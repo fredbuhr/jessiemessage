@@ -1,0 +1,78 @@
+{
+  "status": "fixture_expectations_corrected_syntax_passed_native_rerun_pending",
+  "timestamp": "2026-10-22T21:48:48.759390+00:00",
+  "scope": "Only the three rehearsal files assigned by root; no app/server/fixture-helper source changes.",
+  "branch": "fix/messaging-183",
+  "baseCommit": "3cc4aa52fe336992f2acd2f6c3e136bc67a3f418",
+  "trigger": {
+    "pullRequest": 130,
+    "failedNativeJob": "120106804742",
+    "source": "Three assertion/timeout excerpts supplied by root; this agent did not fetch or rerun the job."
+  },
+  "corrections": [
+    {
+      "file": "tests/rehearsal/authentication.rehearsal.mjs",
+      "before": "rejectedLogin unconditionally required absence of an administrator cookie; after SQL expiry B01 intentionally retains the existing browser cookie, so replayed consumed recovery-code rejection failed this stale assertion.",
+      "after": "Capture cookie and bounded SQL-row snapshot before a refused factor. Require no new cookie, identical token and non-secret cookie metadata if one existed, unchanged session-row count/fingerprint and cleared password/factor fields. Initial invalid MFA also requires an empty SQL session table. Expired cookie is explicitly compared with the previous recovery cookie before/after replay and must remain unauthorized (401). TOTP replay also requires no Set-Cookie and unchanged SQL snapshot.",
+      "sqlGuard": "sessionSnapshot validates the existing loopback-only, explicitly opted-in, confirmed test database before opening its connection. Called only after createAuthenticationFixture owns the initially empty schema. SELECT id FROM sessions ORDER BY id LIMIT16; unexpected16 rows/types fail closed; compare local SHA256 of IDs, never tokens or row contents. Every connection closes in finally. No SQL was run by this agent."
+    },
+    {
+      "file": "tests/rehearsal/messaging.rehearsal.mjs",
+      "before": "loginClient waited for and clicked client-chat-link after successful explicit login. The new controller already navigates to /messages, so that intermediate document/link no longer exists.",
+      "after": "After one explicit submit, await the existing chatReady assertion: exact /messages URL and visible real authenticated workspace. No fallback manual navigation and no synthetic success added; notification destination/resolution assertions remain."
+    },
+    {
+      "file": "tests/rehearsal/video.rehearsal.mjs",
+      "before": "client login waited for and clicked the same obsolete intermediate conversation link.",
+      "after": "Await real workspace directly after explicit login. ready now additionally requires exact role-specific /messages or /admin/messages URL, existing message composer and enabled composer. Administrator MFA, explicit inbox selection, video-gallery and all SQL/media assertions remain."
+    }
+  ],
+  "validation": {
+    "nodeVersion": "v24.19.0",
+    "syntax": [
+      {
+        "command": "node --check tests/rehearsal/authentication.rehearsal.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": "node --check tests/rehearsal/messaging.rehearsal.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": "node --check tests/rehearsal/video.rehearsal.mjs",
+        "exitCode": 0
+      }
+    ],
+    "whitespace": {
+      "command": "git diff --check",
+      "exitCode": 0
+    },
+    "nativeBrowser": "Not rerun: Chrome absent locally; root is waiting for the other jobs before scheduling a new head.",
+    "SQL": "No SQL connection/query executed locally by this agent.",
+    "independentReview": {
+      "reviewer": "peer_a11",
+      "status": "passed_static_read_only_no_concrete_defect_found",
+      "checks": "Cookie preservation and SQL-expired401, cleared credentials, guarded/bounded before-after session-ID snapshot, direct authenticated client destinations, stronger video ready predicate. No tests, network or modifications by reviewer."
+    }
+  },
+  "files": [
+    {
+      "file": "tests/rehearsal/authentication.rehearsal.mjs",
+      "sha256": "f799e4aefa590d5c7864f096d212ab03b9af465d26bb7e382dfdf9ce196c43a5"
+    },
+    {
+      "file": "tests/rehearsal/messaging.rehearsal.mjs",
+      "sha256": "da83c3b4de405013d169f359b27760e551bc7b46d1b8ec9b67e2b04215c089c7"
+    },
+    {
+      "file": "tests/rehearsal/video.rehearsal.mjs",
+      "sha256": "c37e26c130ed66ffb564849e0bde22072c576d1bab8d1631e367376ad2d906e6"
+    }
+  ],
+  "limits": [
+    "These edits correct stale fixtures and strengthen refused-login/session evidence. Syntax checks are not native scenario qualification.",
+    "The SQL snapshot proves the set of persisted session IDs/count is unchanged across rejection; it does not claim every existing session column remains unchanged. Tokens and session contents are not selected or printed.",
+    "No commit, push, application change, version change, deployment, production/private-host access, real account or backup operation."
+  ],
+  "nextAction": "Root waits for existing CI jobs, includes these fixture-only changes in the next source head and reruns required native auth qualification once."
+}

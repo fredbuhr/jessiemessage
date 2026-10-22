@@ -1,0 +1,156 @@
+▶ actual broadcast controller binds every private JSON response to the current account and CSRF proof
+  ✔ /api/broadcast/admin/activity (76.284491ms)
+  ✔ /api/broadcast/admin/campaigns?limit=20 (8.920005ms)
+  ✔ /api/broadcast/admin/campaigns/0000000000000000000000000000000a/summary (10.569982ms)
+  ✔ /api/admin/crm/contacts?limit=50 (7.475893ms)
+  ✔ /api/admin/crm/labels?limit=100 (11.968219ms)
+  ✔ /api/media/admin/assets?limit=20 (6.028896ms)
+  ✔ /api/broadcast/admin/preview (6.34646ms)
+✔ actual broadcast controller binds every private JSON response to the current account and CSRF proof (130.560694ms)
+✔ data obtained under another login cannot enter a restored administrator window with a new CSRF proof (5.286793ms)
+✔ a changed account during a private photo read cannot create or display an old object URL (4.560138ms)
+▶ a successful POST followed by a failed session proof preserves the exact uncertain confirmation
+  ✔ proof 400 (11.464089ms)
+  ✔ proof 403 (9.527108ms)
+  ✔ proof 409 (9.614781ms)
+  ✔ proof 429 (5.393302ms)
+  ✔ proof 503 (7.653557ms)
+✔ a successful POST followed by a failed session proof preserves the exact uncertain confirmation (45.219119ms)
+✔ activity refresh updates an old live campaign outside page one and discovers new random IDs from another window (40.321253ms)
+✔ stale local live rows are resolved in bounded progressing batches instead of rejecting an eleven-row cache (18.150293ms)
+✔ explicit history refresh restarts an exhausted archive so older additions outside the recent window remain reachable (44.601546ms)
+✔ late history data cannot restore queued counters after cancellation (10.639747ms)
+✔ old poll cleanup cannot clear a new bootstrap's busy state or schedule an extra timer (4.856679ms)
+✔ real hide/show handlers preserve the exact uncertain confirmation and stale cleanup cannot release its explicit retry (18.606922ms)
+✔ a hidden page ignores late activity even when the transport ignores abort (2.89281ms)
+✔ text, selection and attachment stay hidden until one fresh owner proof allows resumption (7.784732ms)
+✔ a failed resume proof keeps the immutable pending key for the explicit reload action (7.925633ms)
+▶ owner and login changes during suspension purge retained work before displaying the new session
+  ✔ other account (5.877772ms)
+  ✔ new login (4.259145ms)
+✔ owner and login changes during suspension purge retained work before displaying the new session (10.709288ms)
+✔ a resume proof arriving after another hide cannot reveal content or replace the new cycle (15.404973ms)
+✔ suspension during initial reads resumes contacts and labels without losing the composed work (20.976452ms)
+✔ an interrupted cancellation resumes a usable freshly read detail without replaying its POST (11.741672ms)
+✔ a rate-limited history poll respects Retry-After before scheduling another read (4.06567ms)
+✔ a rate-limited selected detail also delays the next periodic history read (5.1702ms)
+✔ a manual detail rate limit also postpones a history timer which was already scheduled (5.687129ms)
+✔ selected recipients progress 1 to 2 to 1, prepare their exact edited content and send with one final action (15.696351ms)
+✔ zero eligible recipients and a late preparation for an old selection never enable send (8.455848ms)
+✔ global2500 preview and a lost POST response retain one immutable confirmation while scope controls stay frozen (15.384733ms)
+✔ contact pages replace50 rows, retain explicit choices and preserve checkbox focus (48.768557ms)
+✔ periodic summary polling keeps recipient rows and never refetches their page (11.70446ms)
+✔ redaction invalidates an in-flight recipient page and a late snapshot cannot restore its removed client (18.341938ms)
+✔ a removed campaign summary404 purges its selected page without any legacy-detail fallback (10.245499ms)
+✖ an edited filter clears the real confirmation even when canonical criteria stay identical (8.087174ms)
+✔ broadcast video is opt-in and rejects non-MP4, empty, oversized or over-caption selections before any upload (9.303388ms)
+✔ broadcast video waits for native preview and a session-bound upload ACK before previewing its typed audience and sending (25.370127ms)
+▶ broadcast cancelled, malformed and lost uploads never attach a video or retry automatically
+  ✔ cancel (7.568662ms)
+  ✔ network (6.928788ms)
+  ✔ wrong-size (4.907094ms)
+  ✔ extra-field (5.850665ms)
+✔ broadcast cancelled, malformed and lost uploads never attach a video or retry automatically (26.572ms)
+✔ video upload acknowledgement under a changed account is discarded and suspension keeps the local file without replaying an ambiguous upload (10.643125ms)
+✔ a confirmed video survives suspension and local preview callbacks bind to the resumed session (12.358176ms)
+✔ broadcast UI starts without selected clients or a sendable composition (2.947408ms)
+✔ client, malformed and expired sessions clear private broadcast state (5.317861ms)
+✔ a different account or a new login for the same admin invalidates pending sends (3.228265ms)
+✔ CRM filter changes preserve only explicitly checked recipients and reject the old in-flight page (0.960684ms)
+✔ keyset pagination retains the submitted filter snapshot while the form changes (1.67091ms)
+✔ broadcast selection is capped at 100 and never auto-selects newly loaded clients (3.930601ms)
+✔ contact DTOs retain no email, private notes or extra CRM fields (1.168592ms)
+✔ changing a recipient or photo invalidates the earlier eligibility proof even if selection returns (0.611521ms)
+✔ eligibility preview rejects missing, duplicate, foreign or contradictory recipients (1.813063ms)
+✔ inactive access blocks the entire explicit confirmation (0.775908ms)
+✔ a previously shared photo requires its own override followed by another explicit acknowledgment (0.772871ms)
+✔ text and photo captions preserve exact valid Unicode and reject unsupported or invisible content (3.066264ms)
+✔ title checks refuse hidden-only, directional controls and multiline titles before confirmation (1.029917ms)
+✔ confirmation is explicit, expires with the session and is reset by content edits (2.999868ms)
+✔ uncertain sends freeze one immutable payload and retry with exactly the same identifier (0.922166ms)
+✔ a definite rejected request unlocks its unchanged draft and requires a new eligibility review (0.921702ms)
+✔ CSRF failure blocks retries without silently repeating a POST (1.072389ms)
+✔ acknowledgment must match the immutable caller ID and contents before releasing the draft (3.910823ms)
+✔ logging out drops content, recipients and pending acknowledgments even after the same admin returns (0.428145ms)
+✔ suspension retains the draft and exact uncertain payload while invalidating every old response (1.137678ms)
+✔ a different session or feature proof after suspension purges the retained private work (1.471068ms)
+✔ campaign detail discards private server fields and retains only individual recipient status (1.28221ms)
+✔ older history responses cannot roll back delivery counts or repaint a cancelled campaign as queued (1.367577ms)
+✔ large audiences are explicit and capability absence retains the compatible manual path (2.066139ms)
+✔ 2500 manual recipients cross contact pages without a cardinality100 business ceiling (34.245747ms)
+✔ scope changes invalidate an earlier proof even after restoring the same scope, and capability changes purge it (0.364869ms)
+✔ large previews reject inconsistent counters, oversized samples and malformed opaque proofs (0.378312ms)
+✔ recipient pages strip private fields and enforce bounded owned monotone cursors without equating page size and total (2.422556ms)
+✔ redaction can shrink a frozen audience at the same timestamp but later stale reads can never enlarge it (0.814837ms)
+✔ compatibility keeps typed video campaign reads while refusing new video compositions (0.640868ms)
+✔ video payloads require the explicit capability and reject mixed or ambiguous media shapes (6.850273ms)
+✔ video encryption and fingerprints have independent namespaces and bind the complete typed asset (9.172708ms)
+✔ video preview proof cannot be replayed with another asset, media type or selector (3.297949ms)
+✔ service video confirmation produces a compact authenticated queue command with SQL photo reference null (13.14389ms)
+✔ compatibility campaign creation rejects new videos after idempotency lookup and retains exact recorded acknowledgements (4.848114ms)
+✔ read-only broadcast service keeps v3 DTOs and delegates only exact retries to the guarded store (3.660149ms)
+✔ worker emits an ordinary typed video body with the video fingerprint and no broadcast metadata (6.410364ms)
+✔ video delivery validates ownership within the existing transaction and uses the typed ordinary append (4.558263ms)
+✔ compatibility store continues already queued v3 deliveries with new creation disabled (2.855089ms)
+✔ missing source video and previous delivery become sanitized terminal skips before append (3.031573ms)
+✔ video delivery refuses a substituted encrypted asset or queue type (0.931264ms)
+✔ manual video backup authenticates pending v3 references and queue proofs while old profiles reject them (9.074941ms)
+✔ UI video draft binds preview, repeat confirmation, immutable retries and capability (3.584802ms)
+✔ video account erasure shrinks an authenticated compact campaign while preserving the owner's asset and peer proof (19.258606ms)
+ℹ tests 95
+ℹ suites 0
+ℹ pass 94
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 893.066003
+
+✖ failing tests:
+
+test at tests/broadcast-lifecycle.test.mjs:596:1
+✖ an edited filter clears the real confirmation even when canonical criteria stay identical (8.087174ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + {
+  +   audience: {
+  +     conversationIds: [
+  +       '00000000000000000000000000000063'
+  +     ],
+  +     mode: 'selected'
+  +   },
+  +   eligibleCount: 1,
+  +   excludedCount: 0,
+  +   previewToken: 'v1.opaque.signature',
+  +   recipients: [
+  +     {
+  +       client: {
+  +         id: '00000000000000000000000000000062',
+  +         pseudonym: 'Synthetic client'
+  +       },
+  +       conversationId: '00000000000000000000000000000063',
+  +       eligible: true,
+  +       reason: null,
+  +       repeatMedia: false
+  +     }
+  +   ],
+  +   repeatCount: 0,
+  +   totalCount: 1
+  + }
+  - null
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/bb431be72395/jessiemessage/tests/broadcast-lifecycle.test.mjs:605:60)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { recipients: [ [Object] ], eligibleCount: 1, repeatCount: 0, totalCount: 1, excludedCount: 0, previewToken: 'v1.opaque.signature', audience: { mode: 'selected', conversationIds: [Array] } },
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

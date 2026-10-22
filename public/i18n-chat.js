@@ -42,6 +42,9 @@ globalThis.JessieI18n?.register({
   "Vidéos indisponibles pour le moment": "Videos are temporarily unavailable",
 
   "Options": "Options",
+  "Autres options": "More options",
+  "Accueil admin": "Admin home",
+  "Détails": "Details",
   "Ouvrir les options": "Open options",
   "Ouvrir les options de la conversation": "Open conversation options",
   "Ajouter au message": "Add to message",

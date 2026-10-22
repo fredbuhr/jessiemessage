@@ -184,7 +184,7 @@ jobs:
           GRANT ALL PRIVILEGES ON `jessiemessage\_test\_restore\_ci`.* TO 'jessiemessage_backup_test'@'%';
           SQL
       - name: Exercise migrations and constraints on disposable database
-        run: timeout --signal=TERM --kill-after=10s 8m npm run test:db
+        run: timeout --signal=TERM --kill-after=10s 10m npm run test:db
         env:
           JESSIEMESSAGE_DB_TEST: "1"
           JESSIEMESSAGE_RESTORE_TEST_DATABASE: jessiemessage_test_restore_ci

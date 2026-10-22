@@ -85,7 +85,7 @@ async function harness({ clients = [client(), client(4, { status: "pending", ema
   const context = vm.createContext({ document, window: { addEventListener: (name, callback) => add(windowEvents, name, callback) },
     sessionStorage: { getItem: (key) => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) },
     navigator: { language: "fr-FR", languages: ["fr-FR"], clipboard: { async writeText() {} } },
-    location: { pathname: "/admin" }, history: { replaceState() {} }, AbortController, Intl,
+    location: { pathname: "/admin/clients" }, history: { replaceState() {} }, AbortController, Intl,
     Date: class extends Date { static now() { return now; } },
     setTimeout: (callback, duration) => { const key = ++timerId; timers.set(key, { callback, duration }); return key; }, clearTimeout: (key) => timers.delete(key),
     fetch: async (path, options) => {

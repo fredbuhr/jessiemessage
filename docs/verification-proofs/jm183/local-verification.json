@@ -1,0 +1,168 @@
+{
+  "type": "jm183-local-verification",
+  "recordedAtUTC": "2026-10-22T21:40:52.960208+00:00",
+  "status": "local_review_complete_native_qualification_pending",
+  "candidateVersion": "1.8.3",
+  "nodeLocal": "v24.19.0",
+  "nodeRequired": "v24.22.1",
+  "lastPublishedCheckpoint": "04b99da27726ffd10946c75827edf456bf0c2475",
+  "branch": "fix/messaging-183",
+  "generalInitial": {
+    "tests": 3940,
+    "pass": 3699,
+    "fail": 1,
+    "skipped": 240,
+    "result": "failed_stale_navigation_assertion",
+    "scope": "LocalNode24.19.0 with unavailable native/procfs/database cases explicitly skipped. Not a native qualification.",
+    "exitStatusCollected": false,
+    "failureResolution": "Header now links to Admin home; old test still searched for Service status. Corrected the navigation/translation assertion; focused7/7 passed. Full native CI on final source remains required."
+  },
+  "targetedGroups": {
+    "backendInitial": {
+      "tests": 369,
+      "pass": 368,
+      "skipped": 1
+    },
+    "backendAdditional": {
+      "tests": 36,
+      "pass": 36
+    },
+    "sessionSurfacesFinal": {
+      "tests": 22,
+      "pass": 22
+    },
+    "historicalGuards": {
+      "tests": 8,
+      "pass": 8
+    },
+    "chat": {
+      "tests": 196,
+      "pass": 196
+    },
+    "broadcast": {
+      "tests": 103,
+      "pass": 103
+    },
+    "notifications": {
+      "tests": 70,
+      "pass": 70
+    },
+    "navigation": {
+      "tests": 123,
+      "pass": 123
+    },
+    "navigationMicrofix": {
+      "tests": 18,
+      "pass": 18
+    },
+    "rootHeaderI18n": {
+      "tests": 41,
+      "pass": 41
+    },
+    "rootHeaderCorrected": {
+      "tests": 7,
+      "pass": 7
+    },
+    "help": {
+      "tests": 16,
+      "pass": 16
+    }
+  },
+  "countsNotAdditive": true,
+  "syntax": {
+    "command": "npm run check",
+    "exitCode": 0,
+    "resultLine": "Syntax verified: 721 JavaScript and shell source files.",
+    "subsequentNativeTestEdits": "Four browser/rehearsal scripts separately syntax-checked by navigation owner."
+  },
+  "reports": [
+    "backend-report.json",
+    "chat-report.json",
+    "broadcast-report.json",
+    "notifications-report.json",
+    "journey-review.json",
+    "navigation-report.json",
+    "historical-guards-report.json",
+    "repro-broadcast-baseline.json"
+  ],
+  "logFiles": [
+    {
+      "path": "logs/backend-targeted-added-cases.log",
+      "sha256": "748ee59b3f5bf94a8023733f78953619def32a4b8d1679ecf83586eb9846f75f"
+    },
+    {
+      "path": "logs/backend-session-surfaces-corrected.log",
+      "sha256": "65ae0c577faff6f1dc99b8a43f378f08f1bab5c695e565d4dfa9c338f57344bc"
+    },
+    {
+      "path": "logs/broadcast-focused-initial.log",
+      "sha256": "37c68e1c05ecf319b82fa0b22e11b07715d3a27ceabdd161135a22883b8a8dc2"
+    },
+    {
+      "path": "logs/backend-targeted-initial.log",
+      "sha256": "a69662647304d2839b5d618438ba7381349a30184654f530c1ca2d25f55087c5"
+    },
+    {
+      "path": "logs/backend-session-surfaces-final.log",
+      "sha256": "d43ee65b9c6d5f20798f1bc8e5e21339d3a08863c830f64fac425c7396c85f62"
+    },
+    {
+      "path": "logs/broadcast-lifecycle-final.log",
+      "sha256": "db2c15661bee0aa581f9dc2074311df7f1cff501da4e83432516b1ba60107d3d"
+    },
+    {
+      "path": "logs/broadcast-focused.log",
+      "sha256": "d6bc6f6e0b4703680d7af26ee53be64856e832789f9f45b33cff4b8bfee8cdc6"
+    },
+    {
+      "path": "logs/historical-guards-tests-guard-diagnostic.log",
+      "sha256": "4e84962052edf86fc5cab602278db95ab2cbcbf73b0019fca0e95ef6c0b66272"
+    },
+    {
+      "path": "logs/historical-guards-tests-final.log",
+      "sha256": "a88aa4347a3f04dba8a0c07c7139209e313a75a4fcdfeed3c3a851ea8317e039"
+    },
+    {
+      "path": "logs/historical-guards-tests.log",
+      "sha256": "9cf755c8e9ccc0b2d6d342c5a6650b80c4ac449cc0197b84b14e34280e19e69b"
+    },
+    {
+      "path": "logs/syntax-final.tap",
+      "sha256": "919fb74e14541be0497c02f531b35c02bbea464bbed93f7ad4261f8558938fb9"
+    },
+    {
+      "path": "logs/root-help.tap",
+      "sha256": "4d2cb0091ab709ea20ee1401444dbe1c305fa217571f1160a5e3b33b092e07be"
+    },
+    {
+      "path": "logs/general-initial.tap",
+      "sha256": "217ddebe565e6975b26b7ec6fec3f902eec5cf1aff864c207c76120c4914d0f9"
+    },
+    {
+      "path": "logs/root-navigation-i18n.tap",
+      "sha256": "4c7c98b38b892ac12a50d6cb9867a23024bf18c81a3e86631dd7a4755a98e76c"
+    },
+    {
+      "path": "logs/root-header-corrected.tap",
+      "sha256": "6c57fbf0a909059e8cdc0bfefcab1be43668bb55e77be8bb71fa1f572bc5b1f3"
+    },
+    {
+      "path": "logs/ux183-chat-final.tap",
+      "sha256": "d043829c62b805c19bd8c37540048783aab4b6ed9a30e0ee0893b2897fea145f"
+    },
+    {
+      "path": "logs/ux183-navigation-microfix.tap",
+      "sha256": "2d304b5a824c474ce58be30bbced8119586f463a9e569be8c10ae29f8603918b"
+    }
+  ],
+  "sourceManifest": "source-manifest.json",
+  "reviewDeltas": [
+    "Broadcast HTML shared header adjusted by root after broadcast owner report; controller unchanged.",
+    "Navigation microcopy/deep-link corrections were owner-reviewed and18tests passed after independent journey review snapshot.",
+    "Browser fixtures updated to actual routing/dashboard/common CSS after first source checkpoint."
+  ],
+  "nativeBrowserExecutedLocally": false,
+  "realPushSent": false,
+  "productionChanged": false,
+  "nextAction": "Open native qualification PR on final frozen source; inspect CI and synthetic screenshots."
+}

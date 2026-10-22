@@ -6,13 +6,13 @@ import { request as httpRequest } from "node:http";
 
 const token = Buffer.alloc(32, 17).toString("base64url"), csrf = Buffer.alloc(32, 18).toString("base64url");
 const origin = "https://jessiemessage.com";
-const paths = ["/admin", "/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/admin/privacy"];
+const paths = ["/admin", "/admin/clients", "/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/admin/privacy"];
 async function fixture(t, { legacy = false, backups = true, auth = true } = {}) {
   const session = { user: { id: "1".repeat(32), role: "admin", pseudonym: "Synthetic" }, csrf, expiresAt: Date.now() + 86400000 };
   const authHandler = auth ? createAuthHandler({ login() {}, logout() {}, logoutAll() {}, async session(value) { return value === token ? session : null; } }, { origin }) : undefined;
   const restricted = async (request, response) => {
     const path = new URL(request.url, origin).pathname;
-    if (!paths.slice(1).includes(path)) return false;
+    if (path === "/admin/clients" || !paths.slice(1).includes(path)) return false;
     response.writeHead(401, { "Content-Type": "application/json" }); response.end('{"error":"authentication_required"}'); return true;
   };
   const handlers = { privacyHandler: restricted, authHandler, chatHandler: restricted, broadcastHandler: restricted, readinessHandler: restricted, ...(backups ? { backupHandler: restricted } : {}) };
@@ -73,7 +73,7 @@ test("navigation bridge never authenticates APIs, changes mutation checks or int
   assert.equal((await request("/api/auth/logout", { method: "POST", headers: { Accept: "text/html" }, body: "{}" })).status, 403);
   const expired = await request("/admin", { headers: { Accept: "text/html", Cookie: `__Host-jessie_session=${Buffer.alloc(32, 99).toString("base64url")}` } });
   assert.equal(expired.status, 303);
-  assert.match(expired.headers.get("set-cookie"), /Max-Age=0/);
+  assert.equal(expired.headers.get("set-cookie"), null, "an old navigation cannot erase a later login");
 });
 
 test("disabled routes and the recipe origin cannot acquire a primary-only backup bridge", async t => {
@@ -96,4 +96,27 @@ test("a server without authentication does not acquire the login slash alias", a
     assert.equal(response.headers.get("location"), null);
     assert.equal(response.headers.get("set-cookie"), null);
   }
+});
+
+
+test("a delayed refusal on the new clients page cannot erase a newer administrator login", async t => {
+  const old = Buffer.alloc(32, 61).toString("base64url"), next = Buffer.alloc(32, 62).toString("base64url");
+  let entered, release;
+  const started = new Promise(resolve => { entered = resolve; }), gate = new Promise(resolve => { release = resolve; });
+  const current = { user: { id: "1".repeat(32), role: "admin", pseudonym: "Synthetic" }, csrf, expiresAt: Date.now() + 86400000 };
+  const authHandler = createAuthHandler({ async login() { return { ...current, token: next }; }, async session(value) {
+    if (value === old) { entered(); await gate; return null; } return value === next ? current : null;
+  }, async logout() {}, async logoutAll() {} }, { origin });
+  const server = createAppServer({ authHandler }); await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+  t.after(async () => { release(); server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const pending = fetch(base + "/admin/clients", { redirect: "manual", headers: { Accept: "text/html", Cookie: `__Host-jessie_session=${old}` } });
+  await started;
+  const login = await fetch(base + "/api/auth/login", { method: "POST", headers: { Origin: origin, "Content-Type": "application/json", "X-Jessie-Request": "1" },
+    body: JSON.stringify({ email: "admin@example.invalid", password: "synthetic password", factor: "123456" }) });
+  assert.equal(login.status, 200); assert.ok(login.headers.get("set-cookie").startsWith(`__Host-jessie_session=${next};`));
+  release(); const refused = await pending; assert.equal(refused.status, 303); assert.equal(refused.headers.get("location"), "/admin/login?continue=%2Fadmin%2Fclients");
+  assert.equal(refused.headers.get("set-cookie"), null);
+  const page = await fetch(base + "/admin/clients", { headers: { Cookie: `__Host-jessie_session=${next}` } });
+  assert.equal(page.status, 200); assert.match(await page.text(), /id="access-tools"/);
 });

@@ -1,0 +1,1190 @@
+TAP version 13
+# Subtest: chat has an empty dedicated polite announcement outside the non-live message history
+ok 1 - chat has an empty dedicated polite announcement outside the non-live message history
+  ---
+  duration_ms: 4.750582
+  type: 'test'
+  ...
+# Subtest: chat keyboard destinations and composer instructions keep their explicit relationships and translation markers
+ok 2 - chat keyboard destinations and composer instructions keep their explicit relationships and translation markers
+  ---
+  duration_ms: 3.169343
+  type: 'test'
+  ...
+# Subtest: chat CSS keeps explicit keyboard focus and the skip link out of the visual flow until focused
+ok 3 - chat CSS keeps explicit keyboard focus and the skip link out of the visual flow until focused
+  ---
+  duration_ms: 6.638818
+  type: 'test'
+  ...
+# Subtest: the dedicated polite live region starts empty and never contains history or private message content
+ok 4 - the dedicated polite live region starts empty and never contains history or private message content
+  ---
+  duration_ms: 104.097722
+  type: 'test'
+  ...
+# Subtest: only fresh living peer messages increase the cumulative count; empty polls and unrelated events leave it intact
+ok 5 - only fresh living peer messages increase the cumulative count; empty polls and unrelated events leave it intact
+  ---
+  duration_ms: 50.805654
+  type: 'test'
+  ...
+# Subtest: metadata describing later pages never suppresses fresh messages on pages two and three
+ok 6 - metadata describing later pages never suppresses fresh messages on pages two and three
+  ---
+  duration_ms: 32.039561
+  type: 'test'
+  ...
+# Subtest: language switching clears the spoken text without replay or network and preserves the cumulative count
+ok 7 - language switching clears the spoken text without replay or network and preserves the cumulative count
+  ---
+  duration_ms: 47.600641
+  type: 'test'
+  ...
+# Subtest: hide, pagehide and session replacement purge announcements and late responses cannot speak
+ok 8 - hide, pagehide and session replacement purge announcements and late responses cannot speak
+  ---
+  duration_ms: 28.839782
+  type: 'test'
+  ...
+# Subtest: resuming visible catch-up remains silent across more than three pages before arming live announcements
+ok 9 - resuming visible catch-up remains silent across more than three pages before arming live announcements
+  ---
+  duration_ms: 33.622593
+  type: 'test'
+  ...
+# Subtest: contact activation and return use visible logical keyboard targets without opening the composer
+ok 10 - contact activation and return use visible logical keyboard targets without opening the composer
+  ---
+  duration_ms: 39.491832
+  type: 'test'
+  ...
+# Subtest: a pending conversation load cannot take focus after the user already moved elsewhere
+ok 11 - a pending conversation load cannot take focus after the user already moved elsewhere
+  ---
+  duration_ms: 19.819565
+  type: 'test'
+  ...
+# Subtest: deleting a focused message selects its tombstone, while another active control keeps focus
+ok 12 - deleting a focused message selects its tombstone, while another active control keeps focus
+  ---
+  duration_ms: 42.43601
+  type: 'test'
+  ...
+# Subtest: native links and text selection inside a message do not toggle its details or begin a deletion
+ok 13 - native links and text selection inside a message do not toggle its details or begin a deletion
+  ---
+  duration_ms: 12.775069
+  type: 'test'
+  ...
+# Subtest: history and new-message pagination controls hand focus to history only when their focused control disappears
+ok 14 - history and new-message pagination controls hand focus to history only when their focused control disappears
+  ---
+  duration_ms: 18.675245
+  type: 'test'
+  ...
+# Subtest: a cached conversation re-entry consumes catch-up silently and starts a fresh visible counter
+ok 15 - a cached conversation re-entry consumes catch-up silently and starts a fresh visible counter
+  ---
+  duration_ms: 34.417163
+  type: 'test'
+  ...
+# Subtest: inbox pagination ending restores focus to the first newly loaded contact
+ok 16 - inbox pagination ending restores focus to the first newly loaded contact
+  ---
+  duration_ms: 16.062281
+  type: 'test'
+  ...
+# Subtest: media pagination ending focuses its newly loaded photo and does not move focus outside the dialog
+ok 17 - media pagination ending focuses its newly loaded photo and does not move focus outside the dialog
+  ---
+  duration_ms: 31.174721
+  type: 'test'
+  ...
+# Subtest: a lightbox whose photo opener was replaced returns to the same current photo, respecting the active dialog
+ok 18 - a lightbox whose photo opener was replaced returns to the same current photo, respecting the active dialog
+  ---
+  duration_ms: 17.90502
+  type: 'test'
+  ...
+# Subtest: closing a media dialog whose original opener became disabled uses a visible current fallback
+ok 19 - closing a media dialog whose original opener became disabled uses a visible current fallback
+  ---
+  duration_ms: 17.826018
+  type: 'test'
+  ...
+# Subtest: deleting an expanded received photo closes it with a visible logical focus target and no new-message announcement
+ok 20 - deleting an expanded received photo closes it with a visible logical focus target and no new-message announcement
+  ---
+  duration_ms: 26.871026
+  type: 'test'
+  ...
+# Subtest: removing a focused image draft returns to the composer without changing its caption or posting
+ok 21 - removing a focused image draft returns to the composer without changing its caption or posting
+  ---
+  duration_ms: 14.24413
+  type: 'test'
+  ...
+# Subtest: a wrapping placeholder never expands an empty composer, while typed content grows within its height budget and clearing resets it
+ok 22 - a wrapping placeholder never expands an empty composer, while typed content grows within its height budget and clearing resets it
+  ---
+  duration_ms: 13.986708
+  type: 'test'
+  ...
+# Subtest: a completed button-initiated send restores composer focus only if the user has not moved elsewhere
+ok 23 - a completed button-initiated send restores composer focus only if the user has not moved elsewhere
+  ---
+  duration_ms: 39.352153
+  type: 'test'
+  ...
+# Subtest: CRM-backed inbox pagination has the same focused final-page fallback
+ok 24 - CRM-backed inbox pagination has the same focused final-page fallback
+  ---
+  duration_ms: 13.371997
+  type: 'test'
+  ...
+# Subtest: a same-tab reload restores bounded Unicode text only for the same role, owner and session fingerprint
+ok 25 - a same-tab reload restores bounded Unicode text only for the same role, owner and session fingerprint
+  ---
+  duration_ms: 17.35118
+  type: 'test'
+  ...
+# Subtest: another owner or renewed session purges old text while the other authenticated role remains separate
+ok 26 - another owner or renewed session purges old text while the other authenticated role remains separate
+  ---
+  duration_ms: 4.996675
+  type: 'test'
+  ...
+# Subtest: ordinary drafts expire after a day but an immutable uncertain request is never silently expired
+ok 27 - ordinary drafts expire after a day but an immutable uncertain request is never silently expired
+  ---
+  duration_ms: 2.565087
+  type: 'test'
+  ...
+# Subtest: invalid, oversized or future-dated records are discarded before any text can be restored
+ok 28 - invalid, oversized or future-dated records are discarded before any text can be restored
+  ---
+  duration_ms: 11.180993
+  type: 'test'
+  ...
+# Subtest: the complete UTF-8 record stays within 64 KiB and twenty entries without evicting an uncertain key
+ok 29 - the complete UTF-8 record stays within 64 KiB and twenty entries without evicting an uncertain key
+  ---
+  duration_ms: 49.164879
+  type: 'test'
+  ...
+# Subtest: twenty uncertain requests keep every exact key when a new draft or request does not fit
+ok 30 - twenty uncertain requests keep every exact key when a new draft or request does not fit
+  ---
+  duration_ms: 3.096971
+  type: 'test'
+  ...
+# Subtest: quota failure during promotion invalidates the old ordinary draft without losing another uncertain request
+ok 31 - quota failure during promotion invalidates the old ordinary draft without losing another uncertain request
+  ---
+  duration_ms: 3.288417
+  type: 'test'
+  ...
+# Subtest: a completely unwritable store cannot preserve an old ordinary draft before sending with a new key
+ok 32 - a completely unwritable store cannot preserve an old ordinary draft before sending with a new key
+  ---
+  duration_ms: 4.352846
+  type: 'test'
+  ...
+# Subtest: a new POST stays local if invalidation would discard another uncertain key
+ok 33 - a new POST stays local if invalidation would discard another uncertain key
+  ---
+  duration_ms: 1.156134
+  type: 'test'
+  ...
+# Subtest: replacement requests cannot overwrite an existing uncertain identity or body
+ok 34 - replacement requests cannot overwrite an existing uncertain identity or body
+  ---
+  duration_ms: 1.880006
+  type: 'test'
+  ...
+# Subtest: media files and uncertain captions never become a text-only retry after reload
+ok 35 - media files and uncertain captions never become a text-only retry after reload
+  ---
+  duration_ms: 1.457954
+  type: 'test'
+  ...
+# Subtest: unavailable storage degrades to memory while a late fingerprint cannot reactivate a cleared or replaced owner
+ok 36 - unavailable storage degrades to memory while a late fingerprint cannot reactivate a cleared or replaced owner
+  ---
+  duration_ms: 1.186752
+  type: 'test'
+  ...
+# Subtest: acknowledged sends remove their persistent marker and text together
+ok 37 - acknowledged sends remove their persistent marker and text together
+  ---
+  duration_ms: 1.742333
+  type: 'test'
+  ...
+# Subtest: chat HTML loads explicit catalogues before its controller and marks UI leaves without user content
+ok 38 - chat HTML loads explicit catalogues before its controller and marks UI leaves without user content
+  ---
+  duration_ms: 106.5608
+  type: 'test'
+  ...
+# Subtest: live chat switching preserves raw user phrases, drafts, focused controls and read receipt rows
+ok 39 - live chat switching preserves raw user phrases, drafts, focused controls and read receipt rows
+  ---
+  duration_ms: 68.362599
+  type: 'test'
+  ...
+# Subtest: Jessie's read receipt updates and translates in place after a metadata-only poll
+ok 40 - Jessie's read receipt updates and translates in place after a metadata-only poll
+  ---
+  duration_ms: 46.636474
+  type: 'test'
+  ...
+# Subtest: uncertain send IDs, retry state, raw text and errors survive language changes without another POST
+ok 41 - uncertain send IDs, retry state, raw text and errors survive language changes without another POST
+  ---
+  duration_ms: 25.989494
+  type: 'test'
+  ...
+# Subtest: emoji panel labels change language without changing a draft or issuing a request
+ok 42 - emoji panel labels change language without changing a draft or issuing a request
+  ---
+  duration_ms: 48.090849
+  type: 'test'
+  ...
+# Subtest: photo rows, images, gallery cards and accessibility names translate in place without a refetch
+ok 43 - photo rows, images, gallery cards and accessibility names translate in place without a refetch
+  ---
+  duration_ms: 25.459428
+  type: 'test'
+  ...
+# Subtest: image draft captions and uploading state remain unchanged while UI labels switch
+ok 44 - image draft captions and uploading state remain unchanged while UI labels switch
+  ---
+  duration_ms: 18.451293
+  type: 'test'
+  ...
+# Subtest: hidden date parameters do not reappear on a language switch and a new owner cannot restore old rows
+ok 45 - hidden date parameters do not reappear on a language switch and a new owner cannot restore old rows
+  ---
+  duration_ms: 21.358453
+  type: 'test'
+  ...
+# Subtest: unread counts and reminders translate while raw CRM names and labels keep their exact text
+ok 46 - unread counts and reminders translate while raw CRM names and labels keep their exact text
+  ---
+  duration_ms: 15.585911
+  type: 'test'
+  ...
+# Subtest: translated tombstones remain distinct from live user text matching the same French UI phrase
+ok 47 - translated tombstones remain distinct from live user text matching the same French UI phrase
+  ---
+  duration_ms: 68.518297
+  type: 'test'
+  ...
+# Subtest: photo loading and failure states translate without retrying or replacing their message
+ok 48 - photo loading and failure states translate without retrying or replacing their message
+  ---
+  duration_ms: 14.714619
+  type: 'test'
+  ...
+# Subtest: photo library controls and metadata switch in place without changing the selected asset
+ok 49 - photo library controls and metadata switch in place without changing the selected asset
+  ---
+  duration_ms: 24.981504
+  type: 'test'
+  ...
+# Subtest: all controller message and photo error variants retain reactive translated UI sources
+ok 50 - all controller message and photo error variants retain reactive translated UI sources
+  ---
+  duration_ms: 36.529893
+  type: 'test'
+  ...
+# Subtest: personal replies keep their title and body verbatim while management controls change language
+ok 51 - personal replies keep their title and body verbatim while management controls change language
+  ---
+  duration_ms: 26.09079
+  type: 'test'
+  ...
+# Subtest: video selection is a local draft and cancelling upload never submits a message
+ok 52 - video selection is a local draft and cancelling upload never submits a message
+  ---
+  duration_ms: 78.239735
+  type: 'test'
+  ...
+# Subtest: an uncertain video message response retries the same asset and identity without uploading again
+ok 53 - an uncertain video message response retries the same asset and identity without uploading again
+  ---
+  duration_ms: 20.128775
+  type: 'test'
+  ...
+# Subtest: video players never adopt foreign origin, role, conversation or message URLs
+ok 54 - video players never adopt foreign origin, role, conversation or message URLs
+  ---
+  duration_ms: 11.138493
+  type: 'test'
+  ...
+# Subtest: hidden video uploads abort and old acknowledgements cannot submit for another session
+ok 55 - hidden video uploads abort and old acknowledgements cannot submit for another session
+  ---
+  duration_ms: 9.297307
+  type: 'test'
+  ...
+# Subtest: late video gallery pages respect tombstones and queued close events cannot close a new gallery
+ok 56 - late video gallery pages respect tombstones and queued close events cannot close a new gallery
+  ---
+  duration_ms: 10.343925
+  type: 'test'
+  ...
+# Subtest: admin tools live at the single admin-home menu link rather than raw links or chat polling
+ok 57 - admin tools live at the single admin-home menu link rather than raw links or chat polling
+  ---
+  duration_ms: 28.968877
+  type: 'test'
+  ...
+# Subtest: the optional profile adapter belongs to the account and survives same-owner visibility resume without changing chat drafts
+    # Subtest: client
+    ok 1 - client
+      ---
+      duration_ms: 7.287492
+      type: 'test'
+      ...
+    # Subtest: admin
+    ok 2 - admin
+      ---
+      duration_ms: 16.59737
+      type: 'test'
+      ...
+    1..2
+ok 58 - the optional profile adapter belongs to the account and survives same-owner visibility resume without changing chat drafts
+  ---
+  duration_ms: 36.423665
+  type: 'test'
+  ...
+# Subtest: avatar bytes accept only canonical role-scoped JPEG URLs and enforce the thumbnail size while streaming
+ok 59 - avatar bytes accept only canonical role-scoped JPEG URLs and enforce the thumbnail size while streaming
+  ---
+  duration_ms: 8.83204
+  type: 'test'
+  ...
+# Subtest: a delayed profile module from a hidden page cannot block mounting after visibility resumes
+ok 60 - a delayed profile module from a hidden page cannot block mounting after visibility resumes
+  ---
+  duration_ms: 7.482813
+  type: 'test'
+  ...
+# Subtest: an avatar cached hit proves the current owner and cannot reuse a blob after a cookie replacement
+ok 61 - an avatar cached hit proves the current owner and cannot reuse a blob after a cookie replacement
+  ---
+  duration_ms: 8.647837
+  type: 'test'
+  ...
+# Subtest: late unauthorized avatar headers and late bytes cannot sign out a new owner or create private blob URLs
+    # Subtest: headers
+    ok 1 - headers
+      ---
+      duration_ms: 8.100163
+      type: 'test'
+      ...
+    # Subtest: bytes
+    ok 2 - bytes
+      ---
+      duration_ms: 10.449885
+      type: 'test'
+      ...
+    # Subtest: hide
+    ok 3 - hide
+      ---
+      duration_ms: 7.849731
+      type: 'test'
+      ...
+    1..3
+ok 62 - late unauthorized avatar headers and late bytes cannot sign out a new owner or create private blob URLs
+  ---
+  duration_ms: 27.340893
+  type: 'test'
+  ...
+# Subtest: peer avatars use guarded blobs and keep initials when absent, removed, stale or replaced while loading
+ok 63 - peer avatars use guarded blobs and keep initials when absent, removed, stale or replaced while loading
+  ---
+  duration_ms: 11.157812
+  type: 'test'
+  ...
+# Subtest: notification message-page acknowledgements clear an uncertain text or photo without repeating the send
+    # Subtest: text
+    ok 1 - text
+      ---
+      duration_ms: 37.388908
+      type: 'test'
+      ...
+    # Subtest: photo
+    ok 2 - photo
+      ---
+      duration_ms: 35.831639
+      type: 'test'
+      ...
+    1..2
+ok 64 - notification message-page acknowledgements clear an uncertain text or photo without repeating the send
+  ---
+  duration_ms: 73.982933
+  type: 'test'
+  ...
+# Subtest: retry from an old notification accepts the latest message-page acknowledgement for text and photo
+    # Subtest: text
+    ok 1 - text
+      ---
+      duration_ms: 90.474623
+      type: 'test'
+      ...
+    # Subtest: photo
+    ok 2 - photo
+      ---
+      duration_ms: 83.347172
+      type: 'test'
+      ...
+    1..2
+ok 65 - retry from an old notification accepts the latest message-page acknowledgement for text and photo
+  ---
+  duration_ms: 174.669275
+  type: 'test'
+  ...
+# Subtest: message-page reads preserve an ordinary draft and an uncertain send with a different key
+ok 66 - message-page reads preserve an ordinary draft and an uncertain send with a different key
+  ---
+  duration_ms: 57.618812
+  type: 'test'
+  ...
+# Subtest: an authenticated notification opens its exact message and clears only its navigation reference
+ok 67 - an authenticated notification opens its exact message and clears only its navigation reference
+  ---
+  duration_ms: 27.837652
+  type: 'test'
+  ...
+# Subtest: notification opening preserves its destination through a genuinely missing session
+ok 68 - notification opening preserves its destination through a genuinely missing session
+  ---
+  duration_ms: 4.330457
+  type: 'test'
+  ...
+# Subtest: an existing chat acknowledges a notification without reloading or losing its draft, including after backgrounding
+ok 69 - an existing chat acknowledges a notification without reloading or losing its draft, including after backgrounding
+  ---
+  duration_ms: 8.165414
+  type: 'test'
+  ...
+# Subtest: an administrator notification loads a conversation outside its first inbox page and anchors an old bigint message without a history gap
+ok 70 - an administrator notification loads a conversation outside its first inbox page and anchors an old bigint message without a history gap
+  ---
+  duration_ms: 16.849349
+  type: 'test'
+  ...
+# Subtest: an unavailable notification leaves the signed-in client in their conversation
+ok 71 - an unavailable notification leaves the signed-in client in their conversation
+  ---
+  duration_ms: 6.126975
+  type: 'test'
+  ...
+# Subtest: a PWA that reuses the existing window can deliver the next notification through a fragment change
+ok 72 - a PWA that reuses the existing window can deliver the next notification through a fragment change
+  ---
+  duration_ms: 7.720572
+  type: 'test'
+  ...
+# Subtest: initially hidden chat does not bootstrap; late hidden bootstrap cannot restore a private workspace
+ok 73 - initially hidden chat does not bootstrap; late hidden bootstrap cannot restore a private workspace
+  ---
+  duration_ms: 12.282503
+  type: 'test'
+  ...
+# Subtest: returning as another client purges the old messages, draft, pending IDs and bootstraps the new conversation
+ok 74 - returning as another client purges the old messages, draft, pending IDs and bootstraps the new conversation
+  ---
+  duration_ms: 10.986752
+  type: 'test'
+  ...
+# Subtest: a new login for the same account also abandons the old pending send, while the unchanged session preserves its exact retry key
+ok 75 - a new login for the same account also abandons the old pending send, while the unchanged session preserves its exact retry key
+  ---
+  duration_ms: 26.703606
+  type: 'test'
+  ...
+# Subtest: quick replies append to the administrator draft, remain editable, and require the ordinary send action
+ok 76 - quick replies append to the administrator draft, remain editable, and require the ordinary send action
+  ---
+  duration_ms: 23.211171
+  type: 'test'
+  ...
+# Subtest: quick replies reject clients, full drafts, suspended sending and stale choices after hiding or account replacement
+ok 77 - quick replies reject clients, full drafts, suspended sending and stale choices after hiding or account replacement
+  ---
+  duration_ms: 17.976692
+  type: 'test'
+  ...
+# Subtest: client: emojis replace the selected draft text without media, network or automatic sending
+ok 78 - client: emojis replace the selected draft text without media, network or automatic sending
+  ---
+  duration_ms: 13.013363
+  type: 'test'
+  ...
+# Subtest: admin: emojis replace the selected draft text without media, network or automatic sending
+ok 79 - admin: emojis replace the selected draft text without media, network or automatic sending
+  ---
+  duration_ms: 13.49139
+  type: 'test'
+  ...
+# Subtest: client: secondary panels close on Escape, outside interaction, hiding and owner replacement without sending
+ok 80 - client: secondary panels close on Escape, outside interaction, hiding and owner replacement without sending
+  ---
+  duration_ms: 10.55692
+  type: 'test'
+  ...
+# Subtest: admin: secondary panels close on Escape, outside interaction, hiding and owner replacement without sending
+ok 81 - admin: secondary panels close on Escape, outside interaction, hiding and owner replacement without sending
+  ---
+  duration_ms: 17.439748
+  type: 'test'
+  ...
+# Subtest: emoji selection preserves full drafts and photo captions without truncation or a request
+ok 82 - emoji selection preserves full drafts and photo captions without truncation or a request
+  ---
+  duration_ms: 21.628426
+  type: 'test'
+  ...
+# Subtest: emoji panels close and clear choices on hide or account change, and old choices cannot alter a new dialog
+ok 83 - emoji panels close and clear choices on hide or account change, and old choices cannot alter a new dialog
+  ---
+  duration_ms: 18.937398
+  type: 'test'
+  ...
+# Subtest: a new administrator session clears all loaded inbox and conversation caches before adopting the new owner
+ok 84 - a new administrator session clears all loaded inbox and conversation caches before adopting the new owner
+  ---
+  duration_ms: 28.811502
+  type: 'test'
+  ...
+# Subtest: cookie replacement while visible is detected before a private GET can adopt another account's data
+ok 85 - cookie replacement while visible is detected before a private GET can adopt another account's data
+  ---
+  duration_ms: 11.076058
+  type: 'test'
+  ...
+# Subtest: a private response arriving after a proof was dispatched requires a newer proof
+ok 86 - a private response arriving after a proof was dispatched requires a newer proof
+  ---
+  duration_ms: 10.053364
+  type: 'test'
+  ...
+# Subtest: a failed session proof after a completed POST preserves the uncertain key even when the proof returns a rejection status
+ok 87 - a failed session proof after a completed POST preserves the uncertain key even when the proof returns a rejection status
+  ---
+  duration_ms: 7.999519
+  type: 'test'
+  ...
+# Subtest: an old send finally cannot unlock a newer send belonging to the newly logged-in account
+ok 88 - an old send finally cannot unlock a newer send belonging to the newly logged-in account
+  ---
+  duration_ms: 11.292369
+  type: 'test'
+  ...
+# Subtest: logout during an unfinished bootstrap permanently invalidates its late response without automatic re-entry
+ok 89 - logout during an unfinished bootstrap permanently invalidates its late response without automatic re-entry
+  ---
+  duration_ms: 5.709659
+  type: 'test'
+  ...
+# Subtest: a visible cookie replacement is confirmed before any user POST, for a different account and a fresh login of the same account
+ok 90 - a visible cookie replacement is confirmed before any user POST, for a different account and a fresh login of the same account
+  ---
+  duration_ms: 18.484161
+  type: 'test'
+  ...
+# Subtest: a blocked old poll cannot block polling after same-session visibility restore or disturb its current cycle
+ok 91 - a blocked old poll cannot block polling after same-session visibility restore or disturb its current cycle
+  ---
+  duration_ms: 10.212529
+  type: 'test'
+  ...
+# Subtest: late photo blobs cannot create an object URL after hide or a newly detected cookie owner
+ok 92 - late photo blobs cannot create an object URL after hide or a newly detected cookie owner
+  ---
+  duration_ms: 15.963474
+  type: 'test'
+  ...
+# Subtest: all previously authorized private photo URLs are revoked when the session owner is replaced
+ok 93 - all previously authorized private photo URLs are revoked when the session owner is replaced
+  ---
+  duration_ms: 9.051247
+  type: 'test'
+  ...
+# Subtest: a resumed workspace stays masked until the current session proof resolves, even for the unchanged owner
+ok 94 - a resumed workspace stays masked until the current session proof resolves, even for the unchanged owner
+  ---
+  duration_ms: 7.521493
+  type: 'test'
+  ...
+# Subtest: late unauthorized photo headers cannot sign out the new owner or a hidden same-session page
+ok 95 - late unauthorized photo headers cannot sign out the new owner or a hidden same-session page
+  ---
+  duration_ms: 28.987549
+  type: 'test'
+  ...
+# Subtest: empty event polls preserve a message and its focused delete control
+ok 96 - empty event polls preserve a message and its focused delete control
+  ---
+  duration_ms: 12.106
+  type: 'test'
+  ...
+# Subtest: client: one message at a time exposes details and selection is cleared across content, visibility and account changes
+ok 97 - client: one message at a time exposes details and selection is cleared across content, visibility and account changes
+  ---
+  duration_ms: 20.56219
+  type: 'test'
+  ...
+# Subtest: admin: one message at a time exposes details and selection is cleared across content, visibility and account changes
+ok 98 - admin: one message at a time exposes details and selection is cleared across content, visibility and account changes
+  ---
+  duration_ms: 20.348131
+  type: 'test'
+  ...
+# Subtest: client: a receipt-only poll preserves the photo and focus while exposing reads only to Jessie
+ok 99 - client: a receipt-only poll preserves the photo and focus while exposing reads only to Jessie
+  ---
+  duration_ms: 9.415036
+  type: 'test'
+  ...
+# Subtest: admin: a receipt-only poll preserves the photo and focus while exposing reads only to Jessie
+ok 100 - admin: a receipt-only poll preserves the photo and focus while exposing reads only to Jessie
+  ---
+  duration_ms: 10.532529
+  type: 'test'
+  ...
+# Subtest: new messages and photo deletion update the history without replacing unaffected messages
+ok 101 - new messages and photo deletion update the history without replacing unaffected messages
+  ---
+  duration_ms: 8.98712
+  type: 'test'
+  ...
+# Subtest: loading older messages prepends in sequence and preserves the existing focused control
+ok 102 - loading older messages prepends in sequence and preserves the existing focused control
+  ---
+  duration_ms: 7.876429
+  type: 'test'
+  ...
+# Subtest: same-session visibility return reloads revoked photos and waits for their new load before read eligibility
+ok 103 - same-session visibility return reloads revoked photos and waits for their new load before read eligibility
+  ---
+  duration_ms: 12.944968
+  type: 'test'
+  ...
+# Subtest: failed photos retry on the next poll without replacing their message or photo control
+ok 104 - failed photos retry on the next poll without replacing their message or photo control
+  ---
+  duration_ms: 16.370054
+  type: 'test'
+  ...
+# Subtest: a photo response arriving after its message deletion cannot restore the private image
+ok 105 - a photo response arriving after its message deletion cannot restore the private image
+  ---
+  duration_ms: 6.628425
+  type: 'test'
+  ...
+# Subtest: returning offline keeps private work masked, bounds retries, then resumes on online without replaying a send
+ok 106 - returning offline keeps private work masked, bounds retries, then resumes on online without replaying a send
+  ---
+  duration_ms: 8.438608
+  type: 'test'
+  ...
+# Subtest: a genuine unauthorized resume purges drafts while temporary proof failures do not redirect
+ok 107 - a genuine unauthorized resume purges drafts while temporary proof failures do not redirect
+  ---
+  duration_ms: 26.799749
+  type: 'test'
+  ...
+# Subtest: initial temporary outage can recover from the visible retry button without reloading
+ok 108 - initial temporary outage can recover from the visible retry button without reloading
+  ---
+  duration_ms: 7.174528
+  type: 'test'
+  ...
+# Subtest: long administrator sessions use bounded server checks and survive a hidden timer wakeup
+ok 109 - long administrator sessions use bounded server checks and survive a hidden timer wakeup
+  ---
+  duration_ms: 7.051161
+  type: 'test'
+  ...
+# Subtest: drafts warn before leaving and remain per conversation without browser persistence
+ok 110 - drafts warn before leaving and remain per conversation without browser persistence
+  ---
+  duration_ms: 8.075603
+  type: 'test'
+  ...
+# Subtest: message deletion requires explicit confirmation and cancellation returns focus without a request
+ok 111 - message deletion requires explicit confirmation and cancellation returns focus without a request
+  ---
+  duration_ms: 31.625327
+  type: 'test'
+  ...
+# Subtest: a local image preparation failure releases the untouched send for correction without a private POST
+ok 112 - a local image preparation failure releases the untouched send for correction without a private POST
+  ---
+  duration_ms: 6.430579
+  type: 'test'
+  ...
+# Subtest: administrator conversation changes preserve each memory-only draft
+ok 113 - administrator conversation changes preserve each memory-only draft
+  ---
+  duration_ms: 18.322737
+  type: 'test'
+  ...
+# Subtest: a delayed close event from a cancelled dialog cannot cancel its next confirmation
+ok 114 - a delayed close event from a cancelled dialog cannot cancel its next confirmation
+  ---
+  duration_ms: 10.139166
+  type: 'test'
+  ...
+# Subtest: personal quick replies join the preset list, edit, insert without sending and delete across independent administrator sessions
+ok 115 - personal quick replies join the preset list, edit, insert without sending and delete across independent administrator sessions
+  ---
+  duration_ms: 24.323875
+  type: 'test'
+  ...
+# Subtest: loading personal replies preserves the six preset nodes and keyboard focus in the common list
+ok 116 - loading personal replies preserves the six preset nodes and keyboard focus in the common list
+  ---
+  duration_ms: 13.573134
+  type: 'test'
+  ...
+# Subtest: personal quick reply CAS conflicts preserve the editor and merge only after explicit reload and save
+ok 117 - personal quick reply CAS conflicts preserve the editor and merge only after explicit reload and save
+  ---
+  duration_ms: 17.368651
+  type: 'test'
+  ...
+# Subtest: an uncertain personal reply save requires explicit reload and never automatically repeats a POST
+ok 118 - an uncertain personal reply save requires explicit reload and never automatically repeats a POST
+  ---
+  duration_ms: 34.441315
+  type: 'test'
+  ...
+# Subtest: personal replies respect caption limits and are erased on hide, stale network completion and owner replacement
+ok 119 - personal replies respect caption limits and are erased on hide, stale network completion and owner replacement
+  ---
+  duration_ms: 28.880589
+  type: 'test'
+  ...
+# Subtest: compatibility video capabilities preserve existing players and gallery while refusing every new draft/send
+ok 120 - compatibility video capabilities preserve existing players and gallery while refusing every new draft/send
+  ---
+  duration_ms: 11.136949
+  type: 'test'
+  ...
+# Subtest: read-only personal replies still insert saved text but expose no editing or mutation
+ok 121 - read-only personal replies still insert saved text but expose no editing or mutation
+  ---
+  duration_ms: 10.250823
+  type: 'test'
+  ...
+# Subtest: a read-only capability change preserves an unsaved reply draft for copying or explicit cancellation
+ok 122 - a read-only capability change preserves an unsaved reply draft for copying or explicit cancellation
+  ---
+  duration_ms: 10.474467
+  type: 'test'
+  ...
+# Subtest: owned videos use strict owner URLs, paginate and expose interrupted cleanup for retry
+ok 123 - owned videos use strict owner URLs, paginate and expose interrupted cleanup for retry
+  ---
+  duration_ms: 11.956753
+  type: 'test'
+  ...
+# Subtest: owned video deletion requires confirmation, preserves conflicts and retries the same uncertain asset
+ok 124 - owned video deletion requires confirmation, preserves conflicts and retries the same uncertain asset
+  ---
+  duration_ms: 8.780356
+  type: 'test'
+  ...
+# Subtest: owned videos protect uncertain sends and discard late pages after an account change
+ok 125 - owned videos protect uncertain sends and discard late pages after an account change
+  ---
+  duration_ms: 9.990585
+  type: 'test'
+  ...
+# Subtest: owned video deletion rechecks uncertain sends after an asynchronous confirmation
+ok 126 - owned video deletion rechecks uncertain sends after an asynchronous confirmation
+  ---
+  duration_ms: 27.536322
+  type: 'test'
+  ...
+# Subtest: same-tab reload restores text for each role only after the conversation is authorized and never sends automatically
+ok 127 - same-tab reload restores text for each role only after the conversation is authorized and never sends automatically
+  ---
+  duration_ms: 33.353695
+  type: 'test'
+  ...
+# Subtest: a lost text response reloads as the same explicit retry, and only the retry click sends its exact key
+ok 128 - a lost text response reloads as the same explicit retry, and only the retry click sends its exact key
+  ---
+  duration_ms: 19.971416
+  type: 'test'
+  ...
+# Subtest: the authorized history after reload acknowledges an already committed text without another POST
+ok 129 - the authorized history after reload acknowledges an already committed text without another POST
+  ---
+  duration_ms: 14.380258
+  type: 'test'
+  ...
+# Subtest: changed cookie ownership and a rejected conversation cannot expose the previous stored draft
+ok 130 - changed cookie ownership and a rejected conversation cannot expose the previous stored draft
+  ---
+  duration_ms: 41.210398
+  type: 'test'
+  ...
+# Subtest: explicit logout purges restored text and an unavailable store leaves a visible memory-only fallback
+ok 131 - explicit logout purges restored text and an unavailable store leaves a visible memory-only fallback
+  ---
+  duration_ms: 16.559885
+  type: 'test'
+  ...
+# Subtest: client: deleted messages stay in synchronization state while only admin sees tombstones and delete controls
+ok 132 - client: deleted messages stay in synchronization state while only admin sees tombstones and delete controls
+  ---
+  duration_ms: 24.711785
+  type: 'test'
+  ...
+# Subtest: admin: deleted messages stay in synchronization state while only admin sees tombstones and delete controls
+ok 133 - admin: deleted messages stay in synchronization state while only admin sees tombstones and delete controls
+  ---
+  duration_ms: 14.194285
+  type: 'test'
+  ...
+# Subtest: touch sends and emoji insertion never automatically refocus the text field
+ok 134 - touch sends and emoji insertion never automatically refocus the text field
+  ---
+  duration_ms: 11.01216
+  type: 'test'
+  ...
+# Subtest: a client notification for a deleted message opens history without a deleted-message row or retry loop
+ok 135 - a client notification for a deleted message opens history without a deleted-message row or retry loop
+  ---
+  duration_ms: 5.41801
+  type: 'test'
+  ...
+# Subtest: touch photo/video drafts and quick replies return to a composer control instead of reopening a text keyboard
+ok 136 - touch photo/video drafts and quick replies return to a composer control instead of reopening a text keyboard
+  ---
+  duration_ms: 21.617208
+  type: 'test'
+  ...
+# Subtest: history keeps exact ordering beyond JavaScript's safe integer boundary
+ok 137 - history keeps exact ordering beyond JavaScript's safe integer boundary
+  ---
+  duration_ms: 3.680105
+  type: 'test'
+  ...
+# Subtest: only canonical unsigned 64-bit decimal cursors are accepted
+ok 138 - only canonical unsigned 64-bit decimal cursors are accepted
+  ---
+  duration_ms: 0.527832
+  type: 'test'
+  ...
+# Subtest: deletion of an older loaded message propagates and a stale page cannot resurrect it
+ok 139 - deletion of an older loaded message propagates and a stale page cannot resurrect it
+  ---
+  duration_ms: 0.733418
+  type: 'test'
+  ...
+# Subtest: replayed event pages keep the cursor and tombstone monotonically
+ok 140 - replayed event pages keep the cursor and tombstone monotonically
+  ---
+  duration_ms: 1.023972
+  type: 'test'
+  ...
+# Subtest: a deletion outside the loaded page does not insert an isolated old message
+ok 141 - a deletion outside the loaded page does not insert an isolated old message
+  ---
+  duration_ms: 0.713538
+  type: 'test'
+  ...
+# Subtest: persisted sends reconcile a lost response through their exact client key
+ok 142 - persisted sends reconcile a lost response through their exact client key
+  ---
+  duration_ms: 1.588461
+  type: 'test'
+  ...
+# Subtest: a pending send prevents changing content under the same idempotency key
+ok 143 - a pending send prevents changing content under the same idempotency key
+  ---
+  duration_ms: 1.874035
+  type: 'test'
+  ...
+# Subtest: body validation preserves whitespace and rejects empty or oversized text
+ok 144 - body validation preserves whitespace and rejects empty or oversized text
+  ---
+  duration_ms: 1.397371
+  type: 'test'
+  ...
+# Subtest: definite validation rejection unlocks correction while an uncertain response keeps its key
+ok 145 - definite validation rejection unlocks correction while an uncertain response keeps its key
+  ---
+  duration_ms: 1.122183
+  type: 'test'
+  ...
+# Subtest: read receipts cannot jump to unseen messages or advance in a hidden page
+ok 146 - read receipts cannot jump to unseen messages or advance in a hidden page
+  ---
+  duration_ms: 0.769615
+  type: 'test'
+  ...
+# Subtest: metadata receipts cannot regress when an older snapshot finishes later
+ok 147 - metadata receipts cannot regress when an older snapshot finishes later
+  ---
+  duration_ms: 2.883797
+  type: 'test'
+  ...
+# Subtest: a conversation epoch prevents a late result being applied after switching away and back
+ok 148 - a conversation epoch prevents a late result being applied after switching away and back
+  ---
+  duration_ms: 0.176857
+  type: 'test'
+  ...
+# Subtest: new arrivals preserve reading position and earlier pages never trigger bottom jumps
+ok 149 - new arrivals preserve reading position and earlier pages never trigger bottom jumps
+  ---
+  duration_ms: 0.10724
+  type: 'test'
+  ...
+# Subtest: inbox rotates loaded pages and probes new tail rows after exhausting known contacts
+ok 150 - inbox rotates loaded pages and probes new tail rows after exhausting known contacts
+  ---
+  duration_ms: 1.797121
+  type: 'test'
+  ...
+# Subtest: image retries preserve the uploaded asset and message key after a lost response
+ok 151 - image retries preserve the uploaded asset and message key after a lost response
+  ---
+  duration_ms: 0.689115
+  type: 'test'
+  ...
+# Subtest: a pending image cannot change asset, caption, local file or become text
+ok 152 - a pending image cannot change asset, caption, local file or become text
+  ---
+  duration_ms: 3.269103
+  type: 'test'
+  ...
+# Subtest: image captions allow an empty exact value and reject malformed or oversized input
+ok 153 - image captions allow an empty exact value and reject malformed or oversized input
+  ---
+  duration_ms: 0.543225
+  type: 'test'
+  ...
+# Subtest: a photo tombstone removes delivery metadata and blocks stale thumbnail completion
+ok 154 - a photo tombstone removes delivery metadata and blocks stale thumbnail completion
+  ---
+  duration_ms: 0.511277
+  type: 'test'
+  ...
+# Subtest: a photo without a visible caption is read only after loading, without jumping over it
+ok 155 - a photo without a visible caption is read only after loading, without jumping over it
+  ---
+  duration_ms: 0.676771
+  type: 'test'
+  ...
+# Subtest: memory image resources revoke on replacement, bounded eviction and privacy clearing
+ok 156 - memory image resources revoke on replacement, bounded eviction and privacy clearing
+  ---
+  duration_ms: 3.076027
+  type: 'test'
+  ...
+# Subtest: an image removed in another tab releases its rejected send while uncertain sends retain their key
+ok 157 - an image removed in another tab releases its rejected send while uncertain sends retain their key
+  ---
+  duration_ms: 0.356096
+  type: 'test'
+  ...
+# Subtest: a definitive photo-dimension rejection allows replacing the file while preserving its caption
+ok 158 - a definitive photo-dimension rejection allows replacing the file while preserving its caption
+  ---
+  duration_ms: 0.218128
+  type: 'test'
+  ...
+# Subtest: the local bilingual catalogue offers distinct choices and useful translated categories
+ok 159 - the local bilingual catalogue offers distinct choices and useful translated categories
+  ---
+  duration_ms: 16.941267
+  type: 'test'
+  ...
+# Subtest: search accepts French and English aliases, accents, case, several words and Unicode
+ok 160 - search accepts French and English aliases, accents, case, several words and Unicode
+  ---
+  duration_ms: 11.024682
+  type: 'test'
+  ...
+# Subtest: returned choices and categories cannot mutate the local catalogue
+ok 161 - returned choices and categories cannot mutate the local catalogue
+  ---
+  duration_ms: 3.203346
+  type: 'test'
+  ...
+# Subtest: five skin tones replace supported gestures without multiplying the grid or recolouring objects
+ok 162 - five skin tones replace supported gestures without multiplying the grid or recolouring objects
+  ---
+  duration_ms: 11.527115
+  type: 'test'
+  ...
+# Subtest: a toned choice inserts its actual Unicode text and retains text and photo limits
+ok 163 - a toned choice inserts its actual Unicode text and retains text and photo limits
+  ---
+  duration_ms: 3.662573
+  type: 'test'
+  ...
+# Subtest: adult characters, couples and combinations keep valid modifier positions before ZWJ sequences
+ok 164 - adult characters, couples and combinations keep valid modifier positions before ZWJ sequences
+  ---
+  duration_ms: 1.0956
+  type: 'test'
+  ...
+# Subtest: suggestive fruit and vegetable choices are searchable by French and English names
+ok 165 - suggestive fruit and vegetable choices are searchable by French and English names
+  ---
+  duration_ms: 3.342506
+  type: 'test'
+  ...
+# Subtest: insertion preserves the draft verbatim around a cursor or replaces its selection
+ok 166 - insertion preserves the draft verbatim around a cursor or replaces its selection
+  ---
+  duration_ms: 0.624706
+  type: 'test'
+  ...
+# Subtest: multi-codepoint text and surrogate pairs retain their UTF-16 selection boundaries
+ok 167 - multi-codepoint text and surrogate pairs retain their UTF-16 selection boundaries
+  ---
+  duration_ms: 2.188105
+  type: 'test'
+  ...
+# Subtest: text and photo captions keep their existing limits without silently truncating
+ok 168 - text and photo captions keep their existing limits without silently truncating
+  ---
+  duration_ms: 0.77209
+  type: 'test'
+  ...
+# Subtest: invalid options, selections and malformed text fail without including private text
+ok 169 - invalid options, selections and malformed text fail without including private text
+  ---
+  duration_ms: 0.951046
+  type: 'test'
+  ...
+# Subtest: profile loads for either role, preserves a user name verbatim and saves through the account adapter
+ok 170 - profile loads for either role, preserves a user name verbatim and saves through the account adapter
+  ---
+  duration_ms: 40.24788
+  type: 'test'
+  ...
+# Subtest: a new avatar is uploaded as an asset only, and is never sent as a chat message
+ok 171 - a new avatar is uploaded as an asset only, and is never sent as a chat message
+  ---
+  duration_ms: 11.225672
+  type: 'test'
+  ...
+# Subtest: 409 retains the name/avatar draft; keeping it refreshes the version without reuploading the asset
+ok 172 - 409 retains the name/avatar draft; keeping it refreshes the version without reuploading the asset
+  ---
+  duration_ms: 12.166312
+  type: 'test'
+  ...
+# Subtest: reloading after 409 discards the draft only after obtaining the saved profile
+ok 173 - reloading after 409 discards the draft only after obtaining the saved profile
+  ---
+  duration_ms: 5.123332
+  type: 'test'
+  ...
+# Subtest: a stale binary response cannot install an old account's avatar after close/reopen
+ok 174 - a stale binary response cannot install an old account's avatar after close/reopen
+  ---
+  duration_ms: 6.198284
+  type: 'test'
+  ...
+# Subtest: only the latest avatar preparation can publish a preview; closing aborts and revokes it
+ok 175 - only the latest avatar preparation can publish a preview; closing aborts and revokes it
+  ---
+  duration_ms: 3.75557
+  type: 'test'
+  ...
+# Subtest: hiding the page aborts preparation and discards all private draft data
+ok 176 - hiding the page aborts preparation and discards all private draft data
+  ---
+  duration_ms: 5.373183
+  type: 'test'
+  ...
+# Subtest: old saves and old authentication errors cannot affect a newer opening or owner
+ok 177 - old saves and old authentication errors cannot affect a newer opening or owner
+  ---
+  duration_ms: 4.787467
+  type: 'test'
+  ...
+# Subtest: loss of the mounted owner clears the dialog without reporting an old 401
+ok 178 - loss of the mounted owner clears the dialog without reporting an old 401
+  ---
+  duration_ms: 2.465983
+  type: 'test'
+  ...
+# Subtest: a current authentication error closes the editor and is delegated once
+ok 179 - a current authentication error closes the editor and is delegated once
+  ---
+  duration_ms: 2.555083
+  type: 'test'
+  ...
+# Subtest: an unexpected avatar URL is rejected before any binary request
+ok 180 - an unexpected avatar URL is rejected before any binary request
+  ---
+  duration_ms: 1.824657
+  type: 'test'
+  ...
+# Subtest: public names reject format controls and are normalized consistently with the profile API
+ok 181 - public names reject format controls and are normalized consistently with the profile API
+  ---
+  duration_ms: 4.40578
+  type: 'test'
+  ...
+# Subtest: media disabled still permits name edits and neither fetches nor mutates avatars
+ok 182 - media disabled still permits name edits and neither fetches nor mutates avatars
+  ---
+  duration_ms: 2.30459
+  type: 'test'
+  ...
+# Subtest: removing an avatar changes only the draft until save, without deleting its media asset
+ok 183 - removing an avatar changes only the draft until save, without deleting its media asset
+  ---
+  duration_ms: 3.632108
+  type: 'test'
+  ...
+# Subtest: Escape returns focus to the opener; Tab stays inside the modal
+ok 184 - Escape returns focus to the opener; Tab stays inside the modal
+  ---
+  duration_ms: 3.455908
+  type: 'test'
+  ...
+# Subtest: destroy removes listeners, revokes avatar URLs and cannot be reopened
+ok 185 - destroy removes listeners, revokes avatar URLs and cannot be reopened
+  ---
+  duration_ms: 4.661083
+  type: 'test'
+  ...
+# Subtest: the default avatar crop makes a 256px central JPEG and releases the bitmap/canvas
+ok 186 - the default avatar crop makes a 256px central JPEG and releases the bitmap/canvas
+  ---
+  duration_ms: 3.33491
+  type: 'test'
+  ...
+# Subtest: touch profile loading and saving do not open a keyboard; desktop name focus remains available
+ok 187 - touch profile loading and saving do not open a keyboard; desktop name focus remains available
+  ---
+  duration_ms: 6.790415
+  type: 'test'
+  ...
+1..187
+# tests 196
+# suites 0
+# pass 196
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1868.849834

@@ -8,7 +8,7 @@ import { startWebDriver, waitUntil } from "./webdriver.mjs";
 
 const id = number => number.toString(16).padStart(32, "0");
 const publicRoot = new URL("../../public/", import.meta.url);
-const assets = ["broadcast.html", "broadcast.js", "broadcast-model.js", "broadcast.css", "session-clock.js", "i18n.js", "i18n.css", "i18n-tools.js", "i18n-broadcast.js", "help-link.js",
+const assets = ["broadcast.html", "broadcast.js", "broadcast-model.js", "broadcast.css", "admin-navigation.css", "session-clock.js", "i18n.js", "i18n.css", "i18n-tools.js", "i18n-broadcast.js", "help-link.js",
   "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css", "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png",
   "brand/icon-128.png", "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
 const videoBytes = Buffer.from(await readFile(new URL("../fixtures/video-decodable.mp4.base64", import.meta.url), "utf8"), "base64");
@@ -164,15 +164,15 @@ async function compose(page, title = "Synthetic private title", body = "Syntheti
 async function preview(page, expected) {
   await waitUntil(() => page.execute("return !document.getElementById('preview').disabled"), "preview is enabled for the explicit audience");
   await page.click("#preview");
-  await waitUntil(() => page.execute("return document.querySelectorAll('#preview-list li').length>0 && !document.getElementById('acknowledge').disabled"), "bounded recipient preview");
+  await waitUntil(() => page.execute("return document.querySelectorAll('#preview-list li').length>0 && !document.getElementById('confirm').disabled"), "bounded recipient preview");
   assert.equal(await page.execute("return document.querySelectorAll('#preview-list li').length"), Math.min(expected, 50));
   const text = await page.execute("return document.getElementById('acknowledge-label').textContent");
   assert.ok(text.replace(/[^0-9]/gu, "").includes(String(expected)), "confirmation names the full audience count");
-  assert.equal(await page.execute("return document.getElementById('confirm').disabled"), true, "review alone never confirms a campaign");
+  assert.equal(await page.execute("return document.getElementById('confirm').disabled"), false, "prepared recipients enable only the explicit send button");
 }
 async function errors(page) { assert.deepEqual(await page.execute("return window.__scaleErrors"), []); }
 async function confirmWithKeyboard(page) {
-  await page.click("#acknowledge"); await page.key("\uE004");
+  await page.execute("document.getElementById('confirm').focus()");
   assert.equal(await page.execute("return document.activeElement.id"), "confirm"); await page.key("\uE007");
 }
 
@@ -231,8 +231,8 @@ test("Chrome mobile FR/EN: all 2,500 and filtered 175 are explicitly reviewed wi
       assert.equal(source.state.creates.length, 0);
       assert.equal(await page.execute("return document.querySelectorAll('#contacts .contact-row').length<=50 && document.querySelectorAll('#selected li').length<=50 && document.documentElement.scrollWidth<=innerWidth"), true);
       assert.match(await page.execute("return document.getElementById('preview-sample').textContent"), /50/u);
-      await page.click("#acknowledge"); await chooseMode(page, "filtered");
-      assert.equal(await page.execute("return !document.getElementById('acknowledge').checked && document.getElementById('confirm').disabled && document.querySelectorAll('#preview-list li').length===0"), true, "changing audience invalidates preview and acknowledgment");
+      await chooseMode(page, "filtered");
+      assert.equal(await page.execute("return document.getElementById('confirm').disabled && document.querySelectorAll('#preview-list li').length===0"), true, "changing audience invalidates preview and acknowledgment");
       await page.type("#search", "Scale"); await page.click("#filters button[type=submit]"); await preview(page, 175);
       await chooseMode(page, "all"); await preview(page, 2500); await confirmWithKeyboard(page);
       await waitUntil(() => source.state.creates.length === 1 && page.execute("return !document.getElementById('campaign-detail').hidden && document.querySelectorAll('#campaign-detail .recipient-list li').length===50"), "confirmed large campaign and bounded detail");

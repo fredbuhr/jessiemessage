@@ -4,7 +4,7 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
 
-const names = ["backups.html", "backups.js", "backups.css", "readiness.css", "readiness-model.js", "i18n.js", "i18n-backups.js", "i18n.css", "session-clock.js", "brand/brand.css", "brand/icon-128.png", "favicon.ico", "manifest.webmanifest"];
+const names = ["backups.html", "backups.js", "backups.css", "admin-navigation.css", "readiness.css", "readiness-model.js", "i18n.js", "i18n-backups.js", "i18n.css", "session-clock.js", "brand/brand.css", "brand/icon-128.png", "favicon.ico", "manifest.webmanifest"];
 async function fixture(controlClock = false, paired = false) {
   const resources = new Map(await Promise.all(names.map(async name => [`/${name}`, await readFile(new URL(`../../public/${name}`, import.meta.url))])));
   const id = "1".repeat(32), csrf = "A".repeat(43), requests = [], heldSettings = []; let sessionChanged = false, changeOnKit = false, holdSettings = false;

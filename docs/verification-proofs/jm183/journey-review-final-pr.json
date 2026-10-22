@@ -1,0 +1,697 @@
+{
+  "status": "independent_static_review_passed_no_open_source_defect_native_qualification_pending",
+  "scope": "UX183 independent read-only journey review of shared local diff; includes additional bounded B02/B03 backend counter-review requested by root.",
+  "branch": "fix/messaging-183",
+  "baseCommit": "38ccb3862f3d9ab4153b578dfb3abbd0dd94d857",
+  "createdAt": "2026-10-22T21:32:42.142179+00:00",
+  "sourceReviewMethod": "Changed hunks and directly connected routing/lifecycle sections. Entire device-transition.js and entry/http.mjs read; this is not a second full-source audit of all listed modules.",
+  "captures": {
+    "count": 8,
+    "reviewedLocally": true,
+    "privateContentCopied": false,
+    "layoutIssuesOnly": true,
+    "basenames": [
+      "image(20261022-203942).png",
+      "image(20261022-204104).png",
+      "image(20261022-204948).png",
+      "image(20261022-210450).png",
+      "image(20261022-210509).png",
+      "image(20261022-210524).png",
+      "image(20261022-210539).png",
+      "image(20261022-210608).png"
+    ]
+  },
+  "acceptanceCriteria": [
+    {
+      "id": "J01",
+      "journey": "Primary /, /app and /index.html -> anonymous sign-in or connected role",
+      "status": "reviewed_pass",
+      "evidence": [
+        {
+          "file": "server/index.mjs",
+          "lines": "223-227",
+          "claim": "Primary entry serves access.html; legacy retains its entry document."
+        },
+        {
+          "file": "public/access.js",
+          "lines": "20-21,95-117,304-310",
+          "claim": "One client sign-in form; active client -> messages, admin -> admin home or exact notified admin message; no guess for two connected roles."
+        }
+      ]
+    },
+    {
+      "id": "J02",
+      "journey": "Messages -> Mon accès -> account settings -> conversation",
+      "status": "reviewed_pass_after_correction",
+      "evidence": [
+        {
+          "file": "public/access.js",
+          "lines": "190-200,250-254",
+          "claim": "Only public entry, explicit login or notification intent auto-opens messages; direct /access preserves account settings."
+        },
+        {
+          "file": "public/chat.js",
+          "lines": "2114",
+          "claim": "Client account link remains /access."
+        }
+      ]
+    },
+    {
+      "id": "J03",
+      "journey": "Two connected client/admin sessions -> compact explicit role choice",
+      "status": "reviewed_pass",
+      "evidence": [
+        {
+          "file": "public/access.js",
+          "lines": "102-113",
+          "claim": "Separate links; admin notification choice targets /admin/messages#notification directly. No role auto-choice."
+        },
+        {
+          "file": "public/access.html",
+          "lines": "40-44",
+          "claim": "Native nav and two ordinary links."
+        }
+      ]
+    },
+    {
+      "id": "J04",
+      "journey": "Admin sign-in -> /admin dashboard -> /admin/clients management",
+      "status": "reviewed_pass",
+      "evidence": [
+        {
+          "file": "public/admin-login.js",
+          "lines": "3-9,119-157",
+          "claim": "Closed continue allowlist, default /admin redirect, dashboard vs clients distinguished; only clients calls management lists."
+        },
+        {
+          "file": "server/auth/http.mjs",
+          "lines": "29,36,219-240",
+          "claim": "Both HTML pages require administrator session; signed-out clients path returns through exact local continue link."
+        }
+      ]
+    },
+    {
+      "id": "J05",
+      "journey": "Admin tool -> home/messages and expired/cross-site session -> local sign-in",
+      "status": "reviewed_pass_after_header_harmonization",
+      "evidence": [
+        {
+          "file": "server/index.mjs",
+          "lines": "188-197",
+          "claim": "Closed server map builds local continue destination for external HTML navigation."
+        },
+        {
+          "file": "public/admin-login.js",
+          "lines": "5-9,119-132",
+          "claim": "Returns to enabled local pages; default login returns admin home."
+        },
+        {
+          "file": "public/admin-navigation.css",
+          "lines": "1-16",
+          "claim": "Seven root-owned tools share wrapping ordinary links, minimum44px height and visible focus."
+        },
+        {
+          "file": "public/admin-login.html",
+          "lines": "14,29-35",
+          "claim": "Shared header/nav classes applied; translated ordinary home/messages links."
+        },
+        {
+          "file": "public/broadcast.html",
+          "lines": "13,17",
+          "claim": "Shared style/header/nav applied; brand and direct Admin home link target /admin."
+        }
+      ]
+    },
+    {
+      "id": "J06",
+      "journey": "Normal primary sign-in vs legacy migration handoff",
+      "status": "reviewed_pass_with_technical_bridge_limit",
+      "evidence": [
+        {
+          "file": "server/entry/http.mjs",
+          "lines": "35-36,63-65",
+          "claim": "Migration offered only when deviceTransition AND legacyOrigin."
+        },
+        {
+          "file": "public/device-transition.js",
+          "lines": "40-70,96-163",
+          "claim": "Primary bridge remains for validated challenge/ticket/signin handoff; protocol destinations remain closed and role-specific."
+        }
+      ],
+      "limit": "Direct technical bridge URL still exists on primary because return tickets must complete there. It is absent from normal primary entry; no claim that every primary bridge URL was removed."
+    },
+    {
+      "id": "J07",
+      "journey": "Chat options and nested secondary downloads",
+      "status": "reviewed_pass",
+      "evidence": [
+        {
+          "file": "public/chat.js",
+          "lines": "128-169,2021-2050",
+          "claim": "Native buttons, accurate aria-expanded, Escape/outside close, return focus; More options collapsed on close."
+        },
+        {
+          "file": "public/chat.html",
+          "lines": "33-64",
+          "claim": "Ordinary disclosure panel; no misleading ARIA menu role. Download/help/contact grouped under secondary details."
+        }
+      ]
+    },
+    {
+      "id": "J08",
+      "journey": "Touch send/profile/emoji/reply/photo/video -> deliberate editing only",
+      "status": "reviewed_pass_synthetic_policy",
+      "evidence": [
+        {
+          "file": "public/chat.js",
+          "lines": "121-126,851,1034,1112,1690-1697,1714,1804,1975,1987",
+          "claim": "Coarse-pointer policy avoids programmatic textarea focus and dismisses composer on opening tools."
+        },
+        {
+          "file": "public/profile.js",
+          "lines": "focusLoadedProfile",
+          "claim": "Loading preserves deliberate field focus and initially focuses close button on touch."
+        }
+      ],
+      "limit": "Any-pointer coarse is conservative on hybrids. Actual virtual keyboard/viewport behavior was not tested on physical devices."
+    },
+    {
+      "id": "J09",
+      "journey": "Deleted message history / catchup / notification",
+      "status": "reviewed_pass",
+      "evidence": [
+        {
+          "file": "public/chat.js",
+          "lines": "1331-1335,1453-1463",
+          "claim": "Client DOM omits tombstones while state/cursors remain; deleted notification focuses history without resurrecting row."
+        },
+        {
+          "file": "public/chat.js",
+          "lines": "1304-1320,1646-1648",
+          "claim": "No visible ellipsis; accessible Details button shown for keyboard focus. Client message-delete UI absent; frontend handler admin-only."
+        }
+      ],
+      "limit": "Backend owner-based deletion permission and existing conversation export tombstone formats are unchanged by this UI scope; this is not a new backend authorization restriction."
+    },
+    {
+      "id": "J10",
+      "journey": "Emoji choose -> insertion -> return focus",
+      "status": "reviewed_pass",
+      "evidence": [
+        {
+          "file": "public/chat.js",
+          "lines": "1706-1788",
+          "claim": "No search input; close button initial focus; categories/tone/insertion/arrows retained."
+        },
+        {
+          "file": "public/emoji.css",
+          "lines": "1-9",
+          "claim": "Existing minimum44px targets retained."
+        }
+      ]
+    },
+    {
+      "id": "J11",
+      "journey": "Broadcast choose recipients -> verify/prepare -> explicit final send",
+      "status": "reviewed_pass",
+      "evidence": [
+        {
+          "file": "public/broadcast.js",
+          "lines": "190-208,318-334,454-464",
+          "claim": "Chosen and prepared counts are distinguished; no final send before eligible preview; final submit supplies acknowledgment itself."
+        },
+        {
+          "file": "public/broadcast-model.js",
+          "lines": "105-150",
+          "claim": "Selection/content changes invalidate prepared preview; zero/stale preview cannot confirm; uncertain retries preserve frozen payload."
+        }
+      ],
+      "limit": "The generic acknowledgment checkbox is removed. Specific existing allow-repeat-media checkbox is intentionally retained to avoid accidental repeated attachments; recipient selection checkboxes remain."
+    },
+    {
+      "id": "J12",
+      "journey": "Notification setup -> permission/subscription -> reopen settings -> received alert",
+      "status": "reviewed_pass_with_platform_limits",
+      "evidence": [
+        {
+          "file": "public/notifications.js",
+          "lines": "135-180",
+          "claim": "Current-origin SW registration and authenticated owner proof; prepare never subscribes; subscribe starts synchronously only from activation click."
+        },
+        {
+          "file": "public/chat.js",
+          "lines": "2015-2020",
+          "claim": "Opening notification settings refreshes mounted state."
+        },
+        {
+          "file": "public/sw.js",
+          "lines": "8-20,23-60",
+          "claim": "Generic private alert, same-origin restricted routes, renotify requests another signal while retaining one alert; live window handshake preserves drafts."
+        }
+      ],
+      "limit": "No real push or browser permission was triggered. Sound/notification visibility depends on browser, OS, PWA install and device settings; this code cannot establish cause of a particular missing notification."
+    }
+  ],
+  "reviewFindings": [
+    {
+      "id": "UXR01",
+      "severity": "P2",
+      "state": "corrected_source_reviewed_owner_targeted_log_passed",
+      "owner": "versions_reprise",
+      "file": "public/access.js",
+      "line": 196,
+      "trigger": "Active client opens Mon accès from messages.",
+      "impactBeforeCorrection": "Unconditional capability redirect returned immediately to messages, making account settings unreachable.",
+      "correction": "openConversation now starts only on primary public entry and becomes true on explicit successful login; notification intent remains explicit. Direct /access stays accessible."
+    },
+    {
+      "id": "UXR02",
+      "severity": "P3",
+      "state": "corrected_source_reviewed_owner_tests_passed",
+      "owner": "audit2_frontend_messaging",
+      "file": "public/chat.js",
+      "line": 125,
+      "trigger": "Touch client chooses/removes photo/video or inserts a quick reply.",
+      "impactBeforeCorrection": "Remaining programmatic textarea focus reopened the keyboard after these tool actions.",
+      "correction": "Shared focusComposer policy chooses composer tools button on coarse pointers and textarea on desktop; extra touch fixtures included in final196 pass."
+    },
+    {
+      "id": "UXR03",
+      "severity": "P3",
+      "state": "corrected_source_reviewed",
+      "owner": "versions_reprise",
+      "file": "public/admin-login.html",
+      "line": 35,
+      "trigger": "Open admin login/home/clients shared document.",
+      "impact": "Stylesheet imported but nav lacks admin-navigation class; two adjacent unstyled textual links miss shared touch-target treatment.",
+      "requestedAction": "Apply shared navigation class/translated accessible label or equivalent explicit style; owner notified.",
+      "correction": "Navigation owner applied admin-tool-header and admin-navigation classes with translated accessible label."
+    },
+    {
+      "id": "UXR04",
+      "severity": "P3",
+      "state": "corrected_source_reviewed",
+      "owner": "audit2_domains",
+      "file": "public/broadcast.html",
+      "line": 17,
+      "trigger": "Admin opens broadcast tool.",
+      "impact": "Header still points brand to / and lacks direct Admin home link/shared style while seven other tools have been harmonized.",
+      "requestedAction": "Align header home/messages with shared admin navigation; owner notified.",
+      "correction": "Root harmonized header only; controller unchanged. Direct Admin home and logo /admin, shared style/header/nav."
+    }
+  ],
+  "primarySources": [
+    {
+      "name": "WAI APG Disclosure Pattern",
+      "url": "https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/",
+      "retrievalRef": "turn20view1",
+      "application": "Native button/Enter/Space; aria-expanded reflects visibility; ordinary panel is not an application menu."
+    },
+    {
+      "name": "WAI APG Dialog Modal Pattern",
+      "url": "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/",
+      "retrievalRef": "turn20view0",
+      "application": "Initial focus can be appropriate noninput close control; modal keyboard containment/Escape and focus return remain necessary."
+    },
+    {
+      "name": "MDN Using Notifications API",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API",
+      "retrievalRef": "turn20view2",
+      "application": "Permission request follows explicit gesture in secure context; SW persistent notifications support mobile browsers."
+    },
+    {
+      "name": "W3C WCAG2.2 Understanding Target Size Minimum",
+      "url": "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html",
+      "retrievalRef": "turn20view3",
+      "application": "AA minimum24CSSpx or exceptions/spacing; app uses44px targets as a stronger touch design choice, not a false claim that AA requires44."
+    }
+  ],
+  "backendCounterReview": {
+    "B02": {
+      "status": "no_new_defect_found",
+      "evidence": [
+        {
+          "file": "server/access/service.mjs",
+          "lines": "264-290",
+          "claim": "Strict input fields/bounds unchanged; internal calculatedAt validated by storedInstant and >=admin pre-store time; exact id/target/bounds rechecked; only id+accessExpiresAt returned."
+        },
+        {
+          "file": "server/access/store.mjs",
+          "lines": "460-496",
+          "claim": "Existing admin/MFA/session/client lock order and exact SQL microsecond expiry CAS retained; fresh time after client lock rechecks admin expiry; computed result carries internal calculatedAt."
+        }
+      ],
+      "staticTestsRead": [
+        "tests/access-renewal-clock.test.mjs entire",
+        "tests/access-service.test.mjs renewal section",
+        "tests/access-store.integration.test.mjs changed assertions only"
+      ],
+      "limit": "No SQL or integration execution by this reviewer."
+    },
+    "B03": {
+      "status": "no_new_defect_found",
+      "evidence": [
+        {
+          "file": "server/index.mjs",
+          "lines": "399-400,416",
+          "claim": "Runtime passes the shared clock to both mail stores."
+        },
+        {
+          "file": "server/mail/store.mjs",
+          "lines": "80-100,121-131",
+          "claim": "Fresh time read after acquiring connection and lock sequence; effective expiry=min(job,verification), leaseUntil<=effective expiry."
+        },
+        {
+          "file": "server/reset/mail-store.mjs",
+          "lines": "38-57,81-89",
+          "claim": "Same for reset proof; existing account/credential/email/proof guards preserved."
+        },
+        {
+          "file": "server/mail/worker.mjs",
+          "lines": "27-64",
+          "claim": "Abort before SMTP releases exact reservation; payload validation preserved; fresh bounded instant/effective expiry/lease checked immediately before transport; existing token CAS follows SMTP."
+        }
+      ],
+      "staticTestsRead": [
+        "tests/mail-expiry-clock.test.mjs entire",
+        "tests/mail.test.mjs changed expiry fixtures section",
+        "tests/worker-lifecycle.test.mjs entire"
+      ],
+      "limits": [
+        "Prevents starting transport when already expired, including waiting at commit. It cannot guarantee remote delivery completes before expiry.",
+        "SMTP remains at least once across accepted delivery and lost database acknowledgment. Existing abort/release, token CAS and no restoration after ambiguous SMTP remain unchanged.",
+        "No SMTP, SQL, scheduler or host action by this reviewer."
+      ]
+    }
+  },
+  "validation": {
+    "reviewerExecutedTests": [],
+    "ownerReportsRead": [
+      "ux183/chat-report.json",
+      "ux183/broadcast-report.json",
+      "ux183/notifications-report.json",
+      "ux183/backend-report.json",
+      "ux183/navigation-report.json"
+    ],
+    "ownerResults": {
+      "chat": {
+        "passed": 196,
+        "failed": 0,
+        "skipped": 0,
+        "log": "ux183-chat-final.tap"
+      },
+      "broadcast": {
+        "focusedPassed": 103,
+        "finalLifecyclePassed": 51,
+        "failed": 0,
+        "logs": [
+          "ux183/broadcast-focused.log",
+          "ux183/broadcast-lifecycle-final.log"
+        ]
+      },
+      "notifications": {
+        "passed": 70,
+        "failed": 0,
+        "nativeBrowser": "blocked by absent ChromeDriver; hook failure not counted as scenario qualification"
+      },
+      "backend": {
+        "initial": {
+          "total": 369,
+          "passed": 368,
+          "skipped": 1,
+          "failed": 0
+        },
+        "addedCasesPassed": 36,
+        "sessionSurfacesPassed": 22,
+        "logs": [
+          "ux183/backend-targeted-initial.log",
+          "ux183/backend-targeted-added-cases.log",
+          "ux183/backend-session-surfaces-corrected.log"
+        ]
+      }
+    },
+    "navigation": {
+      "status": "owner_manifest_final_and_logs_read",
+      "baseline": {
+        "tests": 123,
+        "passed": 123,
+        "failed": 0,
+        "skipped": 0,
+        "log": "ux183-navigation-final.tap"
+      },
+      "finalBoundedAccess": {
+        "tests": 18,
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0,
+        "log": "ux183-navigation-microfix.tap"
+      },
+      "reviewerRerun": false,
+      "ownerManifest": "ux183/navigation-report.json"
+    },
+    "rootPresentationChecks": [
+      {
+        "log": "ux183/logs/root-navigation-i18n.tap",
+        "tests": 41,
+        "passed": 41,
+        "failed": 0
+      },
+      {
+        "log": "ux183/logs/root-help.tap",
+        "tests": 16,
+        "passed": 16,
+        "failed": 0
+      }
+    ],
+    "staticTestSectionsRead": [
+      "tests/access-i18n.test.mjs public entry/login/role/late-proof additions and direct access assertions",
+      "tests/admin-lifecycle.test.mjs home/login/continue additions",
+      "tests/admin-navigation.test.mjs new clients late-refusal surface and closed redirect path assertions",
+      "tests/entry-server.test.mjs root/app/index direct document addition",
+      "tests/entry-http.test.mjs legacyOrigin primary fallback addition",
+      "tests/profile-ui.test.mjs coarse profile addition",
+      "tests/chat-accessibility.test.mjs changed admin deletion focus case"
+    ]
+  },
+  "sourceSnapshot": [
+    {
+      "file": "public/access.js",
+      "sha256": "a3ac86e8677d958a0db51531deb50ee577d307f980b7443d444d958982d62221"
+    },
+    {
+      "file": "public/access.html",
+      "sha256": "2368b6c917f9878d412aa1fb1755d823c4936e9f77a4c2ab2ae6e08f1efe101b"
+    },
+    {
+      "file": "public/access.css",
+      "sha256": "0752992a3ce1512c65416797eae728885d5342640ef9ebe54a23c49aab17d3d1"
+    },
+    {
+      "file": "public/admin-login.js",
+      "sha256": "2f03a2d8be8666cab94f32aece0927192c9d6416dee54ac17e38a1f635f83825"
+    },
+    {
+      "file": "public/admin-login.html",
+      "sha256": "fcee04696d90b125bd229115d34f71a60759379da3b19fcf53c54f222ca58135"
+    },
+    {
+      "file": "public/admin-login.css",
+      "sha256": "8dae222ee07ec4e10052802a7f80330201e46d11ca3fff5e8bc8e9c4b8934610"
+    },
+    {
+      "file": "public/admin-navigation.css",
+      "sha256": "a446effff268ef2e0175de33acee162cd6b195a912e403c9d2c4d42210bd734a"
+    },
+    {
+      "file": "public/entry.js",
+      "sha256": "23c22bafe28f523eed2753a44a06623e59f4d1bdb1955acda49d18528d842109"
+    },
+    {
+      "file": "public/entry-model.js",
+      "sha256": "42e842a0a5849dea635a40ddf60dc37f3d2044ee2d62ccf5075fa7d295d438f6"
+    },
+    {
+      "file": "public/device-transition.js",
+      "sha256": "274e8f1c5f7001d9a1afc35b6d3214d3d43342ed3019a600e839106c7edb7657"
+    },
+    {
+      "file": "public/chat.js",
+      "sha256": "ef88172452810c43960d3ab55ec4bd6c0493589ea3b92ef1fcaa2b4014ed6134"
+    },
+    {
+      "file": "public/chat.html",
+      "sha256": "7fbf63133107cd9fdb7a2038196398c7e817cf292107d56c1654999bf92af16f"
+    },
+    {
+      "file": "public/chat.css",
+      "sha256": "8e9867360a6dd4ae6602686a3ee9180974a2231aacc14773a9b13b46091d2a11"
+    },
+    {
+      "file": "public/profile.js",
+      "sha256": "9846211ca16aad30bcc5d3c4f31801889c5e5a7ac07a8af0ba205911d8211e91"
+    },
+    {
+      "file": "public/emoji.css",
+      "sha256": "c2723e6e77658d3ba14511e22e587889195953e944a7d6dcf1a0209c44fab37d"
+    },
+    {
+      "file": "public/broadcast.js",
+      "sha256": "00e05328cbe129980fa0caa2866b45e32c1a69bf0d834a14093e425c234f17c8"
+    },
+    {
+      "file": "public/broadcast-model.js",
+      "sha256": "601d5d6750506fa61c31466c4427c431cc27da8128729e189674891eeecad31b"
+    },
+    {
+      "file": "public/broadcast.html",
+      "sha256": "09a74ca313b2cf9a49f31a5ce917b1cbe045c04d484a28669f4ad35409161b5e"
+    },
+    {
+      "file": "public/notifications.js",
+      "sha256": "103bfa6e9b54e11a0b89c386ce61221e48b47ddad497af9636b7b73f0e2cddb5"
+    },
+    {
+      "file": "public/sw.js",
+      "sha256": "b5b9beeb3d7b0ab092206373c5fefd821fca44d97d417a790959a416233c3ed6"
+    },
+    {
+      "file": "public/help.html",
+      "sha256": "86c90d76b4309a20379c63ec27182c164e9c14d300dc36b500266fbb899c4194"
+    },
+    {
+      "file": "public/help.js",
+      "sha256": "81f4d0741f9b9c9402b0ede466bf1aad53350ce750e89e6763e598fa98d15f12"
+    },
+    {
+      "file": "public/announcements.html",
+      "sha256": "06caaf8a7e2380e2058cb505096425302cfe856a8f2957c99ee6e876716f3e5d"
+    },
+    {
+      "file": "public/tasks.html",
+      "sha256": "cbba03f64e55e0ebe89ec7126ae4e1c6170ef8f5dbf48a8711756e34d6458620"
+    },
+    {
+      "file": "public/backups.html",
+      "sha256": "75551eee8ec5badf9f45e535182f4e5d495b861e5443fccd43943084eed8818c"
+    },
+    {
+      "file": "public/manual-backups.html",
+      "sha256": "aa646b5dd40702b15f2feb035938a610f5cffd5d332022d03ab6adb262128ab7"
+    },
+    {
+      "file": "public/readiness.html",
+      "sha256": "070f8baba495069aa76fc25b4d63e4a8b31c0143ea6453dbf4fe470a510ba7ca"
+    },
+    {
+      "file": "public/privacy.html",
+      "sha256": "16dc5db7636ff1f2aa22d356a26e43539bcb99ed0c1d30da4fa6b5ad1ef7a1d9"
+    },
+    {
+      "file": "public/closures.html",
+      "sha256": "4b4a22bce07870107ef0f5fbb5f159b6c39ef67b6e346d940a120046f5c3416c"
+    },
+    {
+      "file": "server/entry/http.mjs",
+      "sha256": "05e4139becf420629d6af34fc1426d9acf027fec272281c3227c964fc5f6dec8"
+    },
+    {
+      "file": "server/auth/http.mjs",
+      "sha256": "96f04e5f6cd0226044b9c56c186f812fc84978406b7e558c442cf87f123ba8e6"
+    },
+    {
+      "file": "server/index.mjs",
+      "sha256": "b6d2d01d9fe5f68a18065d5c815d8ca8953d99a820eca86cd28a6a92803a24d2"
+    },
+    {
+      "file": "server/access/service.mjs",
+      "sha256": "3463710199aadefbb97a1c200346d8ee6ced6448b0ee666621ca9624bdf9760a"
+    },
+    {
+      "file": "server/access/store.mjs",
+      "sha256": "1efc5a42de2bc8d3c8327f1b767c525722ab425f8f6355aa657f455ed6b9b5c5"
+    },
+    {
+      "file": "server/mail/store.mjs",
+      "sha256": "19f8d1d9ea47bbe45347a95b30d8b52a3cf38361c215b5ea86a638fa650e303a"
+    },
+    {
+      "file": "server/reset/mail-store.mjs",
+      "sha256": "5318c0b169108867769b98643dd8ba6280468b364653aa9b4ea159383428615e"
+    },
+    {
+      "file": "server/mail/worker.mjs",
+      "sha256": "5ebbeda42e0a9fdda0c181a43521a7b7813f61bfb57f1ecaad472cb69ea3e60e"
+    },
+    {
+      "file": "server/auth/session-policy.mjs",
+      "sha256": "f3a68b126cc203de4776c0469ef6ab917fc5a386b8f3b9c0bb61d3f2acb8f60a"
+    }
+  ],
+  "limits": [
+    "Review of a local uncommitted shared branch, not production1.8.3 qualification. No package version, commit, push, merge or deployment performed by reviewer.",
+    "Native browser, real mobile keyboard, real permission UI, OS sound, real message/campaign/notification and hosted sessions not exercised. Owner tests use Node24.19.0; production previously reported24.22.1.",
+    "No production process, private account, real send, SQL database, backup, restoration, PC, provider diagnostic or cloud browser used.",
+    "No screenshot, private message, identity, token or other uploaded private content copied into this report or repository.",
+    "Primary guidance informs the bounded UX review; no legal or complete WCAG conformance audit claimed."
+  ],
+  "completedAt": "2026-10-22T21:46:09.026715+00:00",
+  "openSourceFindings": [],
+  "ownerReportHashes": [
+    {
+      "file": "ux183/chat-report.json",
+      "sha256": "0c1d684d0a41b124844bb37acd81d83758721d33ad594d36674bc61ebacb73d3"
+    },
+    {
+      "file": "ux183/broadcast-report.json",
+      "sha256": "583972e93b01eda3f3ed69c42805b7080b6afa59c20083970552d539fcd0a212"
+    },
+    {
+      "file": "ux183/notifications-report.json",
+      "sha256": "0bfa51118357d28d8975112f7d51a48b39150b898c011931460295432e6c611c"
+    },
+    {
+      "file": "ux183/backend-report.json",
+      "sha256": "d264ff85224a47edd867e216403151151fb73bb02950aeb0d8dc282b31b10c48"
+    },
+    {
+      "file": "ux183/navigation-report.json",
+      "sha256": "d9d9d9270213b205bd3a80f1606ed70a4954d01720b9c20341d09c58d55016ed"
+    }
+  ],
+  "finalReadOnlyReview": {
+    "head": "3cc4aa52fe336992f2acd2f6c3e136bc67a3f418",
+    "tree": "57558692f628a32e9548aef09c97d7412ddd81ec",
+    "status": "no_new_blocking_source_defect_found_in_requested_deltas",
+    "changedSincePriorSnapshot": [
+      "public/access.js",
+      "public/access.css"
+    ],
+    "nativeFixturesRead": [
+      "tests/browser/entry-navigation.browser.mjs entire",
+      "tests/browser/admin-navigation.browser.mjs changed selector",
+      "tests/browser/chat-accessibility.browser.mjs changed asset allowlist",
+      "tests/rehearsal/authentication.rehearsal.mjs changed connected-entry expectations"
+    ],
+    "confirmed": [
+      "Neutral two-role copy no longer persists after sign-out; notification intent opens exact admin messages route from root/app and explicit admin choice.",
+      "Existing resend summary gains44px minimum; no new action or form.",
+      "Browser fixture retains actual HTTPS routing/controllers and browser cookie flow, with synthetic accounts/chat endpoint.",
+      "Only logo exempt from44px target check while retaining bounds and overflow checks.",
+      "Fixture initialization precedes driver in try; nested cleanup covers both setup and teardown failures.",
+      "Shared headers remain unchanged from prior approved snapshot; direct Admin home paths and shared stylesheet are present.",
+      "Native admin selector now targets existing dashboard; manual chat fixture includes shared stylesheet; auth-only rehearsal expects /app single-admin redirect."
+    ],
+    "ownerValidation": {
+      "baseline123": "ux183-navigation-final.tap",
+      "lastAccess18": "ux183-navigation-microfix.tap",
+      "bothLogsObservedPassing": true
+    },
+    "CI": "Parent reported39859668984 in progress; not polled or qualified by reviewer.",
+    "knownSeparateIssue": "Parent already identified writer183 PUBLIC_HOME expectation index.html vs primary runtime access.html; delivery owns isolated tooling correction. Not a duplicate app finding.",
+    "limits": [
+      "No test rerun, Chrome, hosted access or production network.",
+      "No conclusion that native screenshots have been produced or visually approved until CI artifacts are reviewed.",
+      "The prior Git copy of journey-review records the earlier review snapshot. This scratch update and the final source manifest identify the later head."
+    ]
+  }
+}

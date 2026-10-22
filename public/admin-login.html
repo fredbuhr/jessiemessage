@@ -11,6 +11,7 @@
     <link rel="icon" href="/brand/icon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
     <link rel="stylesheet" href="/admin-login.css" />
+    <link rel="stylesheet" href="/admin-navigation.css" />
     <link rel="stylesheet" href="/brand/brand.css" />
     <link rel="stylesheet" href="/i18n.css" />
     <link rel="stylesheet" href="/notifications.css" />
@@ -25,13 +26,13 @@
   </head>
   <body>
     <div class="page">
-      <header class="topbar">
-        <a class="brand" href="/" aria-label="JessieMessage">
+      <header class="topbar admin-tool-header">
+        <a class="brand" href="/admin" aria-label="JessieMessage">
           <span class="brandmark"><img src="/brand/icon-128.png" width="44" height="44" alt="" /></span>
           <span class="brand-name">Jessie</span>
         </a>
-        <span class="private-label" data-jm-i18n="ESPACE PRIVÉ">ESPACE PRIVÉ</span>
         <button class="jm-language" type="button" data-jm-language aria-label="Passer en anglais">EN</button>
+        <nav class="account-nav admin-navigation" aria-label="Administration" data-jm-i18n-aria-label="Administration"><a href="/admin" data-jm-i18n="Accueil admin">Accueil admin</a><a href="/admin/messages" data-jm-i18n="Messagerie">Messagerie</a></nav>
       </header>
       <main class="access-main">
         <section class="access-card" aria-labelledby="access-title">
@@ -61,15 +62,18 @@
           <section id="connected" hidden aria-label="Session administrateur" data-jm-i18n-aria-label="Session administrateur">
             <div class="connection"><span class="connection-dot" aria-hidden="true"></span><strong data-jm-i18n="Connexion sécurisée">Connexion sécurisée</strong></div>
             <p class="intro"><span data-jm-i18n="Compte connecté :">Compte connecté :</span> <strong id="connected-name"></strong>.</p>
-            <p id="admin-session-note" class="session-note" data-jm-i18n="L’accès administrateur est prêt. La messagerie sera disponible lors d’une prochaine étape.">L’accès administrateur est prêt. La messagerie sera disponible lors d’une prochaine étape.</p>
+            <p id="admin-session-note" class="session-note" data-jm-i18n="Choisis un outil pour gérer ton espace.">Choisis un outil pour gérer ton espace.</p>
             <button id="admin-chat-retry" class="button button-secondary" type="button" hidden data-jm-i18n="Réessayer les conversations">Réessayer les conversations</button>
             <a id="admin-chat-link" class="button button-primary" href="/admin/messages" hidden data-jm-i18n="Ouvrir les conversations">Ouvrir les conversations</a>
-            <nav class="admin-shortcuts" aria-label="Accès rapides" data-jm-i18n-aria-label="Accès rapides">
-              <a class="button button-secondary" href="#access-tools" data-jm-i18n="Invitations et clients">Invitations et clients</a>
-              <a class="button button-secondary" href="/admin/backups" data-jm-i18n="Sauvegardes">Sauvegardes</a>
-              <a class="button button-secondary" href="/admin/privacy" data-jm-i18n="Confidentialité">Confidentialité</a>
-              <a class="button button-secondary" href="/admin/closures" data-jm-i18n="Fermeture des comptes">Fermeture des comptes</a>
-              <a class="button button-secondary" href="/admin/readiness" data-jm-i18n="État du service">État du service</a>
+            <nav id="admin-dashboard" class="admin-dashboard" aria-label="Outils d’administration" data-jm-i18n-aria-label="Outils d’administration">
+              <a class="dashboard-tool" href="/admin/clients"><span class="tool-icon" aria-hidden="true">+</span><strong data-jm-i18n="Invitations et clients">Invitations et clients</strong><span data-jm-i18n="Inviter, valider et gérer les accès.">Inviter, valider et gérer les accès.</span></a>
+              <a class="dashboard-tool" href="/admin/broadcasts"><span class="tool-icon" aria-hidden="true">↗</span><strong data-jm-i18n="Diffusions">Diffusions</strong><span data-jm-i18n="Écrire à plusieurs clients.">Écrire à plusieurs clients.</span></a>
+              <a class="dashboard-tool" href="/admin/announcements"><span class="tool-icon" aria-hidden="true">◎</span><strong data-jm-i18n="Annonces">Annonces</strong><span data-jm-i18n="Partager les nouvelles de ton espace.">Partager les nouvelles de ton espace.</span></a>
+              <a class="dashboard-tool" href="/admin/tasks"><span class="tool-icon" aria-hidden="true">✓</span><strong data-jm-i18n="Tâches privées">Tâches privées</strong><span data-jm-i18n="Retrouver tes notes et tes rappels.">Retrouver tes notes et tes rappels.</span></a>
+              <a class="dashboard-tool" href="/admin/backups"><span class="tool-icon" aria-hidden="true">↓</span><strong data-jm-i18n="Sauvegardes">Sauvegardes</strong><span data-jm-i18n="Créer et télécharger une copie chiffrée.">Créer et télécharger une copie chiffrée.</span></a>
+              <a class="dashboard-tool" href="/admin/readiness"><span class="tool-icon" aria-hidden="true">◷</span><strong data-jm-i18n="État du service">État du service</strong><span data-jm-i18n="Consulter les mesures du serveur.">Consulter les mesures du serveur.</span></a>
+              <a class="dashboard-tool" href="/admin/closures"><span class="tool-icon" aria-hidden="true">−</span><strong data-jm-i18n="Fermeture des comptes">Fermeture des comptes</strong><span data-jm-i18n="Consulter et fermer un accès définitivement.">Consulter et fermer un accès définitivement.</span></a>
+              <a class="dashboard-tool" href="/admin/privacy"><span class="tool-icon" aria-hidden="true">◇</span><strong data-jm-i18n="Confidentialité">Confidentialité</strong><span data-jm-i18n="Retrouver tes notes privées.">Retrouver tes notes privées.</span></a>
             </nav>
 
             <section id="access-tools" hidden aria-labelledby="invitation-title">

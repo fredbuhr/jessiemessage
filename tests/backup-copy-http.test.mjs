@@ -34,7 +34,7 @@ test("all backup UI assets and settings require a current administrator with no-
     assert.equal(response.headers.get("access-control-allow-origin"), null); assert.equal(response.headers.get("set-cookie"), null); await response.arrayBuffer();
   }
 });
-test("backup reads preserve absent administrator cookies and clear invalid cookies without changing destinations", async t => {
+test("backup reads preserve absent administrator cookies and preserve invalid cookies without changing destinations", async t => {
   const f = await fixture(t), path = "/api/admin/backups";
   for (const value of ["preference=a", `__Host-jessie_client=${token}`]) {
     const response = await f.get(path, { Cookie: value, "Sec-Fetch-Site": "cross-site" });
@@ -42,10 +42,10 @@ test("backup reads preserve absent administrator cookies and clear invalid cooki
   }
   for (const value of ["__Host-jessie_session=", "__Host-jessie_session=invalid", `__Host-jessie_session=${token}; __Host-jessie_session=${token}`, `__Host-jessie_session=${Buffer.alloc(32, 7).toString("base64url")}`]) {
     const response = await f.get(path, { Cookie: value });
-    assert.equal(response.status, 401); assert.match(response.headers.get("set-cookie"), /^__Host-jessie_session=;.*Max-Age=0/);
+    assert.equal(response.status, 401); assert.equal(response.headers.get("set-cookie"), null);
   }
   const mutation = await f.post("/api/admin/backups/destinations", { label: "Synthetic", kind: "computer" }, { Origin: origin });
-  assert.equal(mutation.status, 401); assert.match(mutation.headers.get("set-cookie"), /^__Host-jessie_session=;.*Max-Age=0/);
+  assert.equal(mutation.status, 401); assert.equal(mutation.headers.get("set-cookie"), null);
   const agent = await f.get("/api/backup-copy/manifest", { "X-Jessie-Backup": "1" });
   assert.equal(agent.status, 401); assert.equal(agent.headers.get("set-cookie"), null);
   assert.equal((await f.service.summary()).destinations.length, 0);

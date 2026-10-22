@@ -6,7 +6,7 @@ import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
 
 const clientId = "2".repeat(32), endpoint = `/api/admin/closures/clients/${clientId}`;
 async function fixture({ enabled = true, name = "Client fictif" } = {}) {
-  const names = ["closures.html", "closures.js", "closures.css", "i18n-closures.js", "i18n.js", "i18n.css", "readiness-model.js", "brand/brand.css", "brand/icon-64.png", "favicon.ico"];
+  const names = ["closures.html", "closures.js", "closures.css", "admin-navigation.css", "i18n-closures.js", "i18n.js", "i18n.css", "readiness-model.js", "brand/brand.css", "brand/icon-64.png", "favicon.ico"];
   const resources = new Map(await Promise.all(names.map(async file => [`/${file}`, await readFile(new URL(`../../public/${file}`, import.meta.url))])));
   const requests = []; let phase = "none", changed = false, changeNextProof = false, changeOnPost = false, dropPost = false, unavailable = false;
   const closure = () => ({ clientId, phase, updatedAt: phase === "none" ? null : Date.now(), scope: "active_database_and_client_owned_media", backupCopies: "separate_not_erased", externalCopies: "not_checked" });

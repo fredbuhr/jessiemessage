@@ -217,22 +217,23 @@ test("live chat switching preserves raw user phrases, drafts, focused controls a
   assert.equal(f.element("peer-name").textContent, "Messages privés");
   assert.equal(messages(f).children[0].querySelector(".bubble").textContent, "Envoyer");
   await f.send("Message supprimé");
-  const article = messages(f).children.at(-1), remove = article.querySelector(".delete-message"), time = article.querySelector("time");
+  const article = messages(f).children.at(-1), remove = article.querySelector(".message-details-toggle"), time = article.querySelector("time");
   const receipt = article.querySelector(".message-meta").children[1];
   assert.equal(receipt.textContent, "Sent"); assert.equal(time.textContent, dateText("en"));
   assert.equal(article.querySelector(".bubble").textContent, "Message supprimé");
   f.element("message-body").value = "Draft: Envoyer"; await revealMessageDetails(article); remove.focus(); const before = f.calls.length;
   for (const language of ["fr", "en", "fr", "en"]) {
     f.language(language);
-    assert.equal(messages(f).children.at(-1), article); assert.equal(article.querySelector(".delete-message"), remove);
+    assert.equal(messages(f).children.at(-1), article); assert.equal(article.querySelector(".message-details-toggle"), remove);
     assert.equal(f.document.activeElement, remove); assert.equal(f.element("message-body").value, "Draft: Envoyer");
     assert.equal(article.querySelector(".bubble").textContent, "Message supprimé");
     assert.equal(messages(f).children[0].querySelector(".bubble").textContent, "Envoyer");
     assert.equal(f.element("peer-name").textContent, "Messages privés");
     assert.equal(time.textContent, dateText(language));
-    assert.equal(remove.textContent, language === "fr" ? "Supprimer" : "Delete");
+    assert.equal(article.querySelector(".delete-message"), null);
+    assert.equal(remove.textContent, language === "fr" ? "Détails" : "Details");
     assert.equal(receipt.textContent, language === "fr" ? "Envoyé" : "Sent");
-    assert.equal(remove.getAttribute("aria-label"), `${language === "fr" ? "Supprimer mon message du" : "Delete my message from"} ${dateText(language)}`);
+    assert.equal(remove.getAttribute("aria-label"), `${language === "fr" ? "Détails du message du" : "Details of message from"} ${dateText(language)}`);
   }
   assert.equal(f.calls.length, before); assert.equal(contentPosts(f).length, 1);
   f.conversation().peerReadSequence = "2"; await f.advance(3000);
@@ -269,12 +270,10 @@ test("uncertain send IDs, retry state, raw text and errors survive language chan
   assert.equal(state.pending.clientMessageId, key); assert.equal(state.pending.status, "retry"); assert.equal(contentPosts(f).length, 1); assert.equal(f.calls.length, settled);
 });
 
-test("emoji search and category labels change language without changing a draft or issuing a request", async () => {
+test("emoji panel labels change language without changing a draft or issuing a request", async () => {
   const f = harness({ language: "en" }); await flush();
   f.element("message-body").value = "Bisou, a private draft 😘"; const before = f.calls.length;
   await f.click("open-emojis");
-  f.element("emoji-search").value = "bisou";
-  for (const handler of f.element("emoji-search").events.get("input")) handler({});
   let kiss = f.element("emoji-list").children.find(button => button.dataset.emojiId === "kiss-face");
   assert.equal(kiss.getAttribute("aria-label"), "Blowing a kiss"); kiss.focus();
   assert.equal(f.element("emoji-categories").children[0].textContent, "All");
@@ -282,7 +281,7 @@ test("emoji search and category labels change language without changing a draft 
   kiss = f.element("emoji-list").children.find(button => button.dataset.emojiId === "kiss-face");
   assert.equal(kiss.getAttribute("aria-label"), "Bisou envoyé"); assert.equal(f.document.activeElement, kiss);
   assert.equal(f.element("emoji-categories").children[0].textContent, "Tous");
-  assert.equal(f.element("emoji-search").value, "bisou"); assert.equal(f.element("message-body").value, "Bisou, a private draft 😘");
+  assert.equal(f.element("emoji-search"), undefined); assert.equal(f.element("message-body").value, "Bisou, a private draft 😘");
   assert.equal(f.calls.length, before); assert.equal(contentPosts(f).length, 0);
 });
 
@@ -347,31 +346,33 @@ test("hidden date parameters do not reappear on a language switch and a new owne
 
 test("unread counts and reminders translate while raw CRM names and labels keep their exact text", async () => {
   const f = harness({ currentSession: session(1, "A".repeat(43), "admin") }); await flush();
-  const serviceLink = f.element("readiness-nav").querySelector("a");
-  assert.equal(serviceLink.href, "/admin/readiness"); assert.equal(serviceLink.textContent, "État du service");
+  const serviceLink = f.element("account-link");
+  assert.equal(f.element("readiness-nav"), undefined);
+  assert.equal(serviceLink.href, "/admin"); assert.equal(serviceLink.textContent, "Accueil admin");
   f.conversation().unreadCount = 1200;
   f.run(`crm = { displayName: (conversation) => conversation.peerName }; const contact = [...inbox.values()][0]; contact.unreadCount = 1200; contact.crm = { labels: [{name:"Envoyer"},{name:"Messages privés"}], reminderAt: Date.now() }; renderInbox();`);
   const button = f.element("conversations").children[0], count = button.querySelector(".unread"), details = button.querySelector(".crm-contact-meta"), name = button.querySelector("strong");
   button.focus(); const before = f.calls.length;
   assert.equal(count.textContent, (1200).toLocaleString("fr-FR")); assert.match(details.textContent, /Envoyer · Messages privés · Rappel à traiter/);
   f.language("en");
-  assert.equal(serviceLink.textContent, "Service status"); assert.equal(serviceLink.href, "/admin/readiness");
+  assert.equal(serviceLink.textContent, "Admin home"); assert.equal(serviceLink.href, "/admin");
   assert.equal(f.element("conversations").children[0], button); assert.equal(f.document.activeElement, button);
   assert.equal(name.textContent, "Messages privés"); assert.equal(count.textContent, "1,200"); assert.equal(count.getAttribute("aria-label"), "1,200 unread messages");
   assert.equal(details.textContent, "Envoyer · Messages privés · Reminder due"); assert.equal(f.calls.length, before);
   f.language("fr"); assert.equal(count.getAttribute("aria-label"), `${(1200).toLocaleString("fr-FR")} messages non lus`);
-  assert.equal(serviceLink.textContent, "État du service");
+  assert.equal(serviceLink.textContent, "Accueil admin");
   assert.equal(details.textContent, "Envoyer · Messages privés · Rappel à traiter");
 });
 
 test("translated tombstones remain distinct from live user text matching the same French UI phrase", async () => {
   let f;
-  f = harness({ language: "en", intercept: (path) => path.endsWith("/messages?limit=50") ? response(200, {
+  f = harness({ language: "en", currentSession: session(1, "A".repeat(43), "admin"), intercept: (path) => path.endsWith("/messages?limit=50") ? response(200, {
     conversation: f.conversation(), messages: [
       { id: id(900), sequence: "1", sender: "peer", body: "Message supprimé", createdAt: now, deletedAt: null },
       { id: id(901), sequence: "2", sender: "peer", body: null, createdAt: now, deletedAt: now },
     ], eventCursor: "1", hasMoreBefore: false,
   }) : undefined }); await flush();
+  for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush();
   const [live, deleted] = messages(f).children;
   assert.equal(live.querySelector(".bubble").textContent, "Message supprimé"); assert.equal(deleted.querySelector(".bubble").textContent, "Message deleted");
   const before = f.calls.length;

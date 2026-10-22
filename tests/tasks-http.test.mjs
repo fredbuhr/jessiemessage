@@ -94,7 +94,7 @@ test("missing or expired sessions redirect admin navigation and protect each tas
   const f = await fixture(t, { actor: async () => null });
   const response = await get(f, "/admin/tasks", { redirect: "manual", headers: { Cookie: cookie, Accept: "text/html" } });
   assert.equal(response.status, 303); privateResponse(response); assert.equal(response.headers.get("location"), "/admin/login?continue=%2Fadmin%2Ftasks");
-  assert.match(response.headers.get("set-cookie"), /__Host-jessie_session=;.*Max-Age=0/); assert.equal(await response.text(), "");
+  assert.equal(response.headers.get("set-cookie"), null); assert.equal(await response.text(), "");
   for (const asset of ["/tasks.js", "/tasks-model.js", "/tasks.css"]) await failure(await get(f, asset), 401, "authentication_required");
 });
 test("disabled task handlers expose no route and unsupported methods never mutate", async t => {

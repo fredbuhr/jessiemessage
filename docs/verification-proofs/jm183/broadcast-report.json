@@ -1,0 +1,89 @@
+{
+  "status": "implemented_and_targeted_tests_passed",
+  "scope": "UX183 broadcast recipient count, preparation and explicit send flow",
+  "branch": "fix/messaging-183",
+  "baselineSource": "38ccb3862f3d9ab4153b578dfb3abbd0dd94d857",
+  "productionSourceUntouched": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "cause": {
+    "description": "In the active compact audience profile the confirmation count used preview.eligibleCount and defaulted to zero before preparation. A selected contact did not constitute a preview; the independent acknowledgement checkbox could be ticked before the preview, while the final button also required the preview. The UI showed a selected recipient beside a confirmation for zero and gave no clear preparation/send progression.",
+    "baselineReproduction": {
+      "status": "reproduced",
+      "runtime": "v24.19.0",
+      "source": "38ccb3862f3d9ab4153b578dfb3abbd0dd94d857",
+      "proof": {
+        "selected": 1,
+        "selectedLabel": "1 destinataire choisi",
+        "confirmationLabel": "Je confirme le contenu et l’envoi individuel à 0 client.",
+        "checked": true,
+        "sendDisabled": true,
+        "previewRequests": 0,
+        "campaignRequests": 0
+      }
+    },
+    "baselineEvidence": "/workspace/scratch/bb431be72395/ux183/repro-broadcast-baseline.json"
+  },
+  "behavior": [
+    "Selection count changes immediately (1, 2, remove back to 1), while only server preview results are described as eligible/prepared.",
+    "Two explicit actions: Check and prepare to send, then Send to N clients. The redundant acknowledgement checkbox is removed. Preparation never creates a campaign.",
+    "The final send action acknowledges the prepared snapshot internally before the existing campaign guard. It does not bypass composition, session, recipient eligibility or repeated attachment consent.",
+    "Title, body, attachment, selection, audience and filter edits invalidate preparation and its generation. Late results for an earlier generation are rejected.",
+    "Suspending an unsubmitted draft preserves text/selection/attachments but requires a fresh preparation after owner revalidation.",
+    "Uncertain campaigns retain the same frozen payload and identifier; only the explicit retry uses them. Existing de-duplication and retry contracts are preserved.",
+    "French and English labels and live selected/prepared counts are covered."
+  ],
+  "changedFiles": [
+    "public/broadcast-model.js",
+    "public/broadcast.js",
+    "public/broadcast.html",
+    "public/broadcast.css",
+    "public/i18n-broadcast.js",
+    "tests/broadcast-model.test.mjs",
+    "tests/broadcast-lifecycle.test.mjs",
+    "tests/tools-i18n.test.mjs",
+    "tests/browser/broadcast-scale.browser.mjs"
+  ],
+  "checks": [
+    {
+      "command": "node --test tests/broadcast-model.test.mjs tests/broadcast-lifecycle.test.mjs tests/broadcast-video.test.mjs tests/tools-i18n.test.mjs",
+      "status": "passed",
+      "tests": 103,
+      "failures": 0,
+      "log": "/workspace/scratch/bb431be72395/ux183/broadcast-focused.log"
+    },
+    {
+      "command": "node --test tests/broadcast-lifecycle.test.mjs",
+      "status": "passed",
+      "tests": 51,
+      "failures": 0,
+      "reason": "final obsolete checkbox assertion replaced with preview invalidation and disabled-send assertions",
+      "log": "/workspace/scratch/bb431be72395/ux183/broadcast-lifecycle-final.log"
+    },
+    {
+      "command": "node --check public/broadcast.js; node --check public/broadcast-model.js; node --check public/i18n-broadcast.js",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --check -- <the 9 changed broadcast files>",
+      "status": "passed"
+    },
+    {
+      "description": "Actual old model/controller exercised in existing browser VM fixture with selected contact and checked old checkbox",
+      "status": "reproduced",
+      "evidence": "repro-broadcast-baseline.json"
+    },
+    {
+      "description": "Actual new model/controller and generated contact checkbox listeners exercised through 1, 2, removal, editing, preparation and one campaign POST to a synthetic fixture",
+      "status": "passed"
+    },
+    {
+      "description": "Late preview, zero eligible recipients, no campaign POST before preparation, frozen uncertain retry, attachment/video and FR/EN tests",
+      "status": "passed"
+    }
+  ],
+  "limits": [
+    "Browser VM fixtures and synthetic server replies are local and do not qualify a native browser or production service.",
+    "Native Chrome scale suite was adapted to the new final-action control but not executed: default Chrome and ChromeDriver binaries are unavailable in this environment.",
+    "No real email, push, message, campaign, database, production process, migration or configuration was accessed or mutated.",
+    "No commit, push, version bump or deployment was performed by this agent; parent owns integration and release."
+  ]
+}

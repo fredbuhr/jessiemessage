@@ -276,10 +276,16 @@ export async function createAccessService({ store, authStore, authService, totpK
       return target;
     };
     targetAt(storedInstant(clock()));
-    const { actorTokenHash, now } = await administration(raw, true), expectedTarget = targetAt(now);
+    const { actorTokenHash, now } = await administration(raw, true);
+    targetAt(now);
     const result = await database(() => store.renewClient(actorTokenHash, Buffer.from(id, "hex"), { now, expectedExpiresAt, accessDays }));
     if (result === null) return null;
-    if (!result || storedId(result.id) !== id.toLowerCase() || storedInstant(result.accessExpiresAt) !== expectedTarget) throw unavailable();
+    // The store refreshes time after the account locks. Validate its exact
+    // calculation rather than comparing a committed result with an older time.
+    if (!result || storedId(result.id) !== id.toLowerCase() || storedInstant(result.calculatedAt) < now) throw unavailable();
+    const expectedTarget = Math.max(result.calculatedAt, expectedExpiresAt) + accessDays * DAY_MILLISECONDS;
+    if (expectedTarget > MAX_INSTANT || expectedTarget > result.calculatedAt + 3650 * DAY_MILLISECONDS
+      || storedInstant(result.accessExpiresAt) !== expectedTarget) throw unavailable();
     return { id: result.id, accessExpiresAt: result.accessExpiresAt };
   }
   async function approveClient(raw, id) {

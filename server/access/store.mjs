@@ -492,7 +492,7 @@ export function createAccessStore(pool, { clock } = {}) {
         // Do not rewrite the first approval, conversation owner, credential
         // generation or session rows: renewal extends this approved access only.
         await connection.query("UPDATE users SET access_expires_at = ?, updated_at = ? WHERE id = ?", [sqlDate(accessExpiresAt), sqlDate(now), userId]);
-        return { id: userId.toString("hex"), accessExpiresAt };
+        return { id: userId.toString("hex"), accessExpiresAt, calculatedAt: now };
       }, true);
     },
 

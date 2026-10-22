@@ -37,9 +37,10 @@ const clientRow = (index = 3, changes = {}) => ({ id: index.toString(16).padStar
   status: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: true, createdAt: initialTime - index, accessExpiresAt: initialTime + 86400000, ...changes });
 const invitationRow = (index = 2) => ({ id: index.toString(16).padStart(32, "0"), createdAt: initialTime - index, expiresAt: initialTime + 3600000, accessDays: 30, state: "pending" });
 function harness({ visible = true, currentSession = session(), intercept, clipboard, confirm = () => true,
+  pathname = "/admin/clients", notification = null, search = "",
   clients = [clientRow(3, { pseudonym: "Client synthétique", email: "private-client@example.invalid", accessExpiresAt: null })],
   invitations = [invitationRow(2)] } = {}) {
-  const nodes = new Map(), documentEvents = new Map(), windowEvents = new Map(), calls = [], timers = new Map(), history = [];
+  const nodes = new Map(), documentEvents = new Map(), windowEvents = new Map(), calls = [], timers = new Map(), history = [], navigations = [];
   let now = initialTime, timerId = 0;
   const element = (id, tagName = "div") => { if (!nodes.has(id)) nodes.set(id, new Element(tagName)); return nodes.get(id); };
   const form = element("login-form", "form"), tools = element("access-tools"), connected = element("connected");
@@ -60,7 +61,7 @@ function harness({ visible = true, currentSession = session(), intercept, clipbo
     createElement: (tagName) => new Element(tagName), addEventListener: (name, handler) => documentEvents.set(name, handler) };
   const state = { currentSession, clipboardCalls: [], clients, invitations };
   const context = vm.createContext({ document, window: { confirm, addEventListener: (name, handler) => windowEvents.set(name, handler) },
-    location: { pathname: "/admin" }, history: { replaceState: (...args) => history.push(args) }, AbortController,
+    location: { pathname, search, replace: value => navigations.push(value) }, JessieNotificationLink: { read: () => notification }, history: { replaceState: (...args) => history.push(args) }, AbortController, URLSearchParams,
     navigator: { clipboard: { writeText: async (value) => { state.clipboardCalls.push(value); if (clipboard) return clipboard(value); } } },
     Date: class extends Date { static now() { return now; } },
     setTimeout: (handler, delay) => { const id = ++timerId; timers.set(id, { handler, at: now + delay }); return id; }, clearTimeout: (id) => timers.delete(id),
@@ -86,7 +87,7 @@ function harness({ visible = true, currentSession = session(), intercept, clipbo
     } });
   vm.runInContext(clockSource, context);
   vm.runInContext(source, context, { filename: "public/admin-login.js" });
-  return { element, document, calls, state, timers, createButton, history,
+  return { element, document, calls, state, timers, createButton, history, navigations,
     async event(name, value = {}) { const handler = documentEvents.get(name) ?? windowEvents.get(name); assert.equal(typeof handler, "function", name); handler(value); await flush(); },
     async hide() { document.visibilityState = "hidden"; await this.event("visibilitychange"); },
     async show() { document.visibilityState = "visible"; await this.event("visibilitychange"); },
@@ -123,7 +124,7 @@ test("plain 404 optional features preserve an authentication-only administrator 
       await f.submit("login-form");
     }
     assert.equal(f.element("connected").hidden, false); assert.equal(f.element("connected-name").textContent, "Jess");
-    assert.equal(f.element("login-form").hidden, true); assert.equal(f.element("access-title").textContent, "Ton espace Jessie.");
+    assert.equal(f.element("login-form").hidden, true); assert.equal(f.element("access-title").textContent, "Invitations et clients");
     assert.equal(f.element("auth-status").textContent, ""); assert.equal(f.element("auth-status").classList.contains("is-error"), false);
     assert.equal(f.element("access-tools").hidden, true); assert.equal(f.element("admin-chat-link").hidden, true);
     assert.equal(f.calls.some((call) => /^\/api\/admin\/(?:clients|invitations)/.test(call.path)), false);
@@ -737,4 +738,39 @@ test("an isolated conversation capability failure offers retry without losing th
   failure = false; await f.click("admin-chat-retry"); assert.equal(f.element("admin-chat-link").hidden, false); assert.equal(f.element("admin-chat-retry").hidden, true);
   assert.equal(f.element("connected-name").textContent, "Jess"); assert.equal(posts(f).length, 0);
   });
+});
+
+
+test("administrator home is separate from client management and reads no private audience lists", async () => {
+  const f = harness({ pathname: "/admin" });
+  await flush();
+  assert.equal(f.element("connected").hidden, false); assert.equal(f.element("admin-dashboard").hidden, false);
+  assert.equal(f.element("access-title").textContent, "Administration"); assert.equal(f.element("access-tools").hidden, true);
+  assert.equal(f.calls.some(call => call.path.startsWith("/api/admin/")), false);
+  await f.hide(); assert.equal(f.element("connected").hidden, true); assert.equal(f.element("connected-name").textContent, "");
+});
+
+test("administrator sign-in opens the home or exact notified message only after the final session proof", async () => {
+  for (const notification of [null, "b".repeat(32)]) {
+    const proof = pause(); let f, checks = 0;
+    f = harness({ pathname: "/admin/login", notification, currentSession: null, intercept: (path) => {
+      if (path === "/api/auth/login") { f.state.currentSession = session(); return response(200, f.state.currentSession); }
+      if (path === "/api/auth/session" && ++checks > 1) return proof.promise;
+    } });
+    await flush(); f.element("email").value = "admin@example.invalid"; f.element("password").value = "synthetic password"; f.element("factor").value = "123456";
+    await f.submit("login-form"); assert.deepEqual(f.navigations, [], "MFA login response alone does not choose a destination");
+    proof.resolve(response(200, f.state.currentSession)); await flush();
+    assert.deepEqual(f.navigations, [notification ? `/admin/messages#notification=${notification}` : "/admin"]);
+    assert.equal(posts(f).length, 1); assert.equal(f.element("password").value, ""); assert.equal(f.element("factor").value, "");
+    await f.hide();
+  }
+});
+
+
+test("administrator login keeps a closed continue target including client management", async () => {
+  for (const [search, expected] of [["?continue=%2Fadmin%2Fclients", "/admin/clients"], ["?continue=%2Fadmin%2Fbackups", "/admin/backups"],
+    ["?continue=https%3A%2F%2Fattacker.invalid", "/admin"], ["?continue=%2Fadmin%2Fclients&continue=%2Fadmin%2Fmessages", "/admin"]]) {
+    const f = harness({ pathname: "/admin/login", search }); await flush();
+    assert.deepEqual(f.navigations, [expected]); assert.equal(posts(f).length, 0);
+  }
 });

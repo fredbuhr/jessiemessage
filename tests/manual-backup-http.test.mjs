@@ -91,7 +91,7 @@ test("strict mutation origin, CSRF, closed fields and bounded JSON reject reques
   assert.equal(f.saves(), 0); assert.equal(await f.requests.status(), null);
   for (const cookie of ["__Host-jessie_session=invalid", `__Host-jessie_session=${token}; __Host-jessie_session=${token}`]) {
     const response = await f.get("/api/admin/backups", { Cookie: cookie });
-    assert.equal(response.status, 401); assert.match(response.headers.get("set-cookie"), /Max-Age=0/);
+    assert.equal(response.status, 401); assert.equal(response.headers.get("set-cookie"), null);
   }
   const clientCookie = await f.get("/api/admin/backups", { Cookie: `__Host-jessie_client=${token}` });
   assert.equal(clientCookie.status, 401); assert.equal(clientCookie.headers.get("set-cookie"), null);

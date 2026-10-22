@@ -1,4 +1,5 @@
 globalThis.JessieI18n?.register({
+  "Accueil admin": "Admin home", "Messages": "Messages",
   "Administration": "Administration",
   "Sauvegardes": "Backups",
   "Gérer les accès": "Manage access",

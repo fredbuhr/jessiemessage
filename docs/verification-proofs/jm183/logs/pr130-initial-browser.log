@@ -1,0 +1,876 @@
+﻿2026-10-22T21:44:30.8245931Z Current runner version: '2.338.0'
+2026-10-22T21:44:30.8263624Z ##[group]Runner Image Provisioner
+2026-10-22T21:44:30.8264146Z Hosted Compute Agent
+2026-10-22T21:44:30.8264475Z Version: 20261012.601
+2026-10-22T21:44:30.8264918Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+2026-10-22T21:44:30.8265331Z Build Date: 2026-10-12T17:48:21Z
+2026-10-22T21:44:30.8265747Z Worker ID: {13fe13de-1124-4ff3-9fa2-a05ef5f77d12}
+2026-10-22T21:44:30.8266160Z Region: westus3
+2026-10-22T21:44:30.8266487Z Cloud: Azure
+2026-10-22T21:44:30.8266882Z ##[endgroup]
+2026-10-22T21:44:30.8267840Z ##[group]Operating System
+2026-10-22T21:44:30.8268223Z Ubuntu
+2026-10-22T21:44:30.8268540Z 24.04.5
+2026-10-22T21:44:30.8268841Z LTS
+2026-10-22T21:44:30.8269203Z ##[endgroup]
+2026-10-22T21:44:30.8269525Z ##[group]Runner Image
+2026-10-22T21:44:30.8269852Z Image: ubuntu-24.04
+2026-10-22T21:44:30.8270224Z Version: 20261012.334.1
+2026-10-22T21:44:30.8271170Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-22T21:44:30.8272084Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+2026-10-22T21:44:30.8272613Z ##[endgroup]
+2026-10-22T21:44:30.8273294Z ##[group]GITHUB_TOKEN Permissions
+2026-10-22T21:44:30.8274422Z Contents: read
+2026-10-22T21:44:30.8274866Z Metadata: read
+2026-10-22T21:44:30.8275187Z ##[endgroup]
+2026-10-22T21:44:30.8276470Z Secret source: Actions
+2026-10-22T21:44:30.8276984Z Cache mode: write
+2026-10-22T21:44:30.8277434Z Prepare workflow directory
+2026-10-22T21:44:30.8469340Z Prepare all required actions
+2026-10-22T21:44:30.8498607Z Getting action download info
+2026-10-22T21:44:31.1648231Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-22T21:44:31.2422627Z Download action repository 'actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+2026-10-22T21:44:32.0385995Z Download action repository 'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-10-22T21:44:32.8825578Z Complete job name: Chrome keyboard and chat lifecycle
+2026-10-22T21:44:32.9434574Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-22T21:44:32.9435545Z with:
+2026-10-22T21:44:32.9436030Z   persist-credentials: false
+2026-10-22T21:44:32.9436636Z   repository: fredbuhr/jessiemessage
+2026-10-22T21:44:32.9441933Z   token: ***
+2026-10-22T21:44:32.9442404Z   ssh-strict: true
+2026-10-22T21:44:32.9442886Z   ssh-user: git
+2026-10-22T21:44:32.9443358Z   clean: true
+2026-10-22T21:44:32.9443875Z   sparse-checkout-cone-mode: true
+2026-10-22T21:44:32.9444475Z   fetch-depth: 1
+2026-10-22T21:44:32.9444955Z   fetch-tags: false
+2026-10-22T21:44:32.9445455Z   show-progress: true
+2026-10-22T21:44:32.9445988Z   lfs: false
+2026-10-22T21:44:32.9446462Z   submodules: false
+2026-10-22T21:44:32.9446972Z   set-safe-directory: true
+2026-10-22T21:44:32.9447577Z   allow-unsafe-pr-checkout: false
+2026-10-22T21:44:32.9448267Z ##[endgroup]
+2026-10-22T21:44:33.0183709Z Syncing repository: fredbuhr/jessiemessage
+2026-10-22T21:44:33.0186152Z ##[group]Getting Git version info
+2026-10-22T21:44:33.0187319Z Working directory is '/home/runner/work/jessiemessage/jessiemessage'
+2026-10-22T21:44:33.0188850Z [command]/usr/bin/git version
+2026-10-22T21:44:33.0238210Z git version 2.55.0
+2026-10-22T21:44:33.0257326Z ##[endgroup]
+2026-10-22T21:44:33.0267654Z Temporarily overriding HOME='/home/runner/work/_temp/b66b0466-d980-47d1-8ab4-1330e0af7fb4' before making global git config changes
+2026-10-22T21:44:33.0269558Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-22T21:44:33.0272413Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/jessiemessage/jessiemessage
+2026-10-22T21:44:33.0314372Z Deleting the contents of '/home/runner/work/jessiemessage/jessiemessage'
+2026-10-22T21:44:33.0318557Z ##[group]Determining repository object format
+2026-10-22T21:44:33.0321835Z ##[endgroup]
+2026-10-22T21:44:33.0323182Z ##[group]Initializing the repository
+2026-10-22T21:44:33.0325146Z [command]/usr/bin/git init /home/runner/work/jessiemessage/jessiemessage
+2026-10-22T21:44:33.0417423Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-22T21:44:33.0420549Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-22T21:44:33.0422728Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-22T21:44:33.0424329Z hint: call:
+2026-10-22T21:44:33.0425205Z hint:
+2026-10-22T21:44:33.0426451Z hint: 	git config --global init.defaultBranch <name>
+2026-10-22T21:44:33.0427721Z hint:
+2026-10-22T21:44:33.0429013Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-22T21:44:33.0431085Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-22T21:44:33.0432543Z hint:
+2026-10-22T21:44:33.0433634Z hint: 	git branch -m <name>
+2026-10-22T21:44:33.0434620Z hint:
+2026-10-22T21:44:33.0435913Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-22T21:44:33.0438177Z Initialized empty Git repository in /home/runner/work/jessiemessage/jessiemessage/.git/
+2026-10-22T21:44:33.0453309Z [command]/usr/bin/git remote add origin https://github.com/fredbuhr/jessiemessage
+2026-10-22T21:44:33.0501139Z ##[endgroup]
+2026-10-22T21:44:33.0502588Z ##[group]Disabling automatic garbage collection
+2026-10-22T21:44:33.0505382Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-22T21:44:33.0539262Z ##[endgroup]
+2026-10-22T21:44:33.0541093Z ##[group]Setting up auth
+2026-10-22T21:44:33.0542551Z Removing SSH command configuration
+2026-10-22T21:44:33.0544865Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-22T21:44:33.0585071Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-22T21:44:33.0879214Z Removing HTTP extra header
+2026-10-22T21:44:33.0884237Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-22T21:44:33.0916127Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-22T21:44:33.1105731Z Removing includeIf entries pointing to credentials config files
+2026-10-22T21:44:33.1109232Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-22T21:44:33.1141401Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-22T21:44:33.1343814Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-28704260-c197-4288-aefb-d29a8acb4be1.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-22T21:44:33.1387591Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path /home/runner/work/_temp/git-credentials-28704260-c197-4288-aefb-d29a8acb4be1.config
+2026-10-22T21:44:33.1422521Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-28704260-c197-4288-aefb-d29a8acb4be1.config
+2026-10-22T21:44:33.1456769Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-28704260-c197-4288-aefb-d29a8acb4be1.config
+2026-10-22T21:44:33.1494167Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-28704260-c197-4288-aefb-d29a8acb4be1.config
+2026-10-22T21:44:33.1527744Z ##[endgroup]
+2026-10-22T21:44:33.1528900Z ##[group]Fetching the repository
+2026-10-22T21:44:33.1533239Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +a38ae28f22a55f3814cb2082bc08f07dd035d4e7:refs/remotes/pull/130/merge
+2026-10-22T21:44:34.9002157Z From https://github.com/fredbuhr/jessiemessage
+2026-10-22T21:44:34.9003054Z  * [new ref]         a38ae28f22a55f3814cb2082bc08f07dd035d4e7 -> pull/130/merge
+2026-10-22T21:44:34.9006860Z ##[endgroup]
+2026-10-22T21:44:34.9007812Z ##[group]Determining the checkout info
+2026-10-22T21:44:34.9008546Z ##[endgroup]
+2026-10-22T21:44:34.9012197Z [command]/usr/bin/git sparse-checkout disable
+2026-10-22T21:44:34.9150735Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-22T21:44:34.9183676Z ##[group]Checking out the ref
+2026-10-22T21:44:34.9187914Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/130/merge
+2026-10-22T21:44:35.0041271Z Note: switching to 'refs/remotes/pull/130/merge'.
+2026-10-22T21:44:35.0041764Z 
+2026-10-22T21:44:35.0041977Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-22T21:44:35.0042543Z changes and commit them, and you can discard any commits you make in this
+2026-10-22T21:44:35.0043134Z state without impacting any branches by switching back to a branch.
+2026-10-22T21:44:35.0043483Z 
+2026-10-22T21:44:35.0043815Z If you want to create a new branch to retain commits you create, you may
+2026-10-22T21:44:35.0044320Z do so (now or later) by using -c with the switch command. Example:
+2026-10-22T21:44:35.0044620Z 
+2026-10-22T21:44:35.0044922Z   git switch -c <new-branch-name>
+2026-10-22T21:44:35.0045117Z 
+2026-10-22T21:44:35.0045282Z Or undo this operation with:
+2026-10-22T21:44:35.0045397Z 
+2026-10-22T21:44:35.0045622Z   git switch -
+2026-10-22T21:44:35.0045856Z 
+2026-10-22T21:44:35.0046174Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-22T21:44:35.0046418Z 
+2026-10-22T21:44:35.0046805Z HEAD is now at a38ae28 Merge 3cc4aa52fe336992f2acd2f6c3e136bc67a3f418 into 38ccb3862f3d9ab4153b578dfb3abbd0dd94d857
+2026-10-22T21:44:35.0053150Z ##[endgroup]
+2026-10-22T21:44:35.0096730Z [command]/usr/bin/git log -1 --format=%H
+2026-10-22T21:44:35.0121664Z a38ae28f22a55f3814cb2082bc08f07dd035d4e7
+2026-10-22T21:44:35.0130249Z ##[group]Removing auth
+2026-10-22T21:44:35.0130755Z Removing SSH command configuration
+2026-10-22T21:44:35.0133430Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-22T21:44:35.0164478Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-22T21:44:35.0360263Z Removing HTTP extra header
+2026-10-22T21:44:35.0362911Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-22T21:44:35.0393404Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-22T21:44:35.0570237Z Removing includeIf entries pointing to credentials config files
+2026-10-22T21:44:35.0573043Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-22T21:44:35.0599017Z includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path
+2026-10-22T21:44:35.0599802Z includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path
+2026-10-22T21:44:35.0600546Z includeif.gitdir:/github/workspace/.git.path
+2026-10-22T21:44:35.0601044Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-22T21:44:35.0606873Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path
+2026-10-22T21:44:35.0628701Z /home/runner/work/_temp/git-credentials-28704260-c197-4288-aefb-d29a8acb4be1.config
+2026-10-22T21:44:35.0695865Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-28704260\-c197\-4288\-aefb\-d29a8acb4be1\.config
+2026-10-22T21:44:35.0698038Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path
+2026-10-22T21:44:35.0698727Z /home/runner/work/_temp/git-credentials-28704260-c197-4288-aefb-d29a8acb4be1.config
+2026-10-22T21:44:35.0700250Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-28704260\-c197\-4288\-aefb\-d29a8acb4be1\.config
+2026-10-22T21:44:35.0734187Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-22T21:44:35.0756557Z /github/runner_temp/git-credentials-28704260-c197-4288-aefb-d29a8acb4be1.config
+2026-10-22T21:44:35.0761796Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-28704260\-c197\-4288\-aefb\-d29a8acb4be1\.config
+2026-10-22T21:44:35.0799835Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-22T21:44:35.0822687Z /github/runner_temp/git-credentials-28704260-c197-4288-aefb-d29a8acb4be1.config
+2026-10-22T21:44:35.0828489Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-28704260\-c197\-4288\-aefb\-d29a8acb4be1\.config
+2026-10-22T21:44:35.0859591Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-22T21:44:35.1038159Z Removing credentials config '/home/runner/work/_temp/git-credentials-28704260-c197-4288-aefb-d29a8acb4be1.config'
+2026-10-22T21:44:35.1047080Z ##[endgroup]
+2026-10-22T21:44:35.1230791Z ##[group]Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+2026-10-22T21:44:35.1231012Z with:
+2026-10-22T21:44:35.1231146Z   node-version: 24.22.1
+2026-10-22T21:44:35.1231284Z   package-manager-cache: false
+2026-10-22T21:44:35.1231423Z   check-latest: false
+2026-10-22T21:44:35.1232752Z   token: ***
+2026-10-22T21:44:35.1232868Z ##[endgroup]
+2026-10-22T21:44:35.2061581Z Attempting to download 24.22.1...
+2026-10-22T21:44:36.2627172Z Acquiring 24.22.1 - x64 from https://github.com/actions/node-versions/releases/download/24.22.1-39619001896/node-24.22.1-linux-x64.tar.gz
+2026-10-22T21:44:36.8197378Z Extracting ...
+2026-10-22T21:44:36.8277808Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/29c9d950-d3e2-43c1-803b-7f68ec9b3847 -f /home/runner/work/_temp/ce40cc86-859e-4d68-9b28-2e1cde85b47e
+2026-10-22T21:44:37.7808964Z Adding to the cache ...
+2026-10-22T21:44:44.3049690Z ##[group]Environment details
+2026-10-22T21:44:44.4560189Z node: v24.22.1
+2026-10-22T21:44:44.4560565Z npm: 11.19.1
+2026-10-22T21:44:44.4560723Z yarn: 1.22.22
+2026-10-22T21:44:44.4561173Z ##[endgroup]
+2026-10-22T21:44:44.5698082Z ##[group]Run npm ci --ignore-scripts
+2026-10-22T21:44:44.5698336Z [36;1mnpm ci --ignore-scripts[0m
+2026-10-22T21:44:44.6312896Z shell: /usr/bin/bash -e {0}
+2026-10-22T21:44:44.6313086Z ##[endgroup]
+2026-10-22T21:44:45.4634750Z 
+2026-10-22T21:44:45.4641683Z added 35 packages, and audited 36 packages in 756ms
+2026-10-22T21:44:45.4642001Z 
+2026-10-22T21:44:45.4642180Z 10 packages are looking for funding
+2026-10-22T21:44:45.4642459Z   run `npm fund` for details
+2026-10-22T21:44:45.4642563Z 
+2026-10-22T21:44:45.4642638Z found 0 vulnerabilities
+2026-10-22T21:44:45.5017626Z ##[group]Run npm run test:browser
+2026-10-22T21:44:45.5017814Z [36;1mnpm run test:browser[0m
+2026-10-22T21:44:45.5069912Z shell: /usr/bin/bash -e {0}
+2026-10-22T21:44:45.5070059Z ##[endgroup]
+2026-10-22T21:44:45.5747375Z 
+2026-10-22T21:44:45.5748098Z > jessiemessage@1.8.3 test:browser
+2026-10-22T21:44:45.5748400Z > node --test tests/browser/*.browser.mjs
+2026-10-22T21:44:45.5748534Z 
+2026-10-22T21:44:49.7285260Z ▶ real Chrome: closure preview, separate confirmation and status at mobile and desktop widths in FR/EN
+2026-10-22T21:44:49.7286197Z   ✖ fr 320px (2102.438163ms)
+2026-10-22T21:44:50.6487784Z   ✖ fr 375px (919.654408ms)
+2026-10-22T21:44:52.2581064Z   ✔ fr 1280px (1610.659793ms)
+2026-10-22T21:44:53.1121928Z   ✖ en 320px (838.657344ms)
+2026-10-22T21:44:54.1439363Z   ✖ en 375px (1041.576575ms)
+2026-10-22T21:44:55.3434879Z   ✔ en 1280px (1197.438676ms)
+2026-10-22T21:44:55.3739237Z ✖ real Chrome: closure preview, separate confirmation and status at mobile and desktop widths in FR/EN (9700.390708ms)
+2026-10-22T21:44:56.9262030Z ✔ real Chrome: cancel, hide and BFCache clear names and confirmation without submitting (1556.307366ms)
+2026-10-22T21:44:59.2763480Z ✔ real Chrome: a replacement proof before confirmation cancels the old action (2341.437629ms)
+2026-10-22T21:45:01.4698874Z ✔ real Chrome: a lost response reloads the durable status with GET only, including after navigation (2201.400767ms)
+2026-10-22T21:45:03.1560985Z ✔ real Chrome: a session replaced during the POST response discards the obsolete view and never resubmits (1686.510993ms)
+2026-10-22T21:45:04.9925806Z ✔ real Chrome: unactivated mode never reads a target or offers erasure, and private names remain literal (1836.668983ms)
+2026-10-22T21:45:05.0048031Z ✔ real Chrome: external links retain the existing Strict admin session and resume a private deep link (6841.455476ms)
+2026-10-22T21:45:05.8252844Z ✔ Chrome mobile FR/EN: schedule, review the complete audience and publish one announcement without overflow (11589.595875ms)
+2026-10-22T21:45:05.8289416Z ✔ Chrome: a lost acknowledgement retries exactly one publication, conflicts preserve drafts and account changes purge them (1650.706915ms)
+2026-10-22T21:45:05.8298714Z ✔ Chrome client mobile: the compact banner opens accessibly, expires locally and clears on an account change (6881.124255ms)
+2026-10-22T21:45:06.7655048Z ✔ Chrome compatibility: an absent announcement capability preserves the ordinary conversation (956.579839ms)
+2026-10-22T21:45:08.9158386Z ✔ Chrome: an announcement that expires during its response is never displayed after the network proof (2156.919033ms)
+2026-10-22T21:45:09.5972611Z ✔ real Chrome: an obsolete settings action cannot restart the new bootstrap after a same-task synthetic visibility handoff (1745.267157ms)
+2026-10-22T21:45:09.6065176Z ✔ real Chrome: a natively aborted settings response cannot release a later action or replay a POST (1543.259278ms)
+2026-10-22T21:45:09.6082276Z ✔ real Chrome: history capacity warning translates, clears below the threshold and stays private (1281.650182ms)
+2026-10-22T21:45:09.6112115Z ▶ real Chrome: backup destinations, keyboard controls, translations and kit download at three widths
+2026-10-22T21:45:09.6165378Z   ✔ fr 320px (1262.459284ms)
+2026-10-22T21:45:09.6252302Z   ✔ fr 375px (1662.173647ms)
+2026-10-22T21:45:09.6271432Z   ✔ fr 1280px (1650.786954ms)
+2026-10-22T21:45:09.6281033Z   ✔ en 320px (1537.418459ms)
+2026-10-22T21:45:09.6307933Z   ✔ en 375px (1647.712806ms)
+2026-10-22T21:45:09.6331423Z   ✔ en 1280px (1904.314425ms)
+2026-10-22T21:45:09.6352539Z ✔ real Chrome: backup destinations, keyboard controls, translations and kit download at three widths (9858.697689ms)
+2026-10-22T21:45:09.6371651Z ✔ real Chrome: copied backups show a simple overview and keep technical controls closed (2507.272585ms)
+2026-10-22T21:45:12.4022877Z ✔ real Chrome: a login change during any kit suppresses its download and never repeats the request (2809.788007ms)
+2026-10-22T21:45:13.3803590Z ✔ real Chrome: periodic proof replaces private settings after another login without a mutation (978.035842ms)
+2026-10-22T21:45:16.0312657Z ✔ real Chrome: updating a paired PC is explicit, translated and does not start a new pairing (2649.120872ms)
+2026-10-22T21:45:21.7895329Z ✔ Chrome: suspended text and explicit recipient return only after session proof, and another account purges them (2169.210827ms)
+2026-10-22T21:45:21.7975866Z ✔ Chrome: a suspended uncertain confirmation retains its exact key and only an explicit retry can acknowledge it (2234.037244ms)
+2026-10-22T21:45:21.7982401Z ✔ Chrome mobile FR/EN: all 2,500 and filtered 175 are explicitly reviewed with bounded DOM and paginated details (12328.123663ms)
+2026-10-22T21:45:25.1035928Z ✔ Chrome: manual selection exceeds 100 across contact pages while contacts and selected DOM stay at 50 (3312.465247ms)
+2026-10-22T21:45:27.3440496Z ✔ Chrome: lost confirmation freezes its exact audience, retry uses one ID, and changed account purges private data (2232.338326ms)
+2026-10-22T21:45:29.2222547Z ✔ Chrome: compatibility capability hides global creation while existing 2,500-recipient history stays paginated (1881.005223ms)
+2026-10-22T21:45:33.9379633Z ✔ Chrome broadcast video FR/EN mobile/desktop: native preview, one raw upload, typed audience and exact uncertain campaign retry (4718.361211ms)
+2026-10-22T21:45:36.4576268Z ✔ Chrome broadcast video upload can be cancelled while awaiting ACK without any campaign or automatic upload retry (2526.987485ms)
+2026-10-22T21:45:38.0163928Z ✔ Chrome compatibility preserves existing v3 video campaign details while hiding new video creation (1551.177221ms)
+2026-10-22T21:45:46.5852890Z ✔ Chrome: only Jessie sees a read receipt after a metadata-only poll, with stable focus and French / English labels (8868.771649ms)
+2026-10-22T21:45:46.5855749Z ✔ Chrome mobile: compact messages reveal one accessible details area at a time without intercepting photos or native links (28683.284951ms)
+2026-10-22T21:46:04.7521896Z ✔ Chrome mobile: a captionless photo keeps its enlarge action and a keyboard-only details control without an extra row (18161.137262ms)
+2026-10-22T21:46:08.6866235Z ✔ Chrome: message details never hide an uncertain send, its error or the explicit retry action (3937.560303ms)
+2026-10-22T21:46:10.3374314Z ✖ Chrome 320px: keyboard emoji panel inserts at the selection without photos or automatic sending, and Escape restores focus (1649.903876ms)
+2026-10-22T21:46:11.5884388Z ✖ Chrome 320px: skin tone changes the preview and inserted text, survives reopening and translation without sending (1252.882053ms)
+2026-10-22T21:46:12.5564009Z ✖ Chrome desktop and 320px: actual Tab / Enter contact selection and return, French / English (947.581243ms)
+2026-10-22T21:46:24.9818378Z ✔ Chrome mobile: a single compact conversation bar leaves room for history and exposes account actions through its menu (12444.10046ms)
+2026-10-22T21:46:32.3763401Z ✔ Chrome short mobile viewports: a multiline draft keeps the composer usable with bounded independent history (7375.814974ms)
+2026-10-22T21:46:37.1852615Z ✔ Chrome 360px high: photo preview and multiline caption retain reachable attachment tools and Close (4819.589509ms)
+2026-10-22T21:46:48.5709515Z ✖ Chrome 320px: both roles edit their public profile with the keyboard, translated labels and focus restored to the opener (11376.688354ms)
+2026-10-22T21:46:58.6240530Z ✔ Chrome: real avatar crop, private preview cleanup on controlled hiding, explicit upload/save and peer initials after removal (10069.983876ms)
+2026-10-22T21:47:06.0036429Z ✔ Chrome: aggregate new-message announcement, silent empty poll / older history, stable focused photo (7376.147218ms)
+2026-10-22T21:47:07.7162361Z ✔ Chrome mobile: native modal Escape restores photo / gallery focus; private media is memory-only (1715.598673ms)
+2026-10-22T21:47:09.4505774Z ✔ Chrome mobile: deleting a message has a keyboard-accessible confirmation with safe cancellation (1728.203247ms)
+2026-10-22T21:47:14.8281316Z ✔ Chrome: a notification reaches its exact old message for each role, directly or after required login (5372.484273ms)
+2026-10-22T21:47:33.6787209Z ✔ Chrome: notification history acknowledges a persisted send after native response loss, without duplicate text or photo caption (18858.434182ms)
+2026-10-22T21:47:34.8542282Z ▶ real Chrome: conversation archive from the actual chat controller, keyboard and translations
+2026-10-22T21:47:34.8543195Z   ✔ fr 320px (1175.344995ms)
+2026-10-22T21:47:36.4722752Z   ✔ en 320px (1618.044516ms)
+2026-10-22T21:47:37.5328486Z   ✔ fr 1280px (1060.430682ms)
+2026-10-22T21:47:38.9003812Z   ✔ en 1280px (1366.890809ms)
+2026-10-22T21:47:38.9004321Z ✔ real Chrome: conversation archive from the actual chat controller, keyboard and translations (5222.269237ms)
+2026-10-22T21:47:40.1259815Z ✔ real Chrome: another login during export suppresses the old file without replaying the request (1225.412416ms)
+2026-10-22T21:47:41.5396400Z ✔ real Chrome: closing a profile cancels its download and cannot unlock or populate a new profile (1413.261961ms)
+2026-10-22T21:47:42.7670014Z ▶ real Chrome: clients download their own conversation at mobile/desktop widths in both languages
+2026-10-22T21:47:42.7670619Z   ✔ fr 320px (1227.352385ms)
+2026-10-22T21:47:44.2939369Z   ✔ en 320px (1526.546635ms)
+2026-10-22T21:47:45.2848598Z   ✔ fr 1280px (990.805562ms)
+2026-10-22T21:47:46.2688762Z   ✔ en 1280px (983.494752ms)
+2026-10-22T21:47:46.2689310Z ✔ real Chrome: clients download their own conversation at mobile/desktop widths in both languages (4729.449655ms)
+2026-10-22T21:47:47.2449285Z ✔ real Chrome: a replacement client login suppresses the previous archive without replay (975.982056ms)
+2026-10-22T21:47:48.5065720Z ✔ real Chrome: closing the client dialog cancels a held archive and never updates a reopened dialog (1261.501877ms)
+2026-10-22T21:47:49.9720870Z ✔ real Chrome: client size limit offers an explicit text-only retry without sending a message (1465.511615ms)
+2026-10-22T21:47:50.9941146Z ✔ real Chrome: hiding the client page cancels the archive and returns with no stale download (1021.761562ms)
+2026-10-22T21:47:52.0380927Z ✖ Chrome 320px fr: quick replies preserve the draft and send only after editing and explicit submission (1043.993368ms)
+2026-10-22T21:47:53.1519579Z ✖ Chrome 320px en: quick replies preserve the draft and send only after editing and explicit submission (1113.632524ms)
+2026-10-22T21:47:54.2389202Z ✔ Chrome 1280px fr: quick replies preserve the draft and send only after editing and explicit submission (1087.231118ms)
+2026-10-22T21:47:55.4586880Z ✔ Chrome 1280px en: quick replies preserve the draft and send only after editing and explicit submission (1219.487931ms)
+2026-10-22T21:48:01.1544169Z ✔ Chrome: clients have no quick replies; Escape, full drafts and returning to the inbox never send (5695.344612ms)
+2026-10-22T21:48:05.9374773Z ✔ Chrome 320px fr: personal replies join the preset list, persist between sessions and CAS conflicts preserve both catalogue and draft (4783.383688ms)
+2026-10-22T21:48:09.2602695Z ✔ Chrome 1280px en: personal replies join the preset list, persist between sessions and CAS conflicts preserve both catalogue and draft (3322.533593ms)
+2026-10-22T21:48:11.0058454Z ✔ Chrome personal reply lost acknowledgement never retries automatically and explicit reload reveals the saved reply (1745.561671ms)
+2026-10-22T21:48:12.2215127Z ✔ Chrome compatibility hides new video and reply editing while preserving gallery access and saved reply insertion (1215.411515ms)
+2026-10-22T21:48:14.3021249Z ✔ Chrome: real same-tab reload restores only the authorized text draft and a changed session purges it (2080.550821ms)
+2026-10-22T21:48:15.6449958Z ✔ Chrome: an uncertain text survives a real reload with its exact retry key and no automatic POST (1342.878906ms)
+2026-10-22T21:48:16.9283496Z ✖ Chrome: client tombstones are absent from the actual DOM while admin history retains them (1283.044118ms)
+2026-10-22T21:48:18.4710272Z ✔ Chrome: synthetic coarse-pointer focus policy keeps keyboards closed after send, profile and emoji panels (1542.820238ms)
+2026-10-22T21:48:18.5210015Z ▶ real Chrome: shared administrator CRM drafts, conflicts and paused label requests
+2026-10-22T21:48:18.5210733Z   ✔ two editors, fr, 375px (3341.525954ms)
+2026-10-22T21:48:18.5211045Z   ✔ two editors, fr, 1280px (3064.269715ms)
+2026-10-22T21:48:18.5211350Z   ✔ two editors, en, 375px (3666.233556ms)
+2026-10-22T21:48:18.5211628Z   ✔ two editors, en, 1280px (2872.630503ms)
+2026-10-22T21:48:18.5211964Z   ✔ old label failure after pause, fr (2137.410334ms)
+2026-10-22T21:48:18.5212520Z   ✔ old label failure after pause, en (2114.041898ms)
+2026-10-22T21:48:18.5213109Z ✔ real Chrome: shared administrator CRM drafts, conflicts and paused label requests (17400.450493ms)
+2026-10-22T21:48:18.5213618Z ▶ real Chrome: two HTTPS hosts preserve native protected sessions through the real device transition
+2026-10-22T21:48:18.5214290Z   ✔ admin active: native source cookie, exact token and notification reference survive (1399.082573ms)
+2026-10-22T21:48:18.5214945Z   ✔ client active: native source cookie, exact token and notification reference survive (1224.760187ms)
+2026-10-22T21:48:18.5215594Z   ✔ client pending: native source cookie, exact token and notification reference survive (1267.850341ms)
+2026-10-22T21:48:18.5216211Z   ✔ a transient start failure offers a real retry and then succeeds (1589.40468ms)
+2026-10-22T21:48:18.5216746Z   ✔ an unanswered network request times out, restores retry and then succeeds (9556.157522ms)
+2026-10-22T21:48:18.5217249Z   ✔ admin: authorize 503 retries to the exact notified message (2196.511546ms)
+2026-10-22T21:48:18.5217737Z   ✔ admin: authorize network retries to the exact notified message (1958.193822ms)
+2026-10-22T21:48:18.5218223Z   ✔ admin: authorize timeout retries to the exact notified message (10113.410804ms)
+2026-10-22T21:48:18.5218688Z   ✔ client: complete 503 retries to the exact notified message (1735.791546ms)
+2026-10-22T21:48:18.5219155Z   ✔ client: complete network retries to the exact notified message (1967.540759ms)
+2026-10-22T21:48:18.5219639Z   ✔ client: complete timeout retries to the exact notified message (9845.906475ms)
+2026-10-22T21:48:18.5220112Z   ✔ client: complete consumed retries to the exact notified message (1644.391756ms)
+2026-10-22T21:48:18.5220876Z   ✔ a forged retry hint cannot replace the real ticket's authenticated notification destination (1211.555115ms)
+2026-10-22T21:48:18.5221550Z   ✔ revocation after authorization cannot install the previously valid source session (1411.711957ms)
+2026-10-22T21:48:18.5222176Z   ✔ a different target account is preserved and the page explains the conflict (1161.562354ms)
+2026-10-22T21:48:18.5222717Z   ✔ an existing target session for the same account is kept (1508.924466ms)
+2026-10-22T21:48:18.5223353Z   ✔ a missing source session offers sign-in at the new address with the notification reference (1167.26339ms)
+2026-10-22T21:48:18.5224129Z ✔ real Chrome: two HTTPS hosts preserve native protected sessions through the real device transition (51227.092348ms)
+2026-10-22T21:48:18.5224880Z ▶ real Chrome: transition actions stay distinct and accessible in every responsive state and language
+2026-10-22T21:48:18.5225373Z   ✔ initial, 320px: French and English (1043.379684ms)
+2026-10-22T21:48:18.5225737Z   ✔ preparing, 320px: French and English (1266.430092ms)
+2026-10-22T21:48:18.5226113Z   ✔ unavailable, 320px: French and English (1517.117643ms)
+2026-10-22T21:48:18.5226502Z   ✔ missing client, 320px: French and English (1681.849477ms)
+2026-10-22T21:48:18.5226930Z   ✔ missing administrator, 320px: French and English (1591.346119ms)
+2026-10-22T21:48:18.5227355Z   ✔ account conflict, 320px: French and English (1860.224652ms)
+2026-10-22T21:48:18.5227713Z   ✔ initial, 360px: French and English (981.081924ms)
+2026-10-22T21:48:18.5228051Z   ✔ preparing, 360px: French and English (1356.614191ms)
+2026-10-22T21:48:18.5228464Z   ✔ unavailable, 360px: French and English (1710.896588ms)
+2026-10-22T21:48:18.5228845Z   ✔ missing client, 360px: French and English (1080.504824ms)
+2026-10-22T21:48:18.5229250Z   ✔ missing administrator, 360px: French and English (1040.593604ms)
+2026-10-22T21:48:18.5229868Z   ✔ account conflict, 360px: French and English (971.567771ms)
+2026-10-22T21:48:18.5230243Z   ✔ initial, 390px: French and English (825.239698ms)
+2026-10-22T21:48:18.5230727Z   ✔ preparing, 390px: French and English (873.126417ms)
+2026-10-22T21:48:18.5231089Z   ✔ unavailable, 390px: French and English (1193.024391ms)
+2026-10-22T21:48:18.5231461Z   ✔ missing client, 390px: French and English (1193.538926ms)
+2026-10-22T21:48:18.5232033Z   ✔ missing administrator, 390px: French and English (939.894025ms)
+2026-10-22T21:48:18.5232451Z   ✔ account conflict, 390px: French and English (1201.162315ms)
+2026-10-22T21:48:18.5232823Z   ✔ initial, 635px: French and English (797.783436ms)
+2026-10-22T21:48:18.5233223Z   ✔ preparing, 635px: French and English (1157.455714ms)
+2026-10-22T21:48:18.5233603Z   ✔ unavailable, 635px: French and English (1141.606263ms)
+2026-10-22T21:48:18.5233990Z   ✔ missing client, 635px: French and English (1220.010574ms)
+2026-10-22T21:48:18.5234426Z   ✔ missing administrator, 635px: French and English (1019.378211ms)
+2026-10-22T21:48:18.5234845Z   ✔ account conflict, 635px: French and English (1319.968356ms)
+2026-10-22T21:48:18.5235511Z ✔ real Chrome: transition actions stay distinct and accessible in every responsive state and language (29431.120347ms)
+2026-10-22T21:48:18.5256156Z ▶ real Chrome: the chosen language survives both origins, retries and the sign-in fallback
+2026-10-22T21:48:18.5258954Z   ✔ admin: English overrides an old French source preference and reaches a genuinely translated destination (1205.826015ms)
+2026-10-22T21:48:18.5259462Z   ✔ client: English overrides an old French source preference and reaches a genuinely translated destination (1286.835729ms)
+2026-10-22T21:48:18.5259955Z   ✔ an English source error followed by a French choice keeps the latest language and notification through retry (1415.875744ms)
+2026-10-22T21:48:18.5260608Z   ✔ missing source sign-in carries its latest language and the server's reference instead of a forged retry hint (1509.212332ms)
+2026-10-22T21:48:18.5261107Z ✔ real Chrome: the chosen language survives both origins, retries and the sign-in fallback (5939.608937ms)
+2026-10-22T21:48:18.5261571Z ▶ real Chrome: configured root is one client sign-in page and administrator home has its own tools at320/1280px
+2026-10-22T21:48:18.5261859Z   ✔ 320px (3222.755807ms)
+2026-10-22T21:48:18.5262020Z   ✔ 1280px (2413.382751ms)
+2026-10-22T21:48:18.5262395Z ✔ real Chrome: configured root is one client sign-in page and administrator home has its own tools at320/1280px (5965.683765ms)
+2026-10-22T21:48:18.5263102Z ✔ real Chrome: client and MFA administrator sign-in preserve the exact notification destination without a dashboard hop (2336.827625ms)
+2026-10-22T21:48:18.5263785Z ✔ Help source storage assertions reject credentials, media, history and malformed draft records (7.833641ms)
+2026-10-22T21:48:18.5264281Z ▶ real Chrome: practical Help is translated, accessible and never collects private content
+2026-10-22T21:48:18.5264632Z   ✔ fr, 320px: real Help, keyboard FAQ, fixed contact and return (1086.770276ms)
+2026-10-22T21:48:18.5264935Z   ✔ fr, 375px: real Help, keyboard FAQ, fixed contact and return (1282.387546ms)
+2026-10-22T21:48:18.5265237Z   ✔ fr, 1280px: real Help, keyboard FAQ, fixed contact and return (1449.603504ms)
+2026-10-22T21:48:18.5265541Z   ✔ en, 320px: real Help, keyboard FAQ, fixed contact and return (1514.290417ms)
+2026-10-22T21:48:18.5265883Z   ✔ en, 375px: real Help, keyboard FAQ, fixed contact and return (1112.463164ms)
+2026-10-22T21:48:18.5266361Z   ✔ en, 1280px: real Help, keyboard FAQ, fixed contact and return (1436.643311ms)
+2026-10-22T21:48:18.5266969Z   ✔ unsupported or augmented language fragments are erased without changing the saved preference (1246.343486ms)
+2026-10-22T21:48:18.5267681Z   ✖ chat, 320px: opening Help leaves the real source document and its in-memory work in place (1407.157535ms)
+2026-10-22T21:48:18.5268369Z   ✖ chat, 375px: opening Help leaves the real source document and its in-memory work in place (1411.062838ms)
+2026-10-22T21:48:18.5269245Z   ✖ chat, 1280px: opening Help leaves the real source document and its in-memory work in place (1186.271552ms)
+2026-10-22T21:48:18.5269898Z   ✔ recovery, 320px: opening Help leaves the real source document and its in-memory work in place (1140.983291ms)
+2026-10-22T21:48:18.5270707Z   ✔ recovery, 375px: opening Help leaves the real source document and its in-memory work in place (1067.860955ms)
+2026-10-22T21:48:18.5271535Z   ✔ recovery, 1280px: opening Help leaves the real source document and its in-memory work in place (845.786489ms)
+2026-10-22T21:48:18.5272062Z ✖ real Chrome: practical Help is translated, accessible and never collects private content (16367.638761ms)
+2026-10-22T21:48:18.5272541Z ▶ real Chrome: homepage is personal, translated and usable by keyboard at 320px, 390px and desktop
+2026-10-22T21:48:18.5272814Z   ✔ fr, 320px (1402.036911ms)
+2026-10-22T21:48:18.5272991Z   ✔ fr, 390px (1644.660528ms)
+2026-10-22T21:48:18.5273180Z   ✔ fr, 1280px (2029.352709ms)
+2026-10-22T21:48:18.5273361Z   ✔ en, 320px (1206.07861ms)
+2026-10-22T21:48:18.5273532Z   ✔ en, 390px (1132.087238ms)
+2026-10-22T21:48:18.5273717Z   ✔ en, 1280px (1684.463176ms)
+2026-10-22T21:48:18.5274141Z ✔ real Chrome: homepage is personal, translated and usable by keyboard at 320px, 390px and desktop (9225.498606ms)
+2026-10-22T21:48:18.5274707Z ✔ phone photo preparation really resizes twenty MP, preserves alpha and applies EXIF orientation (1802.721863ms)
+2026-10-22T21:48:18.5275329Z ▶ real Chrome: manual backup creation and encrypted download are explicit, translated and keyboard accessible at three widths
+2026-10-22T21:48:18.5275669Z   ✔ fr 320px (1099.800854ms)
+2026-10-22T21:48:18.5275824Z   ✔ fr 375px (1314.564571ms)
+2026-10-22T21:48:18.5275983Z   ✔ fr 1280px (1309.384246ms)
+2026-10-22T21:48:18.5276133Z   ✔ en 320px (1693.19279ms)
+2026-10-22T21:48:18.5276284Z   ✔ en 375px (1554.735421ms)
+2026-10-22T21:48:18.5276433Z   ✔ en 1280px (1388.855567ms)
+2026-10-22T21:48:18.5276846Z ✔ real Chrome: manual backup creation and encrypted download are explicit, translated and keyboard accessible at three widths (8562.330166ms)
+2026-10-22T21:48:18.5277416Z ✔ real Chrome: a lost capture acknowledgement survives a visibility handoff and a server interruption without a replay (1619.604732ms)
+2026-10-22T21:48:18.5277890Z ✔ real Chrome: a changed administrator session suppresses a pending archive download (1348.593177ms)
+2026-10-22T21:48:18.5278405Z ✔ Chrome 320px: trusted click subscribes directly, language changes preserve state and disabling affects this preference only (1749.49087ms)
+2026-10-22T21:48:18.5278895Z ✔ Chrome: refused notification permission stays off without prompting or subscribing (684.036244ms)
+2026-10-22T21:48:18.5279598Z ✔ Chrome: a changed cookie owner prevents the subscription POST and shows no false enabled state (938.279676ms)
+2026-10-22T21:48:18.5280518Z ▶ real Chrome: private diagnostic is translated, bounded and downloadable by keyboard on narrow and wide screens
+2026-10-22T21:48:18.5280992Z   ✖ fr, 320px (899.133415ms)
+2026-10-22T21:48:18.5281233Z   ✖ fr, 375px (1045.674757ms)
+2026-10-22T21:48:18.5281467Z   ✖ fr, 1280px (872.974025ms)
+2026-10-22T21:48:18.5281701Z   ✖ en, 320px (1015.691608ms)
+2026-10-22T21:48:18.5281932Z   ✖ en, 375px (954.549706ms)
+2026-10-22T21:48:18.5282180Z   ✖ en, 1280px (1040.455215ms)
+2026-10-22T21:48:18.5282798Z ✖ real Chrome: private diagnostic is translated, bounded and downloadable by keyboard on narrow and wide screens (5992.293384ms)
+2026-10-22T21:48:18.5283563Z ▶ real Chrome: the privacy summary states the actual closure capability in French and English
+2026-10-22T21:48:18.5283960Z   ✔ disabled (827.298069ms)
+2026-10-22T21:48:18.5284191Z   ✔ enabled (1010.061278ms)
+2026-10-22T21:48:18.5284681Z ✔ real Chrome: the privacy summary states the actual closure capability in French and English (2026.101908ms)
+2026-10-22T21:48:18.5285146Z ▶ real Chrome: private preparation at mobile and desktop widths, FR/EN, keyboard save and independent notice language
+2026-10-22T21:48:18.5285553Z   ✔ fr 320px (1946.49842ms)
+2026-10-22T21:48:18.5285701Z   ✔ fr 375px (1550.492718ms)
+2026-10-22T21:48:18.5285847Z   ✔ fr 1280px (1625.869688ms)
+2026-10-22T21:48:18.5285992Z   ✔ en 320px (1709.103435ms)
+2026-10-22T21:48:18.5286141Z   ✔ en 375px (1624.224971ms)
+2026-10-22T21:48:18.5286285Z   ✔ en 1280px (1366.91333ms)
+2026-10-22T21:48:18.5286888Z ✔ real Chrome: private preparation at mobile and desktop widths, FR/EN, keyboard save and independent notice language (9983.39642ms)
+2026-10-22T21:48:18.5287841Z ✔ real Chrome: conflict preserves edits, compares saved data and requires a separate explicit save (1988.292157ms)
+2026-10-22T21:48:18.5288608Z ✔ real Chrome: hiding clears private DOM and restores unsaved edits only for the same proved login (1377.402199ms)
+2026-10-22T21:48:18.5289435Z ✔ real Chrome: a replacement login during save discards the obsolete response and never repeats the write (1365.940312ms)
+2026-10-22T21:48:18.5290277Z ✔ real Chrome: markup in drafts stays literal and never executes when previewing or changing UI language (1318.9217ms)
+2026-10-22T21:48:18.5291178Z ▶ real Chrome: client recovery is deliberate, private, translated and usable from phone to desktop
+2026-10-22T21:48:18.5291799Z   ✔ fr, 320px: native validation, accepted request, deliberate reset and sign-in (2641.35905ms)
+2026-10-22T21:48:18.5292388Z   ✔ fr, 375px: native validation, accepted request, deliberate reset and sign-in (2219.643706ms)
+2026-10-22T21:48:18.5293016Z   ✔ fr, 1280px: native validation, accepted request, deliberate reset and sign-in (2165.265154ms)
+2026-10-22T21:48:18.5293618Z   ✔ en, 320px: native validation, accepted request, deliberate reset and sign-in (2528.231973ms)
+2026-10-22T21:48:18.5294222Z   ✔ en, 375px: native validation, accepted request, deliberate reset and sign-in (2239.631922ms)
+2026-10-22T21:48:18.5294841Z   ✔ en, 1280px: native validation, accepted request, deliberate reset and sign-in (2745.909935ms)
+2026-10-22T21:48:18.5295295Z   ✔ an unavailable capability can be retried without submitting a reset or losing the link (1605.600343ms)
+2026-10-22T21:48:18.5295712Z   ✔ a lost reset acknowledgment requires an explicit retry; token previously consumed=false (1997.266817ms)
+2026-10-22T21:48:18.5296158Z   ✔ a lost reset acknowledgment requires an explicit retry; token previously consumed=true (2043.066757ms)
+2026-10-22T21:48:18.5296592Z   ✔ an expired link clears its password form and offers a fresh neutral request (1633.514445ms)
+2026-10-22T21:48:18.5296980Z   ✔ a malformed fragment is removed and can never become a reset submission (1123.955395ms)
+2026-10-22T21:48:18.5297358Z   ✔ reloading the cleaned URL cannot recover a token from browser storage (944.907492ms)
+2026-10-22T21:48:18.5297800Z   ✔ choosing a new link abandons a pending reset and cannot be overwritten by its acknowledgment (1634.257872ms)
+2026-10-22T21:48:18.5298234Z   ✔ an intentionally disabled recovery keeps sign-in available and hides both forms (927.673925ms)
+2026-10-22T21:48:18.5298725Z ✔ real Chrome: client recovery is deliberate, private, translated and usable from phone to desktop (26543.123369ms)
+2026-10-22T21:48:18.5299227Z ✖ real Chrome: late 401 responses preserve the newer native admin/client cookie on every shared surface (782.27432ms)
+2026-10-22T21:48:18.5299741Z ✔ Chrome mobile FR/EN: create, postpone, complete and reopen a private client task without overflow (5125.171535ms)
+2026-10-22T21:48:18.5300253Z ✔ Chrome: a lost task acknowledgement retries one stable request and a conflict preserves the unsaved draft (2843.873522ms)
+2026-10-22T21:48:18.5301077Z ✔ Chrome: hiding the page clears private task markup, same-owner resume preserves drafts and replacement accounts purge them (1356.051077ms)
+2026-10-22T21:48:18.5301613Z ✔ Chrome: the common task view spans clients and paginates without truncating the private work list (1790.746842ms)
+2026-10-22T21:48:18.5302104Z ✔ Chrome: a CSRF refusal freezes an uncertain task until connection refresh and explicit retry (2244.849977ms)
+2026-10-22T21:48:18.5302741Z ✔ Chrome: a list read begun before a save cannot restore the old private task after the mutation (1738.365166ms)
+2026-10-22T21:48:18.5303163Z ✔ video draft, native decoding, retry and gallery at 320px in fr (3679.431677ms)
+2026-10-22T21:48:18.5303528Z ✔ video draft, native decoding, retry and gallery at 320px in en (2471.084791ms)
+2026-10-22T21:48:18.5303872Z ✔ video draft, native decoding, retry and gallery at 375px in fr (2851.801784ms)
+2026-10-22T21:48:18.5304212Z ✔ video draft, native decoding, retry and gallery at 375px in en (2991.971949ms)
+2026-10-22T21:48:18.5304655Z ✔ video draft, native decoding, retry and gallery at 1280px in fr (1887.462351ms)
+2026-10-22T21:48:18.5304999Z ✔ video draft, native decoding, retry and gallery at 1280px in en (1734.08157ms)
+2026-10-22T21:48:18.5305313Z ℹ tests 230
+2026-10-22T21:48:18.5305516Z ℹ suites 0
+2026-10-22T21:48:18.5305715Z ℹ pass 206
+2026-10-22T21:48:18.5305897Z ℹ fail 24
+2026-10-22T21:48:18.5306104Z ℹ cancelled 0
+2026-10-22T21:48:18.5306227Z ℹ skipped 0
+2026-10-22T21:48:18.5306359Z ℹ todo 0
+2026-10-22T21:48:18.5306505Z ℹ duration_ms 212923.607374
+2026-10-22T21:48:18.5306675Z 
+2026-10-22T21:48:18.5306743Z ✖ failing tests:
+2026-10-22T21:48:18.5306811Z 
+2026-10-22T21:48:18.5306956Z test at tests/browser/account-closures.browser.mjs:56:88
+2026-10-22T21:48:18.5307169Z ✖ fr 320px (2102.438163ms)
+2026-10-22T21:48:18.5307396Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+2026-10-22T21:48:18.5307608Z   
+2026-10-22T21:48:18.5307723Z   false !== true
+2026-10-22T21:48:18.5307827Z   
+2026-10-22T21:48:18.5308202Z       at TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/account-closures.browser.mjs:65:16)
+2026-10-22T21:48:18.5308627Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5308914Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5309338Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/account-closures.browser.mjs:56:80)
+2026-10-22T21:48:18.5309712Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5309993Z       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+2026-10-22T21:48:18.5310215Z     generatedMessage: true,
+2026-10-22T21:48:18.5310530Z     code: 'ERR_ASSERTION',
+2026-10-22T21:48:18.5310667Z     actual: false,
+2026-10-22T21:48:18.5310785Z     expected: true,
+2026-10-22T21:48:18.5310923Z     operator: 'strictEqual',
+2026-10-22T21:48:18.5311106Z     diff: 'simple'
+2026-10-22T21:48:18.5311288Z   }
+2026-10-22T21:48:18.5311378Z 
+2026-10-22T21:48:18.5311559Z test at tests/browser/account-closures.browser.mjs:56:88
+2026-10-22T21:48:18.5311915Z ✖ fr 375px (919.654408ms)
+2026-10-22T21:48:18.5312279Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+2026-10-22T21:48:18.5312591Z   
+2026-10-22T21:48:18.5312742Z   false !== true
+2026-10-22T21:48:18.5312903Z   
+2026-10-22T21:48:18.5313414Z       at TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/account-closures.browser.mjs:65:16)
+2026-10-22T21:48:18.5314124Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5314417Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5314939Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/account-closures.browser.mjs:56:80)
+2026-10-22T21:48:18.5315304Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5315569Z       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+2026-10-22T21:48:18.5315789Z     generatedMessage: true,
+2026-10-22T21:48:18.5315924Z     code: 'ERR_ASSERTION',
+2026-10-22T21:48:18.5316054Z     actual: false,
+2026-10-22T21:48:18.5316170Z     expected: true,
+2026-10-22T21:48:18.5316291Z     operator: 'strictEqual',
+2026-10-22T21:48:18.5316420Z     diff: 'simple'
+2026-10-22T21:48:18.5316657Z   }
+2026-10-22T21:48:18.5316718Z 
+2026-10-22T21:48:18.5316828Z test at tests/browser/account-closures.browser.mjs:56:88
+2026-10-22T21:48:18.5317041Z ✖ en 320px (838.657344ms)
+2026-10-22T21:48:18.5317236Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+2026-10-22T21:48:18.5317423Z   
+2026-10-22T21:48:18.5317523Z   false !== true
+2026-10-22T21:48:18.5317627Z   
+2026-10-22T21:48:18.5317914Z       at TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/account-closures.browser.mjs:65:16)
+2026-10-22T21:48:18.5318394Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5318658Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5319028Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/account-closures.browser.mjs:56:80)
+2026-10-22T21:48:18.5319379Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5319642Z       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+2026-10-22T21:48:18.5319863Z     generatedMessage: true,
+2026-10-22T21:48:18.5319996Z     code: 'ERR_ASSERTION',
+2026-10-22T21:48:18.5320123Z     actual: false,
+2026-10-22T21:48:18.5320239Z     expected: true,
+2026-10-22T21:48:18.5320525Z     operator: 'strictEqual',
+2026-10-22T21:48:18.5320700Z     diff: 'simple'
+2026-10-22T21:48:18.5320813Z   }
+2026-10-22T21:48:18.5320870Z 
+2026-10-22T21:48:18.5320982Z test at tests/browser/account-closures.browser.mjs:56:88
+2026-10-22T21:48:18.5321185Z ✖ en 375px (1041.576575ms)
+2026-10-22T21:48:18.5321377Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+2026-10-22T21:48:18.5321562Z   
+2026-10-22T21:48:18.5321660Z   false !== true
+2026-10-22T21:48:18.5321765Z   
+2026-10-22T21:48:18.5322056Z       at TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/account-closures.browser.mjs:65:16)
+2026-10-22T21:48:18.5322446Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5322709Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5323108Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/account-closures.browser.mjs:56:80)
+2026-10-22T21:48:18.5323464Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5323748Z       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+2026-10-22T21:48:18.5323970Z     generatedMessage: true,
+2026-10-22T21:48:18.5324102Z     code: 'ERR_ASSERTION',
+2026-10-22T21:48:18.5324229Z     actual: false,
+2026-10-22T21:48:18.5324347Z     expected: true,
+2026-10-22T21:48:18.5324468Z     operator: 'strictEqual',
+2026-10-22T21:48:18.5324595Z     diff: 'simple'
+2026-10-22T21:48:18.5324702Z   }
+2026-10-22T21:48:18.5324759Z 
+2026-10-22T21:48:18.5324880Z test at tests/browser/chat-accessibility.browser.mjs:487:1
+2026-10-22T21:48:18.5325344Z ✖ Chrome 320px: keyboard emoji panel inserts at the selection without photos or automatic sending, and Escape restores focus (1649.903876ms)
+2026-10-22T21:48:18.5325743Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+2026-10-22T21:48:18.5325956Z   + actual - expected
+2026-10-22T21:48:18.5326072Z   
+2026-10-22T21:48:18.5326169Z     [
+2026-10-22T21:48:18.5326274Z       8,
+2026-10-22T21:48:18.5326378Z       8,
+2026-10-22T21:48:18.5326483Z   +   'open-emojis'
+2026-10-22T21:48:18.5326605Z   -   'message-body'
+2026-10-22T21:48:18.5326744Z     ]
+2026-10-22T21:48:18.5326840Z   
+2026-10-22T21:48:18.5327168Z       at TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/chat-accessibility.browser.mjs:503:14)
+2026-10-22T21:48:18.5327570Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5327938Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5328202Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+2026-10-22T21:48:18.5328445Z     generatedMessage: true,
+2026-10-22T21:48:18.5328582Z     code: 'ERR_ASSERTION',
+2026-10-22T21:48:18.5328729Z     actual: [ 8, 8, 'open-emojis' ],
+2026-10-22T21:48:18.5328889Z     expected: [ 8, 8, 'message-body' ],
+2026-10-22T21:48:18.5329049Z     operator: 'deepStrictEqual',
+2026-10-22T21:48:18.5329340Z     diff: 'simple'
+2026-10-22T21:48:18.5329449Z   }
+2026-10-22T21:48:18.5329503Z 
+2026-10-22T21:48:18.5329621Z test at tests/browser/chat-accessibility.browser.mjs:520:1
+2026-10-22T21:48:18.5330066Z ✖ Chrome 320px: skin tone changes the preview and inserted text, survives reopening and translation without sending (1252.882053ms)
+2026-10-22T21:48:18.5330586Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+2026-10-22T21:48:18.5330800Z   + actual - expected
+2026-10-22T21:48:18.5330921Z   
+2026-10-22T21:48:18.5331028Z     [
+2026-10-22T21:48:18.5331129Z       10,
+2026-10-22T21:48:18.5331228Z       10,
+2026-10-22T21:48:18.5331331Z   +   'open-emojis'
+2026-10-22T21:48:18.5331473Z   -   'message-body'
+2026-10-22T21:48:18.5331591Z     ]
+2026-10-22T21:48:18.5331696Z   
+2026-10-22T21:48:18.5332013Z       at TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/chat-accessibility.browser.mjs:537:14)
+2026-10-22T21:48:18.5332427Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5332767Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5333186Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+2026-10-22T21:48:18.5333539Z     generatedMessage: true,
+2026-10-22T21:48:18.5333753Z     code: 'ERR_ASSERTION',
+2026-10-22T21:48:18.5334005Z     actual: [ 10, 10, 'open-emojis' ],
+2026-10-22T21:48:18.5334264Z     expected: [ 10, 10, 'message-body' ],
+2026-10-22T21:48:18.5334505Z     operator: 'deepStrictEqual',
+2026-10-22T21:48:18.5334658Z     diff: 'simple'
+2026-10-22T21:48:18.5334774Z   }
+2026-10-22T21:48:18.5334831Z 
+2026-10-22T21:48:18.5334959Z test at tests/browser/chat-accessibility.browser.mjs:558:1
+2026-10-22T21:48:18.5335379Z ✖ Chrome desktop and 320px: actual Tab / Enter contact selection and return, French / English (947.581243ms)
+2026-10-22T21:48:18.5335746Z   Error: WebDriver POST /session/:session/execute/sync: command failed (HTTP 500)
+2026-10-22T21:48:18.5336076Z       at file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/webdriver.mjs:118:51
+2026-10-22T21:48:18.5336413Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5336846Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/chat-accessibility.browser.mjs:568:20)
+2026-10-22T21:48:18.5337213Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5337472Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+2026-10-22T21:48:18.5337636Z 
+2026-10-22T21:48:18.5337754Z test at tests/browser/chat-accessibility.browser.mjs:710:1
+2026-10-22T21:48:18.5338234Z ✖ Chrome 320px: both roles edit their public profile with the keyboard, translated labels and focus restored to the opener (11376.688354ms)
+2026-10-22T21:48:18.5338573Z   Error: Timed out: profile loaded with the name focused
+2026-10-22T21:48:18.5338876Z       at waitUntil (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/webdriver.mjs:16:9)
+2026-10-22T21:48:18.5339327Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/chat-accessibility.browser.mjs:721:7)
+2026-10-22T21:48:18.5339684Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5339938Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+2026-10-22T21:48:18.5340097Z 
+2026-10-22T21:48:18.5340445Z test at tests/browser/chat-accessibility.browser.mjs:1108:3
+2026-10-22T21:48:18.5340856Z ✖ Chrome 320px fr: quick replies preserve the draft and send only after editing and explicit submission (1043.993368ms)
+2026-10-22T21:48:18.5341197Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+2026-10-22T21:48:18.5341394Z   + actual - expected
+2026-10-22T21:48:18.5341510Z   
+2026-10-22T21:48:18.5341621Z   + 'open-composer-tools'
+2026-10-22T21:48:18.5341836Z   - 'message-body'
+2026-10-22T21:48:18.5341945Z   
+2026-10-22T21:48:18.5342248Z       at TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/chat-accessibility.browser.mjs:1128:14)
+2026-10-22T21:48:18.5342646Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5342918Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5343317Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+2026-10-22T21:48:18.5343632Z     generatedMessage: true,
+2026-10-22T21:48:18.5343771Z     code: 'ERR_ASSERTION',
+2026-10-22T21:48:18.5343918Z     actual: 'open-composer-tools',
+2026-10-22T21:48:18.5344131Z     expected: 'message-body',
+2026-10-22T21:48:18.5344311Z     operator: 'strictEqual',
+2026-10-22T21:48:18.5344445Z     diff: 'simple'
+2026-10-22T21:48:18.5344556Z   }
+2026-10-22T21:48:18.5344616Z 
+2026-10-22T21:48:18.5344733Z test at tests/browser/chat-accessibility.browser.mjs:1108:3
+2026-10-22T21:48:18.5345214Z ✖ Chrome 320px en: quick replies preserve the draft and send only after editing and explicit submission (1113.632524ms)
+2026-10-22T21:48:18.5345575Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+2026-10-22T21:48:18.5345769Z   + actual - expected
+2026-10-22T21:48:18.5345883Z   
+2026-10-22T21:48:18.5345991Z   + 'open-composer-tools'
+2026-10-22T21:48:18.5346122Z   - 'message-body'
+2026-10-22T21:48:18.5346233Z   
+2026-10-22T21:48:18.5346534Z       at TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/chat-accessibility.browser.mjs:1128:14)
+2026-10-22T21:48:18.5346933Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5347197Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5347458Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+2026-10-22T21:48:18.5347677Z     generatedMessage: true,
+2026-10-22T21:48:18.5347812Z     code: 'ERR_ASSERTION',
+2026-10-22T21:48:18.5347954Z     actual: 'open-composer-tools',
+2026-10-22T21:48:18.5348099Z     expected: 'message-body',
+2026-10-22T21:48:18.5348237Z     operator: 'strictEqual',
+2026-10-22T21:48:18.5348370Z     diff: 'simple'
+2026-10-22T21:48:18.5348478Z   }
+2026-10-22T21:48:18.5348533Z 
+2026-10-22T21:48:18.5348651Z test at tests/browser/chat-accessibility.browser.mjs:1314:1
+2026-10-22T21:48:18.5349029Z ✖ Chrome: client tombstones are absent from the actual DOM while admin history retains them (1283.044118ms)
+2026-10-22T21:48:18.5349353Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+2026-10-22T21:48:18.5349559Z   + actual - expected
+2026-10-22T21:48:18.5349672Z   
+2026-10-22T21:48:18.5349767Z     [
+2026-10-22T21:48:18.5349869Z   -   '1',
+2026-10-22T21:48:18.5349971Z       '2',
+2026-10-22T21:48:18.5350071Z       '3'
+2026-10-22T21:48:18.5350168Z     ]
+2026-10-22T21:48:18.5350267Z   
+2026-10-22T21:48:18.5350778Z       at TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/chat-accessibility.browser.mjs:1322:14)
+2026-10-22T21:48:18.5351174Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5351439Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5351701Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+2026-10-22T21:48:18.5351921Z     generatedMessage: true,
+2026-10-22T21:48:18.5352159Z     code: 'ERR_ASSERTION',
+2026-10-22T21:48:18.5352287Z     actual: [ '2', '3' ],
+2026-10-22T21:48:18.5352423Z     expected: [ '1', '2', '3' ],
+2026-10-22T21:48:18.5352571Z     operator: 'deepStrictEqual',
+2026-10-22T21:48:18.5352708Z     diff: 'simple'
+2026-10-22T21:48:18.5352840Z   }
+2026-10-22T21:48:18.5352895Z 
+2026-10-22T21:48:18.5353016Z test at tests/browser/help.browser.mjs:240:94
+2026-10-22T21:48:18.5353377Z ✖ chat, 320px: opening Help leaves the real source document and its in-memory work in place (1407.157535ms)
+2026-10-22T21:48:18.5353811Z   Error: WebDriver POST /session/:session/element/:element/click: command failed (HTTP 400)
+2026-10-22T21:48:18.5354148Z       at file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/webdriver.mjs:118:51
+2026-10-22T21:48:18.5354474Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5354840Z       at async Object.click (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/webdriver.mjs:230:33)
+2026-10-22T21:48:18.5355272Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/help.browser.mjs:267:9)
+2026-10-22T21:48:18.5355629Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5356184Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/help.browser.mjs:240:86)
+2026-10-22T21:48:18.5356691Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5356949Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+2026-10-22T21:48:18.5357109Z 
+2026-10-22T21:48:18.5357203Z test at tests/browser/help.browser.mjs:240:94
+2026-10-22T21:48:18.5357561Z ✖ chat, 375px: opening Help leaves the real source document and its in-memory work in place (1411.062838ms)
+2026-10-22T21:48:18.5357922Z   Error: WebDriver POST /session/:session/element/:element/click: command failed (HTTP 400)
+2026-10-22T21:48:18.5358260Z       at file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/webdriver.mjs:118:51
+2026-10-22T21:48:18.5358584Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5358947Z       at async Object.click (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/webdriver.mjs:230:33)
+2026-10-22T21:48:18.5359461Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/help.browser.mjs:267:9)
+2026-10-22T21:48:18.5359921Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5360890Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/help.browser.mjs:240:86)
+2026-10-22T21:48:18.5361469Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5361920Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+2026-10-22T21:48:18.5362250Z 
+2026-10-22T21:48:18.5362368Z test at tests/browser/help.browser.mjs:240:94
+2026-10-22T21:48:18.5362855Z ✖ chat, 1280px: opening Help leaves the real source document and its in-memory work in place (1186.271552ms)
+2026-10-22T21:48:18.5363225Z   Error: WebDriver POST /session/:session/element/:element/click: command failed (HTTP 400)
+2026-10-22T21:48:18.5363574Z       at file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/webdriver.mjs:118:51
+2026-10-22T21:48:18.5363900Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5364264Z       at async Object.click (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/webdriver.mjs:230:33)
+2026-10-22T21:48:18.5364695Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/help.browser.mjs:267:9)
+2026-10-22T21:48:18.5365025Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5365519Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/help.browser.mjs:240:86)
+2026-10-22T21:48:18.5365852Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5366107Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+2026-10-22T21:48:18.5366267Z 
+2026-10-22T21:48:18.5366384Z test at tests/browser/operations-report.browser.mjs:45:88
+2026-10-22T21:48:18.5366597Z ✖ fr, 320px (899.133415ms)
+2026-10-22T21:48:18.5366884Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+2026-10-22T21:48:18.5367085Z   + actual - expected
+2026-10-22T21:48:18.5367202Z   
+2026-10-22T21:48:18.5367307Z   + 'Messages'
+2026-10-22T21:48:18.5367430Z   - 'Ouvrir la messagerie'
+2026-10-22T21:48:18.5367551Z   
+2026-10-22T21:48:18.5367847Z       at TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/operations-report.browser.mjs:54:16)
+2026-10-22T21:48:18.5368243Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5368505Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5368877Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/operations-report.browser.mjs:45:80)
+2026-10-22T21:48:18.5369233Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5369501Z       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+2026-10-22T21:48:18.5369744Z     generatedMessage: true,
+2026-10-22T21:48:18.5369883Z     code: 'ERR_ASSERTION',
+2026-10-22T21:48:18.5370015Z     actual: 'Messages',
+2026-10-22T21:48:18.5370169Z     expected: 'Ouvrir la messagerie',
+2026-10-22T21:48:18.5370462Z     operator: 'strictEqual',
+2026-10-22T21:48:18.5370597Z     diff: 'simple'
+2026-10-22T21:48:18.5370708Z   }
+2026-10-22T21:48:18.5370767Z 
+2026-10-22T21:48:18.5370886Z test at tests/browser/operations-report.browser.mjs:45:88
+2026-10-22T21:48:18.5371095Z ✖ fr, 375px (1045.674757ms)
+2026-10-22T21:48:18.5371295Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+2026-10-22T21:48:18.5371491Z   + actual - expected
+2026-10-22T21:48:18.5371605Z   
+2026-10-22T21:48:18.5371707Z   + 'Messages'
+2026-10-22T21:48:18.5371823Z   - 'Ouvrir la messagerie'
+2026-10-22T21:48:18.5371942Z   
+2026-10-22T21:48:18.5372237Z       at TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/operations-report.browser.mjs:54:16)
+2026-10-22T21:48:18.5372636Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5372900Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5373319Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/operations-report.browser.mjs:45:80)
+2026-10-22T21:48:18.5373678Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5373950Z       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+2026-10-22T21:48:18.5374173Z     generatedMessage: true,
+2026-10-22T21:48:18.5374306Z     code: 'ERR_ASSERTION',
+2026-10-22T21:48:18.5374434Z     actual: 'Messages',
+2026-10-22T21:48:18.5374577Z     expected: 'Ouvrir la messagerie',
+2026-10-22T21:48:18.5374725Z     operator: 'strictEqual',
+2026-10-22T21:48:18.5374860Z     diff: 'simple'
+2026-10-22T21:48:18.5374971Z   }
+2026-10-22T21:48:18.5375028Z 
+2026-10-22T21:48:18.5375150Z test at tests/browser/operations-report.browser.mjs:45:88
+2026-10-22T21:48:18.5375351Z ✖ fr, 1280px (872.974025ms)
+2026-10-22T21:48:18.5375546Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+2026-10-22T21:48:18.5375740Z   + actual - expected
+2026-10-22T21:48:18.5375858Z   
+2026-10-22T21:48:18.5375959Z   + 'Messages'
+2026-10-22T21:48:18.5376080Z   - 'Ouvrir la messagerie'
+2026-10-22T21:48:18.5376200Z   
+2026-10-22T21:48:18.5376589Z       at TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/operations-report.browser.mjs:54:16)
+2026-10-22T21:48:18.5376981Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5377248Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5377640Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/operations-report.browser.mjs:45:80)
+2026-10-22T21:48:18.5378133Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5378399Z       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+2026-10-22T21:48:18.5378620Z     generatedMessage: true,
+2026-10-22T21:48:18.5378754Z     code: 'ERR_ASSERTION',
+2026-10-22T21:48:18.5378884Z     actual: 'Messages',
+2026-10-22T21:48:18.5379023Z     expected: 'Ouvrir la messagerie',
+2026-10-22T21:48:18.5379170Z     operator: 'strictEqual',
+2026-10-22T21:48:18.5379300Z     diff: 'simple'
+2026-10-22T21:48:18.5379411Z   }
+2026-10-22T21:48:18.5379469Z 
+2026-10-22T21:48:18.5379585Z test at tests/browser/operations-report.browser.mjs:45:88
+2026-10-22T21:48:18.5379787Z ✖ en, 320px (1015.691608ms)
+2026-10-22T21:48:18.5379980Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+2026-10-22T21:48:18.5380175Z   + actual - expected
+2026-10-22T21:48:18.5380288Z   
+2026-10-22T21:48:18.5380512Z   + 'Messages'
+2026-10-22T21:48:18.5380633Z   - 'Open messaging'
+2026-10-22T21:48:18.5380746Z   
+2026-10-22T21:48:18.5381037Z       at TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/operations-report.browser.mjs:54:16)
+2026-10-22T21:48:18.5381427Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5381691Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5382069Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/operations-report.browser.mjs:45:80)
+2026-10-22T21:48:18.5382421Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5382682Z       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+2026-10-22T21:48:18.5382908Z     generatedMessage: true,
+2026-10-22T21:48:18.5383056Z     code: 'ERR_ASSERTION',
+2026-10-22T21:48:18.5383200Z     actual: 'Messages',
+2026-10-22T21:48:18.5383346Z     expected: 'Open messaging',
+2026-10-22T21:48:18.5383488Z     operator: 'strictEqual',
+2026-10-22T21:48:18.5383618Z     diff: 'simple'
+2026-10-22T21:48:18.5383728Z   }
+2026-10-22T21:48:18.5383785Z 
+2026-10-22T21:48:18.5383897Z test at tests/browser/operations-report.browser.mjs:45:88
+2026-10-22T21:48:18.5384102Z ✖ en, 375px (954.549706ms)
+2026-10-22T21:48:18.5384297Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+2026-10-22T21:48:18.5384491Z   + actual - expected
+2026-10-22T21:48:18.5384604Z   
+2026-10-22T21:48:18.5384703Z   + 'Messages'
+2026-10-22T21:48:18.5384820Z   - 'Open messaging'
+2026-10-22T21:48:18.5384933Z   
+2026-10-22T21:48:18.5385228Z       at TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/operations-report.browser.mjs:54:16)
+2026-10-22T21:48:18.5385619Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5385883Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5386262Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/operations-report.browser.mjs:45:80)
+2026-10-22T21:48:18.5386620Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5386883Z       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+2026-10-22T21:48:18.5387104Z     generatedMessage: true,
+2026-10-22T21:48:18.5387238Z     code: 'ERR_ASSERTION',
+2026-10-22T21:48:18.5387371Z     actual: 'Messages',
+2026-10-22T21:48:18.5387606Z     expected: 'Open messaging',
+2026-10-22T21:48:18.5387750Z     operator: 'strictEqual',
+2026-10-22T21:48:18.5387879Z     diff: 'simple'
+2026-10-22T21:48:18.5387988Z   }
+2026-10-22T21:48:18.5388045Z 
+2026-10-22T21:48:18.5388159Z test at tests/browser/operations-report.browser.mjs:45:88
+2026-10-22T21:48:18.5388368Z ✖ en, 1280px (1040.455215ms)
+2026-10-22T21:48:18.5388566Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+2026-10-22T21:48:18.5388841Z   + actual - expected
+2026-10-22T21:48:18.5388954Z   
+2026-10-22T21:48:18.5389052Z   + 'Messages'
+2026-10-22T21:48:18.5389171Z   - 'Open messaging'
+2026-10-22T21:48:18.5389283Z   
+2026-10-22T21:48:18.5389595Z       at TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/operations-report.browser.mjs:54:16)
+2026-10-22T21:48:18.5389993Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:48:18.5390256Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5390795Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/operations-report.browser.mjs:45:80)
+2026-10-22T21:48:18.5391154Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:48:18.5391418Z       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+2026-10-22T21:48:18.5391639Z     generatedMessage: true,
+2026-10-22T21:48:18.5391778Z     code: 'ERR_ASSERTION',
+2026-10-22T21:48:18.5391908Z     actual: 'Messages',
+2026-10-22T21:48:18.5392044Z     expected: 'Open messaging',
+2026-10-22T21:48:18.5392181Z     operator: 'strictEqual',
+2026-10-22T21:48:18.5392314Z     diff: 'simple'
+2026-10-22T21:48:18.5392423Z   }
+2026-10-22T21:48:18.5392486Z 
+2026-10-22T21:48:18.5392589Z test at tests/browser/session-race.browser.mjs:14:1
+2026-10-22T21:48:18.5393063Z ✖ real Chrome: late 401 responses preserve the newer native admin/client cookie on every shared surface (782.27432ms)
+2026-10-22T21:48:18.5393606Z   TypeError [Error]: Cannot read properties of undefined (reading 'handler')
+2026-10-22T21:48:18.5394204Z       at Server.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/session-race.browser.mjs:31:25)
+2026-10-22T21:48:18.5394733Z       at Server.emit (node:events:514:28)
+2026-10-22T21:48:18.5395026Z       at parserOnIncoming (node:_http_server:1293:12)
+2026-10-22T21:48:18.5395396Z       at HTTPParser.parserOnHeadersComplete (node:_http_common:125:17)
+2026-10-22T21:48:18.5408320Z ##[error]Process completed with exit code 1.
+2026-10-22T21:48:18.5465802Z ##[group]Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+2026-10-22T21:48:18.5466031Z with:
+2026-10-22T21:48:18.5466144Z   name: homepage-render
+2026-10-22T21:48:18.5466266Z   retention-days: 7
+2026-10-22T21:48:18.5466386Z   if-no-files-found: error
+2026-10-22T21:48:18.5466520Z   path: artifacts/homepage/*.png
+2026-10-22T21:48:18.5466657Z   compression-level: 6
+2026-10-22T21:48:18.5466775Z   overwrite: false
+2026-10-22T21:48:18.5466898Z   include-hidden-files: false
+2026-10-22T21:48:18.5467028Z   archive: true
+2026-10-22T21:48:18.5467141Z ##[endgroup]
+2026-10-22T21:48:18.6486207Z With the provided path, there will be 14 files uploaded
+2026-10-22T21:48:18.6486813Z Artifact name is valid!
+2026-10-22T21:48:18.6487075Z Root directory input is valid!
+2026-10-22T21:48:18.9760558Z Uploading artifact: homepage-render.zip
+2026-10-22T21:48:18.9785017Z Beginning upload of artifact content to blob storage
+2026-10-22T21:48:19.6897532Z Uploaded bytes 2773987
+2026-10-22T21:48:19.7438503Z Finished uploading artifact content to blob storage!
+2026-10-22T21:48:19.7439086Z SHA256 digest of uploaded artifact is 6780881e9dfccc78a5ccd8986e7856877be913b35092d544837b1eceb2642760
+2026-10-22T21:48:19.7439512Z Finalizing artifact upload
+2026-10-22T21:48:20.3181008Z Artifact homepage-render successfully finalized. Artifact ID 12461531401
+2026-10-22T21:48:20.3181673Z Artifact homepage-render has been successfully uploaded! Final size is 2773987 bytes. Artifact ID is 12461531401
+2026-10-22T21:48:20.3184149Z Artifact download URL: https://github.com/fredbuhr/jessiemessage/actions/runs/39859668984/artifacts/12461531401
+2026-10-22T21:48:20.3340519Z Post job cleanup.
+2026-10-22T21:48:20.3917247Z [command]/usr/bin/git version
+2026-10-22T21:48:20.3951173Z git version 2.55.0
+2026-10-22T21:48:20.3975118Z Temporarily overriding HOME='/home/runner/work/_temp/c3ce5f0d-3d8f-43e8-8821-e08c916291ca' before making global git config changes
+2026-10-22T21:48:20.3976189Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-22T21:48:20.3978676Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/jessiemessage/jessiemessage
+2026-10-22T21:48:20.4011006Z Removing SSH command configuration
+2026-10-22T21:48:20.4016200Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-22T21:48:20.4049323Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-22T21:48:20.4256048Z Removing HTTP extra header
+2026-10-22T21:48:20.4262910Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-22T21:48:20.4301675Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-22T21:48:20.4498114Z Removing includeIf entries pointing to credentials config files
+2026-10-22T21:48:20.4504108Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-22T21:48:20.4536624Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-22T21:48:20.4846771Z Cleaning up orphan processes

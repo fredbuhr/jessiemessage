@@ -1,5 +1,5 @@
 import { CLIENT_ADMISSION_POLICY } from "../access/admission.mjs";
-import { checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
+import { checkMutation, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { safeMedia, safeMessage } from "../chat/http.mjs";
 import { validateMessageBody } from "../chat/crypto.mjs";
 
@@ -202,7 +202,7 @@ export function createMediaHandler(service, { origin }) {
       const token = sessionToken(request, COOKIES[route.role]);
       const actor = token ? await service.actor(route.role, token) : null;
       if (!actor) {
-        const headers = method === "POST" || hasSessionCookie(request, COOKIES[route.role]) ? { "Set-Cookie": clearCookie(COOKIES[route.role]) } : {};
+        const headers = {};
         reply(response, method, 401, { error: "authentication_required" }, { ...headers, ...(method === "POST" ? { Connection: "close" } : {}) });
         if (method === "POST") request.resume();
         return true;
@@ -276,7 +276,6 @@ export function createMediaHandler(service, { origin }) {
       if (!response.headersSent && !response.destroyed) {
         const { status, code, retry } = mappedError(error);
         const headers = retry ? { "Retry-After": String(retry) } : {};
-        if (status === 401 && (method === "POST" || hasSessionCookie(request, COOKIES[route.role]))) headers["Set-Cookie"] = clearCookie(COOKIES[route.role]);
         if (method === "POST" || [400, 408, 413].includes(status)) { headers.Connection = "close"; request.resume(); }
         reply(response, method, status, { error: code }, headers);
       }

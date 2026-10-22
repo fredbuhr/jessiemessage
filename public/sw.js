@@ -12,7 +12,8 @@ self.addEventListener("push", (event) => {
   try { const data = event.data?.json(); if (data?.language === "en") language = "en"; target = notificationTarget(data); } catch { /* A visible, generic alert is still required. */ }
   event.waitUntil(self.registration.showNotification("Jessie", {
     body: language === "en" ? "A new message is waiting for you." : "Un nouveau message t’attend.",
-    lang: language, tag: "jessie-new-message", renotify: false,
+    // Keep one discreet alert while asking the device to signal each new push.
+    lang: language, tag: "jessie-new-message", renotify: true,
     icon: "/brand/icon-192.png", badge: "/brand/icon-192.png", data: { url: target },
   }));
 });

@@ -94,22 +94,21 @@ test("capabilities, own library and upload DTOs authenticate both roles and hide
 test("media cookies never accept the other role, duplicate values, or noncanonical token entropy", async (t) => {
   const { base, calls } = await fixture(t);
   for (const role of ["admin", "client"]) {
-    for (const [value, clears] of [[null, false], [cookie(role === "admin" ? "client" : "admin"), false], [`${cookie(role).split("=")[0]}=`, true], [`${cookie(role)}; ${cookie(role)}`, true], [cookie(role).replace(tokens[role], "A".repeat(42) + "B"), true]]) {
+    for (const [value] of [[null, false], [cookie(role === "admin" ? "client" : "admin"), false], [`${cookie(role).split("=")[0]}=`, true], [`${cookie(role)}; ${cookie(role)}`, true], [cookie(role).replace(tokens[role], "A".repeat(42) + "B"), true]]) {
       const before = calls.length;
       const response = await fetch(`${base}${assetsPath(role)}`, { headers: value ? { Cookie: value } : {} });
       assert.equal(response.status, 401); assert.deepEqual(await response.json(), { error: "authentication_required" });
-      if (clears) assert.match(response.headers.get("set-cookie"), new RegExp(`^${cookie(role).split("=")[0]}=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict$`));
-      else assert.equal(response.headers.get("set-cookie"), null);
+      assert.equal(response.headers.get("set-cookie"), null);
       assert.equal(calls.length, before);
     }
   }
 });
 
-test("unauthenticated media POST still clears the role cookie before admitting an upload", async (t) => {
+test("unauthenticated media POST refuses admission without changing cookies", async (t) => {
   const { base, calls, admissionRates } = await fixture(t);
   for (const role of ["admin", "client"]) {
     const response = await post(base, assetsPath(role), jpeg, uploadHeaders(role, { Cookie: "" }));
-    assert.equal(response.status, 401); assert.match(response.headers.get("set-cookie"), new RegExp(`^${cookie(role).split("=")[0]}=;.*Max-Age=0`));
+    assert.equal(response.status, 401); assert.equal(response.headers.get("set-cookie"), null);
   }
   assert.equal(calls.length, 0); assert.equal(admissionRates.length, 0);
 });
@@ -415,12 +414,12 @@ test("invalid or cross-role service metadata, URLs and byte buffers fail closed"
   }
 });
 
-test("media service errors are bounded and clear only the unauthorized role cookie", async (t) => {
+test("media service errors are bounded without changing cookies", async (t) => {
   const { base, service } = await fixture(t);
   for (const [code, status, publicCode] of [["CHAT_UNAUTHORIZED", 401, "authentication_required"], ["AUTH_INVALID", 401, "authentication_required"], ["ACCESS_EXPIRED", 403, "request_rejected"], ["ACCESS_PREREQUISITES", 403, "request_rejected"], ["CHAT_FORBIDDEN", 403, "request_rejected"], ["MEDIA_NOT_FOUND", 404, "not_found"], ["MEDIA_INPUT", 400, "invalid_request"], ["MEDIA_FORMAT", 415, "media_format"], ["MEDIA_DIMENSIONS", 422, "media_dimensions"], ["MEDIA_BUSY", 429, "try_again_later"], ["MEDIA_RATE_LIMIT", 429, "try_again_later"], ["MEDIA_STORAGE_LIMIT", 507, "storage_limit"], ["MEDIA_CAPACITY_UNAVAILABLE", 503, "media_unavailable"], ["MEDIA_UNAVAILABLE", 503, "media_unavailable"], ["ER_PRIVATE_SQL", 503, "media_unavailable"]]) {
     service.listAssets = async () => { throw Object.assign(new Error("private SQL, original name and filesystem path"), { code, retryAfter: 5, privateKey: "secret" }); };
     const response = await fetch(`${base}${assetsPath("client")}`, { headers: { Cookie: cookie("client") } }); assert.equal(response.status, status, code); assert.deepEqual(await response.json(), { error: publicCode });
-    assert.equal(response.headers.get("set-cookie") !== null, status === 401); if (status === 429) assert.equal(response.headers.get("retry-after"), "5");
+    assert.equal(response.headers.get("set-cookie"), null); if (status === 429) assert.equal(response.headers.get("retry-after"), "5");
   }
   service.listAssets = async () => { throw Object.assign(new Error("private"), { httpStatus: 400, publicCode: "private SQL" }); };
   const unexpected = await fetch(`${base}${assetsPath("client")}`, { headers: { Cookie: cookie("client") } }); assert.equal(unexpected.status, 503); assert.deepEqual(await unexpected.json(), { error: "media_unavailable" });

@@ -26,10 +26,8 @@ async function loginClient(page, fixture, { notification = null } = {}) {
   if (notification) assert.equal(await page.execute("return location.hash"), `#notification=${notification}`);
   await page.type("#login-email", fixture.client.email); await page.type("#login-password", fixture.client.password);
   await page.click("#client-login-form button[type=submit]");
-  if (!notification) {
-    await waitUntil(() => page.execute("const link=document.getElementById('client-chat-link');return !!link&&!link.hidden&&link.getClientRects().length>0"), "real active client can open their conversation");
-    await page.click("#client-chat-link");
-  }
+  // Successful explicit sign-in now opens /messages directly after its fresh
+  // owner proof; require the real workspace rather than an intermediate link.
   await chatReady(page);
 }
 async function sessionStatus(page) {

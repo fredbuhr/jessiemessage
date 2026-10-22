@@ -68,12 +68,12 @@ test("current client states navigate only to their fixed allowed destination whi
   }
 });
 
-test("current administrator destinations honor only the server chat flag", async (t) => {
+test("current administrator sessions always open their administration home", async (t) => {
   for (const chatEnabled of [false, true]) {
     const base = await listen(t, { adminSession: async () => administrator(), chatEnabled });
     const response = await fetch(`${base}/api/entry`, { headers: { Cookie: cookies(null) } });
     assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), { status: "available", client: null, administrator: { state: "connected", href: chatEnabled ? "/admin/messages" : "/admin" } });
+    assert.deepEqual(await response.json(), { status: "available", client: null, administrator: { state: "connected", href: "/admin" } });
   }
 });
 
@@ -83,7 +83,7 @@ test("two valid role cookies remain two explicit choices without identity, CSRF,
     adminSession: async (value) => { calls.push(["admin", value]); return administrator(); }, chatEnabled: true });
   const response = await fetch(`${base}/api/entry`, { headers: { Cookie: cookies(), "X-Forwarded-User": "secret-admin@example.invalid" } });
   const result = await response.json(); assert.equal(response.status, 200); privateHeaders(response);
-  assert.deepEqual(result, { status: "available", client: { state: "active", href: "/messages" }, administrator: { state: "connected", href: "/admin/messages" } });
+  assert.deepEqual(result, { status: "available", client: { state: "active", href: "/messages" }, administrator: { state: "connected", href: "/admin" } });
   assert.deepEqual(calls, [["client", CLIENT_TOKEN], ["admin", ADMIN_TOKEN]]);
   const serialized = JSON.stringify(result);
   assert.doesNotMatch(serialized, /private|secret|example\.invalid|csrf|expiresAt|password|user|pseudonym|token|"id"/i);
@@ -201,7 +201,7 @@ test("session and access expiry use the clock after both awaited lookups, includ
     now = NOW + (boundary === "access" ? 30000 : 60000); gate.resolve();
     const response = await pending; assert.equal(response.status, 200); const result = await response.json();
     assert.deepEqual(result.client, boundary === "access" ? { state: "expired", href: "/access" } : { state: "signed_out", href: "/access" });
-    assert.deepEqual(result.administrator, boundary === "access" ? { state: "connected", href: "/admin/messages" } : null);
+    assert.deepEqual(result.administrator, boundary === "access" ? { state: "connected", href: "/admin" } : null);
     assert.equal(clockCalls, 1);
   }
 });
@@ -214,15 +214,17 @@ test("an invalid or throwing post-wait clock cannot expose a usable role decisio
   }
 });
 
-test("primary transition offers role-specific resume links only while a role is signed out", async t => {
+test("only the legacy origin offers a migration link; primary anonymous clients sign in directly", async t => {
+  for (const legacyOrigin of [false, true]) {
   for (const connected of [false, true]) {
-    const base = await listen(t, { deviceTransition: true, chatEnabled: true,
+    const base = await listen(t, { deviceTransition: true, legacyOrigin, chatEnabled: true,
       clientSession: async () => connected ? client() : null, adminSession: async () => connected ? administrator() : null });
     const response = await fetch(`${base}/api/entry`, { headers: { Cookie: cookies() } });
     privateHeaders(response);
     assert.deepEqual(await response.json(), { status: "available",
-      client: { state: connected ? "active" : "signed_out", href: connected ? "/messages" : "/connect-device/client" },
-      administrator: connected ? { state: "connected", href: "/admin/messages" } : null });
+      client: { state: connected ? "active" : "signed_out", href: connected ? "/messages" : legacyOrigin ? "/connect-device/client" : "/access" },
+      administrator: connected ? { state: "connected", href: "/admin" } : null });
+  }
   }
   for (const deviceTransition of ["true", 1, null, {}]) assert.throws(() => createEntryHandler({ deviceTransition }), TypeError);
 });

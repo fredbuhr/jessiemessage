@@ -14,8 +14,8 @@ async function attest(page, fixture) {
   assert.equal(await page.execute("return document.body.textContent"), fixture.videoAttestation,
     "credentials are entered only after proving the owned loopback fixture");
 }
-async function ready(page) {
-  await waitUntil(() => page.execute("return !!document.getElementById('workspace')&&!document.getElementById('workspace').hidden&&!document.getElementById('message-body').disabled"), "SQL36 video conversation ready", 20000);
+async function ready(page, role) {
+  await waitUntil(() => page.execute("return location.pathname===arguments[0]&&!!document.getElementById('workspace')&&!document.getElementById('workspace').hidden&&!!document.getElementById('message-body')&&!document.getElementById('message-body').disabled", role === "admin" ? "/admin/messages" : "/messages"), "SQL36 video conversation ready at its authenticated role destination", 20000);
 }
 async function login(page, fixture, role, recoveryIndex = 0) {
   await attest(page, fixture);
@@ -33,10 +33,9 @@ async function login(page, fixture, role, recoveryIndex = 0) {
     await waitUntil(() => page.execute("return !!document.getElementById('client-login-form')&&!document.getElementById('client-login-form').hidden&&!document.querySelector('#client-login-form button[type=submit]').disabled"), "client login form");
     await page.type("#login-email", fixture.client.email); await page.type("#login-password", fixture.client.password);
     await page.click("#client-login-form button[type=submit]");
-    await waitUntil(() => page.execute("const n=document.getElementById('client-chat-link');return !!n&&!n.hidden&&n.getClientRects().length>0"), "active client conversation link");
-    await page.click("#client-chat-link");
+    // The current sign-in flow opens the authenticated conversation directly.
   }
-  await ready(page);
+  await ready(page, role);
   assert.equal(await page.execute("return document.getElementById('open-video-gallery').hidden"), false);
 }
 async function json(page, role, path, body = null) {

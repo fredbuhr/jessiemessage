@@ -1,0 +1,161 @@
+{
+  "work": "UX183 notifications",
+  "branch": "fix/messaging-183",
+  "baseCommit": "38ccb3862f3d9ab4153b578dfb3abbd0dd94d857",
+  "status": "implemented_locally_not_committed_or_deployed",
+  "establishedCauses": [
+    {
+      "id": "N183-01",
+      "scope": "Code behavior; not a verified hosted incident diagnosis",
+      "file": "public/sw.js",
+      "trigger": "A new push arrives while the previous generic Jessie notification remains displayed.",
+      "before": "All received messages used the same tag jessie-new-message with renotify:false. Replacements did not request another audible/vibration alert.",
+      "after": "The same single generic notification is retained, with renotify:true requesting a fresh device alert for each received push.",
+      "proof": "VM inspection of HEAD and working source for two successive opaque message references: before flags [false,false], after [true,true], same tag and latest reference preserved.",
+      "references": [
+        "https://notifications.spec.whatwg.org/",
+        "https://developer.chrome.com/blog/notifications/"
+      ],
+      "limit": "The browser and OS still decide how to signal under device permissions and settings; sound/vibration is not guaranteed."
+    },
+    {
+      "id": "N183-02",
+      "scope": "Reconnection UX after an inactive server preference",
+      "file": "public/notifications.js",
+      "before": "A browser subscription with granted permission but server status enabled:false was described only as notifications off.",
+      "after": "Explicit reconnect status/button, localized FR/EN. A click reuses the existing browser subscription after fresh account proof and enables only the current role preference; no automatic POST, permission prompt, reset or other-device action.",
+      "proof": "Admin and client VM cases verify no POST during preparation, Reconnect button, one role-scoped POST on explicit click, no subscribe()/permission call, and confirmed enabled state.",
+      "limit": "Local subscription existence does not prove why its server preference is inactive. No specific real account state was inspected."
+    },
+    {
+      "id": "B01-notifications",
+      "scope": "Shared second-audit fix coordinated with delivery_review",
+      "file": "server/notifications/http.mjs",
+      "before": "401 errors, including old asynchronous request errors, could clear the role cookie.",
+      "after": "Error responses never set a deletion cookie; absent/malformed sessions remain denied and existing Origin/CSRF checks remain enforced.",
+      "proof": "Updated malformed-token/POST/service-error contracts and delayed A / replacement B / late401 tests for both roles."
+    }
+  ],
+  "pipelineReview": {
+    "enqueue": "server/chat/store.mjs installs enqueueNotification inside its append transaction. Configured server composes the same callback when notifications are enabled; duplicates do not append twice.",
+    "recipient": "enqueueNotification selects the opposite participant’s enabled subscriptions; one outbox delivery per selected subscription.",
+    "eligibility": "Store rechecks current active participants, admission, source session revocation/credentials, subscription generation, message deletion and read receipt before transport. Normal session expiry alone intentionally does not cancel the opted-in subscription.",
+    "visibility": "Service worker has no foreground/hidden suppression. The server deliberately skips already-read messages; this is distinct from a missing unread push.",
+    "worker": "Poll 2 seconds, at most5 claimed jobs; lease90seconds; up to6 attempts; retryable provider errors get bounded backoff. Worker requests TTL no longer than24hours or the useful message window. No timing or quota changed.",
+    "origin": "Service-worker registration and requests remain relative to the current origin. Old recipe subscriptions/clicks remain recipe; primary activation remains independent. No automatic permission migration or origin switching.",
+    "click": "Opaque role-bound reference routes to /messages or /admin/messages, remains in the fragment, and live chat handoff preserves the browsing context; no message text/name/attachment is present in the alert."
+  },
+  "syntheticEndToEnd": {
+    "test": "tests/notifications-pipeline.test.mjs",
+    "matrix": "admin/client × https://jessiemessage.com / https://recette.jessiemessage.com",
+    "actualComponents": [
+      "enqueueNotification",
+      "createNotificationWorker",
+      "public/sw.js push and notificationclick handlers"
+    ],
+    "explicitAdapters": [
+      "in-memory SQL enqueue collector",
+      "worker claim/eligibility/settlement boundary",
+      "provider send stub",
+      "service-worker VM showNotification/openWindow boundary"
+    ],
+    "assertions": [
+      "two unread messages enqueue and settle once each",
+      "TTL86398seconds for normal message and43seconds for remaining45second useful window",
+      "two generic alerts request renotify while retaining one tag",
+      "latest opaque reference survives click",
+      "clicked destination remains on the subscription origin",
+      "no message/account/endpoint payload is exposed"
+    ],
+    "notClaimed": "This is not a MariaDB transaction test, real provider receipt, actual push-device delivery or real OS alert qualification."
+  },
+  "tests": [
+    {
+      "command": "node --test tests/notifications-http.test.mjs tests/notifications-ui.test.mjs tests/notifications-worker.test.mjs",
+      "result": "passed",
+      "tests": 39,
+      "passed": 39,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "runtime": "v24.19.0"
+    },
+    {
+      "command": "node --test tests/notifications-pipeline.test.mjs tests/notifications-store.test.mjs tests/notifications-service.test.mjs tests/notifications-transport.test.mjs",
+      "result": "passed",
+      "tests": 31,
+      "passed": 31,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "runtime": "v24.19.0"
+    },
+    {
+      "command": "node --test tests/browser/notifications.browser.mjs",
+      "result": "blocked_before_scenarios",
+      "testsReportedFailedByHook": 3,
+      "scenarioPasses": 0,
+      "exitCode": 1,
+      "reason": "ChromeDriver unavailable; prerequisite setup hook failed. No browser qualification counted, no browser installation attempted."
+    },
+    {
+      "command": "git diff --check -- [six owned changed files]",
+      "result": "passed",
+      "exitCode": 0
+    }
+  ],
+  "changedFiles": [
+    {
+      "path": "server/notifications/http.mjs",
+      "sha256": "d6d1174123173062e26ebd7dae85a8d46d4cba6833dc5e9a76d2a83c4430c74f"
+    },
+    {
+      "path": "public/notifications.js",
+      "sha256": "103bfa6e9b54e11a0b89c386ce61221e48b47ddad497af9636b7b73f0e2cddb5"
+    },
+    {
+      "path": "public/sw.js",
+      "sha256": "b5b9beeb3d7b0ab092206373c5fefd821fca44d97d417a790959a416233c3ed6"
+    },
+    {
+      "path": "tests/notifications-http.test.mjs",
+      "sha256": "bd71cdf0025da21ccb1c640ad379bcaf31d8135aa2bed1ed7ce7a5ab1dde4e75"
+    },
+    {
+      "path": "tests/notifications-ui.test.mjs",
+      "sha256": "b3c2bdaa07cffa5af697cb37ce621062df33338bc7df36bfbae17fd193ebcee3"
+    },
+    {
+      "path": "tests/notifications-pipeline.test.mjs",
+      "sha256": "28ce839513838ef741069f1b1878e60e26eba06696b0722d108a11b9d017cdc6"
+    }
+  ],
+  "reviewedUnchanged": [
+    "server/notifications/config.mjs",
+    "server/notifications/store.mjs",
+    "server/notifications/service.mjs",
+    "server/notifications/worker.mjs",
+    "server/notifications/transport.mjs",
+    "public/notification-link.js",
+    "public/notifications.css"
+  ],
+  "coordination": {
+    "delivery_review": "Notifications B01 surface/test owned here; other 401 surfaces remain with delivery_review.",
+    "frontend_messaging": "Keeps mount/refresh/clear API. Agent agreed to refresh notification settings at each dialog opening and close chat menu before showing it; changes belong to chat agent.",
+    "navigation": "Fragments preserved through sign-in; primary normal entry simplified by navigation agent. Recipe push remains same-origin and is not silently redirected."
+  },
+  "unknownsForReportedMissingNotification": [
+    "Whether the real device had a permitted active subscription on primary or recipe at that instant.",
+    "Whether the specific message was unread when the worker prepared delivery.",
+    "Actual outbox eligibility, provider status, device connectivity, OS focus/quiet settings and alert replacement state.",
+    "Whether this code-level silent replacement explains the particular report. No hosted telemetry or private account was accessed."
+  ],
+  "constraintsPreserved": [
+    "No live push/SMTP/provider diagnostics or real account/message",
+    "No backup/restore/PC/scheduler action",
+    "No cloud browser",
+    "No global permission change or notification task addition",
+    "No package version, commit, push, merge or deployment"
+  ],
+  "nextQualification": "Root integration review and existing native CI/browser prerequisites for the stabilized shared branch; physical-device result remains separate."
+}

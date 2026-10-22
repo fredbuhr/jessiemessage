@@ -1,0 +1,42 @@
+{
+  "status": "independent_visual_review_no_brand_defect_in_supplied_pngs",
+  "timestamp": "2026-10-22T21:51:20.650231+00:00",
+  "captureHeadReportedByRoot": "3cc4aa52fe336992f2acd2f6c3e136bc67a3f418",
+  "capturesReviewed": [
+    {
+      "file": "/workspace/scratch/bb431be72395/ux183/first-screenshots/admin-home-1280.png",
+      "sha256": "1c80a94da9bf4a43760747910d2b383b66818f7c43d6aa8c5ad5364f00137777",
+      "width": 1280,
+      "height": 757
+    },
+    {
+      "file": "/workspace/scratch/bb431be72395/ux183/first-screenshots/admin-home-320.png",
+      "sha256": "e111ae38f26f4026bcf9cab56002e9c351a974ff041952ad302f3a05da562ac4",
+      "width": 320,
+      "height": 844
+    },
+    {
+      "file": "/workspace/scratch/bb431be72395/ux183/first-screenshots/client-home-1280.png",
+      "sha256": "58fe616b41f99b0bfa76f98d3c2395199c3f8023acb742fb8b92f0394ae6d5e8",
+      "width": 1280,
+      "height": 757
+    }
+  ],
+  "observations": [
+    "admin-home-1280.png contains both the complete gold/dark logo and the visible Jessie brand text at the top left, approximately x74–212,y24–68. The stated missing-brand issue is not present in this exact PNG.",
+    "admin-home-320.png and client-home-1280.png also show the logo and Jessie text clearly. Administrator navigation wraps onto a second header row on320px; the dashboard uses one column there and three columns at1280px. Visible labels and primary conversation controls fit the captured viewport width.",
+    "Both administrator PNGs show a missing-glyph box for the fullwidth plus icon in the Invitations et clients card. Root already replaced that symbol with ASCII+; this reviewer did not duplicate the change."
+  ],
+  "sourceCheck": {
+    "files": [
+      "public/brand/brand.css",
+      "public/admin-login.css",
+      "public/admin-login.html",
+      "tests/browser/entry-navigation.browser.mjs"
+    ],
+    "finding": "Brand is an inline-flex anchor with a block image and visible light text; mobile CSS changes dimensions only. No desktop hiding/opacity/animation rule was found. The native capture occurs after authenticated home and layout assertions. The viewed PNG itself is the decisive evidence that the brand was painted.",
+    "causalityLimit": "No evidence supports a source or frame-paint defect for the alleged absent brand. A viewer/display ambiguity was resolved by independent inspection; its internal cause was not investigated or inferred as fact."
+  },
+  "actions": "Read-only source/image review and new report only. No application edit, screenshot/capture-code edit, new capture or test rerun.",
+  "remaining": "Root's ASCII+ correction is to be qualified by the next already planned CI. This review covers only visible portions of these three supplied PNGs, not every scroll position or other device/browser."
+}

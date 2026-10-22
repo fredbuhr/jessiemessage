@@ -2,7 +2,13 @@
 
 **22 octobre 2026 — application active, checkpoint privé et latest : 1.8.2 / Node v24.22.1 / SQL36, alignés.** L’identité et les reçus hébergés sont rapportés par l’utilisateur (**USER_REPORTED**), sans inspection privée directe par l’agent. La livraison technique182 est close : qualification, publication, préparation, CHECK, activation et enregistrement final acquis. Aucun chantier technique ne reste ouvert pour ce lot ; les réserves et contrôles non réalisés sont conservés ci-dessous.
 
-## Second audit explicitement demandé — terminé, correctifs non réalisés
+## Correctif messagerie1.8.3 — travail actuel en cours
+
+Après le second audit, l’utilisateur signale dix problèmes de parcours et demande leur correction globale. **Branche `fix/messaging-183`, base `38ccb3862f3d9ab4153b578dfb3abbd0dd94d857` ; version candidate1.8.3, production toujours1.8.2.** [Périmètre et critères](UX-183-20261022.md). Les corrections couvrent les menus, accueil par rôle et connexion directe, clavier tactile, détails/suppression des messages, émojis, export discret, diffusion et notifications, ainsi queB01–B05/I01. Le code, les tests ciblés et la contre-revue sont terminés localement ; aucune nouvelle qualification native, fusion, release ou activation n’est encore acquise. Ne pas déployer ce travail avant sa qualification. Adresse admin active déjà acquise : `https://jessiemessage.com/admin/login` ; le nouvel accueil `/admin` est un candidat.
+
+La [PR130](https://github.com/fredbuhr/jessiemessage/pull/130), checkpoint `bf68261184e14f4cced911717217f950271abb78`, a terminé sa [deuxième CI native](verification-proofs/jm183/pr-native-second.json) : **5/5 réussis**, Chrome230, HTTPS4, MariaDB576 chacune, général3897/3945 et48omissions. Les captures320/1280 sont relues sans défaut. Le premier passage échoué reste conservé. Deux dernières corrections de texte d’aide et une marge CI bornée sont préparées : qualifier ce dernier head puis main avant publication, sans relancer les anciens lots182. Les manipulations restent synthétiques ; sauvegarde hébergée et PC toujours reportés. [État de travail](verification-proofs/jm183-progress.json).
+
+## Second audit explicitement demandé — rapport conservé
 
 Le **second audit complet backend/frontend/sécurité** de la source exacte182 est terminé : **447 fichiers examinés**, plus trois helpers 182 épinglés hors main. Les 390 tests sont inventoriés ; 202 lus en entier, 25 partiellement, 163 contrôlés structurellement seulement. [Rapport final](AUDIT-2-20261022.md), [résumé structuré](verification-proofs/audit2-182-progress.json), [couverture exacte](verification-proofs/audit2-182/source-coverage.json).
 

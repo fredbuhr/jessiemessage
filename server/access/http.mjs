@@ -1,7 +1,7 @@
 import { peerAddress as requestPeerAddress } from "../http/peer-address.mjs";
 import { CLIENT_ADMISSION_POLICY } from "./admission.mjs";
 import { readFile } from "node:fs/promises";
-import { checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, safeSession, sameText, sessionCookie, sessionToken } from "../auth/http.mjs";
+import { checkMutation, clearCookie, httpError, isToken, readJson, reply, safeSession, sameText, sessionCookie, sessionToken } from "../auth/http.mjs";
 import { decodeAccessCursor, validateAccessPage } from "./pagination.mjs";
 
 const CLIENT_COOKIE = "__Host-jessie_client";
@@ -217,7 +217,8 @@ export function createAccessHandler(service, { origin, clock = Date.now }) {
         const token = sessionToken(request, CLIENT_COOKIE);
         const session = token ? await service.session(token) : null;
         if (!session) {
-          const headers = method === "POST" || hasSessionCookie(request, CLIENT_COOKIE) ? { "Set-Cookie": clearCookie(CLIENT_COOKIE) } : {};
+          // A delayed refusal must not erase a cookie installed by a newer login.
+          const headers = {};
           reply(response, method, 401, { error: "authentication_required" }, headers);
           return true;
         }

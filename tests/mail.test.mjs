@@ -6,6 +6,7 @@ import { sealVerificationPayload, openVerificationPayload, MailCryptoError } fro
 import { createVerificationTransport, MailDeliveryError } from "../server/mail/transport.mjs";
 import { runMailBatch, startMailWorker } from "../server/mail/worker.mjs";
 import { createMailStore } from "../server/mail/store.mjs";
+import { sealResetPayload } from "../server/reset/mail-crypto.mjs";
 import { newToken } from "../server/auth/crypto.mjs";
 
 const origin = "https://example.invalid";
@@ -19,7 +20,7 @@ const configured = () => ({
 });
 const jobFixture = (key, overrides = {}) => {
   const id = randomBytes(16);
-  return { id, leaseToken: randomBytes(16), recipientEmail: email,
+  return { id, leaseToken: randomBytes(16), recipientEmail: email, expiresAt: 200000, leaseUntil: 121000,
     payloadEncrypted: sealVerificationPayload({ email, token: newToken() }, key, id), ...overrides };
 };
 
@@ -308,6 +309,23 @@ test("worker exceptions are sanitized and invalid batch bounds cannot touch pers
   for (const batchSize of [0, 21, 1.5]) await assert.rejects(runMailBatch({ key, batchSize }), { code: "MAIL_WORKER_FAILED" });
   await assert.rejects(runMailBatch({ key, store: { async claim() { throw new Error("private SQL values"); } } }), (error) => error.code === "MAIL_WORKER_FAILED" && error.cause === undefined && !error.message.includes("SQL"));
 });
+
+for (const purpose of ["verification", "password-reset"]) {
+  test(`${purpose}: expired or replaced lease after claim never starts a transport`, async () => {
+    const key = randomBytes(32), failures = [];
+    for (const overrides of [{ expiresAt: 1000, leaseUntil: 1000 }, { expiresAt: 2000, leaseUntil: 1000 },
+      { expiresAt: undefined }, { leaseUntil: undefined }, { expiresAt: 2000, leaseUntil: 2001 }]) {
+      const job = jobFixture(key, overrides);
+      if (purpose === "password-reset") job.payloadEncrypted = sealResetPayload({ email, token: newToken() }, key, job.id);
+      const result = await runMailBatch({ key, purpose, batchSize: 1, clock: () => 1000, store: {
+        async claim() { return job; }, async markFailed(...args) { failures.push(args); return false; }, async prune() {},
+      }, transport: { async sendVerification() { assert.fail("expired job must not send"); }, async sendPasswordReset() { assert.fail("expired job must not send"); } } });
+      assert.deepEqual(result, { sent: 0, failed: 1 });
+    }
+    assert.equal(failures.length, 5);
+    assert.ok(failures.every(([, , input]) => input.now === 1000 && input.code === "MAIL_DELIVERY_FAILED"));
+  });
+}
 
 test("worker shutdown waits for an active batch and closes its transport once", async () => {
   let releaseClaim, announceClaim;

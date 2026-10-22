@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createBroadcastState, clearBroadcast, suspendBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, contactPageQuery, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, compositionValid, canConfirmBroadcast, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, mergeCampaign, acceptCampaign, updateAudience, parseRecipientPage } from "../public/broadcast-model.js";
+import { createBroadcastState, clearBroadcast, suspendBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, contactPageQuery, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, compositionValid, canReviewBroadcast, canConfirmBroadcast, confirmationCount, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, mergeCampaign, acceptCampaign, updateAudience, parseRecipientPage } from "../public/broadcast-model.js";
 import "../public/session-clock.js";
 
 const now = 1800000000000;
@@ -78,6 +78,18 @@ test("eligibility preview rejects missing, duplicate, foreign or contradictory r
 test("inactive access blocks the entire explicit confirmation", () => {
   const state = selected(); const input = preview(state); input.recipients[0].eligible = false; input.recipients[0].reason = "access_inactive"; input.eligibleCount = 1;
   acceptPreview(state, previewTicket(state), input); state.acknowledged = true; assert.equal(canConfirmBroadcast(state, now), false); assert.equal(prepareCampaign(state, id(90), now), null);
+  assert.equal(confirmationCount(state), 1, "only the checked eligibility result is counted, including compatibility mode");
+});
+test("a prepared snapshot enables review without acknowledging or creating a campaign and text edits invalidate its generation", () => {
+  const state = selected(1);
+  assert.equal(confirmationCount(state), 0); assert.equal(canReviewBroadcast(state, now), false);
+  const old = previewTicket(state); updateComposition(state, { body: "Edited before the reply" });
+  assert.equal(acceptPreview(state, old, preview(state)), false); assert.equal(state.preview, null);
+  acceptPreview(state, previewTicket(state), preview(state));
+  assert.equal(confirmationCount(state), 1); assert.equal(canReviewBroadcast(state, now), true);
+  assert.equal(canConfirmBroadcast(state, now), false); assert.equal(state.pending, null);
+  suspendBroadcast(state); assert.equal(state.preview, null, "resuming an unsubmitted draft requires a fresh preparation");
+  assert.equal(state.selected.size, 1); assert.equal(state.draft.body, "Edited before the reply");
 });
 test("a previously shared photo requires its own override followed by another explicit acknowledgment", () => {
   const state = selected(); updateComposition(state, { mediaId: id(300), body: "" }); const input = preview(state); input.recipients[0].repeatMedia = true; input.repeatCount = 1;
@@ -100,7 +112,9 @@ test("title checks refuse hidden-only, directional controls and multiline titles
 test("confirmation is explicit, expires with the session and is reset by content edits", () => {
   const state = ready(); assert.equal(canConfirmBroadcast(state, now), true); assert.equal(canConfirmBroadcast(state, now + 3600000), false);
   updateComposition(state, { body: "Nouveau contenu" }); assert.equal(canConfirmBroadcast(state, now), false); assert.equal(state.acknowledged, false);
-  state.acknowledged = true; assert.equal(canConfirmBroadcast(state, now), true);
+  state.acknowledged = true; assert.equal(canConfirmBroadcast(state, now), false, "edited content must be prepared again");
+  acceptPreview(state, previewTicket(state), preview(state)); state.acknowledged = true;
+  assert.equal(canConfirmBroadcast(state, now), true);
 });
 test("uncertain sends freeze one immutable payload and retry with exactly the same identifier", () => {
   const state = ready(); const payload = prepareCampaign(state, id(90), now); const ticket = broadcastTicket(state);

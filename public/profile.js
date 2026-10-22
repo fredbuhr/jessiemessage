@@ -115,6 +115,13 @@ export function createProfileUI(adapter) {
   function focus(target) {
     if (ownerCurrent() && target?.isConnected && !target.disabled && !target.hidden) target.focus({ preventScroll: true });
   }
+  // Loading a dialog must not summon a touch keyboard. Editing still starts
+  // with an explicit tap; desktop keyboard users retain the name shortcut.
+  function focusLoadedProfile() {
+    if (document.activeElement !== closeButton && document.activeElement !== dialog) return;
+    if (globalThis.matchMedia?.("(any-pointer: coarse)").matches === true) focus(closeButton);
+    else focus(name);
+  }
   function clearPreview() {
     previewEpoch += 1; previewAbort?.abort(); previewAbort = null;
     image.removeAttribute("src"); image.hidden = true; fallback.hidden = false;
@@ -191,7 +198,7 @@ export function createProfileUI(adapter) {
       if (!current(ticket)) return;
       adopt(value, ticket); message("");
     } catch (error) { if (current(ticket)) { report(error, ticket); retry.hidden = !opened || Boolean(saved); } }
-    finally { if (current(ticket)) { busy = false; controls(); if (saved) focus(name); } }
+    finally { if (current(ticket)) { busy = false; controls(); if (saved) focusLoadedProfile(); } }
   }
   async function chooseAvatar() {
     const selected = file.files?.[0]; file.value = "";
@@ -229,7 +236,7 @@ export function createProfileUI(adapter) {
       if (keepDraft) { saved = value; conflict = false; message("Ton brouillon est conservé. Vérifie-le puis enregistre le profil."); }
       else { adopt(value, ticket); message("Profil enregistré rechargé."); }
     } catch (error) { report(error, ticket); }
-    finally { if (current(ticket)) { busy = false; controls(); focus(name); } }
+    finally { if (current(ticket)) { busy = false; controls(); focusLoadedProfile(); } }
   }
   async function save(event) {
     event.preventDefault();

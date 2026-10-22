@@ -2,9 +2,11 @@
 // disposable MariaDB fixture as well as real Chrome. No production credentials.
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createHash } from "node:crypto";
 import { request as httpsRequest } from "node:https";
 import { startWebDriver, waitUntil } from "../browser/webdriver.mjs";
-import { createAuthenticationFixture } from "./auth-fixture.mjs";
+import { createAuthenticationFixture, validateFixtureEnvironment } from "./auth-fixture.mjs";
+import { connectDatabase } from "../../server/db/connection.mjs";
 
 const cookieName = "__Host-jessie_session";
 const incorrectFactor = "Les identifiants ou le code de sécurité sont incorrects.";
@@ -47,11 +49,34 @@ async function submitLogin(page, fixture, factor) {
   await page.type("#factor", factor);
   await page.click("#login-button");
 }
-async function rejectedLogin(page) {
+// Called only after this scenario owns the freshly created disposable schema.
+// Compare a bounded fingerprint of row IDs, never tokens or row contents, so
+// an unchanged cookie cannot conceal a session inserted by a refused factor.
+async function sessionSnapshot() {
+  validateFixtureEnvironment();
+  const connection = await connectDatabase();
+  try {
+    const rows = await connection.query("SELECT id FROM sessions ORDER BY id LIMIT 16");
+    if (rows.length >= 16 || rows.some(row => !Buffer.isBuffer(row.id) || row.id.length !== 16)) throw new Error();
+    return { count: rows.length, fingerprint: createHash("sha256").update(Buffer.concat(rows.map(row => row.id))).digest("hex") };
+  } catch { throw new Error("Owned authentication fixture session snapshot unavailable"); }
+  finally { await connection.end(); }
+}
+async function rejectedLogin(page, before) {
   await waitUntil(() => page.execute("return document.getElementById('auth-status').textContent === arguments[0] && !document.getElementById('login-button').disabled", incorrectFactor), "invalid MFA is rejected by the real service");
   assert.equal(await page.execute("return document.getElementById('connected').hidden"), true);
-  assert.equal((await page.cookies()).some((cookie) => cookie.name === cookieName), false, "a rejected factor must not create a session cookie");
+  const cookies = (await page.cookies()).filter(cookie => cookie.name === cookieName);
+  assert.equal(cookies.length, before.cookies.length, "a rejected factor creates no new session cookie");
+  assert.equal(cookies.every((cookie, index) => cookie.value === before.cookies[index].value), true, "a rejected factor preserves the exact cookie already present, including an SQL-expired one");
+  const metadata = values => values.map(({ name, path, domain, secure, httpOnly, sameSite, expiry }) => ({ name, path, domain, secure, httpOnly, sameSite, expiry }));
+  assert.deepEqual(metadata(cookies), metadata(before.cookies), "a rejected factor does not replace or expire the existing cookie");
+  assert.deepEqual(await sessionSnapshot(), before.sessions, "a rejected factor creates zero SQL sessions and preserves the existing session IDs");
   assert.equal(await page.execute("return document.getElementById('password').value === '' && document.getElementById('factor').value === ''"), true, "rejected credentials are cleared from the form");
+}
+async function submitRejectedLogin(page, fixture, factor) {
+  const before = { cookies: (await page.cookies()).filter(cookie => cookie.name === cookieName), sessions: await sessionSnapshot() };
+  await submitLogin(page, fixture, factor); await rejectedLogin(page, before);
+  return before.sessions;
 }
 async function connected(page) {
   await waitUntil(() => page.execute("return !!document.getElementById('connected') && !document.getElementById('connected').hidden && location.pathname === '/admin'"), "real administrator session confirmed in the DOM");
@@ -76,10 +101,10 @@ async function sessionCookie(page) {
 }
 async function entry(page, state) {
   await page.navigate("/app");
-  if (state === "connected") await waitUntil(() => page.execute("const link = document.getElementById('administrator-link'); return !!link && !link.hidden && link.getAttribute('href') === '/admin'"), "neutral opening shows the connected administrator choice");
+  if (state === "connected") await connected(page);
   else await waitUntil(() => page.execute("const card = document.getElementById('administrator-card'); return !!card && card.hidden && document.getElementById('entry-status').textContent.includes('pas encore disponible')"), "anonymous opening conceals administrator access");
   assert.equal(await page.execute("return location.protocol"), "https:", "the actual browser is using HTTPS, not localhost HTTP cookie exceptions");
-  assert.equal(await page.execute("return document.getElementById('client-card').hidden"), true, "the fixture has no client access service");
+  if (state !== "connected") assert.equal(await page.execute("return document.getElementById('client-card').hidden"), true, "the fixture has no client access service");
 }
 async function signedOutEntry(origin) {
   const result = await fixtureRequest(origin, "/api/entry");
@@ -105,7 +130,7 @@ test("real Chrome + MariaDB: HTTPS administrator MFA, protected cookie, revocati
     assert.equal(await page.execute("return location.pathname"), "/admin/login");
     t.diagnostic("Anonymous API / protected page and HTTPS neutral opening verified.");
 
-    await submitLogin(page, fixture, fixture.invalidTotp()); await rejectedLogin(page);
+    assert.equal((await submitRejectedLogin(page, fixture, fixture.invalidTotp())).count, 0, "initial invalid MFA leaves the SQL session table empty");
     assert.equal((await fixtureRequest(fixture.origin, "/api/auth/session")).status, 401);
     await loginForm(page); await page.type("#email", fixture.email); await page.type("#password", fixture.password);
     await page.click("#toggle-password");
@@ -125,10 +150,13 @@ test("real Chrome + MariaDB: HTTPS administrator MFA, protected cookie, revocati
     // Check reuse immediately, without first navigating / logging out. A fresh
     // window on both sides rules out expiry as the reason for this rejection.
     assert.equal(fixture.isTotpFresh(acceptedTotp), true, "accepted OTP is still within the server's verification window before replay");
+    const beforeTotpReplay = await sessionSnapshot();
     const replayedTotp = await fixtureRequest(fixture.origin, "/api/auth/login", { method: "POST",
       headers: { Origin: fixture.origin, "Content-Type": "application/json", "X-Jessie-Request": "1" },
       body: JSON.stringify({ email: fixture.email, password: fixture.password, factor: acceptedTotp }) });
     assert.equal(replayedTotp.status, 401, "a previously accepted OTP is rejected even while its time window remains valid");
+    assert.equal(replayedTotp.headers["set-cookie"], undefined, "replayed OTP creates or clears no cookie");
+    assert.deepEqual(await sessionSnapshot(), beforeTotpReplay, "replayed OTP creates zero SQL sessions");
     assert.equal(fixture.isTotpFresh(acceptedTotp), true, "OTP replay did not merely wait for expiry");
     t.diagnostic("Wrong MFA rejected; authenticator app-switch fields, real TOTP login and browser cookie protection verified.");
 
@@ -145,7 +173,7 @@ test("real Chrome + MariaDB: HTTPS administrator MFA, protected cookie, revocati
     const authenticatedEntry = await fixtureRequest(fixture.origin, "/api/entry", { cookie: initialCookie });
     assert.equal(authenticatedEntry.status, 200);
     assert.deepEqual(authenticatedEntry.data, { status: "available", client: null, administrator: { state: "connected", href: "/admin" } });
-    await entry(page, "connected"); await page.click("#administrator-link"); await connected(page);
+    await entry(page, "connected");
     t.diagnostic("CSRF / Origin refusals preserve the session; /api/entry, /app and /admin recognize the real cookie.");
 
     await signOutThisDevice(page);
@@ -162,7 +190,10 @@ test("real Chrome + MariaDB: HTTPS administrator MFA, protected cookie, revocati
     assert.equal((await fixtureRequest(fixture.origin, "/api/auth/session", { cookie: recoveryCookie })).status, 401, "SQL expiry rejects a cookie still present in the browser");
     await page.navigate("/admin"); await loginForm(page);
     assert.equal(await page.execute("return location.pathname"), "/admin/login");
-    await submitLogin(page, fixture, fixture.recoveryCodes[0]); await rejectedLogin(page);
+    assert.equal((await sessionCookie(page)).value === recoveryCookie.value, true, "SQL-expired navigation retains the identical browser cookie without authorizing it");
+    await submitRejectedLogin(page, fixture, fixture.recoveryCodes[0]);
+    assert.equal((await sessionCookie(page)).value === recoveryCookie.value, true, "consumed recovery-code rejection preserves the expired cookie rather than creating a new one");
+    assert.equal((await fixtureRequest(fixture.origin, "/api/auth/session", { cookie: recoveryCookie })).status, 401, "preserving the expired cookie never restores its SQL session");
     await submitLogin(page, fixture, fixture.recoveryCodes[1]); await connected(page);
     const finalCookie = await sessionCookie(page);
     await signOutThisDevice(page);

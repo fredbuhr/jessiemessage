@@ -14,7 +14,7 @@ const config = () => ({ enabled: true, origin, smtp: {
 } });
 function jobFixture(key, seal = sealResetPayload) {
   const id = randomBytes(16), token = newToken();
-  return { id, recipientEmail: email, leaseToken: randomBytes(16), payloadEncrypted: seal({ email, token }, key, id) };
+  return { id, recipientEmail: email, leaseToken: randomBytes(16), expiresAt: 200000, leaseUntil: 121000, payloadEncrypted: seal({ email, token }, key, id) };
 }
 
 test("reset mail encryption hides its payload, binds the job and key, and rejects verification-purpose interchange", () => {

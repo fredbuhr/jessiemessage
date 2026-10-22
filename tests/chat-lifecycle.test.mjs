@@ -83,11 +83,12 @@ class Element {
   }
   getBoundingClientRect() { return { top: 0, bottom: 100, height: 100 }; }
   focus() { if (this.isConnected && this.registry?.document) this.registry.document.activeElement = this; }
+  blur() { if (this.registry?.document.activeElement === this) this.registry.document.activeElement = this.registry.document.body; }
   setSelectionRange(start, end) { this.selectionStart = start; this.selectionEnd = end; }
   showModal() { this.open = true; }
   close() { this.open = false; for (const handler of this.events.get("close") ?? []) handler({}); }
 }
-function harness({ currentSession = session(), visible = true, intercept = null, quickReplies = null, prepare = async (file) => file, notification = null, profileFactory = null, profileLoader = null, draftStorage = undefined, serverState = null } = {}) {
+function harness({ currentSession = session(), visible = true, intercept = null, quickReplies = null, prepare = async (file) => file, notification = null, profileFactory = null, profileLoader = null, draftStorage = undefined, serverState = null, coarse = false } = {}) {
   const nodes = new Map(), documentEvents = new Map(), windowEvents = new Map(), calls = [], timers = new Map(), redirects = [], revoked = [], createdUrls = [];
   let timerId = 0, time = now, blobId = 0;
   const body = new Element("body", nodes);
@@ -113,7 +114,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   const location = { origin: "https://example.invalid", pathname: currentSession?.user.role === "admin" ? "/admin/messages" : "/messages", hash: notification ? `#notification=${notification}` : "", replace: (path) => redirects.push(path), reload() { redirects.push("reload"); } };
   const history = { replaceState(_state, _title, path) { const next = new URL(path, location.origin); location.pathname = next.pathname; location.hash = next.hash; } };
   const context = vm.createContext({ __chatDrafts: { createChatDrafts }, __loadProfile: async () => { if (profileLoader) return profileLoader(); if (!profileFactory) throw new Error("Optional profile disabled in fixture"); return { createProfileUI: profileFactory }; }, __emojis: { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji }, __quickReplies: { quickReplyOptions }, __prepareImageUpload: prepare, document, window: { addEventListener: (name, handler) => windowEvents.set(name, handler) },
-    location, history, sessionStorage: draftStorage, navigator: { serviceWorker: { controller: worker, addEventListener: (name, handler) => workerEvents.set(name, handler) } },
+    matchMedia: () => ({ matches: coarse }), location, history, sessionStorage: draftStorage, navigator: { serviceWorker: { controller: worker, addEventListener: (name, handler) => workerEvents.set(name, handler) } },
     Date: class extends Date { static now() { return time; } }, AbortController, TextEncoder, Uint8Array, Blob, crypto: webcrypto, queueMicrotask,
     URL: { createObjectURL: () => { const value = `blob:synthetic-${++blobId}`; createdUrls.push(value); return value; }, revokeObjectURL: (url) => revoked.push(url) },
     setTimeout: (handler, delay) => { const value = ++timerId; timers.set(value, { handler, at: time + delay }); return value; }, clearTimeout: (value) => timers.delete(value),
@@ -283,35 +284,15 @@ test("late video gallery pages respect tombstones and queued close events cannot
   for (const handler of queued) handler({}); await flush(); assert.equal(dialog.open, true);
 });
 
-test("due task counts stay in the admin menu and a late result cannot survive logout", async () => {
-  const delayed = pause();
+test("admin tools live at the single admin-home menu link rather than raw links or chat polling", async () => {
   const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: path =>
-    path === "/api/chat/admin/capabilities" ? response(200, { enabled: true, tasks: { enabled: true } })
-      : path === "/api/admin/crm/tasks/summary" ? delayed.promise : undefined });
-  await flush();
-  const link = f.element("tasks-nav");
-  assert.equal(link.href, "/admin/tasks");
-  assert.equal(link.parentElement.id, "readiness-nav");
-  assert.equal(link.textContent, "Mes tâches");
-  await f.click("logout");
-  delayed.resolve(response(200, { dueCount: 7, serverTime: now })); await flush();
-  assert.equal(link.isConnected, false);
-  assert.equal(link.textContent, "Mes tâches");
+    path === "/api/chat/admin/capabilities" ? response(200, { enabled: true, tasks: { enabled: true }, announcements: { enabled: true } }) : undefined });
+  await flush(); await f.advance(31000);
+  assert.equal(f.element("account-link").href, "/admin");
+  assert.equal(f.element("account-link").textContent, "Accueil admin");
+  for (const id of ["tasks-nav", "readiness-nav", "announcements-nav", "broadcast-nav"]) assert.equal(f.element(id), undefined);
+  assert.equal(f.calls.some(call => /tasks\/summary|broadcast\/admin\/session/.test(call.path)), false);
   assert.equal(posts(f).length, 0);
-});
-
-test("due task count refreshes while admin is active and never mounts for a client", async () => {
-  let dueCount = 2;
-  const intercept = path => path.endsWith("/capabilities") && path.startsWith("/api/chat/")
-    ? response(200, { enabled: true, tasks: { enabled: true } })
-    : path === "/api/admin/crm/tasks/summary" ? response(200, { dueCount, serverTime: now }) : undefined;
-  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept }); await flush();
-  assert.match(f.element("tasks-nav").textContent, /2 à traiter/);
-  dueCount = 0; await f.advance(31000);
-  assert.equal(f.element("tasks-nav").textContent, "Mes tâches");
-  const client = harness({ intercept }); await flush();
-  assert.equal(client.element("tasks-nav"), undefined);
-  assert.equal(client.calls.some(call => call.path === "/api/admin/crm/tasks/summary"), false);
 });
 function avatarResponse({ chunks = [new Uint8Array([255, 216, 255, 217])], declared = null, type = "image/jpeg", read = null } = {}) {
   let index = 0, cancelled = false;
@@ -657,7 +638,7 @@ for (const role of ["client", "admin"]) test(`${role}: emojis replace the select
   assert.equal(f.element("pick-image").hidden, true, "emoji availability is independent from photos");
   f.element("message-body").value = "Bonjour toi !"; f.element("message-body").setSelectionRange(8, 11);
   const before = f.calls.length; await f.click("open-emojis");
-  assert.equal(f.element("emoji-dialog").open, true); assert.equal(f.document.activeElement, f.element("emoji-search"));
+  assert.equal(f.element("emoji-dialog").open, true); assert.equal(f.document.activeElement, f.element("close-emojis"));
   assert.ok(f.element("emoji-list").children.length >= 150);
   const kiss = f.element("emoji-list").children.find(button => button.dataset.emojiId === "kiss-face");
   assert.ok(kiss.getAttribute("aria-label"));
@@ -727,16 +708,15 @@ test("emoji selection preserves full drafts and photo captions without truncatio
   }
 });
 
-test("emoji dialogs close and forget searches on hide or account change, and old choices cannot alter a new dialog", async () => {
+test("emoji panels close and clear choices on hide or account change, and old choices cannot alter a new dialog", async () => {
   const f = harness(); await flush(); await f.click("open-emojis");
   f.element("emoji-skin-tone").value = "dark";
   for (const handler of f.element("emoji-skin-tone").events.get("change")) handler({}); await flush();
   assert.equal(f.element("emoji-list").children.find(button => button.dataset.emojiId === "thumbs-up").textContent, "👍🏿");
   const old = f.element("emoji-list").children.find(button => button.dataset.emojiId === "kiss-face");
-  f.element("emoji-search").value = "A private search";
   await f.hide();
   assert.equal(f.element("emoji-dialog").open, false); assert.equal(f.element("emoji-list").children.length, 0);
-  assert.equal(f.element("emoji-search").value, "");
+  assert.equal(f.element("emoji-search"), undefined);
   for (const handler of old.events.get("click")) handler({}); await flush(); assert.equal(f.element("message-body").value, "");
   await f.show(); await f.click("open-emojis");
   assert.equal(f.element("emoji-skin-tone").value, "dark", "same-owner visibility resume retains the preference");
@@ -915,7 +895,8 @@ test("late unauthorized photo headers cannot sign out the new owner or a hidden 
 });
 
 test("empty event polls preserve a message and its focused delete control", async () => {
-  const f = harness(); await flush(); await f.send("Keep my keyboard position");
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin") }); await flush();
+  for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush(); await f.send("Keep my keyboard position");
   const messages = f.element("messages"), article = messages.children.at(-1), remove = article.querySelector(".delete-message");
   await revealMessageDetails(article); remove.focus(); assert.equal(f.document.activeElement, remove);
   await f.advance(3000);
@@ -940,7 +921,7 @@ for (const role of ["client", "admin"]) test(`${role}: one message at a time exp
   await toggle(peer); assert.equal(selected().length, 1); assert.equal(peer.querySelector(".message-meta").hidden, false);
   assert.equal(peer.querySelector(".delete-message"), null, "a peer message never gains an own-message delete action");
   await toggle(own); assert.equal(selected().length, 1); assert.equal(peer.querySelector(".message-meta").hidden, true);
-  assert.equal(own.querySelector(".message-meta").hidden, false); assert.ok(own.querySelector(".delete-message"));
+  assert.equal(own.querySelector(".message-meta").hidden, false); assert.equal(Boolean(own.querySelector(".delete-message")), role === "admin");
   assert.equal(oldToggle.getAttribute("aria-expanded"), "true");
   assert.equal(oldToggle.getAttribute("aria-controls"), own.querySelector(".message-meta").id);
   await toggle(own); assert.equal(selected().length, 0); assert.equal(oldToggle.getAttribute("aria-expanded"), "false");
@@ -1023,8 +1004,9 @@ test("new messages and photo deletion update the history without replacing unaff
   f.conversation().latestEventSequence = "3";
   events = [{ kind: "delete", sequence: "3", message: { ...photoFixture(f), body: null, media: undefined, deletedAt: now + 2000 } }];
   await f.advance(3000);
-  assert.equal(messages.children[1], second); assert.match(contents(messages.children[0]), /Message supprimé/);
-  assert.equal(messages.children[0].querySelectorAll("img").length, 0); assert.equal(messages.children[0].querySelector(".photo-open"), null);
+  assert.equal(messages.children.length, 1); assert.equal(messages.children[0], second);
+  assert.equal(first.isConnected, false); assert.equal(originalPhoto.isConnected, false);
+  assert.equal(f.inspect().states.get(f.inspect().selected).messages.get("1").deletedAt, now + 2000);
   assert.deepEqual(f.revoked, f.createdUrls);
 });
 
@@ -1037,11 +1019,11 @@ test("loading older messages prepends in sequence and preserves the existing foc
     if (path.includes("/messages?before=")) return response(200, { conversation: f.conversation(), messages: [older], hasMoreBefore: false, nextBefore: null });
     return undefined;
   } }); await flush();
-  const messages = f.element("messages"), article = messages.children[0], remove = article.querySelector(".delete-message"); await revealMessageDetails(article); remove.focus();
+  const messages = f.element("messages"), article = messages.children[0], remove = article.querySelector(".message-details-toggle"); await revealMessageDetails(article); remove.focus();
   await f.click("older-messages");
   assert.deepEqual(messages.children.map((item) => item.dataset.sequence), ["1", "2"]);
   assert.match(contents(messages.children[0]), /Older history/); assert.equal(messages.children[1], article);
-  assert.equal(article.querySelector(".delete-message"), remove); assert.equal(f.document.activeElement, remove);
+  assert.equal(article.querySelector(".message-details-toggle"), remove); assert.equal(f.document.activeElement, remove);
 });
 
 test("same-session visibility return reloads revoked photos and waits for their new load before read eligibility", async () => {
@@ -1113,7 +1095,9 @@ test("a photo response arriving after its message deletion cannot restore the pr
   f.conversation().latestEventSequence = "2";
   events = [{ kind: "delete", sequence: "2", message: { ...photoFixture(f), body: null, media: undefined, deletedAt: now + 2000 } }];
   await f.advance(3000); thumbnail.resolve(photoResponse()); await flush();
-  assert.match(contents(f.element("messages")), /Message supprimé/);
+  assert.doesNotMatch(contents(f.element("messages")), /Message supprimé/);
+  assert.equal(f.element("messages").children.length, 0);
+  assert.equal(f.inspect().states.get(f.inspect().selected).messages.get("1").deletedAt, now + 2000);
   assert.equal(f.element("messages").querySelectorAll("img").length, 0); assert.equal(f.createdUrls.length, 0);
 });
 
@@ -1186,9 +1170,10 @@ test("drafts warn before leaving and remain per conversation without browser per
 
 test("message deletion requires explicit confirmation and cancellation returns focus without a request", async () => {
   let f;
-  f = harness({ intercept: (path) => path.endsWith("/messages?limit=50") ? response(200, {
+  f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: (path) => path.endsWith("/messages?limit=50") ? response(200, {
     conversation: f.conversation(), messages: [{ id: id(880), sequence: "1", sender: "me", body: "Keep until confirmed", createdAt: now, deletedAt: null }], eventCursor: "1", hasMoreBefore: false,
   }) : path.endsWith("/delete") ? response(200, { message: { id: id(880), sequence: "1", sender: "me", body: null, createdAt: now, deletedAt: now } }) : undefined }); await flush();
+  for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush();
   const button = f.element("messages").children[0].querySelector(".delete-message"); await revealMessageDetails(button.parentElement.parentElement); button.focus();
   for (const handler of button.events.get("click")) handler({}); await flush();
   assert.equal(f.element("confirm-delete").open, true); assert.equal(f.document.activeElement, f.element("cancel-delete"));
@@ -1232,10 +1217,11 @@ test("administrator conversation changes preserve each memory-only draft", async
 
 test("a delayed close event from a cancelled dialog cannot cancel its next confirmation", async () => {
   let f;
-  f = harness({ intercept: (path) => path.endsWith("/messages?limit=50") ? response(200, {
+  f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: (path) => path.endsWith("/messages?limit=50") ? response(200, {
     conversation: f.conversation(), messages: [{ id: id(881), sequence: "1", sender: "me", body: "Keep the current confirmation", createdAt: now, deletedAt: null }], eventCursor: "1", hasMoreBefore: false,
   }) : path.endsWith("/delete") ? response(200, { message: { id: id(881), sequence: "1", sender: "me", body: null, createdAt: now, deletedAt: now } }) : undefined });
   await flush();
+  for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush();
   const dialog = f.element("confirm-delete"), queuedCloseEvents = [];
   // Native dialog.close() queues its close event; it need not be delivered
   // before the next keyboard activation reopens the same dialog.
@@ -1541,4 +1527,76 @@ test("explicit logout purges restored text and an unavailable store leaves a vis
   const fallback = harness(); await readyDraftFixture(fallback); await enterPersistentDraft(fallback, "Synthetic memory draft");
   assert.equal(fallback.element("composer-help").textContent, "Ce navigateur ne peut pas garder ce brouillon après rechargement. Il reste dans cet onglet.");
   await fallback.send("Synthetic normal send"); assert.equal(posts(fallback).length, 1);
+});
+
+for (const currentRole of ["client", "admin"]) test(`${currentRole}: deleted messages stay in synchronization state while only admin sees tombstones and delete controls`, async () => {
+  let f, events = [];
+  const live = { id: id(1991), sequence: "1", sender: "peer", body: "Message supprimé", createdAt: now, deletedAt: null };
+  const tombstone = { id: id(1992), sequence: "2", sender: "peer", body: null, createdAt: now, deletedAt: now + 1 };
+  const own = { id: id(1993), sequence: "3", sender: "me", body: "Synthetic own message", createdAt: now, deletedAt: null };
+  f = harness({ currentSession: session(1, "A".repeat(43), currentRole), intercept(path) {
+    if (path.endsWith("/messages?limit=50")) { Object.assign(f.conversation(), { latestSequence: "3", latestEventSequence: "3" }); return response(200, { conversation: f.conversation(), messages: [live, tombstone, own], eventCursor: "3", hasMoreBefore: false }); }
+    if (path.includes("/events?")) return response(200, { conversation: f.conversation(), events, nextCursor: f.conversation().latestEventSequence, hasMore: false });
+  } }); await flush();
+  if (currentRole === "admin") { for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush(); }
+  const view = () => f.element("messages");
+  assert.equal(view().children.length, currentRole === "admin" ? 3 : 2);
+  assert.equal(view().children[0].querySelector(".bubble").textContent, "Message supprimé", "live user text matching a UI phrase remains untouched");
+  assert.equal(view().querySelectorAll(".delete-message").length, currentRole === "admin" ? 1 : 0);
+  f.conversation().latestEventSequence = "4";
+  events = [{ kind: "delete", sequence: "4", message: { ...own, body: null, deletedAt: now + 2 } }];
+  await f.advance(3000);
+  const state = f.inspect().states.get(f.inspect().selected);
+  assert.equal(state.messages.size, 3); assert.equal(state.eventCursor, "4"); assert.equal(state.messages.get("3").deletedAt, now + 2);
+  assert.equal(view().children.length, currentRole === "admin" ? 3 : 1); assert.equal(view().querySelectorAll(".delete-message").length, 0);
+  f.context.__lateHistory = own;
+  vm.runInContext("mergeMessages(currentState(), [__lateHistory]); renderMessages(currentState());", f.context);
+  assert.equal(state.messages.get("3").deletedAt, now + 2, "late history cannot resurrect the deletion");
+  assert.equal(view().children.length, currentRole === "admin" ? 3 : 1); assert.equal(posts(f).length, 0);
+});
+
+test("touch sends and emoji insertion never automatically refocus the text field", async () => {
+  const f = harness({ coarse: true }); await flush();
+  f.element("message-body").focus(); await f.send("Synthetic touch send");
+  assert.notEqual(f.document.activeElement.id, "message-body"); assert.equal(f.state.posts, 1);
+  f.element("send").focus(); await f.send("Another synthetic touch send");
+  assert.equal(f.document.activeElement.id, "send"); assert.equal(f.state.posts, 2);
+  f.element("message-body").value = "Hello "; f.element("message-body").setSelectionRange(6, 6); f.element("message-body").focus();
+  const before = f.calls.length; await f.click("open-emojis");
+  assert.equal(f.element("emoji-search"), undefined); assert.equal(f.document.activeElement, f.element("close-emojis"));
+  const choice = f.element("emoji-list").children.find(button => button.dataset.emojiId === "kiss-face");
+  for (const handler of choice.events.get("click")) handler({}); await flush();
+  assert.equal(f.element("message-body").value, "Hello 😘"); assert.equal(f.document.activeElement.id, "open-emojis");
+  assert.equal(f.calls.length, before); assert.equal(f.state.posts, 2);
+});
+
+test("a client notification for a deleted message opens history without a deleted-message row or retry loop", async () => {
+  let f;
+  const reference = id(1998), deleted = { id: id(501), sequence: "1", sender: "peer", body: null, createdAt: now, deletedAt: now + 1 };
+  f = harness({ notification: reference, intercept(path) {
+    if (path === "/api/notifications/client/open") return response(200, { conversationId: id(101), messageId: deleted.id, sequence: "1" });
+    if (path.includes("/messages?")) return response(200, { conversation: f.conversation(), messages: [deleted], eventCursor: "1", hasMoreBefore: false, hasMoreAfter: false });
+  } }); await flush();
+  assert.equal(f.inspect().pendingNotification, null); assert.equal(f.element("messages").children.length, 0);
+  assert.equal(f.document.activeElement.id, "message-scroll"); assert.equal(f.element("empty-message").hidden, false);
+  assert.equal(f.inspect().states.get(f.inspect().selected).messages.get("1").deletedAt, now + 1);
+  assert.doesNotMatch(f.element("chat-status").textContent, /supprimé|indisponible/);
+  assert.equal(f.calls.filter(call => call.path.endsWith("/open")).length, 1); assert.equal(posts(f).length, 0);
+});
+
+test("touch photo/video drafts and quick replies return to a composer control instead of reopening a text keyboard", async () => {
+  const photo = harness({ coarse: true, intercept: path => path === "/api/media/client/capabilities" ? response(200, { enabled: true }) : undefined }); await flush();
+  photo.element("image-file").files = [new Blob(["Synthetic touch photo"], { type: "image/jpeg" })];
+  for (const handler of photo.element("image-file").events.get("change")) handler({}); await flush();
+  assert.equal(photo.document.activeElement.id, "open-composer-tools");
+  photo.element("cancel-image").focus(); await photo.click("cancel-image");
+  assert.equal(photo.document.activeElement.id, "open-composer-tools"); assert.equal(posts(photo).length, 0);
+  const video = harness({ coarse: true, intercept: videoCapability }); await flush(); await selectVideo(video);
+  assert.equal(video.document.activeElement.id, "open-composer-tools"); await video.click("cancel-video");
+  assert.equal(video.document.activeElement.id, "open-composer-tools"); assert.equal(posts(video).length, 0);
+  const admin = harness({ coarse: true, currentSession: session(1, "A".repeat(43), "admin") }); await flush();
+  for (const handler of admin.element("conversations").children[0].events.get("click")) handler({}); await flush();
+  await admin.click("open-quick-replies"); const reply = admin.element("quick-replies-list").children[0];
+  for (const handler of reply.events.get("click")) handler({}); await flush();
+  assert.equal(admin.document.activeElement.id, "open-composer-tools"); assert.ok(admin.element("message-body").value.length > 0); assert.equal(posts(admin).length, 0);
 });

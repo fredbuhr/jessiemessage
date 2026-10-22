@@ -66,3 +66,18 @@ h2 { font-size: 19px; line-height: 1.4; margin: 0 0 18px; color: #f5eef2; }
 #devices-panel { margin: 18px 0; }
 .text-button { background: transparent; color: #d8b999; border: 0; padding: 10px 0; text-align: left; cursor: pointer; min-height: 44px; font-size: 13px; }
 #session-retry, #access-retry { margin-bottom: 20px; }
+
+.is-admin-home .access-main { width: min(1000px, calc(100% - 40px)); margin: 24px auto auto; }
+.is-admin-home .access-card { padding: clamp(24px, 4vw, 44px); }
+.admin-dashboard { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 30px 0; }
+.dashboard-tool { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; min-height: 160px; padding: 22px; border: 1px solid #554353; border-radius: 16px; background: #211a24; text-decoration: none; transition: background .15s ease, border-color .15s ease; }
+.dashboard-tool:hover { background: #302333; border-color: #b37894; }
+.dashboard-tool strong { font-size: 16px; line-height: 1.4; }
+.dashboard-tool > span:last-child { color: #c7b9c4; font-size: 13px; line-height: 1.6; }
+.tool-icon { color: #e6c8a7; font-size: 23px; line-height: 1; margin-bottom: 6px; }
+.is-admin-home #admin-chat-link { max-width: 340px; padding: 17px 22px; }
+.is-admin-home #account-settings { margin-top: 30px; }
+.is-admin-clients .access-main { width: min(840px, calc(100% - 40px)); }
+.is-admin-clients #admin-session-note, .is-admin-clients .connection, .is-admin-clients #connected > .intro { display: none; }
+@media (max-width: 760px) { .admin-dashboard { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .admin-dashboard { grid-template-columns: 1fr; gap: 12px; margin-top: 24px; } .dashboard-tool { min-height: 120px; padding: 20px; } .is-admin-home .access-main { margin-top: 8px; } }

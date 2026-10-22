@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { canonicalEmail } from "../auth/config.mjs";
+import { createSessionClock } from "../auth/session-policy.mjs";
 
 export class MailStoreError extends Error {
   constructor(code = "MAIL_DATABASE_OPERATION") {
@@ -24,7 +25,8 @@ const timestamp = (value) => {
   return result;
 };
 
-export function createMailStore(pool) {
+export function createMailStore(pool, { clock } = {}) {
+  const freshNow = createSessionClock(clock);
   let nextPruneAt = null;
   async function connectionRun(operation, transaction = false) {
     let connection;
@@ -78,10 +80,13 @@ export function createMailStore(pool) {
         || now + leaseMilliseconds > 253402300799999) fail("MAIL_STORE_INPUT");
       // The initial read acquires no locks. Each candidate then has its own short
       // transaction so a batch never retains locks on several unrelated users.
-      const candidates = await connectionRun((connection) => connection.query(`SELECT id, recipient_user_id, verification_id
+      const candidates = await connectionRun((connection) => {
+        now = freshNow(now);
+        return connection.query(`SELECT id, recipient_user_id, verification_id
         FROM mail_outbox WHERE (status = 'pending' AND available_at <= ?)
           OR (status = 'sending' AND lease_until <= ?)
-        ORDER BY available_at, created_at, id LIMIT 16`, [sqlDate(now), sqlDate(now)]));
+        ORDER BY available_at, created_at, id LIMIT 16`, [sqlDate(now), sqlDate(now)]);
+      });
       for (const candidate of candidates) {
         bytes(candidate.id); bytes(candidate.recipient_user_id); bytes(candidate.verification_id);
         const claimed = await connectionRun(async (connection) => {
@@ -91,6 +96,7 @@ export function createMailStore(pool) {
           const verification = (await connection.query(`SELECT user_id, created_at, expires_at, consumed_at, revoked_at
             FROM email_verifications WHERE id = ? FOR UPDATE`, [candidate.verification_id]))[0];
           const job = (await connection.query("SELECT * FROM mail_outbox WHERE id = ? FOR UPDATE", [candidate.id]))[0];
+          now = freshNow(now);
           if (!job || !job.recipient_user_id.equals(candidate.recipient_user_id)
             || !job.verification_id.equals(candidate.verification_id)) return null;
           const ready = (job.status === "pending" && timestamp(job.available_at) <= now)
@@ -121,7 +127,8 @@ export function createMailStore(pool) {
           await connection.query(`UPDATE mail_outbox SET status = 'sending', attempts = attempts + 1,
             lease_token = ?, lease_until = ?, last_error = NULL WHERE id = ?`, [leaseToken, sqlDate(leaseUntil), job.id]);
           return { id: job.id, verificationId: job.verification_id, userId: job.recipient_user_id,
-            recipientEmail, payloadEncrypted: job.payload_encrypted, leaseToken, attempts: attempts + 1, expiresAt };
+            recipientEmail, payloadEncrypted: job.payload_encrypted, leaseToken, leaseUntil, attempts: attempts + 1,
+            expiresAt: Math.min(expiresAt, timestamp(verification.expires_at)) };
         }, true);
         if (claimed) return claimed;
       }

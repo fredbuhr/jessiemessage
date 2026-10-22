@@ -41,6 +41,7 @@ function media(role) {
 function message(sequence, role) {
   const sent = fixture.sent.find(message => message.sequence === String(sequence)); if (sent) return { ...sent };
   const number = Number(sequence);
+  if (fixture.deletedSequences?.includes(String(sequence))) return { id: id(200 + number), sequence: String(number), sender: number === 2 ? "me" : "peer", body: null, createdAt: fixture.now + number * 1000, deletedAt: fixture.now + 5000, clientMessageId: null };
   return { id: id(200 + number), sequence: String(number), sender: number === 2 || number === 3 && fixture.ownPhoto ? "me" : "peer",
     body: number === 1 ? "Earlier fictional message" : number === 2 ? "Fictional message from me" : number === 3 ? fixture.photoWithoutCaption ? "" : "Fictional photo caption" : `Fictional incoming body ${number}`,
     createdAt: fixture.now + number * 1000, deletedAt: null, clientMessageId: null,
@@ -68,7 +69,7 @@ window.addEventListener("error", event => { window.__browserErrors.push(String(e
 window.addEventListener("unhandledrejection", event => { window.__browserErrors.push(String(event.reason?.message ?? event.reason).slice(0, 500)); });
 window.addEventListener("securitypolicyviolation", event => { window.__browserErrors.push("CSP: " + event.violatedDirective); });
 `;
-const fileNames = ["conversation-download.js", "quick-replies.js", "crm.js", "crm-model.js", "crm.css", "private-archive.js", "notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "chat-drafts.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "help-link.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
+const fileNames = ["conversation-download.js", "quick-replies.js", "crm.js", "crm-model.js", "crm.css", "private-archive.js", "notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "admin-navigation.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "chat-drafts.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "help-link.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
   "emoji-catalog.js", "emoji.css", "profile.js", "profile.css", "i18n-profile.js", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
   "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png", "brand/icon-128.png",
   "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
@@ -314,7 +315,9 @@ async function openChatOptions(page) {
   await waitUntil(() => page.execute("return !document.getElementById('chat-menu').hidden"), "options panel opens");
 }
 async function clickOptionsAction(page, selector) {
-  await openChatOptions(page); await page.click(selector);
+  await openChatOptions(page);
+  if (selector === ".conversation-download-entry" && !await page.execute("return document.querySelector('.menu-extras').open")) await page.click(".menu-extras summary");
+  await page.click(selector);
 }
 async function toggleChatLanguage(page) {
   await clickOptionsAction(page, "[data-jm-language]");
@@ -357,7 +360,7 @@ test("Chrome: only Jessie sees a read receipt after a metadata-only poll, with s
       if (role === "admin") await page.click(".contact");
       await loadedPhoto(page);
       await openMessageDetails(page, "2");
-      await tabUntil(page, '#messages [data-sequence="2"] .delete-message');
+      if (role === "admin") await tabUntil(page, '#messages [data-sequence="2"] .delete-message');
       await page.execute(`window.__receiptProbe = { article: document.querySelector('#messages [data-sequence="2"]'),
         remove: document.activeElement, receipt: document.querySelector('#messages [data-sequence="2"] .message-meta span') };`);
       assert.equal(await page.execute("return window.__receiptProbe.receipt.textContent"), "Envoyé");
@@ -400,8 +403,9 @@ test("Chrome mobile: compact messages reveal one accessible details area at a ti
       const details = await page.execute(`const row=document.querySelector('#messages [data-sequence="2"]'),meta=row.querySelector('.message-meta'),toggle=row.querySelector('.message-details-toggle'),r=toggle.getBoundingClientRect();
         return {selected:document.querySelectorAll('#messages .is-selected').length,visible:!meta.hidden,controls:toggle.getAttribute('aria-controls')===meta.id,
           label:toggle.getAttribute('aria-label'),role:row.getAttribute('role'),width:r.width,height:r.height,below:meta.getBoundingClientRect().top>=row.querySelector('.bubble').getBoundingClientRect().bottom-1,
-          receipt:meta.querySelector('span').textContent,deleteVisible:row.querySelector('.delete-message').getClientRects().length>0};`);
-      assert.equal(details.selected, 1); assert.equal(details.visible && details.controls && details.below && details.deleteVisible, true, context);
+          receipt:meta.querySelector('span').textContent,deleteVisible:!!row.querySelector('.delete-message')?.getClientRects().length};`);
+      assert.equal(details.selected, 1); assert.equal(details.visible && details.controls && details.below, true, context);
+      assert.equal(details.deleteVisible, role === "admin", context);
       assert.equal(details.role, "listitem"); assert.match(details.label, language === "fr" ? /^Détails du message/ : /^Details of message/);
       assert.ok(details.width>=44 && details.height>=44, `${context}: focused details control is touch-sized`);
       assert.equal(details.receipt, role === "admin" ? language === "fr" ? "Lu" : "Read" : language === "fr" ? "Envoyé" : "Sent", `${context}: only Jessie may see a read receipt`);
@@ -432,7 +436,7 @@ test("Chrome mobile: compact messages reveal one accessible details area at a ti
   }
 });
 
-test("Chrome mobile: a captionless photo has a visible touch-sized details control without adding a metadata row", { timeout: 180000 }, async () => {
+test("Chrome mobile: a captionless photo keeps its enlarge action and a keyboard-only details control without an extra row", { timeout: 180000 }, async () => {
   for (const width of [320, 360, 390]) for (const role of ["client", "admin"]) for (const ownPhoto of [false, true]) {
     resetFixture(); fixture.photoWithoutCaption = true; fixture.ownPhoto = ownPhoto;
     const page = await browser(width, 640), context = `${role} ${ownPhoto ? "own" : "peer"} photo ${width}px`;
@@ -445,11 +449,11 @@ test("Chrome mobile: a captionless photo has a visible touch-sized details contr
           touch:r.width>=44 && r.height>=44,fits:r.left>=s.left && r.right<=s.right,beside:r.bottom<=b.bottom+1,
           hit:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)===button,extraHeight:row.getBoundingClientRect().height-b.height};`);
       assert.equal(resting.caption, false, context); assert.equal(resting.hidden, true, context);
-      assert.equal(resting.visible && resting.touch && resting.fits && resting.beside && resting.hit, true, context);
+      assert.equal(resting.visible, false, `${context}: no redundant visible details control`);
       assert.ok(resting.extraHeight<=1, `${context}: the details control adds no vertical space`);
-      await page.click('#messages [data-sequence="3"] .message-details-toggle');
+      await openMessageDetails(page, "3");
       assert.equal(await page.execute(`const row=document.querySelector('#messages [data-sequence="3"]');return row.classList.contains('is-selected') && !row.querySelector('.message-meta').hidden && !document.getElementById('lightbox').open && !document.getElementById('confirm-delete').open;`), true, context);
-      assert.equal(await page.execute(`const button=document.querySelector('#messages [data-sequence="3"] .delete-message');return !!button && button.getClientRects().length>0;`), ownPhoto, `${context}: existing ownership governs deletion`);
+      assert.equal(await page.execute(`const button=document.querySelector('#messages [data-sequence="3"] .delete-message');return !!button && button.getClientRects().length>0;`), ownPhoto && role === "admin", `${context}: only the admin may delete their own messages`);
       await page.click("#message-body");
       await page.click('#messages [data-sequence="3"] .photo-open');
       await waitUntil(() => page.execute("return document.getElementById('lightbox').open"), "the captionless photo still opens its viewer");
@@ -480,7 +484,7 @@ test("Chrome: message details never hide an uncertain send, its error or the exp
   }
 });
 
-test("Chrome 320px: keyboard emoji search inserts at the selection without photos or automatic sending, and Escape restores focus", { timeout: 60000 }, async () => {
+test("Chrome 320px: keyboard emoji panel inserts at the selection without photos or automatic sending, and Escape restores focus", { timeout: 60000 }, async () => {
   for (const role of ["client", "admin"]) {
     resetFixture(); fixture.mediaDisabled = true; const page = await browser(320);
     try {
@@ -490,20 +494,19 @@ test("Chrome 320px: keyboard emoji search inserts at the selection without photo
       await page.type("#message-body", "Hello friend");
       await page.execute("document.getElementById('message-body').setSelectionRange(6, 12)");
       await page.click("#open-emojis");
-      await waitUntil(() => page.execute("return document.getElementById('emoji-dialog').matches(':modal') && document.activeElement.id === 'emoji-search'"), "native emoji dialog and search focus");
-      await page.type("#emoji-search", "kiss");
+      await waitUntil(() => page.execute("return document.getElementById('emoji-dialog').matches(':modal') && document.activeElement.id === 'close-emojis'"), "native emoji panel and choice focus");
       await tabUntil(page, '#emoji-list [data-emoji-id="kiss-face"]');
       await page.key("\uE014"); assert.notEqual(await page.execute("return document.activeElement.dataset.emojiId"), "kiss-face");
       await page.key("\uE012"); assert.equal(await page.execute("return document.activeElement.dataset.emojiId"), "kiss-face");
       await page.key("\uE007");
       assert.equal(await page.execute("return document.getElementById('message-body').value"), "Hello 😘");
-      assert.deepEqual(await page.execute("const t=document.getElementById('message-body');return [t.selectionStart,t.selectionEnd,document.activeElement.id]"), [8, 8, "message-body"]);
+      assert.deepEqual(await page.execute("const t=document.getElementById('message-body');return [t.selectionStart,t.selectionEnd,document.activeElement.id]"), [8, 8, "open-emojis"]);
       assert.equal(fixture.messageRequests.length, 0);
       await page.click("#open-emojis"); await page.key("\uE00C");
       await waitUntil(() => page.execute("return !document.getElementById('emoji-dialog').open && document.activeElement.id === 'open-emojis'"), "Escape returns to the emoji opener");
       await page.click("#open-emojis");
       await page.execute("JessieI18n.setLanguage('en')");
-      assert.equal(await page.execute("return document.querySelector('.emoji-search span').textContent"), "Find an emoji");
+      assert.equal(await page.execute("return document.getElementById('emoji-title').textContent"), "Emojis");
       const layout = await page.execute(`const dialog=document.getElementById('emoji-dialog'), rect=dialog.getBoundingClientRect();
         return {fits:rect.left>=0 && rect.right<=innerWidth && dialog.scrollWidth<=dialog.clientWidth,
           touch:[...document.querySelectorAll('#emoji-list button')].every(button=>{const b=button.getBoundingClientRect();return b.width>=44 && b.height>=44})};`);
@@ -528,11 +531,10 @@ test("Chrome 320px: skin tone changes the preview and inserted text, survives re
       await tabUntil(page, "#emoji-skin-tone");
       await page.key("\uE010"); await page.key("\uE004");
       await waitUntil(() => page.execute("return document.getElementById('emoji-skin-tone').value === 'dark'"), "dark skin tone chosen with the keyboard");
-      await page.type("#emoji-search", "pouce");
       assert.equal(await page.execute("return document.querySelector('[data-emoji-id=\"thumbs-up\"]').textContent"), "👍🏿");
       await page.click('[data-emoji-id="thumbs-up"]');
       assert.equal(await page.execute("return document.getElementById('message-body').value"), "Hello 👍🏿");
-      assert.deepEqual(await page.execute("const t=document.getElementById('message-body');return [t.selectionStart,t.selectionEnd,document.activeElement.id]"), [10, 10, "message-body"]);
+      assert.deepEqual(await page.execute("const t=document.getElementById('message-body');return [t.selectionStart,t.selectionEnd,document.activeElement.id]"), [10, 10, "open-emojis"]);
       assert.equal(fixture.messageRequests.length, 0);
 
       await page.click("#open-emojis");
@@ -540,7 +542,6 @@ test("Chrome 320px: skin tone changes the preview and inserted text, survives re
       await page.execute("JessieI18n.setLanguage('en')");
       const translated = await page.execute("const select=document.getElementById('emoji-skin-tone');return {value:select.value,label:document.querySelector('label[for=\"emoji-skin-tone\"] span').textContent,option:select.selectedOptions[0].textContent};");
       assert.equal(translated.value, "dark"); assert.equal(translated.label, "Skin tone"); assert.match(translated.option, /dark/i);
-      await page.type("#emoji-search", "peace");
       assert.equal(await page.execute("return document.querySelector('[data-emoji-id=\"peace\"]').textContent"), "✌🏿");
       const layout = await page.execute(`const dialog=document.getElementById('emoji-dialog'), rect=dialog.getBoundingClientRect(), tone=document.getElementById('emoji-skin-tone').getBoundingClientRect();
         return {fits:rect.left>=0 && rect.right<=innerWidth && dialog.scrollWidth<=dialog.clientWidth,
@@ -564,13 +565,13 @@ test("Chrome desktop and 320px: actual Tab / Enter contact selection and return,
       assert.equal(await page.execute("return document.activeElement.id"), "message-scroll", "selecting a contact focuses the history, leaving the draft untouched");
       assert.equal(await page.execute("return document.getElementById('message-body').placeholder"), "Écris ton message…");
       assert.equal(await page.execute("return document.getElementById('peer-name').textContent"), peerName);
-      assert.equal(await page.execute("return document.querySelector('#readiness-nav a[href=\"/admin/readiness\"]').textContent"), "État du service");
+      assert.deepEqual(await page.execute("const link=document.getElementById('account-link');return {href:link.getAttribute('href'),text:link.textContent,oldNav:!!document.getElementById('readiness-nav')};"), {href:"/admin",text:"Accueil admin",oldNav:false});
       assert.equal(await page.execute("return document.getElementById('message-announcement').textContent"), "", "loaded history is silent");
       await toggleChatLanguage(page);
       assert.equal(await page.execute("return document.documentElement.lang"), "en");
       assert.equal(await page.execute("return document.getElementById('message-body').placeholder"), "Write your message…");
       assert.equal(await page.execute("return document.getElementById('peer-name').textContent"), peerName, "private names are never translated");
-      assert.equal(await page.execute("return document.querySelector('#readiness-nav a[href=\"/admin/readiness\"]').textContent"), "Service status");
+      assert.deepEqual(await page.execute("const link=document.getElementById('account-link');return {href:link.getAttribute('href'),text:link.textContent};"), {href:"/admin",text:"Admin home"});
       await tabUntil(page, "#back-to-inbox"); await page.key("\uE007");
       assert.equal(await page.execute("return document.activeElement.dataset.conversationId"), conversationId, "return restores the contact recreated by the controller");
       assert.equal(await page.execute("return document.activeElement.querySelector('strong').textContent"), peerName);
@@ -635,6 +636,7 @@ test("Chrome mobile: a single compact conversation bar leaves room for history a
         const sent = fixture.messageRequests.length, exports = fixture.exportRequests?.length ?? 0;
         await openChatOptions(page);
         assert.equal(await page.execute("return document.getElementById('chat-menu').getAttribute('role')"), null, "ordinary native controls do not masquerade as an ARIA menu");
+        await page.click(".menu-extras summary");
         const selectors = ["#account-link", "#open-profile", "#open-notifications", "[data-jm-language]", "#logout", '#chat-footer a[href^="mailto:"]', "#chat-footer [data-help-link]"];
         if (path === "/messages") selectors.push(".conversation-download-entry");
         for (const selector of selectors) {
@@ -716,7 +718,9 @@ test("Chrome 320px: both roles edit their public profile with the keyboard, tran
       await waitUntil(() => page.execute("return !document.getElementById('message-body').disabled"), "selected conversation metadata rendered");
       assert.equal(await page.execute("return document.getElementById('peer-avatar').textContent"), role === "client" ? "J" : "A", "missing avatar uses the peer's initials");
       await openChatOptions(page); await tabUntil(page, "#open-profile"); await page.key("\uE007");
-      await waitUntil(() => page.execute("return document.querySelector('.profile-dialog').matches(':modal') && document.activeElement.matches('.profile-pseudonym')"), "profile loaded with the name focused");
+      await waitUntil(() => page.execute("return document.querySelector('.profile-dialog').matches(':modal') && !document.querySelector('.profile-pseudonym').disabled && document.activeElement.matches('.profile-close')"), "touch profile loaded without opening the name keyboard");
+      await tabUntil(page, ".profile-pseudonym");
+      assert.equal(await page.execute("return document.activeElement.matches('.profile-pseudonym')"), true, "the name remains reachable through explicit keyboard navigation");
       assert.equal(await page.execute("return document.querySelector('.profile-header h2').textContent"), "Mon profil");
       assert.equal(await page.execute("return document.querySelector('.profile-avatar-preview img').hidden"), true);
       await page.type(".profile-pseudonym", "Envoyer");
@@ -866,7 +870,7 @@ test("Chrome mobile: native modal Escape restores photo / gallery focus; private
 test("Chrome mobile: deleting a message has a keyboard-accessible confirmation with safe cancellation", { timeout: 30000 }, async () => {
   resetFixture(); const page = await browser(390);
   try {
-    await loaded(page, "/messages");
+    await loaded(page, "/admin/messages"); await page.click(".contact");
     await openMessageDetails(page, "2");
     await tabUntil(page, "#messages .delete-message");
     await page.execute("window.__deleteOpener = document.activeElement"); await page.key("\uE007");
@@ -1021,7 +1025,7 @@ async function openClientExport(page, language = "fr") {
   await waitUntil(() => page.execute("return !!document.querySelector('.conversation-download-entry:not([hidden])')"), "client download control mounted");
   if (language === "en") await toggleChatLanguage(page);
   await page.execute("window.__exportDownloads=[];const original=URL.createObjectURL.bind(URL);URL.createObjectURL=blob=>{if(blob.type==='application/zip')window.__exportDownloadBytes=blob.size;return original(blob);};document.addEventListener('click',e=>{const a=e.target.closest('a[download]');if(a){e.preventDefault();window.__exportDownloads.push(a.download);}})");
-  await openChatOptions(page); await tabUntil(page, ".conversation-download-entry"); await page.key("\uE007");
+  await openChatOptions(page); await page.click(".menu-extras summary"); await tabUntil(page, ".conversation-download-entry"); await page.key("\uE007");
   await waitUntil(() => page.execute("return !!document.querySelector('.conversation-download[open]')"), "client export dialog open");
 }
 
@@ -1123,7 +1127,7 @@ for (const width of [320, 1280]) for (const language of ["fr", "en"]) {
       const expected = "Personal draft\n" + (replyLanguage === "fr" ? "Bonne nuit, bisous 😘" : "Good night, kisses 😘");
       assert.equal(await page.execute("return document.querySelector('#message-body').value"), expected);
       assert.equal(await page.execute("return document.querySelector('#quick-replies-dialog').open"), false);
-      assert.equal(await page.execute("return document.activeElement.id"), "message-body"); assert.equal(fixture.sent.length, 0, "insertion never sends");
+      assert.equal(await page.execute("return document.activeElement.id"), width < 800 ? "open-composer-tools" : "message-body"); assert.equal(fixture.sent.length, 0, "insertion never sends");
       assert.match(await page.execute("return document.querySelector('#chat-status').textContent"), language === "fr" ? /ajoutée au brouillon/ : /added to your draft/);
       await page.type("#message-body", expected + " Edited"); await page.click("#send");
       await waitUntil(() => fixture.sent.length === 1, "explicit ordinary send");
@@ -1305,5 +1309,53 @@ test("Chrome: an uncertain text survives a real reload with its exact retry key 
     assert.equal(await page.execute("return JSON.parse(sessionStorage.getItem('jessiemessage.chat-drafts.v1.client')).entries.length"), 0);
     await reloadDraftDocument(page); assert.equal(fixture.messageRequests.length, 2);
     assert.equal(await page.execute("return document.querySelector('#message-body').value"), ""); await noJavascriptErrors(page);
+  } finally { await page.close(); }
+});
+
+
+test("Chrome: client tombstones are absent from the actual DOM while admin history retains them", { timeout: 45000 }, async () => {
+  for (const role of ["client", "admin"]) {
+    resetFixture(); fixture.deletedSequences = ["1", "3"]; const page = await browser(390);
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      if (role === "admin") await page.click(".contact");
+      await waitUntil(() => page.execute("return !!document.querySelector('#messages [data-sequence=\"2\"]')"), "live history rendered");
+      const snapshot = () => page.execute(`return { sequences:[...document.querySelectorAll('#messages .message')].map(node=>node.dataset.sequence), deleted:document.querySelectorAll('#messages .deleted').length, text:document.getElementById('messages').textContent, deletes:document.querySelectorAll('#messages .delete-message').length };`);
+      const initial = await snapshot();
+      assert.deepEqual(initial.sequences, role === "admin" ? ["2", "3"] : ["2"], "the initial fixture page contains only sequences 2 and 3");
+      assert.equal(initial.deleted, role === "admin" ? 1 : 0); assert.equal(initial.deletes, role === "admin" ? 1 : 0);
+      if (role === "client") assert.doesNotMatch(initial.text, /Message supprimé|Message deleted/);
+      await tabUntil(page, "#older-messages"); await page.key("\uE007");
+      await waitUntil(() => page.execute("return document.getElementById('older-messages').hidden"), "the older tombstone page has been consumed");
+      const older = await snapshot();
+      assert.deepEqual(older.sequences, role === "admin" ? ["1", "2", "3"] : ["2"], "pagination preserves tombstones for admin and omits them for client");
+      assert.equal(new Set(older.sequences).size, older.sequences.length, "pagination never duplicates a rendered message");
+      assert.equal(older.deleted, role === "admin" ? 2 : 0); assert.equal(older.deletes, role === "admin" ? 1 : 0);
+      if (role === "client") assert.doesNotMatch(older.text, /Message supprimé|Message deleted/);
+      assert.equal(fixture.deleteRequests, 0); assert.equal(fixture.messageRequests.length, 0); await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+
+test("Chrome: synthetic coarse-pointer focus policy keeps keyboards closed after send, profile and emoji panels", { timeout: 60000 }, async () => {
+  resetFixture(); fixture.profileEnabled = true; const page = await browser(390);
+  try {
+    await loaded(page, "/messages");
+    await waitUntil(() => page.execute("return !document.getElementById('open-profile').hidden"), "profile control mounted");
+    await page.execute(`const original=window.matchMedia.bind(window);window.matchMedia=query=>query==='(any-pointer: coarse)'?{matches:true}:original(query);`);
+    await page.type("#message-body", "Synthetic touch message"); await page.click("#send");
+    await waitUntil(() => page.execute("return document.getElementById('message-body').value==='' && !document.getElementById('message-body').disabled"), "send acknowledged");
+    assert.equal(await page.execute("return document.activeElement.id==='message-body'"), false);
+    await clickOptionsAction(page, "#open-profile");
+    await waitUntil(() => page.execute("return !!document.querySelector('.profile-dialog[open]') && !document.querySelector('.profile-pseudonym').disabled"), "profile loaded");
+    assert.equal(await page.execute("return document.activeElement.classList.contains('profile-close')"), true);
+    await page.type(".profile-pseudonym", "Edited touch name"); await page.click(".profile-save");
+    await waitUntil(() => page.execute("return !document.querySelector('.profile-dialog').open"), "profile saved and closed");
+    assert.equal(await page.execute("return document.activeElement.matches('input,textarea')"), false);
+    await page.click("#open-emojis");
+    assert.equal(await page.execute("return document.getElementById('emoji-search')===null && document.activeElement.id==='close-emojis'"), true);
+    await page.click('[data-emoji-id="kiss-face"]');
+    assert.equal(await page.execute("return document.getElementById('message-body').value==='😘' && document.activeElement.id==='open-emojis'"), true);
+    assert.equal(fixture.messageRequests.length, 1); await noJavascriptErrors(page);
   } finally { await page.close(); }
 });

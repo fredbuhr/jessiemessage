@@ -1,0 +1,24 @@
+✔ public help delivers exact GET/HEAD assets without enabling a private feature or setting a cookie (71.186373ms)
+✔ help remains read only and cannot expose adjacent files through unknown or traversing paths (21.373785ms)
+✔ the existing authority guard serves help on both enabled origins and rejects forwarded or foreign authorities (25.760814ms)
+✔ help offers fixed destinations, official contact subjects and the shared translation runtime (2.133491ms)
+✔ the real shared language accepts only the two exact hints after clearing every URL suffix (7.283283ms)
+✔ unknown, mixed, encoded, uppercase and newline fragment hints never change a stored preference or navigate (23.907738ms)
+✔ only known incoming section anchors cause a local scroll after URL clearing without changing a language (7.398768ms)
+✔ every marked help text and accessible label has an English translation in the real shared catalogue (3.898146ms)
+✔ blocked language storage keeps the supplied language usable without any second store (2.0496ms)
+✔ help still clears the URL and preserves static French content without a translation runtime (1.382942ms)
+✔ public help describes the confirmed private-space choices without promising an implemented account erasure (2.065286ms)
+✔ public privacy help distinguishes live files, retained records, providers and available rights (3.22968ms)
+✔ help carries only the shared language and translates the new-tab hint on first render and changes (5.877681ms)
+✔ blocked preference storage keeps help usable in the current language without a second store (1.0827ms)
+✔ an unavailable translation runtime preserves the static help link and French labels (0.705109ms)
+✔ all existing entry, account and chat pages expose safe help without requiring JavaScript or leaving the page (12.756964ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 303.764134

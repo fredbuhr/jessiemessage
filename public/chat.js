@@ -48,7 +48,7 @@ let dialogReturnFocus = null; let lightboxReturnFocus = null;
 let crm = null;
 let profileUI = null; let profileMount = null; let profileCapability = null;
 let announcementUI = null; let announcementMount = null; let announcementCapability = null; let announcementHost = null;
-let tasksCapability = false, tasksRefresh = null, lastTasksRefresh = 0;
+let tasksCapability = false;
 const avatarContainers = new Map(); const avatarVersions = new Map(); const avatarPaths = new Map();
 let emojiContext = null;
 let emojiCategory = "all";
@@ -118,6 +118,13 @@ function focusVisible(node) {
   return document.activeElement === node;
 }
 function focusWasLost(node) { return document.activeElement === node || document.activeElement === document.body; }
+function touchKeyboard() { return globalThis.matchMedia?.("(any-pointer: coarse)").matches === true; }
+function dismissComposerKeyboard() {
+  if (touchKeyboard() && document.activeElement === el("message-body")) el("message-body").blur();
+}
+function focusComposer(fallback = "open-composer-tools") {
+  return focusVisible(el(touchKeyboard() ? fallback : "message-body"));
+}
 function menuReturnFocus() {
   if (menuOpener?.isConnected && menuOpener.getClientRects?.().length) return menuOpener;
   return el(el("workspace").classList.contains("selected") ? "open-conversation-menu" : "open-account-menu");
@@ -125,6 +132,7 @@ function menuReturnFocus() {
 function closeChatMenu(restoreFocus = false) {
   const wasOpen = !el("chat-menu").hidden;
   el("chat-menu").hidden = true;
+  for (const details of el("chat-menu").querySelectorAll("details")) details.open = false;
   for (const id of ["open-account-menu", "open-conversation-menu"]) el(id).setAttribute("aria-expanded", "false");
   if (wasOpen && restoreFocus) focusVisible(menuReturnFocus());
 }
@@ -155,7 +163,7 @@ function positionComposerTools() {
 function openChatMenu(opener) {
   if (!visible()) return;
   if (!el("chat-menu").hidden) { closeChatMenu(true); return; }
-  closeComposerTools(); menuOpener = opener;
+  dismissComposerKeyboard(); closeComposerTools(); menuOpener = opener;
   el("chat-menu").hidden = false; opener.setAttribute("aria-expanded", "true");
   focusVisible(el("close-chat-menu"));
 }
@@ -274,7 +282,7 @@ async function mountConversationDownload(capability) {
   try {
     const { createConversationDownload } = await import("/conversation-download.js");
     if (!fresh(ticket, true) || !getContext() || conversationDownload) return;
-    conversationDownload = createConversationDownload({ parent: el("conversation-actions"), capability, getContext, request, getReturnFocus: menuReturnFocus, onError: error => handleError(error) });
+    conversationDownload = createConversationDownload({ parent: el("conversation-download-menu"), capability, getContext, request, getReturnFocus: menuReturnFocus, onError: error => handleError(error) });
     conversationDownload.update();
   } catch (error) { if (fresh(ticket, true) && getContext()) notice("Le téléchargement n’est pas disponible. Réessaie ; aucun fichier incomplet n’est proposé.", true); }
 }
@@ -297,13 +305,7 @@ async function mountProfile() {
 }
 async function mountAnnouncements() {
   if (announcementCapability?.enabled !== true || !ready || !visible() || !sessionOwner || loggingOut) return;
-  if (role === "admin") {
-    if (!document.getElementById("announcements-nav")) {
-      const link = document.createElement("a"); link.id = "announcements-nav"; link.href = "/admin/announcements"; ui.text(link, "Annonces");
-      document.getElementById("readiness-nav")?.append(link);
-    }
-    return;
-  }
+  if (role === "admin") return;
   if (announcementUI) { void announcementUI.refresh(true); return; }
   if (announcementMount) return;
   const owner = sessionOwner, lifetime = generation, ticket = snapshot(), mounting = {}; announcementMount = mounting;
@@ -328,23 +330,6 @@ function mountNotificationSettings() {
     onAvailability: (available) => { if (fresh(ticket, true) && ready && visible()) el("open-notifications").hidden = !available; },
   });
 }
-async function refreshTasksMenu(force = false) {
-  if (role !== "admin" || !tasksCapability || !ready || !visible() || !sessionOwner || loggingOut) return;
-  let link = document.getElementById("tasks-nav");
-  if (!link) {
-    link = document.createElement("a"); link.id = "tasks-nav"; link.href = "/admin/tasks"; ui.text(link, "Mes tâches");
-    document.getElementById("readiness-nav")?.append(link);
-  }
-  if (tasksRefresh || !force && Date.now() - lastTasksRefresh < 30000) return;
-  const ticket = snapshot(), pending = {}; tasksRefresh = pending; lastTasksRefresh = Date.now();
-  try {
-    const value = await request("/api/admin/crm/tasks/summary", { account: true });
-    if (tasksRefresh !== pending || !fresh(ticket, true) || !ready || !visible() || !Number.isSafeInteger(value.dueCount) || value.dueCount < 0) return;
-    ui.text(link, value.dueCount ? "Mes tâches · {count} à traiter" : "Mes tâches", { count: ui.numberParam(value.dueCount) });
-  } catch (error) {
-    if (tasksRefresh === pending && fresh(ticket, true) && !error.stale && [401, 403].includes(error.status)) await handleError(error);
-  } finally { if (tasksRefresh === pending) tasksRefresh = null; }
-}
 function clearPrivate({ purgeDrafts = false } = {}) {
   if (purgeDrafts) drafts.clear(role);
   else {
@@ -353,7 +338,7 @@ function clearPrivate({ purgeDrafts = false } = {}) {
   }
   closeChatMenu(); closeComposerTools(); menuOpener = null;
   quickReplyLanguage = null;
-  tasksCapability = false; tasksRefresh = null; lastTasksRefresh = 0;
+  tasksCapability = false;
   emojiSkinTone = "default";
   profileUI?.destroy(); profileUI = null; profileMount = null; profileCapability = null;
   announcementUI?.destroy(); announcementUI = null; announcementMount = null; announcementCapability = null; announcementHost?.remove(); announcementHost = null;
@@ -366,7 +351,6 @@ function clearPrivate({ purgeDrafts = false } = {}) {
   mediaEnabled = false; videoEnabled = false; videoCreationEnabled = false;
   conversationDownload?.clear(); conversationDownload = null; conversationDownloadCapability = null;
   crm?.clear(); crm = null; document.getElementById("crm-style")?.remove();
-  document.getElementById("readiness-nav")?.remove();
   stopPolling(); abortRequests(); expiryTimer?.(); expiryTimer = null;
   states.clear(); inbox.clear(); selected = null; ui.forget(el("conversations")); el("conversations").replaceChildren(); clearChat();
   inboxCursor = null; inboxMore = false; inboxRefreshCursor = null; lastInboxRefresh = 0; inboxLoading = false;
@@ -406,8 +390,8 @@ async function resumeConnection({ reset = false } = {}) {
       if (!continued || !fresh(ticket, true) || !visible() || loggingOut) return;
       if (crm) await crm.resume();
       if (!fresh(ticket, true) || !visible() || loggingOut) return;
-      void refreshBroadcastAccess(); const state = currentState(); if (state) renderMessages(state);
-      el("workspace").hidden = false; conversationDownload?.update(); void mountConversationDownload(conversationDownloadCapability); void mountProfile(); void mountAnnouncements(); void refreshTasksMenu(true); notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
+      const state = currentState(); if (state) renderMessages(state);
+      el("workspace").hidden = false; conversationDownload?.update(); void mountConversationDownload(conversationDownloadCapability); void mountProfile(); void mountAnnouncements(); notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
       reconnectAttempt = 0; stopReconnect(); retryDelay = 3000; schedulePolling(0);
       await openNotification();
     } catch (error) {
@@ -511,16 +495,6 @@ async function confirmOwner(ticket, owner, account = false) {
   if (!fresh(ticket, account) || !sameOwner(owner, sessionOwner) || !visible() || loggingOut) throw staleResponse();
 }
 
-async function refreshBroadcastAccess() {
-  if (role !== "admin") return;
-  const ticket = snapshot();
-  try {
-    const capability = await request("/api/broadcast/admin/session", { account: true });
-    if (!fresh(ticket, true) || capability.user?.role !== "admin" || document.getElementById("broadcast-nav")) return;
-    const link = document.createElement("a"); link.id = "broadcast-nav"; link.href = "/admin/broadcasts"; ui.text(link, "Diffusions");
-    document.getElementById("readiness-nav")?.append(link);
-  } catch (error) { if (!error.stale && error.status === 401) signOut(); }
-}
 function conversationPath(state) { return `${chatBase}/conversations/${state.id}`; }
 function errorText(error) {
   if (error.status === 429) return "Trop de demandes. Patiente un moment avant de réessayer.";
@@ -874,7 +848,7 @@ function chooseVideo() {
   if (el("message-body").value.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant d’ajouter une vidéo.", true); return; }
   state.imageDraft = null; revokePreview();
   state.videoDraft = { file, ready: false, invalid: false }; renderMeta(state);
-  notice("Vidéo choisie. Vérifie l’aperçu, ajoute une légende ou envoie-la."); focusVisible(el("message-body"));
+  notice("Vidéo choisie. Vérifie l’aperçu, ajoute une légende ou envoie-la."); focusComposer();
 }
 async function uploadVideo(file, state, transfer) {
   const ticket = snapshot(state), owner = sessionOwner;
@@ -1057,7 +1031,7 @@ function chooseFile() {
   if (!state || !file || state.pending || sendBusy || !state.conversation?.canSend) return;
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size < 1 || file.size > 10485760) { notice("Choisis une photo JPEG, PNG ou WebP de 10 Mo maximum.", true); return; }
   if (el("message-body").value.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant d’ajouter une photo.", true); return; }
-  state.videoDraft = null; revokeVideoPreview(); state.imageDraft = { file, asset: null }; renderMeta(state); notice("Photo choisie. Ajoute une légende ou envoie-la."); el("message-body").focus();
+  state.videoDraft = null; revokeVideoPreview(); state.imageDraft = { file, asset: null }; renderMeta(state); notice("Photo choisie. Ajoute une légende ou envoie-la."); focusComposer();
 }
 function mediaErrorText(error) {
   if (error.code === "media_format") return "Ce format n’est pas pris en charge. Choisis une photo JPEG, PNG ou WebP.";
@@ -1135,7 +1109,7 @@ function renderMediaPanel() {
       choose.addEventListener("click", () => {
         if (!belongsTo(currentState(), state.id, state.epoch) || state.pending || !state.conversation?.canSend) return;
         if (el("message-body").value.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant de choisir une photo.", true, "media-status"); return; }
-        state.videoDraft = null; revokeVideoPreview(); state.imageDraft = { file: null, asset: media }; closeMedia(); renderMeta(state); notice(media.sharedHere ? "Cette photo a déjà été envoyée ici. Envoyer ajoutera un nouveau message." : "Photo choisie. Ajoute une légende ou envoie-la."); el("message-body").focus();
+        state.videoDraft = null; revokeVideoPreview(); state.imageDraft = { file: null, asset: media }; closeMedia(); renderMeta(state); notice(media.sharedHere ? "Cette photo a déjà été envoyée ici. Envoyer ajoutera un nouveau message." : "Photo choisie. Ajoute une légende ou envoie-la."); focusComposer();
       });
       const remove = document.createElement("button"); remove.type = "button"; remove.className = "text-button"; remove.dataset.mediaAction = "remove"; ui.text(remove, "Supprimer la photo");
       remove.addEventListener("click", () => { void removeOwnAsset(media, state, remove); }); actions.append(choose, remove); card.append(actions);
@@ -1328,7 +1302,7 @@ function createMessageRow(state, message, contentKey) {
   article.append(body);
   const meta = document.createElement("div"); meta.className = "message-meta"; meta.id = `message-details-${message.sequence}`; meta.hidden = true; row.meta = meta;
   const detailsToggle = document.createElement("button"); detailsToggle.type = "button"; detailsToggle.className = "message-details-toggle";
-  ui.rawText(detailsToggle, "⋯"); detailsToggle.setAttribute("aria-expanded", "false"); detailsToggle.setAttribute("aria-controls", meta.id);
+  ui.text(detailsToggle, "Détails"); detailsToggle.setAttribute("aria-expanded", "false"); detailsToggle.setAttribute("aria-controls", meta.id);
   ui.attr(detailsToggle, "aria-label", "Détails du message du {date}", { date: dateParameter(message.createdAt, true) });
   detailsToggle.addEventListener("click", () => toggleMessageDetails(state, message, row)); row.detailsToggle = detailsToggle;
   body.addEventListener("click", event => {
@@ -1340,8 +1314,10 @@ function createMessageRow(state, message, contentKey) {
   const time = document.createElement("time"); time.dateTime = new Date(message.createdAt).toISOString(); ui.text(time, "{date}", { date: dateParameter(message.createdAt, true) }); row.time = time; meta.append(time);
   if (own && message.deletedAt == null) {
     row.receipt = document.createElement("span"); meta.append(row.receipt);
-    const remove = document.createElement("button"); remove.type = "button"; remove.className = "delete-message"; ui.text(remove, "Supprimer"); ui.attr(remove, "aria-label", "Supprimer mon message du {date}", { date: dateParameter(message.createdAt, true) });
-    remove.addEventListener("click", () => { void deleteMessage(state, message, remove); }); row.remove = remove; meta.append(remove);
+    if (role === "admin") {
+      const remove = document.createElement("button"); remove.type = "button"; remove.className = "delete-message"; ui.text(remove, "Supprimer"); ui.attr(remove, "aria-label", "Supprimer mon message du {date}", { date: dateParameter(message.createdAt, true) });
+      remove.addEventListener("click", () => { void deleteMessage(state, message, remove); }); row.remove = remove; meta.append(remove);
+    }
   }
   article.append(meta);
   return row;
@@ -1352,7 +1328,10 @@ function renderMessages(state, { initial = false, ownSend = false, prepend = fal
   const focusedRow = [...messageRows.values()].find((row) => row.article.contains(focused));
   const scroll = el("message-scroll"); const atBottom = nearBottom(scroll); const anchor = viewportAnchor(); const oldTop = scroll.scrollTop;
   pruneDeletedPhotos(state);
-  const messages = orderedMessages(state); const container = el("messages"); const photos = [];
+  // Keep tombstones in state for event cursors and idempotent merging. They
+  // have no row in the client view, including after a late history response.
+  const messages = orderedMessages(state).filter(message => role === "admin" || message.deletedAt == null);
+  const container = el("messages"); const photos = [];
   const retained = new Set(messages.map((message) => message.sequence));
   for (const [key, row] of messageRows) if (!retained.has(key)) {
     if (selectedMessageSequence === key) clearMessageSelection();
@@ -1367,6 +1346,7 @@ function renderMessages(state, { initial = false, ownSend = false, prepend = fal
     }
     row.article.classList.toggle("notification-target", state.notificationSequence === message.sequence);
     showMessageDetails(row, selectedMessageSequence === message.sequence);
+    ui.text(row.detailsToggle, "Détails");
     ui.attr(row.detailsToggle, "aria-label", "Détails du message du {date}", { date: dateParameter(message.createdAt, true) });
     ui.text(row.time, "{date}", { date: dateParameter(message.createdAt, true) });
     if (message.deletedAt != null) ui.text(row.body, "Message supprimé");
@@ -1473,6 +1453,10 @@ function focusNotification(target) {
   const state = currentState(), message = state?.messages.get(target.sequence);
   if (!state || message?.id !== target.messageId) return false;
   state.notificationSequence = target.sequence; renderMessages(state);
+  if (role === "client" && message.deletedAt != null) {
+    focusVisible(el("message-scroll"));
+    return true;
+  }
   const article = messageRows.get(target.sequence)?.article;
   if (!article || !visible()) return false;
   article.setAttribute("tabindex", "-1"); article.scrollIntoView?.({ block: "center" }); focusVisible(article);
@@ -1553,7 +1537,7 @@ async function poll() {
     if (Date.now() - sessionCheckedAt > 60000 && !await refreshAndContinue()) return;
     if (role === "admin" && Date.now() - lastInboxRefresh >= 30000) await loadInbox(false, true);
     const state = currentState(); if (state) catchup = await fetchEvents(state);
-    void announcementUI?.refresh(); void refreshTasksMenu();
+    void announcementUI?.refresh();
     retryDelay = 3000; notice("");
   } catch (error) { if (!error.stale) { retryDelay = Math.min(30000, retryDelay * 2); await handleError(error, currentState()); } }
   finally { if (cycle === pollEpoch) { cycleRunning = false; if (fresh(ticket)) schedulePolling(catchup ? 300 : retryDelay); } }
@@ -1661,7 +1645,7 @@ async function sendVideo(retry = false) {
 }
 
 async function deleteMessage(state, message, button) {
-  if (!belongsTo(currentState(), state.id, state.epoch) || button.disabled) return;
+  if (role !== "admin" || !belongsTo(currentState(), state.id, state.epoch) || button.disabled) return;
   if (!await confirmDeletion("message", button) || !belongsTo(currentState(), state.id, state.epoch) || !visible()) return;
   const restoreFocus = document.activeElement === button;
   button.disabled = true;
@@ -1705,9 +1689,10 @@ async function logout() {
 }
 async function sendWithFocus(retry, button) {
   const state = currentState(), ticket = snapshot(state), restoreFocus = document.activeElement === button;
+  dismissComposerKeyboard();
   try { await sendMessage(retry); }
   finally {
-    if (restoreFocus && state && fresh(ticket) && state === currentState() && !state.pending && state.draft === ""
+    if (!touchKeyboard() && restoreFocus && state && fresh(ticket) && state === currentState() && !state.pending && state.draft === ""
       && el("message-body").value === "" && focusWasLost(button)) focusVisible(el("message-body"));
   }
 }
@@ -1725,8 +1710,8 @@ function closeEmojis(restoreFocus = false, compose = false) {
   emojiContext = null; emojiCategory = "all";
   if (el("emoji-dialog").open) el("emoji-dialog").close();
   for (const id of ["emoji-categories", "emoji-list"]) { ui.forget(el(id)); el(id).replaceChildren(); }
-  el("emoji-search").value = ""; notice("", false, "emoji-status");
-  if (restoreFocus) focusVisible(el(compose ? "message-body" : "open-emojis"));
+  notice("", false, "emoji-status");
+  if (restoreFocus) focusVisible(el(compose && !touchKeyboard() ? "message-body" : "open-emojis"));
 }
 function renderEmojis(rebuildCategories = false) {
   if (!emojiContext) return;
@@ -1750,7 +1735,7 @@ function renderEmojis(rebuildCategories = false) {
   }
   for (const button of el("emoji-categories").children) button.setAttribute("aria-pressed", String(button.dataset.emojiCategory === emojiCategory));
   const selectedSkinTone = emojiSkinTone;
-  const choices = emojiOptions(language, { category: emojiCategory, query: el("emoji-search").value, skinTone: selectedSkinTone });
+  const choices = emojiOptions(language, { category: emojiCategory, skinTone: selectedSkinTone });
   ui.forget(el("emoji-list")); el("emoji-list").replaceChildren();
   for (const choice of choices) {
     const button = document.createElement("button"); button.type = "button"; button.className = "emoji-choice";
@@ -1771,22 +1756,21 @@ function renderEmojis(rebuildCategories = false) {
     });
     el("emoji-list").append(button);
   }
-  notice(choices.length ? "" : "Aucun emoji ne correspond à ta recherche.", false, "emoji-status");
-  if (focusedEmoji) focusVisible([...el("emoji-list").children].find(button => button.dataset.emojiId === focusedEmoji) ?? el("emoji-search"));
+  notice("", false, "emoji-status");
+  if (focusedEmoji) focusVisible([...el("emoji-list").children].find(button => button.dataset.emojiId === focusedEmoji) ?? el("close-emojis"));
   else if (rebuildCategories && focusedCategory) focusVisible([...el("emoji-categories").children].find(button => button.dataset.emojiCategory === focusedCategory));
 }
 el("open-emojis").addEventListener("click", () => {
-  closeChatMenu(); closeComposerTools();
+  dismissComposerKeyboard(); closeChatMenu(); closeComposerTools();
   if (!canUseEmojis()) return;
   closeQuickReplies();
   const textarea = el("message-body"), draft = textarea.value;
   const start = Number.isInteger(textarea.selectionStart) ? textarea.selectionStart : draft.length;
   const end = Number.isInteger(textarea.selectionEnd) ? textarea.selectionEnd : start;
   emojiContext = { ticket: snapshot(currentState()), owner: sessionOwner.id, csrf, draft, start, end };
-  emojiCategory = "all"; el("emoji-search").value = ""; renderEmojis(true);
-  el("emoji-dialog").showModal(); focusVisible(el("emoji-search"));
+  emojiCategory = "all"; renderEmojis(true);
+  el("emoji-dialog").showModal(); focusVisible(el("close-emojis"));
 });
-el("emoji-search").addEventListener("input", () => { if (emojiContext) renderEmojis(); });
 el("emoji-skin-tone").addEventListener("change", () => {
   if (!emojiContext) return;
   const tone = el("emoji-skin-tone").value;
@@ -1802,7 +1786,7 @@ el("emoji-list").addEventListener("keydown", (event) => {
   event.preventDefault(); focusVisible(buttons[next]);
 });
 el("close-emojis").addEventListener("click", () => closeEmojis(true));
-el("open-profile").addEventListener("click", () => { closeEmojis(); closeQuickReplies(); closeComposerTools(); });
+el("open-profile").addEventListener("click", () => { dismissComposerKeyboard(); closeChatMenu(); closeEmojis(); closeQuickReplies(); closeComposerTools(); });
 el("emoji-dialog").addEventListener("close", () => { if (emojiContext && !el("emoji-dialog").open) closeEmojis(true); });
 ui.onChange(() => { if (emojiContext) renderEmojis(true); });
 function quickRepliesCurrent(context = quickReplyContext) {
@@ -1817,7 +1801,7 @@ function closeQuickReplies(restoreFocus = false, compose = false) {
   for (const id of ["personal-reply-title", "personal-reply-body"]) el(id).value = "";
   el("personal-reply-language").value = "fr"; el("personal-reply-editor").hidden = true;
   notice("", false, "quick-replies-status"); notice("", false, "personal-replies-status");
-  if (restoreFocus) focusVisible(el(compose ? "message-body" : "open-composer-tools"));
+  if (restoreFocus) { if (compose) focusComposer(); else focusVisible(el("open-composer-tools")); }
 }
 function insertQuickReply(text) {
   const context = quickReplyContext, state = currentState();
@@ -1988,7 +1972,7 @@ el("cancel-video").addEventListener("click", () => {
     videoTransfer.cancelled = true; videoTransfer.controller.abort(); return;
   }
   if (state.pending || sendBusy) return;
-  state.videoDraft = null; revokeVideoPreview(); renderMeta(state); focusVisible(el("message-body"));
+  state.videoDraft = null; revokeVideoPreview(); renderMeta(state); focusComposer();
 });
 el("open-video-gallery").addEventListener("click", () => { const opener = menuReturnFocus(); closeChatMenu(); void openVideoGallery(opener); });
 el("video-gallery-conversation").addEventListener("click", () => { const opener = videoGalleryReturnFocus; void openVideoGallery(opener, "gallery"); });
@@ -2000,7 +1984,7 @@ el("cancel-image").addEventListener("click", () => {
   const state = currentState(), restoreFocus = document.activeElement === el("cancel-image");
   if (state && !state.pending && !sendBusy) {
     state.imageDraft = null; renderMeta(state); notice("Photo retirée de cet envoi.");
-    if (restoreFocus && !focusVisible(el("message-body"))) focusVisible(el("message-scroll"));
+    if (restoreFocus && !focusComposer()) focusVisible(el("message-scroll"));
   }
 });
 el("open-library").addEventListener("click", () => { closeComposerTools(); void openMedia("library", el("open-composer-tools")); });
@@ -2027,7 +2011,11 @@ el("back-to-inbox").addEventListener("click", () => {
   selectionLoading = false; focusInbox(returnId);
 });
 el("logout").addEventListener("click", () => { void logout(); });
-el("open-notifications").addEventListener("click", () => { if (!ready || !visible() || !notificationsPanel) return; el("notifications-dialog").showModal(); focusVisible(el("close-notifications")); });
+el("open-notifications").addEventListener("click", () => {
+  if (!ready || !visible() || !notificationsPanel) return;
+  dismissComposerKeyboard(); closeChatMenu(); void notificationsPanel.refresh?.();
+  el("notifications-dialog").showModal(); focusVisible(el("close-notifications"));
+});
 el("close-notifications").addEventListener("click", () => el("notifications-dialog").close());
 el("notifications-dialog").addEventListener("close", () => { focusVisible(menuReturnFocus()); });
 for (const id of ["open-account-menu", "open-conversation-menu"]) el(id).addEventListener("click", event => openChatMenu(event.currentTarget));
@@ -2038,7 +2026,7 @@ el("chat-menu").addEventListener("click", event => {
 el("open-composer-tools").addEventListener("click", () => {
   const button = el("open-composer-tools"); if (button.disabled || button.hidden || !visible()) return;
   if (!el("composer-tools").hidden) { closeComposerTools(true); return; }
-  closeChatMenu(); el("composer-tools").hidden = false; button.setAttribute("aria-expanded", "true"); positionComposerTools();
+  dismissComposerKeyboard(); closeChatMenu(); el("composer-tools").hidden = false; button.setAttribute("aria-expanded", "true"); positionComposerTools();
   focusVisible(el("close-composer-tools"));
 });
 el("close-composer-tools").addEventListener("click", () => closeComposerTools(true));
@@ -2123,7 +2111,7 @@ async function start({ session = null } = {}) {
   clearPrivate();
   const task = { ticket: snapshot(), promise: null }; bootstrapTask = task;
   task.promise = (async () => {
-    el("account-link").href = role === "admin" ? "/admin" : "/access"; ui.text(el("account-link"), role === "admin" ? "Gérer les accès" : "Mon accès");
+    el("account-link").href = role === "admin" ? "/admin" : "/access"; ui.text(el("account-link"), role === "admin" ? "Accueil admin" : "Mon accès");
     try {
       if (session) {
         const owner = sessionIdentity(session); if (!owner) { signOut(); return; }
@@ -2141,10 +2129,6 @@ async function start({ session = null } = {}) {
       announcementCapability = capability.announcements?.enabled === true ? capability.announcements : null;
       tasksCapability = role === "admin" && capability.tasks?.enabled === true;
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
-      if (role === "admin" && !document.getElementById("readiness-nav")) {
-        const nav = document.createElement("nav"); nav.id = "readiness-nav"; nav.className = "account-nav"; ui.attr(nav, "aria-label", "Administration");
-        const link = document.createElement("a"); link.href = "/admin/readiness"; ui.text(link, "État du service"); nav.append(link); el("inbox-title").parentElement.append(nav);
-      }
       await refreshMediaCapability();
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       await refreshCrmCapability();
@@ -2168,7 +2152,7 @@ async function start({ session = null } = {}) {
       conversationDownloadCapability = capability.conversationExport;
       await mountConversationDownload(conversationDownloadCapability);
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
-      mountNotificationSettings(); void refreshBroadcastAccess(); void mountAnnouncements(); void refreshTasksMenu(true); scheduleRead(); schedulePolling();
+      mountNotificationSettings(); void mountAnnouncements(); scheduleRead(); schedulePolling();
       await openNotification();
     } catch (error) {
       if (error.stale || !fresh(task.ticket, true)) return;

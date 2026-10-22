@@ -1,5 +1,5 @@
 import { CLIENT_ADMISSION_POLICY } from "../access/admission.mjs";
-import { checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
+import { checkMutation, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 
 const COOKIES = Object.freeze({ admin: "__Host-jessie_session", client: "__Host-jessie_client" });
 const MAX_INSTANT = 253402300799999;
@@ -115,7 +115,7 @@ export function createNotificationsHttpHandler(service, { origin }) {
       if (!response.headersSent && !response.destroyed) {
         const { status, code, retry } = mappedError(error);
         const headers = retry ? { "Retry-After": String(retry) } : {};
-        if (status === 401 && (method === "POST" || hasSessionCookie(request, COOKIES[role]))) headers["Set-Cookie"] = clearCookie(COOKIES[role]);
+        // A delayed request must never erase a newer session cookie.
         if (method === "POST") { headers.Connection = "close"; request.resume(); }
         reply(response, method, status, { error: code }, headers);
       }

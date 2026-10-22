@@ -1,5 +1,5 @@
 import { CLIENT_ADMISSION_POLICY } from "../access/admission.mjs";
-import { AUTH_HEADERS, checkMutation, clearCookie, hasSessionCookie, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
+import { AUTH_HEADERS, checkMutation, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { safeMessage, safeVideo } from "../chat/http.mjs";
 import { validateMessageBody } from "../chat/crypto.mjs";
 
@@ -336,7 +336,6 @@ export function createVideoHandler(service, { origin, uploadTimeoutMs = 300000, 
         const reason = operation?.signal.aborted ? operation.signal.reason : error;
         const { status, code, retry } = mappedError(reason);
         const headers = { ...(retry ? { "Retry-After": String(retry) } : {}) };
-        if (status === 401 && (mutation || hasSessionCookie(request, COOKIES[role]))) headers["Set-Cookie"] = clearCookie(COOKIES[role]);
         if (mutation) { headers.Connection = "close"; if (!request.complete) request.once("error", () => {}); request.resume(); }
         reply(response, method, status, { error: code }, headers);
       }

@@ -262,7 +262,7 @@ test("real HTTP client recovery, encrypted mail, single use and unchanged access
         const stale = await request("/api/access/session", { headers: { Cookie: `${session.cookie}; ${adminSession.cookie}` } });
         assert.equal(stale.status, 401);
         assert.deepEqual(stale.body, { error: "authentication_required" });
-        assert.equal(stale.headers.get("set-cookie"), "__Host-jessie_client=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict");
+        assert.equal(stale.headers.get("set-cookie"), null);
         assert.equal((await request("/api/chat/client/conversation", { headers: { Cookie: session.cookie } })).status, 401);
       }
       const preservedAdmin = await request("/api/auth/session", { headers: adminHeaders() });

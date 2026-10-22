@@ -217,8 +217,8 @@ await run(parseArguments(process.argv.slice(2)), { loadRuntime: async () => ({
       assert.deepEqual(await localRequest(publicPort, controlPath), { status: 200, body: '{"synthetic":"control-ready"}' });
     }
     const entry = await localRequest(publicPort, "/api/entry"); assert.equal(entry.status, 200);
-    assert.deepEqual(JSON.parse(entry.body), { status: "available", client: { state: "signed_out", href: "/connect-device/client" },
-      administrator: null }, "anonymous entry keeps client recovery available without advertising administration");
+    assert.deepEqual(JSON.parse(entry.body), { status: "available", client: { state: "signed_out", href: "/access" },
+      administrator: null }, "anonymous primary entry keeps client sign-in available without advertising administration");
     const publicEntry = await localRequest(publicPort, "/"); assert.equal(publicEntry.status, 200);
     const authentication = [];
     for (const [resource, method, expected] of [["/api/auth/session", "GET", 401], ["/api/auth/session", "POST", 405],

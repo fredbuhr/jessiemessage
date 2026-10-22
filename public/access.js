@@ -17,6 +17,8 @@ const loginForm = element("client-login-form");
 const registrationForm = element("registration-form");
 const connected = element("client-connected");
 const verificationSection = element("email-verification");
+const publicEntry = ["/", "/app", "/index.html"].includes(location.pathname);
+let openConversation = publicEntry;
 let invitationToken = null;
 let verificationToken = null;
 let csrf = null;
@@ -49,7 +51,8 @@ if (entries.length === 1 && /^[A-Za-z0-9_-]{43}$/.test(entries[0][1])) {
   if (entries[0][0] === "invitation") invitationToken = entries[0][1];
   if (entries[0][0] === "verification") verificationToken = entries[0][1];
 }
-history.replaceState(null, "", notificationReference ? `/access#notification=${notificationReference}` : "/access");
+const cleanEntryPath = publicEntry ? "/" : "/access";
+history.replaceState(null, "", notificationReference ? `${cleanEntryPath}#notification=${notificationReference}` : cleanEntryPath);
 
 function notice(message, error = false) { accessI18n.text(status, message); status.classList.toggle("is-error", error); }
 function invalidate() {
@@ -70,7 +73,7 @@ function validClientSession(session) {
     && (access.expiresAt === null || date(access.expiresAt));
 }
 function sameClientOwner(first, second) { return first.user.id === second.user.id && first.user.role === second.user.role && first.csrf === second.csrf; }
-function signedOut(message = "") {
+function signedOut(message = "", { allowRecovery = true } = {}) {
   invalidate(); csrf = null; displayedSession = null; sessionOwner = null; pendingPolls = 0;
   element("client-chat-link").hidden = true;
   element("access-retry").hidden = true;
@@ -79,11 +82,38 @@ function signedOut(message = "") {
   registrationForm.hidden = !invitationToken;
   verificationSection.hidden = !verificationToken;
   connected.hidden = true;
+  element("entry-role-choice").hidden = true;
   element("resend-section").hidden = false;
   accessI18n.text(element("access-title"), invitationToken ? "Bienvenue dans mon espace." : "Bienvenue.");
   loginForm.reset(); clearPrivateAccessSummary();
   notice(message);
-  updateRecoveryLink({ allowLoad: true });
+  updateRecoveryLink({ allowLoad: allowRecovery });
+}
+function openDestination(path) {
+  location.replace(path + (notificationReference ? `#notification=${notificationReference}` : ""));
+}
+function showEntry(entry) {
+  const exact = (value, keys) => value && typeof value === "object" && !Array.isArray(value)
+    && Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key));
+  if (!exact(entry, ["status", "client", "administrator"]) || !["available", "unavailable"].includes(entry.status)) throw new Error("invalid_entry");
+  const { client, administrator } = entry;
+  const paths = { signed_out: "/access", pending: "/access", expired: "/access", active: "/messages" };
+  if (client !== null && (!exact(client, ["state", "href"]) || !Object.hasOwn(paths, client.state)
+    || client.href !== paths[client.state] && !(client.state === "active" && client.href === "/access"))) throw new Error("invalid_entry");
+  if (administrator !== null && (!exact(administrator, ["state", "href"]) || administrator.state !== "connected" || administrator.href !== "/admin")) throw new Error("invalid_entry");
+  if (entry.status === "unavailable" || client === null && administrator === null) throw new Error("entry_unavailable");
+  if (administrator && client && client.state !== "signed_out") {
+    signedOut("", { allowRecovery: false }); loginForm.hidden = true; element("resend-section").hidden = true;
+    element("client-recovery-link").hidden = true; recoveryRetry.hidden = true;
+    accessI18n.text(element("access-title"), "Choisis ton espace.");
+    element("entry-client-link").href = client.href + (notificationReference ? `#notification=${notificationReference}` : "");
+    element("entry-admin-link").href = notificationReference ? `/admin/messages#notification=${notificationReference}` : "/admin";
+    element("entry-role-choice").hidden = false;
+    return;
+  }
+  if (administrator) { openDestination(notificationReference ? "/admin/messages" : "/admin"); return; }
+  if (client && client.state !== "signed_out") { openDestination(client.href); return; }
+  signedOut();
 }
 function signedIn(session) {
   if (!validClientSession(session)) throw new Error("invalid_client_session");
@@ -162,9 +192,7 @@ async function loadChatAccess() {
     const capability = await request("/api/chat/client/capabilities");
     if (ticket !== generation) return;
     if (capability.enabled !== true) { element("client-chat-note").hidden = false; accessI18n.text(element("client-chat-note"), "La conversation sera bientôt disponible. Tu peux revenir ici pour la retrouver."); return; }
-    if (notificationReference && visible()) {
-      location.replace(globalThis.JessieNotificationLink.destination("client", notificationReference)); return;
-    }
+    if ((openConversation || notificationReference) && visible()) { openDestination("/messages"); return; }
     element("client-chat-link").hidden = false;
     element("client-chat-note").hidden = true;
     accessI18n.rawText(element("client-chat-note"), "");
@@ -221,6 +249,7 @@ loginForm.addEventListener("submit", (event) => {
       const current = await request("/api/access/session");
       if (!validClientSession(current)) throw new Error("invalid_client_session");
       const unchanged = sameClientOwner(login, current);
+      openConversation = true;
       signedIn(current); notice(unchanged ? "" : "La connexion a changé. Cet espace correspond à ta session actuelle.");
     } catch (error) { if (!error.stale) error.loginUnconfirmed = true; throw error; }
   });
@@ -274,8 +303,10 @@ async function refreshSession() {
   checkingSession = true;
   const epoch = ++sessionRefreshEpoch;
   try {
-    const session = await request("/api/access/session");
-    if (epoch === sessionRefreshEpoch && visible()) signedIn(session);
+    const session = await request(publicEntry ? "/api/entry" : "/api/access/session");
+    if (epoch === sessionRefreshEpoch && visible()) {
+      if (publicEntry) showEntry(session); else signedIn(session);
+    }
   } catch (error) {
     if (error.stale || epoch !== sessionRefreshEpoch || !visible()) return;
     if (error.status === 401) signedOut();
@@ -311,6 +342,7 @@ function hideAccess() {
   cancelSessionCheck?.(); cancelSessionCheck = null;
   element("access-retry").hidden = true;
   loginForm.hidden = true; registrationForm.hidden = true; verificationSection.hidden = true; connected.hidden = true;
+  element("entry-role-choice").hidden = true;
   element("resend-section").hidden = true; element("client-chat-link").hidden = true;
   clearPrivateAccessSummary();
   for (const form of [loginForm, registrationForm, element("resend-form")]) form.reset();

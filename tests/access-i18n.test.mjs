@@ -82,22 +82,25 @@ class Document extends EventTarget {
   querySelectorAll(selector) { return this.root.querySelectorAll(selector); }
   querySelector(selector) { return this.root.querySelector(selector); }
 }
-function controller(name, fetchHandler, { language = "fr", hash = "" } = {}) {
+function controller(name, fetchHandler, { language = "fr", hash = "", pathname = `/${name}` } = {}) {
   const document = new Document(read(`${name}.html`)); const window = new EventTarget(); const calls = []; const storage = new Map([["jessiemessage.language", language]]); const writes = []; const timers = new Map(); let timer = 0;
-  const location = { hash, pathname: `/${name}` }; const history = { replaceState(_state, _title, path) { location.hash = ""; location.pathname = path; } };
+  const navigations = [];
+  const location = { hash, pathname, replace(value) { navigations.push(value); const target = new URL(value, "https://example.invalid"); this.pathname = target.pathname; this.hash = target.hash; } };
+  const history = { replaceState(_state, _title, path) { const target = new URL(path, "https://example.invalid"); location.hash = target.hash; location.pathname = target.pathname; } };
   const context = createContext({ document, window, location, history, navigator: { language: "fr-FR", languages: ["fr-FR"] }, URLSearchParams, AbortController, Event, Intl,
     __recoveryModel: recoveryModel,
     sessionStorage: { getItem(key) { return storage.get(key) ?? null; }, setItem(key, value) { writes.push([key, value]); storage.set(key, String(value)); } },
     setTimeout(callback, milliseconds) { const id = ++timer; timers.set(id, { callback, milliseconds }); return id; }, clearTimeout(id) { timers.delete(id); },
     fetch(path, options = {}) { calls.push({ path, options }); return Promise.resolve().then(() => fetchHandler(path, options, calls)); } });
-  for (const script of ["i18n.js", "help-link.js", "i18n-access.js", "session-clock.js"]) new Script(read(script), { filename: `public/${script}` }).runInContext(context);
+  for (const script of ["notification-link.js", "i18n.js", "help-link.js", "i18n-access.js", "session-clock.js"]) new Script(read(script), { filename: `public/${script}` }).runInContext(context);
   let source = read(`${name}.js`);
   if (name === "recover") source = source.replace(/^import\s*\{([\s\S]*?)\}\s*from\s*"\/recover-model\.js";/, "const {$1} = __recoveryModel;");
   new Script(source, { filename: `public/${name}.js`, importModuleDynamically: async () => { throw new Error("optional feature unavailable in fixture"); } }).runInContext(context);
-  return { document, context, calls, writes, location, timers, async tick(milliseconds) { const timer = [...timers].find(([, value]) => value.milliseconds === milliseconds); assert.ok(timer, `timer ${milliseconds}`); timers.delete(timer[0]); timer[1].callback(); await flush(); }, async online() { window.dispatchEvent(new Event("online")); await flush(); }, get: (id) => document.getElementById(id), language: (value) => context.JessieI18n.setLanguage(value),
+  return { document, context, calls, writes, location, navigations, timers, async tick(milliseconds) { const timer = [...timers].find(([, value]) => value.milliseconds === milliseconds); assert.ok(timer, `timer ${milliseconds}`); timers.delete(timer[0]); timer[1].callback(); await flush(); }, async online() { window.dispatchEvent(new Event("online")); await flush(); }, get: (id) => document.getElementById(id), language: (value) => context.JessieI18n.setLanguage(value),
     input(id, value) { const node = document.getElementById(id); node.value = value; node.dispatchEvent(new Event("input")); },
     submit(id) { document.getElementById(id).dispatchEvent(new Event("submit", { cancelable: true })); },
     hide() { document.visibilityState = "hidden"; document.dispatchEvent(new Event("visibilitychange")); },
+    async show() { document.visibilityState = "visible"; document.dispatchEvent(new Event("visibilitychange")); await flush(); },
     dispose() { window.dispatchEvent(new Event("pagehide")); } };
 }
 const user = (state = "pending", pseudonym = "Bienvenue.") => ({ user: { id: "a".repeat(32), role: "client", pseudonym }, csrf: "A".repeat(43), expiresAt: Date.now() + 3600000,
@@ -141,7 +144,7 @@ for (const ageAssured of [false, true]) test(`active access shows its conversati
     await flush();
     assert.equal(f.get("client-checks").children.length, 0); assert.equal(f.get("client-checks").hidden, true);
     assert.match(f.get("client-access-state").textContent, /conversation/);
-    assert.equal(f.get("client-chat-link").hidden, false);
+    assert.equal(f.get("client-chat-link").hidden, false); assert.deepEqual(f.navigations, [], "direct account access stays available");
     f.language("fr"); assert.match(f.get("client-access-state").textContent, /conversation/);
     assert.doesNotMatch(f.get("client-checks").textContent, /majorité/i);
   } finally { f.dispose(); }
@@ -256,5 +259,76 @@ test("an interrupted session proof hides private access and reconnects online wi
     assert.equal(f.get("client-validity").hidden, false); assert.match(f.get("client-validity").textContent, /jusqu’au/);
     f.language("en"); assert.match(f.get("client-validity").textContent, /open until/);
     assert.equal(f.calls.filter((call) => call.options.method === "POST").length, 0);
+  } finally { f.dispose(); }
+});
+
+
+test("public client entry shows one login form without a migration hop, and explicit login opens the current conversation once", async () => {
+  let loggedIn = false;
+  const active = user("active"); Object.assign(active.access, { emailVerified: true, approved: true });
+  const f = controller("access", (path, options) => {
+    if (path === "/api/entry") return response({ status: "available", client: { state: "signed_out", href: "/access" }, administrator: null });
+    if (path === "/api/access/login") { assert.deepEqual(JSON.parse(options.body), { email: "client@example.invalid", password: "synthetic password" }); loggedIn = true; return response(active); }
+    if (path === "/api/access/session") return response(active, loggedIn ? 200 : 401);
+    return capability();
+  }, { pathname: "/" });
+  try {
+    await flush(); assert.equal(f.get("client-login-form").hidden, false); assert.deepEqual(f.navigations, []);
+    assert.equal(f.calls.some(call => call.path === "/api/access/session"), false);
+    f.input("login-email", "client@example.invalid"); f.input("login-password", "synthetic password"); f.submit("client-login-form"); await flush();
+    assert.deepEqual(f.navigations, ["/messages"]);
+    assert.equal(f.calls.filter(call => call.path === "/api/access/login").length, 1);
+    assert.equal(f.calls.filter(call => call.path === "/api/access/session").length, 1, "login is followed by a fresh owner proof");
+    assert.equal(f.get("login-password").value, "");
+    assert.equal(f.calls.some(call => call.path.includes("connect-device")), false);
+  } finally { f.dispose(); }
+});
+
+test("public entry sends a single authenticated role straight to its own destination and keeps both roles explicit", async () => {
+  const reference = "b".repeat(32);
+  for (const roles of ["client", "admin", "both"]) {
+    const f = controller("access", () => response({ status: "available", client: { state: roles === "admin" ? "signed_out" : "active", href: roles === "admin" ? "/access" : "/messages" },
+      administrator: roles === "client" ? null : { state: "connected", href: "/admin" } }), { pathname: "/app", hash: `#notification=${reference}` });
+    try {
+      await flush();
+      if (roles === "both") {
+        assert.deepEqual(f.navigations, []); assert.equal(f.get("entry-role-choice").hidden, false); assert.equal(f.get("client-login-form").hidden, true);
+        assert.equal(f.get("entry-client-link").href, `/messages#notification=${reference}`);
+        assert.equal(f.get("entry-admin-link").href, `/admin/messages#notification=${reference}`);
+      } else assert.deepEqual(f.navigations, [`${roles === "admin" ? "/admin/messages" : "/messages"}#notification=${reference}`]);
+      assert.equal(f.calls.length, 1); assert.equal(f.calls[0].path, "/api/entry");
+      assert.deepEqual(f.writes, [], "a role is never selected through persisted identity state");
+    } finally { f.dispose(); }
+  }
+});
+
+test("public entry returns from the two-role choice to neutral sign-in copy after the sessions end elsewhere", async () => {
+  let authenticated = true;
+  const f = controller("access", (path) => path === "/api/entry" ? response({ status: "available",
+    client: { state: authenticated ? "active" : "signed_out", href: authenticated ? "/messages" : "/access" },
+    administrator: authenticated ? { state: "connected", href: "/admin" } : null }) : capability(), { pathname: "/" });
+  const intro = f.get("access-intro").textContent;
+  try {
+    await flush(); assert.equal(f.get("entry-role-choice").hidden, false); assert.equal(f.get("access-intro").textContent, intro);
+    f.hide(); authenticated = false; await f.show();
+    assert.equal(f.get("entry-role-choice").hidden, true); assert.equal(f.get("client-login-form").hidden, false);
+    assert.equal(f.get("access-intro").textContent, intro); assert.equal(f.get("access-title").textContent, "Bienvenue.");
+    assert.deepEqual(f.navigations, []);
+    assert.equal(f.calls.filter(call => call.path === "/api/entry").length, 2);
+    assert.equal(f.calls.some(call => call.options.method === "POST"), false);
+  } finally { f.dispose(); }
+});
+
+test("an invalid or late public entry decision cannot navigate or expose a login guessed from a failed proof", async () => {
+  for (const value of [{ status: "available", client: { state: "active", href: "https://attacker.invalid" }, administrator: null },
+    { status: "available", client: null, administrator: { state: "connected", href: "/admin/messages" } }]) {
+    const f = controller("access", () => response(value), { pathname: "/" });
+    try { await flush(); assert.deepEqual(f.navigations, []); assert.equal(f.get("client-login-form").hidden, true); assert.equal(f.get("access-retry").hidden, false); }
+    finally { f.dispose(); }
+  }
+  const pending = deferred(), f = controller("access", () => pending.promise, { pathname: "/" });
+  try {
+    await flush(); f.hide(); pending.resolve(response({ status: "available", client: { state: "active", href: "/messages" }, administrator: null })); await flush();
+    assert.deepEqual(f.navigations, []); assert.equal(f.get("entry-role-choice").hidden, true);
   } finally { f.dispose(); }
 });

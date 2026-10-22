@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
 import { archive, backupRequest, snapshot } from "../helpers/manual-backups-ui.mjs";
 
-const names = ["manual-backups.html", "manual-backups.js", "manual-backups.css", "i18n-manual-backups.js", "readiness.css", "readiness-model.js", "i18n.js", "i18n.css", "session-clock.js", "brand/brand.css", "brand/icon-128.png", "favicon.ico", "manifest.webmanifest"];
+const names = ["manual-backups.html", "manual-backups.js", "manual-backups.css", "admin-navigation.css", "i18n-manual-backups.js", "readiness.css", "readiness-model.js", "i18n.js", "i18n.css", "session-clock.js", "brand/brand.css", "brand/icon-128.png", "favicon.ico", "manifest.webmanifest"];
 async function fixture({ loseAcknowledgement = false, availableArchive = false } = {}) {
   const resources = new Map(await Promise.all(names.map(async name => [`/${name}`, await readFile(new URL(`../../public/${name}`, import.meta.url))])));
   let current = snapshot(null, availableArchive ? archive() : null), changed = false, unavailable = false;

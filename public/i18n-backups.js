@@ -1,4 +1,5 @@
 globalThis.JessieI18n?.register({
+  "Accueil admin": "Admin home", "Messages": "Messages",
   "L’historique des sauvegardes approche de sa limite. Prévois un archivage avec l’administrateur du service.": "Backup history is approaching its limit. Arrange archiving with the service administrator.",
   "JessieMessage — Sauvegardes": "JessieMessage — Backups",
   "Sauvegardes": "Backups",

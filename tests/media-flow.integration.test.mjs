@@ -593,7 +593,7 @@ test("real HTTP private media uses normalized encrypted files and current delive
         mediaPath("client", `conversations/${convB}/messages/${bMessage.id}/full`)]) {
         const denied = await request(route, { headers: headersFor(b) });
         assert.equal(denied.status, 401);
-        assert.match(denied.headers.get("set-cookie"), /^__Host-jessie_client=; /);
+        assert.equal(denied.headers.get("set-cookie"), null);
       }
       const adminHistory = await request(mediaPath("admin", `conversations/${convB}/gallery`), { headers: headersFor(admin) });
       assert.equal(adminHistory.status, 200);

@@ -14,3 +14,7 @@ details .field-help { margin-bottom: 16px; }
 #check-client-access { margin: 20px 0; }
 #client-connected > .account-settings { margin-top: 28px; }
 #client-connected .account-settings summary { font-size: 14px; }
+
+.entry-role-choice { display: grid; gap: 14px; margin-top: 24px; }
+
+#resend-section > summary { min-height: 44px; padding: 10px 0; }

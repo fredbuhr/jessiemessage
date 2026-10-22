@@ -21,11 +21,11 @@ class Element extends EventTarget {
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
   descendants() { return this.children.flatMap((node) => [node, ...node.descendants()]); }
 }
-function harness({ permission = "default", supported = true, secure = true, registrationReady = null, local = false, intercept, nextPermission = "granted", role = "client", ios = false } = {}) {
+function harness({ permission = "default", supported = true, secure = true, registrationReady = null, local = false, serverEnabled = local, intercept, nextPermission = "granted", role = "client", ios = false } = {}) {
   const host = new Element(), document = { visibilityState: "visible", createElement: (tag) => new Element(tag) };
   const calls = [], trace = [], timers = new Map(), catalogue = {}, bindings = new Map(), availability = [];
   let timer = 0, disposed = false, language = "fr", currentCsrf = csrf;
-  const fixture = { enabled: local, permissionCalls: 0, subscribeCalls: 0, unsubscribeCalls: 0 };
+  const fixture = { enabled: serverEnabled, permissionCalls: 0, subscribeCalls: 0, unsubscribeCalls: 0 };
   const subscription = { options: { applicationServerKey: key.getPublicKey() }, endpoint: "https://fcm.googleapis.com/fcm/send/synthetic-only", toJSON() { return { endpoint: this.endpoint, expirationTime: null, keys: { p256dh: vapidPublicKey, auth: Buffer.alloc(16, 1).toString("base64url") } }; }, async unsubscribe() { fixture.unsubscribeCalls++; trace.push("unsubscribe"); currentSubscription = null; return true; } };
   let currentSubscription = local ? subscription : null;
   const registration = { active: {}, pushManager: { async getSubscription() { trace.push("getSubscription"); return currentSubscription; }, async subscribe(options) { fixture.subscribeCalls++; trace.push("subscribe"); if (Notification.permission === "default") { fixture.permissionCalls++; trace.push("permission"); Notification.permission = nextPermission; } if (Notification.permission !== "granted") throw Object.assign(new Error("Permission not granted"), { name: "NotAllowedError" }); assert.equal(options.userVisibleOnly, true); assert.equal(Buffer.from(options.applicationServerKey).toString("base64url"), vapidPublicKey); currentSubscription = subscription; return subscription; } } };
@@ -96,6 +96,21 @@ test("browser permission alone is not displayed as an enabled server preference"
   assert.equal(JSON.parse(f.calls.find((call) => call.path.endsWith("/subscription")).options.body).language, "en"); f.clear();
 });
 
+test("an existing browser subscription with an inactive sign-in preference offers explicit reconnection without another permission prompt", async () => {
+  for (const role of ["admin", "client"]) {
+    const f = harness({ permission: "granted", local: true, serverEnabled: false, role }); await flush();
+    assert.match(f.host.textContent, /reconnectées à cette connexion/);
+    assert.match(f.host.textContent, /à cette adresse Jessie/);
+    assert.equal(f.button("enable").textContent, "Reconnecter sur cet appareil");
+    assert.equal(f.calls.some(call => call.path.endsWith("/subscription")), false);
+    f.language("en"); assert.equal(f.button("enable").textContent, "Reconnect on this device");
+    f.click("enable"); await flush();
+    assert.equal(f.fixture.permissionCalls, 0); assert.equal(f.fixture.subscribeCalls, 0);
+    assert.equal(f.calls.filter(call => call.path === `/api/notifications/${role}/subscription`).length, 1);
+    assert.match(f.host.textContent, /Notifications are on on this device/); f.clear();
+  }
+});
+
 test("disabling changes only the current subscription and confirms the server before removing the browser subscription", async () => {
   const f = harness({ permission: "granted", local: true }); await flush(); assert.match(f.host.textContent, /activées/);
   f.click("disable"); await flush(); const post = f.calls.find((call) => call.path.endsWith("/disable"));
@@ -140,8 +155,17 @@ test("the worker displays only fixed generic copy and cannot fetch or cache priv
   await f.event("push", { json: () => { throw new Error("malformed"); } });
   assert.equal(f.shown[0].title, "Jessie"); assert.equal(f.shown[0].options.body, "A new message is waiting for you.");
   assert.equal(f.shown[1].options.body, "Un nouveau message t’attend.");
-  for (const value of f.shown) { assert.equal(value.options.tag, "jessie-new-message"); assert.equal(value.options.renotify, false); assert.equal(value.options.data.url, "/app"); assert.doesNotMatch(JSON.stringify(value), /Secret|Private name|conversationId/); }
+  for (const value of f.shown) { assert.equal(value.options.tag, "jessie-new-message"); assert.equal(value.options.renotify, true); assert.equal(value.options.data.url, "/app"); assert.doesNotMatch(JSON.stringify(value), /Secret|Private name|conversationId/); }
   assert.equal(f.listeners.has("fetch"), false); assert.doesNotMatch(swSource, /\b(?:fetch\s*\(|caches\.|indexedDB|localStorage|sessionStorage)\b/);
+});
+
+test("successive unread pushes request another device alert while replacing the existing generic notification", async () => {
+  const f = workerHarness();
+  for (const notification of ["11".repeat(16), "22".repeat(16)]) await f.event("push", { json: () => ({ role: "client", notification, language: "fr" }) });
+  assert.equal(f.shown.length, 2);
+  assert.equal(f.shown[0].options.tag, f.shown[1].options.tag);
+  assert.ok(f.shown.every(value => value.options.renotify === true));
+  assert.equal(f.shown[1].options.data.url, `/messages#notification=${"22".repeat(16)}`);
 });
 test("notification clicks always reach app entry and preserve a draft in an already open conversation", async () => {
   const existing = workerHarness(["https://example.invalid/app"]); await existing.event("notificationclick");

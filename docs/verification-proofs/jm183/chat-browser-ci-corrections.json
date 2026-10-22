@@ -1,0 +1,65 @@
+{
+  "status": "browser_fixture_corrections_ready_for_native_ci",
+  "branch": "fix/messaging-183",
+  "head": "3cc4aa52fe336992f2acd2f6c3e136bc67a3f418",
+  "scope": "Only the two assigned browser test files changed by this task. No application source changes, no browser run, no push.",
+  "ciInput": {
+    "log": "/workspace/scratch/bb431be72395/ux183/logs/pr130-initial-browser.log",
+    "sha256": "9f228e0af6ed73a3957c14cdc8ca465063ffd62518aa35c81e7943829fe8bf94",
+    "initialBrowserResult": "206/230 reported by root; fixes below address this ownership only."
+  },
+  "causesAndChanges": [
+    {
+      "location": "chat-accessibility.browser.mjs:503,537 on initial CI",
+      "cause": "320px WebDriver deviceMetrics enables mobile:true,touch:true; application intentionally restores the emoji opener rather than the text field.",
+      "change": "Expect open-emojis while still checking exact caret positions, inserted content, keyboard choice navigation and zero message requests."
+    },
+    {
+      "location": "chat-accessibility.browser.mjs:568 on initial CI",
+      "cause": "Test dereferenced removed #readiness-nav, producing a JavaScript exception surfaced as WebDriver HTTP500.",
+      "change": "Check the single /admin account link in French and English, and assert the old raw navigation is absent; retain Tab/Enter contact selection and return."
+    },
+    {
+      "location": "chat-accessibility.browser.mjs:710 on initial CI",
+      "cause": "Profile test waited for automatic text-input focus on a touch device, which UX183 intentionally removed.",
+      "change": "Wait for loaded native dialog with Close focused, then use actual Tab navigation to the editable name; keep translated save/return-focus/zero-chat-send assertions."
+    },
+    {
+      "location": "chat-accessibility.browser.mjs:1128 on initial CI",
+      "cause": "Quick-reply test expected text-field focus on touch devices.",
+      "change": "Expect open-composer-tools for the fixture mobile profile under800px and message-body for desktop; retain explicit later edit/send and zero automatic send during insertion."
+    },
+    {
+      "location": "chat-accessibility.browser.mjs:1322 on initial CI",
+      "cause": "Fixture initial history deliberately returns [2,3]; sequence1 is returned only by before pagination, so the admin expectation [1,2,3] was premature.",
+      "change": "Assert initial [2,3] admin / [2] client; activate older history with Tab/Enter; assert final [1,2,3] admin / [2] client, tombstone counts, unique sequences and zero sends/deletions."
+    },
+    {
+      "location": "help.browser.mjs:240 subtests chat320/375/1280 on initial CI",
+      "cause": "Help link is now within the closed More options details element, so direct click was not interactable (HTTP400).",
+      "change": "Open More options with actual Tab/Enter before layout/link navigation assertions; add explicit zero message-POST assertion while preserving draft and source-document checks."
+    }
+  ],
+  "validation": {
+    "nodeVersion": "v24.19.0",
+    "nodeCheck": {
+      "tests/browser/chat-accessibility.browser.mjs": "passed",
+      "tests/browser/help.browser.mjs": "passed"
+    },
+    "gitDiffCheck": "passed for assigned files",
+    "nativeBrowser": "not run: Chrome/ChromeDriver unavailable; corrected fixtures remain to be qualified by native CI",
+    "appDefectEstablished": false
+  },
+  "files": [
+    {
+      "file": "tests/browser/chat-accessibility.browser.mjs",
+      "sha256": "0e6d45f9fc06bd041688d64214d7431290eb3e1ebe9baafe3fd8d68c04d34b9a",
+      "bytes": 127642
+    },
+    {
+      "file": "tests/browser/help.browser.mjs",
+      "sha256": "d68e7d231fc655ee6c5b27f430226d5f78624f1075fb42e9a2aac0d9f12a5953",
+      "bytes": 25369
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+✔ chat/admin: an old refused request never changes a newer cookie (44.173993ms)
+✔ chat/client: an old refused request never changes a newer cookie (12.943647ms)
+✔ media/admin: an old refused request never changes a newer cookie (8.182943ms)
+✔ media/client: an old refused request never changes a newer cookie (5.84644ms)
+✔ video/admin: an old refused request never changes a newer cookie (5.855835ms)
+✔ video/client: an old refused request never changes a newer cookie (4.121255ms)
+✔ profile/admin: an old refused request never changes a newer cookie (4.54572ms)
+✔ profile/client: an old refused request never changes a newer cookie (3.957998ms)
+✔ auth/admin: an old refused request never changes a newer cookie (4.327826ms)
+✔ access-admin/admin: an old refused request never changes a newer cookie (7.603857ms)
+✔ readiness/admin: an old refused request never changes a newer cookie (3.601358ms)
+✔ crm/admin: an old refused request never changes a newer cookie (4.091549ms)
+✔ broadcast/admin: an old refused request never changes a newer cookie (4.038537ms)
+✔ announcements/admin: an old refused request never changes a newer cookie (3.195112ms)
+✔ tasks/admin: an old refused request never changes a newer cookie (3.755372ms)
+✔ quick-replies/admin: an old refused request never changes a newer cookie (3.355923ms)
+✔ copy/admin: an old refused request never changes a newer cookie (3.584755ms)
+✔ manual/admin: an old refused request never changes a newer cookie (3.116898ms)
+✔ access/client: an old refused request never changes a newer cookie (2.829289ms)
+✔ announcements/client: an old refused request never changes a newer cookie (3.27399ms)
+✖ notifications/admin: an old refused request never changes a newer cookie (5.869487ms)
+✖ notifications/client: an old refused request never changes a newer cookie (3.655566ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 20
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 303.89673
+
+✖ failing tests:
+
+test at tests/session-late-401.test.mjs:6:31
+✖ notifications/admin: an old refused request never changes a newer cookie (5.869487ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  503 !== 401
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/bb431be72395/jessiemessage/tests/session-late-401.test.mjs:17:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 401,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/session-late-401.test.mjs:6:31
+✖ notifications/client: an old refused request never changes a newer cookie (3.655566ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  503 !== 401
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/bb431be72395/jessiemessage/tests/session-late-401.test.mjs:17:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 401,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,16 @@
+✔ historical coffre profiles refuse video before source reads, GPG or publication on a synthetic dirfd fixture (162.213389ms)
+✔ poll admission includes pending authorization and releases failed requests (23.480079ms)
+✔ response admission includes pending authorization and releases failed requests (5.228826ms)
+✔ transfer admission remains bounded during body reads and releases parse failures (4.515572ms)
+✔ poll admission remains reserved after wake while final identity is checked (2.732936ms)
+✔ early transfer errors release admission without consuming a body (1.102154ms)
+✔ transfer size refusal, read failure and successful replies each return admission (6.920104ms)
+✔ close also terminates transfers still awaiting authorization (0.711267ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 486.314132

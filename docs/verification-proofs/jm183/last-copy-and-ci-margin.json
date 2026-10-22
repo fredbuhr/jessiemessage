@@ -1,0 +1,21 @@
+{
+  "type": "jm183-last-copy-and-ci-margin",
+  "recordedAt": "2026-10-22T22:11:21.935507+00:00",
+  "baseHead": "bf68261184e14f4cced911717217f950271abb78",
+  "baseNativeRun": 39861746883,
+  "baseNativeJobsPassed": 5,
+  "changes": [
+    "Help FR/EN explicitly includes Options→Autres options→Télécharger ma conversation; remaining paragraph unchanged.",
+    "Synthetic CI database command hard limit10min within unchanged15min job; observed clean10.11 duration462268ms left less than18sec at8min. No application/hosting timeout or quota changed."
+  ],
+  "localHelp": {
+    "command": "node --test tests/help-http.test.mjs tests/help-link.test.mjs",
+    "tests": 16,
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "exitCode": 0
+  },
+  "nextAction": "Qualify this final head once, then merge and qualify exact main before immutable release.",
+  "productionChanged": false
+}

@@ -1,0 +1,223 @@
+{
+  "status": "read_only_counter_review_complete_no_new_blocker_or_masked_case_identified",
+  "createdAt": "2026-10-22T22:02:37.806189+00:00",
+  "reviewer": "peer_a11",
+  "base": "3cc4aa52fe336992f2acd2f6c3e136bc67a3f418",
+  "head": "bf68261184e14f4cced911717217f950271abb78",
+  "tree": "b178fbdfa8fe3d746cfd7251dee26aba618ea5db",
+  "method": "Exact changed hunks plus directly affected fixture/controller contracts. No test execution, native browser, database connection, host access, push, commit or application edit.",
+  "ci": {
+    "runAsReportedByParent": "239861746883",
+    "status": "in_progress_reported_by_parent_not_polled_by_reviewer"
+  },
+  "findings": [],
+  "groups": [
+    {
+      "scope": "Eight admin browser fixture asset maps",
+      "files": [
+        "tests/browser/account-closures.browser.mjs",
+        "tests/browser/announcements.browser.mjs",
+        "tests/browser/backup-settings.browser.mjs",
+        "tests/browser/broadcast-scale.browser.mjs",
+        "tests/browser/manual-backups.browser.mjs",
+        "tests/browser/operations-report.browser.mjs",
+        "tests/browser/privacy-preparation.browser.mjs",
+        "tests/browser/tasks.browser.mjs"
+      ],
+      "verdict": "No weakening found. Only the existing admin-navigation.css is added to bounded synthetic asset maps and served with CSS MIME by existing routing. Controllers, scenario data, assertions and failure handling remain unchanged apart from the separately noted operations label."
+    },
+    {
+      "scope": "Operations header label",
+      "file": "tests/browser/operations-report.browser.mjs",
+      "line": 54,
+      "verdict": "The header expectation changes to Messages, matching the actual common FR/EN catalogue and root header. Independent language checks of h1, operations title, manual checks, downloaded diagnostic, privacy markers, no SMTP/mutation and responsive behavior remain; this does not remove translation coverage."
+    },
+    {
+      "scope": "Native session-race pre-case favicon",
+      "file": "tests/browser/session-race.browser.mjs",
+      "lines": "27-28",
+      "verdict": "The new404 guard only applies before active is installed; every race sets active before install-A, delayed request, install-B and release. It cannot skip a race case or turn its401 into a success. Assertions retain native B-cookie value, Secure/HttpOnly/Strict attributes and next-request header after late401."
+    },
+    {
+      "scope": "Chat native focus/navigation expectations",
+      "file": "tests/browser/chat-accessibility.browser.mjs",
+      "lines": "503,537,568-575,721-725,1130",
+      "verdict": "Mobile emoji/quick-reply/profile focus expectations match coarse-pointer runtime policy rather than forcing the textarea. Cursor insertion, exact draft contents, zero send before explicit action and keyboard access to the name remain tested. Desktop quick-reply textarea focus is still asserted. Admin navigation now verifies actual /admin home link and absence of old readiness-nav, with FR/EN labels preserved."
+    },
+    {
+      "scope": "Chat tombstone pagination",
+      "file": "tests/browser/chat-accessibility.browser.mjs",
+      "lines": "1320-1336",
+      "verdict": "The initial expectation now matches actual fixture history[2,3]. It explicitly uses native Tab/Enter to fetch older[1], then asserts complete admin[1,2,3] vs client[2], counts, no duplicate sequences, hidden deleted text, zero delete/send calls and no JS errors. Full older-tombstone coverage is added rather than dropped; fixture history source at226-244 confirms the page split."
+    },
+    {
+      "scope": "Help nested options",
+      "file": "tests/browser/help.browser.mjs",
+      "lines": "255-260,273-278",
+      "verdict": "Native Tab/Enter opens existing More options details before interacting with Help. No scripted hidden-element click or forced details.open replaces user interaction. Existing source-page/draft retention, target/rel/noreferrer, locale,44px fitting, URL/referrer privacy, recovery no-submit and no-JS-error assertions remain. Added assertion forbids any message POST while opening Help."
+    },
+    {
+      "scope": "Three native SQL/browser rehearsals",
+      "files": [
+        "tests/rehearsal/authentication.rehearsal.mjs",
+        "tests/rehearsal/messaging.rehearsal.mjs",
+        "tests/rehearsal/video.rehearsal.mjs"
+      ],
+      "verdict": "Messaging/video stop clicking the obsolete intermediate conversation link but still require actual role-specific /messages or /admin/messages and visible workspace; video additionally checks a present enabled composer and gallery. MFA implementation was already independently reviewed in this session and is reused, not re-tested: exact cookie value/metadata stable plus bounded SQL session-ID fingerprint and expired cookie still401. Final wording correctly limits the fingerprint claim to session IDs.",
+      "mfaProofLimit": "The fingerprint proves count and identity-set stability, not all SQL column values. No claim of full row immutability."
+    },
+    {
+      "scope": "Six SQL integration contracts",
+      "files": [
+        "tests/chat-flow.integration.test.mjs",
+        "tests/crm-flow.integration.test.mjs",
+        "tests/device-transition-runtime.integration.test.mjs",
+        "tests/media-flow.integration.test.mjs",
+        "tests/readiness-flow.integration.test.mjs",
+        "tests/witness-runtime.integration.test.mjs"
+      ],
+      "verdict": "All changed hunks read. Five refused-response cookie assertions become exact absence(null), matching B01, while401/body, exact SQL expiry/revocation, private-note nondisclosure, blocked writes/sends, unaffected session, admin history and transport-close checks remain. Device runtime still tests both authorities and SQL identities/cookie flags, with admin entry /admin. Witness uses primary Host jessiemessage.com and keeps exact available/signed_out/administrator:null, now /access; direct/gateway readiness/stamp and later maintenance/restart checks remain. Successful session cookie and migration/message destinations are not changed by these hunks."
+    },
+    {
+      "scope": "Only application delta",
+      "file": "public/admin-login.html",
+      "line": 69,
+      "verdict": "Decorative aria-hidden fullwidth plus becomes ASCII plus. Destination, accessible title, description and control semantics unchanged."
+    }
+  ],
+  "caseMaskingAssessment": {
+    "testSkipsAdded": false,
+    "statusRefusalsRemoved": false,
+    "assertionsGloballyRelaxed": false,
+    "runtimeAuthorizationChanged": false,
+    "notes": [
+      "Replacing obsolete intermediate UI actions does not remove final authenticated destination checks.",
+      "Eight asset additions restore actual stylesheet loading rather than suppressing resource errors.",
+      "Pagination adds the missing action before checking the older page rather than removing its tombstone assertion.",
+      "The session-race guard handles unrelated pre-case requests only; active race expectations still execute."
+    ]
+  },
+  "reviewedFiles": [
+    {
+      "file": "public/admin-login.html",
+      "sha256": "0d2c75270148d8ea4364ea21ecbffc84a364ea6eb6599db05b99614bf26f8d32",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/browser/account-closures.browser.mjs",
+      "sha256": "375a1e20d5090c19ed1f9864b156da4bc0db64941a441db586da137f88ee3aa0",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/browser/announcements.browser.mjs",
+      "sha256": "7cc3934b08d37d555d5663a5a9356b086c401fcc2ef5188fca509e06b77b1731",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/browser/backup-settings.browser.mjs",
+      "sha256": "7fecef9cd28bbfa88256b6b04bfac9af7f77b008ef033f558e19ea6ad1e47d7d",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/browser/broadcast-scale.browser.mjs",
+      "sha256": "b1345e8eaed084f9749bf2b2650e3ab0b16132d4da1c7c0a5fde024a72076e5b",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/browser/chat-accessibility.browser.mjs",
+      "sha256": "0e6d45f9fc06bd041688d64214d7431290eb3e1ebe9baafe3fd8d68c04d34b9a",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/browser/help.browser.mjs",
+      "sha256": "d68e7d231fc655ee6c5b27f430226d5f78624f1075fb42e9a2aac0d9f12a5953",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/browser/manual-backups.browser.mjs",
+      "sha256": "8255d40d52647ea936e75887f8e397ca0167ad6d3ee4a4e98206e25a497c899b",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/browser/operations-report.browser.mjs",
+      "sha256": "7fa9072712d786b64bd0821e5fe2516b75b0f7551ce1d9bfece12f6a34e2fd96",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/browser/privacy-preparation.browser.mjs",
+      "sha256": "ab575cc3f4f043f5f8050c33e9a6f3fa6847504460b23284dcf83dd3d287a895",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/browser/session-race.browser.mjs",
+      "sha256": "c8735761c1c2924148e3058776c11faebb24021ed4512fa6de253d598cbe23a7",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/browser/tasks.browser.mjs",
+      "sha256": "e360c4ebe1be7c731009f0b476255ba4c30603013c2079b3fbdf9aac82f4326d",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/chat-flow.integration.test.mjs",
+      "sha256": "f22d19fa1c9ee2026a1b4de480f26b4538e975b25cbfec56a9b99108a49ad427",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/crm-flow.integration.test.mjs",
+      "sha256": "749f58f6c5f1f207c96b12b16f6459023c355c9e9669a96c103e5095cfadf5e4",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/device-transition-runtime.integration.test.mjs",
+      "sha256": "1415f1fb50974f6ad67444b47c97a3d45f0376a192382c6995ed2edf822900e3",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/media-flow.integration.test.mjs",
+      "sha256": "0b36fc84464c51a0d18f59e87e066ea7d6990662a53d1e8633c43f824350c5d7",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/readiness-flow.integration.test.mjs",
+      "sha256": "8bd5b33af4df282fd513209b16a1c5c05138c25d342b8c5657d8edf7b09298cf",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/rehearsal/authentication.rehearsal.mjs",
+      "sha256": "f799e4aefa590d5c7864f096d212ab03b9af465d26bb7e382dfdf9ce196c43a5",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/rehearsal/messaging.rehearsal.mjs",
+      "sha256": "da83c3b4de405013d169f359b27760e551bc7b46d1b8ec9b67e2b04215c089c7",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/rehearsal/video.rehearsal.mjs",
+      "sha256": "c37e26c130ed66ffb564849e0bde22072c576d1bab8d1631e367376ad2d906e6",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    },
+    {
+      "file": "tests/witness-runtime.integration.test.mjs",
+      "sha256": "4eeb375e95e1937d7e5e09d8fdd97ece33e745c35312b360a090a9c1c36bf7ba",
+      "coverage": "changed hunks and named nearby contracts; MFA prior independent review reused"
+    }
+  ],
+  "additionalReferencesRead": [
+    "tests/browser/webdriver.mjs mobileEmulation touch policy and native screenshot/cookie interfaces (previous bounded review reused)",
+    "tests/helpers/session-race-fixture.mjs raceCases and handler delay contracts",
+    "public/chat.js touchKeyboard/focusComposer/native menu close policy (previous bounded review reused)",
+    "public/i18n-readiness.js Messages catalogue",
+    "tests/browser/chat-accessibility.browser.mjs message and history pagination fixtures",
+    "tests/witness-runtime.integration.test.mjs primary request Host and exact entry contract",
+    "server/db/connection.mjs and tests/rehearsal/auth-fixture.mjs fixture authority validation (previous MFA review reused)"
+  ],
+  "limits": [
+    "No green tests re-run, no new fixture executed, no live service/SQL/provider/host/browser accessed.",
+    "Read-only review finds no new blocker in these deltas; it does not predict every native CI outcome.",
+    "Native Chrome, MariaDB suites, screenshots and visual qualification must be judged from the new run and its exact head.",
+    "Decorative glyph change was read but no new raster capture was inspected in this review.",
+    "Earlier writer183 PUBLIC_HOME issue is separate operator tooling and is not re-counted here."
+  ]
+}

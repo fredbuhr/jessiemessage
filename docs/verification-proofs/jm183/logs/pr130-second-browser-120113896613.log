@@ -1,0 +1,490 @@
+﻿2026-10-22T22:00:56.5671141Z Current runner version: '2.338.0'
+2026-10-22T22:00:56.5706305Z ##[group]Runner Image Provisioner
+2026-10-22T22:00:56.5707802Z Hosted Compute Agent
+2026-10-22T22:00:56.5708899Z Version: 20261012.601
+2026-10-22T22:00:56.5710070Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+2026-10-22T22:00:56.5711556Z Build Date: 2026-10-12T17:48:21Z
+2026-10-22T22:00:56.5712824Z Worker ID: {18ed4bbf-c97d-4919-a0ad-5f207d0b1df8}
+2026-10-22T22:00:56.5714242Z Region: eastus
+2026-10-22T22:00:56.5715655Z Cloud: Azure
+2026-10-22T22:00:56.5716779Z ##[endgroup]
+2026-10-22T22:00:56.5719689Z ##[group]Operating System
+2026-10-22T22:00:56.5720796Z Ubuntu
+2026-10-22T22:00:56.5721763Z 24.04.5
+2026-10-22T22:00:56.5722687Z LTS
+2026-10-22T22:00:56.5723849Z ##[endgroup]
+2026-10-22T22:00:56.5724901Z ##[group]Runner Image
+2026-10-22T22:00:56.5726216Z Image: ubuntu-24.04
+2026-10-22T22:00:56.5727468Z Version: 20261012.334.1
+2026-10-22T22:00:56.5729620Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-22T22:00:56.5732634Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+2026-10-22T22:00:56.5734521Z ##[endgroup]
+2026-10-22T22:00:56.5736856Z ##[group]GITHUB_TOKEN Permissions
+2026-10-22T22:00:56.5739999Z Contents: read
+2026-10-22T22:00:56.5740946Z Metadata: read
+2026-10-22T22:00:56.5741938Z ##[endgroup]
+2026-10-22T22:00:56.5745383Z Secret source: Actions
+2026-10-22T22:00:56.5747100Z Cache mode: write
+2026-10-22T22:00:56.5748775Z Prepare workflow directory
+2026-10-22T22:00:56.6249601Z Prepare all required actions
+2026-10-22T22:00:56.6324587Z Getting action download info
+2026-10-22T22:00:56.8297050Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-22T22:00:56.9584315Z Download action repository 'actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+2026-10-22T22:00:57.1645862Z Download action repository 'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-10-22T22:00:57.4423106Z Complete job name: Chrome keyboard and chat lifecycle
+2026-10-22T22:00:57.5367106Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-22T22:00:57.5369597Z with:
+2026-10-22T22:00:57.5370657Z   persist-credentials: false
+2026-10-22T22:00:57.5372111Z   repository: fredbuhr/jessiemessage
+2026-10-22T22:00:57.5386284Z   token: ***
+2026-10-22T22:00:57.5386942Z   ssh-strict: true
+2026-10-22T22:00:57.5387549Z   ssh-user: git
+2026-10-22T22:00:57.5388124Z   clean: true
+2026-10-22T22:00:57.5388737Z   sparse-checkout-cone-mode: true
+2026-10-22T22:00:57.5389505Z   fetch-depth: 1
+2026-10-22T22:00:57.5390083Z   fetch-tags: false
+2026-10-22T22:00:57.5390703Z   show-progress: true
+2026-10-22T22:00:57.5391321Z   lfs: false
+2026-10-22T22:00:57.5391895Z   submodules: false
+2026-10-22T22:00:57.5392525Z   set-safe-directory: true
+2026-10-22T22:00:57.5393282Z   allow-unsafe-pr-checkout: false
+2026-10-22T22:00:57.5394397Z ##[endgroup]
+2026-10-22T22:00:57.6522884Z Syncing repository: fredbuhr/jessiemessage
+2026-10-22T22:00:57.6527216Z ##[group]Getting Git version info
+2026-10-22T22:00:57.6529297Z Working directory is '/home/runner/work/jessiemessage/jessiemessage'
+2026-10-22T22:00:57.6532332Z [command]/usr/bin/git version
+2026-10-22T22:00:57.6616624Z git version 2.55.0
+2026-10-22T22:00:57.6631148Z ##[endgroup]
+2026-10-22T22:00:57.6660903Z Temporarily overriding HOME='/home/runner/work/_temp/3e5620ae-6a73-46b9-8185-02b4f9b74c45' before making global git config changes
+2026-10-22T22:00:57.6666290Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-22T22:00:57.6672390Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/jessiemessage/jessiemessage
+2026-10-22T22:00:57.6733178Z Deleting the contents of '/home/runner/work/jessiemessage/jessiemessage'
+2026-10-22T22:00:57.6737065Z ##[group]Determining repository object format
+2026-10-22T22:00:57.6740171Z ##[endgroup]
+2026-10-22T22:00:57.6742683Z ##[group]Initializing the repository
+2026-10-22T22:00:57.6744545Z [command]/usr/bin/git init /home/runner/work/jessiemessage/jessiemessage
+2026-10-22T22:00:57.6866114Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-22T22:00:57.6869169Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-22T22:00:57.6872269Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-22T22:00:57.6874451Z hint: call:
+2026-10-22T22:00:57.6875726Z hint:
+2026-10-22T22:00:57.6877132Z hint: 	git config --global init.defaultBranch <name>
+2026-10-22T22:00:57.6878867Z hint:
+2026-10-22T22:00:57.6880434Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-22T22:00:57.6883153Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-22T22:00:57.6890171Z hint:
+2026-10-22T22:00:57.6891402Z hint: 	git branch -m <name>
+2026-10-22T22:00:57.6892760Z hint:
+2026-10-22T22:00:57.6894578Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-22T22:00:57.6898085Z Initialized empty Git repository in /home/runner/work/jessiemessage/jessiemessage/.git/
+2026-10-22T22:00:57.6903146Z [command]/usr/bin/git remote add origin https://github.com/fredbuhr/jessiemessage
+2026-10-22T22:00:57.6958660Z ##[endgroup]
+2026-10-22T22:00:57.6961460Z ##[group]Disabling automatic garbage collection
+2026-10-22T22:00:57.6964024Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-22T22:00:57.6998199Z ##[endgroup]
+2026-10-22T22:00:57.7000124Z ##[group]Setting up auth
+2026-10-22T22:00:57.7001424Z Removing SSH command configuration
+2026-10-22T22:00:57.7003533Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-22T22:00:57.7040443Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-22T22:00:57.7404029Z Removing HTTP extra header
+2026-10-22T22:00:57.7413619Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-22T22:00:57.7450116Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-22T22:00:57.7668591Z Removing includeIf entries pointing to credentials config files
+2026-10-22T22:00:57.7673586Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-22T22:00:57.7710198Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-22T22:00:57.7940113Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-8cf15f8e-dd37-455d-a2cc-0c875d3270e8.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-22T22:00:57.7985859Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path /home/runner/work/_temp/git-credentials-8cf15f8e-dd37-455d-a2cc-0c875d3270e8.config
+2026-10-22T22:00:57.8022618Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-8cf15f8e-dd37-455d-a2cc-0c875d3270e8.config
+2026-10-22T22:00:57.8066967Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-8cf15f8e-dd37-455d-a2cc-0c875d3270e8.config
+2026-10-22T22:00:57.8109331Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-8cf15f8e-dd37-455d-a2cc-0c875d3270e8.config
+2026-10-22T22:00:57.8156084Z ##[endgroup]
+2026-10-22T22:00:57.8158149Z ##[group]Fetching the repository
+2026-10-22T22:00:57.8163247Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +a67a3d3121dedcc745dc2f6752e9ba598739e96e:refs/remotes/pull/130/merge
+2026-10-22T22:00:58.9104850Z From https://github.com/fredbuhr/jessiemessage
+2026-10-22T22:00:58.9107275Z  * [new ref]         a67a3d3121dedcc745dc2f6752e9ba598739e96e -> pull/130/merge
+2026-10-22T22:00:58.9110452Z ##[endgroup]
+2026-10-22T22:00:58.9111201Z ##[group]Determining the checkout info
+2026-10-22T22:00:58.9111926Z ##[endgroup]
+2026-10-22T22:00:58.9116385Z [command]/usr/bin/git sparse-checkout disable
+2026-10-22T22:00:58.9172881Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-22T22:00:58.9208404Z ##[group]Checking out the ref
+2026-10-22T22:00:58.9212467Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/130/merge
+2026-10-22T22:00:59.0454706Z Note: switching to 'refs/remotes/pull/130/merge'.
+2026-10-22T22:00:59.0455652Z 
+2026-10-22T22:00:59.0455985Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-22T22:00:59.0456830Z changes and commit them, and you can discard any commits you make in this
+2026-10-22T22:00:59.0457729Z state without impacting any branches by switching back to a branch.
+2026-10-22T22:00:59.0458129Z 
+2026-10-22T22:00:59.0458475Z If you want to create a new branch to retain commits you create, you may
+2026-10-22T22:00:59.0459157Z do so (now or later) by using -c with the switch command. Example:
+2026-10-22T22:00:59.0459550Z 
+2026-10-22T22:00:59.0459734Z   git switch -c <new-branch-name>
+2026-10-22T22:00:59.0460045Z 
+2026-10-22T22:00:59.0460221Z Or undo this operation with:
+2026-10-22T22:00:59.0460522Z 
+2026-10-22T22:00:59.0460722Z   git switch -
+2026-10-22T22:00:59.0461007Z 
+2026-10-22T22:00:59.0461399Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-22T22:00:59.0461816Z 
+2026-10-22T22:00:59.0462318Z HEAD is now at a67a3d3 Merge bf68261184e14f4cced911717217f950271abb78 into 38ccb3862f3d9ab4153b578dfb3abbd0dd94d857
+2026-10-22T22:00:59.0468013Z ##[endgroup]
+2026-10-22T22:00:59.0519467Z [command]/usr/bin/git log -1 --format=%H
+2026-10-22T22:00:59.0550774Z a67a3d3121dedcc745dc2f6752e9ba598739e96e
+2026-10-22T22:00:59.0560578Z ##[group]Removing auth
+2026-10-22T22:00:59.0561140Z Removing SSH command configuration
+2026-10-22T22:00:59.0563716Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-22T22:00:59.0600239Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-22T22:00:59.0828573Z Removing HTTP extra header
+2026-10-22T22:00:59.0832121Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-22T22:00:59.0867748Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-22T22:00:59.1089987Z Removing includeIf entries pointing to credentials config files
+2026-10-22T22:00:59.1093732Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-22T22:00:59.1125536Z includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path
+2026-10-22T22:00:59.1127113Z includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path
+2026-10-22T22:00:59.1134313Z includeif.gitdir:/github/workspace/.git.path
+2026-10-22T22:00:59.1135662Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-22T22:00:59.1145660Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path
+2026-10-22T22:00:59.1163709Z /home/runner/work/_temp/git-credentials-8cf15f8e-dd37-455d-a2cc-0c875d3270e8.config
+2026-10-22T22:00:59.1238649Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-8cf15f8e\-dd37\-455d\-a2cc\-0c875d3270e8\.config
+2026-10-22T22:00:59.1242176Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path
+2026-10-22T22:00:59.1251381Z /home/runner/work/_temp/git-credentials-8cf15f8e-dd37-455d-a2cc-0c875d3270e8.config
+2026-10-22T22:00:59.1262190Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-8cf15f8e\-dd37\-455d\-a2cc\-0c875d3270e8\.config
+2026-10-22T22:00:59.1298989Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-22T22:00:59.1326021Z /github/runner_temp/git-credentials-8cf15f8e-dd37-455d-a2cc-0c875d3270e8.config
+2026-10-22T22:00:59.1335327Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-8cf15f8e\-dd37\-455d\-a2cc\-0c875d3270e8\.config
+2026-10-22T22:00:59.1374599Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-22T22:00:59.1402421Z /github/runner_temp/git-credentials-8cf15f8e-dd37-455d-a2cc-0c875d3270e8.config
+2026-10-22T22:00:59.1411453Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-8cf15f8e\-dd37\-455d\-a2cc\-0c875d3270e8\.config
+2026-10-22T22:00:59.1447865Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-22T22:00:59.1669049Z Removing credentials config '/home/runner/work/_temp/git-credentials-8cf15f8e-dd37-455d-a2cc-0c875d3270e8.config'
+2026-10-22T22:00:59.1678529Z ##[endgroup]
+2026-10-22T22:00:59.1945871Z ##[group]Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+2026-10-22T22:00:59.1946411Z with:
+2026-10-22T22:00:59.1946712Z   node-version: 24.22.1
+2026-10-22T22:00:59.1947036Z   package-manager-cache: false
+2026-10-22T22:00:59.1947364Z   check-latest: false
+2026-10-22T22:00:59.1949818Z   token: ***
+2026-10-22T22:00:59.1950097Z ##[endgroup]
+2026-10-22T22:00:59.3179843Z Attempting to download 24.22.1...
+2026-10-22T22:00:59.9881353Z Acquiring 24.22.1 - x64 from https://github.com/actions/node-versions/releases/download/24.22.1-39619001896/node-24.22.1-linux-x64.tar.gz
+2026-10-22T22:01:00.4037284Z Extracting ...
+2026-10-22T22:01:00.4195215Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/89368337-753d-4f21-8742-7aec7234ce2e -f /home/runner/work/_temp/991b0eab-8d19-4703-90b3-6eeebb57fa45
+2026-10-22T22:01:01.6801840Z Adding to the cache ...
+2026-10-22T22:01:03.7126327Z ##[group]Environment details
+2026-10-22T22:01:03.9369477Z node: v24.22.1
+2026-10-22T22:01:03.9369902Z npm: 11.19.1
+2026-10-22T22:01:03.9370225Z yarn: 1.22.22
+2026-10-22T22:01:03.9370885Z ##[endgroup]
+2026-10-22T22:01:03.9538435Z ##[group]Run npm ci --ignore-scripts
+2026-10-22T22:01:03.9538796Z [36;1mnpm ci --ignore-scripts[0m
+2026-10-22T22:01:03.9811421Z shell: /usr/bin/bash -e {0}
+2026-10-22T22:01:03.9811714Z ##[endgroup]
+2026-10-22T22:01:05.2790445Z 
+2026-10-22T22:01:05.2797900Z added 35 packages, and audited 36 packages in 1s
+2026-10-22T22:01:05.2798244Z 
+2026-10-22T22:01:05.2798460Z 10 packages are looking for funding
+2026-10-22T22:01:05.2798803Z   run `npm fund` for details
+2026-10-22T22:01:05.2802347Z 
+2026-10-22T22:01:05.2802586Z found 0 vulnerabilities
+2026-10-22T22:01:05.3244891Z ##[group]Run npm run test:browser
+2026-10-22T22:01:05.3245508Z [36;1mnpm run test:browser[0m
+2026-10-22T22:01:05.3309378Z shell: /usr/bin/bash -e {0}
+2026-10-22T22:01:05.3309679Z ##[endgroup]
+2026-10-22T22:01:05.4290125Z 
+2026-10-22T22:01:05.4290886Z > jessiemessage@1.8.3 test:browser
+2026-10-22T22:01:05.4291354Z > node --test tests/browser/*.browser.mjs
+2026-10-22T22:01:05.4291571Z 
+2026-10-22T22:01:18.3087743Z ▶ real Chrome: closure preview, separate confirmation and status at mobile and desktop widths in FR/EN
+2026-10-22T22:01:18.3094357Z   ✔ fr 320px (10796.839856ms)
+2026-10-22T22:01:20.3436170Z   ✔ fr 375px (2036.573339ms)
+2026-10-22T22:01:22.0117209Z   ✔ fr 1280px (1665.060621ms)
+2026-10-22T22:01:24.0374464Z   ✔ en 320px (2023.96046ms)
+2026-10-22T22:01:26.2604102Z   ✔ en 375px (2217.496004ms)
+2026-10-22T22:01:27.8992472Z   ✔ en 1280px (1633.744867ms)
+2026-10-22T22:01:27.9728733Z ✔ real Chrome: closure preview, separate confirmation and status at mobile and desktop widths in FR/EN (22381.947365ms)
+2026-10-22T22:01:29.7665687Z ✔ real Chrome: cancel, hide and BFCache clear names and confirmation without submitting (1797.212376ms)
+2026-10-22T22:01:31.8955428Z ✔ real Chrome: a replacement proof before confirmation cancels the old action (2126.841674ms)
+2026-10-22T22:01:34.1305701Z ✔ real Chrome: a lost response reloads the durable status with GET only, including after navigation (2236.983586ms)
+2026-10-22T22:01:35.7486015Z ✔ real Chrome: a session replaced during the POST response discards the obsolete view and never resubmits (1618.360947ms)
+2026-10-22T22:01:38.2911715Z ✔ real Chrome: unactivated mode never reads a target or offers erasure, and private names remain literal (2542.643836ms)
+2026-10-22T22:01:38.3104793Z ✔ real Chrome: external links retain the existing Strict admin session and resume a private deep link (15729.842508ms)
+2026-10-22T22:01:40.3041607Z ✔ Chrome mobile FR/EN: schedule, review the complete audience and publish one announcement without overflow (21514.326572ms)
+2026-10-22T22:01:40.3044510Z ✔ Chrome: a lost acknowledgement retries exactly one publication, conflicts preserve drafts and account changes purge them (2482.715081ms)
+2026-10-22T22:01:40.3047459Z ✔ Chrome client mobile: the compact banner opens accessibly, expires locally and clears on an account change (7167.840659ms)
+2026-10-22T22:01:40.3054742Z ✔ Chrome compatibility: an absent announcement capability preserves the ordinary conversation (1293.23526ms)
+2026-10-22T22:01:40.3056799Z ✔ Chrome: an announcement that expires during its response is never displayed after the network proof (2241.621179ms)
+2026-10-22T22:01:40.5904761Z ✔ real Chrome: an obsolete settings action cannot restart the new bootstrap after a same-task synthetic visibility handoff (2240.133121ms)
+2026-10-22T22:01:40.5907992Z ✔ real Chrome: a natively aborted settings response cannot release a later action or replay a POST (1914.892231ms)
+2026-10-22T22:01:40.5910402Z ✔ real Chrome: history capacity warning translates, clears below the threshold and stays private (1610.037756ms)
+2026-10-22T22:01:40.5956998Z ▶ real Chrome: backup destinations, keyboard controls, translations and kit download at three widths
+2026-10-22T22:01:40.5976738Z   ✔ fr 320px (2119.331498ms)
+2026-10-22T22:01:40.5977702Z   ✔ fr 375px (2070.27851ms)
+2026-10-22T22:01:40.5983404Z   ✔ fr 1280px (3008.012731ms)
+2026-10-22T22:01:40.5984211Z   ✔ en 320px (1766.03749ms)
+2026-10-22T22:01:40.5984968Z   ✔ en 375px (2398.384401ms)
+2026-10-22T22:01:40.5986413Z   ✔ en 1280px (1893.950703ms)
+2026-10-22T22:01:40.6160401Z ✔ real Chrome: backup destinations, keyboard controls, translations and kit download at three widths (13407.296993ms)
+2026-10-22T22:01:43.4420189Z ✔ real Chrome: copied backups show a simple overview and keep technical controls closed (2825.685854ms)
+2026-10-22T22:01:47.2906145Z ✔ real Chrome: a login change during any kit suppresses its download and never repeats the request (3848.766974ms)
+2026-10-22T22:01:48.3767779Z ✔ real Chrome: periodic proof replaces private settings after another login without a mutation (1083.310913ms)
+2026-10-22T22:01:51.7829617Z ✔ real Chrome: updating a paired PC is explicit, translated and does not start a new pairing (3402.171183ms)
+2026-10-22T22:02:00.0177024Z ✔ Chrome: suspended text and explicit recipient return only after session proof, and another account purges them (2474.607514ms)
+2026-10-22T22:02:00.0235906Z ✔ Chrome: a suspended uncertain confirmation retains its exact key and only an explicit retry can acknowledge it (2761.891347ms)
+2026-10-22T22:02:00.0335313Z ✔ Chrome mobile FR/EN: all 2,500 and filtered 175 are explicitly reviewed with bounded DOM and paginated details (16291.969057ms)
+2026-10-22T22:02:05.2443562Z ✔ Chrome: manual selection exceeds 100 across contact pages while contacts and selected DOM stay at 50 (5222.251245ms)
+2026-10-22T22:02:08.2376819Z ✔ Chrome: lost confirmation freezes its exact audience, retry uses one ID, and changed account purges private data (3008.704763ms)
+2026-10-22T22:02:10.4778521Z ✔ Chrome: compatibility capability hides global creation while existing 2,500-recipient history stays paginated (2240.401101ms)
+2026-10-22T22:02:17.5167920Z ✔ Chrome broadcast video FR/EN mobile/desktop: native preview, one raw upload, typed audience and exact uncertain campaign retry (7031.905361ms)
+2026-10-22T22:02:20.4323549Z ✔ Chrome broadcast video upload can be cancelled while awaiting ACK without any campaign or automatic upload retry (2922.973945ms)
+2026-10-22T22:02:22.3227131Z ✔ Chrome compatibility preserves existing v3 video campaign details while hiding new video creation (1888.994829ms)
+2026-10-22T22:02:25.7718599Z ✔ Chrome: only Jessie sees a read receipt after a metadata-only poll, with stable focus and French / English labels (10252.217981ms)
+2026-10-22T22:02:25.7726528Z ✔ Chrome mobile: compact messages reveal one accessible details area at a time without intercepting photos or native links (34979.127811ms)
+2026-10-22T22:02:45.9382213Z ✔ Chrome mobile: a captionless photo keeps its enlarge action and a keyboard-only details control without an extra row (20166.37752ms)
+2026-10-22T22:02:50.9762629Z ✔ Chrome: message details never hide an uncertain send, its error or the explicit retry action (5030.095844ms)
+2026-10-22T22:02:56.5003921Z ✔ Chrome 320px: keyboard emoji panel inserts at the selection without photos or automatic sending, and Escape restores focus (5532.316291ms)
+2026-10-22T22:03:00.7917601Z ✔ Chrome 320px: skin tone changes the preview and inserted text, survives reopening and translation without sending (4288.517697ms)
+2026-10-22T22:03:05.4013507Z ✔ Chrome desktop and 320px: actual Tab / Enter contact selection and return, French / English (4609.827351ms)
+2026-10-22T22:03:23.2251264Z ✔ Chrome mobile: a single compact conversation bar leaves room for history and exposes account actions through its menu (17817.799378ms)
+2026-10-22T22:03:31.5436298Z ✔ Chrome short mobile viewports: a multiline draft keeps the composer usable with bounded independent history (8314.81989ms)
+2026-10-22T22:03:36.7664073Z ✔ Chrome 360px high: photo preview and multiline caption retain reachable attachment tools and Close (5226.091405ms)
+2026-10-22T22:03:42.0526355Z ✔ Chrome 320px: both roles edit their public profile with the keyboard, translated labels and focus restored to the opener (5280.224797ms)
+2026-10-22T22:03:53.5649522Z ✔ Chrome: real avatar crop, private preview cleanup on controlled hiding, explicit upload/save and peer initials after removal (11523.777859ms)
+2026-10-22T22:04:01.1231856Z ✔ Chrome: aggregate new-message announcement, silent empty poll / older history, stable focused photo (7558.731744ms)
+2026-10-22T22:04:03.1540149Z ✔ Chrome mobile: native modal Escape restores photo / gallery focus; private media is memory-only (2013.353665ms)
+2026-10-22T22:04:05.1029118Z ✔ Chrome mobile: deleting a message has a keyboard-accessible confirmation with safe cancellation (1963.385668ms)
+2026-10-22T22:04:11.7768344Z ✔ Chrome: a notification reaches its exact old message for each role, directly or after required login (6670.170901ms)
+2026-10-22T22:04:32.3080287Z ✔ Chrome: notification history acknowledges a persisted send after native response loss, without duplicate text or photo caption (20535.539959ms)
+2026-10-22T22:04:34.6653127Z ▶ real Chrome: conversation archive from the actual chat controller, keyboard and translations
+2026-10-22T22:04:34.6654327Z   ✔ fr 320px (2356.046247ms)
+2026-10-22T22:04:37.2145768Z   ✔ en 320px (2550.018012ms)
+2026-10-22T22:04:39.0544244Z   ✔ fr 1280px (1836.701215ms)
+2026-10-22T22:04:41.3773910Z   ✔ en 1280px (2324.76278ms)
+2026-10-22T22:04:41.3778529Z ✔ real Chrome: conversation archive from the actual chat controller, keyboard and translations (9071.433778ms)
+2026-10-22T22:04:43.4127146Z ✔ real Chrome: another login during export suppresses the old file without replaying the request (2033.741681ms)
+2026-10-22T22:04:45.3930083Z ✔ real Chrome: closing a profile cancels its download and cannot unlock or populate a new profile (1981.06784ms)
+2026-10-22T22:04:47.6403554Z ▶ real Chrome: clients download their own conversation at mobile/desktop widths in both languages
+2026-10-22T22:04:47.6429407Z   ✔ fr 320px (2243.299724ms)
+2026-10-22T22:04:49.7572598Z   ✔ en 320px (2120.832766ms)
+2026-10-22T22:04:51.0198056Z   ✔ fr 1280px (1262.404126ms)
+2026-10-22T22:04:52.4136752Z   ✔ en 1280px (1393.243357ms)
+2026-10-22T22:04:52.4138149Z ✔ real Chrome: clients download their own conversation at mobile/desktop widths in both languages (7021.063113ms)
+2026-10-22T22:04:53.5795242Z ✔ real Chrome: a replacement client login suppresses the previous archive without replay (1165.743165ms)
+2026-10-22T22:04:55.0435624Z ✔ real Chrome: closing the client dialog cancels a held archive and never updates a reopened dialog (1463.900531ms)
+2026-10-22T22:04:56.6874754Z ✔ real Chrome: client size limit offers an explicit text-only retry without sending a message (1643.961481ms)
+2026-10-22T22:04:57.8655455Z ✔ real Chrome: hiding the client page cancels the archive and returns with no stale download (1177.889632ms)
+2026-10-22T22:04:59.3532695Z ✔ Chrome 320px fr: quick replies preserve the draft and send only after editing and explicit submission (1487.571159ms)
+2026-10-22T22:05:01.0373747Z ✔ Chrome 320px en: quick replies preserve the draft and send only after editing and explicit submission (1684.178077ms)
+2026-10-22T22:05:02.4802598Z ✔ Chrome 1280px fr: quick replies preserve the draft and send only after editing and explicit submission (1442.815955ms)
+2026-10-22T22:05:03.8964092Z ✔ Chrome 1280px en: quick replies preserve the draft and send only after editing and explicit submission (1415.911532ms)
+2026-10-22T22:05:12.0880988Z ✔ Chrome: clients have no quick replies; Escape, full drafts and returning to the inbox never send (8191.365595ms)
+2026-10-22T22:05:17.2181822Z ✔ Chrome 320px fr: personal replies join the preset list, persist between sessions and CAS conflicts preserve both catalogue and draft (5130.418208ms)
+2026-10-22T22:05:21.2052752Z ✔ Chrome 1280px en: personal replies join the preset list, persist between sessions and CAS conflicts preserve both catalogue and draft (3986.763171ms)
+2026-10-22T22:05:23.1946178Z ✔ Chrome personal reply lost acknowledgement never retries automatically and explicit reload reveals the saved reply (1989.278935ms)
+2026-10-22T22:05:24.5884398Z ✔ Chrome compatibility hides new video and reply editing while preserving gallery access and saved reply insertion (1393.761384ms)
+2026-10-22T22:05:27.1382544Z ✔ Chrome: real same-tab reload restores only the authorized text draft and a changed session purges it (2549.741917ms)
+2026-10-22T22:05:28.7634233Z ✔ Chrome: an uncertain text survives a real reload with its exact retry key and no automatic POST (1625.128365ms)
+2026-10-22T22:05:30.4878055Z ✔ Chrome: client tombstones are absent from the actual DOM while admin history retains them (1724.093861ms)
+2026-10-22T22:05:32.2867862Z ✔ Chrome: synthetic coarse-pointer focus policy keeps keyboards closed after send, profile and emoji panels (1798.888403ms)
+2026-10-22T22:05:32.3338981Z ▶ real Chrome: shared administrator CRM drafts, conflicts and paused label requests
+2026-10-22T22:05:32.3339966Z   ✔ two editors, fr, 375px (4258.974225ms)
+2026-10-22T22:05:32.3340593Z   ✔ two editors, fr, 1280px (3905.434603ms)
+2026-10-22T22:05:32.3341138Z   ✔ two editors, en, 375px (3933.562457ms)
+2026-10-22T22:05:32.3341501Z   ✔ two editors, en, 1280px (3977.129566ms)
+2026-10-22T22:05:32.3341898Z   ✔ old label failure after pause, fr (2562.409589ms)
+2026-10-22T22:05:32.3342547Z   ✔ old label failure after pause, en (2473.815187ms)
+2026-10-22T22:05:32.3343235Z ✔ real Chrome: shared administrator CRM drafts, conflicts and paused label requests (21316.812408ms)
+2026-10-22T22:05:32.3344745Z ▶ real Chrome: two HTTPS hosts preserve native protected sessions through the real device transition
+2026-10-22T22:05:32.3346093Z   ✔ admin active: native source cookie, exact token and notification reference survive (2074.092985ms)
+2026-10-22T22:05:32.3346905Z   ✔ client active: native source cookie, exact token and notification reference survive (1371.707479ms)
+2026-10-22T22:05:32.3347842Z   ✔ client pending: native source cookie, exact token and notification reference survive (1868.575001ms)
+2026-10-22T22:05:32.3348891Z   ✔ a transient start failure offers a real retry and then succeeds (1837.981013ms)
+2026-10-22T22:05:32.3350162Z   ✔ an unanswered network request times out, restores retry and then succeeds (10037.007428ms)
+2026-10-22T22:05:32.3351394Z   ✔ admin: authorize 503 retries to the exact notified message (2411.199299ms)
+2026-10-22T22:05:32.3352723Z   ✔ admin: authorize network retries to the exact notified message (2220.161849ms)
+2026-10-22T22:05:32.3353847Z   ✔ admin: authorize timeout retries to the exact notified message (10603.363367ms)
+2026-10-22T22:05:32.3354885Z   ✔ client: complete 503 retries to the exact notified message (2153.491942ms)
+2026-10-22T22:05:32.3356404Z   ✔ client: complete network retries to the exact notified message (2144.515149ms)
+2026-10-22T22:05:32.3357578Z   ✔ client: complete timeout retries to the exact notified message (10108.109149ms)
+2026-10-22T22:05:32.3358666Z   ✔ client: complete consumed retries to the exact notified message (2231.594161ms)
+2026-10-22T22:05:32.3359960Z   ✔ a forged retry hint cannot replace the real ticket's authenticated notification destination (1627.573494ms)
+2026-10-22T22:05:32.3361086Z   ✔ revocation after authorization cannot install the previously valid source session (1396.975093ms)
+2026-10-22T22:05:32.3361849Z   ✔ a different target account is preserved and the page explains the conflict (1295.718523ms)
+2026-10-22T22:05:32.3363110Z   ✔ an existing target session for the same account is kept (1642.079936ms)
+2026-10-22T22:05:32.3363840Z   ✔ a missing source session offers sign-in at the new address with the notification reference (1685.870342ms)
+2026-10-22T22:05:32.3364784Z ✔ real Chrome: two HTTPS hosts preserve native protected sessions through the real device transition (57303.14806ms)
+2026-10-22T22:05:32.3366302Z ▶ real Chrome: transition actions stay distinct and accessible in every responsive state and language
+2026-10-22T22:05:32.3366933Z   ✔ initial, 320px: French and English (1408.838254ms)
+2026-10-22T22:05:32.3367368Z   ✔ preparing, 320px: French and English (1475.098454ms)
+2026-10-22T22:05:32.3367806Z   ✔ unavailable, 320px: French and English (1921.94271ms)
+2026-10-22T22:05:32.3368262Z   ✔ missing client, 320px: French and English (2025.608186ms)
+2026-10-22T22:05:32.3368766Z   ✔ missing administrator, 320px: French and English (1875.562076ms)
+2026-10-22T22:05:32.3369277Z   ✔ account conflict, 320px: French and English (1954.097959ms)
+2026-10-22T22:05:32.3369711Z   ✔ initial, 360px: French and English (986.014958ms)
+2026-10-22T22:05:32.3370126Z   ✔ preparing, 360px: French and English (1663.884804ms)
+2026-10-22T22:05:32.3370555Z   ✔ unavailable, 360px: French and English (1965.687407ms)
+2026-10-22T22:05:32.3371005Z   ✔ missing client, 360px: French and English (1990.787839ms)
+2026-10-22T22:05:32.3371485Z   ✔ missing administrator, 360px: French and English (2116.334145ms)
+2026-10-22T22:05:32.3372174Z   ✔ account conflict, 360px: French and English (2087.101795ms)
+2026-10-22T22:05:32.3372667Z   ✔ initial, 390px: French and English (1406.744811ms)
+2026-10-22T22:05:32.3399272Z   ✔ preparing, 390px: French and English (1928.483989ms)
+2026-10-22T22:05:32.3399878Z   ✔ unavailable, 390px: French and English (1713.583325ms)
+2026-10-22T22:05:32.3400428Z   ✔ missing client, 390px: French and English (1955.711993ms)
+2026-10-22T22:05:32.3401250Z   ✔ missing administrator, 390px: French and English (2055.455941ms)
+2026-10-22T22:05:32.3401824Z   ✔ account conflict, 390px: French and English (2060.473256ms)
+2026-10-22T22:05:32.3402326Z   ✔ initial, 635px: French and English (1216.892161ms)
+2026-10-22T22:05:32.3402826Z   ✔ preparing, 635px: French and English (1447.509398ms)
+2026-10-22T22:05:32.3403351Z   ✔ unavailable, 635px: French and English (1389.925813ms)
+2026-10-22T22:05:32.3403872Z   ✔ missing client, 635px: French and English (1754.629226ms)
+2026-10-22T22:05:32.3404399Z   ✔ missing administrator, 635px: French and English (1480.954651ms)
+2026-10-22T22:05:32.3404910Z   ✔ account conflict, 635px: French and English (1534.210756ms)
+2026-10-22T22:05:32.3406119Z ✔ real Chrome: transition actions stay distinct and accessible in every responsive state and language (41866.805419ms)
+2026-10-22T22:05:32.3407693Z ▶ real Chrome: the chosen language survives both origins, retries and the sign-in fallback
+2026-10-22T22:05:32.3408703Z   ✔ admin: English overrides an old French source preference and reaches a genuinely translated destination (1851.284416ms)
+2026-10-22T22:05:32.3409908Z   ✔ client: English overrides an old French source preference and reaches a genuinely translated destination (1551.20231ms)
+2026-10-22T22:05:32.3410886Z   ✔ an English source error followed by a French choice keeps the latest language and notification through retry (1884.346588ms)
+2026-10-22T22:05:32.3411863Z   ✔ missing source sign-in carries its latest language and the server's reference instead of a forged retry hint (1338.422957ms)
+2026-10-22T22:05:32.3412810Z ✔ real Chrome: the chosen language survives both origins, retries and the sign-in fallback (7115.205975ms)
+2026-10-22T22:05:32.3413716Z ▶ real Chrome: configured root is one client sign-in page and administrator home has its own tools at320/1280px
+2026-10-22T22:05:32.3414256Z   ✔ 320px (3264.808348ms)
+2026-10-22T22:05:32.3414519Z   ✔ 1280px (3651.358133ms)
+2026-10-22T22:05:32.3415486Z ✔ real Chrome: configured root is one client sign-in page and administrator home has its own tools at320/1280px (7251.716494ms)
+2026-10-22T22:05:32.3416602Z ✔ real Chrome: client and MFA administrator sign-in preserve the exact notification destination without a dashboard hop (3837.592997ms)
+2026-10-22T22:05:32.3417609Z ✔ Help source storage assertions reject credentials, media, history and malformed draft records (32.951792ms)
+2026-10-22T22:05:32.3418518Z ▶ real Chrome: practical Help is translated, accessible and never collects private content
+2026-10-22T22:05:32.3419185Z   ✔ fr, 320px: real Help, keyboard FAQ, fixed contact and return (1903.044459ms)
+2026-10-22T22:05:32.3419761Z   ✔ fr, 375px: real Help, keyboard FAQ, fixed contact and return (1796.481241ms)
+2026-10-22T22:05:32.3420340Z   ✔ fr, 1280px: real Help, keyboard FAQ, fixed contact and return (1298.448827ms)
+2026-10-22T22:05:32.3420944Z   ✔ en, 320px: real Help, keyboard FAQ, fixed contact and return (1136.888386ms)
+2026-10-22T22:05:32.3421522Z   ✔ en, 375px: real Help, keyboard FAQ, fixed contact and return (1260.278222ms)
+2026-10-22T22:05:32.3422099Z   ✔ en, 1280px: real Help, keyboard FAQ, fixed contact and return (1331.454197ms)
+2026-10-22T22:05:32.3422829Z   ✔ unsupported or augmented language fragments are erased without changing the saved preference (1425.049286ms)
+2026-10-22T22:05:32.3423722Z   ✔ chat, 320px: opening Help leaves the real source document and its in-memory work in place (1937.900971ms)
+2026-10-22T22:05:32.3424887Z   ✔ chat, 375px: opening Help leaves the real source document and its in-memory work in place (2540.807869ms)
+2026-10-22T22:05:32.3426035Z   ✔ chat, 1280px: opening Help leaves the real source document and its in-memory work in place (2064.855903ms)
+2026-10-22T22:05:32.3426878Z   ✔ recovery, 320px: opening Help leaves the real source document and its in-memory work in place (1853.481077ms)
+2026-10-22T22:05:32.3427711Z   ✔ recovery, 375px: opening Help leaves the real source document and its in-memory work in place (1197.381614ms)
+2026-10-22T22:05:32.3428703Z   ✔ recovery, 1280px: opening Help leaves the real source document and its in-memory work in place (1266.870845ms)
+2026-10-22T22:05:32.3429612Z ✔ real Chrome: practical Help is translated, accessible and never collects private content (21174.864314ms)
+2026-10-22T22:05:32.3430452Z ▶ real Chrome: homepage is personal, translated and usable by keyboard at 320px, 390px and desktop
+2026-10-22T22:05:32.3430951Z   ✔ fr, 320px (1338.940922ms)
+2026-10-22T22:05:32.3431227Z   ✔ fr, 390px (1552.2849ms)
+2026-10-22T22:05:32.3431496Z   ✔ fr, 1280px (1929.31883ms)
+2026-10-22T22:05:32.3431771Z   ✔ en, 320px (1666.326175ms)
+2026-10-22T22:05:32.3432026Z   ✔ en, 390px (1976.409136ms)
+2026-10-22T22:05:32.3432306Z   ✔ en, 1280px (2829.367515ms)
+2026-10-22T22:05:32.3432973Z ✔ real Chrome: homepage is personal, translated and usable by keyboard at 320px, 390px and desktop (11408.363334ms)
+2026-10-22T22:05:32.3433897Z ✔ phone photo preparation really resizes twenty MP, preserves alpha and applies EXIF orientation (3933.708578ms)
+2026-10-22T22:05:32.3434897Z ▶ real Chrome: manual backup creation and encrypted download are explicit, translated and keyboard accessible at three widths
+2026-10-22T22:05:32.3435788Z   ✔ fr 320px (2034.712654ms)
+2026-10-22T22:05:32.3436057Z   ✔ fr 375px (1948.927106ms)
+2026-10-22T22:05:32.3436316Z   ✔ fr 1280px (1851.764731ms)
+2026-10-22T22:05:32.3436579Z   ✔ en 320px (2209.967136ms)
+2026-10-22T22:05:32.3436838Z   ✔ en 375px (1984.995943ms)
+2026-10-22T22:05:32.3437092Z   ✔ en 1280px (1779.834726ms)
+2026-10-22T22:05:32.3437886Z ✔ real Chrome: manual backup creation and encrypted download are explicit, translated and keyboard accessible at three widths (11905.33027ms)
+2026-10-22T22:05:32.3439012Z ✔ real Chrome: a lost capture acknowledgement survives a visibility handoff and a server interruption without a replay (1821.398067ms)
+2026-10-22T22:05:32.3439945Z ✔ real Chrome: a changed administrator session suppresses a pending archive download (1765.879867ms)
+2026-10-22T22:05:32.3440967Z ✔ Chrome 320px: trusted click subscribes directly, language changes preserve state and disabling affects this preference only (1984.416845ms)
+2026-10-22T22:05:32.3441938Z ✔ Chrome: refused notification permission stays off without prompting or subscribing (1078.662792ms)
+2026-10-22T22:05:32.3442810Z ✔ Chrome: a changed cookie owner prevents the subscription POST and shows no false enabled state (1034.358745ms)
+2026-10-22T22:05:32.3443710Z ▶ real Chrome: private diagnostic is translated, bounded and downloadable by keyboard on narrow and wide screens
+2026-10-22T22:05:32.3444243Z   ✔ fr, 320px (2093.884756ms)
+2026-10-22T22:05:32.3444511Z   ✔ fr, 375px (2258.232285ms)
+2026-10-22T22:05:32.3444790Z   ✔ fr, 1280px (2121.826119ms)
+2026-10-22T22:05:32.3445302Z   ✔ en, 320px (1972.770611ms)
+2026-10-22T22:05:32.3445583Z   ✔ en, 375px (1854.323821ms)
+2026-10-22T22:05:32.3445861Z   ✔ en, 1280px (2101.475845ms)
+2026-10-22T22:05:32.3446594Z ✔ real Chrome: private diagnostic is translated, bounded and downloadable by keyboard on narrow and wide screens (12625.194286ms)
+2026-10-22T22:05:32.3447675Z ▶ real Chrome: the privacy summary states the actual closure capability in French and English
+2026-10-22T22:05:32.3448551Z   ✔ disabled (1253.535994ms)
+2026-10-22T22:05:32.3448979Z   ✔ enabled (1071.527811ms)
+2026-10-22T22:05:32.3449947Z ✔ real Chrome: the privacy summary states the actual closure capability in French and English (2404.721047ms)
+2026-10-22T22:05:32.3451075Z ▶ real Chrome: private preparation at mobile and desktop widths, FR/EN, keyboard save and independent notice language
+2026-10-22T22:05:32.3452167Z   ✔ fr 320px (2393.50918ms)
+2026-10-22T22:05:32.3452520Z   ✔ fr 375px (2458.925717ms)
+2026-10-22T22:05:32.3452803Z   ✔ fr 1280px (1967.845481ms)
+2026-10-22T22:05:32.3453066Z   ✔ en 320px (2453.933116ms)
+2026-10-22T22:05:32.3453322Z   ✔ en 375px (2103.069485ms)
+2026-10-22T22:05:32.3453581Z   ✔ en 1280px (1711.232902ms)
+2026-10-22T22:05:32.3454355Z ✔ real Chrome: private preparation at mobile and desktop widths, FR/EN, keyboard save and independent notice language (13241.108972ms)
+2026-10-22T22:05:32.3455778Z ✔ real Chrome: conflict preserves edits, compares saved data and requires a separate explicit save (1871.126841ms)
+2026-10-22T22:05:32.3456881Z ✔ real Chrome: hiding clears private DOM and restores unsaved edits only for the same proved login (1744.93494ms)
+2026-10-22T22:05:32.3457847Z ✔ real Chrome: a replacement login during save discards the obsolete response and never repeats the write (2080.698551ms)
+2026-10-22T22:05:32.3458849Z ✔ real Chrome: markup in drafts stays literal and never executes when previewing or changing UI language (1709.435496ms)
+2026-10-22T22:05:32.3459716Z ▶ real Chrome: client recovery is deliberate, private, translated and usable from phone to desktop
+2026-10-22T22:05:32.3460457Z   ✔ fr, 320px: native validation, accepted request, deliberate reset and sign-in (3609.515821ms)
+2026-10-22T22:05:32.3461163Z   ✔ fr, 375px: native validation, accepted request, deliberate reset and sign-in (4202.553246ms)
+2026-10-22T22:05:32.3461888Z   ✔ fr, 1280px: native validation, accepted request, deliberate reset and sign-in (3993.897169ms)
+2026-10-22T22:05:32.3462593Z   ✔ en, 320px: native validation, accepted request, deliberate reset and sign-in (3293.135165ms)
+2026-10-22T22:05:32.3463291Z   ✔ en, 375px: native validation, accepted request, deliberate reset and sign-in (3189.753293ms)
+2026-10-22T22:05:32.3463999Z   ✔ en, 1280px: native validation, accepted request, deliberate reset and sign-in (2953.511484ms)
+2026-10-22T22:05:32.3464774Z   ✔ an unavailable capability can be retried without submitting a reset or losing the link (2004.334514ms)
+2026-10-22T22:05:32.3465871Z   ✔ a lost reset acknowledgment requires an explicit retry; token previously consumed=false (1983.088657ms)
+2026-10-22T22:05:32.3466725Z   ✔ a lost reset acknowledgment requires an explicit retry; token previously consumed=true (1780.123994ms)
+2026-10-22T22:05:32.3467486Z   ✔ an expired link clears its password form and offers a fresh neutral request (1917.91613ms)
+2026-10-22T22:05:32.3468197Z   ✔ a malformed fragment is removed and can never become a reset submission (1260.792387ms)
+2026-10-22T22:05:32.3468874Z   ✔ reloading the cleaned URL cannot recover a token from browser storage (1338.664098ms)
+2026-10-22T22:05:32.3469643Z   ✔ choosing a new link abandons a pending reset and cannot be overwritten by its acknowledgment (1762.905317ms)
+2026-10-22T22:05:32.3470435Z   ✔ an intentionally disabled recovery keeps sign-in available and hides both forms (1227.333518ms)
+2026-10-22T22:05:32.3471335Z ✔ real Chrome: client recovery is deliberate, private, translated and usable from phone to desktop (34609.387341ms)
+2026-10-22T22:05:32.3472305Z ✔ real Chrome: late 401 responses preserve the newer native admin/client cookie on every shared surface (3268.667901ms)
+2026-10-22T22:05:32.3473265Z ✔ Chrome mobile FR/EN: create, postpone, complete and reopen a private client task without overflow (5668.34194ms)
+2026-10-22T22:05:32.3474225Z ✔ Chrome: a lost task acknowledgement retries one stable request and a conflict preserves the unsaved draft (2660.817894ms)
+2026-10-22T22:05:32.3475605Z ✔ Chrome: hiding the page clears private task markup, same-owner resume preserves drafts and replacement accounts purge them (1260.052657ms)
+2026-10-22T22:05:32.3476660Z ✔ Chrome: the common task view spans clients and paginates without truncating the private work list (1304.817525ms)
+2026-10-22T22:05:32.3477570Z ✔ Chrome: a CSRF refusal freezes an uncertain task until connection refresh and explicit retry (2637.195466ms)
+2026-10-22T22:05:32.3478664Z ✔ Chrome: a list read begun before a save cannot restore the old private task after the mutation (1753.524796ms)
+2026-10-22T22:05:32.3479472Z ✔ video draft, native decoding, retry and gallery at 320px in fr (4634.750459ms)
+2026-10-22T22:05:32.3480239Z ✔ video draft, native decoding, retry and gallery at 320px in en (4398.414166ms)
+2026-10-22T22:05:32.3481335Z ✔ video draft, native decoding, retry and gallery at 375px in fr (3895.580911ms)
+2026-10-22T22:05:32.3482656Z ✔ video draft, native decoding, retry and gallery at 375px in en (3863.100594ms)
+2026-10-22T22:05:32.3483786Z ✔ video draft, native decoding, retry and gallery at 1280px in fr (2962.90477ms)
+2026-10-22T22:05:32.3484708Z ✔ video draft, native decoding, retry and gallery at 1280px in en (3097.475749ms)
+2026-10-22T22:05:32.3491422Z ℹ tests 230
+2026-10-22T22:05:32.3491684Z ℹ suites 0
+2026-10-22T22:05:32.3491897Z ℹ pass 230
+2026-10-22T22:05:32.3492099Z ℹ fail 0
+2026-10-22T22:05:32.3492309Z ℹ cancelled 0
+2026-10-22T22:05:32.3492527Z ℹ skipped 0
+2026-10-22T22:05:32.3492750Z ℹ todo 0
+2026-10-22T22:05:32.3492994Z ℹ duration_ms 266873.057138
+2026-10-22T22:05:32.3556857Z ##[group]Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+2026-10-22T22:05:32.3557276Z with:
+2026-10-22T22:05:32.3557476Z   name: homepage-render
+2026-10-22T22:05:32.3557697Z   retention-days: 7
+2026-10-22T22:05:32.3557916Z   if-no-files-found: error
+2026-10-22T22:05:32.3558158Z   path: artifacts/homepage/*.png
+2026-10-22T22:05:32.3558423Z   compression-level: 6
+2026-10-22T22:05:32.3558630Z   overwrite: false
+2026-10-22T22:05:32.3558840Z   include-hidden-files: false
+2026-10-22T22:05:32.3559071Z   archive: true
+2026-10-22T22:05:32.3559264Z ##[endgroup]
+2026-10-22T22:05:32.5140866Z With the provided path, there will be 14 files uploaded
+2026-10-22T22:05:32.5141843Z Artifact name is valid!
+2026-10-22T22:05:32.5142368Z Root directory input is valid!
+2026-10-22T22:05:32.6951591Z Uploading artifact: homepage-render.zip
+2026-10-22T22:05:32.7006374Z Beginning upload of artifact content to blob storage
+2026-10-22T22:05:32.9812102Z Uploaded bytes 2773826
+2026-10-22T22:05:32.9951421Z Finished uploading artifact content to blob storage!
+2026-10-22T22:05:32.9952717Z SHA256 digest of uploaded artifact is 5fe08df49b002ed9f73b497a9ae67c5f8d9dfa213fcdaa0b88a7c20297650a0a
+2026-10-22T22:05:32.9953324Z Finalizing artifact upload
+2026-10-22T22:05:33.4833121Z Artifact homepage-render successfully finalized. Artifact ID 12461254830
+2026-10-22T22:05:33.4834639Z Artifact homepage-render has been successfully uploaded! Final size is 2773826 bytes. Artifact ID is 12461254830
+2026-10-22T22:05:33.4838495Z Artifact download URL: https://github.com/fredbuhr/jessiemessage/actions/runs/39861746883/artifacts/12461254830
+2026-10-22T22:05:33.5025998Z Post job cleanup.
+2026-10-22T22:05:33.6311880Z Post job cleanup.
+2026-10-22T22:05:33.7194851Z [command]/usr/bin/git version
+2026-10-22T22:05:33.7243400Z git version 2.55.0
+2026-10-22T22:05:33.7282590Z Temporarily overriding HOME='/home/runner/work/_temp/6005ed10-b875-47c1-a34c-1b5d210f772d' before making global git config changes
+2026-10-22T22:05:33.7284518Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-22T22:05:33.7289019Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/jessiemessage/jessiemessage
+2026-10-22T22:05:33.7326299Z Removing SSH command configuration
+2026-10-22T22:05:33.7333733Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-22T22:05:33.7371453Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-22T22:05:33.7615405Z Removing HTTP extra header
+2026-10-22T22:05:33.7623022Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-22T22:05:33.7663227Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-22T22:05:33.7932388Z Removing includeIf entries pointing to credentials config files
+2026-10-22T22:05:33.7939474Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-22T22:05:33.7976907Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-22T22:05:33.8381766Z Cleaning up orphan processes

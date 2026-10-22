@@ -2,6 +2,16 @@
 
 Révisé le 22 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
+## Correctif messagerie1.8.3 — travail actuel
+
+[Périmètre détaillé et critères](UX-183-20261022.md). Nouvelle demande explicite après l’audit : dix signalements UX et revue des parcours client/admin, avec correction des constatsB01–B05/I01.
+
+1. Corrections et tests composés locaux terminés : entrée client directe, accueil admin distinct, accès compte explicite, navigation, clavier tactile, messages/émojis/exports, préparation des diffusions, notifications et cohérence des sessions/horloges.
+2. Contre-revue locale terminée ; qualifier laPR sousNode24.22.1 avec Chrome, HTTPS et MariaDB. Inspecter les captures synthétiques320/1280 du nouveau parcours. Les tests locaux sous24.19 et l’absence de Chrome locale restent distincts.
+3. Après qualification seulement, traiter fusion/main, tag/release et préparation opérateur de cette source exacte ; activation hébergée séparée avec reçu. Production actuelle1.8.2/SQL36 inchangée jusque-là. Aucun PC, nouvel essai de sauvegarde, envoi ou effacement de compte réel.
+
+La branche candidate est `fix/messaging-183`, base `38ccb3862f3d9ab4153b578dfb3abbd0dd94d857`. [État](verification-proofs/jm183-progress.json). Le rapport d’audit ci-dessous décrit les constats avant correction ; ne pas le réécrire comme preuve de déploiement.
+
 ## Second audit après livraison182 — terminé
 
 Le [second rapport](AUDIT-2-20261022.md) est terminé : 447 fichiers sources/configuration/ressources examinés, trois helpers 182 externes épinglés lus ; 390 tests inventoriés dont 202 lus intégralement, 25 partiellement et163 structurellement seulement. Les preuves synthétiques, contre-revues et [couverture exacte](verification-proofs/audit2-182/source-coverage.json) sont conservées. Cinq nouveaux défauts, une amélioration conditionnelle, aucun correctif applicatif réalisé.

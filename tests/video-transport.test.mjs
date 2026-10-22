@@ -68,7 +68,7 @@ test("real video transport refuses another client and administrator owner routes
   owner.active = false;
   const revoked = await fetch(`${f.base}${contentPath(owner, uploaded.body.id)}`, { headers: { Cookie: cookie(owner) } });
   assert.equal(revoked.status, 401); assert.deepEqual(await revoked.json(), { error: "authentication_required" });
-  assert.match(revoked.headers.get("set-cookie"), /Max-Age=0/);
+  assert.equal(revoked.headers.get("set-cookie"), null);
 });
 
 test("aborting an actual staged upload refunds only after confirmed encrypted staging cleanup and permits retry", async (t) => {
