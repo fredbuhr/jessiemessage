@@ -18,9 +18,17 @@ after(async () => { await driver?.close(); });
 
 const bootstrap = `
 window.__scaleErrors=[];
+window.__scalePointerEvents=[];
 addEventListener('error',event=>window.__scaleErrors.push(String(event.message)));
 addEventListener('unhandledrejection',event=>window.__scaleErrors.push(String(event.reason?.message??event.reason)));
 addEventListener('securitypolicyviolation',event=>window.__scaleErrors.push('CSP:'+event.violatedDirective));
+for(const type of ['pointerdown','pointerup','click'])addEventListener(type,event=>{
+  const target=event.target,button=document.getElementById('upload-video'),rect=button?.getBoundingClientRect();
+  window.__scalePointerEvents.push({type,targetId:target?.id??null,targetTag:target?.tagName??null,buttonId:target?.closest?.('button')?.id??null,
+    trusted:event.isTrusted,fieldsetDisabled:document.getElementById('composition')?.disabled??null,
+    x:Math.round(event.clientX),y:Math.round(event.clientY),uploadRect:rect?{x:Math.round(rect.x),y:Math.round(rect.y),width:Math.round(rect.width),height:Math.round(rect.height)}:null});
+  if(window.__scalePointerEvents.length>18)window.__scalePointerEvents.shift();
+},true);
 // Advance only the product's 30-second history poll, retaining its actual
 // callback and all other timeout/session/transport behavior.
 const nativeSetTimeout=window.setTimeout.bind(window),nativeClearTimeout=window.clearTimeout.bind(window),polls=new Map();
@@ -257,13 +265,21 @@ async function selectVideo(page) {
 async function waitForVideoUpload(source, page, check, description) {
   try { await waitUntil(check, description); }
   catch (error) {
-    const browser = await page.execute("const byId=id=>document.getElementById(id);return {status:byId('video-status').textContent,error:byId('video-status').classList.contains('is-error'),uploadHidden:byId('upload-video').hidden,uploadDisabled:byId('upload-video').disabled,cancelHidden:byId('cancel-video').hidden,compositionDisabled:byId('composition').disabled,previewDisabled:byId('preview').disabled,pageVisible:document.visibilityState==='visible',errors:window.__scaleErrors}");
+    const browser = await page.execute("const byId=id=>document.getElementById(id);return {status:byId('video-status').textContent,error:byId('video-status').classList.contains('is-error'),uploadHidden:byId('upload-video').hidden,uploadDisabled:byId('upload-video').disabled,cancelHidden:byId('cancel-video').hidden,compositionDisabled:byId('composition').disabled,previewDisabled:byId('preview').disabled,pageVisible:document.visibilityState==='visible',errors:window.__scaleErrors,pointerEvents:window.__scalePointerEvents}");
     // Every value belongs to this synthetic fixture. Keep diagnostic transport
     // phases separate so a failed header/body assertion cannot look like an
     // upload that never reached the local server.
     assert.fail(`${error.message}; ${JSON.stringify({ browser, attempts: source.state.uploadAttempts,
       requestPaths: source.state.requests.filter(request => request.path === '/api/video/admin/assets').map(request => request.method) })}`);
   }
+}
+
+async function clickVideoUpload(page) {
+  await page.execute("window.__scalePointerEvents.length=0");
+  await page.click("#upload-video");
+  const events = await page.execute("return window.__scalePointerEvents");
+  assert.ok(events.some(event => event.type === "click" && event.buttonId === "upload-video" && event.trusted && event.fieldsetDisabled === false),
+    `Native upload click must reach the enabled button: ${JSON.stringify(events)}`);
 }
 
 test("Chrome broadcast video FR/EN mobile/desktop: native preview, one raw upload, typed audience and exact uncertain campaign retry", { timeout: 120000 }, async () => {
@@ -276,7 +292,7 @@ test("Chrome broadcast video FR/EN mobile/desktop: native preview, one raw uploa
       assert.equal(await page.execute("return document.getElementById('preview').disabled&&document.getElementById('confirm').disabled"), true);
       assert.equal(await page.execute("return document.getElementById('upload-video').textContent"), language === "fr" ? "Charger la vidéo" : "Upload video");
       assert.equal(await page.execute("return document.querySelector('#video-preview video').autoplay"), false);
-      await page.click("#upload-video");
+      await clickVideoUpload(page);
       await waitForVideoUpload(source, page, () => page.execute("return document.getElementById('upload-video').hidden&&!document.getElementById('preview').disabled"), "uploaded attachment enables audience verification");
       assert.deepEqual(source.state.uploads, [videoBytes.length]); await preview(page, 175);
       assert.equal(source.state.previewInputs.at(-1).videoId, id(7000)); assert.equal(source.state.previewInputs.at(-1).mediaId, null);
@@ -296,7 +312,7 @@ test("Chrome broadcast video FR/EN mobile/desktop: native preview, one raw uploa
 test("Chrome broadcast video upload can be cancelled while awaiting ACK without any campaign or automatic upload retry", { timeout: 60000 }, async () => {
   const source = await fixture({ videoEnabled: true, holdVideoUpload: true }); let page;
   try {
-    page = await open(source, 390, "en"); await chooseMode(page, "all"); await compose(page); await selectVideo(page); await page.click("#upload-video");
+    page = await open(source, 390, "en"); await chooseMode(page, "all"); await compose(page); await selectVideo(page); await clickVideoUpload(page);
     await waitForVideoUpload(source, page, () => source.state.uploads.length === 1 && page.execute("return !document.getElementById('cancel-video').hidden"), "native upload awaits its server acknowledgement");
     assert.equal(await page.execute("return document.getElementById('preview').disabled&&document.getElementById('confirm').disabled&&!document.getElementById('video-progress').hidden"), true);
     await page.click("#cancel-video");
