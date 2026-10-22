@@ -144,30 +144,27 @@ test("restored service rejects readiness when the actual supervisor fails to sta
   await assert.rejects(service.close(), error => error === failure); assert.deepEqual(events, ["failed-start"]);
 });
 
-test("restored service masks capture scheduling until publication allows it and preserves the real schedule", async () => {
+test("restored service preserves the manual parent composition without enabling any backup schedule", async () => {
   const lifetime = deferred(), context = { job: { runtimeDirectory: "/reviewed", runtimeHead: "1".repeat(40), runtimeTree: "2".repeat(40),
     targetPrivateDirectory: "/target-private" }, paths: { journalDirectory: "/target-operations" } };
-  const configuration = { version: 1, enabled: true, recipientSha256: "f".repeat(64), hourUtc: 5, minuteUtc: 15 };
-  let read, observedArgs;
+  let manual, read, allowed;
   const service = createRestoredService(context, { environment, outputStream: { write() {} } }, {
     async recurringMain(_args, dependencies) {
       dependencies.signal.addEventListener("abort", () => lifetime.resolve(), { once: true });
-      await dependencies.makeSupervisor({ command: "start" }, {}).start(); await lifetime.promise;
+      await dependencies.makeSupervisor({ command: "start" }, { manualBackups: true }).start(); await lifetime.promise;
     },
     makeSupervisor(_options, dependencies) {
-      read = dependencies.readConfiguration; dependencies.makeRuntime({}); return { async start() { return { ready: true }; } };
+      manual = dependencies.manualBackups; read = dependencies.readConfiguration; allowed = dependencies.allowManualRequests;
+      dependencies.makeRuntime({}); return { async start() { return { ready: true }; } };
     },
     makeRuntime() { return { state: () => ({ status: "running" }), async stop() { return { exitCode: 0, signal: null }; } }; },
-    async readConfiguration(...args) { observedArgs = args; return configuration; },
+    readConfiguration: forbidden,
   });
   try {
     await service.start();
-    const cancellation = new AbortController(), options = { signal: cancellation.signal };
-    assert.deepEqual(await read(context.paths.journalDirectory, options), { ...configuration, enabled: false });
-    assert.deepEqual(observedArgs, [context.paths.journalDirectory, options]); assert.equal(configuration.enabled, true);
-    assert.equal((await read(context.paths.journalDirectory)).enabled, false);
-    service.allowCaptures(); assert.equal(await read(context.paths.journalDirectory), configuration);
-    configuration.enabled = false; assert.equal((await read(context.paths.journalDirectory)).enabled, false);
+    assert.equal(manual, true); assert.equal(read, undefined);
+    assert.equal(Object.hasOwn(service, "allowCaptures"), false);
+    assert.equal(allowed(), false); service.allowManualBackups(); assert.equal(allowed(), true);
   } finally { await service.stop(); await service.close(); }
 });
 

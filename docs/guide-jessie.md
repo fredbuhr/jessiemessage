@@ -63,7 +63,7 @@ Le texte du message en cours et les modifications de fiche non enregistrées res
 
 ## Tâches et rappels privés
 
-**Ce parcours est disponible dans la version active 1.6.0, dont la livraison est close.** Le [relevé d’identité et l’état de livraison](REPRISE.md) restent la référence. Aucun nouveau réglage, Build ou redémarrage n’est nécessaire pour utiliser ces fonctions.
+**Ce parcours est disponible depuis la livraison 1.6.0 close et conservé dans la version active indiquée par REPRISE.** Le [relevé d’identité et l’état de livraison](REPRISE.md) restent la référence. Aucun nouveau réglage, Build ou redémarrage n’est nécessaire pour utiliser ces fonctions.
 
 Depuis la conversation d’un client, ouvre **Options → Fiche → Tâches du client**, puis **Ajouter une tâche**. Écris ce que tu veux préparer ou envoyer, ajoute une échéance si utile, puis choisis **Enregistrer la tâche**. Tu peux garder plusieurs tâches pour le même client. Ces informations restent dans ton administration ; le client ne les voit pas.
 
@@ -97,13 +97,17 @@ Dans [Diffusions](https://jessiemessage.com/admin/broadcasts), choisis une séle
 
 Un changement d’audience, de filtres ou de photo demande une nouvelle prévisualisation. Si l’ensemble a changé entre l’aperçu et la confirmation, l’envoi doit être revérifié. Après un résultat d’envoi incertain, la commande de reprise réutilise la même demande. Le suivi présente les compteurs et les destinataires par pages, pendant que les messages sont traités progressivement. Chaque client reçoit son message dans sa conversation privée ; aucun salon collectif n’est créé.
 
-## Copies sur le PC
+## Copies sur le PC — mécanisme actuellement livré
 
-Dans [Sauvegardes](https://jessiemessage.com/admin/backups), consulte les dates de sauvegarde et de copie. Le PC doit être allumé, connecté à Internet et ta session Windows ouverte. Les copies en attente peuvent se rattraper lors d’un prochain passage.
+Dans [Sauvegardes](https://jessiemessage.com/admin/backups), consulte les dates de sauvegarde et de copie. La version actuellement livrée utilise encore le mécanisme automatique : le PC doit être allumé, connecté à Internet et ta session Windows ouverte. Son fonctionnement reste bloqué ou incertain après le signalement antivirus ; les dates et anciens reçus ne prouvent pas une copie actuelle. Les copies en attente peuvent se rattraper lorsque ce mécanisme fonctionne.
 
 Le raccourci **JessieMessage — Sauvegardes** sur le Bureau indique le dossier choisi et permet de le changer. Aucune manipulation de clé ni nouveau raccordement n’est nécessaire au quotidien. En cas d’erreur, conserve les copies, le dossier de récupération et le raccordement existants. Aucune sauvegarde n’est supprimée automatiquement.
 
 Le reçu confirme le fichier chiffré reçu, sans certifier une restauration de l’application. [Copies PC](backup-destinations-055.md).
+
+### Planifié : sauvegarde à la demande dans l’administration
+
+La prochaine évolution remplacera les sauvegardes et copies automatiques par une sauvegarde simple déclenchée depuis l’administration lorsque tu la demandes, sans dépendre du PC. **Ce parcours n’est pas encore disponible** ; ses boutons et étapes seront décrits après livraison vérifiée. L’archivage automatique est abandonné. Les archives déjà créées, les clés et le raccordement existant sont conservés ; aucun nouveau raccordement ni manipulation de clé n’est demandé.
 
 ## Fermeture définitive et remise en service
 

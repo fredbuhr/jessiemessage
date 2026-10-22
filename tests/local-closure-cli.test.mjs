@@ -22,39 +22,39 @@ test("local check remains read-only and closes resources on success or failure",
     const events = []; let output = "";
     const report = { type: "local_closure_precheck", started: false, erased: false };
     const run = main(args("check-local-closures"), { environment, execArgv: [], ...noWitness,
-      async preflight() { events.push("preflight"); },
+      preflight: forbidden, async localPreflight() { events.push("source"); },
       async makeLocalClosures() { events.push("context"); return { async check() { events.push("check"); if (reject) throw new Error("Synthetic failure"); return report; },
         async close() { events.push("close"); } }; },
       makeSupervisor: forbidden, makeMonitor: forbidden, makeAlerts: forbidden,
       outputStream: { write(value) { output += value; } } });
     if (reject) { await assert.rejects(run); assert.equal(output, ""); }
     else { assert.deepEqual(await run, report); assert.deepEqual(JSON.parse(output), report); }
-    assert.deepEqual(events, ["preflight", "context", "check", "close"]);
+    assert.deepEqual(events, ["source", "context", "check", "close"]);
   }
 });
 
 test("local start composes the existing supervisor and closes the owner after the drained child", async () => {
   const events = [], operations = {};
   await main(args("start-local-closures"), { environment, execArgv: [], ...noWitness,
-    async preflight() { events.push("preflight"); },
+    preflight: forbidden, async localPreflight() { events.push("source"); },
     async makeLocalClosures() { return { operations, async close() { events.push("local-close"); } }; },
     makeSupervisor(selected, dependencies) {
       assert.equal(selected.command, "start"); assert.equal(dependencies.closureOperations, operations);
       assert.equal(dependencies.resumeClosures, resumeManagedLocalClosureRuntime);
+      assert.equal(dependencies.manualBackups, true);
       assert.equal(Object.hasOwn(dependencies, "witnessControl"), false);
       return { async start() { events.push("start"); }, async close() { events.push("supervisor-close"); }, finished: Promise.resolve({ failed: false }) };
     },
-    makeMonitor() { return { async start() {}, async close() { events.push("monitor-close"); } }; },
-    makeAlerts() { return { async close() { events.push("alerts-close"); } }; },
+    makeMonitor: forbidden, makeAlerts: forbidden,
   });
-  assert.deepEqual(events, ["preflight", "start", "monitor-close", "supervisor-close", "alerts-close", "local-close"]);
+  assert.deepEqual(events, ["source", "start", "supervisor-close", "local-close"]);
 });
 
 test("local construction and child startup failures never leak the parent context", async () => {
   for (const stage of ["construct", "start", "close"]) {
     const events = [];
     await assert.rejects(main(args("start-local-closures"), { environment, execArgv: [], ...noWitness,
-      async preflight() {}, async makeLocalClosures() { return { operations: {}, async close() { events.push("local-close"); } }; },
+      async localPreflight() {}, preflight: forbidden, async makeLocalClosures() { return { operations: {}, async close() { events.push("local-close"); } }; },
       makeSupervisor() {
         if (stage === "construct") throw new Error("Synthetic construction failure");
         return { async start() { if (stage === "start") throw new Error("Synthetic startup failure"); },

@@ -1,8 +1,8 @@
 # JessieMessage — bilan global du 22 octobre 2026
 
-**JessieMessage fonctionne déjà en production pour la messagerie texte et photo et les outils de Jessie. La vidéo reste en développement ; plusieurs fonctions évoquées ne sont pas encore codées.** Le précédent décompte « huit résultats plus deux corrections possibles » concernait la fin du chantier vidéo et sa qualification. Il ne constituait pas un bilan de tout le projet.
+**JessieMessage fonctionne déjà en production pour la messagerie texte et photo et les outils de Jessie. La vidéo reste en développement. Le périmètre est simplifié le 22 octobre : sauvegarde manuelle admin en premier et abandon explicite des fonctions citées ci-dessous.** Le précédent décompte « huit résultats plus deux corrections possibles » concernait la fin du chantier vidéo et sa qualification. Il ne constituait pas un bilan de tout le projet.
 
-Ce bilan rassemble l’existant, les manques et une proposition de suite en quatre résultats lisibles. Les subdivisions techniques servent à reprendre le travail après une interruption ; elles ne doivent pas devenir autant de livraisons ou de nouvelles décisions demandées à l’utilisateur.
+Ce bilan rassemble l’existant, les manques et la suite retenue en quatre résultats lisibles après la décision de simplification. Les subdivisions techniques servent à reprendre le travail après une interruption ; elles ne doivent pas devenir autant de livraisons ou de nouvelles décisions demandées à l’utilisateur.
 
 ## La référence réellement en service
 
@@ -33,29 +33,29 @@ Les preuves et parcours sont regroupés dans [PRODUCT](PRODUCT.md), le [guide qu
 
 **La vidéo n’est pas utilisable dans la conversation.** Catalogue, accès privé, exports et suppression/fermeture/capacité ont des qualifications backend sur branche. Inventaire, capture/restauration et compatibilité restent incomplets ; l’interface avec sélection, progression, lecteur, avance/recul et galerie reste absente, ainsi que la diffusion vidéo complète.
 
-**IA assistée, paiements intégrés, cryptomonnaies, Lovense et rendez-vous partagés ne sont pas codés.** Une tâche privée avec une date n’est pas un rendez-vous partagé. Leur absence du code ne prouve pas que l’utilisateur les a abandonnés.
+**La sauvegarde simple à la demande via l’administration n’est pas encore livrée.** La production 1.7.1 conserve ses mécanismes automatiques existants ; leur remplacement effectif est le premier résultat codé sur la branche, en attente de qualification CI et de livraison. Les réponses rapides personnelles restent à développer : les six phrases actuelles sont fixes.
 
-Messages audio, réactions, citation/réponse, édition et transfert de messages, recherche dans les messages, pack illustré, GIF et intégrations de stickers ne sont pas livrés. Ce sont des pistes à prioriser et préciser, pas des engagements déjà chiffrés. Les textes « Voix de Jessie » des anciennes livraisons désignent leur formulation, sans fonction audio.
+**Abandonnés par décision du 22 octobre :** IA, paiements carte et crypto, stickers/GIF, vocaux, réponse citée, édition, transfert de messages et épingles. Ils sortent du backlog ; leur absence ne devient plus une évolution différée. Les textes « Voix de Jessie » des anciennes livraisons décrivent leur formulation, sans fonction audio.
 
-## Ce qui reste incertain ou différé
+**À préciser, non ouverts :** Lovense, rendez-vous partagés, recherche dans les messages/notes, réactions et rappels privés push. Ils ne sont pas abandonnés par inférence et n’ajoutent ni prestataire, ni service, ni développement simultané. Une tâche privée datée ne constitue pas un rendez-vous partagé.
 
-Le [blocage Avast](pc-antivirus-20261020.md) peut interrompre les copies PC ; une fausse alerte n’est pas confirmée. Le kit possède aussi un **défaut connu de confirmation finale** pouvant annoncer une mise à jour malgré une installation partielle. Il faudra le corriger avant une nouvelle recette d’installation. L’utilisateur a demandé de différer ce chantier : aucun réappariement ni changement de clé n’est nécessaire pour poursuivre la messagerie.
+## Exploitation : ce qui change et ce qui reste constaté
 
-L’interface de [choix des destinations](backup-destinations-055.md) existe déjà : dossier Windows, éventuellement synchronisé par un autre logiciel. Elle ne réalise pas une connexion directe aux API Drive/OneDrive/Dropbox. L’archivage **A08** possède avertissement et simulation, mais aucun exécuteur actif ni purge automatique.
+**L’automatisation des sauvegardes et de l’archivage est abandonnée dans le périmètre cible.** G1 la remplace par une sauvegarde à la demande depuis l’administration, sans PC requis. L’archivage **A08** possède avertissement et simulation historiques, sans exécuteur actif ni purge automatique ; aucun exécuteur automatique n’est désormais à construire. Rien n’a encore été désactivé ou modifié en production par cette décision documentaire.
 
-Fermeture locale et restauration manuelle sous maintenance restent conditionnelles aux contrôles prévus ; elles n’attestent pas le fonctionnement actuel du PC. Récupération autonome après perte totale de l’hôte, témoin frais à chaque phase et inventaire SQL exhaustif ne font pas partie des garanties livrées ; ils ne deviennent pas des prérequis à la messagerie.
+Le [blocage Avast](pc-antivirus-20261020.md) peut toujours interrompre les copies PC existantes ; une fausse alerte n’est pas confirmée. Le défaut connu de confirmation finale du kit reste non résolu. Le [choix des destinations](backup-destinations-055.md) concerne un dossier Windows, éventuellement synchronisé par un autre logiciel, sans API cloud directe. Le nouveau parcours manuel ne relance pas ce chantier PC et ne demande ni réappariement ni changement de clé. Les anciennes copies, clés, autorités, journaux et états restent préservés.
 
-Trois points secondaires restent ouverts : Authenticator sur téléphone physique, correctif PHP réellement installé par le fournisseur, et ancien aperçu sur `accueil.jessiemessage.com`. Le principal et www ont le nouvel accueil. La redirection du sous-domaine a été refusée par le contrôle automatique pour autorisation explicite manquante ; elle n’est pas appliquée et ne doit pas être retentée implicitement.
+Fermeture locale et restauration manuelle sous maintenance conservent leurs gardes et doivent rester cohérentes après le remplacement de l’automatisation. Elles n’attestent pas le fonctionnement présent du PC. Récupération autonome après perte totale de l’hôte, témoin frais à chaque phase et inventaire SQL exhaustif ne font pas partie des garanties livrées ; ils ne deviennent pas des prérequis à la messagerie.
 
-## Proposition de suite : quatre résultats pour 1.8.0
+Authenticator sur téléphone physique reste non vérifié. PHP du site secondaire relève d’Infomaniak et sort des actions du projet. L’ancien aperçu de `accueil.jessiemessage.com` reste constaté ; le principal et www ont le nouvel accueil. La redirection du sous-domaine a été refusée par le contrôle automatique pour autorisation explicite manquante ; elle n’est pas appliquée et n’est pas reprise dans ce chantier.
 
-| Résultat | Critère de fin | Travail indicatif |
-| --- | --- | --- |
-| **1. Vidéo complète** | Cycle de vie, capture/restauration, interface lisant une vraie vidéo décodable, galerie, export, suppression et diffusion cohérents. | 3 à 5 séquences |
-| **2. Réponses rapides personnalisables** | Jessie peut créer, modifier et retrouver ses propres phrases, avec insertion au brouillon et envoi explicite. | 1 séquence |
-| **3. Qualification globale et corrections utiles** | Parcours combinés de toutes les fonctions ; corrections UX/sécurité proportionnées ; performances mesurées sur cible isolée ; portabilité et repli éprouvés sur un parcours synthétique complet. | 1 à 2 séquences |
-| **4. Livraison unique et contrôles** | Sources qualifiées, publication, repli compatible, préparation/migration/activation distinctement attestées, identité active et contrôles hébergés. | 1 séquence |
+## Suite retenue : quatre résultats pour la prochaine version
 
-Cela représente **six à neuf séquences de travail comme ordre de grandeur**, sans garantie de durée ni de nombre de messages. Une seule livraison produit est visée. PC et archivage restent différés et non bloquants. Aucun pourcentage global d’achèvement n’est déduit du nombre de tests ou de jalons.
+| Résultat | Critère de fin |
+| --- | --- |
+| **G1 — Sauvegarde manuelle admin** | Déclenchement explicite, résultat visible et archive récupérable, sans dépendance PC ni déclenchements/copies/archivage automatiques inutiles dans le nouveau parcours. Archives, clés, autorités et fermetures locales préservées et vérifiées. |
+| **G2 — Vidéo complète** | Cycle de vie, sauvegarde/restauration manuelle, interface lisant une vraie vidéo décodable, galerie, export, suppression et diffusion cohérents. |
+| **G3 — Réponses personnelles et qualification globale** | Jessie crée/modifie/retrouve ses phrases avec envoi explicite ; parcours combinés, corrections utiles, sécurité, performances et transfert/restauration/repli qualifiés sur des cibles isolées. |
+| **G4 — Livraison unique et contrôles** | Sources qualifiées, publication, repli compatible, préparation/migration/activation distinctement attestées ; identité active et comportements réellement vérifiés, dont remplacement des automatismes. |
 
-Le backlog proposé conserve ensuite, à arbitrer : **rappels de tâches hors application**, **IA assistée**, **paiements/crypto**, **Lovense**, **rendez-vous partagés**, puis **stickers, recherche et autres conforts de messagerie**. Chaque sujet exige encore un résultat attendu et une estimation propres, sans prestataire présumé. Le décompte de 1.8.0 ne promet pas de les réaliser tous.
+L’ancien ordre de grandeur de six à neuf séquences précède cette nouvelle portée et n’est plus retenu. Aucun nouveau nombre précis de séquences ni pourcentage global n’est étayé à ce stade. Le [plan détaillé](PLAN-IMPLEMENTATION.md) contient les critères ; [REPRISE](REPRISE.md) garde les sources et preuves courantes. À chaque étape, annoncer **fait** et **restant**. La prochaine action est G1 ; la vidéo déjà qualifiée sur branche reste acquise et sera reprise en G2.

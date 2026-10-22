@@ -15,6 +15,7 @@ import { runManagedClosures, resumeManagedClosureRuntime } from "./managed-closu
 import { runManagedWitnessPreparation } from "./managed-witness.mjs";
 import { witnessOriginErrorCode } from "./witness-origin-diagnostics.mjs";
 import { runWitnessObservationMaintenance } from "./witness-observation-maintenance.mjs";
+import { createManualBackupRequests } from "./manual-backup-files.mjs";
 
 const REPOSITORY = resolve(fileURLToPath(new URL("../../", import.meta.url)));
 const PROFILE = "photos-notify-recovery-crm-broadcast";
@@ -176,12 +177,17 @@ export function createRecurringSupervisor(options, { environment = process.env, 
   append = appendCheckpointRecord, preflight = recurringPreflight, source = assertRuntimeSource, checkpoint = checkpointProcess,
   encrypt = encryptCheckpointArchive, makeRuntime = createManagedRuntime, emit = () => {}, intervalMilliseconds = 60000,
   schedule = setTimeout, unschedule = clearTimeout, closureOperations = null, runClosures = runManagedClosures, resumeClosures = resumeManagedClosureRuntime, witnessControl = null, makeGateway = createParentGateway,
-  witnessOriginOperations = null, prepareWitness = runManagedWitnessPreparation } = {}) {
+  witnessOriginOperations = null, prepareWitness = runManagedWitnessPreparation, manualBackups = false, manualRequests = null,
+  allowManualRequests = () => true } = {}) {
   if (!["start", "prepare-witness"].includes(options.command)) fail("CONFIGURATION");
   if (witnessControl !== null && typeof witnessControl !== "function") fail("CONFIGURATION");
   if (!Number.isSafeInteger(intervalMilliseconds) || intervalMilliseconds < 1 || intervalMilliseconds > 60000) fail("CONFIGURATION");
   if (closureOperations !== null && ["hasPending", "preflight", "run", "verifyStartup"].some(name => typeof closureOperations?.[name] !== "function")) fail("CONFIGURATION");
   if (typeof resumeClosures !== "function") fail("CONFIGURATION");
+  if (typeof allowManualRequests !== "function" || typeof manualBackups !== "boolean" || manualBackups && (closureOperations === null || witnessControl !== null || witnessOriginOperations !== null)
+    || manualRequests !== null && !manualBackups) fail("CONFIGURATION");
+  const requests = manualBackups ? manualRequests ?? createManualBackupRequests({ operationsDirectory: options.operationsDirectory, clock }) : null;
+  if (requests !== null && ["status", "recover", "claim", "complete", "fail"].some(name => typeof requests[name] !== "function")) fail("CONFIGURATION");
   if (witnessOriginOperations !== null && (options.command !== "prepare-witness" || closureOperations !== null || witnessControl !== null
     || typeof prepareWitness !== "function" || ["check", "prepare"].some(name => typeof witnessOriginOperations?.[name] !== "function"))
     || options.command === "prepare-witness" && witnessOriginOperations === null) fail("CONFIGURATION");
@@ -208,7 +214,7 @@ export function createRecurringSupervisor(options, { environment = process.env, 
     if (closed || !started || observing) return Promise.resolve(null);
     if (ticking) return ticking;
     ticking = (async () => {
-      let ownerStopAttempted = false;
+      let ownerStopAttempted = false, manualRequest = null, manualArchiveId = null, manualPreflightPassed = false;
       try {
         let closurePending = false;
         if (closureOperations !== null) {
@@ -226,28 +232,52 @@ export function createRecurringSupervisor(options, { environment = process.env, 
           }
           return null;
         }
-        const configuration = await readConfiguration(options.operationsDirectory, { signal: cancellation.signal });
-        if (!configuration.enabled) return null;
-        const previous = await history(options.operationsDirectory, { signal: cancellation.signal });
-        if (!recurringCheckpointDue(clock(), configuration, previous)) return null;
-        return await lock(options.operationsDirectory, async lease => {
-          const current = await readConfiguration(options.operationsDirectory, { signal: cancellation.signal });
-          const checkedHistory = await history(options.operationsDirectory, { signal: cancellation.signal });
-          if (!recurringCheckpointDue(clock(), current, checkedHistory)) return null;
+        if (manualBackups) {
+          if (allowManualRequests() !== true) return null;
+          manualRequest = await requests.status();
+          if (manualRequest?.status !== "queued") return null;
+        } else {
+          const configuration = await readConfiguration(options.operationsDirectory, { signal: cancellation.signal });
+          if (!configuration.enabled) return null;
+          const previous = await history(options.operationsDirectory, { signal: cancellation.signal });
+          if (!recurringCheckpointDue(clock(), configuration, previous)) return null;
+        }
+        const result = await lock(options.operationsDirectory, async lease => {
+          let current;
+          if (manualBackups) {
+            const claimed = await requests.claim(manualRequest.requestId);
+            if (claimed.status !== "running") return null;
+          } else {
+            current = await readConfiguration(options.operationsDirectory, { signal: cancellation.signal });
+            const checkedHistory = await history(options.operationsDirectory, { signal: cancellation.signal });
+            if (!recurringCheckpointDue(clock(), current, checkedHistory)) return null;
+          }
           const prepared = await preflight(options, { environment, signal: cancellation.signal, readConfiguration });
-          if (["enabled", "recipientSha256", "hourUtc", "minuteUtc"].some(name => prepared?.[name] !== current[name])) fail("CONFIGURATION");
+          if (manualBackups) { current = prepared; manualPreflightPassed = true; }
+          else if (["enabled", "recipientSha256", "hourUtc", "minuteUtc"].some(name => prepared?.[name] !== current[name])) fail("CONFIGURATION");
           active(cancellation.signal);
-          let destination, stopAttempted = false;
+          let destination, stopAttempted = false, stopConfirmed = false;
           controller = createRecurringCheckpoint({ clock,
             record: async report => {
-              if (report.status === "running") destination = `${options.operationsDirectory}/capture-${report.startedAt}-${randomBytes(8).toString("hex")}`;
+              if (report.status === "running") {
+                const archiveId = `capture-${report.startedAt}-${randomBytes(8).toString("hex")}`;
+                destination = `${options.operationsDirectory}/${archiveId}`;
+                if (manualBackups) manualArchiveId = archiveId;
+              }
               await append(options.operationsDirectory, report);
             },
-            stopRuntime: async ({ signal }) => { active(signal); stopAttempted = true; ownerStopAttempted = closureOperations !== null; return runtime.stop(); },
+            stopRuntime: async ({ signal }) => {
+              active(signal); stopAttempted = true; ownerStopAttempted = closureOperations !== null;
+              const result = await runtime.stop();
+              stopConfirmed = result?.exitCode === 0 && result.signal === null;
+              return result;
+            },
             capture: ({ signal }) => checkpoint("capture-application", options, destination, { signal, environment }),
             encrypt: ({ signal }) => encrypt({ checkpointDirectory: destination, recipientDirectory: options.operationsDirectory,
               recipientSha256: current.recipientSha256, signal }),
             resumeRuntime: async ({ signal }) => {
+              // The manual owner never reopens after an unconfirmed drain.
+              if (manualBackups && !stopConfirmed) fail("RUNTIME");
               active(signal); await source(options, { signal }); active(signal);
               // An intent can arrive after the initial tick check, while the
               // preflight or HTTP drain is in progress. Keep producers stopped.
@@ -266,7 +296,16 @@ export function createRecurringSupervisor(options, { environment = process.env, 
           if (!closed && stopAttempted && !report.runtimeResumed) { unexpected(); }
           return report;
         }, { signal: cancellation.signal });
+        if (manualBackups && result !== null) {
+          if (result.status === "succeeded") await requests.complete(manualRequest.requestId, manualArchiveId);
+          else await requests.fail(manualRequest.requestId, result.code === "CANCELLED" ? "CANCELLED" : "CAPTURE_FAILED");
+        }
+        return result;
       } catch (error) {
+        if (manualRequest?.status === "queued") {
+          try { await requests.fail(manualRequest.requestId, cancellation.signal.aborted ? "CANCELLED" : manualPreflightPassed ? "CAPTURE_FAILED" : "PREFLIGHT_FAILED"); }
+          catch { /* An uncertain state is preserved for startup recovery. */ }
+        }
         if (!closed) {
           // A lock may reject during final descriptor/sync/unlink checks after
           // the callback reopened the child. End this owner without awaiting
@@ -300,6 +339,12 @@ export function createRecurringSupervisor(options, { environment = process.env, 
     starting = true; let witnessPhase = "initial_precheck";
     try {
       await source(options, { signal: cancellation.signal }); active(cancellation.signal);
+      // Recovery is serialized with captures and closures. A stale running
+      // request is failed, never replayed; queued requests have a short TTL.
+      if (manualBackups) await lock(options.operationsDirectory, async lease => {
+        if (typeof lease?.assertReady !== "function") fail("RUNTIME");
+        await lease.assertReady(); await requests.recover(); await lease.assertReady();
+      }, { signal: cancellation.signal });
       // Initial-only operator preparation never runs from a normal startup,
       // timer, recovery or public request. Reject its plan before any listener.
       if (witnessOriginOperations !== null) {
@@ -333,7 +378,8 @@ export function createRecurringSupervisor(options, { environment = process.env, 
         notice(report);
       }
       if (closed) fail("ABORTED"); started = true;
-      notice({ version: 1, type: "recurring_supervisor", status: "started", backupStarted: false, nodeVersion: process.version });
+      notice({ version: 1, type: "recurring_supervisor", status: "started", backupStarted: false, nodeVersion: process.version,
+        ...(manualBackups ? { backupMode: "manual" } : {}) });
       void tick().finally(arm);
       return { ready: true };
     } catch (error) {

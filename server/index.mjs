@@ -102,6 +102,7 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
     ["/admin/readiness", "readinessHandler"], ["/admin/backups", "backupHandler"], ["/admin/privacy", "privacyHandler"], ["/admin/closures", "closureHandler"]]);
   const primaryPageHandlers = { authHandler, chatHandler, broadcastHandler, announcementsHandler, tasksHandler, readinessHandler, backupHandler, privacyHandler, closureHandler };
   const protectedFiles = new Set(["/admin", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/backups.js", "/backups.css", "/i18n-backups.js",
+    "/manual-backups.js", "/manual-backups.css", "/i18n-manual-backups.js",
     "/admin/privacy", "/privacy.js", "/privacy.css", "/i18n-privacy.js", "/admin/closures", "/closures.js", "/closures.css", "/i18n-closures.js", "/broadcast.js", "/broadcast-model.js", "/broadcast.css",
     "/crm.js", "/crm-model.js", "/crm.css", "/private-archive.js", "/client-archive.js", "/conversation-download.js", "/readiness.js", "/readiness-model.js", "/readiness.css",
     "/admin/announcements", "/announcements.js", "/announcements-model.js", "/announcements.css", "/announcement-banner.js", "/announcement-banner.css",
@@ -320,8 +321,14 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       const [{ withPrivateDirectory }, { assertNoOperationalRestore }] = await Promise.all([
         import("./files/private-directory.mjs"), import("./backup/operational-checkpoint.mjs")]);
       await withPrivateDirectory(backupDirectory, assertNoOperationalRestore);
-      const [{ createBackupCopyService }, { createBackupCopyHandler }] = await Promise.all([import("./backup/copy-service.mjs"), import("./backup/copy-http.mjs")]);
-      backupHandler = createBackupCopyHandler(createBackupCopyService(backupDirectory), { origin: config.origin, actor: token => service.session(token), clock });
+      if (accountClosures) {
+        const [{ createManualBackupService }, { createManualBackupHandler }] = await Promise.all([
+          import("./backup/manual-backup-service.mjs"), import("./backup/manual-backup-http.mjs")]);
+        backupHandler = createManualBackupHandler(createManualBackupService(backupDirectory, { clock }), { origin: config.origin, actor: token => service.session(token) });
+      } else {
+        const [{ createBackupCopyService }, { createBackupCopyHandler }] = await Promise.all([import("./backup/copy-service.mjs"), import("./backup/copy-http.mjs")]);
+        backupHandler = createBackupCopyHandler(createBackupCopyService(backupDirectory), { origin: config.origin, actor: token => service.session(token), clock });
+      }
       const [{ createPrivacyService }, { createPrivacyHandler }] = await Promise.all([import("./privacy/service.mjs"), import("./privacy/http.mjs")]);
       privacyHandler = createPrivacyHandler(await createPrivacyService({ directory: backupDirectory, key: crmConfig.key, clock, accountClosures }),
         { origin: config.origin, actor: token => service.session(token) });

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#100d12" /><meta name="color-scheme" content="dark" /><meta name="robots" content="noindex, nofollow, noarchive" />
+  <link rel="icon" href="/favicon.ico?v=identity-01" sizes="any" /><link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="stylesheet" href="/readiness.css" /><link rel="stylesheet" href="/manual-backups.css" /><link rel="stylesheet" href="/i18n.css" /><link rel="stylesheet" href="/brand/brand.css" />
+  <title data-jm-i18n="JessieMessage — Sauvegardes">JessieMessage — Sauvegardes</title>
+  <script src="/i18n.js" defer></script><script src="/i18n-manual-backups.js" defer></script><script src="/session-clock.js" defer></script><script type="module" src="/manual-backups.js"></script>
+</head>
+<body><div class="page">
+  <header class="topbar"><a class="brand" href="/" aria-label="JessieMessage"><span class="brandmark"><img src="/brand/icon-128.png" width="44" height="44" alt="" /></span><span class="brand-name">Jessie</span></a><button data-jm-language type="button" class="jm-language" aria-label="Switch to English">EN</button><nav class="account-nav" aria-label="Administration"><a href="/admin" data-jm-i18n="Gérer les accès">Gérer les accès</a><a href="/admin/chat" data-jm-i18n="Ouvrir la messagerie">Ouvrir la messagerie</a></nav></header>
+  <main class="readiness-main manual-backups-main">
+    <div class="page-heading"><div class="eyebrow" data-jm-i18n="ADMINISTRATION">ADMINISTRATION</div><h1 data-jm-i18n="Sauvegardes">Sauvegardes</h1><p class="intro" data-jm-i18n="Crée une sauvegarde quand tu le souhaites, puis télécharge son fichier chiffré. Cet espace est réservé à l’administration.">Crée une sauvegarde quand tu le souhaites, puis télécharge son fichier chiffré. Cet espace est réservé à l’administration.</p></div>
+    <p id="backup-status" class="status" role="status" aria-live="polite" data-jm-i18n="Vérification de la connexion…">Vérification de la connexion…</p>
+    <button id="refresh" class="button secondary" type="button" data-jm-i18n="Actualiser l’état">Actualiser l’état</button>
+    <div id="backup-content" hidden>
+      <section class="card backup-card" aria-labelledby="capture-title">
+        <h2 id="capture-title" data-jm-i18n="Créer une sauvegarde">Créer une sauvegarde</h2>
+        <p class="body-copy" data-jm-i18n="Pendant sa préparation, la messagerie peut être momentanément indisponible.">Pendant sa préparation, la messagerie peut être momentanément indisponible.</p>
+        <p id="capture-state" class="capture-state" role="status" aria-live="polite"></p>
+        <dl id="capture-details" class="backup-details"></dl>
+        <button id="create-backup" class="button primary" type="button" data-jm-i18n="Créer une sauvegarde">Créer une sauvegarde</button>
+      </section>
+      <section class="card backup-card" aria-labelledby="archive-title">
+        <h2 id="archive-title" data-jm-i18n="Dernière sauvegarde disponible">Dernière sauvegarde disponible</h2>
+        <p id="archive-empty" class="body-copy" data-jm-i18n="Aucune sauvegarde disponible pour le moment.">Aucune sauvegarde disponible pour le moment.</p>
+        <dl id="archive-details" class="backup-details"></dl>
+        <button id="download-backup" class="button secondary" type="button" hidden data-jm-i18n="Télécharger">Télécharger</button>
+        <p class="small-copy" data-jm-i18n="Le fichier téléchargé reste chiffré. Conserve-le dans un endroit privé.">Le fichier téléchargé reste chiffré. Conserve-le dans un endroit privé.</p>
+      </section>
+    </div>
+    <noscript><p data-jm-i18n="Active JavaScript pour gérer les sauvegardes.">Active JavaScript pour gérer les sauvegardes.</p></noscript>
+  </main><footer class="footer"><span>JessieMessage</span><a href="mailto:contact@jessiemessage.com" data-jm-i18n="Contact">Contact</a></footer>
+</div></body></html>

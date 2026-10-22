@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
-import { parseRecurringArguments, recurringPreflight, createRecurringSupervisor, RecurringSupervisorError } from "../server/backup/recurring-supervisor.mjs";
+import { parseRecurringArguments, recurringPreflight, assertRuntimeSource, createRecurringSupervisor, RecurringSupervisorError } from "../server/backup/recurring-supervisor.mjs";
 import { createPeriodicBackupMonitor } from "../server/backup/periodic-monitor.mjs";
 import { createBackupAlertWorker } from "../server/backup/alert-worker.mjs";
 import { createWitnessOriginOperations } from "../server/backup/witness-origin-operator.mjs";
@@ -12,7 +12,7 @@ import { createConfiguredLocalClosures } from "../server/backup/local-closure-pa
 import { resumeManagedLocalClosureRuntime } from "../server/backup/managed-closures.mjs";
 
 export async function main(args = process.argv.slice(2), { environment = process.env, execArgv = process.execArgv,
-  preflight = recurringPreflight, makeSupervisor = createRecurringSupervisor, makeMonitor = createPeriodicBackupMonitor,
+  preflight = recurringPreflight, localPreflight = assertRuntimeSource, makeSupervisor = createRecurringSupervisor, makeMonitor = createPeriodicBackupMonitor,
   makeAlerts = createBackupAlertWorker, makeWitnessOrigin = createWitnessOriginOperations,
   makeWitnessObserver = createConfiguredWitnessObserver, makeWitnessRecovery = createConfiguredWitnessRecovery,
   makeRecoveryServer = createWitnessRecoveryServer, makeLocalClosures = createConfiguredLocalClosures, outputStream = process.stdout,
@@ -59,7 +59,9 @@ export async function main(args = process.argv.slice(2), { environment = process
   const localMode = ["check-local-closures", "start-local-closures"].includes(options.command);
   let local;
   if (localMode) {
-    await preflight(options, { environment, signal });
+    // Local closures and ordinary messaging do not depend on a backup clock,
+    // recipient or free space. Those checks belong to an explicit request.
+    await localPreflight(options, { signal });
     local = await makeLocalClosures(options, { environment, signal });
     if (options.command === "check-local-closures") {
       try { const report = await local.check(); outputStream.write(`${JSON.stringify(report)}\n`); return report; }
@@ -84,7 +86,7 @@ export async function main(args = process.argv.slice(2), { environment = process
     if (observer !== null) await observer[options.command === "prepare-witness-enrollment" ? "checkInitial" : "check"]();
     supervisor = makeSupervisor(observer === null && !localMode ? options : { ...options, command: "start" }, { environment, emit,
       ...(observer === null ? {} : { witnessControl: observer.handler }),
-      ...(local === undefined ? {} : { closureOperations: local.operations, resumeClosures: resumeManagedLocalClosureRuntime }),
+      ...(local === undefined ? {} : { closureOperations: local.operations, resumeClosures: resumeManagedLocalClosureRuntime, manualBackups: true }),
       ...(witnessOriginOperations === null ? {} : { witnessOriginOperations }) });
     if (observer !== null) observer.attachMaintenance(supervisor.withWitnessMaintenance, supervisor.failWitnessObservation);
   } catch (error) {
@@ -119,16 +121,18 @@ export async function main(args = process.argv.slice(2), { environment = process
           if (!signal?.aborted) observer.startObservation();
         }
       }
-      try { alerts = makeAlerts({ operationsDirectory: options.operationsDirectory, privateDirectory: options.privateDirectory },
-        { emit: report => outputStream.write(`${JSON.stringify(report)}\n`) }); } catch { alertsUnavailable(); }
-      try {
-        monitor = makeMonitor({ operationsDirectory: options.operationsDirectory }, { emit: report => {
-          // A broken console cannot prevent enqueueing a technical alert.
-          try { outputStream.write(`${JSON.stringify(report)}\n`); } catch {}
-          try { Promise.resolve(alerts?.observe(report)).catch(alertsUnavailable); } catch { alertsUnavailable(); }
-        } });
-        Promise.resolve(monitor.start()).catch(monitorUnavailable);
-      } catch { monitorUnavailable(); }
+      if (!localMode) {
+        try { alerts = makeAlerts({ operationsDirectory: options.operationsDirectory, privateDirectory: options.privateDirectory },
+          { emit: report => outputStream.write(`${JSON.stringify(report)}\n`) }); } catch { alertsUnavailable(); }
+        try {
+          monitor = makeMonitor({ operationsDirectory: options.operationsDirectory }, { emit: report => {
+            // A broken console cannot prevent enqueueing a technical alert.
+            try { outputStream.write(`${JSON.stringify(report)}\n`); } catch {}
+            try { Promise.resolve(alerts?.observe(report)).catch(alertsUnavailable); } catch { alertsUnavailable(); }
+          } });
+          Promise.resolve(monitor.start()).catch(monitorUnavailable);
+        } catch { monitorUnavailable(); }
+      }
     }
     const result = await supervisor.finished;
     if (result.failed) throw new RecurringSupervisorError("RUNTIME");

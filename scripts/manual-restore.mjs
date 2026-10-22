@@ -102,11 +102,11 @@ async function copyBackupSettings(context, signal) {
   } finally { bytes.forEach(value => value.fill(0)); }
 }
 
-/** The normal daily parent owns the real child, monitors and alerts after the
- * one-time publication. Captures stay paused only until publication completes. */
+/** The normal manual-backup parent owns the real child after publication.
+ * Restoring a service never enables a daily capture or a background copier. */
 export function createRestoredService(context, { environment = process.env, signal, outputStream = process.stdout } = {}, internal = {}) {
   const cancellation = new AbortController();
-  let runtime, supervisor, service, stopped = false, allowed = false, resolveReady, rejectReady;
+  let runtime, supervisor, service, stopped = false, manualRequestsAllowed = false, resolveReady, rejectReady;
   const ready = new Promise((yes, no) => { resolveReady = yes; rejectReady = no; });
   ready.catch(() => {});
   const abort = () => cancellation.abort(); signal?.addEventListener("abort", abort, { once: true });
@@ -120,12 +120,13 @@ export function createRestoredService(context, { environment = process.env, sign
       service = (internal.recurringMain ?? recurringMain)(options, { environment, execArgv: [], signal: cancellation.signal, outputStream,
         makeSupervisor: (selected, dependencies) => {
           supervisor = (internal.makeSupervisor ?? createRecurringSupervisor)(selected, { ...dependencies,
-            readConfiguration: async (...args) => { const value = await (internal.readConfiguration ?? readRecurringConfiguration)(...args); return allowed ? value : { ...value, enabled: false }; },
+            allowManualRequests: () => manualRequestsAllowed,
             makeRuntime: (...args) => { runtime = (internal.makeRuntime ?? createManagedRuntime)(...args); return runtime; } });
           return { ...supervisor, async start() { try { const result = await supervisor.start(); resolveReady(result); return result; } catch (error) { rejectReady(error); throw error; } } };
         } });
       service.catch(rejectReady); return ready;
     },
+    allowManualBackups() { manualRequestsAllowed = true; },
     async stop() {
       const result = runtime ? await runtime.stop() : { exitCode: 0, signal: null };
       if (result?.exitCode !== 0 || result.signal !== null) fail("DRAIN");
@@ -133,7 +134,6 @@ export function createRestoredService(context, { environment = process.env, sign
       if (service) { try { await service; } catch {} }
       return result;
     },
-    allowCaptures() { allowed = true; },
     async finished() { if (!service) fail("SERVICE"); return service; },
     async close() { signal?.removeEventListener("abort", abort); if (service) { cancellation.abort(); await service; } },
   });
@@ -228,9 +228,9 @@ export async function run(selected, { environment = process.env, signal, inputSt
       try {
         const runtime = { state: service.state, stop: service.stop, async start() { await service.start(); await save("opened"); } };
         const result = await (internal.publish ?? publishManualRestore)(input, { expectedPlanSha256: options.expectedPlanSha256, runtime });
-        published = true; service.allowCaptures(); emit(result);
+        published = true; service.allowManualBackups(); emit(result);
         // Normal service lifetime: the existing parent handles actual SIGTERM
-        // drain, daily captures, closure priority, monitor and alerts.
+        // drain, closure priority and explicitly requested manual captures.
         await service.finished(); return result;
       } catch (error) {
         if (!published) {
