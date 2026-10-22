@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "type": "jessiemessage-audit-lot2-implementation",
-  "recordedAtUTC": "2026-10-22T17:46:30.160839+00:00",
-  "status": "first_ci_failed_legacy_help_fixture_corrected_requalification_pending",
+  "recordedAtUTC": "2026-10-22T18:00:37.409776+00:00",
+  "status": "qualified_on_branch_not_merged_not_deployed_operator_facts_explicit",
   "branch": "fix/audit-182",
   "baseSource": "e47a883c8f2a7087f18027de88e889e3e4f65dea",
   "baseTree": "8fb54159346bedebd0824c28a54994867b034ed2",
@@ -15,7 +15,7 @@
   "lot1Proof": "jm182-lot1-verification.json",
   "findings": {
     "A06": {
-      "status": "implemented_targeted_passed_native_browser_pending",
+      "status": "implemented_targeted_and_native_browser_qualified",
       "sameOwnerBackgroundResume": true,
       "draftAudienceMediaPreservedInMemory": true,
       "uncertainCampaignPayloadAndKeyPreserved": true,
@@ -27,7 +27,7 @@
       "logoutOrChangedIdentityPurges": true
     },
     "A08": {
-      "status": "implemented_targeted_passed_native_browser_pending",
+      "status": "implemented_targeted_and_native_browser_qualified",
       "storage": "sessionStorage of current tab and origin",
       "maxEntries": 20,
       "maxUtf8JsonBytes": 65536,
@@ -57,7 +57,7 @@
       "failedPromotion": "invalidate old ordinary record before POST without evicting other pending keys; if impossible, only the new POST remains local"
     },
     "A16": {
-      "status": "implemented_targeted_passed",
+      "status": "implemented_targeted_and_full_ci_qualified",
       "editableDatesModesTextOptionsAndAcknowledgementCompared": true,
       "referenceIsLoadedOrConfirmedFormNotPollingResult": true,
       "sameVisibleMinuteDoesNotCreateFalseDirtyState": true,
@@ -221,19 +221,22 @@
     "scope": "No global duplicate guarantee; storage-unavailable fallback and native browser cases remain explicitly bounded."
   },
   "browser": {
-    "status": "not_executed_locally",
+    "status": "qualified_in_native_ci_not_executed_locally",
     "reason": "Chrome/ChromeDriver unavailable locally; required CI uses synthetic loopback fixtures.",
     "newChatCases": [
       "real same-tab document reload and WebCrypto/sessionStorage for client/admin; changed session purges text",
       "uncertain text reload has no automatic POST; explicit retry reuses exact clientMessageId and body"
     ],
     "newBroadcastCases": 2,
-    "realBrowserQualificationStillRequired": true,
+    "realBrowserQualificationStillRequired": false,
     "physicalOsBfcacheAndEvictionNotQualified": true,
-    "firstSourceResult": "All four new chat/broadcast continuity cases passed; the legacy Help source-tab storage expectation failed three leaves plus the parent. Overall Chrome remains unqualified until corrected exact-source CI."
+    "firstSourceResult": "The first run passed all four new continuity cases but failed the legacy Help expectation; the corrected exact-source run passes all223 browser tests with no omission.",
+    "qualifiedProof": "jm182-lot2-ci-corrected.json",
+    "newChatCasesPassed": 2,
+    "newBroadcastCasesPassed": 2
   },
   "ci": {
-    "status": "first_attempt_failed_corrected_revision_requires_fresh_ci",
+    "status": "corrected_exact_source_pr_ci_passed_five_jobs",
     "pullRequest": "https://github.com/fredbuhr/jessiemessage/pull/129",
     "firstSource": "479e45a969cb6d33b959ac4eacf75c9b02268e79",
     "firstTree": "60e80d85d488c12dbcde54ea4e404cae64ed5977",
@@ -319,7 +322,97 @@
       }
     },
     "correction": "Only the Help Chrome privacy fixture changed; application code and privacy guards remain unchanged.",
-    "sameRunRerunPerformed": false
+    "sameRunRerunPerformed": false,
+    "qualifiedSource": "bfaf637dfcb230e198032d8fc43eb5ee508745f9",
+    "qualifiedTree": "3d73ee2197f7c7daa6a47bc493158312ff795478",
+    "correctedRun": {
+      "id": 39826096824,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39826096824",
+      "event": "pull_request",
+      "path": ".github/workflows/ci.yml",
+      "head": "bfaf637dfcb230e198032d8fc43eb5ee508745f9",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-10-22T17:49:57Z",
+      "startedAt": "2026-10-22T17:49:57Z",
+      "updatedAt": "2026-10-22T17:56:51Z"
+    },
+    "correctedAttemptProof": "jm182-lot2-ci-corrected.json",
+    "testedCheckout": "8b62c658bed928e9c0d27016df2de3b79c1db9c3",
+    "testedTree": "3d73ee2197f7c7daa6a47bc493158312ff795478",
+    "testedParents": [
+      "422c8ac0b75b945d280c3a84225cd3e2b0025087",
+      "bfaf637dfcb230e198032d8fc43eb5ee508745f9"
+    ],
+    "testedTreeEqualsSource": true,
+    "correctedJobResults": {
+      "MariaDB 10.11": {
+        "conclusion": "success",
+        "tests": {
+          "tests": 575,
+          "suites": 0,
+          "pass": 575,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 363083.535959
+        }
+      },
+      "verify": {
+        "conclusion": "success",
+        "tests": {
+          "tests": 3869,
+          "suites": 0,
+          "pass": 3821,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 48,
+          "todo": 0,
+          "duration_ms": 109045.10261
+        }
+      },
+      "MariaDB 11.4": {
+        "conclusion": "success",
+        "tests": {
+          "tests": 575,
+          "suites": 0,
+          "pass": 575,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 360057.796919
+        }
+      },
+      "Chrome HTTPS authentication and messaging with MariaDB": {
+        "conclusion": "success",
+        "tests": {
+          "tests": 4,
+          "suites": 0,
+          "pass": 4,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 56411.747013
+        }
+      },
+      "Chrome keyboard and chat lifecycle": {
+        "conclusion": "success",
+        "tests": {
+          "tests": 223,
+          "suites": 0,
+          "pass": 223,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 219935.780047
+        }
+      }
+    }
   },
   "references": [
     {
@@ -472,12 +565,11 @@
   },
   "backupHostedTest": "deferred_by_user",
   "remaining": [
-    "Acquire exact-source CI for this lot on PR129.",
     "Lot3 documentation, proven unused code and CI maintenance remains.",
     "Lot4 final exact-source merge/release/deployment and grouped hosted checks remains.",
-    "Unestablished privacy-notice operator facts and A11 topology remain explicit; no legal foundation or proxy trust is invented."
+    "Unestablished privacy-notice operator facts D01-D07 and A11 topology remain explicit; no legal foundation or proxy trust is invented."
   ],
-  "nextAction": "Publish the corrected strict Help privacy fixture and acquire its own complete exact-source CI in PR129.",
+  "nextAction": "Implement the single coherent lot3 on the same branch, then qualify it before final lot4 delivery. Production stays1.8.1 and the hosted backup test remains deferred.",
   "fixtureCorrection": {
     "file": "tests/browser/help.browser.mjs",
     "reason": "privateSurfaces expected language-only storage even in the source chat tab now retaining its explicit bounded text draft",
@@ -509,8 +601,10 @@
       "fail": 0,
       "skip": 0,
       "realChromeExecuted": false,
-      "nativeBrowserQualification": "pending corrected CI revision",
+      "nativeBrowserQualification": "passed in corrected exact-source CI39826096824; all three Help widths and strict storage oracle passed",
       "helpUnitSuitesRerun": false
     }
-  }
+  },
+  "qualifiedSource": "bfaf637dfcb230e198032d8fc43eb5ee508745f9",
+  "qualifiedTree": "3d73ee2197f7c7daa6a47bc493158312ff795478"
 }
