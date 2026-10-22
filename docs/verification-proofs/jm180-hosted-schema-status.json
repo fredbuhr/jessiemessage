@@ -1,0 +1,63 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_180_hosted_schema_status",
+  "status": "read_only_status_user_reported_not_migrated_not_started",
+  "date": "2026-10-22",
+  "provenance": {
+    "classification": "USER_REPORTED",
+    "description": "User personally ran the protected SQL status helper in their own browser SSH terminal and supplied this exact final JSON; no direct agent observation of this execution.",
+    "timestampProvided": false,
+    "credentialsExcluded": true
+  },
+  "operatorSource": "79680445793a160be8f96f82c7337e260e944808",
+  "operatorTree": "b9ed75ed1729ae13d9c3419b14295035355e3d1e",
+  "source": "fd6e53b14b520231b0b307a2761331dd8c740a5b",
+  "tree": "324c3563fc6b1cfce669bcf58d90962c23c966b8",
+  "rollbackSource": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+  "stagingReceiptSha256": "c43b16b305be8be861c65dfae2881634a28beec6d0067ee0d6c26f6c274d9a74",
+  "bundleFingerprintSha256": "bcca2f3fd91ffc0dec51a7077eb9e192a53b6e653b60c7db7159e473b83aac85",
+  "report": {
+    "status": "release180_schema_status_checked",
+    "engineVerified": true,
+    "transportVerified": true,
+    "migrations": 36,
+    "applied": 33,
+    "pending": 3,
+    "interrupted": false,
+    "readOnly": true,
+    "migrated": false,
+    "runtimeStarted": false,
+    "completedReceipts": 0,
+    "normalPlanMigrations": 33,
+    "candidateMigrations": [
+      {
+        "version": 34,
+        "name": "0034_video_storage_state.sql",
+        "checksum": "69b8ecfa68266b372642b3ee4d35de15912b8815a971b053d48ae25d5f39201e"
+      },
+      {
+        "version": 35,
+        "name": "0035_video_assets.sql",
+        "checksum": "8b8ae74c836de44374a63c7befcd7b01aabb7c07d506d0e8887d94a0f0fb233c"
+      },
+      {
+        "version": 36,
+        "name": "0036_message_video.sql",
+        "checksum": "8f4fcd95094ecccaa5c47daa0af3e70e6c099b4012d535f513731115b8bfe427"
+      }
+    ]
+  },
+  "nextAction": {
+    "sequence": [
+      "Stop the existing Node service in Infomaniak Manager and wait for the stopped state.",
+      "Only after the actual stop, run the protected helper with --service-stopped and the pinned staging and bundle hashes.",
+      "Require the final JSON proving SQL36 migration, initialization and both 1.7.2/1.8.0 prechecks before activation."
+    ],
+    "performed": false
+  },
+  "limits": [
+    "The report is user supplied, not a fresh direct host observation by the agent.",
+    "No migration, initialization, precheck, application start or Manager stop is proved by this read-only report.",
+    "Production remains 1.7.1 / SQL33 at this checkpoint. Never start 1.7.1 or 1.6.0 on SQL36."
+  ]
+}
