@@ -38,7 +38,7 @@ Les réponses rapides existent déjà : six phrases FR/EN proposées à l’admi
 
 **Abandonnés : IA, paiements carte/crypto, stickers/GIF, vocaux, réponse citée, édition, transfert de messages et épingles.** Ces sujets sortent des actions futures ; ils ne sont plus différés à arbitrer après la vidéo. Les emojis Unicode, diffusions, suppressions et exports déjà livrés restent conservés.
 
-**Sauvegardes et archivage automatiques : abandon de l’automatisation, remplacement par une sauvegarde simple à la demande via l’administration.** Le parcours cible ne dépend pas du PC et n’ajoute aucun service. Archives, clés, autorités, reçus et fermetures locales restent préservés. La production 1.7.1 conserve encore ses mécanismes existants : le remplacement est codé sur la branche et doit être qualifié puis livré, qualifié et livré avant d’être annoncé effectif.
+**Sauvegardes et archivage automatiques : abandon de l’automatisation, remplacement par une sauvegarde simple à la demande via l’administration.** Le parcours cible ne dépend pas du PC et n’ajoute aucun service. Archives, clés, autorités, reçus et fermetures locales restent préservés. La production 1.7.1 conserve encore ses mécanismes existants : le remplacement est codé sur la branche et doit être qualifié puis livré avant d’être annoncé effectif.
 
 Le [plan global courant](PLAN-IMPLEMENTATION.md) et le [bilan de l’application](BILAN-GLOBAL-20261022.md) retiennent quatre résultats :
 

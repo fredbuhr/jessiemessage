@@ -299,5 +299,24 @@
     "Only the existing GitHub latest marker changed remotely. Tags, release targets, names, body, dates and assets were verified unchanged.",
     "No new application release, deployment, hosted restart, migration, private account action or owner-PC action was performed.",
     "Development remains 1.8.0 on its branch, distinct from deployed 1.7.1; Node, SQL and authenticated-format versions remain independent."
-  ]
+  ],
+  "mainDocumentationAlignment": {
+    "commit": "6de271352d01527eacb92ddac7aad282f7c23a9a",
+    "tree": "5c3dbd37bd487925d840822425fdbc928adaf128",
+    "base": "5eef6b2b8d98efedf3dfaae67bf4791da6c99edd",
+    "documentsOnly": true,
+    "files": [
+      "README.md",
+      "docs/NEXT-STEPS.md",
+      "docs/PLAN-IMPLEMENTATION.md",
+      "docs/PLAN-PRODUCTION-20261022.md",
+      "docs/REPRISE.md",
+      "docs/guide-jessie.md",
+      "docs/verification-proofs/jm171-version-audit-20261022.json"
+    ],
+    "relativeLinksAndAnchorsChecked": 322,
+    "brokenLinks": 0,
+    "applicationVersionUnchanged": "1.7.1",
+    "applicationDeployed": false
+  }
 }
