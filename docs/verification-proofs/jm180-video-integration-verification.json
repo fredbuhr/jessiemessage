@@ -322,5 +322,14 @@
     "New native restore fixture calls actual import/copy/recovery functions, not the high-level import/resume operator wrappers; those wrappers have targeted profile tests.",
     "Native producer/drain in the restore fixture is a genuine IPC/HTTP synthetic shim; the configured application SQL36 is separately exercised by the real HTTPS browser fixture.",
     "Physical phones, real hosting memory/throughput and combined G3 qualification remain unverified."
-  ]
+  ],
+  "broadcastBrowserRootCause": {
+    "diagnosticRun": 39718902423,
+    "source": "0d89921b078dc3466830d9c6788225b9d53fcb5e",
+    "tree": "83da71469fe12e43a1dc1b5e06666ea6f087047f",
+    "testedMerge": "2fb46e236bb4203ec19da65b1f83d6962bcc8713",
+    "evidence": "Both trusted native clicks reached SECTION#video-options at x195/y836 or837 while the enabled upload button rect was x41/y734/width308/height46. No click reached the button, so no product upload handler or raw POST ran.",
+    "correction": "Center the button and wait for stable native geometry before the same real WebDriver click; retain isTrusted/target assertions. No programmatic click, server guard change, network bypass or upload retry.",
+    "nativeJobsAtObservation": "Still in progress; their eventual conclusions must be read rather than inferred."
+  }
 }

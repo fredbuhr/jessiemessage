@@ -274,12 +274,18 @@ async function waitForVideoUpload(source, page, check, description) {
   }
 }
 
-async function clickVideoUpload(page) {
+async function clickVideoButton(page, buttonId) {
+  const geometry = await page.executeAsync("const id=arguments[0],done=arguments[arguments.length-1],button=document.getElementById(id);button.scrollIntoView({block:'center',inline:'nearest',behavior:'auto'});const measure=()=>{const r=button.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}};requestAnimationFrame(()=>{const first=measure();requestAnimationFrame(()=>{const second=measure(),target=document.elementFromPoint(second.x+second.width/2,second.y+second.height/2);done({first,second,enabled:!button.matches(':disabled'),centerHitsButton:target===button||button.contains(target)})})})", buttonId);
+  assert.equal(geometry.enabled, true, `${buttonId}: enabled before the native click`);
+  assert.ok(geometry.second.width > 0 && geometry.second.height > 0 && geometry.centerHitsButton,
+    `${buttonId}: visible center must hit the button: ${JSON.stringify(geometry)}`);
+  assert.ok(["x", "y", "width", "height"].every(name => Math.abs(geometry.first[name] - geometry.second[name]) < 0.5),
+    `${buttonId}: native target geometry must settle across two animation frames: ${JSON.stringify(geometry)}`);
   await page.execute("window.__scalePointerEvents.length=0");
-  await page.click("#upload-video");
+  await page.click(`#${buttonId}`);
   const events = await page.execute("return window.__scalePointerEvents");
-  assert.ok(events.some(event => event.type === "click" && event.buttonId === "upload-video" && event.trusted && event.fieldsetDisabled === false),
-    `Native upload click must reach the enabled button: ${JSON.stringify(events)}`);
+  assert.ok(events.some(event => event.type === "click" && event.buttonId === buttonId && event.trusted && event.fieldsetDisabled === false),
+    `Native ${buttonId} click must reach the enabled button: ${JSON.stringify(events)}`);
 }
 
 test("Chrome broadcast video FR/EN mobile/desktop: native preview, one raw upload, typed audience and exact uncertain campaign retry", { timeout: 120000 }, async () => {
@@ -292,7 +298,7 @@ test("Chrome broadcast video FR/EN mobile/desktop: native preview, one raw uploa
       assert.equal(await page.execute("return document.getElementById('preview').disabled&&document.getElementById('confirm').disabled"), true);
       assert.equal(await page.execute("return document.getElementById('upload-video').textContent"), language === "fr" ? "Charger la vidéo" : "Upload video");
       assert.equal(await page.execute("return document.querySelector('#video-preview video').autoplay"), false);
-      await clickVideoUpload(page);
+      await clickVideoButton(page, "upload-video");
       await waitForVideoUpload(source, page, () => page.execute("return document.getElementById('upload-video').hidden&&!document.getElementById('preview').disabled"), "uploaded attachment enables audience verification");
       assert.deepEqual(source.state.uploads, [videoBytes.length]); await preview(page, 175);
       assert.equal(source.state.previewInputs.at(-1).videoId, id(7000)); assert.equal(source.state.previewInputs.at(-1).mediaId, null);
@@ -312,12 +318,12 @@ test("Chrome broadcast video FR/EN mobile/desktop: native preview, one raw uploa
 test("Chrome broadcast video upload can be cancelled while awaiting ACK without any campaign or automatic upload retry", { timeout: 60000 }, async () => {
   const source = await fixture({ videoEnabled: true, holdVideoUpload: true }); let page;
   try {
-    page = await open(source, 390, "en"); await chooseMode(page, "all"); await compose(page); await selectVideo(page); await clickVideoUpload(page);
+    page = await open(source, 390, "en"); await chooseMode(page, "all"); await compose(page); await selectVideo(page); await clickVideoButton(page, "upload-video");
     await waitForVideoUpload(source, page, () => source.state.uploads.length === 1 && page.execute("return !document.getElementById('cancel-video').hidden"), "native upload awaits its server acknowledgement");
     assert.equal(await page.execute("return document.getElementById('preview').disabled&&document.getElementById('confirm').disabled&&!document.getElementById('video-progress').hidden"), true);
-    await page.click("#cancel-video");
+    await clickVideoButton(page, "cancel-video");
     await waitUntil(() => page.execute("return document.getElementById('cancel-video').hidden&&document.getElementById('video-status').textContent.includes('Upload cancelled')"), "cancel aborts the upload and exposes a translated result");
-    await page.click("#remove-video");
+    await clickVideoButton(page, "remove-video");
     assert.equal(await page.execute("return document.querySelectorAll('#video-preview video').length===0&&document.getElementById('video-progress').hidden"), true);
     assert.equal(source.state.uploads.length, 1); assert.equal(source.state.creates.length, 0); assert.equal(source.state.previewInputs.length, 0); await errors(page);
   } finally { await page?.close(); await source.close(); }
