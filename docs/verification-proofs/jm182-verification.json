@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "type": "jessiemessage182-delivery-state",
-  "recordedAtUTC": "2026-10-22T18:45:51.511516+00:00",
+  "recordedAtUTC": "2026-10-22T18:54:27.731254+00:00",
   "status": "published_staged_prechecked_activation_pending",
   "version": "1.8.2",
   "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
@@ -29,12 +29,21 @@
     "precheckAcquired": true,
     "activationAcquired": false,
     "metadataAcquired": false,
-    "metadataWriterReady": false,
+    "metadataWriterReady": true,
     "noMigration": true,
     "nodeUnchanged": "v24.22.1",
     "schemaUnchanged": 36,
     "stagingReceiptSha256": "ba1aa8d0527dd8bbff76c86e274c9681ce9b6546bfd997a47e44988a92e3157f",
-    "hostedEvidence": "jm182-hosted-preparation.json"
+    "hostedEvidence": "jm182-hosted-preparation.json",
+    "metadataOperator": {
+      "source": "9a52b4840b65d2c825020ffa81d4bdc2d29fc268",
+      "helperPath": "ops/record-release182.py",
+      "helperSha256": "48eb96eb3a75ec07a6e7baff861cfea24bc6d561a889723801f044734a38cbf1",
+      "nativeQualification": "jm182-metadata-operator-verification.json",
+      "nativeSyntheticTests": 19,
+      "requiresReal182StartupBeforeExecution": true,
+      "hostedExecutionAcquired": false
+    }
   },
   "production": {
     "version": "1.8.1",
@@ -57,7 +66,7 @@
     "Hosted preparation and CHECK182 are acquired; do not repeat. Activate the exact prepared launchers, then acquire the real application identity.",
     "Activate exact launchers only after hosted prechecks; acquire real identity and grouped available-device/HTTP checks.",
     "A11 finite private network peer observation remains conditional; no proxy trust is inferred.",
-    "Qualify the final metadata writer using the actual staging receipt hash; preserve prior sections atomically.",
+    "Qualified metadata writer is published on the exact operator source; execute only after real1.8.2 startup identity, preserving prior sections atomically.",
     "A10 facts D01-D07 remain unestablished; physical-device coverage stays explicit; hosted backup UI test remains deferred by user."
   ],
   "nextAction": "User activates the exact prepared Run and Build launchers through Infomaniak Manager and supplies the real administrator-readiness release identity.",

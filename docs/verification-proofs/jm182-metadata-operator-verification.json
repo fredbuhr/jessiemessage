@@ -1,0 +1,105 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage182-writer-native-verification",
+  "recordedAtUTC": "2026-10-22T18:53:09.865894+00:00",
+  "status": "native_synthetic_operator_tests_passed",
+  "run": {
+    "id": 39835184817,
+    "head": "9a52b4840b65d2c825020ffa81d4bdc2d29fc268",
+    "branch": "ops/record-v1.8.2",
+    "path": ".github/workflows/record-release182.yml",
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "attempt": 1,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39835184817",
+    "createdAt": "2026-10-22T18:52:32Z",
+    "updatedAt": "2026-10-22T18:52:47Z"
+  },
+  "jobs": [
+    {
+      "id": 120021509718,
+      "name": "operator-tests",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 39835184817,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Checkout exact operator commit",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Use qualified Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Test metadata recording with isolated synthetic files",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Post Use qualified Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Post Checkout exact operator commit",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        }
+      ]
+    }
+  ],
+  "operatorCheckout": "9a52b4840b65d2c825020ffa81d4bdc2d29fc268",
+  "nodeVersion": "v24.22.1",
+  "tests": {
+    "tests": 19,
+    "pass": 19,
+    "fail": 0,
+    "durationSeconds": 0.441,
+    "syntheticOnly": true
+  },
+  "helper": {
+    "path": "ops/record-release182.py",
+    "sha256": "48eb96eb3a75ec07a6e7baff861cfea24bc6d561a889723801f044734a38cbf1",
+    "localFrozenFileHashVerified": true
+  },
+  "stagingReceiptOperatorSourcePrefix": "ba1aa8d0",
+  "completeDecodedLog": {
+    "file": "writer-native-job-120021509718.log",
+    "bytes": 21557,
+    "sha256": "a88c6694eb51ce471bfe6a210c9c272bf515573d042cf7a58e9101707ffdf4a5",
+    "readCompletely": true,
+    "encoding": "UTF-8 of complete connector-decoded log; BOM and line endings preserved"
+  },
+  "errorAnnotations": [],
+  "warningAnnotations": [],
+  "sameRunRerun": false,
+  "collectorGitHubMutation": false,
+  "realHostingWrite": false,
+  "realReleaseWrite": false,
+  "limits": [
+    "Synthetic qualification of the protected metadata writer; does not attest execution on the hosting server.",
+    "Checkout exact source and Node24.22.1 observed in complete native job log."
+  ]
+}
