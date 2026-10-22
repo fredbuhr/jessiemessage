@@ -1,0 +1,156 @@
+# Reuses the qualified marker-only operation from
+# f2e90e5f34a290ffff80108f830f21b09d87813b. No deployment or tag mutation.
+name: Qualify 1.8.0 metadata operator and align existing latest marker
+
+on:
+  push:
+    branches: ["ops/record-v1.8.0"]
+    paths: [".github/workflows/record-release180.yml"]
+
+permissions: {}
+
+concurrency:
+  group: record-release180
+  cancel-in-progress: false
+
+jobs:
+  operator-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact operator commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Use qualified Node.js 24.22.1
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.22.1"
+      - name: Test metadata recording with isolated synthetic files
+        run: python3 ops/test_record_release180.py
+      - name: Test marker alignment with a simulated GitHub API
+        run: python3 ops/test-align-release180-latest.py
+  align-latest:
+    needs: operator-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Verify qualified immutable releases and align only latest marker
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: python
+        run: |
+          import datetime, hashlib, json, os, urllib.request
+
+          repo = "fredbuhr/jessiemessage"
+          release_id = 420607423
+          source = "fd6e53b14b520231b0b307a2761331dd8c740a5b"
+          tree = "324c3563fc6b1cfce669bcf58d90962c23c966b8"
+          ci = 39762468466
+          previous_id = 420135576
+          previous_source = "c2d7b3b31c6d0955892829f808dc4135d7d8debf"
+          rollback_id = 420600213
+          rollback_source = "6b3319a77c307ed7d6b003fe33de36807c70c266"
+          rollback_tree = "924d500375a69ae50bc63414b15df71271e2bf8a"
+          assert os.environ["GITHUB_REPOSITORY"] == repo
+          assert os.environ["GITHUB_REF"] == "refs/heads/ops/record-v1.8.0"
+          assert os.environ["GITHUB_EVENT_NAME"] == "push"
+          root = "https://api.github.com/repos/" + repo
+          qualified = False
+
+          def request(path, body=None):
+              if body is not None:
+                  assert qualified and path == "/releases/" + str(release_id)
+                  assert body == {"make_latest": "true"}
+              headers = {"Authorization": "Bearer " + os.environ["GITHUB_TOKEN"],
+                         "Accept": "application/vnd.github+json",
+                         "X-GitHub-Api-Version": "2022-11-28",
+                         "User-Agent": "JessieMessage-release-metadata-alignment"}
+              payload = None if body is None else json.dumps(body).encode()
+              if payload is not None:
+                  headers["Content-Type"] = "application/json"
+              req = urllib.request.Request(root + path, data=payload, headers=headers,
+                                           method="GET" if body is None else "PATCH")
+              with urllib.request.urlopen(req, timeout=30) as response:
+                  return json.load(response)
+
+          def release_identity(value, expected_id, tag, commit):
+              assert value["id"] == expected_id and value["tag_name"] == tag
+              assert value["target_commitish"] == commit
+              assert value["draft"] is False and value["prerelease"] is False
+
+          def tag_identity(tag, commit):
+              value = request("/git/ref/tags/" + tag)["object"]
+              assert value["type"] == "commit" and value["sha"] == commit
+
+          immutable = ["id", "tag_name", "target_commitish", "name", "body",
+                       "draft", "prerelease", "published_at", "created_at", "assets"]
+          def content(value):
+              return {key: value[key] for key in immutable}
+
+          run = request("/actions/runs/" + str(ci))
+          assert run["head_sha"] == source and run["head_branch"] == "main"
+          assert run["event"] == "push" and run["path"] == ".github/workflows/ci.yml"
+          assert run["status"] == "completed" and run["conclusion"] == "success" and run["run_attempt"] == 1
+          jobs = request("/actions/runs/" + str(ci) + "/jobs?per_page=100")
+          names = {"verify", "MariaDB 10.11", "MariaDB 11.4",
+                   "Chrome keyboard and chat lifecycle",
+                   "Chrome HTTPS authentication and messaging with MariaDB"}
+          assert jobs["total_count"] == len(jobs["jobs"]) == 5
+          assert {job["name"] for job in jobs["jobs"]} == names
+          assert all(job["status"] == "completed" and job["conclusion"] == "success"
+                     and job["head_sha"] == source and job["run_id"] == ci and job["run_attempt"] == 1
+                     for job in jobs["jobs"])
+          assert request("/git/commits/" + source)["tree"]["sha"] == tree
+          assert request("/git/commits/" + rollback_source)["tree"]["sha"] == rollback_tree
+          comparison = request("/compare/" + source + "...main")
+          assert comparison["merge_base_commit"]["sha"] == source and comparison["status"] in {"identical", "ahead"}
+
+          before = request("/releases/" + str(release_id))
+          previous = request("/releases/" + str(previous_id))
+          rollback = request("/releases/" + str(rollback_id))
+          release_identity(before, release_id, "v1.8.0", source)
+          release_identity(previous, previous_id, "v1.7.1", previous_source)
+          release_identity(rollback, rollback_id, "v1.7.2", rollback_source)
+          before_content, previous_content, rollback_content = map(content, [before, previous, rollback])
+          assert isinstance(before["body"], str)
+          for tag, commit in [("v1.8.0", source), ("v1.7.1", previous_source), ("v1.7.2", rollback_source)]:
+              tag_identity(tag, commit)
+          old_latest = request("/releases/latest")
+          if old_latest["id"] == previous_id:
+              release_identity(old_latest, previous_id, "v1.7.1", previous_source)
+          else:
+              release_identity(old_latest, release_id, "v1.8.0", source)
+          # Everything above must pass before the one permitted mutation.
+          qualified = True
+          changed = old_latest["id"] != release_id
+          if changed:
+              patched = request("/releases/" + str(release_id), {"make_latest": "true"})
+              release_identity(patched, release_id, "v1.8.0", source)
+              assert before_content == content(patched)
+          after = request("/releases/" + str(release_id))
+          latest = request("/releases/latest")
+          assert before_content == content(after)
+          assert previous_content == content(request("/releases/" + str(previous_id)))
+          assert rollback_content == content(request("/releases/" + str(rollback_id)))
+          release_identity(latest, release_id, "v1.8.0", source)
+          for tag, commit in [("v1.8.0", source), ("v1.7.1", previous_source), ("v1.7.2", rollback_source)]:
+              tag_identity(tag, commit)
+          assert request("/git/commits/" + source)["tree"]["sha"] == tree
+          print(json.dumps({"status": "latest_release_aligned",
+              "observedAtUTC": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              "releaseId": release_id, "tag": "v1.8.0", "source": source, "tree": tree,
+              "previousLatest": old_latest["tag_name"], "latest": latest["tag_name"],
+              "markerChanged": changed, "latestMarkerOnly": True,
+              "releaseBodySha256": hashlib.sha256(after["body"].encode()).hexdigest(),
+              "tagSourceUnchanged": True, "releaseContentUnchanged": True, "assetsUnchanged": True,
+              "previous171Preserved": True, "rollback172Preserved": True,
+              "newReleaseCreated": False, "applicationDeployed": False,
+              "serviceChanged": False, "sqlChanged": False}, separators=(",", ":")))
