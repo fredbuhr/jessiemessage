@@ -1,0 +1,47 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_181_hosted_identity",
+  "status": "application181_identity_user_reported_metadata_pending",
+  "date": "2026-10-22",
+  "provenance": {
+    "classification": "USER_REPORTED",
+    "surface": "admin_readiness",
+    "description": "User supplied the four displayed startup identity fields from the live administration readiness page; no direct agent PID or startup-log observation.",
+    "startupDisplayIsUiTextOnly": true,
+    "observationTimestampProvided": false
+  },
+  "displayedFields": {
+    "Version de l’application": "1.8.1",
+    "Commit au démarrage": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+    "Version Node.js": "v24.22.1",
+    "Relevé au démarrage": "22/10/2026 15:30:16"
+  },
+  "sourceTree": "eb427f887248fa9db5c656c3773e016f8688efc9",
+  "schemaEvidence": "jm180-hosted-schema36.json",
+  "schemaIsNotPartOfDisplayedIdentity": true,
+  "hostedPreparationEvidence": "jm181-hosted-preparation.json",
+  "publicHttpEvidence": "jm181-public-http.json",
+  "currentState": {
+    "applicationVersion": "1.8.1",
+    "source": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+    "nodeVersion": "v24.22.1",
+    "schemaMigrations": 36,
+    "metadataCheckpointVersion": "1.8.0",
+    "metadataCheckpointSchema": 36,
+    "metadataCheckpointSha256": "c7bbecf40233a0f8626fdca5af3e48fc5725a14dff202e1f378fdc3082db3a41",
+    "metadataAlignmentPending": true,
+    "latestLastVerified": "1.8.1",
+    "rollback172Prechecked": true,
+    "rollback172Started": false,
+    "hostedFunctionalChecksPending": true,
+    "deliveryComplete": false,
+    "latestAlignmentEvidence": "jm181-metadata-operator-verification.json"
+  },
+  "limits": [
+    "Startup display text is preserved exactly; no epoch or timezone conversion is inferred.",
+    "SQL36 and hosted prechecks come from the separately linked proofs, not from the four displayed identity fields.",
+    "Anonymous HTTP confirms health/readiness/home/login and the exact login alias response but does not independently expose the active commit or administrator session.",
+    "No direct agent observation of PID, socket, startup log or Manager fields is claimed.",
+    "G4 remains in progress: release181 metadata/latest alignment and the two hosted functional checks remain."
+  ]
+}

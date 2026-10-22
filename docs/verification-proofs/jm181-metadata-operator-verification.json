@@ -1,0 +1,156 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_181_metadata_operator_verification",
+  "status": "qualified_latest181_aligned_host_metadata_not_executed",
+  "checkedAtUTC": "2026-10-22T13:39:46.822193+00:00",
+  "repository": "fredbuhr/jessiemessage",
+  "operatorSource": "eb0e0b2e1cdacf24730c8767db92e9df9dd0d2d6",
+  "operatorTree": "cc90fd3361e5288343b8db500141b985fbe648eb",
+  "run": {
+    "id": 39788433888,
+    "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39788433888",
+    "head_branch": "ops/record-v1.8.1",
+    "event": "push",
+    "path": ".github/workflows/record-release181.yml",
+    "run_attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "eb0e0b2e1cdacf24730c8767db92e9df9dd0d2d6"
+  },
+  "jobs": [
+    {
+      "id": 119857685419,
+      "name": "operator-tests",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 39788433888,
+      "run_attempt": 1,
+      "head_sha": "eb0e0b2e1cdacf24730c8767db92e9df9dd0d2d6",
+      "started_at": "2026-10-22T13:37:14Z",
+      "completed_at": "2026-10-22T13:37:25Z"
+    },
+    {
+      "id": 119857804075,
+      "name": "align-latest",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 39788433888,
+      "run_attempt": 1,
+      "head_sha": "eb0e0b2e1cdacf24730c8767db92e9df9dd0d2d6",
+      "started_at": "2026-10-22T13:37:28Z",
+      "completed_at": "2026-10-22T13:37:41Z"
+    }
+  ],
+  "verification": {
+    "completeDecodedLogsRead": true,
+    "noGitHubErrorAnnotation": true,
+    "operatorCheckoutExact": true,
+    "credentialsPersisted": false,
+    "nodeVersion": "v24.22.1",
+    "writerUnitTests": {
+      "tests": 16,
+      "passCount": 16,
+      "skipped": 0,
+      "seconds": 0.719
+    },
+    "markerApiSimulations": {
+      "tests": 55,
+      "passCount": 55,
+      "failCount": 0,
+      "networkCalls": 0,
+      "realMutations": 0,
+      "productionAccess": false
+    },
+    "workflowSha256": "afa484f28fdb16ce4b136a01690d824d51edcd34d5733661c59c241a8db0704a",
+    "alignmentScriptMatchesQualifiedWorkflow": true,
+    "alignmentStartedAfterOperatorTests": true,
+    "latestReceipt": {
+      "status": "latest_release_aligned",
+      "observedAtUTC": "2026-10-22T13:37:39.415374+00:00",
+      "releaseId": 420741528,
+      "tag": "v1.8.1",
+      "source": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+      "tree": "eb427f887248fa9db5c656c3773e016f8688efc9",
+      "previousLatest": "v1.8.0",
+      "latest": "v1.8.1",
+      "markerChanged": true,
+      "latestMarkerOnly": true,
+      "releaseBodySha256": "8e43a203d4ef63dfecfd0cfece3b1a704ddb565e655d9d539c770e29c03420ef",
+      "tagSourceUnchanged": true,
+      "releaseContentUnchanged": true,
+      "assetsUnchanged": true,
+      "previous180Preserved": true,
+      "historical171Preserved": true,
+      "rollback172Preserved": true,
+      "newReleaseCreated": false,
+      "applicationDeployed": false,
+      "serviceChanged": false,
+      "sqlChanged": false,
+      "hostMetadataExecuted": false
+    }
+  },
+  "evidence": [
+    {
+      "file": "jm181-record-ci-run39788433888.json",
+      "bytes": 13830,
+      "sha256": "223ade7ee2a5cd618d80fa9c4bbc31b1dc2ec18b62011b69241e41506153a972"
+    },
+    {
+      "file": "jm181-record-ci-jobs39788433888.json",
+      "bytes": 5290,
+      "sha256": "00bcd4a7ab186ad773e6e19ebda0d664ce5a2e0fb337d7b2d17735cccd88382f"
+    },
+    {
+      "file": "jm181-record-ci-job119857685419.log",
+      "bytes": 41773,
+      "sha256": "f6fb6ee0df4de7176d5ad6c1969e59ccff3773b3c0cc69685765e26aa9e1bc07"
+    },
+    {
+      "file": "jm181-record-ci-job119857804075.log",
+      "bytes": 14240,
+      "sha256": "217db54390d3d9c1a74188805597fbb8868b2f9894aace013f136ccbd86e25a3"
+    }
+  ],
+  "nonBlockingWarnings": [
+    "GitHub runner forces actions/checkout@v4 and actions/setup-node@v4 from deprecated Node20 to Node24; this is distinct from the pinned application Node24.22.1.",
+    "The setup-node action emitted its existing DEP0040 punycode deprecation notice."
+  ],
+  "limits": [
+    "Logs are the decoded UTF-8 output returned by the GitHub connector, not original archive bytes.",
+    "This read-only review performs no tests, network requests to production, SQL, runtime action or remote mutation.",
+    "The workflow result does not prove execution of the host metadata helper.",
+    "Root independently verified the completed successful run, current latest release identity and exact remote helper bytes. Host metadata execution remains pending."
+  ],
+  "helper": {
+    "path": "ops/record-release181.py",
+    "sourceUrl": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/eb0e0b2e1cdacf24730c8767db92e9df9dd0d2d6/ops/record-release181.py",
+    "bytes": 24720,
+    "sha256": "78458879fe9a2ed022c430e1a3565ed704492f63f6089c7bfb7a7bfd561380c7",
+    "testBytes": 25686,
+    "testSha256": "a09e810eef92815132e6c8f051a58fc2449dfc153dee9d9fc27cf0dbbc6da5f5",
+    "remoteBytesEqualQualifiedLocalFile": true,
+    "cliArguments": [],
+    "executionName": "__main__",
+    "hostExecuted": false,
+    "metadataOnly": true,
+    "noRestart": true,
+    "sqlConnected": false,
+    "precheckExecuted": false,
+    "credentialsRequested": false
+  },
+  "independentRootVerification": {
+    "workflowRunSuccess": true,
+    "latestApi": {
+      "tag": "v1.8.1",
+      "id": 420741528,
+      "targetSource": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31"
+    },
+    "rawHelperMatchesQualifiedFile": true
+  },
+  "metadataCheckpoint": {
+    "lastAcquiredVersion": "1.8.0",
+    "schema": 36,
+    "sha256": "c7bbecf40233a0f8626fdca5af3e48fc5725a14dff202e1f378fdc3082db3a41",
+    "release181ExecutionPending": true
+  }
+}

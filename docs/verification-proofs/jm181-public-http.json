@@ -1,0 +1,66 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_181_public_http",
+  "observedAtUTC": "2026-10-22T13:33:21.129410+00:00",
+  "evidenceKind": "ANONYMOUS_HTTP_VIA_ENVIRONMENT_TRANSPORT",
+  "sourceCompared": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+  "requests": {
+    "health": {
+      "url": "https://jessiemessage.com/api/health",
+      "status": 200,
+      "bytes": 15,
+      "sha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288",
+      "body": {
+        "status": "ok"
+      }
+    },
+    "ready": {
+      "url": "https://jessiemessage.com/api/ready",
+      "status": 200,
+      "bytes": 18,
+      "sha256": "31bf75f4c0a97cc1f7b60df824fa390b3be9ba014f29b63c87c698ba63d9a9fd",
+      "body": {
+        "status": "ready"
+      }
+    },
+    "entry": {
+      "url": "https://jessiemessage.com/api/entry",
+      "status": 200,
+      "bytes": 107,
+      "sha256": "4f05319b6222826a3572763579f9fda713603e0c145af7acda5cee121a0ad22b",
+      "administrator": null
+    },
+    "home": {
+      "url": "https://jessiemessage.com/",
+      "status": 200,
+      "bytes": 3416,
+      "sha256": "f66af81b9c69d01386a86e3195aff5cf791d120bae63112c1b3dc24d51d55e9f"
+    },
+    "login": {
+      "url": "https://jessiemessage.com/admin/login",
+      "status": 200,
+      "bytes": 12702,
+      "sha256": "d6a4adba277981d978511e6d88276eb8597ffe92e91288a534caa4afc015607c"
+    },
+    "loginAlias": {
+      "url": "https://jessiemessage.com/admin/login/?continue=%2Fadmin%2Fbackups",
+      "status": 308,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "location": "/admin/login?continue=%2Fadmin%2Fbackups"
+    }
+  },
+  "checks": {
+    "health": true,
+    "ready": true,
+    "anonymousEntry": true,
+    "successfulPages": true,
+    "loginAlias": true,
+    "homeMatchesSource": true
+  },
+  "initialDirectTransportAttempt": "unconfirmed_before_response_validation; no application failure inferred; normal environment transport used for this recorded check",
+  "limits": [
+    "Anonymous HTTP does not expose or independently prove the active commit, PID, binary or administrator session.",
+    "Backup creation, completion and download and personal quick-reply behaviour still require the hosted interface."
+  ]
+}

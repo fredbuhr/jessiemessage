@@ -2,7 +2,7 @@
 
 Retrouve ton espace sur [jessiemessage.com](https://jessiemessage.com/app) et l’[aide du site](https://jessiemessage.com/help).
 
-La version **1.8.0** est active. La [preuve de mise en service et d’alignement](verification-proofs/jm180-hosted-metadata.json), transmise par l’utilisateur, confirme la source `fd6e53b14b520231b0b307a2761331dd8c740a5b`, Node **24.22.1** et SQL **36** ; la mise à jour est enregistrée et la dernière livraison publiée est aussi 1.8.0. [REPRISE](REPRISE.md) conserve les références techniques. Le [retour utilisateur sur l’interface](verification-proofs/jm180-hosted-interface.json) confirme le parcours vidéo ; restent à terminer la sauvegarde manuelle et la vérification d’une réponse personnelle enregistrée.
+La version **1.8.1** est active selon l’[identité admin rapportée](verification-proofs/jm181-hosted-identity.json), source `1ae4c75152795ea6f31c2ff364e337a1d5a04e31`, Node **24.22.1** ; SQL **36** est conservé. [REPRISE](REPRISE.md) distingue cette activation et l’alignement des métadonnées, encore en attente. Le [retour utilisateur sur l’interface](verification-proofs/jm180-hosted-interface.json) confirme le parcours vidéo ; l’enregistrement des réponses est aussi rapporté réussi. Restent à terminer la sauvegarde manuelle et la vérification d’une réponse retrouvée puis insérée depuis la liste commune.
 
 ## Se connecter et gérer les accès
 
@@ -53,9 +53,9 @@ La sélection n’envoie rien et ne supprime rien. Les commandes **Supprimer** e
 
 ### Tes réponses personnelles
 
-Dans [Messages](https://jessiemessage.com/admin/messages), sélectionne une conversation, ouvre **+ → Réponses rapides**, puis retrouve la section **Mes réponses**. Choisis **Nouvelle réponse**, remplis **Titre de la réponse**, **Langue de la réponse** et **Texte de la réponse**, puis **Enregistrer la réponse**. Le catalogue accepte jusqu’à 50 phrases, avec un titre de 64 caractères et un texte de 4 096 caractères au maximum. **Modifier** reprend une phrase ; **Supprimer**, puis sa confirmation, la retire.
+Dans [Messages](https://jessiemessage.com/admin/messages), sélectionne une conversation, ouvre **+ → Réponses rapides**. Les six phrases proposées et tes réponses enregistrées sont réunies dans la même liste, selon la langue choisie. Choisis **Nouvelle réponse**, remplis **Titre de la réponse**, **Langue de la réponse** et **Texte de la réponse**, puis **Enregistrer la réponse**. Le catalogue accepte jusqu’à 50 phrases, avec un titre de 64 caractères et un texte de 4 096 caractères au maximum. Les six phrases proposées restent fixes. Pour tes seules réponses ajoutées, **Modifier** reprend une phrase ; **Supprimer**, puis sa confirmation, la retire.
 
-Attends la confirmation **Réponses personnelles enregistrées.** : c’est cette phrase du catalogue qui est conservée, indépendamment du texte préparé pour un message. Après rechargement de la page, sélectionne de nouveau la conversation, ouvre **+ → Réponses rapides**, choisis la **Langue des réponses** correspondant à celle enregistrée, puis retrouve la phrase dans **Mes réponses**. Clique dessus pour l’insérer dans le brouillon : cela n’envoie aucun message. Les réponses enregistrées restent privées et se retrouvent dans tes sessions administrateur. Si une autre session les a modifiées ou si la confirmation manque, ton texte en cours reste affiché : utilise **Recharger les réponses enregistrées**, vérifie le résultat, puis enregistre explicitement si nécessaire.
+Attends la confirmation **Réponses personnelles enregistrées.** : c’est cette phrase du catalogue qui est conservée, indépendamment du texte préparé pour un message. Après rechargement de la page, sélectionne de nouveau la conversation, ouvre **+ → Réponses rapides**, choisis la **Langue des réponses** correspondant à celle enregistrée, puis retrouve la phrase dans la liste commune. Clique dessus pour l’insérer dans le brouillon : cela n’envoie aucun message. Les réponses enregistrées restent privées et se retrouvent dans tes sessions administrateur. Si une autre session les a modifiées ou si la confirmation manque, ton texte en cours reste affiché : utilise **Recharger les réponses enregistrées**, vérifie le résultat, puis enregistre explicitement si nécessaire.
 
 ## Fiches, notes et travail sur deux appareils
 
@@ -68,7 +68,7 @@ Si **La fiche a été modifiée ailleurs** apparaît, ton brouillon reste visibl
 - **Recharger la fiche** reprend la version enregistrée et abandonne ton brouillon de fiche ;
 - **Enregistrer ma version** la remplace explicitement par la tienne. Une nouvelle modification simultanée peut provoquer un autre conflit.
 
-Le texte non envoyé du message reste dans la page ouverte : changer de conversation ou d’onglet le conserve tant que la page n’est pas déchargée, mais recharger ou fermer la page l’efface normalement. Une phrase enregistrée dans **Mes réponses** reste, elle, disponible dans le catalogue. Les modifications de fiche non enregistrées restent aussi dans la page ouverte, sans synchronisation entre appareils. Enregistre tes notes et conserve ton texte avant de recharger, fermer ou te déconnecter. Après une coupure réseau, garde l’onglet ouvert et utilise **Réessayer la connexion**.
+Le texte non envoyé du message reste dans la page ouverte : changer de conversation ou d’onglet le conserve tant que la page n’est pas déchargée, mais recharger ou fermer la page l’efface normalement. Une phrase enregistrée dans **Réponses rapides** reste disponible dans le catalogue. Les modifications de fiche non enregistrées restent aussi dans la page ouverte, sans synchronisation entre appareils. Enregistre tes notes et conserve ton texte avant de recharger, fermer ou te déconnecter. Après une coupure réseau, garde l’onglet ouvert et utilise **Réessayer la connexion**.
 
 ## Tâches et rappels privés
 
@@ -116,10 +116,10 @@ Une sauvegarde téléchargée ne certifie pas encore son déchiffrement ou une r
 
 ### Deux vérifications restantes dans ton navigateur
 
-La mise en service et l’alignement des métadonnées sont terminés. Tu as confirmé ajout, retrait avant envoi, envoi et suppression d’une vidéo ; le [retour utilisateur sur l’interface](verification-proofs/jm180-hosted-interface.json) conserve ce résultat, sans précision sur l’appareil ou le destinataire. Il reste deux vérifications. Effectue d’abord la sauvegarde : sa préparation peut interrompre brièvement la messagerie. Fais cet essai avant de préparer des brouillons.
+L’identité active 1.8.1 est rapportée ; l’alignement des métadonnées reste à terminer. Tu as confirmé ajout, retrait avant envoi, envoi et suppression d’une vidéo ; le [retour utilisateur sur l’interface](verification-proofs/jm180-hosted-interface.json) conserve ce résultat, sans précision sur l’appareil ou le destinataire. Il reste deux vérifications. Effectue d’abord la sauvegarde : sa préparation peut interrompre brièvement la messagerie. Fais cet essai avant de préparer des brouillons.
 
 - Crée une sauvegarde, attends sa fin, puis télécharge le fichier chiffré.
-- Dans **+ → Réponses rapides**, section **Mes réponses**, choisis **Nouvelle réponse**, remplis titre, langue et texte, puis **Enregistrer la réponse**. Attends **Réponses personnelles enregistrées.** Recharge ensuite la page, rouvre la conversation et **+ → Réponses rapides**, choisis la **Langue des réponses** correspondante et retrouve la phrase dans le catalogue. Clique dessus pour l’insérer dans le brouillon, sans **Envoyer**.
+- Dans **+ → Réponses rapides**, choisis **Nouvelle réponse**, remplis titre, langue et texte, puis **Enregistrer la réponse**. Attends **Réponses personnelles enregistrées.** Recharge ensuite la page, rouvre la conversation et **+ → Réponses rapides**, choisis la **Langue des réponses** correspondante et retrouve la phrase dans le catalogue. Clique dessus pour l’insérer dans le brouillon, sans **Envoyer**.
 
 Ces deux vérifications ne demandent aucun nouvel envoi à un destinataire réel, aucune fermeture ni suppression de compte. Le brouillon du composeur disparaît normalement au rechargement : vérifie la phrase dans le catalogue, puis son insertion dans un nouveau brouillon. La restauration réelle, les téléphones physiques, les notifications système et les performances de l’hébergement restent distincts de ces vérifications.
 

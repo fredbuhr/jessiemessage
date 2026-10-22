@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "type": "jessiemessage_181_verification",
-  "status": "published_not_deployed",
+  "status": "deployed_user_reported_metadata_pending",
   "recordedDate": "2026-10-22",
   "version": "1.8.1",
   "source": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
@@ -1207,10 +1207,10 @@
     "deploymentPerformed": false
   },
   "operatorHosted": {
-    "status": "staged_and_prechecked_not_started",
+    "status": "activated_user_reported_metadata_pending",
     "release181PreparationAcquired": true,
     "release181PrecheckAcquired": true,
-    "release181ActivationAcquired": false,
+    "release181ActivationAcquired": true,
     "release181MetadataAcquired": false,
     "migrationRequired": false,
     "qualifiedPreparationHelper": {
@@ -1232,17 +1232,32 @@
       "automaticRetryAfterPartialStaging": false
     },
     "hostedPreparationProof": "jm181-hosted-preparation.json",
-    "evidenceKind": "USER_REPORTED"
+    "evidenceKind": "USER_REPORTED",
+    "hostedIdentityProof": "jm181-hosted-identity.json",
+    "publicHttpProof": "jm181-public-http.json",
+    "qualifiedMetadataHelper": {
+      "operatorSource": "eb0e0b2e1cdacf24730c8767db92e9df9dd0d2d6",
+      "operatorTree": "cc90fd3361e5288343b8db500141b985fbe648eb",
+      "rawUrl": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/eb0e0b2e1cdacf24730c8767db92e9df9dd0d2d6/ops/record-release181.py",
+      "bytes": 24720,
+      "sha256": "78458879fe9a2ed022c430e1a3565ed704492f63f6089c7bfb7a7bfd561380c7",
+      "remoteBytesEqualQualifiedLocalFile": true,
+      "hostExecuted": false,
+      "qualificationProof": "jm181-metadata-operator-verification.json"
+    }
   },
   "production": {
-    "version": "1.8.0",
-    "source": "fd6e53b14b520231b0b307a2761331dd8c740a5b",
-    "tree": "324c3563fc6b1cfce669bcf58d90962c23c966b8",
+    "version": "1.8.1",
+    "source": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+    "tree": "eb427f887248fa9db5c656c3773e016f8688efc9",
     "nodeVersion": "v24.22.1",
     "schemaMigrations": 36,
-    "proof": "jm180-hosted-metadata.json",
-    "evidenceKind": "USER_REPORTED protected writer receipt; no new direct host observation",
-    "unchangedBy181Qualification": true
+    "proof": "jm181-hosted-identity.json",
+    "evidenceKind": "USER_REPORTED administrator readiness identity; no direct host process observation",
+    "schemaProof": "jm180-hosted-schema36.json",
+    "publicHttpProof": "jm181-public-http.json",
+    "metadataCheckpointVersion": "1.8.0",
+    "metadataAlignmentPending": true
   },
   "rollback": {
     "version": "1.7.2",
@@ -1258,7 +1273,7 @@
       "jm180-hosted-metadata.json"
     ]
   },
-  "deploymentPerformed": false,
+  "deploymentPerformed": true,
   "release181MetadataRecorded": false,
   "limits": [
     "The successful pull-request and main runs qualify the release source. The initial failed run records tests of its earlier source and remains failed; it does not qualify the release source.",
@@ -1267,11 +1282,11 @@
     "CI SQL transport is owned loopback without TLS; production TLS guards are unchanged.",
     "Synthetic resource metrics measure peak RSS of the Node test process only; MariaDB, Chrome and child processes are excluded. They do not measure mutualised hosting performance.",
     "Native Chrome rehearsal does not establish hosted activation, an actual administrator session on the host, physical-phone behaviour or closed-app OS notifications.",
-    "The exact login alias applies only to requests that reach Node. The reported Infomaniak upstream page has no established cause or hosted correction proof yet.",
+    "The exact login alias applies only to requests that reach Node. Anonymous hosted HTTP now confirms its GET 308 response with preserved query; the earlier Infomaniak page cause and the full backup workflow remain unqualified.",
     "Creation, completion and download of a manual backup through the hosted administrator interface remain unverified.",
     "The user reported successful personal-reply saving in 1.8.0; persistence after page reload and insertion through the final combined hosted list remain to be confirmed.",
     "The upper manual-restore CLI is not claimed as a complete native end-to-end path; existing targeted wrapper qualifications remain distinct.",
-    "Publication is qualified and acquired. Host preparation, activation and release181 metadata alignment remain pending. No migration, initialisation, new key or PC manipulation is required by this patch."
+    "Publication and hosted preparation/precheck are acquired; activation is USER_REPORTED through the displayed administrator identity. Latest is aligned on v1.8.1; only execution of the qualified host metadata helper remains pending. No migration, initialisation, new key or PC manipulation is required by this patch."
   ],
   "userFeedback": {
     "date": "2026-10-22",
@@ -1280,5 +1295,24 @@
     "requestedChange": "Display saved personal replies in the same list as preset quick replies.",
     "backup": "Still blocked before administrator backup interface; creation, completion and download not qualified.",
     "screenshots": "Inspected during this conversation, not committed; provider page showed /admin/login/ with trailing slash. Provider-page cause not established."
+  },
+  "previousProduction": {
+    "version": "1.8.0",
+    "source": "fd6e53b14b520231b0b307a2761331dd8c740a5b",
+    "tree": "324c3563fc6b1cfce669bcf58d90962c23c966b8",
+    "nodeVersion": "v24.22.1",
+    "schemaMigrations": 36,
+    "proof": "jm180-hosted-metadata.json",
+    "evidenceKind": "USER_REPORTED protected writer receipt; no new direct host observation",
+    "unchangedBy181Qualification": true
+  },
+  "deploymentPerformedBy": "USER_REPORTED Manager activation",
+  "latestAlignment": {
+    "tag": "v1.8.1",
+    "id": 420741528,
+    "source": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+    "markerOnly": true,
+    "proof": "jm181-metadata-operator-verification.json",
+    "independentLatestApiReadByRoot": true
   }
 }
