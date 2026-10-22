@@ -113,7 +113,9 @@ export async function createChatService({ store, authStore, authService, accessS
       createdAt: row.createdAt, deletedAt: row.deletedAt, clientMessageId: mine ? row.clientMessageId.toString("hex") : null };
   }
   async function mutationLimit(userId, kind, now) {
-    const budgets = kind === "send" ? [["global-send", "all", 300], ["user-send", userId, 30]] : [["user-update", userId, 120]];
+    // A personal refusal must not consume the shared allowance used by other
+    // conversations and the broadcasts worker. Keep those persisted buckets.
+    const budgets = kind === "send" ? [["user-send", userId, 30], ["global-send", "all", 300]] : [["user-update", userId, 120]];
     for (const [name, identity, limit] of budgets) {
       const bucket = createHmac("sha256", key).update("jessiemessage:chat-rate:v1:").update(name).update("\0").update(identity).digest();
       const result = await authStore.consumeRateLimit(bucket, { now, windowSeconds: 60, limit });

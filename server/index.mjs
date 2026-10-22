@@ -475,13 +475,13 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         mediaStorage = await createMediaStorage({ root: mediaConfig.root, key: mediaConfig.key });
         mediaCapacity = { ...mediaConfig.capacity, rootFingerprint: await mediaStorage.fingerprint() };
       }
-      const mediaStore = createMediaStore({ pool, chatStore, capacity: mediaCapacity });
+      const mediaStore = createMediaStore({ pool, chatStore, capacity: mediaCapacity, video });
       await mediaStore.assertSchema(schemaOptions);
       const { createConversationExporter } = await import("./chat/conversation-export.mjs");
       const exporter = video ? (await import("./chat/streaming-conversation-export.mjs")).createStreamingConversationExporter : createConversationExporter;
       const clientConversationExporter = exporter({ role: "client", history: (token, id, options) => chatService.messages("client", token, id, options),
         photo: mediaConfig.enabled ? (token, id, message) => mediaService.exportClientMessageAsset(token, id, message) : null,
-        ...(video ? { video: (token, id, message, settings) => videoService.openMessage("client", token, id, message, settings) } : {}), clock });
+        ...(video ? { video: (token, id, message, settings) => videoService.openExportMessage("client", token, id, message, settings) } : {}), clock });
       if (crmConfig.enabled) {
         const { createCrmStore } = await import("./crm/store.mjs");
         const { createCrmService } = await import("./crm/service.mjs");
@@ -499,7 +499,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         }
         const conversationExporter = exporter({ history: (token, id, options) => chatService.messages("admin", token, id, options),
           photo: mediaConfig.enabled ? (token, id, message) => mediaService.exportMessageAsset(token, id, message) : null,
-          ...(video ? { video: (token, id, message, settings) => videoService.openMessage("admin", token, id, message, settings) } : {}), clock });
+          ...(video ? { video: (token, id, message, settings) => videoService.openExportMessage("admin", token, id, message, settings) } : {}), clock });
         crmHandler = createCrmHandler(crmService, { origin: crmConfig.origin, conversationExporter });
         if (legacyHandlers) legacyHandlers.crmHandler = createCrmHandler(crmService, { origin: RECIPE_ORIGIN, conversationExporter });
         const { createTasksStore } = await import("./tasks/store.mjs");

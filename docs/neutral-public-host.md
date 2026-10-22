@@ -1,5 +1,7 @@
 # Accueil public neutre sur Apache
 
+> **Document et outil historiques.** Ce contrat décrit l’ancien accueil Apache et sa transition 0.32 ; il ne doit pas régénérer le routage actuel. Le générateur `scripts/build-neutral-site.mjs` conserve ce contrat pour ses preuves et fixtures, hors build/démarrage courant. Principal et recette utilisent désormais le même service Node ; accueil/www redirigent vers le principal avec chemins et paramètres conservés. Voir [REPRISE](REPRISE.md) et les [domaines confirmés le 22 octobre](public-domains-20261022.md). Aucune édition Apache, DNS, certificat ou PHP n’est à rejouer.
+
 **Suite 0.32 — 17 octobre 2026 :** l’application privée est désormais active sur la recette et le propriétaire accepte ses notifications. L’ancienne entrée neutre de l’apex créait une impasse. Le [lien temporaire vers l’entrée active](public-entry-transition.md) est en ligne sur l’export `1f669e45`, après vérification de 25 fichiers, cinq jobs CI et 56 réponses HTTP réelles. Sans cette option d’export explicite, le contrat neutre décrit ci-dessous reste inchangé. Les observations du 15 octobre restent historiques.
 
 ## État et portée

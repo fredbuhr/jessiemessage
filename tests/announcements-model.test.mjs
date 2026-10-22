@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createAnnouncementsState, clearAnnouncements, announcementTicket, currentAnnouncementTicket, acceptAnnouncementsSession, setAnnouncementCurrent, updateAnnouncementDraft, announcementDraft, acceptAnnouncementPreview, prepareAnnouncementMutation, retryAnnouncementMutation, uncertainAnnouncementMutation, rejectAnnouncementMutation, completeAnnouncementMutation, parseAnnouncement, parseAnnouncementCurrent, parseAnnouncementPreview, localAnnouncementDate, readLocalAnnouncementDate } from "../public/announcements-model.js";
+import { createAnnouncementsState, clearAnnouncements, announcementTicket, currentAnnouncementTicket, acceptAnnouncementsSession, setAnnouncementCurrent, hasUnsavedAnnouncementChanges, updateAnnouncementDraft, announcementDraft, acceptAnnouncementPreview, prepareAnnouncementMutation, retryAnnouncementMutation, uncertainAnnouncementMutation, rejectAnnouncementMutation, completeAnnouncementMutation, parseAnnouncement, parseAnnouncementCurrent, parseAnnouncementPreview, localAnnouncementDate, readLocalAnnouncementDate } from "../public/announcements-model.js";
 
 const now = 1792584000000, id = n => n.toString(16).padStart(32, "0");
 const session = (n = 1, csrf = "A".repeat(43)) => ({ user: { id: id(n), role: "admin", pseudonym: "Synthetic" }, csrf, expiresAt: now + 3600000 });
@@ -88,4 +88,41 @@ test("a delayed current read cannot restore an older revision or overwrite a com
   prepareAnnouncementMutation(state, id(12), now, true); completeAnnouncementMutation(state, { serverTime: now + 2, revision: "3", announcement: null });
   assert.equal(setAnnouncementCurrent(state, before, { fillDraft: true }), null);
   assert.equal(state.current, null); assert.equal(state.currentRevision, "3"); assert.equal(state.draft.body, "");
+});
+
+test("every editable announcement field is compared with its loaded reference and returning to it clears the warning", () => {
+  const state = createAnnouncementsState();
+  setAnnouncementCurrent(state, { serverTime: now, revision: "1", announcement: announcement() }, { fillDraft: true });
+  const original = { ...state.draft };
+  assert.equal(hasUnsavedAnnouncementChanges(state), false);
+  for (const change of [{ body: "Autre texte" }, { body: "" }, { mode: "scheduled" }, { startsAt: now + 60000 },
+    { expiresAt: now + 7200000 }, { expiresAt: null }, { sendMessage: true }]) {
+    updateAnnouncementDraft(state, change); assert.equal(hasUnsavedAnnouncementChanges(state), true);
+    updateAnnouncementDraft(state, original); assert.equal(hasUnsavedAnnouncementChanges(state), false);
+  }
+  state.acknowledged = true; assert.equal(hasUnsavedAnnouncementChanges(state), true);
+  state.acknowledged = false; assert.equal(hasUnsavedAnnouncementChanges(state), false);
+  setAnnouncementCurrent(state, { serverTime: now + 1, revision: "2", announcement: { ...announcement("2"), body: "Other device" } });
+  assert.equal(hasUnsavedAnnouncementChanges(state), false, "a polling read does not turn an untouched local draft into an edit");
+  updateAnnouncementDraft(state, { expiresAt: now + 7200000 });
+  setAnnouncementCurrent(state, { serverTime: now + 1, revision: "2", announcement: state.current }, { fillDraft: true });
+  assert.equal(hasUnsavedAnnouncementChanges(state), false, "explicitly reloading the saved announcement resets the reference");
+});
+
+test("visible minute precision, successful mutations, pending removal and owner clearing keep the warning accurate", () => {
+  const state = createAnnouncementsState(); state.visible = true; acceptAnnouncementsSession(state, session());
+  const current = { ...announcement(), expiresAt: now + 3600123 };
+  setAnnouncementCurrent(state, { serverTime: now, revision: "1", announcement: current }, { fillDraft: true });
+  updateAnnouncementDraft(state, { expiresAt: readLocalAnnouncementDate(localAnnouncementDate(current.expiresAt)) });
+  assert.equal(hasUnsavedAnnouncementChanges(state), false, "the same date shown by the form is unchanged");
+  updateAnnouncementDraft(state, { body: "Saved next" }); prepareAnnouncementMutation(state, id(11), now);
+  completeAnnouncementMutation(state, { serverTime: now, revision: "2", announcement: { ...announcement("2"), body: "Saved next" } });
+  assert.equal(hasUnsavedAnnouncementChanges(state), false);
+  prepareAnnouncementMutation(state, id(12), now, true);
+  assert.equal(hasUnsavedAnnouncementChanges(state), true, "pending removal warns even with no draft edits");
+  uncertainAnnouncementMutation(state); assert.equal(hasUnsavedAnnouncementChanges(state), true);
+  completeAnnouncementMutation(state, { serverTime: now, revision: "3", announcement: null });
+  assert.equal(hasUnsavedAnnouncementChanges(state), false);
+  updateAnnouncementDraft(state, { body: "Private owner text" }); clearAnnouncements(state, true);
+  assert.equal(hasUnsavedAnnouncementChanges(state), false);
 });

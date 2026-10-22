@@ -9,7 +9,7 @@ import { createChatStore, ChatStoreError } from "../server/chat/store.mjs";
 import { createMediaStore, MediaStoreError } from "../server/media/store.mjs";
 import { createProfileStore } from "../server/profile/store.mjs";
 import { createMediaCapacityStore } from "../server/media/capacity-store.mjs";
-import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_OBJECTS } from "../server/media/backup-limits.mjs";
+import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_OBJECTS, BACKUP_MEDIA_MAX_RECORDS } from "../server/media/backup-limits.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const id = () => randomBytes(16), digest = () => randomBytes(32);
@@ -419,6 +419,77 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
       await assert.rejects(media.releaseStorageObject({ ...actor(fixture), objectId: value.id, storageKey: value.storageKey }), code("MEDIA_INPUT"));
     });
 
+    await t.test("confirmed unwritten reservations cancel exactly once without releasing another pending object", async () => {
+      for (const role of ["admin", "client"]) {
+        const fixture = await pair(), first = asset(), second = asset(), bytes = first.fullBytes + first.thumbnailBytes + 80;
+        const before = await capacityStore.status();
+        await media.reserveAsset({ ...actor(fixture, role), asset: first });
+        await media.reserveAsset({ ...actor(fixture, role), asset: second });
+        const cancellation = { ...actor(fixture, role), objectId: first.id, storageKey: first.storageKey };
+        assert.deepEqual(await Promise.all([media.cancelAssetReservation(cancellation), media.cancelAssetReservation(cancellation)]), [{ released: true }, { released: true }]);
+        const after = await capacityStore.status();
+        assert.equal(after.heldBytes, before.heldBytes + bytes); assert.equal(after.pendingBytes, before.pendingBytes + bytes);
+        const row = (await connection.query("SELECT state, asset_id FROM media_storage_objects WHERE id = ?", [first.id]))[0];
+        assert.equal(row.state, "released"); assert.equal(row.asset_id, null);
+        assert.equal((await connection.query("SELECT state FROM media_storage_objects WHERE id = ?", [second.id]))[0].state, "reserved");
+        await assert.rejects(media.registerAsset({ ...actor(fixture, role), asset: first }), code("MEDIA_INPUT"));
+        assert.equal((await media.registerAsset({ ...actor(fixture, role), asset: second })).duplicate, false);
+        assert.equal((await capacityStore.status()).heldBytes, before.heldBytes + bytes);
+      }
+    });
+
+    await t.test("reservation cancellation requires the exact owner and key with current access and never releases registered metadata", async () => {
+      const fixture = await pair(), other = await pair(fixture.admin), value = asset();
+      await media.reserveAsset({ ...actor(fixture), asset: value });
+      const charged = await capacityStore.status(), cancellation = { ...actor(fixture), objectId: value.id, storageKey: value.storageKey };
+      await assert.rejects(media.cancelAssetReservation({ ...cancellation, ...actor(other) }), code("MEDIA_NOT_FOUND"));
+      await assert.rejects(media.cancelAssetReservation({ ...cancellation, storageKey: digest() }), code("MEDIA_NOT_FOUND"));
+      await assert.rejects(media.cancelAssetReservation({ ...cancellation, objectId: id() }), code("MEDIA_NOT_FOUND"));
+      await connection.query("UPDATE users SET access_expires_at = ? WHERE id = ?", [sqlDate(now + 1000), fixture.client.id]);
+      await assert.rejects(media.cancelAssetReservation({ ...cancellation, now: now + 1000 }), code("CHAT_FORBIDDEN"));
+      await connection.query("UPDATE users SET access_expires_at = NULL WHERE id = ?", [fixture.client.id]);
+      await connection.query("UPDATE sessions SET revoked_at = ? WHERE id = ?", [sqlDate(now + 1000), fixture.client.sessionId]);
+      await assert.rejects(media.cancelAssetReservation({ ...cancellation, now: now + 1000 }), code("CHAT_UNAUTHORIZED"));
+      await connection.query("UPDATE sessions SET revoked_at = NULL WHERE id = ?", [fixture.client.sessionId]);
+      assert.deepEqual(await capacityStore.status(), charged);
+      await media.registerAsset({ ...actor(fixture), asset: value });
+      await assert.rejects(media.cancelAssetReservation(cancellation), code("MEDIA_INPUT"));
+      await remove(fixture, "client", value.id);
+      await assert.rejects(media.cancelAssetReservation(cancellation), code("MEDIA_INPUT"));
+      await media.releaseStorageObject(cancellation);
+      await assert.rejects(media.cancelAssetReservation(cancellation), code("MEDIA_INPUT"));
+    });
+
+    await t.test("reservation cancellation refuses even unlinked metadata with the proposed id or storage key", async () => {
+      for (const linkedField of ["id", "storageKey"]) {
+        const fixture = await pair(), value = asset();
+        await media.reserveAsset({ ...actor(fixture), asset: value });
+        const linkedId = linkedField === "id" ? value.id : id(), linkedKey = linkedField === "storageKey" ? value.storageKey : digest();
+        await connection.query(`INSERT INTO media_assets (id, owner_id, owner_role, storage_key, content_digest, active_digest,
+          width, height, thumbnail_width, thumbnail_height, full_bytes, thumbnail_bytes, created_at)
+          VALUES (?, ?, 'client', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [linkedId, fixture.client.id, linkedKey, value.digest, value.digest,
+          value.width, value.height, value.thumbnailWidth, value.thumbnailHeight, value.fullBytes, value.thumbnailBytes, sqlDate(now)]);
+        const charged = await capacityStore.status(), cancellation = { ...actor(fixture), objectId: value.id, storageKey: value.storageKey };
+        await assert.rejects(media.cancelAssetReservation(cancellation), code("MEDIA_INPUT"));
+        assert.deepEqual(await capacityStore.status(), charged);
+        await connection.query("DELETE FROM media_assets WHERE id = ?", [linkedId]);
+        assert.deepEqual(await media.cancelAssetReservation(cancellation), { released: true });
+      }
+    });
+
+    await t.test("reservation cancellation rolls back its state and quota together after a failed counter update", async () => {
+      const fixture = await pair(), value = asset();
+      await media.reserveAsset({ ...actor(fixture), asset: value });
+      const charged = await capacityStore.status(), cancellation = { ...actor(fixture), objectId: value.id, storageKey: value.storageKey };
+      await connection.query("CREATE TRIGGER synthetic_fail_capacity BEFORE UPDATE ON media_storage_state FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'synthetic cancellation failure'");
+      try { await assert.rejects(media.cancelAssetReservation(cancellation), code("CHAT_DATABASE_OPERATION")); }
+      finally { await connection.query("DROP TRIGGER synthetic_fail_capacity"); }
+      assert.deepEqual(await capacityStore.status(), charged);
+      assert.equal((await connection.query("SELECT state FROM media_storage_objects WHERE id = ?", [value.id]))[0].state, "reserved");
+      assert.deepEqual(await media.cancelAssetReservation(cancellation), { released: true });
+      assert.equal((await capacityStore.status()).heldBytes, charged.heldBytes - value.fullBytes - value.thumbnailBytes - 80);
+    });
+
     await t.test("early owner deduplication avoids reservation and late concurrent deduplication holds cleanup until release", async () => {
       const fixture = await pair(), first = asset(), second = { ...first, id: id(), storageKey: digest() }, bytes = first.fullBytes + first.thumbnailBytes + 80;
       const before = await capacityStore.status();
@@ -519,11 +590,14 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
       }
     });
 
-    await t.test("the backup object ceiling counts tiny reserved and cleanup objects until acknowledged release", async () => {
+    await t.test("the backup catalogue ceiling serializes final photo records and retains released allocation history", async () => {
       const fixture = await pair(), other = await pair(), prefix = randomBytes(8);
-      const current = Number((await connection.query("SELECT COUNT(*) AS value FROM media_storage_objects WHERE state <> 'released'"))[0].value);
-      const fill = BACKUP_MEDIA_MAX_OBJECTS - current - 1, digits = "(SELECT 0 AS n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9)";
-      assert.ok(fill > 0 && fill < BACKUP_MEDIA_MAX_OBJECTS);
+      const current = Number((await connection.query("SELECT COUNT(*) AS value FROM media_storage_objects"))[0].value);
+      // Every photo allocation reserves two catalogue records, including its
+      // eventual asset row; released allocations remain in the manifest.
+      const maxAllocations = Math.floor(BACKUP_MEDIA_MAX_RECORDS / 2);
+      const fill = maxAllocations - current - 1, digits = "(SELECT 0 AS n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9)";
+      assert.ok(fill > 0 && fill < maxAllocations);
       let seeded = false;
       try {
         await connection.beginTransaction();
@@ -541,17 +615,23 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
         const rejected = results.findIndex((result) => result.status === "rejected"), accepted = 1 - rejected;
         assert.equal(results[rejected].reason.code, "MEDIA_STORAGE_LIMIT");
         assert.equal((await connection.query("SELECT id FROM media_storage_objects WHERE id = ?", [proposals[rejected].id])).length, 0);
-        assert.equal(Number((await connection.query("SELECT COUNT(*) AS value FROM media_storage_objects WHERE state <> 'released'"))[0].value), BACKUP_MEDIA_MAX_OBJECTS);
+        assert.equal(Number((await connection.query("SELECT COUNT(*) AS value FROM media_storage_objects"))[0].value) * 2, BACKUP_MEDIA_MAX_RECORDS);
         const status = await capacityStore.status(); assert.ok(status.heldBytes < BACKUP_MEDIA_MAX_BYTES);
         assert.equal((await media.reserveAsset({ ...actor(actors[accepted]), asset: proposals[accepted] })).duplicate, false);
         assert.deepEqual(await capacityStore.status(), status);
         const cleanupId = Buffer.concat([prefix, Buffer.alloc(8)]); cleanupId.writeBigUInt64BE(1n, 8);
         const cleanup = (await connection.query("SELECT storage_key FROM media_storage_objects WHERE id = ?", [cleanupId]))[0];
         await media.releaseStorageObject({ ...actor(fixture), objectId: cleanupId, storageKey: cleanup.storage_key });
-        await media.reserveAsset({ ...actor(other), asset: asset({ fullBytes: 1, thumbnailBytes: 1 }) });
-        const fullAgain = await capacityStore.status();
+        const released = await capacityStore.status();
+        assert.equal(released.heldBytes, status.heldBytes - 82); assert.equal(released.pendingBytes, status.pendingBytes - 82);
+        assert.ok(Number((await connection.query("SELECT COUNT(*) AS value FROM media_storage_objects WHERE state <> 'released'"))[0].value) < BACKUP_MEDIA_MAX_OBJECTS);
+        const refused = asset({ fullBytes: 1, thumbnailBytes: 1 });
+        await assert.rejects(media.reserveAsset({ ...actor(other), asset: refused }), code("MEDIA_STORAGE_LIMIT"));
+        assert.equal((await connection.query("SELECT id FROM media_storage_objects WHERE id = ?", [refused.id])).length, 0);
+        assert.deepEqual(await capacityStore.status(), released, "a catalogue refusal cannot allocate an object or charge bytes despite available file capacity");
         await media.releaseStorageObject({ ...actor(fixture), objectId: cleanupId, storageKey: cleanup.storage_key });
-        assert.deepEqual(await capacityStore.status(), fullAgain, "release replay cannot give back a second slot or byte charge");
+        assert.deepEqual(await capacityStore.status(), released, "release replay cannot refund bytes twice or discard catalogue history");
+        assert.equal(Number((await connection.query("SELECT COUNT(*) AS value FROM media_storage_objects"))[0].value) * 2, BACKUP_MEDIA_MAX_RECORDS);
         await assert.rejects(media.reserveAsset({ ...actor(other), asset: asset({ fullBytes: 1, thumbnailBytes: 1 }) }), code("MEDIA_STORAGE_LIMIT"));
       } finally { try { await connection.rollback(); } catch {} if (seeded) await removeSeed(fixture.client, prefix); }
     });

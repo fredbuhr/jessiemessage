@@ -65,7 +65,7 @@ function fixture(handler = () => null, initialOwner = actor(), { XMLHttpRequest,
       return response({ error: "not_found" }, 404);
     } });
   new Script(sessionClock).runInContext(context);
-  new Script(`${source}\nglobalThis.controller = { state, campaigns, assets, chooseVideo, uploadVideo, removeVideo, cancelVideoUpload, videoState: () => ({videoDraft,videoTransfer}), request, loadHistory, loadContacts, preview, loadPhotos, showPhoto, showCampaign, cancelCampaign, send, bootstrap, clearPrivate, scheduleHistory, renderSelection, renderControls, loadRecipientPage, rememberCampaign, detailState: () => ({ recipientPage, recipientAfter, recipientEpoch, detailElements }), busy: () => ({ historyBusy, sendBusy }) };`).runInContext(context);
+  new Script(`${source}\nglobalThis.controller = { state, campaigns, assets, chooseVideo, uploadVideo, removeVideo, cancelVideoUpload, videoState: () => ({videoDraft,videoTransfer}), request, loadHistory, loadContacts, preview, loadPhotos, showPhoto, showCampaign, cancelCampaign, send, bootstrap, clearPrivate, suspendPrivate, resumePrivate, scheduleHistory, renderSelection, renderControls, loadRecipientPage, rememberCampaign, detailState: () => ({ recipientPage, recipientAfter, recipientEpoch, detailElements }), busy: () => ({ historyBusy, sendBusy }) };`).runInContext(context);
   const ui = context.controller;
   document.visibilityState = "visible";
   model.acceptBroadcastSession(ui.state, model.clearBroadcast(ui.state, { visible: true }), owner);
@@ -250,7 +250,7 @@ test("old poll cleanup cannot clear a new bootstrap's busy state or schedule an 
   } finally { old.resolve(response({ campaigns: [] })); fresh.resolve(response({ campaigns: [] })); f.close(); }
 });
 
-test("real hide/show handlers clear an in-flight confirmation and its old finally cannot release a new send", async () => {
+test("real hide/show handlers preserve the exact uncertain confirmation and stale cleanup cannot release its explicit retry", async () => {
   const old = deferred(), fresh = deferred(); const sent = []; const stored = new Map();
   const f = fixture((path, options) => {
     if (path === "/api/broadcast/admin/campaigns" && options.method === "POST") {
@@ -264,12 +264,14 @@ test("real hide/show handlers clear an in-flight confirmation and its old finall
   try {
     compose(f.ui); const first = f.ui.send(); await flush(); assert.equal(sent.length, 1);
     f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange");
-    assert.equal(f.ui.state.pending, null); assert.equal(f.ui.state.session, null); assert.equal(f.node("broadcast-content").hidden, true);
+    const retained = f.ui.state.pending.payload;
+    assert.equal(f.ui.state.pending.status, "uncertain"); assert.equal(f.ui.state.session.id, actor().user.id); assert.equal(f.node("broadcast-content").hidden, true);
     f.document.visibilityState = "visible"; f.dispatchDocument("visibilitychange"); await flush();
-    compose(f.ui); const second = f.ui.send(); await flush(); assert.equal(sent.length, 2);
-    const newCallerId = f.ui.state.pending.payload.clientCampaignId;
+    assert.equal(sent.length, 1, "returning never posts automatically"); assert.strictEqual(f.ui.state.pending.payload, retained);
+    const second = f.ui.send(true); await flush(); assert.equal(sent.length, 2);
+    assert.equal(sent[1].clientCampaignId, sent[0].clientCampaignId); assert.equal(sent[1].body, sent[0].body);
     old.resolve(response({ campaign: sent[0], duplicate: false }, 201)); await first;
-    assert.equal(f.ui.busy().sendBusy, true); assert.equal(f.ui.state.pending.payload.clientCampaignId, newCallerId);
+    assert.equal(f.ui.busy().sendBusy, true); assert.strictEqual(f.ui.state.pending.payload, retained);
     assert.equal(f.ui.campaigns.has(sent[0].id), false);
     fresh.resolve(response({ campaign: sent[1], duplicate: false }, 201)); await second; await flush();
     assert.equal(f.ui.state.pending, null); assert.equal(f.ui.busy().sendBusy, false); assert.equal(f.ui.campaigns.has(sent[1].id), true);
@@ -283,10 +285,117 @@ test("a hidden page ignores late activity even when the transport ignores abort"
     const loading = f.ui.loadHistory(); await flush();
     f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange");
     pending.resolve(response({ campaigns: [campaign()] })); await loading;
-    assert.equal(f.ui.campaigns.size, 0); assert.equal(f.ui.state.session, null);
+    assert.equal(f.ui.campaigns.size, 0); assert.equal(f.ui.state.session.id, actor().user.id); assert.equal(f.ui.state.visible, false);
     assert.equal(f.node("history").children.length, 0); assert.equal(f.node("broadcast-content").hidden, true);
     assert.equal([...f.timers.values()].filter((timer) => timer.delay === 30000).length, 0);
   } finally { pending.resolve(response({ campaigns: [] })); f.close(); }
+});
+
+test("text, selection and attachment stay hidden until one fresh owner proof allows resumption", async () => {
+  const proof = deferred(); let block = false;
+  const f = fixture(path => block && path === "/api/broadcast/admin/session" ? proof.promise : null);
+  try {
+    compose(f.ui); model.updateComposition(f.ui.state, { mediaId: id(70) });
+    f.node("campaign-title").value = f.ui.state.draft.title; f.node("campaign-body").value = f.ui.state.draft.body;
+    f.ui.renderSelection();
+    f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange");
+    const hiddenCalls = f.calls.length;
+    await f.ui.send(); await f.ui.resumePrivate(); await flush(); assert.equal(f.calls.length, hiddenCalls);
+    assert.equal(f.ui.state.selected.size, 1); assert.equal(f.ui.state.draft.mediaId, id(70)); assert.equal(f.ui.state.acknowledged, false);
+    block = true; f.document.visibilityState = "visible"; f.dispatchDocument("visibilitychange"); f.dispatchWindow("pageshow", { persisted: true }); await flush();
+    assert.equal(f.calls.length, hiddenCalls + 2, "simultaneous visibility/pageshow share one cookie renewal and one feature proof");
+    assert.equal(f.node("broadcast-content").hidden, true); await f.ui.send();
+    assert.equal(f.calls.some(call => call.options.method === "POST"), false);
+    proof.resolve(response(actor())); await f.ui.resumePrivate();
+    assert.equal(f.node("broadcast-content").hidden, false); assert.equal(f.node("campaign-body").value, "Synthetic confirmed body");
+    assert.equal(f.node("selected").children.length, 1); assert.equal(f.ui.state.draft.mediaId, id(70));
+    assert.equal(f.node("acknowledge").checked, false); assert.equal(f.calls.some(call => call.options.method === "POST"), false);
+  } finally { proof.resolve(response(actor())); f.close(); }
+});
+
+test("a failed resume proof keeps the immutable pending key for the explicit reload action", async () => {
+  let unavailable = true;
+  const f = fixture(path => path === "/api/broadcast/admin/session" && unavailable ? response({ error: "unavailable" }, 503) : null);
+  try {
+    compose(f.ui); const payload = model.prepareCampaign(f.ui.state, id(88));
+    f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange");
+    f.document.visibilityState = "visible"; await f.ui.resumePrivate();
+    assert.equal(f.node("broadcast-content").hidden, true); assert.equal(f.node("reload").hidden, false);
+    assert.strictEqual(f.ui.state.pending.payload, payload); assert.equal(f.ui.state.pending.status, "uncertain");
+    unavailable = false; f.node("reload").listeners.get("click")(); await flush();
+    assert.equal(f.node("broadcast-content").hidden, false); assert.strictEqual(f.ui.state.pending.payload, payload);
+    assert.equal(f.node("uncertain").hidden, false); assert.equal(f.calls.some(call => call.options.method === "POST"), false);
+  } finally { f.close(); }
+});
+
+test("owner and login changes during suspension purge retained work before displaying the new session", async (t) => {
+  for (const next of [actor(2), { ...actor(), csrf: "z".repeat(43) }]) await t.test(next.user.id === actor().user.id ? "new login" : "other account", async () => {
+    const f = fixture();
+    try {
+      compose(f.ui); model.prepareCampaign(f.ui.state, id(89));
+      f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange"); f.setOwner(next);
+      assert.equal(f.node("broadcast-content").hidden, true);
+      f.document.visibilityState = "visible"; await f.ui.resumePrivate();
+      assert.equal(f.ui.state.session.id, next.user.id); assert.equal(f.ui.state.session.csrf, next.csrf);
+      assert.equal(f.ui.state.pending, null); assert.equal(f.ui.state.draft.body, ""); assert.equal(f.ui.state.selected.size, 0);
+      assert.equal(f.node("selected").children.length, 0); assert.equal(f.calls.some(call => call.options.method === "POST"), false);
+    } finally { f.close(); }
+  });
+});
+
+test("a resume proof arriving after another hide cannot reveal content or replace the new cycle", async () => {
+  const old = deferred(), fresh = deferred(); let proofs = 0;
+  const f = fixture(path => path === "/api/broadcast/admin/session" ? (++proofs === 1 ? old.promise : fresh.promise) : null);
+  try {
+    compose(f.ui); f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange");
+    f.document.visibilityState = "visible"; const first = f.ui.resumePrivate(); await flush();
+    f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange");
+    f.document.visibilityState = "visible"; const second = f.ui.resumePrivate(); await flush();
+    old.resolve(response(actor(2))); await first;
+    assert.equal(f.ui.state.session.id, actor().user.id); assert.equal(f.node("broadcast-content").hidden, true);
+    assert.equal(proofs, 2, "one feature proof belongs to each resume cycle");
+    fresh.resolve(response(actor())); await second;
+    assert.equal(f.ui.state.draft.body, "Synthetic confirmed body"); assert.equal(f.node("broadcast-content").hidden, false);
+  } finally { old.resolve(response(actor())); fresh.resolve(response(actor())); f.close(); }
+});
+
+test("suspension during initial reads resumes contacts and labels without losing the composed work", async () => {
+  const oldContacts = deferred(), oldLabels = deferred(); let contacts = 0, labels = 0;
+  const contact = { id: id(51), client: { id: id(52), pseudonym: "Resumed client" }, crm: { nickname: "" }, canSend: true };
+  const f = fixture(path => {
+    if (path.startsWith("/api/admin/crm/contacts?")) return ++contacts === 1 ? oldContacts.promise : response({ contacts: [contact], nextCursor: null, hasMore: false });
+    if (path.startsWith("/api/admin/crm/labels?")) return ++labels === 1 ? oldLabels.promise : response({ labels: [{ id: id(53), kind: "tag", name: "Resumed tag" }], nextCursor: null, hasMore: false });
+    return null;
+  });
+  try {
+    const initial = f.ui.bootstrap(); await flush(); model.updateComposition(f.ui.state, { title: "Kept while loading", body: "Kept private draft" });
+    f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange");
+    f.document.visibilityState = "visible"; await f.ui.resumePrivate(); await flush();
+    assert.equal(contacts, 2); assert.equal(labels, 2); assert.equal(f.ui.state.contacts.get(id(51)).client.pseudonym, "Resumed client");
+    assert.equal(f.node("tag-filter").children.at(-1).value, id(53)); assert.equal(f.node("campaign-body").value, "Kept private draft");
+    oldContacts.resolve(response({ contacts: [], nextCursor: null, hasMore: false })); oldLabels.resolve(response({ labels: [], nextCursor: null, hasMore: false })); await initial;
+    assert.equal(f.ui.state.contacts.size, 1); assert.equal(f.node("tag-filter").children.length, 2); assert.equal(f.calls.some(call => call.options.method === "POST"), false);
+  } finally { oldContacts.resolve(response({ contacts: [], nextCursor: null, hasMore: false })); oldLabels.resolve(response({ labels: [], nextCursor: null, hasMore: false })); f.close(); }
+});
+
+test("an interrupted cancellation resumes a usable freshly read detail without replaying its POST", async () => {
+  const pending = deferred(), queued = campaign(10);
+  const f = fixture((path, options) => {
+    if (path === `/api/broadcast/admin/campaigns/${queued.id}/summary`) return response(queued);
+    if (path.endsWith("/cancel") && options.method === "POST") return pending.promise;
+    if (path === "/api/broadcast/admin/activity") return response({ campaigns: [queued] });
+    return null;
+  });
+  try {
+    f.ui.campaigns.set(queued.id, queued); await f.ui.showCampaign(queued.id);
+    const old = f.ui.detailState().detailElements, cancelling = f.ui.cancelCampaign(queued.id); await flush(); assert.equal(old.cancel.disabled, true);
+    f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange");
+    f.document.visibilityState = "visible"; await f.ui.resumePrivate(); await flush();
+    const fresh = f.ui.detailState().detailElements; assert.notStrictEqual(fresh, old); assert.equal(fresh.cancel.disabled, false);
+    assert.equal(f.calls.filter(call => call.options.method === "POST").length, 1);
+    pending.resolve(response({ ...queued, status: "cancelled", counts: counts("cancelled") })); await cancelling;
+    assert.strictEqual(f.ui.detailState().detailElements, fresh); assert.equal(f.ui.campaigns.get(queued.id).status, "queued");
+  } finally { pending.resolve(response(queued)); f.close(); }
 });
 
 test("a rate-limited history poll respects Retry-After before scheduling another read", async () => {
@@ -524,14 +633,33 @@ test("broadcast cancelled, malformed and lost uploads never attach a video or re
   });
 });
 
-test("video upload acknowledgement under a changed account is discarded and hiding the page revokes the local file", async () => {
+test("video upload acknowledgement under a changed account is discarded and suspension keeps the local file without replaying an ambiguous upload", async () => {
   const f = videoFixture();
   try {
     f.choose(); f.decode(); const loading = f.ui.uploadVideo(); await flush(); f.setOwner(videoActor(2)); f.uploads[0].complete(); await loading; await flush();
     assert.equal(f.ui.state.session.id, id(2)); assert.equal(f.ui.state.draft.videoId, undefined); assert.equal(f.ui.videoState().videoDraft, null); assert.equal(f.revoked.length, 1);
     f.choose(); f.decode(); const second = f.ui.uploadVideo(); await flush();
     f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange"); await second;
-    assert.equal(f.uploads[1].aborted, true); assert.equal(f.ui.state.session, null); assert.equal(f.ui.videoState().videoDraft, null); assert.equal(f.revoked.length, 2);
+    assert.equal(f.uploads[1].aborted, true); assert.equal(f.ui.state.session.id, id(2)); assert.equal(f.ui.videoState().videoDraft.failed, true); assert.equal(f.revoked.length, 2);
     assert.equal(f.node("video-preview").children.length, 0); assert.equal(f.node("broadcast-content").hidden, true);
+    f.document.visibilityState = "visible"; f.dispatchDocument("visibilitychange"); await flush(); f.decode();
+    await f.ui.uploadVideo(); assert.equal(f.uploads.length, 2); assert.equal(f.ui.videoState().videoDraft.id, null);
+    assert.equal(f.node("broadcast-content").hidden, false); assert.match(f.node("video-status").textContent, /pas été confirmé/);
+  } finally { f.close(); }
+});
+
+test("a confirmed video survives suspension and local preview callbacks bind to the resumed session", async () => {
+  const f = videoFixture();
+  try {
+    compose(f.ui); f.choose(); f.decode(); const loading = f.ui.uploadVideo(); await flush(); f.uploads[0].complete(); await loading;
+    const draft = f.ui.videoState().videoDraft, oldPlayer = f.node("video-preview").children[0];
+    f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange");
+    assert.equal(f.ui.state.draft.videoId, id(77)); assert.strictEqual(f.ui.videoState().videoDraft, draft); assert.equal(f.revoked.length, 1);
+    f.document.visibilityState = "visible"; await f.ui.resumePrivate();
+    const newPlayer = f.node("video-preview").children[0]; assert.notStrictEqual(newPlayer, oldPlayer); assert.equal(draft.ready, false);
+    oldPlayer.listeners.get("loadedmetadata")(); assert.equal(draft.ready, false, "old media events remain stale");
+    f.decode(); assert.equal(draft.ready, true); await f.ui.uploadVideo(); assert.equal(f.uploads.length, 1);
+    assert.equal(f.ui.state.draft.videoId, id(77)); assert.equal(f.created.length, 2);
+    f.ui.clearPrivate(); assert.equal(f.ui.videoState().videoDraft, null); assert.equal(f.ui.state.pending, null); assert.equal(f.revoked.length, 2);
   } finally { f.close(); }
 });

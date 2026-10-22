@@ -1,4 +1,4 @@
-import { createBroadcastState, clearBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, contactPageQuery, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, canConfirmBroadcast, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, mergeCampaign, acceptCampaign, campaignNames, recipientNames, reasonNames, updateAudience, audienceValue, confirmationCount, parseRecipientPage } from "/broadcast-model.js";
+import { createBroadcastState, clearBroadcast, suspendBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, contactPageQuery, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, canConfirmBroadcast, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, mergeCampaign, acceptCampaign, campaignNames, recipientNames, reasonNames, updateAudience, audienceValue, confirmationCount, parseRecipientPage } from "/broadcast-model.js";
 
 const ui = globalThis.JessieI18n ?? {
   t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
@@ -20,6 +20,8 @@ let contactAfter = null; let contactBack = []; let selectedPage = 0; let contact
 let recipientPage = null; let recipientAfter = null; let recipientBack = []; let recipientEpoch = 0; let recipientsBusy = false; let detailElements = null;
 let previewBusy = false; let sendBusy = false; let logoutBusy = false;
 let videoDraft = null; let videoTransfer = null;
+let resumeTask = null;
+let labelsLoaded = false; let resumeContacts = false;
 const MAX_VIDEO_BYTES = 104857600;
 const visible = () => document.visibilityState === "visible";
 const validId = (value) => typeof value === "string" && value.length === 32 && /^[0-9a-f]{32}$/.test(value);
@@ -48,10 +50,62 @@ function clearDisplay() {
 }
 function clearPrivate(isVisible = false) {
   for (const controller of controllers) controller.abort(); controllers.clear(); cancelSessionCheck?.(); clearTimeout(pollTimer); cancelSessionCheck = null; pollTimer = null; sessionPaused = false;
-  clearBroadcast(state, { visible: isVisible }); detailEpoch += 1; detailId = null; campaigns.clear(); assets.clear();
+  clearBroadcast(state, { visible: isVisible }); resumeTask = null; labelsLoaded = false; resumeContacts = false; detailEpoch += 1; detailId = null; campaigns.clear(); assets.clear();
   contactCursor = null; contactMore = false; contactsBusy = false; contactAfter = null; contactBack = []; selectedPage = 0; contactsDirty = false;
   recipientPage = null; recipientAfter = null; recipientBack = []; recipientEpoch += 1; recipientsBusy = false; detailElements = null; historyCursor = null; historyMore = false; historyStarted = false; historyBusy = false; historyRetryAt = 0;
   photoCursor = null; photoMore = false; photosBusy = false; previewBusy = false; sendBusy = false; clearDisplay();
+}
+function suspendPrivate() {
+  if (!state.visible) return;
+  resumeContacts = contactsBusy || !state.contacts.size;
+  suspendBroadcast(state); sessionPaused = true; resumeTask = null;
+  for (const controller of controllers) controller.abort(); controllers.clear(); cancelSessionCheck?.(); clearTimeout(pollTimer); cancelSessionCheck = null; pollTimer = null;
+  detailEpoch += 1; recipientEpoch += 1; contactsBusy = false; historyBusy = false; photosBusy = false; previewBusy = false; sendBusy = false; recipientsBusy = false;
+  if (videoTransfer) { videoTransfer.draft.failed = true; videoTransfer = null; notice("Le chargement n’a pas été confirmé. Choisis de nouveau la vidéo pour réessayer.", true, "video-status"); }
+  for (const player of el("video-preview").querySelectorAll("video")) { player.pause?.(); player.removeAttribute("src"); player.load?.(); }
+  replace(el("video-preview")); if (videoDraft?.url) { URL.revokeObjectURL(videoDraft.url); videoDraft.url = null; }
+  clearPhoto(); el("acknowledge").checked = false;
+  el("broadcast-content").hidden = true; el("logout").hidden = true; el("reload").hidden = true;
+}
+async function resumePrivate() {
+  if (!visible()) return;
+  if (!state.session) { await bootstrap(); return; }
+  if (resumeTask) return resumeTask.promise;
+  if (state.visible && !sessionPaused) return;
+  state.visible = true; sessionPaused = true;
+  const ticket = broadcastTicket(state), task = { promise: null }; resumeTask = task;
+  notice("Vérification de la connexion…");
+  task.promise = (async () => {
+    try {
+      const auth = await request("/api/auth/session", { ticket });
+      if (!acceptBroadcastSession(state, ticket, { ...auth, mediaEnabled: state.session.mediaEnabled, largeAudiencesEnabled: state.session.largeAudiencesEnabled, ...(state.session.videoEnabled === true ? { videoEnabled: true, ...(state.session.videoCreationEnabled === false ? { videoCreationEnabled: false } : {}) } : {}) })) {
+        await bootstrap("La session a changé. Consulte l’historique avant de préparer une nouvelle diffusion."); return;
+      }
+      cookieRefreshAt = Date.now() + 300000;
+      const session = await request("/api/broadcast/admin/session", { ticket });
+      if (!acceptBroadcastSession(state, ticket, session)) { await bootstrap("La session a changé. Consulte l’historique avant de préparer une nouvelle diffusion."); return; }
+      sessionPaused = false; armExpiry();
+      el("campaign-title").value = state.draft.title; el("campaign-body").value = state.draft.body;
+      el("broadcast-content").hidden = false; el("logout").hidden = false; el("reload").hidden = false;
+      notice(""); renderSelection(); renderPreview();
+      if (videoDraft) renderVideoDraft();
+      if (state.draft.mediaId) void showPhoto();
+      if (resumeContacts && !state.pending) void loadContacts();
+      if (!labelsLoaded) void loadLabels().catch(error => report(error, "contacts-status"));
+      if (detailId) {
+        detailElements = null; replace(el("campaign-detail"), node("p", "Chargement…", "status"));
+        void showCampaign(detailId, true, true);
+      }
+      void loadHistory();
+      scheduleHistory();
+    } catch (error) {
+      if (error.stale) return;
+      if (error.status === 401) { signOut(); return; }
+      el("broadcast-content").hidden = true; el("reload").hidden = false;
+      notice("Les diffusions sont momentanément indisponibles. Actualise la page pour réessayer.", true);
+    } finally { if (resumeTask === task) resumeTask = null; }
+  })();
+  return task.promise;
 }
 function signOut() { clearPrivate(); location.replace("/admin/login"); }
 async function request(path, { ticket = broadcastTicket(state), body, timeout = 15000 } = {}) {
@@ -251,6 +305,7 @@ async function loadLabels() {
   }
   if (cursor) throw new TypeError("too_many_labels");
   for (const [element, kind] of [["tag-filter", "tag"], ["group-filter", "group"]]) for (const label of labels.filter((value) => value.kind === kind).sort((a, b) => a.name.localeCompare(b.name, "fr"))) { const option = rawNode("option", label.name); option.value = label.id; el(element).append(option); }
+  labelsLoaded = true;
 }
 async function preview() {
   if (state.audienceMode === "selected" && !state.selected.size || state.audienceMode === "filtered" && contactsDirty || previewBusy || state.pending || state.csrfFailed
@@ -305,21 +360,26 @@ function chooseVideo() {
   }
   if (state.draft.body.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant d’ajouter une vidéo.", true, "video-status"); return; }
   clearVideo(); clearPhoto(); el("photo-select").value = ""; updateComposition(state, { mediaId: null, videoId: null });
-  const ticket = broadcastTicket(state), draft = { file, url: URL.createObjectURL(file), ready: false, invalid: false, id: null };
-  videoDraft = draft;
+  videoDraft = { file, url: null, ready: false, invalid: false, id: null };
+  renderVideoDraft(); attachmentChanged();
+}
+function renderVideoDraft() {
+  const draft = videoDraft; if (!draft || !state.visible || sessionPaused || !visible()) return;
+  const ticket = broadcastTicket(state); if (!draft.url) draft.url = URL.createObjectURL(draft.file);
+  draft.ready = false;
   const player = node("video"); player.controls = true; player.preload = "metadata"; player.playsInline = true;
   ui.attr(player, "aria-label", "Vidéo choisie pour cette diffusion"); player.src = draft.url;
   player.addEventListener("loadedmetadata", () => {
     if (videoDraft !== draft || !currentBroadcast(state, ticket) || !visible()) return;
     draft.ready = true; draft.invalid = false;
-    notice("Vérifie l’aperçu, puis charge la vidéo avant de vérifier les destinataires.", false, "video-status"); renderControls();
+    if (!draft.failed) notice(draft.id ? "Vidéo chargée. Vérifie maintenant les destinataires avant de confirmer la diffusion." : "Vérifie l’aperçu, puis charge la vidéo avant de vérifier les destinataires.", false, "video-status"); renderControls();
   });
   player.addEventListener("error", () => {
     if (videoDraft !== draft || !currentBroadcast(state, ticket) || !visible()) return;
     draft.ready = false; draft.invalid = true;
     notice("Cette vidéo ne peut pas être lue. Choisis une autre vidéo MP4.", true, "video-status"); renderControls();
   });
-  replace(el("video-preview"), player); notice("Préparation de l’aperçu vidéo…", false, "video-status"); attachmentChanged();
+  replace(el("video-preview"), player); if (!draft.failed) notice("Préparation de l’aperçu vidéo…", false, "video-status"); renderControls();
 }
 function removeVideo() {
   if (state.pending || sendBusy || videoTransfer) return;
@@ -383,7 +443,7 @@ function cancelVideoUpload() {
 }
 function newId() { return [...crypto.getRandomValues(new Uint8Array(16))].map((value) => value.toString(16).padStart(2, "0")).join(""); }
 async function send(retry = false) {
-  if (sendBusy || videoTransfer || !retry && videoDraft && (!videoDraft.id || !videoDraft.ready || videoDraft.invalid)) return;
+  if (!state.visible || !visible() || sessionPaused || sendBusy || videoTransfer || !retry && videoDraft && (!videoDraft.id || !videoDraft.ready || videoDraft.invalid)) return;
   const payload = retry ? retryCampaign(state) : prepareCampaign(state, newId()); if (!payload) return;
   const ticket = broadcastTicket(state); sendBusy = true; renderControls(); notice("Confirmation de cette diffusion…", false, "send-status");
   try {
@@ -600,7 +660,7 @@ el("acknowledge").addEventListener("change", () => { state.acknowledged = el("ac
 el("load-photos").addEventListener("click", () => { void loadPhotos(); }); el("more-photos").addEventListener("click", () => { void loadPhotos(true); });
 el("preview").addEventListener("click", () => { void preview(); }); el("campaign-form").addEventListener("submit", (event) => { event.preventDefault(); void send(); });
 el("retry").addEventListener("click", () => { void send(true); }); el("refresh-history").addEventListener("click", () => { void loadHistory(false, { restartArchive: true }); if (detailId) void showCampaign(detailId, true, true); });
-el("more-history").addEventListener("click", () => { void loadHistory(true); }); el("reload").addEventListener("click", () => { void bootstrap(); }); el("logout").addEventListener("click", () => { void logout(); });
-document.addEventListener("visibilitychange", () => { if (visible()) void bootstrap(); else clearPrivate(); }); window.addEventListener("pagehide", () => clearPrivate()); window.addEventListener("pageshow", (event) => { if (event.persisted && visible()) void bootstrap(); });
-window.addEventListener("online", () => { if (visible() && sessionPaused) void checkSession(broadcastTicket(state)); });
+el("more-history").addEventListener("click", () => { void loadHistory(true); }); el("reload").addEventListener("click", () => { suspendPrivate(); void resumePrivate(); }); el("logout").addEventListener("click", () => { void logout(); });
+document.addEventListener("visibilitychange", () => { if (visible()) void resumePrivate(); else suspendPrivate(); }); window.addEventListener("pagehide", () => suspendPrivate()); window.addEventListener("pageshow", (event) => { if (event.persisted && visible()) void resumePrivate(); });
+window.addEventListener("online", () => { if (visible() && sessionPaused) void resumePrivate(); });
 if (visible()) void bootstrap(); else clearPrivate();

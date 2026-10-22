@@ -1,0 +1,1580 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-audit182-lot3-native-qualification-and-recovery",
+  "recordedAtUTC": "2026-10-22T18:29:09.659307+00:00",
+  "status": "exact_source_qualified_complete_existing_job_logs_verified",
+  "repository": "fredbuhr/jessiemessage",
+  "branch": "fix/audit-182",
+  "pullRequest": 129,
+  "pullRequestUrl": "https://github.com/fredbuhr/jessiemessage/pull/129",
+  "developmentVersion": "1.8.2",
+  "source": "3d0daff8bce9028b41879904ae167268537ca84c",
+  "tree": "f3ac13619dc1a50c5494900229beb76e4bbe6759",
+  "testedCheckout": "ca1a9aad2c9b0a302a4eaddc94d88cd772c85157",
+  "testedTree": "f3ac13619dc1a50c5494900229beb76e4bbe6759",
+  "testedParents": [
+    "422c8ac0b75b945d280c3a84225cd3e2b0025087",
+    "3d0daff8bce9028b41879904ae167268537ca84c"
+  ],
+  "testedTreeEqualsSource": true,
+  "previousCheckpointProof": "jm182-lot3-verification.json",
+  "priorQualifiedLots": [
+    "jm182-lot1-verification.json",
+    "jm182-lot2-verification.json"
+  ],
+  "runs": [
+    {
+      "id": 39830136279,
+      "name": "Private service monitor",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39830136279",
+      "head": "3d0daff8bce9028b41879904ae167268537ca84c",
+      "event": "pull_request",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-10-22T18:18:10Z",
+      "startedAt": "2026-10-22T18:18:10Z",
+      "updatedAt": "2026-10-22T18:18:25Z"
+    },
+    {
+      "id": 39830136293,
+      "name": "Windows backup recovery instructions",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39830136293",
+      "head": "3d0daff8bce9028b41879904ae167268537ca84c",
+      "event": "pull_request",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-10-22T18:18:10Z",
+      "startedAt": "2026-10-22T18:18:10Z",
+      "updatedAt": "2026-10-22T18:19:14Z"
+    },
+    {
+      "id": 39830136303,
+      "name": "CI",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39830136303",
+      "head": "3d0daff8bce9028b41879904ae167268537ca84c",
+      "event": "pull_request",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-10-22T18:18:10Z",
+      "startedAt": "2026-10-22T18:18:10Z",
+      "updatedAt": "2026-10-22T18:24:57Z"
+    }
+  ],
+  "jobs": [
+    {
+      "id": 120003781663,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-22T18:18:13Z",
+          "completed_at": "2026-10-22T18:18:14Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-22T18:18:14Z",
+          "completed_at": "2026-10-22T18:18:33Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-22T18:18:33Z",
+          "completed_at": "2026-10-22T18:18:35Z"
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-22T18:18:35Z",
+          "completed_at": "2026-10-22T18:18:39Z"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-22T18:18:39Z",
+          "completed_at": "2026-10-22T18:18:40Z"
+        },
+        {
+          "name": "Install native MariaDB checkpoint clients",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-22T18:18:40Z",
+          "completed_at": "2026-10-22T18:18:53Z"
+        },
+        {
+          "name": "Create disposable runtime and offline schema inspection accounts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-22T18:18:53Z",
+          "completed_at": "2026-10-22T18:18:53Z"
+        },
+        {
+          "name": "Exercise migrations and constraints on disposable database",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-22T18:18:53Z",
+          "completed_at": "2026-10-22T18:24:05Z"
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-10-22T18:24:05Z",
+          "completed_at": "2026-10-22T18:24:05Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-22T18:24:05Z",
+          "completed_at": "2026-10-22T18:24:06Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-10-22T18:24:06Z",
+          "completed_at": "2026-10-22T18:24:06Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-10-22T18:24:06Z",
+          "completed_at": "2026-10-22T18:24:06Z"
+        }
+      ],
+      "node": "v24.22.1",
+      "checkout": "ca1a9aad2c9b0a302a4eaddc94d88cd772c85157",
+      "summary": {
+        "tests": 576,
+        "suites": 0,
+        "pass": 576,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 312116.638335
+      },
+      "completeDecodedLog": {
+        "file": "job-120003781663.log",
+        "bytes": 341081,
+        "sha256": "07d5906da46fbbd0cacd91b99fe2dc02a05f952e2330d8aad833d8ee965b8042",
+        "encoding": "UTF-8 of complete connector-decoded log; BOM and line endings preserved",
+        "readCompletely": true,
+        "storedInGit": false
+      },
+      "errorAnnotations": [],
+      "warningAnnotations": [],
+      "latestActivityCapacitySyntheticMetrics": {
+        "type": "latest-activity-capacity-synthetic-metrics",
+        "mariaDbVersion": "11.4.13-MariaDB-ubu2404",
+        "data": {
+          "ownerContacts": 51,
+          "otherOwnerContacts": 1,
+          "histories": [
+            1000,
+            10000
+          ]
+        },
+        "measurements": [
+          {
+            "operation": "conversationLatestActivity",
+            "historyEvents": 1000,
+            "queryCalls": 16,
+            "elapsedMs": 7.26
+          },
+          {
+            "operation": "conversationLatestActivity",
+            "historyEvents": 10000,
+            "queryCalls": 14,
+            "elapsedMs": 7.392
+          },
+          {
+            "operation": "contactsFirstPage",
+            "requestedLimit": 50,
+            "queryCalls": 11,
+            "elapsedMs": 32.357
+          },
+          {
+            "operation": "contactsNextPage",
+            "requestedLimit": 50,
+            "queryCalls": 11,
+            "elapsedMs": 3.291
+          }
+        ],
+        "plans": [
+          {
+            "operation": "conversationSummary",
+            "historyEvents": 1000,
+            "plan": [
+              {
+                "selectType": "PRIMARY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "No tables used"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": "messages",
+                "type": "range",
+                "key": "messages_conversation_sequence",
+                "rows": 1000,
+                "extra": "Using index condition; Using where"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "no matching row in const table"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "no matching row in const table"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "no matching row in const table"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": "chat_events",
+                "type": "ref",
+                "key": "PRIMARY",
+                "rows": 1000,
+                "extra": "Using where"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "Select tables optimized away"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "Select tables optimized away"
+              }
+            ]
+          },
+          {
+            "operation": "latestActivityMaximum",
+            "historyEvents": 1000,
+            "plan": [
+              {
+                "selectType": "SIMPLE",
+                "table": "chat_events",
+                "type": "ref",
+                "key": "PRIMARY",
+                "rows": 1000,
+                "extra": "Using where"
+              }
+            ]
+          },
+          {
+            "operation": "conversationSummary",
+            "historyEvents": 10000,
+            "plan": [
+              {
+                "selectType": "PRIMARY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "No tables used"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": "messages",
+                "type": "ALL",
+                "key": null,
+                "rows": 11003,
+                "extra": "Using where"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "no matching row in const table"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "no matching row in const table"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "no matching row in const table"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": "chat_events",
+                "type": "ALL",
+                "key": null,
+                "rows": 11004,
+                "extra": "Using where"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "Select tables optimized away"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "Select tables optimized away"
+              }
+            ]
+          },
+          {
+            "operation": "latestActivityMaximum",
+            "historyEvents": 10000,
+            "plan": [
+              {
+                "selectType": "SIMPLE",
+                "table": "chat_events",
+                "type": "ALL",
+                "key": null,
+                "rows": 11004,
+                "extra": "Using where"
+              }
+            ]
+          },
+          {
+            "operation": "contactsFirstPage",
+            "plan": [
+              {
+                "selectType": "PRIMARY",
+                "table": "c",
+                "type": "index",
+                "key": "PRIMARY",
+                "rows": 86,
+                "extra": "Using where"
+              },
+              {
+                "selectType": "PRIMARY",
+                "table": "u",
+                "type": "eq_ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": "Using where"
+              },
+              {
+                "selectType": "PRIMARY",
+                "table": "ca",
+                "type": "eq_ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": ""
+              },
+              {
+                "selectType": "PRIMARY",
+                "table": "p",
+                "type": "eq_ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": "Using where"
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "m",
+                "type": "ref",
+                "key": "messages_conversation_sequence",
+                "rows": 2,
+                "extra": "Using where"
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "chat_receipts",
+                "type": "eq_ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": ""
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "chat_receipts",
+                "type": "eq_ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": ""
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "chat_receipts",
+                "type": "eq_ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": ""
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "chat_events",
+                "type": "ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": ""
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "chat_events",
+                "type": "ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": ""
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "messages",
+                "type": "ref",
+                "key": "messages_conversation_sequence",
+                "rows": 2,
+                "extra": "Using index"
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "up",
+                "type": "eq_ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": "Using where"
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "av",
+                "type": "eq_ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": "Using where"
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "admission_invitation",
+                "type": "ref",
+                "key": "invitations_consumer",
+                "rows": 5,
+                "extra": "Using where"
+              }
+            ]
+          }
+        ],
+        "limits": {
+          "syntheticOnly": true,
+          "loopbackOnly": true,
+          "elapsedTimesInformational": true,
+          "noHostingConcurrencyClaim": true,
+          "queryCountsExcludePoolSetupAndDriverTransactionMethods": true
+        }
+      }
+    },
+    {
+      "id": 120003782019,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-22T18:18:14Z",
+          "completed_at": "2026-10-22T18:18:15Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-22T18:18:15Z",
+          "completed_at": "2026-10-22T18:18:17Z"
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-22T18:18:17Z",
+          "completed_at": "2026-10-22T18:18:22Z"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-22T18:18:22Z",
+          "completed_at": "2026-10-22T18:18:24Z"
+        },
+        {
+          "name": "Exercise real Chrome with synthetic local fixtures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-22T18:18:24Z",
+          "completed_at": "2026-10-22T18:22:35Z"
+        },
+        {
+          "name": "Homepage rendering in French and English",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-22T18:22:35Z",
+          "completed_at": "2026-10-22T18:22:37Z"
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-10-22T18:22:37Z",
+          "completed_at": "2026-10-22T18:22:37Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-22T18:22:37Z",
+          "completed_at": "2026-10-22T18:22:37Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-22T18:22:37Z",
+          "completed_at": "2026-10-22T18:22:37Z"
+        }
+      ],
+      "node": "v24.22.1",
+      "checkout": "ca1a9aad2c9b0a302a4eaddc94d88cd772c85157",
+      "summary": {
+        "tests": 223,
+        "suites": 0,
+        "pass": 223,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 251667.99011
+      },
+      "completeDecodedLog": {
+        "file": "job-120003782019.log",
+        "bytes": 48732,
+        "sha256": "4f1798b4a5db2959925832043436de51a7b9e6604d37a78ddad70084f58318d6",
+        "encoding": "UTF-8 of complete connector-decoded log; BOM and line endings preserved",
+        "readCompletely": true,
+        "storedInGit": false
+      },
+      "errorAnnotations": [],
+      "warningAnnotations": []
+    },
+    {
+      "id": 120003782107,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-22T18:18:14Z",
+          "completed_at": "2026-10-22T18:18:14Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-22T18:18:14Z",
+          "completed_at": "2026-10-22T18:18:16Z"
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-22T18:18:16Z",
+          "completed_at": "2026-10-22T18:18:17Z"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-22T18:18:17Z",
+          "completed_at": "2026-10-22T18:18:20Z"
+        },
+        {
+          "name": "Verify private Node preparation with synthetic files",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-22T18:18:20Z",
+          "completed_at": "2026-10-22T18:18:22Z"
+        },
+        {
+          "name": "Run tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-22T18:18:22Z",
+          "completed_at": "2026-10-22T18:20:03Z"
+        },
+        {
+          "name": "Build offline workbench",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-22T18:20:03Z",
+          "completed_at": "2026-10-22T18:20:20Z"
+        },
+        {
+          "name": "Downloadable preview (open HTML, no console)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-22T18:20:20Z",
+          "completed_at": "2026-10-22T18:20:27Z"
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-22T18:20:27Z",
+          "completed_at": "2026-10-22T18:20:28Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-10-22T18:20:28Z",
+          "completed_at": "2026-10-22T18:20:28Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-10-22T18:20:28Z",
+          "completed_at": "2026-10-22T18:20:28Z"
+        }
+      ],
+      "node": "v24.22.1",
+      "checkout": "ca1a9aad2c9b0a302a4eaddc94d88cd772c85157",
+      "summary": {
+        "tests": 3869,
+        "suites": 0,
+        "pass": 3821,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 48,
+        "todo": 0,
+        "duration_ms": 100615.716673
+      },
+      "completeDecodedLog": {
+        "file": "job-120003782107.log",
+        "bytes": 548716,
+        "sha256": "ccde6f72ea4e79b4bf725423d2a4b202a59c004be252aea1efc12d3f0064de0e",
+        "encoding": "UTF-8 of complete connector-decoded log; BOM and line endings preserved",
+        "readCompletely": true,
+        "storedInGit": false
+      },
+      "errorAnnotations": [],
+      "warningAnnotations": [],
+      "syntaxSources": 712
+    },
+    {
+      "id": 120003782115,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-22T18:18:15Z",
+          "completed_at": "2026-10-22T18:18:15Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-22T18:18:15Z",
+          "completed_at": "2026-10-22T18:18:29Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-22T18:18:29Z",
+          "completed_at": "2026-10-22T18:18:30Z"
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-22T18:18:30Z",
+          "completed_at": "2026-10-22T18:18:31Z"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-22T18:18:31Z",
+          "completed_at": "2026-10-22T18:18:32Z"
+        },
+        {
+          "name": "Create disposable DML-only runtime account",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-22T18:18:32Z",
+          "completed_at": "2026-10-22T18:18:32Z"
+        },
+        {
+          "name": "Rehearse authentication and independent messaging sessions over loopback HTTPS",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-22T18:18:32Z",
+          "completed_at": "2026-10-22T18:19:43Z"
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-22T18:19:43Z",
+          "completed_at": "2026-10-22T18:19:43Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-22T18:19:43Z",
+          "completed_at": "2026-10-22T18:19:43Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-10-22T18:19:43Z",
+          "completed_at": "2026-10-22T18:19:44Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-22T18:19:44Z",
+          "completed_at": "2026-10-22T18:19:44Z"
+        }
+      ],
+      "node": "v24.22.1",
+      "checkout": "ca1a9aad2c9b0a302a4eaddc94d88cd772c85157",
+      "summary": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 70562.809289
+      },
+      "completeDecodedLog": {
+        "file": "job-120003782115.log",
+        "bytes": 38543,
+        "sha256": "fdfe8126b1a8688ef567fe5a2e8fca7f51185b2f8d0c84a24403dbba2414517a",
+        "encoding": "UTF-8 of complete connector-decoded log; BOM and line endings preserved",
+        "readCompletely": true,
+        "storedInGit": false
+      },
+      "errorAnnotations": [],
+      "warningAnnotations": []
+    },
+    {
+      "id": 120003782256,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-22T18:18:17Z",
+          "completed_at": "2026-10-22T18:18:18Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-22T18:18:18Z",
+          "completed_at": "2026-10-22T18:18:30Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-22T18:18:30Z",
+          "completed_at": "2026-10-22T18:18:32Z"
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-22T18:18:32Z",
+          "completed_at": "2026-10-22T18:18:36Z"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-22T18:18:36Z",
+          "completed_at": "2026-10-22T18:18:38Z"
+        },
+        {
+          "name": "Install native MariaDB checkpoint clients",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-22T18:18:38Z",
+          "completed_at": "2026-10-22T18:18:48Z"
+        },
+        {
+          "name": "Create disposable runtime and offline schema inspection accounts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-22T18:18:48Z",
+          "completed_at": "2026-10-22T18:18:48Z"
+        },
+        {
+          "name": "Exercise migrations and constraints on disposable database",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-22T18:18:48Z",
+          "completed_at": "2026-10-22T18:24:54Z"
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-10-22T18:24:54Z",
+          "completed_at": "2026-10-22T18:24:54Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-22T18:24:54Z",
+          "completed_at": "2026-10-22T18:24:54Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-10-22T18:24:54Z",
+          "completed_at": "2026-10-22T18:24:55Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-10-22T18:24:55Z",
+          "completed_at": "2026-10-22T18:24:55Z"
+        }
+      ],
+      "node": "v24.22.1",
+      "checkout": "ca1a9aad2c9b0a302a4eaddc94d88cd772c85157",
+      "summary": {
+        "tests": 576,
+        "suites": 0,
+        "pass": 576,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 366215.318196
+      },
+      "completeDecodedLog": {
+        "file": "job-120003782256.log",
+        "bytes": 340256,
+        "sha256": "7588298dff898c1f9973166287f1ac983515d54c29b76c08db5bc5eb6e48f949",
+        "encoding": "UTF-8 of complete connector-decoded log; BOM and line endings preserved",
+        "readCompletely": true,
+        "storedInGit": false
+      },
+      "errorAnnotations": [],
+      "warningAnnotations": [],
+      "latestActivityCapacitySyntheticMetrics": {
+        "type": "latest-activity-capacity-synthetic-metrics",
+        "mariaDbVersion": "10.11.19-MariaDB-ubu2204",
+        "data": {
+          "ownerContacts": 51,
+          "otherOwnerContacts": 1,
+          "histories": [
+            1000,
+            10000
+          ]
+        },
+        "measurements": [
+          {
+            "operation": "conversationLatestActivity",
+            "historyEvents": 1000,
+            "queryCalls": 16,
+            "elapsedMs": 8.365
+          },
+          {
+            "operation": "conversationLatestActivity",
+            "historyEvents": 10000,
+            "queryCalls": 14,
+            "elapsedMs": 22.696
+          },
+          {
+            "operation": "contactsFirstPage",
+            "requestedLimit": 50,
+            "queryCalls": 11,
+            "elapsedMs": 46.265
+          },
+          {
+            "operation": "contactsNextPage",
+            "requestedLimit": 50,
+            "queryCalls": 11,
+            "elapsedMs": 4.891
+          }
+        ],
+        "plans": [
+          {
+            "operation": "conversationSummary",
+            "historyEvents": 1000,
+            "plan": [
+              {
+                "selectType": "PRIMARY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "No tables used"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": "messages",
+                "type": "range",
+                "key": "messages_conversation_sequence",
+                "rows": 1000,
+                "extra": "Using index condition; Using where"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "no matching row in const table"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "no matching row in const table"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "no matching row in const table"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": "chat_events",
+                "type": "ref",
+                "key": "PRIMARY",
+                "rows": 1000,
+                "extra": "Using where"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "Select tables optimized away"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "Select tables optimized away"
+              }
+            ]
+          },
+          {
+            "operation": "latestActivityMaximum",
+            "historyEvents": 1000,
+            "plan": [
+              {
+                "selectType": "SIMPLE",
+                "table": "chat_events",
+                "type": "ref",
+                "key": "PRIMARY",
+                "rows": 1000,
+                "extra": "Using where"
+              }
+            ]
+          },
+          {
+            "operation": "conversationSummary",
+            "historyEvents": 10000,
+            "plan": [
+              {
+                "selectType": "PRIMARY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "No tables used"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": "messages",
+                "type": "ref",
+                "key": "messages_conversation_sequence",
+                "rows": 5501,
+                "extra": "Using index condition; Using where"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "no matching row in const table"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "no matching row in const table"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "no matching row in const table"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": "chat_events",
+                "type": "ref",
+                "key": "PRIMARY",
+                "rows": 5502,
+                "extra": "Using where"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "Select tables optimized away"
+              },
+              {
+                "selectType": "SUBQUERY",
+                "table": null,
+                "type": null,
+                "key": null,
+                "rows": null,
+                "extra": "Select tables optimized away"
+              }
+            ]
+          },
+          {
+            "operation": "latestActivityMaximum",
+            "historyEvents": 10000,
+            "plan": [
+              {
+                "selectType": "SIMPLE",
+                "table": "chat_events",
+                "type": "ref",
+                "key": "PRIMARY",
+                "rows": 5502,
+                "extra": "Using where"
+              }
+            ]
+          },
+          {
+            "operation": "contactsFirstPage",
+            "plan": [
+              {
+                "selectType": "PRIMARY",
+                "table": "c",
+                "type": "ref",
+                "key": "conversations_admin",
+                "rows": 51,
+                "extra": "Using index condition; Using where; Using filesort"
+              },
+              {
+                "selectType": "PRIMARY",
+                "table": "u",
+                "type": "eq_ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": "Using where"
+              },
+              {
+                "selectType": "PRIMARY",
+                "table": "ca",
+                "type": "eq_ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": "Using index"
+              },
+              {
+                "selectType": "PRIMARY",
+                "table": "p",
+                "type": "eq_ref|filter",
+                "key": "crm_profiles_conversation_fk|crm_profiles_admin_fk",
+                "rows": null,
+                "extra": "Using where; Using rowid filter"
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "m",
+                "type": "ref",
+                "key": "messages_conversation_sequence",
+                "rows": 1,
+                "extra": "Using where"
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "chat_receipts",
+                "type": "eq_ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": ""
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "chat_receipts",
+                "type": "eq_ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": ""
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "chat_receipts",
+                "type": "eq_ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": ""
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "chat_events",
+                "type": "ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": ""
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "chat_events",
+                "type": "ref",
+                "key": "chat_events_message",
+                "rows": 1,
+                "extra": "Using index"
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "messages",
+                "type": "ref",
+                "key": "messages_conversation_sequence",
+                "rows": 1,
+                "extra": "Using index"
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "up",
+                "type": "eq_ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": "Using where"
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "av",
+                "type": "eq_ref",
+                "key": "PRIMARY",
+                "rows": 1,
+                "extra": "Using where"
+              },
+              {
+                "selectType": "DEPENDENT SUBQUERY",
+                "table": "admission_invitation",
+                "type": "ref",
+                "key": "invitations_consumer",
+                "rows": 2,
+                "extra": "Using where"
+              }
+            ]
+          }
+        ],
+        "limits": {
+          "syntheticOnly": true,
+          "loopbackOnly": true,
+          "elapsedTimesInformational": true,
+          "noHostingConcurrencyClaim": true,
+          "queryCountsExcludePoolSetupAndDriverTransactionMethods": true
+        }
+      }
+    },
+    {
+      "id": 120003782386,
+      "name": "Windows PowerShell 5.1 instructions",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Parse owner instructions without creating any key",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Verify harmless native warnings and failed native commands",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Parse and exercise Windows backup collector with synthetic local files",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Generate Node witness fixtures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Verify Windows witness, existing-PC enrollment and native HTTP",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Create the actual Windows ZIP with a synthetic expired pairing code",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Expand ZIP using native Windows tools without running the installer",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Prepare pinned portable Windows GnuPG for the synthetic recovery test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Parse and verify actual GPG decryption in memory on Windows PowerShell 5.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25
+        }
+      ],
+      "node": "v24.22.1",
+      "checkout": "ca1a9aad2c9b0a302a4eaddc94d88cd772c85157",
+      "summary": null,
+      "completeDecodedLog": {
+        "file": "job-120003782386.log",
+        "bytes": 30588,
+        "sha256": "2bb4ad4839ef466655344b87e311142b2c9248dc28beebc1208be0ddccf8781c",
+        "encoding": "UTF-8 of complete connector-decoded log; BOM and line endings preserved",
+        "readCompletely": true,
+        "storedInGit": false
+      },
+      "errorAnnotations": [],
+      "warningAnnotations": [],
+      "qualification": "retained_formats_native_windows_ci_synthetic_only_not_user_pc"
+    },
+    {
+      "id": 120003781966,
+      "name": "Probe failure and privacy tests",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Native Node tests, no hosting access",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        }
+      ],
+      "node": "v24.22.1",
+      "checkout": "ca1a9aad2c9b0a302a4eaddc94d88cd772c85157",
+      "summary": {
+        "tests": 24,
+        "suites": 0,
+        "pass": 24,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 187.786037
+      },
+      "completeDecodedLog": {
+        "file": "job-120003781966.log",
+        "bytes": 20611,
+        "sha256": "1dd0870025ccba8695008b4c738eec871f1db299ba5d69c443e8ce9703ddebc0",
+        "encoding": "UTF-8 of complete connector-decoded log; BOM and line endings preserved",
+        "readCompletely": true,
+        "storedInGit": false
+      },
+      "errorAnnotations": [],
+      "warningAnnotations": []
+    },
+    {
+      "id": 120003893096,
+      "name": "Anonymous HTTPS and readiness",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": null,
+      "qualification": "intentionally_skipped_on_pull_request_no_hosting_probe"
+    }
+  ],
+  "decisionA12": {
+    "nativeDiagnosticPassedOnBothVersions": true,
+    "additionalMigrationOrIndexJustifiedByTheseMeasurements": false,
+    "schemaQuotaAndHistoryUnchanged": true,
+    "observedRangeMs": [
+      3.291,
+      46.265
+    ],
+    "remainingGrowthCost": "MAX(occurred_at) scans matching event history;11.4 optimizer chose ALL at10k in this fixture.",
+    "limits": [
+      "One sample per operation, not a benchmark or comparison between database engines.",
+      "No production, host concurrency, end-to-end HTTP, complete pool/transaction cost, campaign volume or simultaneous-user guarantee."
+    ]
+  },
+  "recovery": {
+    "discussion": "Bilan de production",
+    "lastPushedSourceAtUTC": "2026-10-22T18:17:49Z",
+    "lastPullRequestDescriptionAtUTC": "2026-10-22T18:19:37Z",
+    "lastCiCompletionAtUTC": "2026-10-22T18:24:57Z",
+    "interruptionPoint": "Lot3 source pushed; existing automatic native runs not yet acquired and recorded in repository checkpoints.",
+    "localSourceStatusOnRecovery": "clean_existing_remote_branch_checked_out",
+    "recordedImplementationFileHashesVerified": 33,
+    "preservedRuntimeResourceHashesVerified": 6,
+    "sqlFilesUnchangedFromProduction181": 36,
+    "applicationAndLockRootVersions": [
+      "1.8.2",
+      "1.8.2",
+      "1.8.2"
+    ],
+    "platformRootCause": "not_established_no_internal_chatgpt_browser_or_network_telemetry",
+    "officialReferencesReviewed": [
+      "https://learn.chatgpt.com/docs/reference/troubleshooting",
+      "https://learn.chatgpt.com/docs/long-running-work"
+    ],
+    "officialReferencesDiagnoseThisIncident": false,
+    "previousAudit": "../AUDIT-INTERRUPTIONS-2026-10-21.md",
+    "existingRunRerun": false,
+    "suiteRerun": false,
+    "newGeneralAudit": false
+  },
+  "production": {
+    "version": "1.8.1",
+    "source": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+    "tree": "eb427f887248fa9db5c656c3773e016f8688efc9",
+    "node": "v24.22.1",
+    "schema": 36,
+    "provenance": "existing_user_reported_private_identity_and_receipts",
+    "newPrivateProcessObservation": false
+  },
+  "productionActions": {
+    "merge": false,
+    "tagOrRelease": false,
+    "deployment": false,
+    "sql": false,
+    "manager": false,
+    "cloudBrowser": false,
+    "realMessagesOrDeletion": false,
+    "hostedBackupTest": false
+  },
+  "remaining": [
+    "Lot4: prepare the single exact-source delivery; qualify merged main before immutable release and exact deployment.",
+    "A10 operator facts D01-D07 remain unestablished; A11 private network peer observation and available physical-device checks remain outstanding.",
+    "Hosted backup UI test explicitly deferred by user; no automatic resumption."
+  ],
+  "nextAction": "Prepare lot4 delivery on the existing correction branch, preserving production1.8.1 until its exact deployment is observed."
+}

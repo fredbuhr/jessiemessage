@@ -3,6 +3,7 @@ import { ChatStoreError } from "../chat/store.mjs";
 import { migrationStatus } from "../db/migrations.mjs";
 import { heldMediaObjects, lockMediaCapacity, ownerMediaBytes, pendingMediaBytes, validateMediaCapacity } from "./capacity-store.mjs";
 import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_OBJECTS } from "./backup-limits.mjs";
+import { BackupMediaAdmissionError, fitsBackupMediaAdmission, lockBackupMediaAdmission } from "./backup-admission.mjs";
 
 // Chat transactions preserve this subclass while rolling back every callback
 // failure. No database exception, file key or message content escapes here.
@@ -103,7 +104,8 @@ function authoredChecks(sql) {
   return result;
 }
 
-export function createMediaStore({ pool, chatStore, capacity = null }) {
+export function createMediaStore({ pool, chatStore, capacity = null, video = false }) {
+  if (typeof video !== "boolean") input();
   if (!pool || typeof pool.getConnection !== "function" || !chatStore || typeof chatStore.withActor !== "function" || typeof chatStore.withConversation !== "function") input();
   capacity = capacity === null ? null : validateMediaCapacity(capacity);
   const withContext = (request, callback) => request.conversationId === null || request.conversationId === undefined
@@ -184,6 +186,13 @@ export function createMediaStore({ pool, chatStore, capacity = null }) {
     async reserveAsset({ role, tokenHash, now, asset }) {
       validateAsset(asset);
       return chatStore.withActor({ role, tokenHash, now }, async (connection, context) => {
+        if (capacity === null) fail("MEDIA_CAPACITY_UNAVAILABLE");
+        let backup;
+        try { backup = await lockBackupMediaAdmission(connection, { video }); }
+        catch (error) {
+          if (error instanceof BackupMediaAdmissionError) fail(error.reason === "unavailable" ? "MEDIA_CAPACITY_UNAVAILABLE" : "MEDIA_DATABASE_STATE");
+          throw error;
+        }
         const { heldBytes } = await lockMediaCapacity(connection, capacity);
         const existing = await allocation(connection, asset.id);
         if (existing && (!matches(existing, context, asset) || !["reserved", "registered"].includes(existing.state) || timestamp(existing.created_at) > now)) input();
@@ -197,7 +206,8 @@ export function createMediaStore({ pool, chatStore, capacity = null }) {
           // Keep existing quota/root bindings and uncertain allocations intact.
           // Only new allocations spend the checkpoint's byte and file budgets.
           if (heldBytes > Math.min(capacity.totalBytes, BACKUP_MEDIA_MAX_BYTES) - storedBytes
-            || ownerHeld > capacity.ownerBytes - storedBytes || await heldMediaObjects(connection) >= BACKUP_MEDIA_MAX_OBJECTS) fail("MEDIA_STORAGE_LIMIT");
+            || ownerHeld > capacity.ownerBytes - storedBytes || await heldMediaObjects(connection) >= BACKUP_MEDIA_MAX_OBJECTS
+            || !fitsBackupMediaAdmission(backup, storedBytes, 2)) fail("MEDIA_STORAGE_LIMIT");
           await connection.query(`INSERT INTO media_storage_objects
             (id, owner_id, owner_role, storage_key, content_digest, full_bytes, thumbnail_bytes, stored_bytes, state, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'reserved', ?, ?)`, [asset.id, context.actor.id, role, asset.storageKey, asset.digest,
@@ -205,6 +215,28 @@ export function createMediaStore({ pool, chatStore, capacity = null }) {
           await connection.query("UPDATE media_storage_state SET held_bytes = held_bytes + ? WHERE id = 1", [storedBytes]);
         }
         return { duplicate: false, reservation: { id: asset.id, storageKey: asset.storageKey, bytes: storedBytes, pendingBytes: pendingBytes + (existing ? 0 : storedBytes) } };
+      });
+    },
+
+    async cancelAssetReservation({ role, tokenHash, now, objectId, storageKey }) {
+      bytes(objectId, 16); bytes(storageKey, 32);
+      // Trusted upload cleanup only, before put has ever been called. Keep the
+      // normal fresh actor proof and never admit a registered asset here.
+      return chatStore.withActor({ role, tokenHash, now }, async (connection, context) => {
+        now = context.now;
+        const { heldBytes } = await lockMediaCapacity(connection, capacity);
+        const object = await allocation(connection, objectId);
+        if (!object || !object.owner_id.equals(context.actor.id) || object.owner_role !== role || !object.storage_key.equals(storageKey)) fail("MEDIA_NOT_FOUND");
+        if (object.asset_id !== null || !["reserved", "released"].includes(object.state) || timestamp(object.updated_at) > now) input();
+        const linked = await connection.query("SELECT 1 FROM media_assets WHERE id = ? OR storage_key = ? LIMIT 1 FOR UPDATE", [objectId, storageKey]);
+        if (linked.length) input();
+        if (object.state === "released") return { released: true };
+        const storedBytes = Number(object.stored_bytes);
+        if (!Number.isSafeInteger(storedBytes) || storedBytes < 1 || heldBytes < storedBytes) state();
+        const at = sqlDate(now);
+        await connection.query("UPDATE media_storage_objects SET state = 'released', updated_at = ?, released_at = ? WHERE id = ? AND state = 'reserved'", [at, at, objectId]);
+        await connection.query("UPDATE media_storage_state SET held_bytes = held_bytes - ? WHERE id = 1", [storedBytes]);
+        return { released: true };
       });
     },
 

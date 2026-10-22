@@ -1,7 +1,8 @@
 import { makeConversationState, belongsTo, orderedMessages, mergeMessages, mergeConversation, mergeEvents, sequence, compareSequence, maxSequence, validBody, validCaption, prepareSend, prepareImageSend, completeImageUpload, prepareVideoSend, completeVideoUpload, rejectPendingVideoSend, mediaStillCurrent, createObjectUrlCache, retrySend, rejectPendingSend, rejectPendingImageSend, nearBottom, shouldScroll, readableSequence, inboxRefreshPlan } from "/chat-model.js";
 import { prepareImageUpload } from "/image-preparation.js";
-import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";
+import { quickReplyOptions } from "/quick-replies.js";
 import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";
+import { createChatDrafts } from "/chat-drafts.js";
 
 const ui = globalThis.JessieI18n ?? {
   register() {}, t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
@@ -12,6 +13,13 @@ const ui = globalThis.JessieI18n ?? {
   numberParam(value, options = {}) { return value.toLocaleString("fr-FR", options); },
   getLanguage() { return "fr"; }, onChange() { return () => {}; }, apply() {},
 };
+ui.register({
+  "Ton brouillon texte a été retrouvé.": "Your text draft has been restored.",
+  "Ton brouillon texte a été retrouvé. Ajoute à nouveau les pièces jointes.": "Your text draft has been restored. Add the attachments again.",
+  "Un envoi reste à confirmer. Réessaie cet envoi pour reprendre la même demande.": "A send still needs confirmation. Retry this send to resume the same request.",
+  "Ce navigateur ne peut pas garder ce brouillon après rechargement. Il reste dans cet onglet.": "This browser cannot keep this draft after reloading. It remains in this tab.",
+  "Cet envoi n’a pas commencé. Réessaie sans recharger la page pour conserver ton brouillon.": "This send has not started. Retry without reloading the page to keep your draft.",
+});
 
 const el = (id) => document.getElementById(id);
 const role = location.pathname === "/admin/messages" ? "admin" : location.pathname === "/messages" ? "client" : null;
@@ -20,6 +28,7 @@ const chatBase = `/api/chat/${role}`;
 const mediaBase = `/api/media/${role}`;
 const videoBase = "/api/video/" + role;
 const states = new Map(); const inbox = new Map(); const controllers = new Set();
+const drafts = createChatDrafts({ storage: () => globalThis.sessionStorage, clock: () => Date.now(), digest: bytes => crypto.subtle.digest("SHA-256", bytes) });
 const messageRows = new Map();
 let generation = 0; let visibilityGeneration = 0; let selectionEpoch = 0;
 let selected = null; let csrf = null; let ready = false; let expiryTimer = null;
@@ -336,7 +345,12 @@ async function refreshTasksMenu(force = false) {
     if (tasksRefresh === pending && fresh(ticket, true) && !error.stale && [401, 403].includes(error.status)) await handleError(error);
   } finally { if (tasksRefresh === pending) tasksRefresh = null; }
 }
-function clearPrivate() {
+function clearPrivate({ purgeDrafts = false } = {}) {
+  if (purgeDrafts) drafts.clear(role);
+  else {
+    for (const state of states.values()) if (state.conversation) drafts.write(state, { selected: state.id === selected });
+    drafts.detach();
+  }
   closeChatMenu(); closeComposerTools(); menuOpener = null;
   quickReplyLanguage = null;
   tasksCapability = false; tasksRefresh = null; lastTasksRefresh = 0;
@@ -367,8 +381,8 @@ function cancelConfirmation() {
 }
 function confirmDeletion(kind, opener) {
   cancelConfirmation();
-  ui.text(el("confirm-title"), kind === "photo" ? "Supprimer cette photo ?" : "Supprimer ce message ?");
-  ui.text(el("confirm-description"), kind === "photo" ? "Elle sera retirée de ta bibliothèque. Cette action est définitive." : "Il disparaîtra de cette conversation pour vous deux. Cette action est définitive.");
+  ui.text(el("confirm-title"), kind === "video" ? "Supprimer cette vidéo ?" : kind === "photo" ? "Supprimer cette photo ?" : "Supprimer ce message ?");
+  ui.text(el("confirm-description"), ["photo", "video"].includes(kind) ? "Elle sera retirée de ta bibliothèque. Cette action est définitive." : "Il disparaîtra de cette conversation pour vous deux. Cette action est définitive.");
   return new Promise((resolve) => { pendingConfirmation = { resolve, opener }; el("confirm-delete").showModal(); focusVisible(el("cancel-delete")); });
 }
 function retryConnection(show = true) { el("retry-connection").hidden = !show; }
@@ -409,7 +423,7 @@ function hasUnsavedWork() {
   return !loggingOut && (crm?.hasUnsavedWork?.() === true || [...states.values()].some((state) => state.draft?.length || state.pending || state.imageDraft || state.videoDraft));
 }
 function signOut() {
-  clearPrivate();
+  clearPrivate({ purgeDrafts: true });
   location.replace(pendingNotification ? globalThis.JessieNotificationLink.destination(role, pendingNotification, true) : role === "admin" ? "/admin/login" : "/access");
 }
 function snapshot(state = null) { return { generation, visibilityGeneration, selectionEpoch, id: state?.id, epoch: state?.epoch }; }
@@ -458,8 +472,11 @@ async function refreshSession({ allowLoggingOut = false } = {}) {
   const owner = sessionIdentity(session);
   if (!owner) { signOut(); throw staleResponse(); }
   const changed = Boolean(sessionOwner && !sameOwner(sessionOwner, owner));
-  if (changed) clearPrivate();
+  if (changed) clearPrivate({ purgeDrafts: true });
   sessionOwner = owner; csrf = session.csrf; sessionCheckedAt = Date.now();
+  const ticket = snapshot();
+  await drafts.bind(owner);
+  if (!fresh(ticket, true) || !sameOwner(owner, sessionOwner) || !visible() || loggingOut && !allowLoggingOut) throw staleResponse();
   expiryTimer?.();
   expiryTimer = globalThis.JessieSessionClock.scheduleSessionCheck(session.expiresAt, () => { void resumeConnection(); });
   return { session, changed };
@@ -522,7 +539,7 @@ async function handleError(error, state = null) {
   }
   if (error.status === 401 || (role === "client" && error.status === 403)) { signOut(); return; }
   if (state && error.status === 404 && belongsTo(currentState(), state.id, state.epoch)) {
-    states.delete(state.id); inbox.delete(state.id); selected = null; crm?.removeConversation(state.id); selectionEpoch += 1; selectionLoading = false; clearChat(); renderInbox(); notice("Cette conversation n’est plus accessible.", true); schedulePolling(); return;
+    drafts.forget(state.id); states.delete(state.id); inbox.delete(state.id); selected = null; crm?.removeConversation(state.id); selectionEpoch += 1; selectionLoading = false; clearChat(); renderInbox(); notice("Cette conversation n’est plus accessible.", true); schedulePolling(); return;
   }
   if (role === "admin" && error.status === 403) {
     try {
@@ -748,13 +765,16 @@ function renderImageDraft(state) {
   } else ui.text(el("image-preview"), "Photo prête");
 }
 function videoErrorText(error) {
+  if (error.status === 409 && error.code === "video_in_use") return "Cette vidéo ne peut pas être supprimée : elle est utilisée dans un message, ou une diffusion est en cours.";
   if (error.status === 507) return "Le stockage des vidéos a atteint sa limite.";
   if ([400, 411, 413, 415].includes(error.status)) return "Vidéo refusée. Choisis une vidéo MP4 de 100 Mo maximum et une légende de 1 000 caractères maximum.";
   if (error.status === 404) return "Cette vidéo n’est plus disponible.";
   if (error.status === 429) return "Patiente un moment avant de réessayer cet envoi.";
   return "La confirmation de la vidéo manque. Tu peux réessayer ; un transfert interrompu devra recommencer.";
 }
-function validVideoUrl(value, state, messageId) {
+function validVideoUrl(value, state, messageId, ownedAssetId = null) {
+  if (ownedAssetId !== null) return typeof value === "string" && /^[a-f0-9]{32}$/.test(ownedAssetId)
+    && value === videoBase + "/assets/" + ownedAssetId + "/content";
   return typeof value === "string" && /^[a-f0-9]{32}$/.test(messageId ?? "")
     && value === videoBase + "/conversations/" + state.id + "/messages/" + messageId + "/content";
 }
@@ -781,8 +801,8 @@ function privateVideoElement() {
   ui.attr(video, "aria-label", "Vidéo privée");
   return video;
 }
-function attachPrivateVideo(video, metadata, state, messageId, current = () => true) {
-  if (!videoEnabled || !visible() || !validVideoUrl(metadata?.contentUrl, state, messageId)) return;
+function attachPrivateVideo(video, metadata, state, messageId, current = () => true, ownedAssetId = null) {
+  if (!videoEnabled || !visible() || !validVideoUrl(metadata?.contentUrl, state, messageId, ownedAssetId)) return;
   const ticket = snapshot(state), owner = sessionOwner, version = videoVersion;
   const record = { current: () => current() && video.isConnected && visible() && fresh(ticket)
     && version === videoVersion && sameOwner(owner, sessionOwner) && !loggingOut };
@@ -898,9 +918,13 @@ function closeVideoGallery(restoreFocus = true) {
   if (restoreFocus) focusVisible(videoGalleryReturnFocus ?? menuReturnFocus());
   videoGalleryReturnFocus = null;
 }
-async function openVideoGallery(opener) {
+async function openVideoGallery(opener, kind = "gallery") {
   const state = currentState(); if (!videoEnabled || !state || !visible()) return;
-  closeVideoGallery(false); videoGalleryReturnFocus = opener; videoGallery = { state, items: [], nextBefore: null, hasMore: false };
+  if (!["gallery", "library"].includes(kind)) return;
+  closeVideoGallery(false); videoGalleryReturnFocus = opener; videoGallery = { state, kind, items: [], nextBefore: null, hasMore: false };
+  ui.text(el("video-gallery-title"), kind === "library" ? "Mes vidéos" : "Vidéos de la conversation");
+  el("video-gallery-conversation").setAttribute("aria-pressed", String(kind === "gallery"));
+  el("video-gallery-library").setAttribute("aria-pressed", String(kind === "library"));
   el("video-gallery").showModal(); focusVisible(el("close-video-gallery")); await loadVideoGallery();
 }
 async function loadVideoGallery(more = false) {
@@ -908,23 +932,36 @@ async function loadVideoGallery(more = false) {
   const version = videoGalleryVersion; videoGalleryBusy = true; el("more-videos").disabled = true;
   ui.text(el("video-gallery-status"), "Chargement des vidéos…");
   try {
-    const result = await request(videoBase + "/conversations/" + panel.state.id + "/gallery?limit=20" + (more ? "&before=" + panel.nextBefore : ""), { state: panel.state });
+    const library = panel.kind === "library";
+    const path = library ? videoBase + "/assets?limit=20" + (more ? "&afterId=" + panel.nextBefore : "")
+      : videoBase + "/conversations/" + panel.state.id + "/gallery?limit=20" + (more ? "&before=" + panel.nextBefore : "");
+    const result = await request(path, { state: panel.state });
     if (videoGallery !== panel || version !== videoGalleryVersion) return;
-    if (!Array.isArray(result.items) || result.items.length > 20 || typeof result.hasMore !== "boolean"
-      || result.nextBefore !== null && typeof result.nextBefore !== "string") throw new Error("invalid_video_gallery");
+    const received = library ? result.assets : result.items, cursor = library ? result.nextCursor : result.nextBefore;
+    if (!Array.isArray(received) || received.length > 20 || typeof result.hasMore !== "boolean"
+      || cursor !== null && typeof cursor !== "string") throw new Error("invalid_video_gallery");
     let previous = more ? panel.nextBefore : null;
-    for (const item of result.items) {
-      sequence(item.sequence);
-      if (previous !== null && compareSequence(item.sequence, previous) >= 0 || !validVideoUrl(item.video?.contentUrl, panel.state, item.messageId)) throw new Error("invalid_video_gallery");
-      previous = item.sequence;
+    for (const item of received) {
+      if (library) {
+        if (!/^[a-f0-9]{32}$/.test(item.id ?? "") || previous !== null && item.id <= previous
+          || typeof item.cleanupPending !== "boolean" || !Number.isSafeInteger(item.bytes) || item.bytes < 1 || item.bytes > 104857600
+          || item.mime !== "video/mp4" || !Number.isSafeInteger(item.createdAt) || item.createdAt < 0
+          || (item.cleanupPending ? item.contentUrl !== null : !validVideoUrl(item.contentUrl, panel.state, null, item.id))) throw new Error("invalid_video_gallery");
+        previous = item.id;
+      } else {
+        sequence(item.sequence);
+        if (previous !== null && compareSequence(item.sequence, previous) >= 0 || !validVideoUrl(item.video?.contentUrl, panel.state, item.messageId)) throw new Error("invalid_video_gallery");
+        previous = item.sequence;
+      }
     }
-    if (result.hasMore && (!result.items.length || result.nextBefore !== result.items.at(-1).sequence)
-      || !result.hasMore && result.nextBefore !== null) throw new Error("invalid_video_gallery");
+    if (result.hasMore && (!received.length || cursor !== (library ? received.at(-1).id : received.at(-1).sequence))
+      || !result.hasMore && cursor !== null) throw new Error("invalid_video_gallery");
     const deleted = new Set([...panel.state.messages.values()].filter(message => message.deletedAt != null).map(message => message.id));
-    const items = result.items.filter(item => !deleted.has(item.messageId));
+    const items = library ? received : received.filter(item => !deleted.has(item.messageId));
     panel.items = more ? [...panel.items, ...items] : items;
-    panel.nextBefore = result.nextBefore; panel.hasMore = result.hasMore; renderVideoGallery();
-    ui.text(el("video-gallery-status"), panel.items.length ? "Les vidéos restent privées dans cette conversation." : "Aucune vidéo dans cette conversation.");
+    panel.nextBefore = cursor; panel.hasMore = result.hasMore; renderVideoGallery();
+    ui.text(el("video-gallery-status"), library ? "Tu peux supprimer tes vidéos inutilisées lorsqu’aucune diffusion n’est en cours."
+      : panel.items.length ? "Les vidéos restent privées dans cette conversation." : "Aucune vidéo dans cette conversation.");
   } catch (error) {
     if (videoGallery === panel && version === videoGalleryVersion && !error.stale) {
       ui.text(el("video-gallery-status"), videoErrorText(error));
@@ -936,15 +973,45 @@ async function loadVideoGallery(more = false) {
 }
 function renderVideoGallery() {
   const panel = videoGallery; if (!panel) return;
+  const library = panel.kind === "library";
   clearVideoPlayers(el("video-grid")); ui.forget(el("video-grid")); el("video-grid").replaceChildren();
   for (const item of panel.items) {
     const card = document.createElement("article"), video = privateVideoElement(); card.className = "video-card";
     const error = document.createElement("p"); error.className = "video-error"; error.hidden = true;
     const time = document.createElement("p"); ui.text(time, "{date}", { date: dateParameter(item.createdAt, true) });
-    card.append(video, error, time); el("video-grid").append(card);
-    attachPrivateVideo(video, item.video, panel.state, item.messageId, () => videoGallery === panel && panel.items.includes(item));
+    if (!library || !item.cleanupPending) card.append(video, error);
+    else { const pending = document.createElement("p"); ui.text(pending, "Suppression à terminer"); card.append(pending); }
+    card.append(time); el("video-grid").append(card);
+    if (!library || !item.cleanupPending) attachPrivateVideo(video, library ? item : item.video, panel.state, item.messageId,
+      () => videoGallery === panel && panel.items.includes(item), library ? item.id : null);
+    if (library && videoCreationEnabled) {
+      const remove = document.createElement("button"); remove.type = "button"; remove.className = "text-button";
+      ui.text(remove, item.cleanupPending ? "Terminer la suppression" : "Supprimer");
+      remove.disabled = [...states.values()].some(state => state.pending?.kind === "video" && state.pending.videoId === item.id);
+      remove.addEventListener("click", () => { void removeOwnVideo(item, panel, remove); }); card.append(remove);
+    }
   }
   el("more-videos").hidden = !panel.hasMore;
+  ui.text(el("more-videos"), library ? "Autres vidéos" : "Vidéos précédentes");
+}
+async function removeOwnVideo(item, panel, button) {
+  if (button.disabled || videoGallery !== panel) return;
+  const ticket = snapshot(panel.state), owner = sessionOwner;
+  if (!await confirmDeletion("video", button) || videoGallery !== panel || !fresh(ticket) || !sameOwner(owner, sessionOwner)
+    || !belongsTo(currentState(), panel.state.id, panel.state.epoch) || !visible() || !videoCreationEnabled
+    || !button.isConnected || !panel.items.includes(item)
+    || [...states.values()].some(state => state.pending?.kind === "video" && state.pending.videoId === item.id)) return;
+  button.disabled = true;
+  try {
+    await request(`${videoBase}/assets/${item.id}/delete`, { state: panel.state, mutation: true });
+    if (videoGallery !== panel) return;
+    panel.items = panel.items.filter(value => value.id !== item.id); renderVideoGallery();
+    ui.text(el("video-gallery-status"), "Vidéo retirée de ta bibliothèque."); focusVisible(el("close-video-gallery"));
+  } catch (error) {
+    if (videoGallery !== panel || error.stale) return;
+    ui.text(el("video-gallery-status"), videoErrorText(error));
+    if ([401, 403].includes(error.status)) await handleError(error, panel.state);
+  } finally { if (button.isConnected) button.disabled = false; }
 }
 
 async function refreshMediaCapability() {
@@ -966,6 +1033,7 @@ async function refreshCrmCapability() {
       tasksEnabled: tasksCapability,
       onError: (error) => handleError(error),
       onUnavailable(id) {
+        drafts.forget(id);
         states.delete(id); inbox.delete(id);
         if (selected === id) { selected = null; selectionEpoch += 1; selectionLoading = false; clearChat(); }
         renderInbox(); notice("Cette conversation n’est plus accessible.", true); schedulePolling();
@@ -1209,6 +1277,10 @@ function renderMeta(state) {
   for (const id of ["pick-image", "open-library"]) el(id).disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
   renderImageDraft(state);
   renderVideoDraft(state);
+  if (!drafts.write(state) && state.draft.length) {
+    ui.text(el("composer-help"), "Ce navigateur ne peut pas garder ce brouillon après rechargement. Il reste dans cet onglet.");
+    el("composer-help").classList.remove("sr-only");
+  }
   resizeComposer();
   el("pending-controls").hidden = state.pending?.status !== "retry";
   el("retry-send").disabled = !conversation.canSend || sendBusy;
@@ -1364,11 +1436,20 @@ async function selectConversation(id, { focus = false, target = null } = {}) {
     else {
       const anchor = target ? `&after=${(BigInt(target.sequence) - 1n).toString()}` : "";
       const result = await request(`${conversationPath(state)}/messages?limit=50${anchor}`, { state });
+      const recovered = state.draftHydrated ? null : drafts.read(state.id);
+      state.draftHydrated = true;
+      if (recovered && !state.draft && !state.pending && !state.imageDraft && !state.videoDraft) {
+        state.draft = recovered.text;
+        if (recovered.pending) state.pending = { clientMessageId: recovered.pending.clientMessageId, body: recovered.text, status: "retry" };
+      }
       mergeMessagePage(state, result);
+      el("message-body").value = state.draft;
       state.eventCursor = sequence(result.eventCursor); state.hasMoreBefore = result.hasMoreBefore; state.nextBefore = result.nextBefore;
       state.hasMoreAfter = result.hasMoreAfter === true; state.nextAfter = result.nextAfter ?? null;
       inbox.set(id, result.conversation);
       renderMessages(state, { initial: true });
+      if (recovered && state.pending) notice("Un envoi reste à confirmer. Réessaie cet envoi pour reprendre la même demande.");
+      else if (recovered && state.draft) notice(recovered.hadAttachment ? "Ton brouillon texte a été retrouvé. Ajoute à nouveau les pièces jointes." : "Ton brouillon texte a été retrouvé.");
     }
     if (!moreHistory) armMessageAnnouncement(state); schedulePolling(moreHistory ? 300 : retryDelay);
   } catch (error) { await handleError(error, state); }
@@ -1487,6 +1568,8 @@ async function sendMessage(retry = false) {
   const body = retry ? state.pending?.body : el("message-body").value;
   if (!validBody(body)) { notice("Écris un message de 1 à 4 096 caractères.", true); return; }
   const pending = prepareSend(state, body, state.pending?.clientMessageId ?? newClientId());
+  state.draft = body;
+  if (!drafts.beforeSend(state).safeToSend) { retrySend(state); renderMeta(state); notice("Cet envoi n’a pas commencé. Réessaie sans recharger la page pour conserver ton brouillon.", true); return; }
   state.draft = body; sendBusy = true; renderMeta(state); notice("Envoi en cours…");
   try {
     const result = await request(`${conversationPath(state)}/messages`, { state, mutation: true, body: { clientMessageId: pending.clientMessageId, body: pending.body } });
@@ -1505,6 +1588,8 @@ async function sendImage(retry = false) {
   if (!validCaption(caption)) { notice("Ajoute une légende de 1 000 caractères maximum, ou laisse le champ vide.", true); return; }
   const draft = state.imageDraft;
   const pending = prepareImageSend(state, { caption, mediaId: retry ? state.pending?.mediaId : draft?.asset?.id ?? null, file: retry ? state.pending?.file : draft?.file ?? null }, state.pending?.clientMessageId ?? newClientId());
+  state.draft = caption;
+  if (!drafts.beforeSend(state).safeToSend) { retrySend(state); renderMeta(state); notice("Cet envoi n’a pas commencé. Réessaie sans recharger la page pour conserver ton brouillon.", true); return; }
   state.draft = caption; sendBusy = true; let preparing = false; renderMeta(state); notice(pending.mediaId ? "Envoi de la photo…" : "Préparation de la photo…");
   try {
     if (!pending.mediaId) {
@@ -1541,6 +1626,8 @@ async function sendVideo(retry = false) {
   if (!retry && (!state.videoDraft?.ready || state.videoDraft.invalid)) return;
   const pending = prepareVideoSend(state, { caption, videoId: retry ? state.pending?.videoId : null,
     file: retry ? state.pending?.file : state.videoDraft?.file }, state.pending?.clientMessageId ?? newClientId());
+  state.draft = caption;
+  if (!drafts.beforeSend(state).safeToSend) { retrySend(state); renderMeta(state); notice("Cet envoi n’a pas commencé. Réessaie sans recharger la page pour conserver ton brouillon.", true); return; }
   const transfer = { controller: new AbortController(), state, pending, cancelled: false };
   videoTransfer = transfer; controllers.add(transfer.controller); el("video-progress").value = 0;
   state.draft = caption; sendBusy = true; renderMeta(state);
@@ -1604,7 +1691,7 @@ async function markRead() {
 }
 async function logout() {
   if (logoutBusy) return; logoutBusy = true; loggingOut = true;
-  const logoutCsrf = csrf; clearPrivate(); csrf = logoutCsrf;
+  const logoutCsrf = csrf; clearPrivate({ purgeDrafts: true }); csrf = logoutCsrf;
   el("logout").disabled = true; notice("Déconnexion en cours…", false, "session-status");
   try { await request(`${sessionBase}/logout`, { mutation: true, verifyOwner: false }); signOut(); }
   catch (error) {
@@ -1904,6 +1991,8 @@ el("cancel-video").addEventListener("click", () => {
   state.videoDraft = null; revokeVideoPreview(); renderMeta(state); focusVisible(el("message-body"));
 });
 el("open-video-gallery").addEventListener("click", () => { const opener = menuReturnFocus(); closeChatMenu(); void openVideoGallery(opener); });
+el("video-gallery-conversation").addEventListener("click", () => { const opener = videoGalleryReturnFocus; void openVideoGallery(opener, "gallery"); });
+el("video-gallery-library").addEventListener("click", () => { const opener = videoGalleryReturnFocus; void openVideoGallery(opener, "library"); });
 el("close-video-gallery").addEventListener("click", () => closeVideoGallery());
 el("video-gallery").addEventListener("close", () => { if (videoGallery && !el("video-gallery").open) closeVideoGallery(); });
 el("more-videos").addEventListener("click", () => { void loadVideoGallery(true); });
@@ -2039,6 +2128,8 @@ async function start({ session = null } = {}) {
       if (session) {
         const owner = sessionIdentity(session); if (!owner) { signOut(); return; }
         sessionOwner = owner; csrf = session.csrf; sessionCheckedAt = Date.now();
+        await drafts.bind(owner);
+        if (!fresh(task.ticket, true) || !sameOwner(owner, sessionOwner) || !visible() || loggingOut) throw staleResponse();
         expiryTimer = globalThis.JessieSessionClock.scheduleSessionCheck(session.expiresAt, () => { void resumeConnection(); });
       } else await refreshSession();
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
@@ -2061,7 +2152,11 @@ async function start({ session = null } = {}) {
       el("workspace").classList.toggle("is-admin", role === "admin");
       el("inbox").hidden = role !== "admin"; el("client-aside").hidden = role !== "client"; el("back-to-inbox").hidden = role !== "admin";
       clearChat();
-      if (role === "admin") await loadInbox();
+      if (role === "admin") {
+        await loadInbox();
+        const remembered = drafts.selected();
+        if (remembered && !pendingNotification) await selectConversation(remembered);
+      }
       else {
         const conversation = await request(`${chatBase}/conversation`, { account: true });
         await selectConversation(conversation.id);

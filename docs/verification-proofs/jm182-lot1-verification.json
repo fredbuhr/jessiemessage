@@ -1,0 +1,575 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-audit-lot1-implementation",
+  "recordedAtUTC": "2026-10-22T17:03:46.137899+00:00",
+  "status": "lot1_qualified_on_branch_not_released_or_deployed",
+  "branch": "fix/audit-182",
+  "baseSource": "422c8ac0b75b945d280c3a84225cd3e2b0025087",
+  "developmentVersion": "1.8.2",
+  "productionVersion": "1.8.1",
+  "productionSource": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+  "runtime": {
+    "node": "v24.22.1",
+    "binarySha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb"
+  },
+  "implementedFindings": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A07"
+  ],
+  "findings": {
+    "A01": {
+      "status": "qualified_in_synthetic_ci",
+      "personalRefusalsDoNotSpendSharedBudget": true,
+      "textPhotoVideoRegression": true,
+      "broadcastBudgetPreserved": true
+    },
+    "A02": {
+      "status": "qualified_in_synthetic_ci",
+      "sharedEncryptedPhotoVideoAdmissionBytes": 1073741824,
+      "catalogueWorstCaseRecords": 100000,
+      "photoRecordsReservedPerAllocation": 2,
+      "videoRecordsReservedPerAllocation": 1,
+      "locks": "video singleton then photo singleton in SQL36; photo singleton only in SQL33",
+      "persistedQuotasRootsAndHistoryUnchanged": true,
+      "exactReservationReplaysAboveNewBudgetPreserved": true,
+      "preexistingOverBudgetReadsAndCleanupPreserved": true,
+      "archiveBoundsAndFormatUnchanged": true,
+      "independentSnapshotSqlRowAndTimeLimitsStillApply": true
+    },
+    "A03": {
+      "status": "qualified_in_synthetic_ci",
+      "exactConfirmedReservationOnlyBeforePut": true,
+      "unknownAcknowledgementsNeverReleased": true,
+      "freshOwnerAuthorizationRequired": true,
+      "idempotentCancellationAndQuotaRollbackTestsAdded": true
+    },
+    "A04": {
+      "status": "qualified_in_synthetic_ci",
+      "existingGalleryHasOwnedVideoMode": true,
+      "serverOwnershipCsrfPaginationChecked": true,
+      "liveMessageReferencesBlockDeletion": true,
+      "allOwnedQueuedRunningCampaignsConservativelyBlockAdminDeletion": true,
+      "cleanupPendingRetryPreserved": true,
+      "uncertainSendAndIdentityRecheckedAfterConfirmation": true
+    },
+    "A05": {
+      "status": "qualified_in_synthetic_ci",
+      "separateAuthorizedExportReader": true,
+      "displayQuotaUnchanged": true,
+      "archiveSlotsSizeDurationRevocationAbortPreserved": true,
+      "regression121VideoArchiveCompleted": true
+    },
+    "A07": {
+      "status": "qualified_in_synthetic_ci",
+      "usesFreshActorContextTime": true,
+      "futureDatesStillRefused": true,
+      "encryptedNotesAndVersionsPreserved": true
+    }
+  },
+  "localTestRuns": [
+    {
+      "file": "chat-quota-targeted.log",
+      "bytes": 14381,
+      "sha256": "73804991d7d5e1530112104488b292972f1b023575b91ce21ff028a8dfae477b",
+      "counts": {
+        "tests": 58,
+        "pass": 58,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "shared-media-budget.log",
+      "bytes": 853,
+      "sha256": "50f0c7d102434597ff5ea6108020fdf1ebc15159768fdc05670255022034bfc9",
+      "counts": {
+        "tests": 7,
+        "pass": 7,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "photo-service-http.log",
+      "bytes": 8371,
+      "sha256": "39337abda26af5fd56c5a1551e26b85c16157668ae7d38c0aa28645016c1cdb1",
+      "counts": {
+        "tests": 75,
+        "pass": 75,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "crm-store-unit.log",
+      "bytes": 321,
+      "sha256": "30035fec3d5d0fa50366dc210c71a530828370bbc5be7ea58042bd88b8afa081",
+      "counts": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "video-export-admission.log",
+      "bytes": 541,
+      "sha256": "ef61d5ec31a85c70d0c480f2a42c084873c36ba5e88feb8915b93f1573e51bb6",
+      "counts": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "video-services-http.log",
+      "bytes": 7353,
+      "sha256": "cfd1e585bc976c18e6e1b5e32fd3f20d496ee561608a04cee8f001c42c43f037",
+      "counts": {
+        "tests": 71,
+        "pass": 71,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "video-ui-lifecycle.log",
+      "bytes": 9419,
+      "sha256": "8be421c3c1878ec760158d0f25ccb2da67cc727d83ac917c1d7a1c60f58954f5",
+      "counts": {
+        "tests": 84,
+        "pass": 84,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "video-campaign-protection.log",
+      "bytes": 11383,
+      "sha256": "915225f28d2f7e5000053702bc9921e411496efee2cbc3d0818ecc71c5b3eec4",
+      "counts": {
+        "tests": 102,
+        "pass": 102,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "video-campaign-final.log",
+      "bytes": 1086,
+      "sha256": "8cd5af17b0d1c8d5578b15d6791420dc6a2a8d3c77b841cb4a9aec605c5d34f1",
+      "counts": {
+        "tests": 9,
+        "pass": 9,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "chat-i18n-after.log",
+      "bytes": 1650,
+      "sha256": "28e29b3c15433b7546c7c076218b0621e925fc05f40b1b1d885cab721bed7cbe",
+      "counts": {
+        "tests": 14,
+        "pass": 14,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "media-admission-budget-after.log",
+      "bytes": 741,
+      "sha256": "cad377cfffbcf2dfc66f5ee229c47d6adeba11896b42fd84f043c7fefe0b35a7",
+      "counts": {
+        "tests": 6,
+        "pass": 6,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "backup-video-verify-temp-qualified.log",
+      "bytes": 2285,
+      "sha256": "703e32f55cd371b0aa5fd565d573bb8e8966bae402fd88aeb50a9e1d2cd5a963",
+      "counts": {
+        "tests": 8,
+        "pass": 8,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "conversation-export-isolated-after.log",
+      "bytes": 1575,
+      "sha256": "2d8efa3c4d4764e0840dc39ecc3d383eeb29ac5795e592e964e02ea23794cf4e",
+      "counts": {
+        "tests": 22,
+        "pass": 22,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "video-broadcast-fixture-contract.log",
+      "bytes": 210,
+      "sha256": "2b7ec7b58fec9635d23f29add70bcb6cc62e66a12fd2503e08e383c01c7c98f3",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    }
+  ],
+  "testRunsOverlapDoNotSumAsUnique": true,
+  "nativeQualification": {
+    "status": "qualified_in_native_ci_not_executed_locally",
+    "reason": "No MariaDB/MySQL/Docker or Chrome/ChromeDriver executable available; synthetic dedicated CI required",
+    "integrationFiles": 43,
+    "allIntegrationFilesExplicitlyIncludedInDbCommand": true,
+    "newAdmissionFixture": "tests/backup-media-admission.integration.test.mjs",
+    "requiredSqlEngines": [
+      "MariaDB 10.11",
+      "MariaDB 11.4"
+    ],
+    "requiredBrowser": "Chrome",
+    "ciSource": "bc2b1c0d6a8e124b4256ffd20156ce005f614711",
+    "ciProof": "jm182-lot1-ci-corrected.json",
+    "counts": {
+      "MariaDB 11.4": {
+        "tests": 575,
+        "suites": 0,
+        "pass": 575,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 397886.886372
+      },
+      "verify": {
+        "tests": 3834,
+        "suites": 0,
+        "pass": 3786,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 48,
+        "todo": 0,
+        "duration_ms": 94249.427258
+      },
+      "MariaDB 10.11": {
+        "tests": 575,
+        "suites": 0,
+        "pass": 575,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 353166.220681
+      },
+      "Chrome HTTPS authentication and messaging with MariaDB": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 40864.255415
+      },
+      "Chrome keyboard and chat lifecycle": {
+        "tests": 218,
+        "suites": 0,
+        "pass": 218,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 252071.986857
+      }
+    }
+  },
+  "ci": {
+    "status": "completed_success",
+    "pullRequest": "https://github.com/fredbuhr/jessiemessage/pull/129",
+    "source": "bc2b1c0d6a8e124b4256ffd20156ce005f614711",
+    "tree": "2d69a984129f1878545ad5aa2d1448952fce69f3",
+    "run": "https://github.com/fredbuhr/jessiemessage/actions/runs/39817588326",
+    "attempt": 1,
+    "jobsSucceeded": 5,
+    "proof": "jm182-lot1-ci-corrected.json",
+    "firstAttemptProof": "jm182-lot1-ci-first-attempt.json",
+    "firstAttemptPreserved": true,
+    "applicationAndTestsQualifiedOnExactSource": true,
+    "laterDocumentationCheckpointDoesNotChangeQualifiedCode": true,
+    "merged": false,
+    "released": false,
+    "deployed": false
+  },
+  "reviews": {
+    "A02": "Pre-CI independent review found no concrete blocker. The shared admission contention and historical-over-budget tests subsequently passed on both MariaDB engines. The global snapshot SQL row limit remains independent.",
+    "A04A05": "Independent review found queued/running campaign reference gap; corrected before publication and reviewed again."
+  },
+  "proxyA11": {
+    "status": "host_contract_unverified_forwarding_guards_preserved",
+    "cloudHaProxyFaqDoesNotDefineManagedNodeTrust": "https://www.infomaniak.com/fr/support/faq/2171/rediriger-le-trafic-web-vers-un-port-specifique",
+    "managedNodeFaq": "https://www.infomaniak.com/fr/support/faq/2535/modifier-la-configuration-dun-site-nodejs-infomaniak",
+    "nextCheck": "Minimal private TCP peer observation, aggregated only, grouped with final hosted delivery check. No public debug endpoint or visitor IP in Git."
+  },
+  "sourceFiles": [
+    {
+      "path": "package-lock.json",
+      "bytes": 30119,
+      "sha256": "496781799c1b1ade1e4500afbcfcfd1abf059c5798e06c2b649a1667c03dccb7"
+    },
+    {
+      "path": "package.json",
+      "bytes": 3154,
+      "sha256": "a4cd39c142382fbaac3635e5754f785735e1d3cd2b1993bc65429e659b46b4ef"
+    },
+    {
+      "path": "public/chat.html",
+      "bytes": 17755,
+      "sha256": "6b7240d87cec4ff08326bdf832709bbbcc044cd52f2600740ffeea3dd0f57bc8"
+    },
+    {
+      "path": "public/chat.js",
+      "bytes": 155650,
+      "sha256": "c09df7ab2675f245b691ab4b7a07296ce40a483a23ae71d6e28197fe9a37debc"
+    },
+    {
+      "path": "public/i18n-chat.js",
+      "bytes": 17770,
+      "sha256": "83872d39a7684cd9034957ac023aebca0bb38b73d526be6932e86920b8745486"
+    },
+    {
+      "path": "server/chat/service.mjs",
+      "bytes": 17047,
+      "sha256": "83eb3962f7a2849352d474c56be531e7a2440f003002b9dcfe8a89503bd22903"
+    },
+    {
+      "path": "server/crm/store.mjs",
+      "bytes": 32492,
+      "sha256": "1433c7e5f180324a3bee108d4dc9ec585b6048e141bc931d1eeb57d33b5bb005"
+    },
+    {
+      "path": "server/index.mjs",
+      "bytes": 52686,
+      "sha256": "9c4e0d8cb0e18a22363d7c700eac2c702d5262b9493386505982cd20329ae7a9"
+    },
+    {
+      "path": "server/media/backup-admission.mjs",
+      "bytes": 2910,
+      "sha256": "d6131d17afd9a8178caffe32e818b47a9c08d916aa31bdf188641458ab8d1d32"
+    },
+    {
+      "path": "server/media/backup-limits.mjs",
+      "bytes": 450,
+      "sha256": "ddb8825e3f9ffea62e7a043225af2c0fc35c6a4742799516c04073615e0ee1e7"
+    },
+    {
+      "path": "server/media/service.mjs",
+      "bytes": 16786,
+      "sha256": "0a3abfbea516002004ff020425a09d432c47602241e8954b4805afdf57f4cefb"
+    },
+    {
+      "path": "server/media/store.mjs",
+      "bytes": 28989,
+      "sha256": "3dfe58a68052cdfeaa826206c91cb0fd382b34f1b3c6e097f12502c080ff5bc0"
+    },
+    {
+      "path": "server/video/http.mjs",
+      "bytes": 23245,
+      "sha256": "967bfc249d20c382d409539ee3592a222ae55983a98b28f0cf4f3ec66aa7f080"
+    },
+    {
+      "path": "server/video/service.mjs",
+      "bytes": 23132,
+      "sha256": "790efe40f6b074285a336bd68287e81147d3abf8d9d6df111b2a3326640fc7c1"
+    },
+    {
+      "path": "server/video/store.mjs",
+      "bytes": 29640,
+      "sha256": "3a9a740bc0de01c52ae685cf7ed9931b9f9e4bf7b9b852d597cec810d5f2b35b"
+    },
+    {
+      "path": "tests/backup-media-admission.integration.test.mjs",
+      "bytes": 14701,
+      "sha256": "0e03a22ec6b4c475cba4fc6b9355c50d98ac3135bf3a75e718c807ad752ccc04"
+    },
+    {
+      "path": "tests/backup-media-admission.test.mjs",
+      "bytes": 5372,
+      "sha256": "4cc8c1e27f2812ba37750d1e5c2fc3c56fb6a87d755ea464b0517fe366916967"
+    },
+    {
+      "path": "tests/backup-volume-budget.test.mjs",
+      "bytes": 2059,
+      "sha256": "4a0dc9dcb5ad898afcbf3b46eea7b7062fe9dcfd081dfc6fb5bc3291cec2c981"
+    },
+    {
+      "path": "tests/browser/video-messaging.browser.mjs",
+      "bytes": 15947,
+      "sha256": "52cde4b252e267a661f48f6c822fedc27c1d4c5b79154076cd9803b5164a200c"
+    },
+    {
+      "path": "tests/chat-i18n.test.mjs",
+      "bytes": 40417,
+      "sha256": "345208bdec0c6b45fb9988a0aea5097e5acf5d8be8f8e470d183d7963b4f8bcb"
+    },
+    {
+      "path": "tests/chat-lifecycle.test.mjs",
+      "bytes": 122752,
+      "sha256": "950fee3fb9d188540ea1308e4260060b2fa5b47af56a07091d82ad04b00aa2bd"
+    },
+    {
+      "path": "tests/chat-service.test.mjs",
+      "bytes": 45932,
+      "sha256": "c4a84c156ef8bffdc116146b90088e33fba4a84aedcc0b5f1cc841608354f689"
+    },
+    {
+      "path": "tests/crm-store.integration.test.mjs",
+      "bytes": 32868,
+      "sha256": "6735372fc527a8b11afb951e17e95d45a7112ed86c83d0d8714be253febfab61"
+    },
+    {
+      "path": "tests/crm-store.test.mjs",
+      "bytes": 2876,
+      "sha256": "a9932851e6a20ab42bfb11a7531e9e1c684b1afdb28f255e93f8b74ba0847a8d"
+    },
+    {
+      "path": "tests/media-admission-budget.test.mjs",
+      "bytes": 6281,
+      "sha256": "e6c718657bcb8e9dbaa83e1d9c935305c545db8aa1bdf054e6f139857892eab7"
+    },
+    {
+      "path": "tests/media-http.test.mjs",
+      "bytes": 39073,
+      "sha256": "01c4a195dc856be63117c1a17d6f047289490101ebebf348bea15765577330f1"
+    },
+    {
+      "path": "tests/media-service.test.mjs",
+      "bytes": 58569,
+      "sha256": "ca53ed63807099d937b0b186e296ba162291ca713302c7f871a12f5a0e0f0036"
+    },
+    {
+      "path": "tests/media-store.integration.test.mjs",
+      "bytes": 65423,
+      "sha256": "8b0e00f60073b1ecb0f94bca36028b56afe4cb3eb36cd055760f8c8ffbef23fd"
+    },
+    {
+      "path": "tests/video-broadcast-flow.integration.test.mjs",
+      "bytes": 18082,
+      "sha256": "3b469cbb9ebc63edc9799cf941815fe0e9aff6e719de388112443f50ff9c7a46"
+    },
+    {
+      "path": "tests/video-conversation-archive.integration.test.mjs",
+      "bytes": 28024,
+      "sha256": "059c19a1f5186029590336338ee16469a066bfefa8fe223e78dc19209b149700"
+    },
+    {
+      "path": "tests/video-deletion-campaigns.test.mjs",
+      "bytes": 4470,
+      "sha256": "abfbc0b788fd1cd00026c232571efd13c815fdca7143c0fb27397790e58ef306"
+    },
+    {
+      "path": "tests/video-export-admission.test.mjs",
+      "bytes": 6301,
+      "sha256": "3bfe47a6e18e1ca746716aef1a2ebcf3d1879be2c800e1281f7d5cc05489c462"
+    },
+    {
+      "path": "tests/video-message-http.test.mjs",
+      "bytes": 22984,
+      "sha256": "fd7b8b1671044904ac1fa2f05e8d3f8739b2a498a2b7a372fb61efb75bc1ef59"
+    },
+    {
+      "path": "tests/video-service.test.mjs",
+      "bytes": 22171,
+      "sha256": "f517d26de7da74b853dc36e847034f56beabc618bfe94541ebeb5faa5989c9b0"
+    },
+    {
+      "path": "tests/video-store.integration.test.mjs",
+      "bytes": 31157,
+      "sha256": "a01bbd3afa68c41989cafebfcc1bd5e299e47325126e28ab1baab09c77545337"
+    }
+  ],
+  "backupHostedTest": {
+    "performed": false,
+    "status": "deferred_by_user",
+    "noReminderOrAutomation": true
+  },
+  "productionMutations": {
+    "runtimeRestart": false,
+    "managerChange": false,
+    "migration": false,
+    "dnsOrApache": false,
+    "customerMessageOrDeletion": false
+  },
+  "remaining": [
+    "Lot2: draft/session continuity and accurate public information.",
+    "Lot3: documentation, proven unused code and CI maintenance; includes deprecated GitHub action runtime warnings.",
+    "Lot4: final exact-source qualification, merge, immutable release and grouped hosted delivery.",
+    "A11: private host observation at final delivery; forwarding guards remain unchanged.",
+    "Manual-backup hosted UI test remains explicitly deferred by the user."
+  ],
+  "nextAction": "Implement lot2 on fix/audit-182, preserving this qualified lot1 source and first-failure evidence. No production action is required now.",
+  "fixtureCorrections": [
+    {
+      "path": "tests/chat-i18n.test.mjs",
+      "reason": "Conversation is identical in French and English; explicitly verify both new video gallery tabs."
+    },
+    {
+      "path": "tests/media-admission-budget.test.mjs",
+      "reason": "Mock the shared singleton/catalogue reads; preserve no writes or charges on replay and duplicates."
+    },
+    {
+      "path": "tests/media-store.integration.test.mjs",
+      "reason": "All allocation history reserves two photo catalogue rows; released allocations free bytes but remain in the manifest. Preserve concurrent last-slot admission/refusal."
+    },
+    {
+      "path": "tests/video-broadcast-flow.integration.test.mjs",
+      "reason": "Cancel/detail HTTP returns the direct campaign DTO, unlike create. Preserve and strengthen identity/status assertions."
+    }
+  ],
+  "localGeneralRuns": [
+    {
+      "file": "lot1-full-local.log",
+      "bytes": 272470,
+      "sha256": "1c41c510c774959800af58ff0a94b9a6f0ab94a7d81aa4e8ed14046f44425aac",
+      "exitCode": 1,
+      "completeSummaryAcquired": false,
+      "observedFailedLeaves": 17,
+      "limit": "Local /tmp was unavailable (10 failures); seven other fixture failures also reproduced in CI. This incomplete local run is not a full-suite qualification."
+    },
+    {
+      "file": "lot1-full-local-corrected.log",
+      "bytes": 437775,
+      "sha256": "ed2c754f1c4526fb2f73b9c84ba8af266e45b5e3c003978bec9e726686098235",
+      "exitCode": 130,
+      "completeSummaryAcquired": false,
+      "status": "interrupted_after_no_further_progress",
+      "limit": "TMPDIR corrected; no failure observed in received TAP, but no terminal summary. Local /proc unavailable; cause of stopped progress not established. No full-suite pass claimed."
+    }
+  ],
+  "qualifiedSource": "bc2b1c0d6a8e124b4256ffd20156ce005f614711",
+  "qualifiedTree": "2d69a984129f1878545ad5aa2d1448952fce69f3",
+  "qualifiedCheckout": "6e3c2c2b00671c3570b32989906ae4b7093b8d92"
+}

@@ -139,10 +139,11 @@ export async function createVideoService({ store, chatService, authStore, storag
     // retain their durable charge in the adapter, even after this slot ends.
     try { await refund(record); } finally { finish(record); }
   }
-  function validateRow(row, owner, proposed) {
+  function validateRow(row, owner, proposed, { cleanupAllowed = false } = {}) {
     if (!sized(row?.id, 16) || !sized(row.storageKey, 32) || !sized(row.ownerId, 16) || owner !== null && row.ownerId.toString("hex") !== owner
       || !sized(row.digest, 32) || !validBytes(row.bytes) || row.storedBytes !== videoStoredBytes(row.bytes)
-      || row.mime !== "video/mp4" || row.deletedAt !== null
+      || row.mime !== "video/mp4" || row.deletedAt !== null && (!cleanupAllowed
+        || !Number.isSafeInteger(row.deletedAt) || row.deletedAt < row.createdAt || row.deletedAt > now())
       || !Number.isSafeInteger(row.createdAt) || row.createdAt < 0 || row.createdAt > now()) fail();
     if (proposed && (!row.id.equals(proposed.id) || !row.storageKey.equals(proposed.storageKey) || row.bytes !== proposed.bytes
       || !row.digest.equals(proposed.digest))) fail();
@@ -152,11 +153,12 @@ export async function createVideoService({ store, chatService, authStore, storag
     return { id: row.id.toString("hex"), bytes: row.bytes, mime: "video/mp4",
       contentUrl: `/api/video/${role}/conversations/${conversationId}/messages/${messageId}/content` };
   }
-  async function openContent(role, raw, lookup, { signal, ownerOnly = true, expectedId = null } = {}) {
+  async function openContent(role, raw, lookup, { signal, ownerOnly = true, expectedId = null, displayBudget = true } = {}) {
     const { actor, request } = await context(role, raw), releaseSlot = readSlot(actor.user.id);
     let handle;
     try {
-      checkAbort(signal); await budget(actor.user.id, "read", request.now);
+      checkAbort(signal);
+      if (displayBudget) await budget(actor.user.id, "read", request.now);
       // Delivery ACL belongs to the current conversation/message transaction.
       // Its owner is the sender and can differ from the authorized reader.
       const row = validateRow(await lookup({ ...request, now: now() }), ownerOnly ? actor.user.id : null);
@@ -263,6 +265,27 @@ export async function createVideoService({ store, chatService, authStore, storag
       const target = identifier(assetId);
       return openContent(role, raw, (request) => store.getOwned({ ...request, assetId: target }), { signal, expectedId: target });
     }),
+    listOwned: (role, raw, { afterId = null, limit = 20 } = {}) => guarded(async () => {
+      const after = afterId === null ? null : identifier(afterId);
+      if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) fail("VIDEO_INPUT");
+      if (typeof store.listOwned !== "function") fail("VIDEO_CONFIG");
+      const { actor, request } = await context(role, raw);
+      await budget(actor.user.id, "library", request.now);
+      const result = await store.listOwned({ ...request, now: now(), afterId: after, limit });
+      if (!result || !Array.isArray(result.assets) || result.assets.length > limit || typeof result.hasMore !== "boolean"
+        || !(result.nextCursor === null || sized(result.nextCursor, 16))) fail();
+      let previous = afterId;
+      const assets = result.assets.map(value => {
+        const row = validateRow(value, actor.user.id, null, { cleanupAllowed: true }), id = row.id.toString("hex");
+        if (previous !== null && id <= previous) fail();
+        previous = id;
+        return { id, bytes: row.bytes, mime: row.mime, createdAt: row.createdAt, cleanupPending: row.deletedAt !== null,
+          contentUrl: row.deletedAt === null ? `/api/video/${role}/assets/${id}/content` : null };
+      });
+      const cursor = result.nextCursor?.toString("hex") ?? null;
+      if (result.hasMore ? !assets.length || cursor !== assets.at(-1).id : cursor !== null) fail();
+      return { assets, nextCursor: cursor, hasMore: result.hasMore };
+    }),
     remove: (role, raw, assetId) => guarded(async () => {
       const target = identifier(assetId), { actor, request } = await context(role, raw);
       if (["deleteAsset", "releaseDeletedStorage"].some((name) => typeof store[name] !== "function")
@@ -300,6 +323,14 @@ export async function createVideoService({ store, chatService, authStore, storag
       openMessage: (role, raw, conversationId, messageId, { signal } = {}) => guarded(async () => {
         const conversation = identifier(conversationId), message = identifier(messageId);
         return openContent(role, raw, (request) => messages.getMessageAsset({ ...request, conversationId: conversation, messageId: message }), { signal, ownerOnly: false });
+      }),
+      // Internal aggregate download only. The exporter owns the archive's
+      // size, lifetime and transfer admission; retain exactly the ordinary
+      // message ACL and concurrent read slots without spending display quota.
+      openExportMessage: (role, raw, conversationId, messageId, { signal } = {}) => guarded(async () => {
+        const conversation = identifier(conversationId), message = identifier(messageId);
+        return openContent(role, raw, (request) => messages.getMessageAsset({ ...request, conversationId: conversation, messageId: message }),
+          { signal, ownerOnly: false, displayBudget: false });
       }),
       gallery: (role, raw, conversationId, options = {}) => guarded(async () => {
         const conversation = identifier(conversationId), { before, limit } = pageOptions(options), { actor, request } = await context(role, raw);

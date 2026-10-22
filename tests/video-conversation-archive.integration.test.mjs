@@ -172,7 +172,7 @@ test("real HTTP conversation ZIP streams isolate video deliveries and authentica
       video: async (token, cid, mid, options) => {
         opens.push({ role, cid, mid });
         if (beforeVideoOpen) { const operation = beforeVideoOpen; beforeVideoOpen = null; await operation({ role, cid, mid }); }
-        return videoService.openMessage(role, token, cid, mid, options);
+        return videoService.openExportMessage(role, token, cid, mid, options);
       },
     });
     // Only profile presentation is synthetic; actor, conversation and attachment

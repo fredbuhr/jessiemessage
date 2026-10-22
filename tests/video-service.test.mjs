@@ -279,3 +279,36 @@ test("revocation after unlink prevents release until an authorized retry or clos
   await f.service.remove(a.role, a.token, result.id);
   assert.equal(f.state.held, 0); assert.equal(f.state.refunds, 1);
 });
+
+test("the owned video library is scoped, ordered and retains cleanup intents without private fields", async t => {
+  const f = await videoFixture(t), owner = f.accounts[0];
+  const first = await uploadFixture(f, owner, 100), second = await uploadFixture(f, owner, 101);
+  const rows = [first, second].map(item => f.state.rows.get(item.id)).sort((a, b) => Buffer.compare(a.id, b.id));
+  rows[1].deletedAt = f.state.now;
+  f.store.listOwned = async request => {
+    assert.equal(request.role, owner.role); assert.ok(request.tokenHash.equals(tokenDigest(owner.token)));
+    assert.equal(request.limit, 1);
+    return request.afterId === null ? { assets: [rows[0]], nextCursor: rows[0].id, hasMore: true }
+      : { assets: [rows[1]], nextCursor: null, hasMore: false };
+  };
+  const page = await f.service.listOwned(owner.role, owner.token, { limit: 1 });
+  assert.equal(page.nextCursor, rows[0].id.toString("hex")); assert.equal(page.hasMore, true);
+  assert.equal(page.assets[0].contentUrl, `/api/video/admin/assets/${page.nextCursor}/content`);
+  assert.equal(page.assets[0].cleanupPending, false);
+  const next = await f.service.listOwned(owner.role, owner.token, { afterId: page.nextCursor, limit: 1 });
+  assert.equal(next.assets[0].cleanupPending, true); assert.equal(next.assets[0].contentUrl, null);
+  assert.doesNotMatch(JSON.stringify([page, next]), /storageKey|ownerId|digest|reserveToken|pendingBytes/);
+  for (const invalid of [{ limit: 0 }, { limit: 101 }, { afterId: "bad" }]) await assert.rejects(f.service.listOwned(owner.role, owner.token, invalid), code("VIDEO_INPUT"));
+  f.store.listOwned = async () => ({ assets: [{ ...rows[0], ownerId: f.accounts[1].id }], nextCursor: null, hasMore: false });
+  await assert.rejects(f.service.listOwned(owner.role, owner.token), code("VIDEO_UNAVAILABLE"));
+});
+
+test("the owned video library rejects cursor drift and revoked sessions", async t => {
+  const f = await videoFixture(t), owner = f.accounts[0], uploaded = await uploadFixture(f, owner, 100), row = f.state.rows.get(uploaded.id);
+  f.store.listOwned = async () => ({ assets: [row], nextCursor: Buffer.alloc(16, 255), hasMore: true });
+  await assert.rejects(f.service.listOwned(owner.role, owner.token), code("VIDEO_UNAVAILABLE"));
+  f.store.listOwned = async () => ({ assets: [row], nextCursor: null, hasMore: false });
+  await assert.rejects(f.service.listOwned(owner.role, owner.token, { afterId: uploaded.id }), code("VIDEO_UNAVAILABLE"));
+  owner.active = false;
+  await assert.rejects(f.service.listOwned(owner.role, owner.token), code("CHAT_UNAUTHORIZED"));
+});

@@ -14,12 +14,15 @@ function fixture({ heldBytes = 0, heldObjects = 0, totalBytes = 10 * BACKUP_MEDI
   const state = { heldBytes, heldObjects, ownerHeld: 0, existing: null, duplicate: null }, queries = [];
   const connection = { async query(sql, parameters) {
     queries.push(sql);
+    if (sql === "SELECT held_bytes FROM media_storage_state WHERE id = 1 FOR UPDATE") return [{ held_bytes: state.heldBytes }];
     if (sql.startsWith("SELECT owner_bytes")) return [{ owner_bytes: capacity.ownerBytes, total_bytes: capacity.totalBytes, root_fingerprint: capacity.rootFingerprint, held_bytes: state.heldBytes }];
     if (sql.startsWith("SELECT * FROM media_storage_objects")) return state.existing ? [state.existing] : [];
     if (sql.includes("SUM(stored_bytes)") && sql.includes("owner_id = ?")) return [{ value: state.ownerHeld }];
     if (sql.includes("SUM(stored_bytes)")) return [{ value: state.heldBytes }];
     if (sql.includes("FROM media_assets a WHERE a.owner_id")) return state.duplicate ? [state.duplicate] : [];
-    if (sql.startsWith("SELECT COUNT(*)")) return [{ value: state.heldObjects }];
+    if (sql === "SELECT COUNT(*) AS value FROM media_assets") return [{ value: state.duplicate ? 1 : 0 }];
+    if (sql === "SELECT COUNT(*) AS value FROM media_storage_objects"
+      || sql === "SELECT COUNT(*) AS value FROM media_storage_objects WHERE state <> 'released' FOR UPDATE") return [{ value: state.heldObjects }];
     if (sql.startsWith("INSERT INTO media_storage_objects")) { state.heldObjects += 1; return { affectedRows: 1 }; }
     if (sql.startsWith("UPDATE media_storage_state")) { state.heldBytes += parameters[0]; return { affectedRows: 1 }; }
     throw new Error(`Unexpected query: ${sql}`);
@@ -67,12 +70,14 @@ test("an existing uncertain reservation can be retried at both backup ceilings w
   f.state.existing = f.row(value);
   assert.equal((await f.reserve(value)).duplicate, false);
   assert.equal(f.state.heldBytes, BACKUP_MEDIA_MAX_BYTES); assert.equal(f.state.heldObjects, BACKUP_MEDIA_MAX_OBJECTS);
-  assert.equal(f.queries.some((sql) => sql.startsWith("INSERT") || sql.startsWith("UPDATE") || sql.startsWith("SELECT COUNT(*)")), false);
+  assert.equal(f.queries.some((sql) => sql.startsWith("INSERT") || sql.startsWith("UPDATE")), false);
+  assert.ok(f.queries.includes("SELECT COUNT(*) AS value FROM media_storage_objects"), "the common manifest budget is still inspected on a replay");
 });
 
 test("an already registered duplicate remains reusable at both backup ceilings", async () => {
   const f = fixture({ heldBytes: BACKUP_MEDIA_MAX_BYTES, heldObjects: BACKUP_MEDIA_MAX_OBJECTS }), value = asset();
   f.state.duplicate = f.row(value);
   const result = await f.reserve(); assert.equal(result.duplicate, true); assert.ok(result.asset.id.equals(value.id));
-  assert.equal(f.queries.some((sql) => sql.startsWith("INSERT") || sql.startsWith("UPDATE") || sql.startsWith("SELECT COUNT(*)")), false);
+  assert.equal(f.queries.some((sql) => sql.startsWith("INSERT") || sql.startsWith("UPDATE")), false);
+  assert.ok(f.queries.includes("SELECT COUNT(*) AS value FROM media_storage_objects"), "the common manifest budget is still inspected for a duplicate");
 });

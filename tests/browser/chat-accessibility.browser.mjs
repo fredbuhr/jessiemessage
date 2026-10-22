@@ -68,7 +68,7 @@ window.addEventListener("error", event => { window.__browserErrors.push(String(e
 window.addEventListener("unhandledrejection", event => { window.__browserErrors.push(String(event.reason?.message ?? event.reason).slice(0, 500)); });
 window.addEventListener("securitypolicyviolation", event => { window.__browserErrors.push("CSP: " + event.violatedDirective); });
 `;
-const fileNames = ["conversation-download.js", "quick-replies.js", "crm.js", "crm-model.js", "crm.css", "private-archive.js", "notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "help-link.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
+const fileNames = ["conversation-download.js", "quick-replies.js", "crm.js", "crm-model.js", "crm.css", "private-archive.js", "notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "chat-drafts.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "help-link.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
   "emoji-catalog.js", "emoji.css", "profile.js", "profile.css", "i18n-profile.js", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
   "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png", "brand/icon-128.png",
   "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
@@ -856,7 +856,7 @@ test("Chrome mobile: native modal Escape restores photo / gallery focus; private
       Promise.all([caches.keys(), navigator.serviceWorker.getRegistrations()]).then(([cacheKeys, registrations]) => {
         done({ cacheKeys, registrations: registrations.length, localKeys: Object.keys(localStorage), sessionKeys: Object.keys(sessionStorage) });
       }).catch(error => done({ error: String(error) }));`);
-    assert.deepEqual(persistence, { cacheKeys: [], registrations: 0, localKeys: [], sessionKeys: [] }, "private chat creates no persistent cache, worker or stored private state");
+    assert.deepEqual(persistence, { cacheKeys: [], registrations: 0, localKeys: [], sessionKeys: [] }, "viewing private photos alone creates no cache, worker or stored media state");
     assert.equal(await page.execute("return document.documentElement.scrollWidth <= window.innerWidth"), true);
     await noJavascriptErrors(page);
   } finally { await page.close(); }
@@ -1256,5 +1256,54 @@ test("Chrome compatibility hides new video and reply editing while preserving ga
     assert.equal(await page.execute("return document.querySelector('#new-personal-reply').hidden&&document.querySelector('#personal-reply-editor').hidden&&document.querySelector('.personal-reply-actions:not([hidden]) [data-personal-action]')===null"), true);
     await page.click('[data-personal-quick-reply]'); assert.equal(await page.execute("return document.querySelector('#message-body').value"), "Draft\nExisting personal text");
     assert.equal(fixture.quickReplyRequests.length, 0); assert.equal(fixture.sent.length, 0); await noJavascriptErrors(page);
+  } finally { await page.close(); }
+});
+
+async function reloadDraftDocument(page) {
+  // The ordinary leave-warning is qualified separately. Explicitly leave this
+  // fixture, then perform a real reload in the same Chrome tab and origin.
+  await page.execute("window.__draftReloadMarker = 'old-document'; window.dispatchEvent(new Event('pagehide')); setTimeout(() => location.reload(), 0); return true;");
+  await waitUntil(() => page.execute("return window.__draftReloadMarker !== 'old-document' && document.getElementById('workspace')?.hidden === false"), "new Chrome document with a freshly authorized workspace");
+}
+
+test("Chrome: real same-tab reload restores only the authorized text draft and a changed session purges it", { timeout: 90000 }, async () => {
+  for (const role of ["client", "admin"]) {
+    resetFixture(); const page = await browser(375);
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      if (role === "admin") { await page.click(".contact"); await waitUntil(() => page.execute("return !document.querySelector('#message-body').disabled"), "selected admin conversation"); }
+      const text = `Native ${role} draft with accents é and a second line`;
+      await page.type("#message-body", text);
+      const saved = await page.execute("const keys=Object.keys(sessionStorage).filter(k=>k.startsWith('jessiemessage.chat-drafts.'));return {keys,record:JSON.parse(sessionStorage.getItem(keys[0])),localKeys:Object.keys(localStorage)}");
+      assert.deepEqual(saved.keys, [`jessiemessage.chat-drafts.v1.${role}`]); assert.deepEqual(saved.localKeys, []);
+      assert.deepEqual(Object.keys(saved.record).sort(), ["entries", "id", "role", "selected", "sessionTag", "version"]);
+      assert.match(saved.record.sessionTag, /^[a-f0-9]{64}$/); assert.equal(JSON.stringify(saved.record).includes("A".repeat(43)), false);
+      assert.equal(saved.record.entries[0].text, text); assert.equal(saved.record.entries[0].pending, null);
+      await reloadDraftDocument(page);
+      await waitUntil(() => page.execute("return document.querySelector('#message-body').value === arguments[0]", text), "native sessionStorage text recovery after reload");
+      assert.equal(fixture.messageRequests.length, 0, "restoring text never submits a message");
+      fixture.csrf = "B".repeat(43); await reloadDraftDocument(page);
+      assert.equal(await page.execute("return document.querySelector('#message-body').value"), "");
+      assert.equal(await page.execute("return Object.values(sessionStorage).some(value=>value.includes(arguments[0]))", text), false);
+      assert.equal(fixture.messageRequests.length, 0); await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+
+test("Chrome: an uncertain text survives a real reload with its exact retry key and no automatic POST", { timeout: 60000 }, async () => {
+  resetFixture(); fixture.failNextSend = true; const page = await browser(375);
+  try {
+    await loaded(page, "/messages"); await page.type("#message-body", "Native uncertain synthetic text"); await page.click("#send");
+    await waitUntil(() => fixture.messageRequests.length === 1 && page.execute("return !document.querySelector('#pending-controls').hidden"), "uncertain original text send");
+    const exact = { ...fixture.messageRequests[0] }; assert.equal(fixture.sent.length, 0);
+    await reloadDraftDocument(page);
+    assert.equal(fixture.messageRequests.length, 1); assert.equal(fixture.sent.length, 0);
+    assert.equal(await page.execute("return !document.querySelector('#pending-controls').hidden && document.querySelector('#message-body').disabled"), true);
+    await page.click("#retry-send"); await waitUntil(() => fixture.sent.length === 1, "explicit retry of the same immutable text");
+    assert.equal(fixture.messageRequests.length, 2); assert.deepEqual(fixture.messageRequests[1], exact);
+    await waitUntil(() => page.execute("return document.querySelector('#message-body').value === ''"), "acknowledged text cleared");
+    assert.equal(await page.execute("return JSON.parse(sessionStorage.getItem('jessiemessage.chat-drafts.v1.client')).entries.length"), 0);
+    await reloadDraftDocument(page); assert.equal(fixture.messageRequests.length, 2);
+    assert.equal(await page.execute("return document.querySelector('#message-body').value"), ""); await noJavascriptErrors(page);
   } finally { await page.close(); }
 });

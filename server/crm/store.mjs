@@ -216,6 +216,7 @@ export function createCrmStore({ pool, chatStore }) {
     async createLabel({ tokenHash, now, label }) {
       bytes(label?.id); kindValue(label.kind); textValue(label.name, 64); textValue(label.normalizedName, 128);
       return withActor({ tokenHash, now }, async (connection, context) => {
+        now = context.now;
         const previous = (await connection.query(`SELECT ${labelProjection}, ${memberCountSql} AS member_count FROM crm_labels l
           WHERE l.owner_admin_id = ? AND l.kind = ? AND l.normalized_name = ? FOR UPDATE`, [context.actor.id, label.kind, label.normalizedName]))[0];
         if (previous) return { label: rawLabel(previous), duplicate: true };
@@ -230,6 +231,7 @@ export function createCrmStore({ pool, chatStore }) {
     async renameLabel({ tokenHash, now, labelId, expectedVersion, name, normalizedName }) {
       bytes(labelId); versionValue(expectedVersion, false); textValue(name, 64); textValue(normalizedName, 128);
       return withActor({ tokenHash, now }, async (connection, context) => {
+        now = context.now;
         const previous = await ownedLabel(connection, context.actor.id, labelId);
         if (storedVersion(previous.version) !== expectedVersion) fail("CRM_CONFLICT");
         const collision = await connection.query("SELECT id FROM crm_labels WHERE owner_admin_id = ? AND kind = ? AND normalized_name = ? AND id <> ? LIMIT 1", [context.actor.id, previous.kind, normalizedName, labelId]);
@@ -244,6 +246,9 @@ export function createCrmStore({ pool, chatStore }) {
     async deleteLabel({ tokenHash, now, labelId, expectedVersion }) {
       bytes(labelId); versionValue(expectedVersion, false);
       return withActor({ tokenHash, now }, async (connection, context) => {
+        // The owner lock may have waited behind a valid profile save. Compare
+        // its dates with the live authorization time, not the request's start.
+        now = context.now;
         const label = await ownedLabel(connection, context.actor.id, labelId);
         if (storedVersion(label.version) !== expectedVersion) fail("CRM_CONFLICT");
         // The owner account lock serializes all profile saves. Detect overflow
@@ -272,6 +277,7 @@ export function createCrmStore({ pool, chatStore }) {
       if (!Array.isArray(labelIds) || labelIds.length > 32) input(); for (const labelId of labelIds) bytes(labelId);
       if (new Set(labelIds.map((value) => value.toString("hex"))).size !== labelIds.length) input();
       return withConversation({ tokenHash, now, conversationId }, async (connection, context) => {
+        now = context.now;
         const previous = (await connection.query("SELECT version, updated_at FROM crm_profiles WHERE admin_id = ? AND conversation_id = ? FOR UPDATE", [context.actor.id, conversationId]))[0];
         if ((previous ? storedVersion(previous.version) : "0") !== expectedVersion) fail("CRM_CONFLICT");
         const next = nextVersion(expectedVersion); if (previous && timestamp(previous.updated_at) > now) state();
@@ -295,6 +301,7 @@ export function createCrmStore({ pool, chatStore }) {
       textValue(q, 80, true); limitValue(limit); for (const value of [tagId, groupId, afterId]) if (value !== null) bytes(value);
       if (!["all", "active", "pending", "expired", "revoked", "suspended", "deleted"].includes(access) || typeof unread !== "boolean" || !["all", "due", "upcoming", "none"].includes(reminder)) input();
       return withActor({ tokenHash, now }, async (connection, context) => {
+        now = context.now;
         const owner = context.actor.id, date = sqlDate(now), where = ["c.admin_id = ?", "c.created_at <= ?"], parameters = [owner, date];
         if (q) { where.push("(LOCATE(LOWER(?), LOWER(u.pseudonym)) > 0 OR LOCATE(LOWER(?), LOWER(COALESCE(p.nickname, ''))) > 0 OR LOCATE(LOWER(?), LOWER(u.email)) > 0)"); parameters.push(q, q, q); }
         for (const [labelId, kind] of [[tagId, "tag"], [groupId, "group"]]) if (labelId !== null) {

@@ -2,6 +2,7 @@ import { ChatStoreError } from "../chat/store.mjs";
 import { migrationStatus } from "../db/migrations.mjs";
 import { loadVideoMigrations } from "./migrations.mjs";
 import { MAX_VIDEO_BYTES, videoStoredBytes } from "./storage.mjs";
+import { BackupMediaAdmissionError, fitsBackupMediaAdmission, lockBackupMediaAdmission } from "../media/backup-admission.mjs";
 
 export class VideoStoreError extends ChatStoreError {
   constructor(code) { super(code, "Private video persistence could not be completed."); this.name = "VideoStoreError"; }
@@ -262,13 +263,20 @@ export function createVideoStore({ pool, chatStore, capacity } = {}) {
     async reserve(value) {
       request(value); const proposed = asset(value.asset);
       return chatStore.withActor(value, async (connection, context) => {
+        let backup;
+        try { backup = await lockBackupMediaAdmission(connection, { video: true }); }
+        catch (error) {
+          if (error instanceof BackupMediaAdmissionError) fail(error.reason === "unavailable" ? "VIDEO_CAPACITY_UNAVAILABLE" : "VIDEO_DATABASE_STATE");
+          throw error;
+        }
         const { heldBytes } = await snapshot(connection), existing = await allocation(connection, proposed.id);
         if (existing) {
           if (!owns(existing, context)) fail("VIDEO_NOT_FOUND"); validateRow(existing, context.now);
           if (existing.state !== "reserved" || !bound(existing, proposed, value.tokenHash)) input();
         } else {
           const ownerHeld = count((await connection.query("SELECT COALESCE(SUM(stored_bytes), 0) AS value FROM video_assets WHERE owner_id = ? AND state <> 'released' FOR UPDATE", [context.actor.id]))[0].value);
-          if (heldBytes > capacity.totalBytes - proposed.storedBytes || ownerHeld > capacity.ownerBytes - proposed.storedBytes) fail("VIDEO_STORAGE_LIMIT");
+          if (heldBytes > capacity.totalBytes - proposed.storedBytes || ownerHeld > capacity.ownerBytes - proposed.storedBytes
+            || !fitsBackupMediaAdmission(backup, proposed.storedBytes, 1)) fail("VIDEO_STORAGE_LIMIT");
           const at = sqlDate(context.now);
           await connection.query(`INSERT INTO video_assets (id, owner_id, owner_role, storage_key, reserve_token_hash,
             bytes, stored_bytes, mime, state, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'reserved', ?, ?)`,
@@ -304,6 +312,25 @@ export function createVideoStore({ pool, chatStore, capacity } = {}) {
         if (row.state !== "committed") fail("VIDEO_NOT_FOUND"); return result;
       });
     },
+    async listOwned(value) {
+      request(value);
+      const afterId = value.afterId ?? null, limit = value.limit ?? 20;
+      if (afterId !== null) bytes(afterId, 16);
+      if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) input();
+      return chatStore.withActor(value, async (connection, context) => {
+        await lockCapacity(connection);
+        // Cleanup intents remain visible so a known owner can finish a
+        // previously interrupted unlink. Reserved uploads are never exposed
+        // to this operation while a producer may still publish their files.
+        const rows = await connection.query(`SELECT ${COLUMNS} FROM video_assets
+          WHERE owner_id = ? AND owner_role = ? AND state IN ('committed', 'cleanup_pending')
+          ${afterId === null ? "" : "AND id > ?"} ORDER BY id ASC LIMIT ? FOR UPDATE`,
+        [context.actor.id, context.actor.role, ...(afterId === null ? [] : [afterId]), limit + 1]);
+        const selected = rows.slice(0, limit), hasMore = rows.length > limit;
+        return { assets: selected.map(row => validateRow(row, context.now)),
+          nextCursor: hasMore ? selected.at(-1).id : null, hasMore };
+      });
+    },
     // Trusted message adapter only, inside its currently authorized chat
     // transaction. This helper grants no session or conversation authority.
     async getCommittedAsset(connection, { assetId, ownerId, ownerRole, now } = {}) {
@@ -332,6 +359,16 @@ export function createVideoStore({ pool, chatStore, capacity } = {}) {
           ON m.id = mv.message_id AND m.conversation_id = mv.conversation_id
           WHERE mv.video_id = ? AND m.deleted_at IS NULL LIMIT 1`, [value.assetId]);
         if (references.length) fail("VIDEO_IN_USE");
+        if (context.actor.role === "admin") {
+          // The encrypted campaign payload is intentionally opaque here.
+          // Conservatively retain all originals while this owner's queue is
+          // active. Creation, cancellation and workers hold the same admin
+          // account lock first; this current READ COMMITTED lookup adds no
+          // campaign/recipient lock after the storage lock.
+          const campaigns = await connection.query(`SELECT 1 FROM broadcast_campaigns FORCE INDEX (broadcast_campaigns_owner_page)
+            WHERE admin_id = ? AND status IN ('queued', 'running') LIMIT 1`, [context.actor.id]);
+          if (campaigns.length) fail("VIDEO_IN_USE");
+        }
         const at = sqlDate(context.now);
         await connection.query("UPDATE video_assets SET state = 'cleanup_pending', updated_at = ? WHERE id = ? AND state = 'committed'", [at, value.assetId]);
         return validateRow({ ...row, state: "cleanup_pending", updated_at: at }, context.now);

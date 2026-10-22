@@ -44,7 +44,9 @@ async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed =
   const html = files.get("/broadcast.html").toString().replace("<head>", '<head><script src="/scale-fixture.js"></script>');
   const contacts = Array.from({ length: 2500 }, (_, index) => ({ id: id(index + 1), client: { id: id(10000 + index), pseudonym: `Scale client ${String(index + 1).padStart(4, "0")}` }, crm: { nickname: "" }, canSend: true }));
   const contactsById = new Map(contacts.map(contact => [contact.id, contact]));
-  const state = { owner: 1, requests: [], creates: [], campaigns: new Map(), dropped: false, ownerByCampaign: new Map(), previewInputs: [], delivered: 0, uploads: [], uploadAttempts: [] };
+  const state = { owner: 1, requests: [], creates: [], campaigns: new Map(), dropped: false, ownerByCampaign: new Map(), previewInputs: [], delivered: 0, uploads: [], uploadAttempts: [], blockSessionProofs: false, heldSessionProofs: 0 };
+  const sessionResponses = [];
+  const releaseSessionProofs = () => { state.blockSessionProofs = false; for (const send of sessionResponses.splice(0)) send(); };
   const session = () => ({ user: { id: id(8000 + state.owner), role: "admin", pseudonym: `Synthetic Jessie ${state.owner}` }, csrf: state.owner === 1 ? "A".repeat(43) : "B".repeat(42) + "A",
     expiresAt: Date.now() + 8 * 3600000, mediaEnabled: false, ...(largeAudiencesEnabled ? { largeAudiencesEnabled: true } : {}), ...(videoEnabled ? { videoEnabled: true, ...(videoCreationEnabled === false ? { videoCreationEnabled: false } : {}) } : {}) });
   const targets = audience => audience?.mode === "all" ? contacts : audience?.mode === "filtered" ? contacts.slice(0, 175)
@@ -71,7 +73,11 @@ async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed =
     const json = (status, body) => { response.writeHead(status, { "Content-Type": "application/json; charset=utf-8" }); response.end(JSON.stringify(body)); };
     const page = (rows, key = "id") => { const after = url.searchParams.get("afterId"), limit = Number(url.searchParams.get("limit") ?? 50); const rest = rows.filter(row => after === null || row[key] > after), values = rest.slice(0, limit), hasMore = rest.length > limit;
       return { values, hasMore, nextCursor: hasMore ? values.at(-1)[key] : null }; };
-    if (["/api/broadcast/admin/session", "/api/auth/session"].includes(url.pathname)) { json(200, session()); return; }
+    if (["/api/broadcast/admin/session", "/api/auth/session"].includes(url.pathname)) {
+      if (state.blockSessionProofs) { state.heldSessionProofs += 1; sessionResponses.push(() => { if (!response.destroyed) json(200, session()); }); }
+      else json(200, session());
+      return;
+    }
     if (url.pathname === "/api/admin/crm/labels") { json(200, { labels: [], nextCursor: null, hasMore: false }); return; }
     if (url.pathname === "/api/admin/crm/contacts") {
       const rows = state.owner === 1 ? url.searchParams.get("q") ? contacts.slice(0, 175) : contacts : [], selected = page(rows);
@@ -138,7 +144,7 @@ async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed =
     json(404, { error: "fixture_not_found" });
   })().catch(() => { if (!response.destroyed) { response.writeHead(500, { "Content-Type": "application/json" }); response.end('{"error":"fixture_failure"}'); } }); });
   await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
-  return { state, origin: `http://127.0.0.1:${server.address().port}`, close: async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); } };
+  return { state, releaseSessionProofs, origin: `http://127.0.0.1:${server.address().port}`, close: async () => { releaseSessionProofs(); server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); } };
 }
 
 async function open(source, width, language = "fr") {
@@ -169,6 +175,53 @@ async function confirmWithKeyboard(page) {
   await page.click("#acknowledge"); await page.key("\uE004");
   assert.equal(await page.execute("return document.activeElement.id"), "confirm"); await page.key("\uE007");
 }
+
+async function suspendAndBlockResume(source, page) {
+  const posts = source.state.requests.filter(request => request.method === "POST").length;
+  // Exercise the actual DOM lifecycle handlers in Chrome without changing
+  // document.visibilityState. These synthetic persisted events do not claim
+  // an OS background/freeze transition or a native BFCache restoration.
+  await page.execute("window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}));");
+  assert.equal(await page.execute("return document.getElementById('broadcast-content').hidden && getComputedStyle(document.getElementById('broadcast-content')).display==='none'"), true, "suspension conceals private content synchronously");
+  const held = source.state.heldSessionProofs; source.state.blockSessionProofs = true;
+  await page.execute("window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));");
+  await waitUntil(() => source.state.heldSessionProofs > held, "resume waits on a fresh session proof");
+  assert.equal(await page.execute("return document.getElementById('broadcast-content').hidden && getComputedStyle(document.getElementById('broadcast-content')).display==='none'"), true, "draft and recipients stay concealed until the session proof succeeds");
+  assert.equal(source.state.requests.filter(request => request.method === "POST").length, posts, "resume never submits a preview or campaign automatically");
+}
+
+test("Chrome: suspended text and explicit recipient return only after session proof, and another account purges them", { timeout: 60000 }, async () => {
+  const source = await fixture(); let page;
+  try {
+    page = await open(source, 390); await compose(page, "Suspended private title", "Suspended private body");
+    await page.click("#contacts input[type=checkbox]");
+    assert.equal(await page.execute("return document.querySelectorAll('#selected li').length"), 1);
+    await suspendAndBlockResume(source, page); source.releaseSessionProofs();
+    await waitUntil(() => page.execute("return !document.getElementById('broadcast-content').hidden && document.getElementById('campaign-title').value==='Suspended private title' && document.getElementById('campaign-body').value==='Suspended private body' && document.querySelectorAll('#selected li').length===1"), "the same session restores the exact draft and selected recipient");
+    assert.match(await page.execute("return document.querySelector('#selected li').textContent"), /Scale client 0001/u);
+    assert.equal(source.state.previewInputs.length, 0); assert.equal(source.state.creates.length, 0);
+    await suspendAndBlockResume(source, page); source.state.owner = 2; source.releaseSessionProofs();
+    await waitUntil(() => page.execute("return !document.getElementById('broadcast-content').hidden && document.getElementById('campaign-title').value==='' && document.getElementById('campaign-body').value==='' && document.querySelectorAll('#selected li').length===0 && document.querySelectorAll('#history button').length===0 && document.getElementById('campaign-detail').hidden"), "a new owner receives an empty composition after verification");
+    assert.equal(source.state.requests.filter(request => request.method === "POST").length, 0); await errors(page);
+  } finally { await page?.close(); await source.close(); }
+});
+
+test("Chrome: a suspended uncertain confirmation retains its exact key and only an explicit retry can acknowledge it", { timeout: 60000 }, async () => {
+  const source = await fixture({ uncertain: true }); let page;
+  try {
+    page = await open(source, 320, "en"); await compose(page, "Suspended uncertain title", "Suspended uncertain body");
+    await page.click("#contacts input[type=checkbox]"); await preview(page, 1); await confirmWithKeyboard(page);
+    await waitUntil(() => page.execute("return !document.getElementById('uncertain').hidden && !document.getElementById('retry').disabled"), "the incomplete committed response retains an uncertain confirmation");
+    assert.equal(source.state.creates.length, 1); const original = structuredClone(source.state.creates[0]);
+    await suspendAndBlockResume(source, page); source.releaseSessionProofs();
+    await waitUntil(() => page.execute("return !document.getElementById('broadcast-content').hidden && !document.getElementById('uncertain').hidden && !document.getElementById('retry').disabled && document.getElementById('composition').disabled"), "the same session restores the frozen explicit retry");
+    assert.equal(source.state.creates.length, 1); assert.equal(source.state.previewInputs.length, 1);
+    assert.equal(await page.execute("return document.getElementById('campaign-title').value==='Suspended uncertain title' && document.getElementById('campaign-body').value==='Suspended uncertain body' && document.querySelectorAll('#selected li').length===1"), true);
+    await page.click("#retry");
+    await waitUntil(() => source.state.creates.length === 2 && page.execute("return document.getElementById('uncertain').hidden && !document.getElementById('campaign-detail').hidden"), "the user's explicit retry acknowledges the existing campaign");
+    assert.deepEqual(source.state.creates[1], original); assert.equal(source.state.campaigns.size, 1); await errors(page);
+  } finally { await page?.close(); await source.close(); }
+});
 
 test("Chrome mobile FR/EN: all 2,500 and filtered 175 are explicitly reviewed with bounded DOM and paginated details", { timeout: 180000 }, async () => {
   for (const width of [320, 390]) for (const language of ["fr", "en"]) {

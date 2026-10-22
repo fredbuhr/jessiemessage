@@ -9,7 +9,6 @@ globalThis.JessieI18n?.register({
   "Brouillon privé": "Private draft",
   "Préparer une seule fois, ajuster ensuite": "Prepare once, adjust later",
   "Enregistrer conserve ta préparation. Les textes restent privés et aucune suppression automatique n’est activée.": "Saving keeps your preparation. The texts stay private and automatic deletion stays inactive.",
-  "Le contact est contact@jessiemessage.com. Les sauvegardes sur ton PC et les alertes déjà reçues continuent avec leurs réglages actuels.": "The contact is contact@jessiemessage.com. Your PC backups and the alerts already received keep their current settings.",
   "Les informations à réunir": "Information to gather",
   "Tu peux enregistrer même si tout n’est pas encore renseigné. Ces réponses servent à finaliser les textes ; elles ne valent pas validation juridique.": "You can save even if some answers are missing. These answers help finalise the texts; they are not legal validation.",
   "Relire les textes": "Review the texts",

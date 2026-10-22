@@ -27,9 +27,22 @@ export function parseAnnouncementPreview(value) {
   return { ...value, eligibleCount: value.eligibleCount, previewToken: value.previewToken };
 }
 export function createAnnouncementsState() {
-  return { generation: 0, visible: false, session: null, current: null, serverTime: null,
+  const state = { generation: 0, visible: false, session: null, current: null, serverTime: null,
     currentRevision: "0", baseRevision: "0", draftVersion: 0, preview: null, acknowledged: false, pending: null, csrfFailed: false,
     draft: { body: "", mode: "now", startsAt: null, expiresAt: null, sendMessage: false } };
+  rememberAnnouncementDraft(state); return state;
+}
+function editableDraftValues(state) {
+  return [state.draft.body, state.draft.mode, localAnnouncementDate(state.draft.startsAt),
+    localAnnouncementDate(state.draft.expiresAt), state.draft.sendMessage, state.acknowledged];
+}
+export function rememberAnnouncementDraft(state) {
+  // The form displays local dates to the minute. Re-entering the same visible
+  // date must not make server seconds look like a new unsaved edit.
+  state.draftReference = Object.freeze(editableDraftValues(state));
+}
+export function hasUnsavedAnnouncementChanges(state) {
+  return Boolean(state.pending || editableDraftValues(state).some((value, index) => value !== state.draftReference[index]));
 }
 export function clearAnnouncements(state, visible = false) {
   const next = createAnnouncementsState(); next.generation = state.generation + 1; next.visible = visible;
@@ -58,6 +71,7 @@ export function setAnnouncementCurrent(state, response, { fillDraft = false } = 
     state.draft = { body: value?.body ?? "", mode: value && value.startsAt > current.serverTime ? "scheduled" : "now",
       startsAt: value?.startsAt ?? null, expiresAt: value?.expiresAt ?? null, sendMessage: false };
     state.draftVersion += 1; state.preview = null; state.acknowledged = false;
+    rememberAnnouncementDraft(state);
   }
   return current;
 }

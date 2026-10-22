@@ -1,0 +1,81 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-lot3-official-action-source-check",
+  "checkedDateUTC": "2026-10-22",
+  "scope": "Read-only official release, tag, commit, action.yml and README; no workflow execution by this record.",
+  "securityReference": "https://docs.github.com/en/actions/reference/security/secure-use",
+  "actions": [
+    {
+      "repository": "actions/checkout",
+      "releaseTag": "v7.0.1",
+      "publishedAt": "2026-07-20T15:10:05Z",
+      "releaseUrl": "https://github.com/actions/checkout/releases/tag/v7.0.1",
+      "tagRef": "refs/tags/v7.0.1",
+      "tagRefUrl": "https://api.github.com/repos/actions/checkout/git/refs/tags/v7.0.1",
+      "tagObjectType": "commit",
+      "commit": "3d3c42e5aac5ba805825da76410c181273ba90b1",
+      "commitApiUrl": "https://api.github.com/repos/actions/checkout/git/commits/3d3c42e5aac5ba805825da76410c181273ba90b1",
+      "tree": "150e70ecad5ebf06a559a01ea3a56d9a3236d2b1",
+      "verification": {
+        "verified": true,
+        "reason": "valid"
+      },
+      "actionRuntime": "node24",
+      "actionManifestUrl": "https://raw.githubusercontent.com/actions/checkout/3d3c42e5aac5ba805825da76410c181273ba90b1/action.yml",
+      "readmeUrl": "https://raw.githubusercontent.com/actions/checkout/3d3c42e5aac5ba805825da76410c181273ba90b1/README.md"
+    },
+    {
+      "repository": "actions/setup-node",
+      "releaseTag": "v7.1.0",
+      "publishedAt": "2026-10-08T02:52:34Z",
+      "releaseUrl": "https://github.com/actions/setup-node/releases/tag/v7.1.0",
+      "tagRef": "refs/tags/v7.1.0",
+      "tagRefUrl": "https://api.github.com/repos/actions/setup-node/git/refs/tags/v7.1.0",
+      "tagObjectType": "commit",
+      "commit": "949feb2413d6458794dcd2491c4babbbce0c15c1",
+      "commitApiUrl": "https://api.github.com/repos/actions/setup-node/git/commits/949feb2413d6458794dcd2491c4babbbce0c15c1",
+      "tree": "52fa7965588e7b6e1f688df0ea6c5e99736e820e",
+      "verification": {
+        "verified": true,
+        "reason": "valid"
+      },
+      "actionRuntime": "node24",
+      "actionManifestUrl": "https://raw.githubusercontent.com/actions/setup-node/949feb2413d6458794dcd2491c4babbbce0c15c1/action.yml",
+      "readmeUrl": "https://raw.githubusercontent.com/actions/setup-node/949feb2413d6458794dcd2491c4babbbce0c15c1/README.md"
+    },
+    {
+      "repository": "actions/upload-artifact",
+      "releaseTag": "v7.0.2",
+      "publishedAt": "2026-10-07T10:08:14Z",
+      "releaseUrl": "https://github.com/actions/upload-artifact/releases/tag/v7.0.2",
+      "tagRef": "refs/tags/v7.0.2",
+      "tagRefUrl": "https://api.github.com/repos/actions/upload-artifact/git/refs/tags/v7.0.2",
+      "tagObjectType": "commit",
+      "commit": "cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+      "commitApiUrl": "https://api.github.com/repos/actions/upload-artifact/git/commits/cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+      "tree": "df84027e80651ef90737ddee32cb089085a42a4f",
+      "verification": {
+        "verified": true,
+        "reason": "valid"
+      },
+      "actionRuntime": "node24",
+      "actionManifestUrl": "https://raw.githubusercontent.com/actions/upload-artifact/cf430e030ddbb5b0abf93d22962f4752f3646cd9/action.yml",
+      "readmeUrl": "https://raw.githubusercontent.com/actions/upload-artifact/cf430e030ddbb5b0abf93d22962f4752f3646cd9/README.md"
+    }
+  ],
+  "compatibility": {
+    "applicationNode": "24.22.1 unchanged",
+    "githubHostedRunners": true,
+    "node24MinimumRunner": "2.327.1",
+    "checkoutPersistCredentials": false,
+    "checkoutDefaultPullRequestMergeRefPreserved": true,
+    "unsafePullRequestOptIn": false,
+    "setupNodePackageManagerCache": false,
+    "noRegistryUrlOrNewTokenConfigured": true,
+    "uploadArtifactNamesPathsRetentionAndHiddenFileSettingsPreserved": true
+  },
+  "limits": [
+    "Source verification and pin selection are distinct from native workflow qualification.",
+    "No self-hosted runner, hosting PHP, production service or SQL configuration is changed."
+  ]
+}

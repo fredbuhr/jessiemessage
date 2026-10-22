@@ -29,30 +29,33 @@ concurrency:
 jobs:
   tests:
     name: Probe failure and privacy tests
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24.22.1"
+          package-manager-cache: false
       - name: Native Node tests, no hosting access
         run: node --test tests/external-probe.test.mjs tests/external-probe-cli.test.mjs
 
   service:
     name: Anonymous HTTPS and readiness
     needs: tests
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: ${{ !cancelled() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && (needs.tests.result == 'success' || (github.event_name == 'schedule' && needs.tests.result == 'skipped')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24.22.1"
+          package-manager-cache: false
       - name: Check fixed primary endpoints, confirm persistent failures
         run: node scripts/check-private-service.mjs

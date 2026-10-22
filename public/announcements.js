@@ -1,4 +1,4 @@
-import { createAnnouncementsState, clearAnnouncements, announcementTicket, currentAnnouncementTicket, acceptAnnouncementsSession, setAnnouncementCurrent, updateAnnouncementDraft, announcementDraft, acceptAnnouncementPreview, prepareAnnouncementMutation, retryAnnouncementMutation, uncertainAnnouncementMutation, rejectAnnouncementMutation, completeAnnouncementMutation, localAnnouncementDate, readLocalAnnouncementDate } from "/announcements-model.js";
+import { createAnnouncementsState, clearAnnouncements, announcementTicket, currentAnnouncementTicket, acceptAnnouncementsSession, setAnnouncementCurrent, rememberAnnouncementDraft, hasUnsavedAnnouncementChanges, updateAnnouncementDraft, announcementDraft, acceptAnnouncementPreview, prepareAnnouncementMutation, retryAnnouncementMutation, uncertainAnnouncementMutation, rejectAnnouncementMutation, completeAnnouncementMutation, localAnnouncementDate, readLocalAnnouncementDate } from "/announcements-model.js";
 
 const ui = globalThis.JessieI18n;
 const el = id => document.getElementById(id), state = createAnnouncementsState(), controllers = new Set();
@@ -119,7 +119,13 @@ async function loadCurrent(fillDraft = false) {
     const response = await request("/api/announcements/admin/current", { ticket });
     if (!setAnnouncementCurrent(state, response, { fillDraft })) return;
     serverOffset = response.serverTime - Date.now();
-    if (fillDraft) { if (!state.draft.expiresAt) state.draft.expiresAt = Math.floor((now() + 2 * 3600000) / 60000) * 60000; fillFields(); }
+    if (fillDraft) {
+      if (!state.pending) {
+        if (!state.draft.expiresAt) state.draft.expiresAt = Math.floor((now() + 2 * 3600000) / 60000) * 60000;
+        rememberAnnouncementDraft(state);
+      }
+      fillFields();
+    }
     renderCurrent();
   } catch (error) { report(error, "current-status"); }
   finally { if (currentAnnouncementTicket(state, ticket)) { currentBusy = false; renderControls(); } }
@@ -225,5 +231,5 @@ document.addEventListener("visibilitychange", () => {
 });
 window.addEventListener("pagehide", clearPrivate); window.addEventListener("pageshow", event => { if (event.persisted && visible()) void bootstrap(); });
 window.addEventListener("online", () => { if (visible() && sessionPaused) void bootstrap(); });
-window.addEventListener("beforeunload", event => { if (state.pending || state.draft.body && state.draft.body !== state.current?.body) { event.preventDefault(); event.returnValue = ""; } });
+window.addEventListener("beforeunload", event => { if (hasUnsavedAnnouncementChanges(state)) { event.preventDefault(); event.returnValue = ""; } });
 if (visible()) void bootstrap(); else hidePrivate();

@@ -1,15 +1,45 @@
-# Technical architecture — draft
+# Architecture technique
 
-> État courant et prochaine action : [point de reprise](REPRISE.md). Les jalons datés ci-dessous décrivent leur relevé historique et ne remplacent pas cet état.
+**Vue du code et de l’exploitation au 22 octobre 2026.** [REPRISE](REPRISE.md) reste l’unique référence de version active, sources, accès et repli. Le service rapporté est **1.8.1 / Node v24.22.1 / SQL36** ; les corrections 1.8.2 sont en branche. Le [plan courant](PLAN-IMPLEMENTATION.md) distingue travail qualifié et livraison.
 
+## Composition actuelle
 
-## Current runtime — 18 October 2026
+Un unique service Node HTTP sur l’hébergement mutualisé Infomaniak dessert le domaine principal et `recette.jessiemessage.com`, ancienne origine conservée pour les appareils/PWA/Push. Ils partagent le runtime et la base ; recette n’est pas un environnement de qualification destructible. Accueil/www redirigent vers le principal avec chemin et paramètres conservés ; la [fiche domaines](public-domains-20261022.md) en garde les preuves. Le PHP secondaire relève du fournisseur.
+
+Les profils explicites activent authentification administrateur avec MFA, invitations/admission et sessions client indépendantes, messagerie, photos, CRM, récupération, Push, diffusions, annonces, tâches privées et vidéo. Le profil vidéo compose **33 migrations de base + 3 migrations vidéo**, sept configurations privées et deux racines média distinctes. Le chargeur normal reste SQL33 ; aucune migration ne s’exécute au démarrage. Le repli 1.7.2 compatible SQL36 est préparé et précontrôlé, jamais démarré ; les anciennes 1.7.1/1.6.0 ne peuvent pas redémarrer sur SQL36.
+
+Autorisations, Origin/CSRF, budgets, transactions et contrôle de session sont répétés côté serveur. Les clés de demande permettent les reprises sans recréer une action déjà confirmée. Les messages, notes et médias sont chiffrés côté serveur avec des contextes distincts ; il ne s’agit pas de chiffrement de bout en bout. Les photos sont normalisées et leurs métadonnées source retirées ; les originaux vidéo peuvent conserver leurs métadonnées. Les flux vidéo déchiffrent des blocs authentifiés sous contrôle d’accès, avec lecture Range bornée. Les fichiers et clés privés restent hors du checkout public.
+
+Les workers SMTP, Push et diffusions démarrent avec le service selon les capacités configurées. Les diffusions livrent les messages avec les quotas et droits de messagerie. L’arrêt interrompt les producteurs avant le drainage HTTP/SQL, sous des budgets bornés. Le frontend construit le DOM avec du texte et revalide l’identité avant d’adopter une réponse privée ; le service worker ne cache pas le contenu privé. Les changements 1.8.2 de continuité de saisie sont qualifiés sur branche, sans activation présumée.
+
+Depuis 1.8.0, la sauvegarde est une action explicite de l’administration ; captures et archivage automatiques ne sont plus le parcours retenu. Les archives, autorités, reçus, quarantaines, anciennes clés et fermetures locales restent préservés. Création, fin et téléchargement dans l’interface hébergée restent non vérifiés et reportés à la demande de l’utilisateur. La restauration opérateur est une opération distincte, en maintenance sur cible réellement isolée, selon son [contrat](manual-restore-operator-078.md) et ses limites.
+
+La qualification utilise des fixtures synthétiques : tests généraux, Chrome, HTTPS avec MariaDB et deux moteurs MariaDB natifs. Elle ne déploie pas une branche et ne certifie pas tous les appareils, la charge du mutualisé ou la conformité juridique. A10 conserve ses faits non établis ; A11 reste à observer sur l’hôte sans désactiver les gardes proxy. Aucun envoi réel, essai de sauvegarde reporté, migration ou nouveau service n’est ajouté par l’entretien. La [fiche capacité](capacity-182.md) conserve budgets, seuils de fermeture et mesure synthétique SQL, sans promettre une simultanéité du mutualisé.
+
+## Ressources à conserver avec le checkout
+
+| Ressource | Usage ou particularité |
+| --- | --- |
+| `docs/privacy-notice-draft.md` | Lu au démarrage de la préparation privée par `server/privacy/service.mjs`, avec découpage par titres FR/EN exacts. Fichier et titres restent intacts ; le dossier est `draft_only`, sans publication de notice. |
+| `db/migrations/*.sql` et `server/video/migrations/*.sql` | Plans immuables SQL33 et composition SQL36 ; chemins, ordre et checksums conservés. Ne pas déplacer ou renuméroter pour nettoyer les documents. |
+| `public/brand/asset-manifest.json` et assets PNG/ICO associés | Sources de marque vérifiées, lues par le build de l’atelier ; pas des ressources orphelines. |
+| `public/private-archive.js` | Sert aussi l’alias dynamique `/client-archive.js` via `server/chat/client-export-http.mjs`. L’absence de fichier physique `client-archive.js` n’est pas une erreur. |
+| `scripts/JessieMessage-sauvegardes-055.ps1`, `scripts/JessieMessage-temoin-067.ps1`, `scripts/JessieMessage-verifier-056.ps1` | Chargés par les kits du serveur pour lire/conserver leurs contrats historiques. L’abandon de l’automatisation n’autorise pas leur suppression. |
+| Configurations, clés, états, reçus et outils opérateur hors checkout | Épinglés par leurs preuves et conservés sur l’hôte ; ni copie dans Git ni nettoyage implicite. Les seuls lanceurs courants figurent dans REPRISE. |
+
+Les handlers HTTP servent également leurs listes explicites de ressources `public/`. L’absence d’import JavaScript direct ne suffit donc pas à prouver qu’un asset, une migration, un ancien lecteur de format ou un outil de repli est inutile.
+
+## Repères historiques de conception
+
+> **Toutes les sections suivantes sont historiques.** Les versions, opérations, limites et prochaines étapes appartiennent à leur jalon d’origine. Elles ne décrivent pas l’architecture active et ne remettent pas en chantier l’automatisation PC, un fournisseur d’assurance d’âge, une nouvelle infrastructure ou les fonctions abandonnées. Consulter REPRISE et le plan pour les actions actuelles.
+
+### Runtime historique — 18 octobre 2026
 
 Application 0.56 (`2faf32ce`, schema 30) serves the primary and retained recipe origins with invitations, private text/photos, durable administrator/client sessions, Web Push, primary-only client recovery, private CRM and individually delivered campaigns. Recipients have no separate broadcast opt-in. The retained recipe shares the application's runtime and data; it is not an isolated staging database.
 
 The active 0.56.0 runtime and supervisor share source `2faf32ce` (tree `8bc8029e`) in one pinned checkout. Main contains the complete application, independent probe and subsequent test-only Chrome cleanup. Daily encrypted checkpoints stay at 05:15 UTC, with minute console observations and private atomic SMTP alerts confirmed received by the owner. Primary backup administration manages up to five Windows collector destinations through scoped ciphertext capabilities, DPAPI, strict receipts, pause and revocation. Mon PC is paired and has current receipts, including after activation. The offline verification kit uses the existing owner key and native GPG Pinentry, hashes decrypted binary bytes in memory, and sends no result. Personal decryption remains pending. Direct cloud APIs and Linux collectors remain future adapters. See [0.56 procedure and evidence](backup-verification-056.md), [destinations](backup-destinations-055.md), [mail semantics](backup-email-alerts-053.md), [recovery entry point](REPRISE.md) and [operational plan](production-readiness-2026-10-17.md). Versioned sections below retain historical scope.
 
-## Historical development: media capacity and private inventory
+### Historical development: media capacity and private inventory
 
 Version 0.15 adds a durable storage journal and a singleton capacity lock, with file-length quotas bound to the configured private directory and ceilings. Acknowledged reservations precede writes; metadata registration and journal transitions share a transaction. Uncertain proposals and failed erasures remain charged, with release only after durable unlink. A bounded read-only inventory gates explicit offline initialization of all historical assets. Its envelope checks are structural, not GCM authentication. See [protocol, operator procedure and remaining recovery work](media-capacity-inventory.md).
 
@@ -27,7 +57,7 @@ Version 0.11 adds individually delivered broadcasts behind an additional flag re
 
 At stage 0.15, twenty-seven migrations provided those foundation and administrator tables plus client authentication, email verification, client session state, an encrypted mail outbox, messages, per-participant read receipts and per-conversation change events, owner media assets, audited message attachments, three CRM tables, hashed client reset challenges a separate encrypted reset outbox, client broadcast preferences, encrypted immutable campaigns and durable recipients, plus persistent media capacity state and a storage-object journal. The HTTP runtime uses separate DML credentials and checks applied migration history, required columns, indexes, foreign keys and checks before enabling configured features. Migrations remain a separate explicit CLI with TLS, database-scoped locks, immutable checksums and inspected recovery. CI targets disposable MariaDB 10.11 and 11.4; CRM passes the [verified CRM CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38653885864). Recovery 0.9 passes the [verified recovery CI](https://github.com/fredbuhr/jessiemessage/actions/runs/38655526255). See [database](DATABASE.md) and [private administrator setup](auth-admin.md).
 
-## Planned application
+### Planned application
 
 - Frontend: modularize the approved HTML/CSS/JavaScript interface while preserving its design; deliver the mobile-first PWA over HTTPS.
 - API: Node.js 24; request validation; centralized policy enforcement and granular authorization.
@@ -40,7 +70,7 @@ At stage 0.15, twenty-seven migrations provided those foundation and administrat
 - Installation: manifest, appropriate PNG icons and service worker caching **only** public static assets; never cache private media or messages.
 - Localization: French/English from the outset; extensible translation keys.
 
-## Logical entities
+### Logical entities
 
 - `users`: account identity, account status and policy flags.
 - `invitations`: hashed token, created by, expiry, consumed/revoked status.
@@ -63,7 +93,7 @@ At stage 0.15, twenty-seven migrations provided those foundation and administrat
 
 Subject to data minimization, retention and legal review before schema stabilization.
 
-## Private CRM boundary
+### Private CRM boundary
 
 `JESSIEMESSAGE_ENABLE_CRM=1` requires enabled chat and a distinct 32-byte `JESSIEMESSAGE_CRM_KEY`; the key must differ from MFA, mail, message and any supplied media key. CRM assets and endpoints require the administrator host cookie and a current MFA session. Database hooks recheck the actor and assigned conversation inside each transaction. The client chat module does not import the CRM module or request its data.
 
@@ -71,7 +101,7 @@ Profile updates replace nickname, notes, reminder and memberships atomically aga
 
 The contacts query searches pseudonym, nickname and email as literal substrings and combines tag/group, live access, unread and reminder filters. Results contain no email or notes; only the private selected profile includes them. Pages use stable conversation-ID cursors and bounded batch label reads. The reminder is a date used by filters, with no background notification job. Full contracts and operational limits are in [private-crm.md](private-crm.md).
 
-## Client recovery boundary
+### Client recovery boundary
 
 `JESSIEMESSAGE_ENABLE_CLIENT_RECOVERY=1` requires enabled access and SMTP configuration. It reuses `JESSIEMESSAGE_MAIL_KEY`; purpose-specific AES-GCM authenticated context prevents verification and password-reset payloads from being interchanged. Reset jobs use their own table and worker purpose. Each worker sends sequentially; enabling both permits at most two concurrent sends in one process. Delivery remains at least once, and a revocation after a job is claimed may still deliver a now-unusable link.
 
@@ -79,7 +109,7 @@ A recovery request returns a generic accepted response for eligible and ineligib
 
 The public enabled-only `/recover` page reads the canonical token from a fragment, removes the fragment/query before API calls, and keeps the token only in memory. Page loads never inspect or consume the challenge. Only explicit same-origin JSON submission completes a reset. APIs refuse query parameters and return fixed DTOs with no email, token or account ID. Persistent HMAC rate buckets and the existing bounded scrypt queue constrain abuse. See [client-recovery.md](client-recovery.md) for precise scope and remaining operational work.
 
-## Site mail identity and preparation boundary
+### Site mail identity and preparation boundary
 
 `server/site.mjs` defines the public contact address and recognizes only canonical HTTPS origins at `jessiemessage.com` or its subdomains. Mail remains opt-in. An omitted SMTP From defaults to the contact address; an explicitly empty or invalid value fails. An official origin rejects a different sender, including on manually constructed transport configuration. Nonofficial origins may use explicit synthetic senders for isolated tests. Reply-To and SMTP-envelope From always follow the validated sender. SMTP host, port, username, password and the private mail key remain explicit; no address is converted into a credential automatically.
 
@@ -87,7 +117,7 @@ The public enabled-only `/recover` page reads the canonical token from a fragmen
 
 Each verification creates a separate transport, calls Nodemailer's `verify()` with a 20-second wall deadline, and closes that instance on success, error or timeout. It never sends mail and never closes the workers' shared delivery transport. The administrator session is checked again after network work and cleanup, so a session revoked during the request receives no success proof. A successful DTO reports `smtp_authentication` and `delivery: not_checked`; it is not stored as a delivery or publication approval. The UI clears its temporary result when hidden or signed out, reloads the session on return, and does not automatically repeat this network action after a CSRF refresh. See [mail-readiness.md](mail-readiness.md).
 
-## Hosting and deployment
+### Hosting and deployment
 
 - Source: public GitHub repository; **no** production secrets or user data.
 - CI: non-privileged tests on GitHub Actions; no automatic deployment from untrusted branches.
@@ -97,7 +127,7 @@ Each verification creates a separate transport, calls Nodemailer's `verify()` wi
 - Validate memory, connection limits, file storage, background processes and WebSockets on shared hosting with actual load tests.
 - A service outage or a compromised shared hosting account can affect other sites; consider separate hosting for mature production.
 
-## Next implementation order
+### Next implementation order
 
 1. Freeze key architecture and privacy assumptions.
 2. Schema migrations + test database (all synthetic data).
@@ -112,7 +142,7 @@ Each verification creates a separate transport, calls Nodemailer's `verify()` wi
 
 **Do not** deploy real user chat functionality ahead of the legal and security gates.
 
-## Individual broadcast queue (0.11)
+### Individual broadcast queue (0.11)
 
 An additional explicit flag enables `/admin/broadcasts`, private campaign APIs and client-owned consent controls. Confirmation freezes at most 100 explicitly selected CRM conversations, an encrypted payload and stable per-recipient message IDs. The queue contains no raw session token. Current administrator status/MFA, assignment, recipient access, consent and media are checked under SQL locks again before ordinary chat insertion. A durable approval survives logout; cancellation removes outstanding work and a changed MFA epoch terminally pauses it. No shared audience metadata enters client DTOs.
 

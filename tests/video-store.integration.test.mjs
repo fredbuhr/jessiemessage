@@ -149,6 +149,33 @@ test("real MariaDB dormant video catalog reserves, commits and reconciles durabl
       assert.equal(await store.assertSchema(), true);
     });
 
+    await t.test("owned library pagination isolates accounts and retains cleanup intents only", async () => {
+      const { store } = await fresh(), owner = (await pair()).client, other = (await pair()).client;
+      const values = Array.from({ length: 5 }, () => asset(100));
+      for (const [index, value] of values.entries()) {
+        const account = index === 4 ? other : owner;
+        await store.reserve({ ...actor(account), asset: value });
+        if (index === 1) await release(store, owner, value);
+        else if (index !== 0) await store.commit({ ...actor(account), asset: committed(value) });
+      }
+      await store.deleteAsset({ ...actor(owner), assetId: values[3].id });
+      const expected = [values[2], values[3]].sort((a, b) => Buffer.compare(a.id, b.id));
+      const held = (await store.status()).heldBytes;
+      const first = await store.listOwned({ ...actor(owner), limit: 1 });
+      assert.equal(first.hasMore, true); assert.ok(first.nextCursor.equals(expected[0].id));
+      assert.equal(first.assets.length, 1); assert.ok(first.assets[0].ownerId.equals(owner.id));
+      const second = await store.listOwned({ ...actor(owner), afterId: first.nextCursor, limit: 1 });
+      assert.equal(second.hasMore, false); assert.equal(second.nextCursor, null);
+      assert.ok(second.assets[0].id.equals(expected[1].id));
+      const all = [...first.assets, ...second.assets];
+      assert.equal(all.filter(value => value.deletedAt !== null).length, 1);
+      assert.equal((await store.listOwned({ ...actor(other), limit: 100 })).assets.length, 1);
+      assert.equal((await store.status()).heldBytes, held, "a library read never releases capacity");
+      for (const options of [{ limit: 0 }, { limit: 101 }, { afterId: Buffer.alloc(15) }]) await assert.rejects(store.listOwned({ ...actor(owner), ...options }), code("VIDEO_INPUT"));
+      await connection.query("UPDATE sessions SET revoked_at = ? WHERE id = ?", [sql(now), owner.sessionId]);
+      await assert.rejects(store.listOwned({ ...actor(owner) }), code("CHAT_UNAUTHORIZED"));
+    });
+
     await t.test("SQL itself enforces encrypted-byte accounting, state, role, digest and ownership", async () => {
       const { store } = await fresh(), owner = (await pair()).client, value = asset(); await store.reserve({ ...actor(owner), asset: value });
       for (const [statement, parameters] of [

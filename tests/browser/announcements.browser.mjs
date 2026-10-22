@@ -9,7 +9,7 @@ import { startWebDriver, waitUntil } from "./webdriver.mjs";
 
 const id = number => number.toString(16).padStart(32, "0"), publicRoot = new URL("../../public/", import.meta.url);
 const assets = ["announcements.html", "announcements.js", "announcements-model.js", "announcements.css", "announcement-banner.js", "announcement-banner.css",
-  "chat.html", "chat.js", "chat-model.js", "chat.css", "image-preparation.js", "quick-replies.js", "emoji-catalog.js", "emoji.css",
+  "chat.html", "chat.js", "chat-model.js", "chat-drafts.js", "chat.css", "image-preparation.js", "quick-replies.js", "emoji-catalog.js", "emoji.css",
   "profile.js", "profile.css", "i18n-profile.js", "notification-link.js", "notifications.js", "notifications.css", "session-clock.js",
   "i18n.js", "i18n.css", "i18n-tools.js", "i18n-chat.js", "help-link.js", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png",
   "brand/brand.css", "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png", "brand/icon-128.png",

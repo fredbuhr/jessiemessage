@@ -1,0 +1,756 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-audit182-lot1-ci-qualification",
+  "status": "source_qualified_run_and_complete_job_logs_verified",
+  "repository": "fredbuhr/jessiemessage",
+  "candidateVersion": "1.8.2",
+  "pullRequest": 129,
+  "pullRequestUrl": "https://github.com/fredbuhr/jessiemessage/pull/129",
+  "source": "bc2b1c0d6a8e124b4256ffd20156ce005f614711",
+  "tree": "2d69a984129f1878545ad5aa2d1448952fce69f3",
+  "testedCheckout": "6e3c2c2b00671c3570b32989906ae4b7093b8d92",
+  "testedTree": "2d69a984129f1878545ad5aa2d1448952fce69f3",
+  "testedParents": [
+    "422c8ac0b75b945d280c3a84225cd3e2b0025087",
+    "bc2b1c0d6a8e124b4256ffd20156ce005f614711"
+  ],
+  "testedTreeEqualsSource": true,
+  "run": {
+    "id": 39817588326,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39817588326",
+    "event": "pull_request",
+    "path": ".github/workflows/ci.yml",
+    "head": "bc2b1c0d6a8e124b4256ffd20156ce005f614711",
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "createdAt": "2026-10-22T16:51:36Z",
+    "startedAt": "2026-10-22T16:51:36Z",
+    "updatedAt": "2026-10-22T16:58:54Z"
+  },
+  "jobs": [
+    {
+      "id": 119960034689,
+      "name": "MariaDB 11.4",
+      "head": "bc2b1c0d6a8e124b4256ffd20156ce005f614711",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-22T16:51:39Z",
+      "completedAt": "2026-10-22T16:58:53Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Install native MariaDB checkpoint clients",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Create disposable runtime and offline schema inspection accounts",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Exercise migrations and constraints on disposable database",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 14,
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 15,
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 16,
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 17,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "nodeVersion": "v24.22.1",
+      "checkout": "6e3c2c2b00671c3570b32989906ae4b7093b8d92",
+      "tests": {
+        "tests": 575,
+        "suites": 0,
+        "pass": 575,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 397886.886372
+      },
+      "syntheticSqlMetrics": [
+        {
+          "type": "video-backup-synthetic-metrics",
+          "sqlBytes": 84555,
+          "encryptedPhotoBytes": 1272,
+          "encryptedVideoBytes": 2622485,
+          "measurements": [
+            {
+              "phase": "capture",
+              "durationMs": 1539.763,
+              "peakNodeRssKiB": 168956
+            },
+            {
+              "phase": "operator-resume",
+              "durationMs": 1800.329,
+              "peakNodeRssKiB": 169612
+            },
+            {
+              "phase": "copy-two-roots",
+              "durationMs": 85.42,
+              "peakNodeRssKiB": 169612
+            },
+            {
+              "phase": "copy-two-roots",
+              "durationMs": 111.333,
+              "peakNodeRssKiB": 170456
+            },
+            {
+              "phase": "operator-resume",
+              "durationMs": 1170.476,
+              "peakNodeRssKiB": 188420
+            },
+            {
+              "phase": "backup-restore",
+              "durationMs": 108.899,
+              "peakNodeRssKiB": 192220
+            },
+            {
+              "phase": "copy-two-roots",
+              "durationMs": 53.032,
+              "peakNodeRssKiB": 192220
+            },
+            {
+              "phase": "backup-restore",
+              "durationMs": 865.69,
+              "peakNodeRssKiB": 197344
+            },
+            {
+              "phase": "backup-restore",
+              "durationMs": 807.244,
+              "peakNodeRssKiB": 197344
+            },
+            {
+              "phase": "operator-resume",
+              "durationMs": 1740.232,
+              "peakNodeRssKiB": 203356
+            },
+            {
+              "phase": "copy-two-roots",
+              "durationMs": 129.329,
+              "peakNodeRssKiB": 203356
+            },
+            {
+              "phase": "backup-restore",
+              "durationMs": 858.723,
+              "peakNodeRssKiB": 212292
+            },
+            {
+              "phase": "manual-reconcile-publish",
+              "durationMs": 21732.888,
+              "peakNodeRssKiB": 331108
+            }
+          ],
+          "peakNodeRssKiB": 331108,
+          "memoryScope": "Node test process peak RSS only; MariaDB, Chrome and child processes excluded",
+          "sqlTransport": "owned loopback without TLS"
+        }
+      ],
+      "fullLog": {
+        "file": "ci-39817588326-job119960034689.log",
+        "bytes": 331563,
+        "sha256": "1c458682b319b3db363da55faf8e16bba9067c2965bc5f4aba579a383746741b",
+        "encoding": "UTF-8 of complete decoded connector log; BOM and line endings preserved",
+        "completeDecodedLogRead": true
+      },
+      "errorAnnotations": []
+    },
+    {
+      "id": 119960034997,
+      "name": "verify",
+      "head": "bc2b1c0d6a8e124b4256ffd20156ce005f614711",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-22T16:51:39Z",
+      "completedAt": "2026-10-22T16:53:59Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Check JavaScript syntax",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Verify private Node preparation with synthetic files",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Run tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Build offline workbench",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Downloadable preview (open HTML, no console)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 17,
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 18,
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 19,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "nodeVersion": "v24.22.1",
+      "checkout": "6e3c2c2b00671c3570b32989906ae4b7093b8d92",
+      "tests": {
+        "tests": 3834,
+        "suites": 0,
+        "pass": 3786,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 48,
+        "todo": 0,
+        "duration_ms": 94249.427258
+      },
+      "pythonTests": {
+        "tests": 15,
+        "pass": 15,
+        "fail": 0,
+        "skipped": 0,
+        "footer": "Ran 15 tests in 0.243s"
+      },
+      "omissions": {
+        "total": 48,
+        "sqlOptIn": 46,
+        "procfsEnvironmentDependent": 2,
+        "countedAsPassed": false
+      },
+      "fullLog": {
+        "file": "ci-39817588326-job119960034997.log",
+        "bytes": 540690,
+        "sha256": "d2026d282b13b308833e8e0e1d62df82be95b0e6998ec358a44f7657278364e4",
+        "encoding": "UTF-8 of complete decoded connector log; BOM and line endings preserved",
+        "completeDecodedLogRead": true
+      },
+      "errorAnnotations": []
+    },
+    {
+      "id": 119960035019,
+      "name": "MariaDB 10.11",
+      "head": "bc2b1c0d6a8e124b4256ffd20156ce005f614711",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-22T16:51:39Z",
+      "completedAt": "2026-10-22T16:58:36Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Install native MariaDB checkpoint clients",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Create disposable runtime and offline schema inspection accounts",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Exercise migrations and constraints on disposable database",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 14,
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 15,
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 16,
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 17,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "nodeVersion": "v24.22.1",
+      "checkout": "6e3c2c2b00671c3570b32989906ae4b7093b8d92",
+      "tests": {
+        "tests": 575,
+        "suites": 0,
+        "pass": 575,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 353166.220681
+      },
+      "syntheticSqlMetrics": [
+        {
+          "type": "video-backup-synthetic-metrics",
+          "sqlBytes": 84555,
+          "encryptedPhotoBytes": 1272,
+          "encryptedVideoBytes": 2622485,
+          "measurements": [
+            {
+              "phase": "capture",
+              "durationMs": 1872.008,
+              "peakNodeRssKiB": 156868
+            },
+            {
+              "phase": "operator-resume",
+              "durationMs": 1558.434,
+              "peakNodeRssKiB": 179992
+            },
+            {
+              "phase": "copy-two-roots",
+              "durationMs": 50.924,
+              "peakNodeRssKiB": 179992
+            },
+            {
+              "phase": "copy-two-roots",
+              "durationMs": 96.225,
+              "peakNodeRssKiB": 180552
+            },
+            {
+              "phase": "operator-resume",
+              "durationMs": 988.761,
+              "peakNodeRssKiB": 184084
+            },
+            {
+              "phase": "backup-restore",
+              "durationMs": 79.244,
+              "peakNodeRssKiB": 184084
+            },
+            {
+              "phase": "copy-two-roots",
+              "durationMs": 37.403,
+              "peakNodeRssKiB": 184084
+            },
+            {
+              "phase": "backup-restore",
+              "durationMs": 663.846,
+              "peakNodeRssKiB": 196284
+            },
+            {
+              "phase": "backup-restore",
+              "durationMs": 579.622,
+              "peakNodeRssKiB": 204060
+            },
+            {
+              "phase": "operator-resume",
+              "durationMs": 1330.575,
+              "peakNodeRssKiB": 227068
+            },
+            {
+              "phase": "copy-two-roots",
+              "durationMs": 82.256,
+              "peakNodeRssKiB": 227068
+            },
+            {
+              "phase": "backup-restore",
+              "durationMs": 630.369,
+              "peakNodeRssKiB": 227068
+            },
+            {
+              "phase": "manual-reconcile-publish",
+              "durationMs": 15598.338,
+              "peakNodeRssKiB": 337272
+            }
+          ],
+          "peakNodeRssKiB": 337272,
+          "memoryScope": "Node test process peak RSS only; MariaDB, Chrome and child processes excluded",
+          "sqlTransport": "owned loopback without TLS"
+        }
+      ],
+      "fullLog": {
+        "file": "ci-39817588326-job119960035019.log",
+        "bytes": 332949,
+        "sha256": "2b2802271d3952e60645c7ccf48ac1fd7fb169a2ac258c9f274b1171c730a11a",
+        "encoding": "UTF-8 of complete decoded connector log; BOM and line endings preserved",
+        "completeDecodedLogRead": true
+      },
+      "errorAnnotations": []
+    },
+    {
+      "id": 119960035172,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "head": "bc2b1c0d6a8e124b4256ffd20156ce005f614711",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-22T16:51:39Z",
+      "completedAt": "2026-10-22T16:52:46Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Create disposable DML-only runtime account",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Rehearse authentication and independent messaging sessions over loopback HTTPS",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 12,
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 13,
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 14,
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 15,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "nodeVersion": "v24.22.1",
+      "checkout": "6e3c2c2b00671c3570b32989906ae4b7093b8d92",
+      "tests": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 40864.255415
+      },
+      "fullLog": {
+        "file": "ci-39817588326-job119960035172.log",
+        "bytes": 34558,
+        "sha256": "a3d99cfdfc9848eb358ab31f7d1a454928a444f0df575257b7e4e38a93bb0b59",
+        "encoding": "UTF-8 of complete decoded connector log; BOM and line endings preserved",
+        "completeDecodedLogRead": true
+      },
+      "errorAnnotations": []
+    },
+    {
+      "id": 119960035225,
+      "name": "Chrome keyboard and chat lifecycle",
+      "head": "bc2b1c0d6a8e124b4256ffd20156ce005f614711",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-22T16:51:39Z",
+      "completedAt": "2026-10-22T16:55:59Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Exercise real Chrome with synthetic local fixtures",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Homepage rendering in French and English",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 11,
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 12,
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 13,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "nodeVersion": "v24.22.1",
+      "checkout": "6e3c2c2b00671c3570b32989906ae4b7093b8d92",
+      "tests": {
+        "tests": 218,
+        "suites": 0,
+        "pass": 218,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 252071.986857
+      },
+      "fullLog": {
+        "file": "ci-39817588326-job119960035225.log",
+        "bytes": 43478,
+        "sha256": "8a70c9d716fe2bd75d564db517280c9c2707daa134973548880482ca1dca7865",
+        "encoding": "UTF-8 of complete decoded connector log; BOM and line endings preserved",
+        "completeDecodedLogRead": true
+      },
+      "errorAnnotations": []
+    }
+  ],
+  "firstFailedSource": {
+    "source": "3efc17e0e87910d353729a9784ffbd9b3e6876ef",
+    "tree": "3251158010841b3015b9afa55abb22149d55848c",
+    "run": 39815056042,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "failure",
+    "proof": "jm182-lot1-ci-first-attempt.json",
+    "preserved": true
+  },
+  "correction": {
+    "applicationCodeUnchangedComparedWithFirstFailedSource": true,
+    "changedTestFiles": [
+      "tests/chat-i18n.test.mjs",
+      "tests/media-admission-budget.test.mjs",
+      "tests/media-store.integration.test.mjs",
+      "tests/video-broadcast-flow.integration.test.mjs"
+    ],
+    "documentationAndFailureProofAlsoUpdated": true,
+    "guardsRelaxed": false,
+    "newRunForChangedSource": true,
+    "sameRunRerunPerformed": false
+  },
+  "newAdmissionNativeChecks": {
+    "jobIds": [
+      119960034689,
+      119960035019
+    ],
+    "tests": 4,
+    "subtests": 3,
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "countedWithinNativeTotals": true,
+    "cases": [
+      "Ten 100 MiB reservations across owners; eleventh rollback; exact replay spends nothing",
+      "Independent owners racing photo/video stay within shared envelope",
+      "Historical allocations above envelope remain readable with replay identities preserved"
+    ]
+  },
+  "nonBlockingWarnings": [
+    "GitHub runner reports actions/checkout@v4, actions/setup-node@v4 and actions/upload-artifact@v4 target deprecated Node20 and are forced to runner Node24. This is distinct from application Node24.22.1."
+  ],
+  "repositoryModifiedByCollector": false,
+  "productionAccessPerformed": false,
+  "mergePerformedByCollector": false,
+  "deploymentPerformedByCollector": false,
+  "limits": [
+    "The completed run qualifies this exact pull-request source/tree. A merge and its required main qualification remain separate operations.",
+    "General 48 omissions remain omissions: 46 SQL opt-in cases and two environment-dependent procfs cases. Both native MariaDB jobs and both Chrome jobs have zero omissions.",
+    "Test groups overlap and are not added as unique coverage.",
+    "Native SQL transport uses isolated loopback without TLS; production TLS guards were not changed.",
+    "Synthetic resource metrics are peak RSS of the Node test process only; MariaDB, Chrome and subprocesses are excluded and no hosted capacity is established.",
+    "No hosting, authenticated production session, physical phone or closed-app OS push qualification is inferred.",
+    "Manual-backup hosted UI test remains deferred. No backup, restore, migration, production restart or customer action was performed by this collection.",
+    "Logs are UTF-8 encoded decoded connector text with returned BOM/line endings preserved, not original GitHub archive bytes."
+  ],
+  "checkedAtUTC": "2026-10-22T17:02:17.639402+00:00"
+}
