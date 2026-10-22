@@ -147,7 +147,7 @@ test("SQL36 video broadcasts protect queued originals, preserve private delivery
     assert.equal(protectedQueued.status, 409); assert.equal(protectedQueued.body.error, "video_in_use");
     assert.equal((await videoStore.getOwned({ ...actor, assetId: Buffer.from(beforeClaim.id, "hex") })).deletedAt, null);
     const cancelled = await request(route + "campaigns/" + pendingCampaign.body.campaign.id + "/cancel", { owner: admin, body: {} });
-    assert.equal(cancelled.status, 200); assert.equal(cancelled.body.campaign.status, "cancelled");
+    assert.equal(cancelled.status, 200); assert.equal(cancelled.body.id, pendingCampaign.body.campaign.id); assert.equal(cancelled.body.status, "cancelled");
     assert.equal((await request(`/api/video/admin/assets/${beforeClaim.id}/delete`, { owner: admin, body: {} })).status, 200);
     assert.deepEqual(await worker.runOnce(), { delivered: 0, deferred: 0, failed: 0 });
     const beforeDelivery = await upload(), waiting = await draft(beforeDelivery, { mode: "selected", conversationIds: [clients[0].cid] });
@@ -155,7 +155,7 @@ test("SQL36 video broadcasts protect queued originals, preserve private delivery
     const claimed = await broadcastStore.claim({ now }); assert.ok(claimed.videoId.equals(Buffer.from(beforeDelivery.id, "hex")));
     await assert.rejects(videoStore.deleteAsset({ ...actor, assetId: claimed.videoId }), error => error.code === "VIDEO_IN_USE");
     const cancelledClaim = await request(route + "campaigns/" + waitingCampaign.body.campaign.id + "/cancel", { owner: admin, body: {} });
-    assert.equal(cancelledClaim.status, 200); assert.equal(cancelledClaim.body.campaign.status, "cancelled");
+    assert.equal(cancelledClaim.status, 200); assert.equal(cancelledClaim.body.id, waitingCampaign.body.campaign.id); assert.equal(cancelledClaim.body.status, "cancelled");
     assert.equal((await request(`/api/video/admin/assets/${beforeDelivery.id}/delete`, { owner: admin, body: {} })).status, 200);
     const queue = [claimed], deliveryWorker = createBroadcastWorker({ store: { claim: async () => queue.shift() ?? null,
       deliver: (...args) => broadcastStore.deliver(...args), defer: (...args) => broadcastStore.defer(...args), fail: (...args) => broadcastStore.fail(...args) },
@@ -171,7 +171,8 @@ test("SQL36 video broadcasts protect queued originals, preserve private delivery
     await connection.query("UPDATE broadcast_recipients SET attempts = 7 WHERE campaign_id = ?", [failing.campaignId]);
     assert.equal(await broadcastStore.fail(failing, { now }), true);
     const failed = await request(route + "campaigns/" + failureCampaign.body.campaign.id, { owner: admin });
-    assert.equal(failed.body.campaign.status, "completed"); assert.equal(failed.body.recipients[0].state, "failed");
+    assert.equal(failed.status, 200); assert.equal(failed.body.id, failureCampaign.body.campaign.id);
+    assert.equal(failed.body.status, "completed"); assert.equal(failed.body.recipients[0].state, "failed");
     assert.equal((await request(`/api/video/admin/assets/${failedSource.id}/delete`, { owner: admin, body: {} })).status, 200);
     const stillShared = await request(delivered[1].video.contentUrl, { owner: clients[1] }); assert.equal(stillShared.status, 200);
     assert.equal((await loadMigrations()).length, 33); assert.equal((await connection.query("SELECT COUNT(*) AS n FROM schema_migrations"))[0].n.toString(), "36");

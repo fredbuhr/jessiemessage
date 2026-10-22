@@ -9,7 +9,7 @@ import { createChatStore, ChatStoreError } from "../server/chat/store.mjs";
 import { createMediaStore, MediaStoreError } from "../server/media/store.mjs";
 import { createProfileStore } from "../server/profile/store.mjs";
 import { createMediaCapacityStore } from "../server/media/capacity-store.mjs";
-import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_OBJECTS } from "../server/media/backup-limits.mjs";
+import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_OBJECTS, BACKUP_MEDIA_MAX_RECORDS } from "../server/media/backup-limits.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const id = () => randomBytes(16), digest = () => randomBytes(32);
@@ -590,11 +590,14 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
       }
     });
 
-    await t.test("the backup object ceiling counts tiny reserved and cleanup objects until acknowledged release", async () => {
+    await t.test("the backup catalogue ceiling serializes final photo records and retains released allocation history", async () => {
       const fixture = await pair(), other = await pair(), prefix = randomBytes(8);
-      const current = Number((await connection.query("SELECT COUNT(*) AS value FROM media_storage_objects WHERE state <> 'released'"))[0].value);
-      const fill = BACKUP_MEDIA_MAX_OBJECTS - current - 1, digits = "(SELECT 0 AS n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9)";
-      assert.ok(fill > 0 && fill < BACKUP_MEDIA_MAX_OBJECTS);
+      const current = Number((await connection.query("SELECT COUNT(*) AS value FROM media_storage_objects"))[0].value);
+      // Every photo allocation reserves two catalogue records, including its
+      // eventual asset row; released allocations remain in the manifest.
+      const maxAllocations = Math.floor(BACKUP_MEDIA_MAX_RECORDS / 2);
+      const fill = maxAllocations - current - 1, digits = "(SELECT 0 AS n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9)";
+      assert.ok(fill > 0 && fill < maxAllocations);
       let seeded = false;
       try {
         await connection.beginTransaction();
@@ -612,17 +615,23 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
         const rejected = results.findIndex((result) => result.status === "rejected"), accepted = 1 - rejected;
         assert.equal(results[rejected].reason.code, "MEDIA_STORAGE_LIMIT");
         assert.equal((await connection.query("SELECT id FROM media_storage_objects WHERE id = ?", [proposals[rejected].id])).length, 0);
-        assert.equal(Number((await connection.query("SELECT COUNT(*) AS value FROM media_storage_objects WHERE state <> 'released'"))[0].value), BACKUP_MEDIA_MAX_OBJECTS);
+        assert.equal(Number((await connection.query("SELECT COUNT(*) AS value FROM media_storage_objects"))[0].value) * 2, BACKUP_MEDIA_MAX_RECORDS);
         const status = await capacityStore.status(); assert.ok(status.heldBytes < BACKUP_MEDIA_MAX_BYTES);
         assert.equal((await media.reserveAsset({ ...actor(actors[accepted]), asset: proposals[accepted] })).duplicate, false);
         assert.deepEqual(await capacityStore.status(), status);
         const cleanupId = Buffer.concat([prefix, Buffer.alloc(8)]); cleanupId.writeBigUInt64BE(1n, 8);
         const cleanup = (await connection.query("SELECT storage_key FROM media_storage_objects WHERE id = ?", [cleanupId]))[0];
         await media.releaseStorageObject({ ...actor(fixture), objectId: cleanupId, storageKey: cleanup.storage_key });
-        await media.reserveAsset({ ...actor(other), asset: asset({ fullBytes: 1, thumbnailBytes: 1 }) });
-        const fullAgain = await capacityStore.status();
+        const released = await capacityStore.status();
+        assert.equal(released.heldBytes, status.heldBytes - 82); assert.equal(released.pendingBytes, status.pendingBytes - 82);
+        assert.ok(Number((await connection.query("SELECT COUNT(*) AS value FROM media_storage_objects WHERE state <> 'released'"))[0].value) < BACKUP_MEDIA_MAX_OBJECTS);
+        const refused = asset({ fullBytes: 1, thumbnailBytes: 1 });
+        await assert.rejects(media.reserveAsset({ ...actor(other), asset: refused }), code("MEDIA_STORAGE_LIMIT"));
+        assert.equal((await connection.query("SELECT id FROM media_storage_objects WHERE id = ?", [refused.id])).length, 0);
+        assert.deepEqual(await capacityStore.status(), released, "a catalogue refusal cannot allocate an object or charge bytes despite available file capacity");
         await media.releaseStorageObject({ ...actor(fixture), objectId: cleanupId, storageKey: cleanup.storage_key });
-        assert.deepEqual(await capacityStore.status(), fullAgain, "release replay cannot give back a second slot or byte charge");
+        assert.deepEqual(await capacityStore.status(), released, "release replay cannot refund bytes twice or discard catalogue history");
+        assert.equal(Number((await connection.query("SELECT COUNT(*) AS value FROM media_storage_objects"))[0].value) * 2, BACKUP_MEDIA_MAX_RECORDS);
         await assert.rejects(media.reserveAsset({ ...actor(other), asset: asset({ fullBytes: 1, thumbnailBytes: 1 }) }), code("MEDIA_STORAGE_LIMIT"));
       } finally { try { await connection.rollback(); } catch {} if (seeded) await removeSeed(fixture.client, prefix); }
     });

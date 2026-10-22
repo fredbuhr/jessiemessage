@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "type": "jessiemessage-audit-lot1-implementation",
-  "recordedAtUTC": "2026-10-22T16:29:12.948394+00:00",
-  "status": "implemented_targeted_local_passed_native_ci_pending",
+  "recordedAtUTC": "2026-10-22T16:49:40.759037+00:00",
+  "status": "implemented_first_ci_failure_fixtures_corrected_requalification_pending",
   "branch": "fix/audit-182",
   "baseSource": "422c8ac0b75b945d280c3a84225cd3e2b0025087",
   "developmentVersion": "1.8.2",
@@ -178,6 +178,66 @@
         "skipped": 0,
         "cancelled": 0
       }
+    },
+    {
+      "file": "chat-i18n-after.log",
+      "bytes": 1650,
+      "sha256": "28e29b3c15433b7546c7c076218b0621e925fc05f40b1b1d885cab721bed7cbe",
+      "counts": {
+        "tests": 14,
+        "pass": 14,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "media-admission-budget-after.log",
+      "bytes": 741,
+      "sha256": "cad377cfffbcf2dfc66f5ee229c47d6adeba11896b42fd84f043c7fefe0b35a7",
+      "counts": {
+        "tests": 6,
+        "pass": 6,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "backup-video-verify-temp-qualified.log",
+      "bytes": 2285,
+      "sha256": "703e32f55cd371b0aa5fd565d573bb8e8966bae402fd88aeb50a9e1d2cd5a963",
+      "counts": {
+        "tests": 8,
+        "pass": 8,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "conversation-export-isolated-after.log",
+      "bytes": 1575,
+      "sha256": "2d8efa3c4d4764e0840dc39ecc3d383eeb29ac5795e592e964e02ea23794cf4e",
+      "counts": {
+        "tests": 22,
+        "pass": 22,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "video-broadcast-fixture-contract.log",
+      "bytes": 210,
+      "sha256": "2b7ec7b58fec9635d23f29add70bcb6cc62e66a12fd2503e08e383c01c7c98f3",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
     }
   ],
   "testRunsOverlapDoNotSumAsUnique": true,
@@ -194,9 +254,14 @@
     "requiredBrowser": "Chrome"
   },
   "ci": {
-    "status": "not_requested_yet",
-    "pullRequest": null,
-    "run": null
+    "status": "first_attempt_failed_corrected_revision_requires_fresh_ci",
+    "pullRequest": "https://github.com/fredbuhr/jessiemessage/pull/129",
+    "firstAttemptProof": "jm182-lot1-ci-first-attempt.json",
+    "firstSource": "3efc17e0e87910d353729a9784ffbd9b3e6876ef",
+    "firstTree": "3251158010841b3015b9afa55abb22149d55848c",
+    "run": "https://github.com/fredbuhr/jessiemessage/actions/runs/39815056042",
+    "firstResult": "2/5 successful jobs; verify and both databases failed",
+    "correctionScope": "Four regression fixtures only; no application code or guard changed. A fresh exact-source CI is required."
   },
   "reviews": {
     "A02": "Independent review found no concrete blocker; native contention still pending. Global snapshot SQL row limit remains independent.",
@@ -305,6 +370,11 @@
       "sha256": "52cde4b252e267a661f48f6c822fedc27c1d4c5b79154076cd9803b5164a200c"
     },
     {
+      "path": "tests/chat-i18n.test.mjs",
+      "bytes": 40417,
+      "sha256": "345208bdec0c6b45fb9988a0aea5097e5acf5d8be8f8e470d183d7963b4f8bcb"
+    },
+    {
       "path": "tests/chat-lifecycle.test.mjs",
       "bytes": 122752,
       "sha256": "950fee3fb9d188540ea1308e4260060b2fa5b47af56a07091d82ad04b00aa2bd"
@@ -325,6 +395,11 @@
       "sha256": "a9932851e6a20ab42bfb11a7531e9e1c684b1afdb28f255e93f8b74ba0847a8d"
     },
     {
+      "path": "tests/media-admission-budget.test.mjs",
+      "bytes": 6281,
+      "sha256": "e6c718657bcb8e9dbaa83e1d9c935305c545db8aa1bdf054e6f139857892eab7"
+    },
+    {
       "path": "tests/media-http.test.mjs",
       "bytes": 39073,
       "sha256": "01c4a195dc856be63117c1a17d6f047289490101ebebf348bea15765577330f1"
@@ -336,13 +411,13 @@
     },
     {
       "path": "tests/media-store.integration.test.mjs",
-      "bytes": 64415,
-      "sha256": "280a0d921a64f5ea1c27500b6723888259bac9e128cbd613151c31acc80ce863"
+      "bytes": 65423,
+      "sha256": "8b0e00f60073b1ecb0f94bca36028b56afe4cb3eb36cd055760f8c8ffbef23fd"
     },
     {
       "path": "tests/video-broadcast-flow.integration.test.mjs",
-      "bytes": 17868,
-      "sha256": "2875e0268ec2558a7d992bc54f05d1db59163ec1b65854c0b4705d47622e83bf"
+      "bytes": 18082,
+      "sha256": "3b469cbb9ebc63edc9799cf941815fe0e9aff6e719de388112443f50ff9c7a46"
     },
     {
       "path": "tests/video-conversation-archive.integration.test.mjs",
@@ -392,5 +467,43 @@
     "Lots2 and3 remain to implement; lot4 final release/deployment follows stabilized source.",
     "A11 host observation belongs to final delivery; no speculative forwarding trust change."
   ],
-  "nextAction": "Publish coherent branch checkpoint and open draft PR for required native qualification."
+  "nextAction": "Publish the four corrected fixtures and this checkpoint, then qualify the new exact source once in PR129. No release or production change.",
+  "fixtureCorrections": [
+    {
+      "path": "tests/chat-i18n.test.mjs",
+      "reason": "Conversation is identical in French and English; explicitly verify both new video gallery tabs."
+    },
+    {
+      "path": "tests/media-admission-budget.test.mjs",
+      "reason": "Mock the shared singleton/catalogue reads; preserve no writes or charges on replay and duplicates."
+    },
+    {
+      "path": "tests/media-store.integration.test.mjs",
+      "reason": "All allocation history reserves two photo catalogue rows; released allocations free bytes but remain in the manifest. Preserve concurrent last-slot admission/refusal."
+    },
+    {
+      "path": "tests/video-broadcast-flow.integration.test.mjs",
+      "reason": "Cancel/detail HTTP returns the direct campaign DTO, unlike create. Preserve and strengthen identity/status assertions."
+    }
+  ],
+  "localGeneralRuns": [
+    {
+      "file": "lot1-full-local.log",
+      "bytes": 272470,
+      "sha256": "1c41c510c774959800af58ff0a94b9a6f0ab94a7d81aa4e8ed14046f44425aac",
+      "exitCode": 1,
+      "completeSummaryAcquired": false,
+      "observedFailedLeaves": 17,
+      "limit": "Local /tmp was unavailable (10 failures); seven other fixture failures also reproduced in CI. This incomplete local run is not a full-suite qualification."
+    },
+    {
+      "file": "lot1-full-local-corrected.log",
+      "bytes": 437775,
+      "sha256": "ed2c754f1c4526fb2f73b9c84ba8af266e45b5e3c003978bec9e726686098235",
+      "exitCode": 130,
+      "completeSummaryAcquired": false,
+      "status": "interrupted_after_no_further_progress",
+      "limit": "TMPDIR corrected; no failure observed in received TAP, but no terminal summary. Local /proc unavailable; cause of stopped progress not established. No full-suite pass claimed."
+    }
+  ]
 }
