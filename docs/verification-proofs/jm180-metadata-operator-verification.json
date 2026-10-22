@@ -1,0 +1,86 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_180_metadata_operator_verification",
+  "status": "qualified_published_latest_aligned_host_metadata_not_executed",
+  "operatorSource": "56420b9a5e33c7342e7a36353ca91648532442a1",
+  "operatorTree": "e9a3bfdc5e18a57114f49989f217e747325ff84a",
+  "branch": "ops/record-v1.8.0",
+  "qualification": {
+    "runId": 39772668154,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39772668154",
+    "status": "completed",
+    "conclusion": "success",
+    "attempt": 1,
+    "jobs": [
+      {
+        "id": 119803812648,
+        "name": "operator-tests",
+        "conclusion": "success",
+        "metadataUnitTests": {
+          "tests": 13,
+          "passCount": 13,
+          "skipped": 0
+        },
+        "apiSimulations": {
+          "tests": 46,
+          "passCount": 46
+        },
+        "fullLog": {
+          "bytes": 39896,
+          "sha256": "a7bd0eb4656713d97a18989b60971ae0c8722e844c663d631d610ab9f863e087"
+        }
+      },
+      {
+        "id": 119803888314,
+        "name": "align-latest",
+        "conclusion": "success",
+        "fullLog": {
+          "bytes": 12660,
+          "sha256": "9ac4e291e082ef80b120fc0d2b2259b1e2cbaa59f62b87348f863bb44fe29496"
+        }
+      }
+    ]
+  },
+  "helper": {
+    "path": "ops/record-release180.py",
+    "sourceUrl": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/56420b9a5e33c7342e7a36353ca91648532442a1/ops/record-release180.py",
+    "sha256": "41e818cc5ae036191d7a9b8789989c4985bcdd12a63f0c0474f49cc482536041",
+    "bytes": 22408,
+    "testSha256": "e1938786d2ce3b70fd21c975f895efe33ebfeee5506ef9f3d8abfa44f487ee5c",
+    "hostExecuted": false,
+    "cliArguments": [],
+    "executionName": "__main__",
+    "checksActualStartupAndHttpBeforeMetadata": true,
+    "metadataOnly": true,
+    "sqlConnected": false,
+    "credentialsRequested": false,
+    "runtimeStarted": false
+  },
+  "latestAlignment": {
+    "status": "latest_release_aligned",
+    "observedAtUTC": "2026-10-22T11:43:19.157789+00:00",
+    "releaseId": 420607423,
+    "tag": "v1.8.0",
+    "source": "fd6e53b14b520231b0b307a2761331dd8c740a5b",
+    "tree": "324c3563fc6b1cfce669bcf58d90962c23c966b8",
+    "previousLatest": "v1.7.1",
+    "latest": "v1.8.0",
+    "markerOnly": true,
+    "releaseBodySha256": "9bf7e01ff3caeba263acf76ddfb8e37ae16bbbb7ff6a4ea4bd85518c9410e4e8",
+    "tagBodyAndAssetsPreserved": true,
+    "prior171And172ReleasesPreserved": true,
+    "githubLatestApiVerified": true,
+    "serviceChanged": false,
+    "sqlChanged": false
+  },
+  "metadataCheckpoint": {
+    "version": "1.7.1",
+    "schema": 33,
+    "alignmentPending": true
+  },
+  "limits": [
+    "This qualification and latest-marker operation do not prove host metadata execution.",
+    "The helper is published and qualified, but has not run on the host at this checkpoint.",
+    "Public HTTP and hosted functional checks remain distinct from CI simulations and startup identity supplied by the user."
+  ]
+}
