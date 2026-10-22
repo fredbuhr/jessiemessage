@@ -1,0 +1,75 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-release182-writer-final-local-verification",
+  "recordedAtUTC": "2026-10-22T18:51:32.098996+00:00",
+  "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "tree": "7b722ca1fbd3416acecffa3c122e967511184d4c",
+  "stagingReceiptSha256": "ba1aa8d0527dd8bbff76c86e274c9681ce9b6546bfd997a47e44988a92e3157f",
+  "stagingEvidenceKind": "USER_REPORTED",
+  "precheckEvidenceKind": "USER_REPORTED",
+  "priorCheckpointSha256": "53bd5312c42f34934de04d1e4e7994a864892cdf5a945c6a72c7b4c46ef5be76",
+  "sourceAndStagingPinsFinal": true,
+  "tests": {
+    "status": "passed_local_synthetic",
+    "count": 19,
+    "passed": 19,
+    "durationSeconds": 0.572,
+    "realPrivateFileAndPermissionsFixtures": true,
+    "realGitInspectionReplacedByFixture": true,
+    "publicApplicationHttpReplacedByFixture": true,
+    "publishedReleaseTransportExercisedWithFakeOpener": true,
+    "releaseCalls": "exactly3 anonymousGETs, no payload or authentication",
+    "newRegressionReason": "actual staging receipt now acquired; explicit published release/tag/latest GET checks required",
+    "nativeWorkflowNotYetExecuted": true
+  },
+  "workflow": {
+    "jobs": [
+      "operator-tests"
+    ],
+    "permissions": {
+      "contents": "read"
+    },
+    "actionsSourceProof": "docs/verification-proofs/jm182-lot3-action-sources.json",
+    "node": "24.22.1",
+    "alignLatestJob": false,
+    "releaseMutation": false,
+    "hostingExecution": false
+  },
+  "preservation": [
+    "all checkpoint blocks restored exactly after removing new release182 section",
+    "historicalrelease181/180 unchanged",
+    "rollback172 remains prechecked neverstarted",
+    "old staging180/181 unchanged",
+    "keys/configuration/bundle unchanged",
+    "exact retry preserves bytes and inode",
+    "partial publication cannot falsely return success"
+  ],
+  "hostedWriterExecuted": false,
+  "activationKnown": false,
+  "metadataKnown": false,
+  "backupTestStarted": false,
+  "rootCheckoutModified": false,
+  "remoteMutation": false,
+  "files": [
+    {
+      "path": "ops/record-release182.py",
+      "bytes": 28035,
+      "sha256": "48eb96eb3a75ec07a6e7baff861cfea24bc6d561a889723801f044734a38cbf1"
+    },
+    {
+      "path": "ops/test_record_release182.py",
+      "bytes": 31668,
+      "sha256": "32632cceca00d50ca7fcd288b937b20e7f3f6d8328322b87d6fb9419116cb965"
+    },
+    {
+      "path": ".github/workflows/record-release182.yml",
+      "bytes": 1051,
+      "sha256": "d11e478400348b3a9fc274c560063da013ad02ea29d86ac156dfb3e0d2749413"
+    },
+    {
+      "path": "record-test-final.log",
+      "bytes": 3295,
+      "sha256": "d834fbb1051459ff1cbf86b3dac63b26b05211ef417ba874ea09c1560067e366"
+    }
+  ]
+}
