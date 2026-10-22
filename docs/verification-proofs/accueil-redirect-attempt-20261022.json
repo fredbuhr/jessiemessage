@@ -1,0 +1,45 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-accueil-redirect-hosted-attempt",
+  "date": "2026-10-22",
+  "status": "refused_before_any_write",
+  "evidenceKind": "USER_REPORTED",
+  "receipt": {
+    "status": "accueil_redirect_unconfirmed",
+    "code": "SOURCE_NOT_FOUND",
+    "noAutomaticRetry": true
+  },
+  "helperSource": "1f5b5239530c96c3b780f629b8510758f5dc02fe",
+  "helperSha256": "a5ba6c1f3796413fd5196634b24145f812ee366b5855130a1a2be77630b61fb1",
+  "qualifiedScriptInterpretation": {
+    "source": "Static review of the qualified helper; apply() first calls select_source(), which raised this code before checking the private directory or opening any output.",
+    "candidatePathsAbsentInThisTerminal": true,
+    "targetOpened": false,
+    "targetWritten": false,
+    "privateConfigCopyCreated": false,
+    "runtimeChanged": false,
+    "sqlChanged": false,
+    "dnsChanged": false,
+    "redirectApplied": false
+  },
+  "accessCorrection": {
+    "knownTerminalEnvironment": "Node.js",
+    "appropriateSurface": "Apache/PHP Web FTP in the user’s own Manager session",
+    "managerUrl": "https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ftp-ssh",
+    "documentedSiteRoot": "/sites/jessiemessage-entry-1f669e45",
+    "siteId": 1532641,
+    "nodeHelperRetryRequired": false,
+    "newShellPathsGuessed": false,
+    "procedure": "Download original .htaccess, then replace only the existing www host condition by www|accueil in Web FTP; preserve the fixed 308 RewriteRule.",
+    "localRoutingEvidence": "application-table-checkpoint.md distinguishes Apache/PHP Web FTP and Node SSH/SFTP.",
+    "providerGuides": [
+      "https://www.infomaniak.com/fr/support/faq/1130/acceder-rapidement-au-serveur-web-ftp",
+      "https://www.infomaniak.com/fr/support/faq/1982/gerer-les-comptes-ftp-ssh"
+    ]
+  },
+  "limits": [
+    "The failure establishes only that the helper did not find either fixed candidate in the selected terminal; it does not establish that the Apache site/file disappeared.",
+    "The manual Web FTP edit and public redirect verification remain unacquired. No additional user permission is required: the exact redirect is already explicitly authorized.",
+    "Application1.8.1, recette compatibility and the deferred manual-backup check are unchanged."
+  ]
+}

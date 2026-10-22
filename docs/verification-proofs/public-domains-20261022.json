@@ -346,7 +346,7 @@
     "backupTestDeferredUnchanged": true
   },
   "routingChange": {
-    "status": "qualified_published_not_applied",
+    "status": "host_attempt_refused_source_not_found_not_applied",
     "authorizationDate": "2026-10-22",
     "authorizationEvidenceKind": "USER_REQUEST",
     "authorizedFromHost": "accueil.jessiemessage.com",
@@ -358,7 +358,7 @@
     "beforeConfigHashEvidence": "jm171-secondary-entry.json; historical guarded read, not a new server-file observation",
     "hostApplyReceiptAcquired": false,
     "noCloudBrowser": true,
-    "nextAction": "User executes the pinned helper once in their own Infomaniak terminal, reports the JSON; record the actual file-change receipt and then recheck public redirects before declaring completion.",
+    "nextAction": "Use Apache/PHP Web FTP through the documented FTP/SSH Manager page, download original .htaccess and replace the one host condition; do not replay the Node helper. Confirm the edit, then verify public redirects.",
     "operatorSource": "1f5b5239530c96c3b780f629b8510758f5dc02fe",
     "operatorTree": "0cecd0fe54c8070b61bc1b5c45fd83a880194014",
     "operatorBranch": "ops/redirect-accueil",
@@ -367,9 +367,20 @@
       "bytes": 5692,
       "sha256": "a5ba6c1f3796413fd5196634b24145f812ee366b5855130a1a2be77630b61fb1",
       "remoteBytesEqualQualifiedLocalFile": true,
-      "hostExecuted": false,
+      "hostExecuted": true,
       "privateConfigCopyOnly": "/srv/customer/jessiemessage-private/accueil-redirect-before-20261022.htaccess",
-      "noRuntimeOrSqlOrDnsChange": true
+      "noRuntimeOrSqlOrDnsChange": true,
+      "hostExecutionEvidenceKind": "USER_REPORTED",
+      "hostApplySucceeded": false,
+      "retryInNodeTerminal": false
+    },
+    "hostAttemptProof": "accueil-redirect-attempt-20261022.json",
+    "currentProcedure": {
+      "kind": "manual_webftp_single_condition_edit",
+      "managerUrl": "https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ftp-ssh",
+      "siteRootWithinWebFtp": "/sites/jessiemessage-entry-1f669e45",
+      "file": ".htaccess",
+      "applied": false
     }
   },
   "recetteDecision": {

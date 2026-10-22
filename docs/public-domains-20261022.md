@@ -1,6 +1,6 @@
 # Domaines publics de JessieMessage — 22 octobre 2026
 
-**État : redirection accueil autorisée explicitement et préparée, pas encore appliquée.** L’application est déjà en production en **1.8.1**, source `1ae4c75152795ea6f31c2ff364e337a1d5a04e31`, Node **24.22.1**, SQL **36** ; [REPRISE](REPRISE.md) conserve l’identité, le checkpoint et le repli. Cette opération corrige uniquement le routage de l’ancien accueil secondaire.
+**État : redirection accueil autorisée explicitement, pas encore appliquée. Le helper Node s’est arrêté sans écriture sur `SOURCE_NOT_FOUND` ; utiliser la procédure Web FTP ci-dessous.** L’application est déjà en production en **1.8.1**, source `1ae4c75152795ea6f31c2ff364e337a1d5a04e31`, Node **24.22.1**, SQL **36** ; [REPRISE](REPRISE.md) conserve l’identité, le checkpoint et le repli. Cette opération corrige uniquement le routage de l’ancien accueil secondaire.
 
 ## Adresses à conserver
 
@@ -34,7 +34,7 @@ L’ancienne origine reste utile aux sessions, installations PWA et destinations
 
 ## Correction Apache bornée
 
-Le site Apache **1532641**, nommé **accueil.jessiemessage.com**, est distinct du service Node. Son document root Manager documenté est `/sites/jessiemessage-entry-1f669e45`. Le chemin SSH réel n’est pas encore confirmé : le helper doit limiter sa recherche aux candidats `/sites/jessiemessage-entry-1f669e45/.htaccess` et `/srv/customer/sites/jessiemessage-entry-1f669e45/.htaccess`, et refuser une identité absente ou ambiguë. L’empreinte source attendue est `daa58abe55ca39cfb2a931f2caa8d6fc5f19e01c872e32603abc9cea8d6eff63`.
+Le site Apache **1532641**, nommé **accueil.jessiemessage.com**, est distinct du service Node. Son document root Manager documenté est `/sites/jessiemessage-entry-1f669e45`. Le helper a testé `/sites/jessiemessage-entry-1f669e45/.htaccess` et `/srv/customer/sites/jessiemessage-entry-1f669e45/.htaccess` dans le terminal Node : les deux chemins y sont absents. Ce constat ne prouve pas la disparition du fichier ou du site. Le [rappel d’accès déjà consigné](application-table-checkpoint.md) précise que le Web FTP du Manager concerne Apache/PHP, tandis que l’accès SSH/SFTP utilisé concerne Node.js. L’empreinte source historique attendue reste `daa58abe55ca39cfb2a931f2caa8d6fc5f19e01c872e32603abc9cea8d6eff63` ; aucune nouvelle empreinte du fichier Apache n’a été lue lors de cet échec.
 
 La modification préparée remplace seulement :
 
@@ -54,21 +54,55 @@ La cible et la règle existantes sont conservées :
 RewriteRule ^(.*)$ https://jessiemessage.com/$1 [R=308,END]
 ```
 
-L’origine de destination est fixe. Aucun retrait des paramètres par `QSD`, aucune modification de DNS, certificat, PHP, service Node, clé ou schéma SQL n’est inclus. Le [refus automatique antérieur](verification-proofs/jm171-secondary-entry.json) reste une preuve historique intacte ; l’autorisation précise de l’utilisateur est maintenant acquise. La qualification et la publication du helper doivent identifier leurs octets exacts avant son utilisation.
+L’origine de destination est fixe. Aucun retrait des paramètres par `QSD`, aucune modification de DNS, certificat, PHP, service Node, clé ou schéma SQL n’est inclus. Le [refus automatique antérieur](verification-proofs/jm171-secondary-entry.json) reste une preuve historique intacte ; l’autorisation précise de l’utilisateur est maintenant acquise. Le helper et ses 14 tests restent qualifiés historiquement ; cette qualification n’établissait pas que son fichier cible serait accessible depuis le terminal Node.
 
-## Exécution et vérification à terminer
+## Arrêt observé, sans modification
 
-L’utilisateur exécute le helper épinglé dans son [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal) ; aucun navigateur cloud n’est utilisé. Les liens et la commande exacte sont fournis dans le chat après qualification. Aucune nouvelle permission n’est requise pour cette redirection déjà autorisée. Un reçu de préparation ne prouve pas une modification effective : consigner séparément l’application de la règle puis les réponses HTTP avec chemin et paramètres avant d’annoncer la redirection réalisée.
+L’utilisateur a transmis le reçu exact :
 
-Le [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) reste celui du service recette/principal ; aucun arrêt, remplacement de Run/Build ou redémarrage n’est demandé pour la correction Apache. Les réglages de PHP restent à la charge d’Infomaniak.
+```json
+{"status":"accueil_redirect_unconfirmed","code":"SOURCE_NOT_FOUND","noAutomaticRetry":true}
+```
 
-La sauvegarde manuelle reste **non vérifiée et reportée à la demande de l’utilisateur** : ce contrôle des domaines ne relance ni sauvegarde, ni diagnostic de sa page, ni rappel ou surveillance automatique.
+Le refus survient dans `select_source()`, premier appel de l’opération, avant l’ouverture du fichier cible, la lecture du répertoire privé ou la création de la copie. Aucun changement de configuration ni copie privée n’est acquis. La [preuve de domaines](verification-proofs/public-domains-20261022.json) conserve ce résultat **USER_REPORTED**, séparément de l’audit HTTP initial et de la qualification synthétique.
 
-## Commande personnelle épinglée
+## Procédure manuelle via Web FTP
+
+Depuis le navigateur personnel de l’utilisateur :
+
+1. Ouvrir [FTP / SSH dans le Manager Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ftp-ssh), pour l’hébergement **812119**.
+2. Ouvrir le **Web FTP de l’environnement Apache/PHP**, celui du site **accueil.jessiemessage.com**, site **1532641**. L’accès Node.js utilisé précédemment ne donne pas le fichier attendu ; aucun nouveau compte ni mot de passe n’est à créer ou à transmettre dans le chat.
+3. Dans le Web FTP, ouvrir **sites**, puis **jessiemessage-entry-1f669e45**. Afficher les fichiers cachés si nécessaire pour voir **`.htaccess`**.
+4. Télécharger ce fichier sur l’ordinateur avant de l’éditer, pour conserver sa copie d’origine.
+5. Ouvrir `.htaccess` dans l’éditeur du Web FTP et retrouver la ligne exacte suivante :
+
+   ```apache
+   RewriteCond %{HTTP_HOST} ^www\.jessiemessage\.com(?::(?:80|443))?$ [NC]
+   ```
+
+6. Remplacer **uniquement cette ligne** par :
+
+   ```apache
+   RewriteCond %{HTTP_HOST} ^(?:www|accueil)\.jessiemessage\.com(?::(?:80|443))?$ [NC]
+   ```
+
+7. Conserver la règle suivante et tous les autres caractères du fichier :
+
+   ```apache
+   RewriteRule ^(.*)$ https://jessiemessage.com/$1 [R=308,END]
+   ```
+
+8. Enregistrer puis signaler que le fichier est enregistré. Les réponses HTTP réelles seront alors vérifiées avant de déclarer la redirection appliquée.
+
+Si le dossier, le fichier ou la ligne exacte n’est pas présent, ne rien créer ni remplacer ailleurs : conserver ce constat pour retrouver le bon site Apache. La copie locale du seul fichier de configuration est propre à cette intervention manuelle ; elle ne relance pas le test de sauvegarde métier reporté.
+
+Le [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) reste celui du service recette/principal. Aucun arrêt, remplacement de Run/Build, redémarrage, DNS, certificat, version PHP ou schéma SQL n’est à modifier. Le navigateur cloud n’est pas utilisé. La sauvegarde manuelle reste **non vérifiée et reportée à la demande de l’utilisateur**.
+
+## Commande SSH historique — ne pas rejouer
 
 Le helper opérateur est publié sur `1f5b5239530c96c3b780f629b8510758f5dc02fe`, arbre `0cecd0fe54c8070b61bc1b5c45fd83a880194014`, distinct de la source applicative active 1.8.1. Ses octets distants sont comparés au fichier qualifié localement ; la [CI opérateur 39800596245](https://github.com/fredbuhr/jessiemessage/actions/runs/39800596245) a réussi à sa première tentative. Les 14 tests isolés ne démarrent pas Apache ; le reçu reste `httpVerified:false` jusqu’aux observations réelles après application.
 
-Après qualification, dans le [terminal SSH personnel](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), coller une fois :
+Le bloc ci-dessous est conservé comme historique du helper qualifié puis refusé sur ce terminal. **Ne pas le relancer et ne pas le déplacer vers un autre terminal** : ses chemins de cible et de copie privée étaient conçus pour l’environnement Node, sans accès Apache établi. La procédure courante est l’édition Web FTP décrite plus haut.
 
 ```bash
 env -i PATH=/usr/bin:/bin python3 - <<'PY_ACCUEIL'
@@ -84,7 +118,7 @@ exec(compile(code, url, 'exec'), {'__name__': '__main__'})
 PY_ACCUEIL
 ```
 
-Renvoyer uniquement le JSON. Le résultat attendu est `accueil_redirect_applied`, avec une condition modifiée, `pathAndQueryRulePreserved:true` et `noRestart:true`. Le helper conserve une copie privée du fichier original, à la demande pour cette opération seulement ; aucune sauvegarde métier automatique n’est introduite. En cas de refus ou de résultat absent, conserver l’état et la sortie sans relancer ni nettoyer. Aucun réglage de l’application Node n’est à modifier.
+L’ancien résultat attendu `accueil_redirect_applied` n’a pas été obtenu. Le seul résultat hébergé acquis est `SOURCE_NOT_FOUND`, sans copie ou écriture. Les 14 tests isolés et le run réussi restent leur qualification historique, sans valider l’accessibilité du `.htaccess` réel. Aucun nouveau helper, script, workflow ou changement de version applicative n’est requis pour l’édition manuelle.
 
 Les réponses publiques à acquérir ensuite sont le 308 de la racine HTTPS accueil et celui de `/app?jm_redirect_probe=1%2B2&lang=fr` vers les mêmes chemins/paramètres sur le principal ; vérifier aussi `www` et la disponibilité du principal. La configuration Apache n’est pas une nouvelle version de l’application : celle-ci reste 1.8.1, sans nouveau tag ni migration. Ne pas redéployer un ancien bundle d’accueil neutre qui rétablirait la condition `www` seule.
 
