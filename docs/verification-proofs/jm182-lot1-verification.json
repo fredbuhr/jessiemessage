@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "type": "jessiemessage-audit-lot1-implementation",
-  "recordedAtUTC": "2026-10-22T16:49:40.759037+00:00",
-  "status": "implemented_first_ci_failure_fixtures_corrected_requalification_pending",
+  "recordedAtUTC": "2026-10-22T17:03:46.137899+00:00",
+  "status": "lot1_qualified_on_branch_not_released_or_deployed",
   "branch": "fix/audit-182",
   "baseSource": "422c8ac0b75b945d280c3a84225cd3e2b0025087",
   "developmentVersion": "1.8.2",
@@ -22,13 +22,13 @@
   ],
   "findings": {
     "A01": {
-      "status": "implemented",
+      "status": "qualified_in_synthetic_ci",
       "personalRefusalsDoNotSpendSharedBudget": true,
       "textPhotoVideoRegression": true,
       "broadcastBudgetPreserved": true
     },
     "A02": {
-      "status": "implemented_native_contention_pending",
+      "status": "qualified_in_synthetic_ci",
       "sharedEncryptedPhotoVideoAdmissionBytes": 1073741824,
       "catalogueWorstCaseRecords": 100000,
       "photoRecordsReservedPerAllocation": 2,
@@ -41,14 +41,14 @@
       "independentSnapshotSqlRowAndTimeLimitsStillApply": true
     },
     "A03": {
-      "status": "implemented_native_transactions_pending",
+      "status": "qualified_in_synthetic_ci",
       "exactConfirmedReservationOnlyBeforePut": true,
       "unknownAcknowledgementsNeverReleased": true,
       "freshOwnerAuthorizationRequired": true,
       "idempotentCancellationAndQuotaRollbackTestsAdded": true
     },
     "A04": {
-      "status": "implemented_native_browser_pending",
+      "status": "qualified_in_synthetic_ci",
       "existingGalleryHasOwnedVideoMode": true,
       "serverOwnershipCsrfPaginationChecked": true,
       "liveMessageReferencesBlockDeletion": true,
@@ -57,14 +57,14 @@
       "uncertainSendAndIdentityRecheckedAfterConfirmation": true
     },
     "A05": {
-      "status": "implemented_native_export_pending",
+      "status": "qualified_in_synthetic_ci",
       "separateAuthorizedExportReader": true,
       "displayQuotaUnchanged": true,
       "archiveSlotsSizeDurationRevocationAbortPreserved": true,
       "regression121VideoArchiveCompleted": true
     },
     "A07": {
-      "status": "implemented_native_lock_wait_pending",
+      "status": "qualified_in_synthetic_ci",
       "usesFreshActorContextTime": true,
       "futureDatesStillRefused": true,
       "encryptedNotesAndVersionsPreserved": true
@@ -242,7 +242,7 @@
   ],
   "testRunsOverlapDoNotSumAsUnique": true,
   "nativeQualification": {
-    "status": "not_executed_locally",
+    "status": "qualified_in_native_ci_not_executed_locally",
     "reason": "No MariaDB/MySQL/Docker or Chrome/ChromeDriver executable available; synthetic dedicated CI required",
     "integrationFiles": 43,
     "allIntegrationFilesExplicitlyIncludedInDbCommand": true,
@@ -251,20 +251,81 @@
       "MariaDB 10.11",
       "MariaDB 11.4"
     ],
-    "requiredBrowser": "Chrome"
+    "requiredBrowser": "Chrome",
+    "ciSource": "bc2b1c0d6a8e124b4256ffd20156ce005f614711",
+    "ciProof": "jm182-lot1-ci-corrected.json",
+    "counts": {
+      "MariaDB 11.4": {
+        "tests": 575,
+        "suites": 0,
+        "pass": 575,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 397886.886372
+      },
+      "verify": {
+        "tests": 3834,
+        "suites": 0,
+        "pass": 3786,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 48,
+        "todo": 0,
+        "duration_ms": 94249.427258
+      },
+      "MariaDB 10.11": {
+        "tests": 575,
+        "suites": 0,
+        "pass": 575,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 353166.220681
+      },
+      "Chrome HTTPS authentication and messaging with MariaDB": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 40864.255415
+      },
+      "Chrome keyboard and chat lifecycle": {
+        "tests": 218,
+        "suites": 0,
+        "pass": 218,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 252071.986857
+      }
+    }
   },
   "ci": {
-    "status": "first_attempt_failed_corrected_revision_requires_fresh_ci",
+    "status": "completed_success",
     "pullRequest": "https://github.com/fredbuhr/jessiemessage/pull/129",
+    "source": "bc2b1c0d6a8e124b4256ffd20156ce005f614711",
+    "tree": "2d69a984129f1878545ad5aa2d1448952fce69f3",
+    "run": "https://github.com/fredbuhr/jessiemessage/actions/runs/39817588326",
+    "attempt": 1,
+    "jobsSucceeded": 5,
+    "proof": "jm182-lot1-ci-corrected.json",
     "firstAttemptProof": "jm182-lot1-ci-first-attempt.json",
-    "firstSource": "3efc17e0e87910d353729a9784ffbd9b3e6876ef",
-    "firstTree": "3251158010841b3015b9afa55abb22149d55848c",
-    "run": "https://github.com/fredbuhr/jessiemessage/actions/runs/39815056042",
-    "firstResult": "2/5 successful jobs; verify and both databases failed",
-    "correctionScope": "Four regression fixtures only; no application code or guard changed. A fresh exact-source CI is required."
+    "firstAttemptPreserved": true,
+    "applicationAndTestsQualifiedOnExactSource": true,
+    "laterDocumentationCheckpointDoesNotChangeQualifiedCode": true,
+    "merged": false,
+    "released": false,
+    "deployed": false
   },
   "reviews": {
-    "A02": "Independent review found no concrete blocker; native contention still pending. Global snapshot SQL row limit remains independent.",
+    "A02": "Pre-CI independent review found no concrete blocker. The shared admission contention and historical-over-budget tests subsequently passed on both MariaDB engines. The global snapshot SQL row limit remains independent.",
     "A04A05": "Independent review found queued/running campaign reference gap; corrected before publication and reviewed again."
   },
   "proxyA11": {
@@ -463,11 +524,13 @@
     "customerMessageOrDeletion": false
   },
   "remaining": [
-    "Acquire native MariaDB/Chrome CI qualification on exact published branch source.",
-    "Lots2 and3 remain to implement; lot4 final release/deployment follows stabilized source.",
-    "A11 host observation belongs to final delivery; no speculative forwarding trust change."
+    "Lot2: draft/session continuity and accurate public information.",
+    "Lot3: documentation, proven unused code and CI maintenance; includes deprecated GitHub action runtime warnings.",
+    "Lot4: final exact-source qualification, merge, immutable release and grouped hosted delivery.",
+    "A11: private host observation at final delivery; forwarding guards remain unchanged.",
+    "Manual-backup hosted UI test remains explicitly deferred by the user."
   ],
-  "nextAction": "Publish the four corrected fixtures and this checkpoint, then qualify the new exact source once in PR129. No release or production change.",
+  "nextAction": "Implement lot2 on fix/audit-182, preserving this qualified lot1 source and first-failure evidence. No production action is required now.",
   "fixtureCorrections": [
     {
       "path": "tests/chat-i18n.test.mjs",
@@ -505,5 +568,8 @@
       "status": "interrupted_after_no_further_progress",
       "limit": "TMPDIR corrected; no failure observed in received TAP, but no terminal summary. Local /proc unavailable; cause of stopped progress not established. No full-suite pass claimed."
     }
-  ]
+  ],
+  "qualifiedSource": "bc2b1c0d6a8e124b4256ffd20156ce005f614711",
+  "qualifiedTree": "2d69a984129f1878545ad5aa2d1448952fce69f3",
+  "qualifiedCheckout": "6e3c2c2b00671c3570b32989906ae4b7093b8d92"
 }
