@@ -69,6 +69,8 @@ Le [socle vidéo 1.7.0](video-transport-170.md), le [catalogue 7.1](video-catalo
 
 L’[ancienne fiche produit, relevé du 20 octobre 2026 avant entretien](https://github.com/fredbuhr/jessiemessage/blob/bbd733d85b49b892d78c7cd90509ced04a990939/docs/PRODUCT.md) est conservée dans Git. Ses fonctions annoncées comme futures et son ancien statut de livraison sont historiques.
 
+**Qualification finale G4 acquise, livraison encore en cours :** la 1.8.0 et le repli 1.7.2 sont fusionnés ; leurs quatre CI PR/main passent 5/5 à la première tentative. [Preuve produit](verification-proofs/jm180-final-delivery-verification.json), [preuve du repli](verification-proofs/jm172-verification.json). La [1.8.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.0) et le [repli v1.7.2](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.7.2) sont publiés, sans déplacer latest 1.7.1 ; aucune préparation hébergée n’est acquise. La production reste 1.7.1. Le repli conserve les données vidéo et réponses personnelles tout en fermant leurs nouvelles créations/modifications.
+
 ## Périmètre simplifié décidé le 22 octobre
 
 **Abandonnés : IA, paiements carte/crypto, stickers et GIF, messages vocaux, réponse citée, édition, transfert de messages et épingles.** Ils sortent de la feuille de route. Les 268 emojis Unicode et les fonctions déjà livrées restent disponibles. Les anciens textes « Voix de Jessie » décrivent la formulation des messages, sans fonction audio.

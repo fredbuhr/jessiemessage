@@ -1,0 +1,657 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_172_compatibility_verification",
+  "status": "published_not_deployed",
+  "version": "1.7.2",
+  "source": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+  "tree": "924d500375a69ae50bc63414b15df71271e2bf8a",
+  "pullRequest": 127,
+  "branchSource": "1f6090f888e31f956ead3d1489c3aee8695ba366",
+  "qualifications": [
+    {
+      "ci": {
+        "id": 39760004711,
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39760004711",
+        "head": "1f6090f888e31f956ead3d1489c3aee8695ba366",
+        "branch": "fix/video-compat-172",
+        "event": "pull_request",
+        "path": ".github/workflows/ci.yml",
+        "status": "completed",
+        "conclusion": "success",
+        "attempt": 1,
+        "updatedAt": "2026-10-22T10:09:42Z"
+      },
+      "testedCheckout": "2251fd54a0bf3e210b3316f80b82d309d31c678f",
+      "testedTreeEqualsSource": true,
+      "jobs": [
+        {
+          "id": 119761532932,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success",
+          "checkout": "2251fd54a0bf3e210b3316f80b82d309d31c678f",
+          "nodeVersion": "v24.22.1",
+          "tests": {
+            "tests": 564,
+            "pass": 564,
+            "fail": 0,
+            "skipped": 0,
+            "cancelled": 0
+          },
+          "fullLog": {
+            "sha256": "8f68cc29f3972a95fdfbaba6052bfa936a48ce69835bb2211323e9765858ccec",
+            "bytes": 325067,
+            "encoding": "UTF-8 with preserved BOM, normalized LF and final newline"
+          }
+        },
+        {
+          "id": 119761532939,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success",
+          "checkout": "2251fd54a0bf3e210b3316f80b82d309d31c678f",
+          "nodeVersion": "v24.22.1",
+          "tests": {
+            "tests": 218,
+            "pass": 218,
+            "fail": 0,
+            "skipped": 0,
+            "cancelled": 0
+          },
+          "fullLog": {
+            "sha256": "91b59dc1d838bd1c9b9a7888983c5275266e806875f511fb945b778d642fd6d8",
+            "bytes": 43908,
+            "encoding": "UTF-8 with preserved BOM, normalized LF and final newline"
+          }
+        },
+        {
+          "id": 119761532980,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success",
+          "checkout": "2251fd54a0bf3e210b3316f80b82d309d31c678f",
+          "nodeVersion": "v24.22.1",
+          "tests": {
+            "tests": 4,
+            "pass": 4,
+            "fail": 0,
+            "skipped": 0,
+            "cancelled": 0
+          },
+          "fullLog": {
+            "sha256": "9f7dabb9f596d925332b959c5b79135e1f72ecd228d265a88a54770fb72a8d50",
+            "bytes": 34587,
+            "encoding": "UTF-8 with preserved BOM, normalized LF and final newline"
+          }
+        },
+        {
+          "id": 119761533063,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success",
+          "checkout": "2251fd54a0bf3e210b3316f80b82d309d31c678f",
+          "nodeVersion": "v24.22.1",
+          "tests": {
+            "tests": 564,
+            "pass": 564,
+            "fail": 0,
+            "skipped": 0,
+            "cancelled": 0
+          },
+          "fullLog": {
+            "sha256": "f62bb59b3bb5f0d59773a505f2ad18ae405702eb16ade2cd73be0983fcd39c66",
+            "bytes": 326636,
+            "encoding": "UTF-8 with preserved BOM, normalized LF and final newline"
+          }
+        },
+        {
+          "id": 119761533181,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success",
+          "checkout": "2251fd54a0bf3e210b3316f80b82d309d31c678f",
+          "nodeVersion": "v24.22.1",
+          "tests": {
+            "tests": 3799,
+            "pass": 3752,
+            "fail": 0,
+            "skipped": 47,
+            "cancelled": 0
+          },
+          "fullLog": {
+            "sha256": "f2383598f0230a4d7416b6587334267edf95f6cbfdcc48f951b2a006eb22d5ce",
+            "bytes": 536029,
+            "encoding": "UTF-8 with preserved BOM, normalized LF and final newline"
+          }
+        }
+      ]
+    },
+    {
+      "ci": {
+        "id": 39761371046,
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39761371046",
+        "head": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+        "branch": "main",
+        "event": "push",
+        "path": ".github/workflows/ci.yml",
+        "status": "completed",
+        "conclusion": "success",
+        "attempt": 1,
+        "updatedAt": "2026-10-22T10:19:12Z"
+      },
+      "testedCheckout": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+      "testedTreeEqualsSource": true,
+      "jobs": [
+        {
+          "id": 119766093090,
+          "name": "Chrome keyboard and chat lifecycle",
+          "status": "completed",
+          "conclusion": "success",
+          "checkout": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+          "nodeVersion": "v24.22.1",
+          "tests": {
+            "tests": 218,
+            "pass": 218,
+            "fail": 0,
+            "skipped": 0,
+            "cancelled": 0
+          },
+          "fullLog": {
+            "sha256": "61c60afa4402822640c67312794e6aeb4e234509d3e21ac159e59edbc9369a5a",
+            "bytes": 42822,
+            "encoding": "UTF-8 with preserved BOM, normalized LF and final newline"
+          }
+        },
+        {
+          "id": 119766093365,
+          "name": "verify",
+          "status": "completed",
+          "conclusion": "success",
+          "checkout": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+          "nodeVersion": "v24.22.1",
+          "tests": {
+            "tests": 3799,
+            "pass": 3752,
+            "fail": 0,
+            "skipped": 47,
+            "cancelled": 0
+          },
+          "fullLog": {
+            "sha256": "d5e71ab30ce602b18f4e456dd0026bf9aade4d031b2a08388aab14e30036f6ec",
+            "bytes": 535040,
+            "encoding": "UTF-8 with preserved BOM, normalized LF and final newline"
+          }
+        },
+        {
+          "id": 119766093424,
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "status": "completed",
+          "conclusion": "success",
+          "checkout": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+          "nodeVersion": "v24.22.1",
+          "tests": {
+            "tests": 4,
+            "pass": 4,
+            "fail": 0,
+            "skipped": 0,
+            "cancelled": 0
+          },
+          "fullLog": {
+            "sha256": "014978a7253250ad10bbbbcce904ace3fb59e5864f88578b87240012f4e15e84",
+            "bytes": 33517,
+            "encoding": "UTF-8 with preserved BOM, normalized LF and final newline"
+          }
+        },
+        {
+          "id": 119766093499,
+          "name": "MariaDB 10.11",
+          "status": "completed",
+          "conclusion": "success",
+          "checkout": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+          "nodeVersion": "v24.22.1",
+          "tests": {
+            "tests": 564,
+            "pass": 564,
+            "fail": 0,
+            "skipped": 0,
+            "cancelled": 0
+          },
+          "fullLog": {
+            "sha256": "9bbc6401219ca73707949bbe2c64610ca84654225d4fc63fae47d5ffa878895e",
+            "bytes": 324551,
+            "encoding": "UTF-8 with preserved BOM, normalized LF and final newline"
+          }
+        },
+        {
+          "id": 119766093519,
+          "name": "MariaDB 11.4",
+          "status": "completed",
+          "conclusion": "success",
+          "checkout": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+          "nodeVersion": "v24.22.1",
+          "tests": {
+            "tests": 564,
+            "pass": 564,
+            "fail": 0,
+            "skipped": 0,
+            "cancelled": 0
+          },
+          "fullLog": {
+            "sha256": "415e5ef0d1ad3edc16715fc6b11b5c23e033e56492dfda8fa1410016a19033bd",
+            "bytes": 325535,
+            "encoding": "UTF-8 with preserved BOM, normalized LF and final newline"
+          }
+        }
+      ]
+    }
+  ],
+  "previousFailedRuns": [],
+  "scope": {
+    "videoReaders": true,
+    "newVideoCreation": false,
+    "personalRepliesReadableAndInsertable": true,
+    "personalRepliesWritable": false,
+    "existingV3CampaignDelivery": true,
+    "existingExactCampaignAcknowledgement": true,
+    "manualBackups": true,
+    "legacyReceiptsAndQuickReplyCapsules": true,
+    "normalSchemaMigrations": 33,
+    "explicitVideoSchemaMigrations": 36,
+    "newMigrationFormatKeyOrConfigurationComparedWithG3": false
+  },
+  "configuredHttps": {
+    "seedBeforeApplicationBoot": true,
+    "seedSessionsRevokedBeforeBoot": true,
+    "productionFeatureGatesOverridden": false,
+    "bothRolesReadAndDecodeExistingH264": true,
+    "rangeGalleryAndZip": true,
+    "privateCatalogueBytesUnchanged": true,
+    "directWritesRefusedAfterAuthorization": true,
+    "existingCampaignWorker": "real separate worker with videoCreationEnabled:false on its store"
+  },
+  "syntheticMetrics": [
+    {
+      "runPrefix": "jm172-pr-initial",
+      "engine": "mariadb1011",
+      "measurement": {
+        "type": "video-backup-synthetic-metrics",
+        "sqlBytes": 84555,
+        "encryptedPhotoBytes": 1272,
+        "encryptedVideoBytes": 2622485,
+        "measurements": [
+          {
+            "phase": "capture",
+            "durationMs": 1504.116,
+            "peakNodeRssKiB": 169512
+          },
+          {
+            "phase": "operator-resume",
+            "durationMs": 1707.642,
+            "peakNodeRssKiB": 169512
+          },
+          {
+            "phase": "copy-two-roots",
+            "durationMs": 73.393,
+            "peakNodeRssKiB": 169512
+          },
+          {
+            "phase": "copy-two-roots",
+            "durationMs": 102.509,
+            "peakNodeRssKiB": 170784
+          },
+          {
+            "phase": "operator-resume",
+            "durationMs": 1130.352,
+            "peakNodeRssKiB": 185092
+          },
+          {
+            "phase": "backup-restore",
+            "durationMs": 110.124,
+            "peakNodeRssKiB": 190244
+          },
+          {
+            "phase": "copy-two-roots",
+            "durationMs": 47.803,
+            "peakNodeRssKiB": 190244
+          },
+          {
+            "phase": "backup-restore",
+            "durationMs": 870.068,
+            "peakNodeRssKiB": 194368
+          },
+          {
+            "phase": "backup-restore",
+            "durationMs": 797.847,
+            "peakNodeRssKiB": 194368
+          },
+          {
+            "phase": "operator-resume",
+            "durationMs": 1601.535,
+            "peakNodeRssKiB": 211348
+          },
+          {
+            "phase": "copy-two-roots",
+            "durationMs": 97.889,
+            "peakNodeRssKiB": 211348
+          },
+          {
+            "phase": "backup-restore",
+            "durationMs": 845.838,
+            "peakNodeRssKiB": 211348
+          },
+          {
+            "phase": "manual-reconcile-publish",
+            "durationMs": 19669.196,
+            "peakNodeRssKiB": 339636
+          }
+        ],
+        "peakNodeRssKiB": 339636,
+        "memoryScope": "Node test process peak RSS only; MariaDB, Chrome and child processes excluded",
+        "sqlTransport": "owned loopback without TLS"
+      }
+    },
+    {
+      "runPrefix": "jm172-pr-initial",
+      "engine": "mariadb114",
+      "measurement": {
+        "type": "video-backup-synthetic-metrics",
+        "sqlBytes": 84555,
+        "encryptedPhotoBytes": 1272,
+        "encryptedVideoBytes": 2622485,
+        "measurements": [
+          {
+            "phase": "capture",
+            "durationMs": 1649.524,
+            "peakNodeRssKiB": 169948
+          },
+          {
+            "phase": "operator-resume",
+            "durationMs": 1929.751,
+            "peakNodeRssKiB": 177480
+          },
+          {
+            "phase": "copy-two-roots",
+            "durationMs": 84.189,
+            "peakNodeRssKiB": 177480
+          },
+          {
+            "phase": "copy-two-roots",
+            "durationMs": 136.696,
+            "peakNodeRssKiB": 177480
+          },
+          {
+            "phase": "operator-resume",
+            "durationMs": 1323.466,
+            "peakNodeRssKiB": 177480
+          },
+          {
+            "phase": "backup-restore",
+            "durationMs": 119.328,
+            "peakNodeRssKiB": 177480
+          },
+          {
+            "phase": "copy-two-roots",
+            "durationMs": 67.402,
+            "peakNodeRssKiB": 177480
+          },
+          {
+            "phase": "backup-restore",
+            "durationMs": 949.467,
+            "peakNodeRssKiB": 177480
+          },
+          {
+            "phase": "backup-restore",
+            "durationMs": 890.859,
+            "peakNodeRssKiB": 192924
+          },
+          {
+            "phase": "operator-resume",
+            "durationMs": 1811.58,
+            "peakNodeRssKiB": 207952
+          },
+          {
+            "phase": "copy-two-roots",
+            "durationMs": 117.832,
+            "peakNodeRssKiB": 207952
+          },
+          {
+            "phase": "backup-restore",
+            "durationMs": 897.833,
+            "peakNodeRssKiB": 207952
+          },
+          {
+            "phase": "manual-reconcile-publish",
+            "durationMs": 23466.217,
+            "peakNodeRssKiB": 324600
+          }
+        ],
+        "peakNodeRssKiB": 324600,
+        "memoryScope": "Node test process peak RSS only; MariaDB, Chrome and child processes excluded",
+        "sqlTransport": "owned loopback without TLS"
+      }
+    },
+    {
+      "runPrefix": "jm172-main-initial",
+      "engine": "mariadb1011",
+      "measurement": {
+        "type": "video-backup-synthetic-metrics",
+        "sqlBytes": 84555,
+        "encryptedPhotoBytes": 1272,
+        "encryptedVideoBytes": 2622485,
+        "measurements": [
+          {
+            "phase": "capture",
+            "durationMs": 1144.564,
+            "peakNodeRssKiB": 172900
+          },
+          {
+            "phase": "operator-resume",
+            "durationMs": 1296.754,
+            "peakNodeRssKiB": 198456
+          },
+          {
+            "phase": "copy-two-roots",
+            "durationMs": 111.227,
+            "peakNodeRssKiB": 199708
+          },
+          {
+            "phase": "copy-two-roots",
+            "durationMs": 103.755,
+            "peakNodeRssKiB": 203164
+          },
+          {
+            "phase": "operator-resume",
+            "durationMs": 860.352,
+            "peakNodeRssKiB": 211512
+          },
+          {
+            "phase": "backup-restore",
+            "durationMs": 80.363,
+            "peakNodeRssKiB": 211512
+          },
+          {
+            "phase": "copy-two-roots",
+            "durationMs": 37.866,
+            "peakNodeRssKiB": 211512
+          },
+          {
+            "phase": "backup-restore",
+            "durationMs": 655.371,
+            "peakNodeRssKiB": 211512
+          },
+          {
+            "phase": "backup-restore",
+            "durationMs": 573.217,
+            "peakNodeRssKiB": 211512
+          },
+          {
+            "phase": "operator-resume",
+            "durationMs": 1315.185,
+            "peakNodeRssKiB": 224132
+          },
+          {
+            "phase": "copy-two-roots",
+            "durationMs": 77.324,
+            "peakNodeRssKiB": 224132
+          },
+          {
+            "phase": "backup-restore",
+            "durationMs": 628.592,
+            "peakNodeRssKiB": 224132
+          },
+          {
+            "phase": "manual-reconcile-publish",
+            "durationMs": 15652.697,
+            "peakNodeRssKiB": 343396
+          }
+        ],
+        "peakNodeRssKiB": 343396,
+        "memoryScope": "Node test process peak RSS only; MariaDB, Chrome and child processes excluded",
+        "sqlTransport": "owned loopback without TLS"
+      }
+    },
+    {
+      "runPrefix": "jm172-main-initial",
+      "engine": "mariadb114",
+      "measurement": {
+        "type": "video-backup-synthetic-metrics",
+        "sqlBytes": 84555,
+        "encryptedPhotoBytes": 1272,
+        "encryptedVideoBytes": 2622485,
+        "measurements": [
+          {
+            "phase": "capture",
+            "durationMs": 1160.357,
+            "peakNodeRssKiB": 172772
+          },
+          {
+            "phase": "operator-resume",
+            "durationMs": 1318.211,
+            "peakNodeRssKiB": 200836
+          },
+          {
+            "phase": "copy-two-roots",
+            "durationMs": 57.323,
+            "peakNodeRssKiB": 200836
+          },
+          {
+            "phase": "copy-two-roots",
+            "durationMs": 90.846,
+            "peakNodeRssKiB": 202940
+          },
+          {
+            "phase": "operator-resume",
+            "durationMs": 891.748,
+            "peakNodeRssKiB": 211632
+          },
+          {
+            "phase": "backup-restore",
+            "durationMs": 80.227,
+            "peakNodeRssKiB": 211632
+          },
+          {
+            "phase": "copy-two-roots",
+            "durationMs": 39.428,
+            "peakNodeRssKiB": 211632
+          },
+          {
+            "phase": "backup-restore",
+            "durationMs": 682.628,
+            "peakNodeRssKiB": 211632
+          },
+          {
+            "phase": "backup-restore",
+            "durationMs": 591.288,
+            "peakNodeRssKiB": 211632
+          },
+          {
+            "phase": "operator-resume",
+            "durationMs": 1585.614,
+            "peakNodeRssKiB": 211632
+          },
+          {
+            "phase": "copy-two-roots",
+            "durationMs": 238.218,
+            "peakNodeRssKiB": 211632
+          },
+          {
+            "phase": "backup-restore",
+            "durationMs": 650.785,
+            "peakNodeRssKiB": 212968
+          },
+          {
+            "phase": "manual-reconcile-publish",
+            "durationMs": 16757.345,
+            "peakNodeRssKiB": 329280
+          }
+        ],
+        "peakNodeRssKiB": 329280,
+        "memoryScope": "Node test process peak RSS only; MariaDB, Chrome and child processes excluded",
+        "sqlTransport": "owned loopback without TLS"
+      }
+    }
+  ],
+  "publication": {
+    "tag": {
+      "name": "v1.7.2",
+      "commit": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+      "immutableReference": true
+    },
+    "release": {
+      "id": 420600213,
+      "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.7.2",
+      "target": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+      "publishedAt": "2026-10-22T10:46:31Z"
+    },
+    "operator": {
+      "source": "3fd11939a89a5bff89e6d183324019b793df8eaf",
+      "tree": "f525d077155580aba67e4a49eb6888e69b807347"
+    },
+    "workflow": {
+      "id": 39765553787,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39765553787",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 119779985614,
+          "name": "operator-tests",
+          "conclusion": "success",
+          "fullLog": {
+            "sha256": "d9120d2c95e7bb0ae7c42711d670c996c4881f2d611deda6029282cb403f46e2",
+            "bytes": 37038
+          }
+        },
+        {
+          "id": 119780069646,
+          "name": "publish",
+          "conclusion": "success",
+          "fullLog": {
+            "sha256": "a972d286a472bef59076c9e5e02a652aa62a14461ed7fb2262b30deec266275a",
+            "bytes": 19670
+          }
+        }
+      ]
+    },
+    "receiptStatus": "published_verified",
+    "latestPreserved": {
+      "version": "1.7.1",
+      "releaseId": 420135576
+    },
+    "newVideoCreation": false,
+    "personalRepliesWritable": false,
+    "deploymentPerformed": false,
+    "hostWritesPerformed": false
+  },
+  "hostedPreparation": null,
+  "deploymentPerformed": false,
+  "limits": [
+    "General-suite 47 omissions remain omissions; both native engines have zero omissions.",
+    "CI SQL transport is owned loopback without TLS; production TLS guards remain unchanged.",
+    "The configured HTTPS rehearsal stops external configured producers and explicitly runs a separate real worker.",
+    "Upper manual-restore CLI job loading is covered by targeted tests, not claimed as full native end-to-end.",
+    "Physical phones, closed-app OS notifications and hosting performance remain unverified.",
+    "Node resource metrics exclude MariaDB, Chrome and child-process memory."
+  ]
+}

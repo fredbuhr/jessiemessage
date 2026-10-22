@@ -8,6 +8,7 @@ Pour changer de discussion, la [passation du 21 octobre 2026](docs/PASSATION-202
 
 - Relever branche, commit, arbre et modifications locales. Vérifier le statut réel de la PR et la CI du commit concerné ; une réponse perdue ne prouve ni échec ni succès.
 - Avant de relancer une opération distante interrompue, lire son résultat durable : PR/merge, run CI, paramètres persistés, processus, journal ou reçu. Reprendre depuis cet état, sans répéter une mutation pour découvrir son résultat.
+- Après une interruption du tour, vérifier aussi l’état des sous-tâches déléguées. Une tâche `interrupted` ne reprend pas avec un simple message : inspecter ses fichiers et résultats déjà obtenus, puis lui donner une tâche de reprise explicite. Ne pas attendre un travail resté suspendu ni relancer ses contrôles déjà réussis.
 - Distinguer **codé**, **fusionné**, **publié**, **déployé**, **vérifié** et **en attente du PC**. Un état absent, ancien ou un test ignoré n’est pas un succès.
 - Conserver les choix acquis : Jessie en France, conversations jusqu’à fermeture définitive, priorité au cœur de la messagerie. Ne pas relancer audit général, questionnaire, test mail ou parcours PC à chaque reprise.
 

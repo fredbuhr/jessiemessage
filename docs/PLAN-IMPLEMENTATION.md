@@ -6,7 +6,7 @@ Révisé le 22 octobre 2026 après le bilan de **l’ensemble de l’application
 
 La production identifiée est **1.7.1 / Node 24.22.1 / schéma 33**. Invitations, authentification et sessions multiples, texte/photos, profils et avatars, 268 emojis Unicode, lecture privée, CRM, diffusions élargies, annonces, tâches privées et exports photo sont livrés. Les réponses rapides se limitent à six phrases fixes FR/EN. La fermeture locale des comptes est disponible sous ses gardes, sans nouveau raccordement PC.
 
-La branche `feat/video-messaging`, [PR 125](https://github.com/fredbuhr/jessiemessage/pull/125), prépare **1.8.0**. **G1 sauvegarde manuelle admin, G2 vidéo complète et G3 réponses personnelles et qualification globale sont qualifiés sur branche, non livrés.** La source G3 est `4f6587aee355b213b58734b576809eae0943553c`, arbre `3a1defe079e2095fb0ee89ad51312c91916cd292`, [CI 39755558913 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39755558913) ; [preuve G3](verification-proofs/jm180-personal-replies-verification.json). Les [preuves G2](verification-proofs/jm180-video-integration-verification.json) et [G1](verification-proofs/jm180-manual-backup-verification.json) sont conservées. G3 n’ajoute ni migration ni clé : le candidat conserve 36 migrations, le plan normal 33 ; aucune nouveauté n’est activée en production.
+**G1–G3 sont fusionnés dans la 1.8.0, et G4 a qualifié le repli technique 1.7.2.** Sources : produit `fd6e53b14b520231b0b307a2761331dd8c740a5b`, arbre `324c3563fc6b1cfce669bcf58d90962c23c966b8` ; repli `6b3319a77c307ed7d6b003fe33de36807c70c266`, arbre `924d500375a69ae50bc63414b15df71271e2bf8a`. Les PR 125 et 127 sont fusionnées ; leurs CI PR et main sont toutes **5/5, tentative 1**. [Preuve finale 1.8.0](verification-proofs/jm180-final-delivery-verification.json), [preuve 1.7.2](verification-proofs/jm172-verification.json). Les preuves G1–G3 restent historiques. La [1.8.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.0) et le [repli v1.7.2](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.7.2) sont publiés, sans déplacer latest 1.7.1 ; aucune préparation ni activation hébergée n’est acquise. Le candidat vidéo conserve SQL 36, le plan normal SQL 33.
 
 ## Périmètre décidé le 22 octobre
 
@@ -16,13 +16,13 @@ La branche `feat/video-messaging`, [PR 125](https://github.com/fredbuhr/jessieme
 
 ## Un seul lot restant : G4
 
-G1, G2 et G3 sont acquis sur branche et attendent leur livraison commune. Les subdivisions techniques ne deviennent pas de nouveaux lots ou arrêts à faire valider par l’utilisateur.
+G1, G2 et G3 sont fusionnés et qualifiés dans la référence produit 1.8.0. Le repli 1.7.2 est lui aussi qualifié et désormais publié ; sa préparation hébergée et la livraison produit restent à effectuer. Les subdivisions techniques ne deviennent pas de nouveaux lots ou arrêts à faire valider par l’utilisateur.
 
 | Lot | Travail regroupé | Critère de fin concret |
 | --- | --- | --- |
-| **G4 — Livraison unique et contrôle en service** | Adapter, qualifier et préparer d’abord le repli exact compatible avec le schéma et les données à activer. Réaliser ensuite fusion finale, CI requises, version/tag/release, préparation, migration et activation bornées ; contrôler HTTP, identité du processus actif, métadonnées et guide quotidien. | Le repli est qualifié et préparé avant migration. La version exacte est réellement active ; sauvegarde manuelle, vidéo et réponses personnelles sont accessibles, remplacement des automatismes vérifié et contrôles hébergés consignés. Publication et déploiement restent distingués. |
+| **G4 — Livraison unique et contrôle en service** | Préparer les checkouts/lanceurs des deux références publiées et le bundle vidéo, migrer et précontrôler le repli sans démarrage, puis activer la 1.8.0 ; contrôler HTTP, identité du processus actif, métadonnées et guide quotidien. | Le repli est qualifié et préparé avant migration. La version exacte est réellement active ; sauvegarde manuelle, vidéo et réponses personnelles sont accessibles, remplacement des automatismes vérifié et contrôles hébergés consignés. Publication et déploiement restent distingués. |
 
-**Prochaine action : G4 — préparer et qualifier le repli exact, puis effectuer la livraison unique.** Le repli courant **1.6.0 / SQL 33** ne peut pas être présenté comme un repli du candidat SQL 36. Le lecteur du jalon G2 refuse les capsules contenant le nouveau type de fichier des réponses personnelles ; son runtime qui conserve ces fichiers ne suffit pas à qualifier un repli complet. L’adaptation et les contrôles de cette référence restent donc réellement à faire dans G4, avant la migration.
+**Prochaine action : G4 — préparation hébergée, migration, activation et contrôles des références publiées.** L’adaptation, la qualification et la publication du repli sont acquises ; sa préparation sur l’hôte reste à effectuer avant migration. Le repli courant **1.6.0 / SQL 33** reste distinct du futur repli 1.7.2 / profil SQL 36. Le lecteur historique G2 seul refuse les capsules avec réponses personnelles ; la 1.7.2 qualifiée conserve ces lecteurs à jour.
 
 G3 a qualifié sur sa source unique les réponses personnelles, les suites globales et les wrappers d’import/reprise natifs, avec métriques CI. Il ne revendique ni une exécution intégrale du CLI de restauration manuelle de plus haut niveau, ni un téléphone physique, une notification système hors application ou une mesure du mutualisé. Ces limites restent explicites ; elles ne deviennent pas des micro-lots supplémentaires. La production conserve son code 1.7.1 jusqu’à G4.
 
@@ -38,7 +38,7 @@ La décision cite les fonctions abandonnées ci-dessus. Elle ne suffit pas à su
 | **Recherche de messages/notes** | Recherche de clients livrée ; recherche dans les contenus absente. | Périmètre à préciser, sans ajout au lot en cours. |
 | **Réactions** | Absentes. | Usage à préciser, sans engagement de développement automatique. |
 
-La **personnalisation des réponses** est maintenant qualifiée dans G3, sur branche et non livrée. La production conserve ses six phrases fixes jusqu’à G4. Les sujets de cette table restent à préciser et non ouverts ; ils ne bloquent pas le dernier lot et n’autorisent pas l’ouverture simultanée d’autres évolutions.
+La **personnalisation des réponses** est fusionnée et qualifiée dans la 1.8.0, non livrée. La production conserve ses six phrases fixes jusqu’à G4. Les sujets de cette table restent à préciser et non ouverts ; ils ne bloquent pas le dernier lot et n’autorisent pas l’ouverture simultanée d’autres évolutions.
 
 ## Exploitation et limites conservées
 
@@ -54,7 +54,7 @@ La récupération autonome après perte totale de l’hôte, le témoin frais à
 
 Conserver des checkpoints Git reprenables et la preuve de chaque opération distante, tout en poursuivant plusieurs sous-tâches cohérentes d’un même livrable sans demander une nouvelle permission générale. Ne pas relancer les mêmes audits et suites vertes sans changement, échec ou préoccupation nouvelle. Regrouper les contrôles quand leurs dépendances le permettent ; ne jamais promouvoir une omission ou un test unitaire en essai réel sur téléphone, hébergement ou compte client.
 
-**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Un export interne, compteur SQL ou document ne constitue pas à lui seul une nouvelle fonction utilisable. G1, G2 et G3 sont qualifiés sur branche ; les nouveautés 1.8.0 ne sont pas encore activées en production et les automatismes existants n’y sont pas encore remplacés. Les contrats techniques et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) restent conservés sans réétiquetage.
+**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Un export interne, compteur SQL ou document ne constitue pas à lui seul une nouvelle fonction utilisable. G1, G2 et G3 sont fusionnés et qualifiés ; les nouveautés 1.8.0 ne sont pas encore activées en production et les automatismes existants n’y sont pas encore remplacés. Les contrats techniques et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) restent conservés sans réétiquetage.
 
 ## Livraisons closes
 

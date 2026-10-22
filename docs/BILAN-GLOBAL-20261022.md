@@ -1,6 +1,6 @@
 # JessieMessage — bilan global du 22 octobre 2026
 
-**JessieMessage fonctionne en production pour la messagerie texte et photo et les outils de Jessie. G1 sauvegarde manuelle admin, G2 vidéo complète et G3 réponses personnelles et qualification globale sont qualifiés sur la branche 1.8.0, non livrés. Il reste G4, livraison unique et contrôles en service.** Le périmètre simplifié et les abandons du 22 octobre restent conservés.
+**JessieMessage fonctionne en production pour la messagerie texte et photo et les outils de Jessie. G1 sauvegarde manuelle admin, G2 vidéo complète et G3 réponses personnelles sont fusionnés, qualifiés et publiés dans la 1.8.0, sans activation hébergée. Le repli technique 1.7.2 est qualifié et publié, sans préparation hébergée. Il reste G4, livraison unique et contrôles en service.** Le périmètre simplifié et les abandons du 22 octobre restent conservés.
 
 Ce bilan distingue ce qui est livré, les acquis sur branche et le dernier lot de livraison. Les subdivisions techniques servent à reprendre le travail après une interruption ; elles ne deviennent pas autant de livraisons ou de nouvelles décisions demandées à l’utilisateur.
 
@@ -10,7 +10,7 @@ La production est **1.7.1**, commit `c2d7b3b31c6d0955892829f808dc4135d7d8debf`, 
 
 Le [contrôle public du 22 octobre](verification-proofs/jm171-global-public-health-20261022.json) confirme santé, disponibilité et accueil HTTP 200 ; il ne prouve ni la version active ni une session réelle.
 
-La branche de développement `feat/video-messaging` prépare **1.8.0**. G3 est qualifié sur la source `4f6587aee355b213b58734b576809eae0943553c`, arbre `3a1defe079e2095fb0ee89ad51312c91916cd292` : [CI 39755558913 réussie 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39755558913), [preuve détaillée](verification-proofs/jm180-personal-replies-verification.json). La qualification G2 et ses preuves restent conservées. Cette qualification ne signifie ni fusion produit, ni migration hébergée, ni activation des nouveautés.
+La 1.8.0 est fusionnée sur `fd6e53b14b520231b0b307a2761331dd8c740a5b`, arbre `324c3563fc6b1cfce669bcf58d90962c23c966b8` ; le repli 1.7.2 sur `6b3319a77c307ed7d6b003fe33de36807c70c266`, arbre `924d500375a69ae50bc63414b15df71271e2bf8a`. Chacune passe ses CI PR et main **5/5 à la première tentative** : [preuve 1.8.0](verification-proofs/jm180-final-delivery-verification.json), [preuve 1.7.2](verification-proofs/jm172-verification.json). La [1.8.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.0) et le [repli v1.7.2](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.7.2) sont publiés, sans déplacer latest 1.7.1 ; préparation hébergée, migration et activation restent à effectuer. Les qualifications G1–G3 restent conservées.
 
 ## Ce qui est disponible et branché en production
 
@@ -57,8 +57,8 @@ G1, G2 et G3 sont qualifiés sur branche et attendent leur livraison commune. La
 
 | Résultat | Critère de fin |
 | --- | --- |
-| **G4 — Livraison unique et contrôles** | Adapter, qualifier et préparer une référence de repli exacte compatible avec le schéma et les données à activer, avant migration ; puis fusion, CI requises, publication, préparation, migration, activation et contrôles en service. L’identité active, les métadonnées, la sauvegarde manuelle et le remplacement des automatismes doivent être réellement attestés. |
+| **G4 — Livraison unique et contrôles** | Préparer les références produit/repli publiées avant migration, puis migrer, activer et contrôler en service. L’identité active, les métadonnées, la sauvegarde manuelle et le remplacement des automatismes doivent être réellement attestés. |
 
-**Le repli actuel 1.6.0 est compatible avec SQL 33, pas avec le candidat SQL 36.** L’ancien lecteur G2 refuse les nouvelles capsules contenant les réponses personnelles. Aucun repli utilisable sur SQL 36 n’est annoncé prêt : son adaptation et sa qualification font partie de G4, avant la migration.
+**Le repli actuel 1.6.0 est compatible avec SQL 33, pas avec le candidat SQL 36.** L’ancien lecteur G2 refuse les nouvelles capsules contenant les réponses personnelles. La référence 1.7.2 est adaptée, qualifiée sur SQL 36 et publiée ; sa préparation hébergée reste à effectuer avant migration.
 
 Le [plan détaillé](PLAN-IMPLEMENTATION.md) contient les critères ; [REPRISE](REPRISE.md) garde les sources et preuves courantes. À chaque étape, annoncer **fait** et **restant**. La prochaine action est G4. Les appareils physiques, les notifications système hors application et les performances réelles du mutualisé restent non vérifiés ; les essais synthétiques ne les remplacent pas.
