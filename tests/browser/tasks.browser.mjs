@@ -7,7 +7,7 @@ import { createServer } from "node:http";
 import { startWebDriver, waitUntil } from "./webdriver.mjs";
 
 const id = number => number.toString(16).padStart(32, "0"), conversationId = id(100);
-const assets = ["tasks.html", "tasks.js", "tasks-model.js", "tasks.css", "i18n.js", "i18n-tools.js", "i18n.css", "session-clock.js", "help-link.js",
+const assets = ["tasks.html", "tasks.js", "tasks-model.js", "tasks.css", "admin-navigation.css", "i18n.js", "i18n-tools.js", "i18n.css", "session-clock.js", "help-link.js",
   "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css", "brand/icon-32.png", "brand/icon-128.png"];
 let driver;
 before(async () => { driver = await startWebDriver(); }, { timeout: 60000 });

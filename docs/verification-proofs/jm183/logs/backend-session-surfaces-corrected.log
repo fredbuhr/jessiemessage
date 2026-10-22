@@ -1,0 +1,30 @@
+✔ chat/admin: an old refused request never changes a newer cookie (43.942466ms)
+✔ chat/client: an old refused request never changes a newer cookie (11.802229ms)
+✔ media/admin: an old refused request never changes a newer cookie (6.213008ms)
+✔ media/client: an old refused request never changes a newer cookie (5.473312ms)
+✔ video/admin: an old refused request never changes a newer cookie (6.563699ms)
+✔ video/client: an old refused request never changes a newer cookie (4.187844ms)
+✔ profile/admin: an old refused request never changes a newer cookie (4.789007ms)
+✔ profile/client: an old refused request never changes a newer cookie (4.916779ms)
+✔ auth/admin: an old refused request never changes a newer cookie (5.62316ms)
+✔ access-admin/admin: an old refused request never changes a newer cookie (8.187332ms)
+✔ readiness/admin: an old refused request never changes a newer cookie (5.043858ms)
+✔ crm/admin: an old refused request never changes a newer cookie (4.307434ms)
+✔ broadcast/admin: an old refused request never changes a newer cookie (3.969357ms)
+✔ announcements/admin: an old refused request never changes a newer cookie (2.892134ms)
+✔ tasks/admin: an old refused request never changes a newer cookie (3.254868ms)
+✔ quick-replies/admin: an old refused request never changes a newer cookie (3.380158ms)
+✔ copy/admin: an old refused request never changes a newer cookie (3.951332ms)
+✔ manual/admin: an old refused request never changes a newer cookie (3.526862ms)
+✔ access/client: an old refused request never changes a newer cookie (2.84657ms)
+✔ announcements/client: an old refused request never changes a newer cookie (2.271215ms)
+✔ notifications/admin: an old refused request never changes a newer cookie (5.441698ms)
+✔ notifications/client: an old refused request never changes a newer cookie (2.352907ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 311.533279

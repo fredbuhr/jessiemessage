@@ -113,7 +113,7 @@ test("the real dual-origin runtime shares schema thirty, source sessions, encryp
       for (const origin of [primary, recipe]) {
         const entry = await request(port, origin, "/api/entry", { cookie: `${cookie("admin")}; ${cookie("client")}` });
         assert.equal(entry.status, 200);
-        assert.deepEqual(entry.json().administrator, { state: "connected", href: "/admin/messages" });
+        assert.deepEqual(entry.json().administrator, { state: "connected", href: "/admin" });
         assert.deepEqual(entry.json().client, { state: "active", href: "/messages" });
         for (const role of ["admin", "client"]) {
           const response = await request(port, origin, role === "admin" ? "/api/auth/session" : "/api/access/session", { cookie: cookie(role) });

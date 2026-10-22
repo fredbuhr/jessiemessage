@@ -366,7 +366,7 @@ test("real HTTP private chat, ciphertext, receipts, deletion and live authorizat
       now = boundary;
       const expired = await request("/api/chat/client/conversation", { headers: headersFor(temporary) });
       assert.equal(expired.status, 401);
-      assert.match(expired.headers.get("set-cookie"), /^__Host-jessie_client=; /);
+      assert.equal(expired.headers.get("set-cookie"), null);
       assert.equal((await request("/api/chat/client/conversation", { headers: headersFor(b) })).status, 200);
     });
 
@@ -399,7 +399,7 @@ test("real HTTP private chat, ciphertext, receipts, deletion and live authorizat
       }
       const denied = await request(pathFor("client", "messages", bConversationId), { method: "POST", headers: headersFor(b), body: { clientMessageId: key(), body: "Synthetic revoked attempted send" } });
       assert.equal(denied.status, 401);
-      assert.match(denied.headers.get("set-cookie"), /^__Host-jessie_client=; /);
+      assert.equal(denied.headers.get("set-cookie"), null);
       const history = await request(pathFor("admin", "messages", bConversationId), { headers: headersFor(admin) });
       assert.equal(history.status, 200);
       assert.equal(history.body.conversation.canSend, false);

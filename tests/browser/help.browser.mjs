@@ -255,6 +255,8 @@ test("real Chrome: practical Help is translated, accessible and never collects p
           assert.equal(await page.execute("return document.getElementById('chat-menu').hidden"), true, "a language choice closes chat options");
           assert.equal(await page.execute("return document.activeElement.id"), menuOpener, "the hidden language action returns focus to the visible options button");
           await openChatOptions(page);
+          await tabUntil(page, ".menu-extras > summary"); await page.key("\uE007");
+          await waitUntil(() => page.execute("return document.querySelector('.menu-extras').open"), "secondary chat options expose Help through native keyboard navigation");
         }
         assert.equal(await page.execute("return document.querySelector('[data-help-link]').getAttribute('href')"), "/help#lang=en", "a late language choice updates the Help link");
         const link = await page.execute("const link = document.querySelector('[data-help-link]'); return { target: link.target, rel: [...link.relList], title: link.textContent, label: link.getAttribute('aria-label') };");
@@ -268,7 +270,10 @@ test("real Chrome: practical Help is translated, accessible and never collects p
         await waitUntil(() => fixture.requests.some(request => request.path === "/help"), "native Help navigation in another tab");
         assert.equal(await page.execute("return location.pathname"), source === "chat" ? "/messages" : "/recover", "the source tab never navigates away");
         assert.equal(await page.execute("return window.__helpPageHides"), 0, "the source document is not disposed or reloaded");
-        if (source === "chat") assert.equal(await page.execute("return document.getElementById('message-body').value"), draft, "the real chat draft remains intact");
+        if (source === "chat") {
+          assert.equal(await page.execute("return document.getElementById('message-body').value"), draft, "the real chat draft remains intact");
+          assert.equal(fixture.requests.some(request => request.method === "POST" && /\/messages$/.test(request.path)), false, "opening Help never sends the draft");
+        }
         else assert.equal(fixture.resetCount(), 0, "opening Help never submits or consumes the recovery link");
         // A new tab may hide the source. recover.js deliberately clears input
         // fields on hiding but retains the token in its suspended model; this

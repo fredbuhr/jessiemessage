@@ -449,7 +449,7 @@ test("real HTTP private CRM, encrypted notes, scoped labels and current authoriz
       for (const path of [crm("capabilities"), crm("contacts"), crm("labels"), profilePath(), "/crm.js", "/crm-model.js", "/crm.css"]) {
         const denied = await request(path, { headers: headersFor(admin) });
         assert.equal(denied.status, 401, path);
-        assert.match(denied.headers.get("set-cookie"), /^__Host-jessie_session=; /);
+        assert.equal(denied.headers.get("set-cookie"), null);
         assert.equal(JSON.stringify(denied.body).includes(profileA.notes), false);
       }
       assert.equal((await save(admin, clientA, { expectedVersion: profileA.version, nickname: "Unauthorized overwrite", notes: "Must never save", reminderAt: null, labelIds: [] })).status, 401);

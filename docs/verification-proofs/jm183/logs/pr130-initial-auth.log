@@ -1,0 +1,443 @@
+﻿2026-10-22T21:44:31.2308172Z Current runner version: '2.338.0'
+2026-10-22T21:44:31.2348548Z ##[group]Runner Image Provisioner
+2026-10-22T21:44:31.2350807Z Hosted Compute Agent
+2026-10-22T21:44:31.2351947Z Version: 20261012.601
+2026-10-22T21:44:31.2353144Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+2026-10-22T21:44:31.2354542Z Build Date: 2026-10-12T17:48:21Z
+2026-10-22T21:44:31.2355830Z Worker ID: {e7fa0e50-d760-4d7e-a117-86cebac81bd0}
+2026-10-22T21:44:31.2357296Z Region: centralus
+2026-10-22T21:44:31.2358363Z Cloud: Azure
+2026-10-22T21:44:31.2359269Z ##[endgroup]
+2026-10-22T21:44:31.2362066Z ##[group]Operating System
+2026-10-22T21:44:31.2363222Z Ubuntu
+2026-10-22T21:44:31.2364295Z 24.04.5
+2026-10-22T21:44:31.2365250Z LTS
+2026-10-22T21:44:31.2366107Z ##[endgroup]
+2026-10-22T21:44:31.2367289Z ##[group]Runner Image
+2026-10-22T21:44:31.2368442Z Image: ubuntu-24.04
+2026-10-22T21:44:31.2369976Z Version: 20261012.334.1
+2026-10-22T21:44:31.2372443Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-22T21:44:31.2374654Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+2026-10-22T21:44:31.2375677Z ##[endgroup]
+2026-10-22T21:44:31.2376936Z ##[group]GITHUB_TOKEN Permissions
+2026-10-22T21:44:31.2379330Z Contents: read
+2026-10-22T21:44:31.2380484Z Metadata: read
+2026-10-22T21:44:31.2381095Z ##[endgroup]
+2026-10-22T21:44:31.2383559Z Secret source: Actions
+2026-10-22T21:44:31.2384658Z Cache mode: write
+2026-10-22T21:44:31.2385673Z Prepare workflow directory
+2026-10-22T21:44:31.2938441Z Prepare all required actions
+2026-10-22T21:44:31.3017012Z Getting action download info
+2026-10-22T21:44:31.5689918Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-22T21:44:31.6755510Z Download action repository 'actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+2026-10-22T21:44:32.2988241Z Complete job name: Chrome HTTPS authentication and messaging with MariaDB
+2026-10-22T21:44:32.3583820Z ##[group]Checking docker version
+2026-10-22T21:44:32.3597673Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+2026-10-22T21:44:32.4583959Z '1.48'
+2026-10-22T21:44:32.4602364Z Docker daemon API version: '1.48'
+2026-10-22T21:44:32.4603319Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+2026-10-22T21:44:32.4785602Z '1.48'
+2026-10-22T21:44:32.4800195Z Docker client API version: '1.48'
+2026-10-22T21:44:32.4806466Z ##[endgroup]
+2026-10-22T21:44:32.4809953Z ##[group]Clean up resources from previous jobs
+2026-10-22T21:44:32.4816377Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=bf3cd8"
+2026-10-22T21:44:32.4987605Z ##[command]/usr/bin/docker network prune --force --filter "label=bf3cd8"
+2026-10-22T21:44:32.5138837Z ##[endgroup]
+2026-10-22T21:44:32.5139861Z ##[group]Create local container network
+2026-10-22T21:44:32.5152228Z ##[command]/usr/bin/docker network create --label bf3cd8 github_network_ce7179d666384817b0526b42e9db23c5
+2026-10-22T21:44:32.5717509Z 27e3df784ae4731bc70d15681cae83d8914255cb54d0f7a9ede7aba9c1e3ffb3
+2026-10-22T21:44:32.5738800Z ##[endgroup]
+2026-10-22T21:44:32.5766538Z ##[group]Starting mariadb service container
+2026-10-22T21:44:32.5790518Z ##[command]/usr/bin/docker pull mariadb:10.11
+2026-10-22T21:44:33.1317947Z 10.11: Pulling from library/mariadb
+2026-10-22T21:44:33.3050931Z cf1a5487baaf: Pulling fs layer
+2026-10-22T21:44:33.3052950Z 74510c5a3c8c: Pulling fs layer
+2026-10-22T21:44:33.3054397Z 0fb036d13c64: Pulling fs layer
+2026-10-22T21:44:33.3055763Z 1ad427190931: Pulling fs layer
+2026-10-22T21:44:33.3057164Z 7b491b6735bd: Pulling fs layer
+2026-10-22T21:44:33.3058575Z 77c672e7e92a: Pulling fs layer
+2026-10-22T21:44:33.3060252Z 122ad3f2efb1: Pulling fs layer
+2026-10-22T21:44:33.3061678Z 492911ec3615: Pulling fs layer
+2026-10-22T21:44:33.3063127Z 7b491b6735bd: Waiting
+2026-10-22T21:44:33.3064503Z 77c672e7e92a: Waiting
+2026-10-22T21:44:33.3066509Z 122ad3f2efb1: Waiting
+2026-10-22T21:44:33.3067823Z 492911ec3615: Waiting
+2026-10-22T21:44:33.3069156Z 1ad427190931: Waiting
+2026-10-22T21:44:33.4262975Z 74510c5a3c8c: Verifying Checksum
+2026-10-22T21:44:33.4264707Z 74510c5a3c8c: Download complete
+2026-10-22T21:44:33.5685707Z 1ad427190931: Verifying Checksum
+2026-10-22T21:44:33.5690068Z 1ad427190931: Download complete
+2026-10-22T21:44:33.5723832Z 0fb036d13c64: Verifying Checksum
+2026-10-22T21:44:33.5730056Z 0fb036d13c64: Download complete
+2026-10-22T21:44:33.6388845Z cf1a5487baaf: Verifying Checksum
+2026-10-22T21:44:33.6391504Z cf1a5487baaf: Download complete
+2026-10-22T21:44:33.6998608Z 7b491b6735bd: Verifying Checksum
+2026-10-22T21:44:33.7001373Z 7b491b6735bd: Download complete
+2026-10-22T21:44:33.7787478Z 122ad3f2efb1: Verifying Checksum
+2026-10-22T21:44:33.7791742Z 122ad3f2efb1: Download complete
+2026-10-22T21:44:33.8409039Z 492911ec3615: Verifying Checksum
+2026-10-22T21:44:33.8411943Z 492911ec3615: Download complete
+2026-10-22T21:44:34.1211330Z 77c672e7e92a: Verifying Checksum
+2026-10-22T21:44:34.1212310Z 77c672e7e92a: Download complete
+2026-10-22T21:44:34.8135399Z cf1a5487baaf: Pull complete
+2026-10-22T21:44:37.6232502Z 74510c5a3c8c: Pull complete
+2026-10-22T21:44:38.2298490Z 0fb036d13c64: Pull complete
+2026-10-22T21:44:38.2401323Z 1ad427190931: Pull complete
+2026-10-22T21:44:38.2534087Z 7b491b6735bd: Pull complete
+2026-10-22T21:44:40.1171275Z 77c672e7e92a: Pull complete
+2026-10-22T21:44:40.1450819Z 122ad3f2efb1: Pull complete
+2026-10-22T21:44:40.1574055Z 492911ec3615: Pull complete
+2026-10-22T21:44:40.1611996Z Digest: sha256:0d0945c57f75b3a3b9ebe71aedaaad005fa5305054e8fca3d2e42a8c92b43b5e
+2026-10-22T21:44:40.1624486Z Status: Downloaded newer image for mariadb:10.11
+2026-10-22T21:44:40.1634067Z docker.io/library/mariadb:10.11
+2026-10-22T21:44:40.1697650Z ##[command]/usr/bin/docker create --name 2e59a35580c64a21982b57ae2183f607_mariadb1011_5454bf --label bf3cd8 --network github_network_ce7179d666384817b0526b42e9db23c5 --network-alias mariadb -p 3306:3306 --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=5s --health-timeout=5s --health-retries=20 -e "MARIADB_ROOT_PASSWORD=ci-only-root-not-a-secret" -e "MARIADB_DATABASE=jessiemessage_test_auth_browser_ci" -e "MARIADB_USER=jessiemessage_test" -e "MARIADB_PASSWORD=ci-only-not-a-secret" -e GITHUB_ACTIONS=true -e CI=true mariadb:10.11
+2026-10-22T21:44:40.2036955Z 75697119e0a2ae6270ca4cdd834cf9915fadaed8c0eaac5ff6eff51404f7b830
+2026-10-22T21:44:40.2063691Z ##[command]/usr/bin/docker start 75697119e0a2ae6270ca4cdd834cf9915fadaed8c0eaac5ff6eff51404f7b830
+2026-10-22T21:44:40.4315276Z 75697119e0a2ae6270ca4cdd834cf9915fadaed8c0eaac5ff6eff51404f7b830
+2026-10-22T21:44:40.4339726Z ##[command]/usr/bin/docker ps --all --filter id=75697119e0a2ae6270ca4cdd834cf9915fadaed8c0eaac5ff6eff51404f7b830 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-10-22T21:44:40.4500354Z 75697119e0a2ae6270ca4cdd834cf9915fadaed8c0eaac5ff6eff51404f7b830 Up Less than a second (health: starting)
+2026-10-22T21:44:40.4512692Z ##[command]/usr/bin/docker port 75697119e0a2ae6270ca4cdd834cf9915fadaed8c0eaac5ff6eff51404f7b830
+2026-10-22T21:44:40.4668867Z 3306/tcp -> 0.0.0.0:3306
+2026-10-22T21:44:40.4681276Z 3306/tcp -> [::]:3306
+2026-10-22T21:44:40.4720483Z ##[endgroup]
+2026-10-22T21:44:40.4732007Z ##[group]Waiting for all services to be ready
+2026-10-22T21:44:40.4751783Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 75697119e0a2ae6270ca4cdd834cf9915fadaed8c0eaac5ff6eff51404f7b830
+2026-10-22T21:44:40.4899746Z starting
+2026-10-22T21:44:40.4924504Z mariadb service is starting, waiting 2 seconds before checking again.
+2026-10-22T21:44:42.4933033Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 75697119e0a2ae6270ca4cdd834cf9915fadaed8c0eaac5ff6eff51404f7b830
+2026-10-22T21:44:42.5095326Z starting
+2026-10-22T21:44:42.5107029Z mariadb service is starting, waiting 4 seconds before checking again.
+2026-10-22T21:44:46.6847159Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 75697119e0a2ae6270ca4cdd834cf9915fadaed8c0eaac5ff6eff51404f7b830
+2026-10-22T21:44:46.6985349Z healthy
+2026-10-22T21:44:46.7003135Z mariadb service is healthy.
+2026-10-22T21:44:46.7004349Z ##[endgroup]
+2026-10-22T21:44:46.7439953Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-22T21:44:46.7440835Z with:
+2026-10-22T21:44:46.7441103Z   persist-credentials: false
+2026-10-22T21:44:46.7441412Z   repository: fredbuhr/jessiemessage
+2026-10-22T21:44:46.7443951Z   token: ***
+2026-10-22T21:44:46.7444201Z   ssh-strict: true
+2026-10-22T21:44:46.7444440Z   ssh-user: git
+2026-10-22T21:44:46.7444672Z   clean: true
+2026-10-22T21:44:46.7444915Z   sparse-checkout-cone-mode: true
+2026-10-22T21:44:46.7445197Z   fetch-depth: 1
+2026-10-22T21:44:46.7445426Z   fetch-tags: false
+2026-10-22T21:44:46.7445665Z   show-progress: true
+2026-10-22T21:44:46.7445902Z   lfs: false
+2026-10-22T21:44:46.7446140Z   submodules: false
+2026-10-22T21:44:46.7446381Z   set-safe-directory: true
+2026-10-22T21:44:46.7446657Z   allow-unsafe-pr-checkout: false
+2026-10-22T21:44:46.7447145Z ##[endgroup]
+2026-10-22T21:44:46.8559287Z Syncing repository: fredbuhr/jessiemessage
+2026-10-22T21:44:46.8561918Z ##[group]Getting Git version info
+2026-10-22T21:44:46.8562785Z Working directory is '/home/runner/work/jessiemessage/jessiemessage'
+2026-10-22T21:44:46.8563885Z [command]/usr/bin/git version
+2026-10-22T21:44:46.8678263Z git version 2.55.0
+2026-10-22T21:44:46.8704041Z ##[endgroup]
+2026-10-22T21:44:46.8718580Z Temporarily overriding HOME='/home/runner/work/_temp/f1cebf50-9f99-435e-8dee-7d548882c5a7' before making global git config changes
+2026-10-22T21:44:46.8721816Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-22T21:44:46.8725733Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/jessiemessage/jessiemessage
+2026-10-22T21:44:46.8790705Z Deleting the contents of '/home/runner/work/jessiemessage/jessiemessage'
+2026-10-22T21:44:46.8804904Z ##[group]Determining repository object format
+2026-10-22T21:44:46.8806231Z ##[endgroup]
+2026-10-22T21:44:46.8806945Z ##[group]Initializing the repository
+2026-10-22T21:44:46.8814039Z [command]/usr/bin/git init /home/runner/work/jessiemessage/jessiemessage
+2026-10-22T21:44:46.8951752Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-22T21:44:46.8953066Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-22T21:44:46.8954214Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-22T21:44:46.8955179Z hint: call:
+2026-10-22T21:44:46.8955703Z hint:
+2026-10-22T21:44:46.8956350Z hint: 	git config --global init.defaultBranch <name>
+2026-10-22T21:44:46.8957068Z hint:
+2026-10-22T21:44:46.8957768Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-22T21:44:46.8960352Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-22T21:44:46.8961289Z hint:
+2026-10-22T21:44:46.8961816Z hint: 	git branch -m <name>
+2026-10-22T21:44:46.8962392Z hint:
+2026-10-22T21:44:46.8963124Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-22T21:44:46.8964316Z Initialized empty Git repository in /home/runner/work/jessiemessage/jessiemessage/.git/
+2026-10-22T21:44:46.8968830Z [command]/usr/bin/git remote add origin https://github.com/fredbuhr/jessiemessage
+2026-10-22T21:44:46.9027888Z ##[endgroup]
+2026-10-22T21:44:46.9028875Z ##[group]Disabling automatic garbage collection
+2026-10-22T21:44:46.9033063Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-22T21:44:46.9077369Z ##[endgroup]
+2026-10-22T21:44:46.9078599Z ##[group]Setting up auth
+2026-10-22T21:44:46.9079278Z Removing SSH command configuration
+2026-10-22T21:44:46.9088464Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-22T21:44:46.9142516Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-22T21:44:46.9541975Z Removing HTTP extra header
+2026-10-22T21:44:46.9548844Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-22T21:44:46.9590308Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-22T21:44:46.9868161Z Removing includeIf entries pointing to credentials config files
+2026-10-22T21:44:46.9875381Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-22T21:44:46.9918336Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-22T21:44:47.0175804Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-af396a6c-23f7-46eb-b17d-5e8743b5e62e.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-22T21:44:47.0226749Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path /home/runner/work/_temp/git-credentials-af396a6c-23f7-46eb-b17d-5e8743b5e62e.config
+2026-10-22T21:44:47.0270537Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-af396a6c-23f7-46eb-b17d-5e8743b5e62e.config
+2026-10-22T21:44:47.0315114Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-af396a6c-23f7-46eb-b17d-5e8743b5e62e.config
+2026-10-22T21:44:47.0357896Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-af396a6c-23f7-46eb-b17d-5e8743b5e62e.config
+2026-10-22T21:44:47.0400088Z ##[endgroup]
+2026-10-22T21:44:47.0400617Z ##[group]Fetching the repository
+2026-10-22T21:44:47.0409256Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +a38ae28f22a55f3814cb2082bc08f07dd035d4e7:refs/remotes/pull/130/merge
+2026-10-22T21:44:48.4351795Z From https://github.com/fredbuhr/jessiemessage
+2026-10-22T21:44:48.4353366Z  * [new ref]         a38ae28f22a55f3814cb2082bc08f07dd035d4e7 -> pull/130/merge
+2026-10-22T21:44:48.4358237Z ##[endgroup]
+2026-10-22T21:44:48.4358922Z ##[group]Determining the checkout info
+2026-10-22T21:44:48.4360236Z ##[endgroup]
+2026-10-22T21:44:48.4366894Z [command]/usr/bin/git sparse-checkout disable
+2026-10-22T21:44:48.4428413Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-22T21:44:48.4469787Z ##[group]Checking out the ref
+2026-10-22T21:44:48.4475135Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/130/merge
+2026-10-22T21:44:48.5675915Z Note: switching to 'refs/remotes/pull/130/merge'.
+2026-10-22T21:44:48.5676421Z 
+2026-10-22T21:44:48.5676763Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-22T21:44:48.5677653Z changes and commit them, and you can discard any commits you make in this
+2026-10-22T21:44:48.5678542Z state without impacting any branches by switching back to a branch.
+2026-10-22T21:44:48.5679230Z 
+2026-10-22T21:44:48.5679872Z If you want to create a new branch to retain commits you create, you may
+2026-10-22T21:44:48.5680677Z do so (now or later) by using -c with the switch command. Example:
+2026-10-22T21:44:48.5681084Z 
+2026-10-22T21:44:48.5681265Z   git switch -c <new-branch-name>
+2026-10-22T21:44:48.5681544Z 
+2026-10-22T21:44:48.5681709Z Or undo this operation with:
+2026-10-22T21:44:48.5681967Z 
+2026-10-22T21:44:48.5682109Z   git switch -
+2026-10-22T21:44:48.5682406Z 
+2026-10-22T21:44:48.5682766Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-22T21:44:48.5683546Z 
+2026-10-22T21:44:48.5684136Z HEAD is now at a38ae28 Merge 3cc4aa52fe336992f2acd2f6c3e136bc67a3f418 into 38ccb3862f3d9ab4153b578dfb3abbd0dd94d857
+2026-10-22T21:44:48.5694446Z ##[endgroup]
+2026-10-22T21:44:48.5751032Z [command]/usr/bin/git log -1 --format=%H
+2026-10-22T21:44:48.5785657Z a38ae28f22a55f3814cb2082bc08f07dd035d4e7
+2026-10-22T21:44:48.5802348Z ##[group]Removing auth
+2026-10-22T21:44:48.5802874Z Removing SSH command configuration
+2026-10-22T21:44:48.5805437Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-22T21:44:48.5850214Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-22T21:44:48.6100601Z Removing HTTP extra header
+2026-10-22T21:44:48.6106344Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-22T21:44:48.6149871Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-22T21:44:48.6410410Z Removing includeIf entries pointing to credentials config files
+2026-10-22T21:44:48.6415265Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-22T21:44:48.6451702Z includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path
+2026-10-22T21:44:48.6452712Z includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path
+2026-10-22T21:44:48.6453407Z includeif.gitdir:/github/workspace/.git.path
+2026-10-22T21:44:48.6454212Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-22T21:44:48.6462091Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path
+2026-10-22T21:44:48.6496519Z /home/runner/work/_temp/git-credentials-af396a6c-23f7-46eb-b17d-5e8743b5e62e.config
+2026-10-22T21:44:48.6521944Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-af396a6c\-23f7\-46eb\-b17d\-5e8743b5e62e\.config
+2026-10-22T21:44:48.6561486Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path
+2026-10-22T21:44:48.6600817Z /home/runner/work/_temp/git-credentials-af396a6c-23f7-46eb-b17d-5e8743b5e62e.config
+2026-10-22T21:44:48.6611385Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-af396a6c\-23f7\-46eb\-b17d\-5e8743b5e62e\.config
+2026-10-22T21:44:48.6660631Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-22T21:44:48.6693279Z /github/runner_temp/git-credentials-af396a6c-23f7-46eb-b17d-5e8743b5e62e.config
+2026-10-22T21:44:48.6703760Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-af396a6c\-23f7\-46eb\-b17d\-5e8743b5e62e\.config
+2026-10-22T21:44:48.6751324Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-22T21:44:48.6785337Z /github/runner_temp/git-credentials-af396a6c-23f7-46eb-b17d-5e8743b5e62e.config
+2026-10-22T21:44:48.6796383Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-af396a6c\-23f7\-46eb\-b17d\-5e8743b5e62e\.config
+2026-10-22T21:44:48.6844188Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-22T21:44:48.7095468Z Removing credentials config '/home/runner/work/_temp/git-credentials-af396a6c-23f7-46eb-b17d-5e8743b5e62e.config'
+2026-10-22T21:44:48.7106447Z ##[endgroup]
+2026-10-22T21:44:48.7372325Z ##[group]Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+2026-10-22T21:44:48.7372744Z with:
+2026-10-22T21:44:48.7372949Z   node-version: 24.22.1
+2026-10-22T21:44:48.7373187Z   package-manager-cache: false
+2026-10-22T21:44:48.7373441Z   check-latest: false
+2026-10-22T21:44:48.7375769Z   token: ***
+2026-10-22T21:44:48.7375976Z ##[endgroup]
+2026-10-22T21:44:48.8718920Z Attempting to download 24.22.1...
+2026-10-22T21:44:49.6619915Z Acquiring 24.22.1 - x64 from https://github.com/actions/node-versions/releases/download/24.22.1-39619001896/node-24.22.1-linux-x64.tar.gz
+2026-10-22T21:44:50.2512973Z Extracting ...
+2026-10-22T21:44:50.2645609Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/14b7cbcc-a3b1-4cac-a7ea-66b661770400 -f /home/runner/work/_temp/59938524-1dfd-4a8b-9673-9029faaaa72e
+2026-10-22T21:44:51.5758879Z Adding to the cache ...
+2026-10-22T21:44:53.5878448Z ##[group]Environment details
+2026-10-22T21:44:53.8217533Z node: v24.22.1
+2026-10-22T21:44:53.8217904Z npm: 11.19.1
+2026-10-22T21:44:53.8218152Z yarn: 1.22.22
+2026-10-22T21:44:53.8218711Z ##[endgroup]
+2026-10-22T21:44:53.8398756Z ##[group]Run npm ci --ignore-scripts
+2026-10-22T21:44:53.8399175Z [36;1mnpm ci --ignore-scripts[0m
+2026-10-22T21:44:53.8610860Z shell: /usr/bin/bash -e {0}
+2026-10-22T21:44:53.8611285Z ##[endgroup]
+2026-10-22T21:44:55.2812102Z 
+2026-10-22T21:44:55.2820960Z added 35 packages, and audited 36 packages in 1s
+2026-10-22T21:44:55.2821319Z 
+2026-10-22T21:44:55.2821526Z 10 packages are looking for funding
+2026-10-22T21:44:55.2821850Z   run `npm fund` for details
+2026-10-22T21:44:55.2826199Z 
+2026-10-22T21:44:55.2826657Z found 0 vulnerabilities
+2026-10-22T21:44:55.3308314Z ##[group]Run docker exec -i -e MYSQL_PWD=ci-only-root-not-a-secret 75697119e0a2ae6270ca4cdd834cf9915fadaed8c0eaac5ff6eff51404f7b830 mariadb --user=root <<'SQL'
+2026-10-22T21:44:55.3309914Z [36;1mdocker exec -i -e MYSQL_PWD=ci-only-root-not-a-secret 75697119e0a2ae6270ca4cdd834cf9915fadaed8c0eaac5ff6eff51404f7b830 mariadb --user=root <<'SQL'[0m
+2026-10-22T21:44:55.3310855Z [36;1mCREATE USER 'jessiemessage_runtime_test'@'%' IDENTIFIED BY 'ci-runtime-only-not-a-secret';[0m
+2026-10-22T21:44:55.3311609Z [36;1mGRANT SELECT, INSERT, UPDATE, DELETE ON `jessiemessage\_test\_auth\_browser\_ci`.* TO 'jessiemessage_runtime_test'@'%';[0m
+2026-10-22T21:44:55.3312157Z [36;1mSQL[0m
+2026-10-22T21:44:55.3378900Z shell: /usr/bin/bash -e {0}
+2026-10-22T21:44:55.3379194Z ##[endgroup]
+2026-10-22T21:44:55.4090363Z ##[group]Run npm run test:auth-browser
+2026-10-22T21:44:55.4090773Z [36;1mnpm run test:auth-browser[0m
+2026-10-22T21:44:55.4155558Z shell: /usr/bin/bash -e {0}
+2026-10-22T21:44:55.4155867Z env:
+2026-10-22T21:44:55.4156100Z   JESSIEMESSAGE_DB_TEST: 1
+2026-10-22T21:44:55.4156382Z   JESSIEMESSAGE_DB_HOST: 127.0.0.1
+2026-10-22T21:44:55.4156687Z   JESSIEMESSAGE_DB_PORT: 3306
+2026-10-22T21:44:55.4157046Z   JESSIEMESSAGE_DB_NAME: jessiemessage_test_auth_browser_ci
+2026-10-22T21:44:55.4157450Z   JESSIEMESSAGE_DB_USER: jessiemessage_test
+2026-10-22T21:44:55.4157832Z   JESSIEMESSAGE_DB_PASSWORD: ci-only-not-a-secret
+2026-10-22T21:44:55.4158292Z   JESSIEMESSAGE_MIGRATION_DATABASE: jessiemessage_test_auth_browser_ci
+2026-10-22T21:44:55.4158731Z   JESSIEMESSAGE_DB_ALLOW_INSECURE_LOCAL: 1
+2026-10-22T21:44:55.4159116Z   JESSIEMESSAGE_RUNTIME_DB_USER: jessiemessage_runtime_test
+2026-10-22T21:44:55.4159878Z   JESSIEMESSAGE_RUNTIME_DB_PASSWORD: ci-runtime-only-not-a-secret
+2026-10-22T21:44:55.4160477Z   JESSIEMESSAGE_APPLICATION_DATABASE: jessiemessage_test_auth_browser_ci
+2026-10-22T21:44:55.4160902Z ##[endgroup]
+2026-10-22T21:44:55.5226105Z 
+2026-10-22T21:44:55.5226891Z > jessiemessage@1.8.3 test:auth-browser
+2026-10-22T21:44:55.5228273Z > node --test --test-concurrency=1 tests/rehearsal/authentication.rehearsal.mjs tests/rehearsal/messaging.rehearsal.mjs tests/rehearsal/video.rehearsal.mjs
+2026-10-22T21:44:55.5229118Z 
+2026-10-22T21:45:13.4296825Z ✖ real Chrome + MariaDB: HTTPS administrator MFA, protected cookie, revocation, expiry and recovery replay (17716.914718ms)
+2026-10-22T21:45:13.4299244Z ℹ Anonymous API / protected page and HTTPS neutral opening verified.
+2026-10-22T21:45:13.4301233Z ℹ Wrong MFA rejected; authenticator app-switch fields, real TOTP login and browser cookie protection verified.
+2026-10-22T21:45:13.4302933Z ℹ CSRF / Origin refusals preserve the session; /api/entry, /app and /admin recognize the real cookie.
+2026-10-22T21:45:13.4305032Z ℹ DOM logout removes the cookie and revokes it in SQL; anonymous opening conceals administration and direct login remains available.
+2026-10-22T21:45:27.4798798Z ✖ real Chrome + MariaDB: independent client sessions, live text and JPEG, memory draft and exact notification after new login (13913.340704ms)
+2026-10-22T21:45:42.0676094Z ✖ real HTTPS SQL36 runtime: both roles upload H264, decode/seek, replay idempotently, browse gallery and revoke content (14452.150523ms)
+2026-10-22T21:45:42.0891429Z ℹ tests 3
+2026-10-22T21:45:42.0894033Z ℹ suites 0
+2026-10-22T21:45:42.0894595Z ℹ pass 0
+2026-10-22T21:45:42.0894954Z ℹ fail 3
+2026-10-22T21:45:42.0895304Z ℹ cancelled 0
+2026-10-22T21:45:42.0895579Z ℹ skipped 0
+2026-10-22T21:45:42.0895853Z ℹ todo 0
+2026-10-22T21:45:42.0896152Z ℹ duration_ms 46526.015675
+2026-10-22T21:45:42.0920274Z 
+2026-10-22T21:45:42.0921035Z ✖ failing tests:
+2026-10-22T21:45:42.0921375Z 
+2026-10-22T21:45:42.0921929Z test at tests/rehearsal/authentication.rehearsal.mjs:90:1
+2026-10-22T21:45:42.0923657Z ✖ real Chrome + MariaDB: HTTPS administrator MFA, protected cookie, revocation, expiry and recovery replay (17716.914718ms)
+2026-10-22T21:45:42.0925038Z   AssertionError [ERR_ASSERTION]: a rejected factor must not create a session cookie
+2026-10-22T21:45:42.0925764Z   
+2026-10-22T21:45:42.0925994Z   true !== false
+2026-10-22T21:45:42.0926210Z   
+2026-10-22T21:45:42.0926804Z       at rejectedLogin (file:///home/runner/work/jessiemessage/jessiemessage/tests/rehearsal/authentication.rehearsal.mjs:53:10)
+2026-10-22T21:45:42.0927622Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-22T21:45:42.0928561Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/rehearsal/authentication.rehearsal.mjs:165:65)
+2026-10-22T21:45:42.0929321Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:45:42.0930548Z       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+2026-10-22T21:45:42.0931966Z     generatedMessage: false,
+2026-10-22T21:45:42.0932452Z     code: 'ERR_ASSERTION',
+2026-10-22T21:45:42.0932901Z     actual: true,
+2026-10-22T21:45:42.0933321Z     expected: false,
+2026-10-22T21:45:42.0933922Z     operator: 'strictEqual',
+2026-10-22T21:45:42.0934405Z     diff: 'simple'
+2026-10-22T21:45:42.0934800Z   }
+2026-10-22T21:45:42.0934980Z 
+2026-10-22T21:45:42.0935384Z test at tests/rehearsal/messaging.rehearsal.mjs:189:1
+2026-10-22T21:45:42.0936507Z ✖ real Chrome + MariaDB: independent client sessions, live text and JPEG, memory draft and exact notification after new login (13913.340704ms)
+2026-10-22T21:45:42.0937367Z   Error: Timed out: real active client can open their conversation
+2026-10-22T21:45:42.0938063Z       at waitUntil (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/webdriver.mjs:16:9)
+2026-10-22T21:45:42.0938998Z       at async loginClient (file:///home/runner/work/jessiemessage/jessiemessage/tests/rehearsal/messaging.rehearsal.mjs:30:5)
+2026-10-22T21:45:42.0940431Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/rehearsal/messaging.rehearsal.mjs:197:5)
+2026-10-22T21:45:42.0941198Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:45:42.0941770Z       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+2026-10-22T21:45:42.0942135Z 
+2026-10-22T21:45:42.0942342Z test at tests/rehearsal/video.rehearsal.mjs:165:1
+2026-10-22T21:45:42.0943336Z ✖ real HTTPS SQL36 runtime: both roles upload H264, decode/seek, replay idempotently, browse gallery and revoke content (14452.150523ms)
+2026-10-22T21:45:42.0944361Z   Error: Timed out: active client conversation link
+2026-10-22T21:45:42.0944993Z       at waitUntil (file:///home/runner/work/jessiemessage/jessiemessage/tests/browser/webdriver.mjs:16:9)
+2026-10-22T21:45:42.0946017Z       at async login (file:///home/runner/work/jessiemessage/jessiemessage/tests/rehearsal/video.rehearsal.mjs:36:5)
+2026-10-22T21:45:42.0946974Z       at async TestContext.<anonymous> (file:///home/runner/work/jessiemessage/jessiemessage/tests/rehearsal/video.rehearsal.mjs:176:5)
+2026-10-22T21:45:42.0947685Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-22T21:45:42.0948212Z       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+2026-10-22T21:45:42.1056714Z ##[error]Process completed with exit code 1.
+2026-10-22T21:45:42.1184790Z Post job cleanup.
+2026-10-22T21:45:42.2082897Z [command]/usr/bin/git version
+2026-10-22T21:45:42.2134270Z git version 2.55.0
+2026-10-22T21:45:42.2173899Z Temporarily overriding HOME='/home/runner/work/_temp/d053f85d-505e-4e4b-8123-aaf06aa81613' before making global git config changes
+2026-10-22T21:45:42.2175426Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-22T21:45:42.2180016Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/jessiemessage/jessiemessage
+2026-10-22T21:45:42.2222608Z Removing SSH command configuration
+2026-10-22T21:45:42.2230929Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-22T21:45:42.2311740Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-22T21:45:42.2567275Z Removing HTTP extra header
+2026-10-22T21:45:42.2575551Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-22T21:45:42.2630663Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-22T21:45:42.2898188Z Removing includeIf entries pointing to credentials config files
+2026-10-22T21:45:42.2906362Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-22T21:45:42.2967700Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-22T21:45:42.3388935Z Print service container logs: 2e59a35580c64a21982b57ae2183f607_mariadb1011_5454bf
+2026-10-22T21:45:42.3393873Z ##[command]/usr/bin/docker logs --details 75697119e0a2ae6270ca4cdd834cf9915fadaed8c0eaac5ff6eff51404f7b830
+2026-10-22T21:45:42.3527575Z  2026-10-22 21:44:40+00:00 [Note] [Entrypoint]: Entrypoint script for MariaDB Server 1:10.11.19+maria~ubu2204 started.
+2026-10-22T21:45:42.3533653Z  2026-10-22 21:44:40+00:00 [Warn] [Entrypoint]: /sys/fs/cgroup///memory.pressure not writable, functionality unavailable to MariaDB
+2026-10-22T21:45:42.3535611Z  2026-10-22 21:44:40 0 [Warning] mariadbd: io_uring_queue_init() failed with EPERM: sysctl kernel.io_uring_disabled has the value 2, or 1 and the user of the process is not a member of sysctl kernel.io_uring_group. (see man 2 io_uring_setup).
+2026-10-22T21:45:42.3537233Z  create_uring failed: falling back to libaio
+2026-10-22T21:45:42.3538630Z  2026-10-22 21:44:41 0 [Note] Starting MariaDB 10.11.19-MariaDB-ubu2204 source revision 93e051860a9c7e87ee8cee6ed38b640d491f7170 server_uid 5iarRBuYGks5j8S75+QGS9X5z+k= as process 94
+2026-10-22T21:45:42.3540371Z  2026-10-22 21:44:41 0 [Note] InnoDB: Compressed tables use zlib 1.2.11
+2026-10-22T21:45:42.3541129Z  2026-10-22 21:44:41 0 [Note] InnoDB: Number of transaction pools: 1
+2026-10-22T21:45:42.3541879Z  2026-10-22 21:44:41 0 [Note] InnoDB: Using crc32 + pclmulqdq instructions
+2026-10-22T21:45:42.3543529Z  2026-10-22 21:44:41 0 [Warning] mariadbd: io_uring_queue_init() failed with EPERM: sysctl kernel.io_uring_disabled has the value 2, or 1 and the user of the process is not a member of sysctl kernel.io_uring_group. (see man 2 io_uring_setup).
+2026-10-22T21:45:42.3545455Z  create_uring failed: falling back to libaio
+2026-10-22T21:45:42.3545951Z  2026-10-22 21:44:41 0 [Note] InnoDB: Using Linux native AIO
+2026-10-22T21:45:42.3546705Z  2026-10-22 21:44:41 0 [Note] InnoDB: innodb_buffer_pool_size_max=8388608m, innodb_buffer_pool_size=128m
+2026-10-22T21:45:42.3547685Z  2026-10-22 21:44:41 0 [Note] InnoDB: Completed initialization of buffer pool
+2026-10-22T21:45:42.3548471Z  2026-10-22 21:44:41 0 [Note] InnoDB: File system buffers for log disabled (block size=4096 bytes)
+2026-10-22T21:45:42.3549216Z  2026-10-22 21:44:41 0 [Note] InnoDB: End of log at LSN=44404
+2026-10-22T21:45:42.3550197Z  2026-10-22 21:44:41 0 [Note] InnoDB: 128 rollback segments are active.
+2026-10-22T21:45:42.3551115Z  2026-10-22 21:44:41 0 [Note] InnoDB: Setting file './ibtmp1' size to 12.000MiB. Physically writing the file full; Please wait ...
+2026-10-22T21:45:42.3552163Z  2026-10-22 21:44:41 0 [Note] InnoDB: File './ibtmp1' size is now 12.000MiB.
+2026-10-22T21:45:42.3552965Z  2026-10-22 21:44:41 0 [Note] InnoDB: log sequence number 44404; transaction id 14
+2026-10-22T21:45:42.3554213Z  2026-10-22 21:44:41 0 [Note] Plugin 'FEEDBACK' is disabled.
+2026-10-22T21:45:42.3554878Z  2026-10-22 21:44:41 0 [Note] mariadbd: ready for connections.
+2026-10-22T21:45:42.3555551Z  Version: '10.11.19-MariaDB-ubu2204'  socket: '/run/mysqld/mysqld.sock'  port: 0  mariadb.org binary distribution
+2026-10-22T21:45:42.3556175Z  2026-10-22 21:44:43 0 [Note] mariadbd (initiated by: unknown): Normal shutdown
+2026-10-22T21:45:42.3556617Z  2026-10-22 21:44:43 0 [Note] InnoDB: FTS optimize thread exiting.
+2026-10-22T21:45:42.3557107Z  2026-10-22 21:44:40+00:00 [Note] [Entrypoint]: Switching to dedicated user 'mysql'
+2026-10-22T21:45:42.3557752Z  2026-10-22 21:44:40+00:00 [Note] [Entrypoint]: Entrypoint script for MariaDB Server 1:10.11.19+maria~ubu2204 started.
+2026-10-22T21:45:42.3558358Z  2026-10-22 21:44:40+00:00 [Note] [Entrypoint]: Initializing database files
+2026-10-22T21:45:42.3558789Z  2026-10-22 21:44:41+00:00 [Note] [Entrypoint]: Database files initialized
+2026-10-22T21:45:42.3559218Z  2026-10-22 21:44:41+00:00 [Note] [Entrypoint]: Starting temporary server
+2026-10-22T21:45:42.3560121Z  2026-10-22 21:44:41+00:00 [Note] [Entrypoint]: Waiting for server startup
+2026-10-22T21:45:42.3561496Z  2026-10-22 21:44:42+00:00 [Note] [Entrypoint]: Temporary server started.
+2026-10-22T21:45:42.3562410Z  2026-10-22 21:44:43+00:00 [Note] [Entrypoint]: Creating database jessiemessage_test_auth_browser_ci
+2026-10-22T21:45:42.3563241Z  2026-10-22 21:44:43 0 [Note] InnoDB: Starting shutdown...
+2026-10-22T21:45:42.3563736Z  2026-10-22 21:44:43 0 [Note] InnoDB: Dumping buffer pool(s) to /var/lib/mysql/ib_buffer_pool
+2026-10-22T21:45:42.3564284Z  2026-10-22 21:44:43 0 [Note] InnoDB: Buffer pool(s) dump completed at 261022 21:44:43
+2026-10-22T21:45:42.3564805Z  2026-10-22 21:44:43 0 [Note] InnoDB: Removed temporary tablespace data file: "./ibtmp1"
+2026-10-22T21:45:42.3565349Z  2026-10-22 21:44:43 0 [Note] Shutdown completed; log sequence number 44776; transaction id 15
+2026-10-22T21:45:42.3565815Z  2026-10-22 21:44:43 0 [Note] mariadbd: Shutdown complete
+2026-10-22T21:45:42.3566611Z  2026-10-22 21:44:43 0 [Note] Starting MariaDB 10.11.19-MariaDB-ubu2204 source revision 93e051860a9c7e87ee8cee6ed38b640d491f7170 server_uid 5iarRBuYGks5j8S75+QGS9X5z+k= as process 1
+2026-10-22T21:45:42.3567435Z  2026-10-22 21:44:43 0 [Note] InnoDB: Compressed tables use zlib 1.2.11
+2026-10-22T21:45:42.3567859Z  2026-10-22 21:44:43 0 [Note] InnoDB: Number of transaction pools: 1
+2026-10-22T21:45:42.3568278Z  2026-10-22 21:44:43 0 [Note] InnoDB: Using crc32 + pclmulqdq instructions
+2026-10-22T21:45:42.3569245Z  2026-10-22 21:44:43 0 [Warning] mariadbd: io_uring_queue_init() failed with EPERM: sysctl kernel.io_uring_disabled has the value 2, or 1 and the user of the process is not a member of sysctl kernel.io_uring_group. (see man 2 io_uring_setup).
+2026-10-22T21:45:42.3570758Z  create_uring failed: falling back to libaio
+2026-10-22T21:45:42.3571117Z  2026-10-22 21:44:43 0 [Note] InnoDB: Using Linux native AIO
+2026-10-22T21:45:42.3571610Z  2026-10-22 21:44:43 0 [Note] InnoDB: innodb_buffer_pool_size_max=8388608m, innodb_buffer_pool_size=128m
+2026-10-22T21:45:42.3572183Z  2026-10-22 21:44:43 0 [Note] InnoDB: Completed initialization of buffer pool
+2026-10-22T21:45:42.3572720Z  2026-10-22 21:44:43 0 [Note] InnoDB: File system buffers for log disabled (block size=4096 bytes)
+2026-10-22T21:45:42.3573217Z  2026-10-22 21:44:43 0 [Note] InnoDB: End of log at LSN=44776
+2026-10-22T21:45:42.3573615Z  2026-10-22 21:44:43 0 [Note] InnoDB: 128 rollback segments are active.
+2026-10-22T21:45:42.3574229Z  2026-10-22 21:44:43 0 [Note] InnoDB: Setting file './ibtmp1' size to 12.000MiB. Physically writing the file full; Please wait ...
+2026-10-22T21:45:42.3574840Z  2026-10-22 21:44:43 0 [Note] InnoDB: File './ibtmp1' size is now 12.000MiB.
+2026-10-22T21:45:42.3575307Z  2026-10-22 21:44:43 0 [Note] InnoDB: log sequence number 44776; transaction id 15
+2026-10-22T21:45:42.3575825Z  2026-10-22 21:44:43 0 [Note] InnoDB: Loading buffer pool(s) from /var/lib/mysql/ib_buffer_pool
+2026-10-22T21:45:42.3576298Z  2026-10-22 21:44:43 0 [Note] Plugin 'FEEDBACK' is disabled.
+2026-10-22T21:45:42.3576883Z  2026-10-22 21:44:43 0 [Warning] You need to use --log-bin to make --expire-logs-days or --binlog-expire-logs-seconds work.
+2026-10-22T21:45:42.3577526Z  2026-10-22 21:44:43 0 [Note] InnoDB: Buffer pool(s) load completed at 261022 21:44:43
+2026-10-22T21:45:42.3578022Z  2026-10-22 21:44:43 0 [Note] Server socket created on IP: '0.0.0.0', port: '3306'.
+2026-10-22T21:45:42.3578485Z  2026-10-22 21:44:43 0 [Note] Server socket created on IP: '::', port: '3306'.
+2026-10-22T21:45:42.3578911Z  2026-10-22 21:44:43 0 [Note] mariadbd: ready for connections.
+2026-10-22T21:45:42.3579785Z  Version: '10.11.19-MariaDB-ubu2204'  socket: '/run/mysqld/mysqld.sock'  port: 3306  mariadb.org binary distribution
+2026-10-22T21:45:42.3580430Z  2026-10-22 21:44:43+00:00 [Note] [Entrypoint]: Creating user jessiemessage_test
+2026-10-22T21:45:42.3581065Z  2026-10-22 21:44:43+00:00 [Note] [Entrypoint]: Giving user jessiemessage_test access to schema jessiemessage_test_auth_browser_ci
+2026-10-22T21:45:42.3581876Z  2026-10-22 21:44:43+00:00 [Note] [Entrypoint]: Securing system users (equivalent to running mysql_secure_installation)
+2026-10-22T21:45:42.3582377Z  
+2026-10-22T21:45:42.3582828Z  2026-10-22 21:44:43+00:00 [Note] [Entrypoint]: Stopping temporary server
+2026-10-22T21:45:42.3583273Z  2026-10-22 21:44:43+00:00 [Note] [Entrypoint]: Temporary server stopped
+2026-10-22T21:45:42.3583611Z  
+2026-10-22T21:45:42.3583957Z  2026-10-22 21:44:43+00:00 [Note] [Entrypoint]: MariaDB init process done. Ready for start up.
+2026-10-22T21:45:42.3584377Z  
+2026-10-22T21:45:42.3591880Z Stop and remove container: 2e59a35580c64a21982b57ae2183f607_mariadb1011_5454bf
+2026-10-22T21:45:42.3597160Z ##[command]/usr/bin/docker rm --force 75697119e0a2ae6270ca4cdd834cf9915fadaed8c0eaac5ff6eff51404f7b830
+2026-10-22T21:45:42.5035115Z 75697119e0a2ae6270ca4cdd834cf9915fadaed8c0eaac5ff6eff51404f7b830
+2026-10-22T21:45:42.5063490Z Remove container network: github_network_ce7179d666384817b0526b42e9db23c5
+2026-10-22T21:45:42.5068581Z ##[command]/usr/bin/docker network rm github_network_ce7179d666384817b0526b42e9db23c5
+2026-10-22T21:45:42.6056357Z github_network_ce7179d666384817b0526b42e9db23c5
+2026-10-22T21:45:42.6161074Z Cleaning up orphan processes

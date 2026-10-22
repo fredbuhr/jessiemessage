@@ -1,0 +1,144 @@
+{
+  "status": "obsolete_integration_expectations_corrected_syntax_checked_native_rerun_pending",
+  "createdAt": "2026-10-22T21:51:12.457997+00:00",
+  "branch": "fix/messaging-183",
+  "baseHead": "3cc4aa52fe336992f2acd2f6c3e136bc67a3f418",
+  "scope": [
+    "tests/chat-flow.integration.test.mjs",
+    "tests/crm-flow.integration.test.mjs",
+    "tests/device-transition-runtime.integration.test.mjs",
+    "tests/media-flow.integration.test.mjs",
+    "tests/readiness-flow.integration.test.mjs",
+    "tests/witness-runtime.integration.test.mjs"
+  ],
+  "files": [
+    {
+      "path": "tests/chat-flow.integration.test.mjs",
+      "beforeSha256": "f4744da5bafef49230be6d4bca74fd03db519d95bde7efd25fa35e6224182f59",
+      "afterSha256": "f22d19fa1c9ee2026a1b4de480f26b4538e975b25cbfec56a9b99108a49ad427",
+      "bytes": 31308
+    },
+    {
+      "path": "tests/crm-flow.integration.test.mjs",
+      "beforeSha256": "7dfe8ebe6821601b07934ceea1167898c4a9dd5e55a1d3fcf7b77e15fc9507b5",
+      "afterSha256": "749f58f6c5f1f207c96b12b16f6459023c355c9e9669a96c103e5095cfadf5e4",
+      "bytes": 34809
+    },
+    {
+      "path": "tests/device-transition-runtime.integration.test.mjs",
+      "beforeSha256": "42d28b0e7fa85ae643c86e3aea36766853ca7e9c23904ce834e443be01739101",
+      "afterSha256": "1415f1fb50974f6ad67444b47c97a3d45f0376a192382c6995ed2edf822900e3",
+      "bytes": 32711
+    },
+    {
+      "path": "tests/media-flow.integration.test.mjs",
+      "beforeSha256": "abc6a83b9466daf43250b66809a1ebe900176ecc02ff97e34eb0ac641fa7615d",
+      "afterSha256": "0b36fc84464c51a0d18f59e87e066ea7d6990662a53d1e8633c43f824350c5d7",
+      "bytes": 49180
+    },
+    {
+      "path": "tests/readiness-flow.integration.test.mjs",
+      "beforeSha256": "bb798c420434983c3b76d08b61dae1a92a594b907a69eccc78aecff63828eab1",
+      "afterSha256": "8bd5b33af4df282fd513209b16a1c5c05138c25d342b8c5657d8edf7b09298cf",
+      "bytes": 19925
+    },
+    {
+      "path": "tests/witness-runtime.integration.test.mjs",
+      "beforeSha256": "6270b139b554f296f6c58a43d88873aa5c706114989d0d75451e2e36aa744d0a",
+      "afterSha256": "4eeb375e95e1937d7e5e09d8fdd97ece33e745c35312b360a090a9c1c36bf7ba",
+      "bytes": 53179
+    }
+  ],
+  "initialEvidence": {
+    "path": "/workspace/scratch/bb431be72395/ux183/logs/pr130-initial-database1011.log",
+    "sha256": "f9665fc4b025ff5957cab468a9c7676ea649ab40ea14f8faa9e438ecef19607d",
+    "nativeDatabase": "MariaDB10.11",
+    "tests": 576,
+    "pass": 563,
+    "failIncludingParents": 13,
+    "failedLeafCases": 8,
+    "notOkRecords": [
+      "not ok 10 - session expiry is enforced at its exact boundary without affecting another live session",
+      "not ok 12 - administrator revocation immediately removes client chat authority and logout removes administrator authority",
+      "not ok 13 - real HTTP private chat, ciphertext, receipts, deletion and live authorization (synthetic disposable database only)",
+      "not ok 14 - administrator logout immediately removes all private CRM reads writes and assets",
+      "not ok 16 - real HTTP private CRM, encrypted notes, scoped labels and current authorization (synthetic disposable database only)",
+      "not ok 1 - both source roles and both authorities reach the same current SQL sessions without changing cookies or account gates",
+      "not ok 20 - the real dual-origin runtime shares schema thirty, source sessions, encrypted notifications and invitation policy (synthetic disposable database only)",
+      "not ok 14 - revocation removes all client media authority and administrator logout closes private image access",
+      "not ok 27 - real HTTP private media uses normalized encrypted files and current delivery authorization (synthetic disposable fixtures only)",
+      "not ok 8 - administrator revocation during a pending SMTP check prevents a stale proof and still closes the transport",
+      "not ok 35 - administrator readiness with real SQL MFA, private HTTP and fake verification-only SMTP (synthetic disposable database only)",
+      "not ok 46 - witness maintenance drains and resumes the actual messaging runtime, SQL and media directly without enabling closures (disposable MariaDB only)",
+      "not ok 47 - witness maintenance drains and resumes the actual messaging runtime, SQL and media through the real parent gateway without enabling closures (disposable MariaDB only)"
+    ]
+  },
+  "changes": [
+    {
+      "files": [
+        "tests/chat-flow.integration.test.mjs",
+        "tests/crm-flow.integration.test.mjs",
+        "tests/media-flow.integration.test.mjs",
+        "tests/readiness-flow.integration.test.mjs"
+      ],
+      "assertions": 5,
+      "before": "401 required an expiring Set-Cookie header",
+      "after": "401 requires Set-Cookie absent (null), matching B01. Existing status/body, permission, revocation, private data, send prohibition, unaffected session and transport-close assertions retained."
+    },
+    {
+      "file": "tests/device-transition-runtime.integration.test.mjs",
+      "line": 116,
+      "before": "Authenticated admin entry href /admin/messages",
+      "after": "Authenticated admin entry href /admin on both origins. Connected state and actual SQL role/session identities preserved; private messaging route and device bridge destinations unchanged."
+    },
+    {
+      "file": "tests/witness-runtime.integration.test.mjs",
+      "line": 220,
+      "before": "Anonymous primary entry client href /connect-device/client",
+      "after": "Anonymous primary entry client href /access, with available/signed_out/administrator:null exact. Both direct and parent-gateway cases use this same assertion. Successful runtime/maintenance/restart/authorization checks unchanged; root HTML remains captured dynamically."
+    }
+  ],
+  "sourceContractsRead": [
+    "server/chat/http.mjs (refusal responses preserve cookies)",
+    "server/crm/http.mjs (refusal responses preserve cookies)",
+    "server/media/http.mjs (refusal responses preserve cookies)",
+    "server/readiness/http.mjs (refusal responses preserve cookies)",
+    "server/entry/http.mjs (administratorChoice /admin, primary signedOut /access, legacy signedOut /connect-device/client)",
+    "server/index.mjs (primary/legacy entry wiring)"
+  ],
+  "preserved": [
+    "All pre-existing authorization/refusal assertions (401/403/404), CSRF/origin checks, SQL revocation, send prohibition, private-note non-disclosure and transport closure remain.",
+    "Successful login/session/transition Set-Cookie assertions remain; B01 only changes refused-request cookie mutation.",
+    "Private /admin/messages routes and admin bridge destination remain unchanged.",
+    "Legacy signed-out /connect-device/client contract remains unchanged; witness fixture uses primary Host jessiemessage.com.",
+    "No application, operator, migration, runtime, dependency, workflow or version file changed by this repair."
+  ],
+  "verification": {
+    "syntaxCommands": [
+      "node --check tests/chat-flow.integration.test.mjs",
+      "node --check tests/crm-flow.integration.test.mjs",
+      "node --check tests/device-transition-runtime.integration.test.mjs",
+      "node --check tests/media-flow.integration.test.mjs",
+      "node --check tests/readiness-flow.integration.test.mjs",
+      "node --check tests/witness-runtime.integration.test.mjs"
+    ],
+    "syntaxResult": "All six Node syntax checks completed without diagnostics; tool invocation final exit0. No test execution or module import.",
+    "diffCommand": "git diff --check -- tests/chat-flow.integration.test.mjs tests/crm-flow.integration.test.mjs tests/device-transition-runtime.integration.test.mjs tests/media-flow.integration.test.mjs tests/readiness-flow.integration.test.mjs tests/witness-runtime.integration.test.mjs",
+    "diffResult": "passed, exit0",
+    "diffEvidence": {
+      "path": "/workspace/scratch/bb431be72395/ux183/ci-integration-contracts.diff",
+      "sha256": "1d74e53a5ccd24e1fc0afdf01a273c22e4ca13dd4af52cd235d1b7292eb61c39"
+    }
+  },
+  "peerReview": {
+    "reviewer": "writer183 child",
+    "method": "Read-only failure and source review of device-transition/witness routes and later assertions, no edit or execution.",
+    "result": "Both route expectations are intentional183 contracts. No additional masked stale expectation identified; preserve successful cookies, messaging/bridge paths and legacy route."
+  },
+  "limits": [
+    "Native database suites were not run locally or declared green; corrected commit still requires fresh native CI.",
+    "No SQL/database connection, SMTP/Push send, witness/backup/host/PC operation executed.",
+    "Only six owned integration tests edited; root owns the other concurrent rehearsal/browser repairs.",
+    "Operator183 artifacts remain frozen, with future qualified pins pending. No Git mutation/commit/push performed."
+  ]
+}

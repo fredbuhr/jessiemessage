@@ -294,7 +294,7 @@ test("administrator readiness with real SQL MFA, private HTTP and fake verificat
       const response = await pending;
       assert.equal(response.status, 401);
       assert.deepEqual(response.body, { error: "authentication_required" });
-      assert.match(response.headers.get("set-cookie"), /^__Host-jessie_session=; /);
+      assert.equal(response.headers.get("set-cookie"), null);
       assert.deepEqual(transports.at(-1), { verifications: 1, closes: 1 });
       assert.equal((await summary()).status, 401);
       assert.equal((await verify()).status, 401);

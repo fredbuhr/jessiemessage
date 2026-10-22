@@ -34,7 +34,7 @@
     },
     {
       "path": "public/admin-login.html",
-      "sha256": "fcee04696d90b125bd229115d34f71a60759379da3b19fcf53c54f222ca58135",
+      "sha256": "0d2c75270148d8ea4364ea21ecbffc84a364ea6eb6599db05b99614bf26f8d32",
       "lines": 124
     },
     {
@@ -398,19 +398,34 @@
       "lines": 253
     },
     {
+      "path": "tests/browser/account-closures.browser.mjs",
+      "sha256": "375a1e20d5090c19ed1f9864b156da4bc0db64941a441db586da137f88ee3aa0",
+      "lines": 146
+    },
+    {
       "path": "tests/browser/admin-navigation.browser.mjs",
       "sha256": "766e3a1502b47f8ffbb4b352474b24fb0cbd348643f18d542d7280cbf55ec361",
       "lines": 87
     },
     {
+      "path": "tests/browser/announcements.browser.mjs",
+      "sha256": "7cc3934b08d37d555d5663a5a9356b086c401fcc2ef5188fca509e06b77b1731",
+      "lines": 223
+    },
+    {
+      "path": "tests/browser/backup-settings.browser.mjs",
+      "sha256": "7fecef9cd28bbfa88256b6b04bfac9af7f77b008ef033f558e19ea6ad1e47d7d",
+      "lines": 239
+    },
+    {
       "path": "tests/browser/broadcast-scale.browser.mjs",
-      "sha256": "e3f194c3f55e8f9fc62c740dab37d2718af67605b2e002e5ee13f542a87a8f07",
+      "sha256": "b1345e8eaed084f9749bf2b2650e3ab0b16132d4da1c7c0a5fde024a72076e5b",
       "lines": 405
     },
     {
       "path": "tests/browser/chat-accessibility.browser.mjs",
-      "sha256": "7829f3b09f4540b4a837d7cd5b917785292aedfede5e6a4b78cf7541923862a2",
-      "lines": 1351
+      "sha256": "0e6d45f9fc06bd041688d64214d7431290eb3e1ebe9baafe3fd8d68c04d34b9a",
+      "lines": 1361
     },
     {
       "path": "tests/browser/entry-navigation.browser.mjs",
@@ -418,14 +433,44 @@
       "lines": 144
     },
     {
+      "path": "tests/browser/help.browser.mjs",
+      "sha256": "d68e7d231fc655ee6c5b27f430226d5f78624f1075fb42e9a2aac0d9f12a5953",
+      "lines": 289
+    },
+    {
+      "path": "tests/browser/manual-backups.browser.mjs",
+      "sha256": "8255d40d52647ea936e75887f8e397ca0167ad6d3ee4a4e98206e25a497c899b",
+      "lines": 119
+    },
+    {
+      "path": "tests/browser/operations-report.browser.mjs",
+      "sha256": "7fa9072712d786b64bd0821e5fe2516b75b0f7551ce1d9bfece12f6a34e2fd96",
+      "lines": 85
+    },
+    {
+      "path": "tests/browser/privacy-preparation.browser.mjs",
+      "sha256": "ab575cc3f4f043f5f8050c33e9a6f3fa6847504460b23284dcf83dd3d287a895",
+      "lines": 138
+    },
+    {
       "path": "tests/browser/session-race.browser.mjs",
-      "sha256": "b5cfc724dd2db0c2235a87991ec89c040a9120edc9227f5ce87ceaef03c512e3",
-      "lines": 59
+      "sha256": "c8735761c1c2924148e3058776c11faebb24021ed4512fa6de253d598cbe23a7",
+      "lines": 61
+    },
+    {
+      "path": "tests/browser/tasks.browser.mjs",
+      "sha256": "e360c4ebe1be7c731009f0b476255ba4c30603013c2079b3fbdf9aac82f4326d",
+      "lines": 232
     },
     {
       "path": "tests/chat-accessibility.test.mjs",
       "sha256": "33a31e535e000bbae3e90cebf68bc6fc0df1a2857831b6db4da14549c0ea704f",
       "lines": 492
+    },
+    {
+      "path": "tests/chat-flow.integration.test.mjs",
+      "sha256": "f22d19fa1c9ee2026a1b4de480f26b4538e975b25cbfec56a9b99108a49ad427",
+      "lines": 417
     },
     {
       "path": "tests/chat-http.test.mjs",
@@ -443,9 +488,19 @@
       "lines": 1602
     },
     {
+      "path": "tests/crm-flow.integration.test.mjs",
+      "sha256": "749f58f6c5f1f207c96b12b16f6459023c355c9e9669a96c103e5095cfadf5e4",
+      "lines": 466
+    },
+    {
       "path": "tests/crm-http.test.mjs",
       "sha256": "dc06240a2b567afd9ab7982993d6bdb92281ead66e88a529614739e5b65c74d4",
       "lines": 477
+    },
+    {
+      "path": "tests/device-transition-runtime.integration.test.mjs",
+      "sha256": "1415f1fb50974f6ad67444b47c97a3d45f0376a192382c6995ed2edf822900e3",
+      "lines": 383
     },
     {
       "path": "tests/entry-http.test.mjs",
@@ -476,6 +531,11 @@
       "path": "tests/manual-backup-http.test.mjs",
       "sha256": "af4ec18d7964741ac5f5ed1f448fad18400f56186b76dd9f508ee87af898419d",
       "lines": 194
+    },
+    {
+      "path": "tests/media-flow.integration.test.mjs",
+      "sha256": "0b36fc84464c51a0d18f59e87e066ea7d6990662a53d1e8633c43f824350c5d7",
+      "lines": 664
     },
     {
       "path": "tests/media-http.test.mjs",
@@ -509,7 +569,7 @@
     },
     {
       "path": "tests/readiness-flow.integration.test.mjs",
-      "sha256": "bb798c420434983c3b76d08b61dae1a92a594b907a69eccc78aecff63828eab1",
+      "sha256": "8bd5b33af4df282fd513209b16a1c5c05138c25d342b8c5657d8edf7b09298cf",
       "lines": 324
     },
     {
@@ -519,8 +579,18 @@
     },
     {
       "path": "tests/rehearsal/authentication.rehearsal.mjs",
-      "sha256": "88cad996059e5b152a484a214d813cb1d049ca8b8bf3710aa41b3a6dc6aff756",
-      "lines": 175
+      "sha256": "f799e4aefa590d5c7864f096d212ab03b9af465d26bb7e382dfdf9ce196c43a5",
+      "lines": 206
+    },
+    {
+      "path": "tests/rehearsal/messaging.rehearsal.mjs",
+      "sha256": "da83c3b4de405013d169f359b27760e551bc7b46d1b8ec9b67e2b04215c089c7",
+      "lines": 330
+    },
+    {
+      "path": "tests/rehearsal/video.rehearsal.mjs",
+      "sha256": "c37e26c130ed66ffb564849e0bde22072c576d1bab8d1631e367376ad2d906e6",
+      "lines": 231
     },
     {
       "path": "tests/reset-flow.integration.test.mjs",
@@ -553,6 +623,11 @@
       "lines": 124
     },
     {
+      "path": "tests/witness-runtime.integration.test.mjs",
+      "sha256": "4eeb375e95e1937d7e5e09d8fdd97ece33e745c35312b360a090a9c1c36bf7ba",
+      "lines": 628
+    },
+    {
       "path": "tests/witness-transport-admission.test.mjs",
       "sha256": "af29fa1d1c8a735fe2384316e018216d04e8943e810de47239b08c1b64b21274",
       "lines": 111
@@ -562,5 +637,6 @@
       "sha256": "70f43ca8bac3f91220a6fd96df3e01385eb8344d3c478cc443ca7b94993dff1d",
       "lines": 194
     }
-  ]
+  ],
+  "count": 127
 }

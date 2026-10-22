@@ -24,6 +24,8 @@ test("real Chrome: late 401 responses preserve the newer native admin/client coo
     server = createServer({ key: await readFile(keyPath), cert: await readFile(certPath), minVersion: "TLSv1.2" }, async (request, response) => {
       const path = new URL(request.url, "https://jessiemessage.com").pathname;
       if (path === "/fixture") { response.writeHead(200, { "Content-Type": "text/html", "Cache-Control": "no-store" }); response.end("<!doctype html><title>Synthetic session race</title>"); return; }
+      // Chrome may request a favicon before the first race is installed.
+      if (!active) { response.writeHead(404); response.end(); return; }
       if (path === "/install-A" || path === "/install-B") {
         response.writeHead(200, { "Set-Cookie": sessionCookie(path === "/install-A" ? oldToken : newToken, Date.now() + 3600000, active.cookie, { role: active.cookie.includes("client") ? "client" : "admin" }), "Cache-Control": "no-store" }); response.end(); return;
       }

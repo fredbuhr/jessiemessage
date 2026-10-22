@@ -1,0 +1,15 @@
+✔ broadcast HTML marks interface leaves and loads the shared runtime/catalog before its controller (24.178102ms)
+✔ broadcast language switches translate live counts/status/date but preserve raw collisions, draft, audience and acknowledgement without HTTP (55.551154ms)
+✔ FR/EN selected counts update immediately while eligibility remains unprepared and no request is sent (18.643461ms)
+✔ CRM switching preserves raw names, label collisions, notes, inputs and selected conversation without requests (36.950976ms)
+✔ broadcast feature checks cannot postpone cookie renewal and offline recovery preserves the draft (19.432023ms)
+✔ all private-interface catalogs can coexist and every static broadcast marker has a registered translation (52.060417ms)
+✔ broadcast video labels, live progress and typed campaign details switch FR/EN without altering private draft or audience (17.114666ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 342.099322

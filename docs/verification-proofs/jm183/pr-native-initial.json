@@ -1,0 +1,99 @@
+{
+  "type": "jm183-pr-native-initial",
+  "recordedAt": "2026-10-22T21:53:44.678830+00:00",
+  "pr": 130,
+  "run": 39859668984,
+  "attempt": 1,
+  "head": "3cc4aa52fe336992f2acd2f6c3e136bc67a3f418",
+  "tree": "57558692f628a32e9548aef09c97d7412ddd81ec",
+  "status": "failed_fixture_contracts_corrected_new_head_qualification_pending",
+  "node": "v24.22.1",
+  "jobs": [
+    {
+      "name": "verify",
+      "id": 120106804330,
+      "tests": 3945,
+      "passed": 3897,
+      "failed": 0,
+      "skipped": 48,
+      "conclusion": "success"
+    },
+    {
+      "name": "Chrome keyboard and chat lifecycle",
+      "id": 120106804304,
+      "tests": 230,
+      "passed": 206,
+      "failed": 24,
+      "skipped": 0,
+      "conclusion": "failure"
+    },
+    {
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "id": 120106804742,
+      "tests": 3,
+      "passed": 0,
+      "failed": 3,
+      "skipped": 0,
+      "conclusion": "failure"
+    },
+    {
+      "name": "MariaDB 10.11",
+      "id": 120106804249,
+      "tests": 576,
+      "passed": 563,
+      "failed": 13,
+      "skipped": 0,
+      "conclusion": "failure"
+    },
+    {
+      "name": "MariaDB 11.4",
+      "id": 120106803884,
+      "tests": 576,
+      "passed": 563,
+      "failed": 13,
+      "skipped": 0,
+      "conclusion": "failure"
+    }
+  ],
+  "logs": [
+    {
+      "path": "logs/pr130-initial-verify.log",
+      "sha256": "dcaaeb4f926de8278ac635df657e45392fcdf4cc1957dc7adff6b95fcf8e45fe",
+      "bytes": 559342
+    },
+    {
+      "path": "logs/pr130-initial-browser.log",
+      "sha256": "9f228e0af6ed73a3957c14cdc8ca465063ffd62518aa35c81e7943829fe8bf94",
+      "bytes": 79949
+    },
+    {
+      "path": "logs/pr130-initial-auth.log",
+      "sha256": "10ff2a9bfc404330745aabb7ddd11f2c7405195aeac3728644e773b406445d51",
+      "bytes": 40608
+    },
+    {
+      "path": "logs/pr130-initial-database1011.log",
+      "sha256": "f9665fc4b025ff5957cab468a9c7676ea649ab40ea14f8faa9e438ecef19607d",
+      "bytes": 350474
+    },
+    {
+      "path": "logs/pr130-initial-database114.log",
+      "sha256": "68462c8791b6899c82da9225f29118b0c28b4719fb157992935addc453a5ccd8",
+      "bytes": 349822
+    }
+  ],
+  "countsIncludeFailedParentSuites": true,
+  "syntaxFiles": 721,
+  "correctionReports": [
+    "auth-rehearsal-ci-fix.json",
+    "chat-browser-ci-corrections.json",
+    "ci-integration-contracts-report.json"
+  ],
+  "rootCorrections": [
+    "Serve shared admin navigation CSS in8synthetic tool fixtures; assert current Messages label.",
+    "Return404 for the synthetic favicon request before the first session race is installed.",
+    "Replace the fullwidth plus glyph rendered as tofu in actual native dashboard captures."
+  ],
+  "nativeRerunRequired": true,
+  "productionChanged": false
+}

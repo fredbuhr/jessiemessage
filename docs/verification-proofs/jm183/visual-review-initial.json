@@ -1,0 +1,52 @@
+{
+  "type": "jm183-native-visual-review",
+  "head": "3cc4aa52fe336992f2acd2f6c3e136bc67a3f418",
+  "artifactId": 12461531401,
+  "run": 39859668984,
+  "archiveSha256": "6780881e9dfccc78a5ccd8986e7856877be913b35092d544837b1eceb2642760",
+  "reviewedWidths": [
+    320,
+    1280
+  ],
+  "images": [
+    {
+      "name": "admin-home-1280-bottom.png",
+      "sha256": "e2411cc083c4c5e9e69c636df37d0b1842213822f7735ff680fb17330fc7def2",
+      "bytes": 83765
+    },
+    {
+      "name": "admin-home-1280.png",
+      "sha256": "1c80a94da9bf4a43760747910d2b383b66818f7c43d6aa8c5ad5364f00137777",
+      "bytes": 145191
+    },
+    {
+      "name": "admin-home-320-bottom.png",
+      "sha256": "97fdd04f9a5cb8d336009b3f1c430beb56c9ced330dc1c003d6f9706299886fd",
+      "bytes": 40721
+    },
+    {
+      "name": "admin-home-320.png",
+      "sha256": "e111ae38f26f4026bcf9cab56002e9c351a974ff041952ad302f3a05da562ac4",
+      "bytes": 64287
+    },
+    {
+      "name": "client-home-1280.png",
+      "sha256": "58fe616b41f99b0bfa76f98d3c2395199c3f8023acb742fb8b92f0394ae6d5e8",
+      "bytes": 170758
+    },
+    {
+      "name": "client-home-320.png",
+      "sha256": "027beeaa4a8618d9fe81f92d33a3297e6802bff85f0696e5ae14037b4e1b581f",
+      "bytes": 64929
+    }
+  ],
+  "findings": [
+    "Client one-form home and distinct administrator tools fit both widths; native entry layout assertions passed.",
+    "Fullwidth plus rendered as tofu; corrected in the next candidate.",
+    "Independent review confirms the approved brand is present; no brand change made."
+  ],
+  "limits": [
+    "Synthetic accounts only. No physical keyboard, real notification delivery or hosted activation inferred.",
+    "Top/bottom viewport captures, not a complete scroll recording. Initial native run failed other fixtures, so no release qualification inferred."
+  ]
+}

@@ -1,0 +1,23 @@
+✖ historical coffre profiles refuse video before source reads, GPG or publication (16.690711ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 189.617216
+
+✖ failing tests:
+
+test at tests/private-secrets-video-guard.test.mjs:12:1
+✖ historical coffre profiles refuse video before source reads, GPG or publication (16.690711ms)
+  Error [PrivatePathError]: Private filesystem path is unavailable.
+      at unavailable (file:///workspace/scratch/bb431be72395/jessiemessage/server/files/private-directory.mjs:11:17)
+      at anchorDirectory (file:///workspace/scratch/bb431be72395/jessiemessage/server/files/private-directory.mjs:131:11)
+      at async openPrivateDirectory (file:///workspace/scratch/bb431be72395/jessiemessage/server/files/private-directory.mjs:137:11)
+      at async TestContext.<anonymous> (file:///workspace/scratch/bb431be72395/jessiemessage/tests/private-secrets-video-guard.test.mjs:21:17)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    code: 'PRIVATE_PATH_UNAVAILABLE'
+  }

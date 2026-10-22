@@ -1,0 +1,44 @@
+✔ registration returns no email challenge, encrypts the atomic job and never forwards asserted age proof (2753.690522ms)
+✔ invalid invitations, missing declarations and failed atomic registration never report success (616.644544ms)
+✔ resending conceals unknown accounts and wrong passwords and creates a new job only for the eligible account (1876.283796ms)
+✔ email verification is required for login; limited and expired sessions cannot authorize private access (1026.178021ms)
+✔ the aggregate public quota blocks before account lookups and expensive password work (1.350273ms)
+✔ public operations share the aggregate while keeping paired network and identity scopes (0.801762ms)
+✔ only a current administrator can obtain invitation links and stored lists cannot recreate them (1.557588ms)
+✔ admin pagination validates scoped canonical cursors and bounded options before any session or quota SQL (1.828149ms)
+✔ admin reads authenticate before consuming stable user-first quotas shared by both lists (4.159564ms)
+✔ a denied admin user budget preserves Retry-After without charging the aggregate or listing (0.941809ms)
+✔ admin quota storage failures and malformed denials fail closed before private queries (0.672703ms)
+✔ admin lists pass a fresh clock after quota waits and rely on persisted authorization again (0.456356ms)
+✔ admin page DTOs discard secrets and retain exact scoped cursors across same-millisecond microsecond ties (1.158662ms)
+✔ admin page DTOs reject duplicates, overflow, wrong cursor ownership and malformed fields (1.779954ms)
+✔ admin page boundaries compare exact cursor precision and reject newer dates (1.269276ms)
+✔ invitation DTOs validate finite dates, lifecycle state, duration and consumed identities (3.062756ms)
+✔ renewal validates the snapshot, identifier, finite extension and options before authentication or SQL (0.967315ms)
+✔ renewals use distinct stable user-first write budgets and a fresh time without changing any gates (1.063393ms)
+✔ expired snapshots extend from the fresh present time, and missing clients return null (0.952005ms)
+✔ renewal propagates only neutral business conflicts, gate refusals and authorization failures (1.296917ms)
+✔ renewal never reaches persistence for an unauthorized actor or denied user budget (0.306223ms)
+✔ renewal rebuilds its DTO and rejects mismatched identities, shortening or fabricated expiration (1.751173ms)
+✔ verification: lock 0ms, commit 0ms, proof 1000ms never starts an expired send (19.468731ms)
+✔ verification: lock 999ms, commit 0ms, proof 1000ms never starts an expired send (3.61835ms)
+✔ verification: lock 1000ms, commit 0ms, proof 1000ms never starts an expired send (3.423268ms)
+✔ verification: lock 2000ms, commit 0ms, proof 1000ms never starts an expired send (1.143938ms)
+✔ verification: lock 0ms, commit 1000ms, proof 1000ms never starts an expired send (3.360437ms)
+✔ verification: lock 499ms, commit 0ms, proof 500ms never starts an expired send (4.745806ms)
+✔ verification: lock 500ms, commit 0ms, proof 500ms never starts an expired send (0.721997ms)
+✔ password-reset: lock 0ms, commit 0ms, proof 1000ms never starts an expired send (7.287303ms)
+✔ password-reset: lock 999ms, commit 0ms, proof 1000ms never starts an expired send (1.539564ms)
+✔ password-reset: lock 1000ms, commit 0ms, proof 1000ms never starts an expired send (0.919796ms)
+✔ password-reset: lock 2000ms, commit 0ms, proof 1000ms never starts an expired send (0.727099ms)
+✔ password-reset: lock 0ms, commit 1000ms, proof 1000ms never starts an expired send (3.923211ms)
+✔ password-reset: lock 499ms, commit 0ms, proof 500ms never starts an expired send (1.43531ms)
+✔ password-reset: lock 500ms, commit 0ms, proof 500ms never starts an expired send (0.973944ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6457.674137

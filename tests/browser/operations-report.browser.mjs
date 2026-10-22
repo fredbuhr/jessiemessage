@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
 
-const names = ["readiness.html", "readiness.js", "readiness-model.js", "readiness.css", "i18n.js", "i18n.css", "i18n-readiness.js", "help-link.js", "session-clock.js", "brand/brand.css", "brand/icon-128.png", "brand/icon-32.png", "favicon.ico", "apple-touch-icon.png", "manifest.webmanifest"];
+const names = ["readiness.html", "readiness.js", "readiness-model.js", "readiness.css", "admin-navigation.css", "i18n.js", "i18n.css", "i18n-readiness.js", "help-link.js", "session-clock.js", "brand/brand.css", "brand/icon-128.png", "brand/icon-32.png", "favicon.ico", "apple-touch-icon.png", "manifest.webmanifest"];
 const types = { html: "text/html", js: "text/javascript", css: "text/css", png: "image/png", ico: "image/x-icon", webmanifest: "application/manifest+json" };
 async function fixture() {
   const resources = new Map(await Promise.all(names.map(async name => [`/${name}`, await readFile(new URL(`../../public/${name}`, import.meta.url))])));
@@ -51,7 +51,7 @@ test("real Chrome: private diagnostic is translated, bounded and downloadable by
         assert.equal(await page.execute("return document.querySelector('h1').textContent"), language === "fr" ? "État du service" : "Service status");
         assert.equal(await page.execute("return document.querySelector('#readiness-content > :first-child').getAttribute('aria-labelledby')"), "operations-title");
         assert.equal(await page.execute("return document.getElementById('operations-title').textContent"), language === "fr" ? "Mesures du serveur" : "Server measurements");
-        assert.equal(await page.execute("return document.querySelector('a[href=\"/admin/messages\"]').textContent"), language === "fr" ? "Ouvrir la messagerie" : "Open messaging");
+        assert.equal(await page.execute("return document.querySelector('a[href=\"/admin/messages\"]').textContent"), "Messages");
         assert.deepEqual(await page.execute("return {measures:document.getElementById('operations-details').open,manual:document.getElementById('manual-checks').open,downloadVisible:document.getElementById('download-operations').checkVisibility()}"),
           { measures: false, manual: false, downloadVisible: false });
         const beforeOpen = source.snapshots();

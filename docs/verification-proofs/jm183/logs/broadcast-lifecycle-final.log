@@ -1,0 +1,63 @@
+▶ actual broadcast controller binds every private JSON response to the current account and CSRF proof
+  ✔ /api/broadcast/admin/activity (38.454083ms)
+  ✔ /api/broadcast/admin/campaigns?limit=20 (6.237012ms)
+  ✔ /api/broadcast/admin/campaigns/0000000000000000000000000000000a/summary (4.622956ms)
+  ✔ /api/admin/crm/contacts?limit=50 (5.37807ms)
+  ✔ /api/admin/crm/labels?limit=100 (5.749885ms)
+  ✔ /api/media/admin/assets?limit=20 (3.761058ms)
+  ✔ /api/broadcast/admin/preview (6.795554ms)
+✔ actual broadcast controller binds every private JSON response to the current account and CSRF proof (73.399545ms)
+✔ data obtained under another login cannot enter a restored administrator window with a new CSRF proof (4.363258ms)
+✔ a changed account during a private photo read cannot create or display an old object URL (6.192706ms)
+▶ a successful POST followed by a failed session proof preserves the exact uncertain confirmation
+  ✔ proof 400 (8.836834ms)
+  ✔ proof 403 (6.075657ms)
+  ✔ proof 409 (6.796013ms)
+  ✔ proof 429 (4.381663ms)
+  ✔ proof 503 (3.170807ms)
+✔ a successful POST followed by a failed session proof preserves the exact uncertain confirmation (31.171247ms)
+✔ activity refresh updates an old live campaign outside page one and discovers new random IDs from another window (25.637481ms)
+✔ stale local live rows are resolved in bounded progressing batches instead of rejecting an eleven-row cache (14.824304ms)
+✔ explicit history refresh restarts an exhausted archive so older additions outside the recent window remain reachable (25.677634ms)
+✔ late history data cannot restore queued counters after cancellation (10.325445ms)
+✔ old poll cleanup cannot clear a new bootstrap's busy state or schedule an extra timer (4.821792ms)
+✔ real hide/show handlers preserve the exact uncertain confirmation and stale cleanup cannot release its explicit retry (10.925337ms)
+✔ a hidden page ignores late activity even when the transport ignores abort (2.795021ms)
+✔ text, selection and attachment stay hidden until one fresh owner proof allows resumption (3.034027ms)
+✔ a failed resume proof keeps the immutable pending key for the explicit reload action (3.438111ms)
+▶ owner and login changes during suspension purge retained work before displaying the new session
+  ✔ other account (2.938701ms)
+  ✔ new login (3.160176ms)
+✔ owner and login changes during suspension purge retained work before displaying the new session (6.52825ms)
+✔ a resume proof arriving after another hide cannot reveal content or replace the new cycle (5.731347ms)
+✔ suspension during initial reads resumes contacts and labels without losing the composed work (11.286613ms)
+✔ an interrupted cancellation resumes a usable freshly read detail without replaying its POST (8.920813ms)
+✔ a rate-limited history poll respects Retry-After before scheduling another read (2.301141ms)
+✔ a rate-limited selected detail also delays the next periodic history read (2.35717ms)
+✔ a manual detail rate limit also postpones a history timer which was already scheduled (2.153671ms)
+✔ selected recipients progress 1 to 2 to 1, prepare their exact edited content and send with one final action (24.747107ms)
+✔ zero eligible recipients and a late preparation for an old selection never enable send (8.397092ms)
+✔ global2500 preview and a lost POST response retain one immutable confirmation while scope controls stay frozen (10.431152ms)
+✔ contact pages replace50 rows, retain explicit choices and preserve checkbox focus (16.71882ms)
+✔ periodic summary polling keeps recipient rows and never refetches their page (6.442275ms)
+✔ redaction invalidates an in-flight recipient page and a late snapshot cannot restore its removed client (7.298435ms)
+✔ a removed campaign summary404 purges its selected page without any legacy-detail fallback (4.565816ms)
+✔ an edited filter clears the real confirmation even when canonical criteria stay identical (2.808138ms)
+✔ broadcast video is opt-in and rejects non-MP4, empty, oversized or over-caption selections before any upload (4.336104ms)
+✔ broadcast video waits for native preview and a session-bound upload ACK before previewing its typed audience and sending (16.311344ms)
+▶ broadcast cancelled, malformed and lost uploads never attach a video or retry automatically
+  ✔ cancel (4.421201ms)
+  ✔ network (4.452781ms)
+  ✔ wrong-size (3.442995ms)
+  ✔ extra-field (3.601403ms)
+✔ broadcast cancelled, malformed and lost uploads never attach a video or retry automatically (16.926741ms)
+✔ video upload acknowledgement under a changed account is discarded and suspension keeps the local file without replaying an ambiguous upload (10.997281ms)
+✔ a confirmed video survives suspension and local preview callbacks bind to the resumed session (6.287832ms)
+ℹ tests 51
+ℹ suites 0
+ℹ pass 51
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 522.0026

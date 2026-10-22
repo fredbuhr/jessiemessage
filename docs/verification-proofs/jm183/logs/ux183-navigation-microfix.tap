@@ -1,0 +1,26 @@
+✔ access and recovery catalogs cover every declared UI leaf and load before their controllers (11.736327ms)
+✔ access pending switches live without another HTTP request or translating a UI-like pseudonym (32.014508ms)
+✔ access expired switches live without another HTTP request or translating a UI-like pseudonym (19.858877ms)
+✔ active access shows its conversation without admission jargon or an age-verification badge (observation false) (16.448265ms)
+✔ active access shows its conversation without admission jargon or an age-verification badge (observation true) (21.809188ms)
+✔ client access rejects missing or unknown admission fields before rendering account data (43.130065ms)
+✔ access malformed session error switches live and preserves untouched credentials (12.841626ms)
+✔ invitation date and duration are reformatted live without repeating or exposing its token (51.858869ms)
+✔ recovery malformed capability switches its retry error without another HTTP request (24.631453ms)
+✔ recovery password counters and validation translate in place while password bytes remain unchanged (13.846339ms)
+✔ language switches during recovery POST neither repeat the request nor reset its pending form (11.825906ms)
+✔ an expired recovery link translates its error while preserving the submitted token and exact password (13.115966ms)
+✔ pending access checks are visible, bounded and reveal approval without a manual refresh (34.768148ms)
+✔ an interrupted session proof hides private access and reconnects online without logging in again (18.351577ms)
+✔ public client entry shows one login form without a migration hop, and explicit login opens the current conversation once (20.809704ms)
+✔ public entry sends a single authenticated role straight to its own destination and keeps both roles explicit (50.830432ms)
+✔ public entry returns from the two-role choice to neutral sign-in copy after the sessions end elsewhere (20.761004ms)
+✔ an invalid or late public entry decision cannot navigate or expose a login guessed from a failed proof (32.937472ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 595.913482

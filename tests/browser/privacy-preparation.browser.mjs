@@ -6,7 +6,7 @@ import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
 import { CONFIRMED_PRIVACY_CHOICES } from "../../server/privacy/choices.mjs";
 
 async function fixture({ accountClosures = false } = {}) {
-  const names = ["privacy.html", "privacy.js", "privacy.css", "i18n-privacy.js", "i18n.js", "i18n.css", "readiness-model.js", "brand/brand.css", "brand/icon-64.png", "favicon.ico"];
+  const names = ["privacy.html", "privacy.js", "privacy.css", "admin-navigation.css", "i18n-privacy.js", "i18n.js", "i18n.css", "readiness-model.js", "brand/brand.css", "brand/icon-64.png", "favicon.ico"];
   const resources = new Map(await Promise.all(names.map(async name => [`/${name}`, await readFile(new URL(`../../public/${name}`, import.meta.url))])));
   const requests = [], draft = { answers: Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`D0${i + 1}`, ""])), notice: { fr: "Texte français — À COMPLÉTER D01", en: "English text — TO COMPLETE D01" } };
   let version = 0, changed = false, hidden = false, changeOnSave = false, delayedRead = null;
