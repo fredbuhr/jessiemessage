@@ -1,0 +1,253 @@
+{
+  "status": "qualified_main_pins_synthetic_pass_native_operator_qualification_and_publication_pending",
+  "createdAt": "2026-10-22T21:43:44.438538+00:00",
+  "runtime": "3.12.14",
+  "base": {
+    "workflow": {
+      "path": "/workspace/scratch/bb431be72395/publisher182/.github/workflows/publish-qualified.yml",
+      "sha256": "9d7fa415492ab5b153fac40dfb86c091038ed7bc1a1e354677e55e3cb947a42a",
+      "bytes": 14691
+    },
+    "tests": {
+      "path": "/workspace/scratch/bb431be72395/publisher182/ops/test-publish-qualified.py",
+      "sha256": "db62ae8e1b8ad7918187be3102cfe3426133db3e43a668ee7a57ce7465d1f49f",
+      "bytes": 15849
+    },
+    "readMethod": "Full workflow232lines and test262lines read; bytes match frozen publisher182 hashes9d7fa415…/db62ae8e…."
+  },
+  "files": [
+    {
+      "path": "/workspace/scratch/bb431be72395/operator183/.github/workflows/publish-qualified183.yml",
+      "sha256": "ef61cef254456f6c3cd23af7656260d28fe9ae7eea442258a78a35eba4f97b18",
+      "bytes": 14745
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/operator183/ops/test-publish-qualified183.py",
+      "sha256": "a825791b1cdfa0dd67642c24488cd82f7eaab9d4541d0134bcc4fbc258a0efbb",
+      "bytes": 19012
+    }
+  ],
+  "readyForPublication": false,
+  "realPublicationPerformed": false,
+  "pendingPins": {},
+  "knownBaseline": {
+    "version": "1.8.2",
+    "releaseId": 421075470,
+    "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+    "tree": "7b722ca1fbd3416acecffa3c122e967511184d4c"
+  },
+  "rollback": {
+    "version": "1.7.2",
+    "releaseId": 420600213,
+    "source": "6b3319a77c307ed7d6b003fe33de36807c70c266"
+  },
+  "behavior": [
+    "Explicit injected source/tree/CI PENDING variant refuses before Node process check or API access, regardless of shipped constants. Each qualification pin missing independently also refuses with the other synthetic pins valid. Shipped workflow and pins unchanged.",
+    "Publication requires canonical repository/push branch, Node24.22.1, exact main push CI source/tree, clean run_attempt1 and five complete successful matching jobs.",
+    "Checks source package/lock version183 and Node engine, official action pins, video/quick-reply gates and runtime wiring, exact baseline182 tree and preserved33+3 migrations with no other SQL.",
+    "Existing rollback172 lightweight tag/release identities fixed; old tag/releases never edited. Before first write, expected latest182(id421075470/source78e6…) required. Rechecked after tag and immediately before create release.",
+    "Only POST git/refs for lightweight candidate183 tag and POST releases make_latest true exist. Existing tag must exactly match candidate source, existing release metadata must be byte-equivalent semantically to planned fields, and existing-release retry requires already-latest183 exact ID/source/metadata and is read-only.",
+    "Unexpected latest between tag/release refuses second write; unexpected latest after creation is reported without corrective mutation. No PATCH/DELETE/tag movement/align-latest path.",
+    "Global workflow permissions empty; operator-tests contents read only; contents write and actions read limited to publish job. Existing full SHA checkout/setup-node actions retained and Node24.22.1 fixed.",
+    "Workflow is only prepared in isolated scratch. No GitHub dispatch/ref/tag/release or host action performed."
+  ],
+  "qualification": {
+    "command": "python3 ops/test-publish-qualified183.py --output publication183-tests-qualified-pins.json > publication183-tests-qualified-pins.log 2>&1",
+    "cwd": "/workspace/scratch/bb431be72395/operator183",
+    "tests": 38,
+    "pass": 38,
+    "fail": 0,
+    "networkCalls": 0,
+    "realMutations": 0,
+    "evidence": {
+      "path": "publication183-tests-qualified-pins.json",
+      "sha256": "a748020ebec4439950fa1913bdde02b3d3cea5e939ac3ba06859b7909285ee52",
+      "bytes": 3025
+    },
+    "log": {
+      "path": "publication183-tests-qualified-pins.log",
+      "sha256": "b2ca6792b1ae5a08c39331e15952c7816efdc152e8ea6e07e29b35b2e90a2662",
+      "bytes": 2809
+    },
+    "sourcePinsQualifiedBySyntheticTest": false,
+    "realMainQualificationEvidence": "qualifiedMain (parent API evidence), distinct from synthetic fixtures",
+    "scope": "publisher"
+  },
+  "earlierAttempts": [
+    {
+      "result": "First generation command used wrong cwd for reading publisher182; failed before creating adapted test or running its test body. Absolute scope corrected, then the first actual publisher test run passed38/38."
+    }
+  ],
+  "limits": [
+    "Shipped publisher has real qualified main pins but has not run remotely; its operator-tests job must pass before contents-write publication job can begin.",
+    "Pending guards refer to the embedded publication program. GitHub Actions infrastructure/checkouts/setup-node in a future qualification run have their own normal network operations; no such run was started here.",
+    "No actual GitHub API, credentials, tag/release, main push, dispatch, hosted configuration, SQL, SMTP/Push, backup/restore/witness/PC or app activation touched.",
+    "Release notes are proposed metadata for future creation; publication and hosted activation remain separate. Production remains182 until a separately verified activation.",
+    "Preserved backup/device/network/growth limits are not promoted into successful checks."
+  ],
+  "updatedAt": "2026-10-22T22:31:35.156168+00:00",
+  "qualificationBeforePhaseIndependentTests": {
+    "command": "python3 ops/test-publish-qualified183.py --output publication183-tests-initial.json",
+    "cwd": "/workspace/scratch/bb431be72395/operator183",
+    "exitCode": 0,
+    "tests": 38,
+    "pass": 38,
+    "fail": 0,
+    "testsComposition": "33 inherited simulated publication/refusal scenarios +4 pending guards +1 baseline-tree drift refusal.",
+    "evidence": {
+      "path": "/workspace/scratch/bb431be72395/operator183/publication183-tests-initial.json",
+      "sha256": "01b493b868236ba329df99ab26a3e516aba80ed3bf70f03843def7d166ea1009",
+      "bytes": 2931
+    },
+    "log": {
+      "path": "/workspace/scratch/bb431be72395/operator183/publication183-tests-initial.log",
+      "sha256": "8d66a15f6f1d7974355a3c83a0b0b661833bb9fccda769b0c2d7fc8d27b28bf0",
+      "bytes": 2715
+    },
+    "checks": [
+      "all pending pins refuse before any process or API call",
+      "pending target refuses before any process or API call",
+      "pending tree refuses before any process or API call",
+      "pending ci_text refuses before any process or API call",
+      "successful immutable creation on pinned source advances latest in the same release write",
+      "identical tag and release retry is read-only",
+      "interrupted after exact tag with previous latest retries only the release",
+      "existing release with previous latest is refused before mutations, no automatic metadata edit",
+      "exact tag alone with unknown latest is refused before mutations",
+      "existing release with divergent latest source is refused before mutations",
+      "latest changed after tag creation refuses release creation without corrective mutation",
+      "refuse ci-incomplete before mutations",
+      "refuse ci-other-sha before mutations",
+      "refuse ci-rerun before mutations",
+      "refuse ci-missing-job before mutations",
+      "refuse ci-failed-job before mutations",
+      "refuse other-tree before mutations",
+      "refuse baseline-tree-drift before mutations",
+      "refuse video-gate-closed before mutations",
+      "refuse quick-gate-closed before mutations",
+      "refuse normal-ddl-changed before mutations",
+      "refuse sql37 before mutations",
+      "refuse candidate-missing before mutations",
+      "refuse candidate-ddl-changed before mutations",
+      "refuse package-version before mutations",
+      "refuse old-node-pin before mutations",
+      "refuse mutable-action-pin before mutations",
+      "refuse untrusted-action before mutations",
+      "refuse credentials-persisted before mutations",
+      "refuse cache-enabled before mutations",
+      "refuse latest-before before mutations",
+      "refuse main-behind before mutations",
+      "refuse rollback-tag-diverged before mutations",
+      "refuse rollback-release-diverged before mutations",
+      "refuse divergent tag before mutations",
+      "refuse divergent release body before mutations",
+      "refuse divergent release source before mutations",
+      "detect an externally changed latest after publication without corrective mutation"
+    ],
+    "static": "Workflow YAML, embedded publisher Python AST and test Python AST parsed.",
+    "fixturePolicy": "Entirely synthetic source/API payloads (package/lock183, CI job/action/Node shape, runtime gate counts,33+3 inventories). Only target/tree/ci_text literals substituted via AST for successful scenarios; no Git command or current app source read used to manufacture qualification. Node command stubbed. Original PENDING script separately proved no API/process calls.",
+    "networkCalls": 0,
+    "realMutations": 0,
+    "productionAccess": false,
+    "sourcePinsQualified": false
+  },
+  "qualifiedMain": {
+    "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "tree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+    "runId": 39864278371,
+    "event": "push",
+    "branch": "main",
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      "verify",
+      "MariaDB 10.11",
+      "MariaDB 11.4",
+      "Chrome keyboard and chat lifecycle",
+      "Chrome HTTPS authentication and messaging with MariaDB"
+    ],
+    "jobCount": 5,
+    "evidenceOrigin": "Parent independently verified GitHub API run/jobs/mainref and supplied these exact values. This agent performed no GitHub API/Git/host operation."
+  },
+  "phaseIndependentTestsBeforeRealPinFinalization": {
+    "status": "tests_only_production_guards_and_pins_unchanged",
+    "workflowSha256": "5e0286fb330e045acfbd9e24f05bfa9f18b1ad70071d7c09b1d30dcaec00b425",
+    "shippedPinsUnchanged": {
+      "target": "QUALIFICATION_PENDING",
+      "tree": "QUALIFICATION_PENDING",
+      "ci_text": "QUALIFICATION_PENDING"
+    },
+    "qualificationInferred": false
+  },
+  "qualificationBeforeRealPinFinalization": {
+    "command": "python3 ops/test-publish-qualified183.py --output publication183-tests-pin-states.json",
+    "cwd": "/workspace/scratch/bb431be72395/operator183",
+    "exitCode": 0,
+    "tests": 38,
+    "pass": 38,
+    "fail": 0,
+    "testsComposition": "33 inherited simulated publication/refusal scenarios +4 pending guards +1 baseline-tree drift refusal.",
+    "evidence": {
+      "path": "/workspace/scratch/bb431be72395/operator183/publication183-tests-pin-states.json",
+      "sha256": "0ee9aa74c35404e3c99390fbc8e0f591e82268e6c812617ca876c6d06952ff27",
+      "bytes": 2997
+    },
+    "log": {
+      "path": "/workspace/scratch/bb431be72395/operator183/publication183-tests-pin-states.log",
+      "sha256": "05fe70b31bbc79ab1e6dddf6d960451eec20716a1c4320a213d52eef844d7046",
+      "bytes": 2781
+    },
+    "checks": [
+      "all pending pins refuse before any process or API call",
+      "partial qualification missing target refuses before any process or API call",
+      "partial qualification missing tree refuses before any process or API call",
+      "partial qualification missing ci_text refuses before any process or API call",
+      "successful immutable creation on pinned source advances latest in the same release write",
+      "identical tag and release retry is read-only",
+      "interrupted after exact tag with previous latest retries only the release",
+      "existing release with previous latest is refused before mutations, no automatic metadata edit",
+      "exact tag alone with unknown latest is refused before mutations",
+      "existing release with divergent latest source is refused before mutations",
+      "latest changed after tag creation refuses release creation without corrective mutation",
+      "refuse ci-incomplete before mutations",
+      "refuse ci-other-sha before mutations",
+      "refuse ci-rerun before mutations",
+      "refuse ci-missing-job before mutations",
+      "refuse ci-failed-job before mutations",
+      "refuse other-tree before mutations",
+      "refuse baseline-tree-drift before mutations",
+      "refuse video-gate-closed before mutations",
+      "refuse quick-gate-closed before mutations",
+      "refuse normal-ddl-changed before mutations",
+      "refuse sql37 before mutations",
+      "refuse candidate-missing before mutations",
+      "refuse candidate-ddl-changed before mutations",
+      "refuse package-version before mutations",
+      "refuse old-node-pin before mutations",
+      "refuse mutable-action-pin before mutations",
+      "refuse untrusted-action before mutations",
+      "refuse credentials-persisted before mutations",
+      "refuse cache-enabled before mutations",
+      "refuse latest-before before mutations",
+      "refuse main-behind before mutations",
+      "refuse rollback-tag-diverged before mutations",
+      "refuse rollback-release-diverged before mutations",
+      "refuse divergent tag before mutations",
+      "refuse divergent release body before mutations",
+      "refuse divergent release source before mutations",
+      "detect an externally changed latest after publication without corrective mutation"
+    ],
+    "static": "Workflow YAML, embedded publisher Python AST and test Python AST parsed.",
+    "fixturePolicy": "Entirely synthetic source/API payloads (package/lock183, CI job/action/Node shape, runtime gates,33+3 inventories). Only target/tree/ci_text literals substituted via AST; all-pending guard always injects PENDING and each missing pin is exercised separately with the others valid. No Git command/current app source read, no source qualification inferred. Node command stubbed.",
+    "networkCalls": 0,
+    "realMutations": 0,
+    "productionAccess": false,
+    "sourcePinsQualified": false
+  },
+  "qualifiedPins": {
+    "target": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "tree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+    "ci_text": "39864278371"
+  }
+}

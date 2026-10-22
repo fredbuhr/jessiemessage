@@ -1,0 +1,65 @@
+{
+  "formatVersion": 1,
+  "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+  "tree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+  "mainRun": 39864278371,
+  "qualificationEvidence": "Supplied by parent after main push run completed5/5 success, attempt1; no GitHub/host access by this agent",
+  "files": [
+    {
+      "path": "ops/prepare-release183.py",
+      "sha256": "0b2c280f238b80eb80944623576a5932a9abf41778cb9f215a7036a529b85101",
+      "bytes": 15612,
+      "changes": "qualification_literal_pins_only",
+      "previousSha256": "7393f11ded4c59c2dc06d7c245ec32777617a3e155bc7bdf0adcf917660264cd"
+    },
+    {
+      "path": "ops/test-prepare-release183.py",
+      "sha256": "b5c32dc7ff490b1a336a5876f56a7e8b63a1a6d0b1962a70c10d7a7cc3fd12a9",
+      "bytes": 32578,
+      "changes": "unchanged",
+      "previousSha256": "b5c32dc7ff490b1a336a5876f56a7e8b63a1a6d0b1962a70c10d7a7cc3fd12a9"
+    },
+    {
+      "path": "ops/record-release183.py",
+      "sha256": "097fdb5287d73abe52f219f7b66a8d3ce8d39d153e26cf5e505e56cd9b48b80e",
+      "bytes": 29171,
+      "changes": "qualification_literal_pins_only",
+      "previousSha256": "8dc68ca0ff63cfc45ff39a85ad849c064acdd80eaaabb6ae9d0efe2449a605ad"
+    },
+    {
+      "path": "ops/test_record_release183.py",
+      "sha256": "999538acc10d7cd45e04a09a5b07b7bbba963e6c51d1ac2431405e071391291e",
+      "bytes": 42096,
+      "changes": "unchanged",
+      "previousSha256": "999538acc10d7cd45e04a09a5b07b7bbba963e6c51d1ac2431405e071391291e"
+    },
+    {
+      "path": "ops/test-publish-qualified183.py",
+      "sha256": "a825791b1cdfa0dd67642c24488cd82f7eaab9d4541d0134bcc4fbc258a0efbb",
+      "bytes": 19012,
+      "changes": "unchanged",
+      "previousSha256": "a825791b1cdfa0dd67642c24488cd82f7eaab9d4541d0134bcc4fbc258a0efbb"
+    },
+    {
+      "path": ".github/workflows/prepare-release183.yml",
+      "sha256": "d044816d26c51f7c3c15ed49c92424a0af917d0a1c0ae835a22de9c65458a615",
+      "bytes": 1060,
+      "changes": "unchanged",
+      "previousSha256": "d044816d26c51f7c3c15ed49c92424a0af917d0a1c0ae835a22de9c65458a615"
+    },
+    {
+      "path": ".github/workflows/record-release183.yml",
+      "sha256": "dc20d11896e0af0bb0817ed62302868a953f09c1fa64918ef566d093c9c26c94",
+      "bytes": 1135,
+      "changes": "unchanged",
+      "previousSha256": "dc20d11896e0af0bb0817ed62302868a953f09c1fa64918ef566d093c9c26c94"
+    },
+    {
+      "path": ".github/workflows/publish-qualified183.yml",
+      "sha256": "ef61cef254456f6c3cd23af7656260d28fe9ae7eea442258a78a35eba4f97b18",
+      "bytes": 14745,
+      "changes": "qualification_literal_pins_only",
+      "previousSha256": "5e0286fb330e045acfbd9e24f05bfa9f18b1ad70071d7c09b1d30dcaec00b425"
+    }
+  ]
+}

@@ -1,0 +1,168 @@
+{
+  "status": "qualified_source_tree_synthetic_pass_operator_publication_pending",
+  "createdAt": "2026-10-22T21:41:26.396953+00:00",
+  "runtime": "Python3.12.14",
+  "baseOperatorCommit": "040701bb8239a85c0484d21c4f1a0d585ef07260",
+  "baseSourceSha256": "9b68d7a060e94781e6a2043a8b37c3a0039101bca912675a7ed8e6d4e55e407a",
+  "files": [
+    {
+      "path": "ops/prepare-release183.py",
+      "sha256": "0b2c280f238b80eb80944623576a5932a9abf41778cb9f215a7036a529b85101",
+      "bytes": 15612
+    },
+    {
+      "path": "ops/test-prepare-release183.py",
+      "sha256": "b5c32dc7ff490b1a336a5876f56a7e8b63a1a6d0b1962a70c10d7a7cc3fd12a9",
+      "bytes": 32578
+    },
+    {
+      "path": ".github/workflows/prepare-release183.yml",
+      "sha256": "d044816d26c51f7c3c15ed49c92424a0af917d0a1c0ae835a22de9c65458a615",
+      "bytes": 1060
+    }
+  ],
+  "candidateVersion": "1.8.3",
+  "expectedActiveVersion": "1.8.2",
+  "expectedActiveSource": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+  "expectedActiveTree": "7b722ca1fbd3416acecffa3c122e967511184d4c",
+  "expectedActiveCheckpointSha256": "148b1e0f1ef0e585aa0e0be99ba4e65517b30d2827e3dc26768684bfc5afa280",
+  "pendingPins": {},
+  "readyForHostedStaging": false,
+  "interface": "python3 prepare-release183.py 48fd42b808b2bc4d95d3f3ba21244c032d0a938f 1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+  "behavior": [
+    "Before private paths/processes, refuse missing qualification pins or mismatched source/tree arguments.",
+    "Use active182 exact checkout/tree, launchers eed42b10…/a6c4435d…, private official Node24.22.1 binary hash; no source dependency install.",
+    "Verify checkpoint182 byte hash mode600/singlelink/no-follow and recheck byte-exact before first output and in final verification; checkpoint never written.",
+    "Fetch candidate main and immutable183 tag only during explicitly invoked finalized staging; enforce ancestry from182 through candidate to main.",
+    "Require matching package versions182/183, identical normalized locked dependencies and byte-exact inventories33normal+3video, never execute SQL.",
+    "Validate both entire start/check launcher texts and bash syntax before outputs. Only source/tree/checkout/log substitutions; preserve local-closures commands, enabled profile, private paths, pinned Node and configurations.",
+    "One new detached checkout, dependency symlink to existing node_modules, exclusive launchers/empty logs/receipt. Existing output or partial interrupted staging refuses automatic retry and is preserved.",
+    "No start/CHECK execution, runtime restart, Manager or configuration/key/checkpoint mutation. Separate CHECK required only at the later hosted staging phase."
+  ],
+  "qualification": {
+    "command": "python3 ops/test-prepare-release183.py > prepare183-tests-qualified-pins.log 2>&1",
+    "cwd": "/workspace/scratch/bb431be72395/operator183",
+    "tests": 22,
+    "pass": 22,
+    "fail": 0,
+    "skipped": 0,
+    "durationSeconds": 33.175,
+    "log": {
+      "path": "prepare183-tests-qualified-pins.log",
+      "sha256": "f5cdb95b5ac20afcde4b1fabb59b2cffc486471efb69d854a240682d38e9cce1",
+      "bytes": 3569
+    },
+    "sourcePinsQualifiedBySyntheticTest": false,
+    "scope": "preparer"
+  },
+  "independentReview": {
+    "reviewer": "writer183 child",
+    "method": "Read complete source/workflow and pertinent tests; no rerun; phase-independent test changes reviewed by child without rerun; seven-literal-only finalization cross-reviewed without test rerun",
+    "status": "no_concrete_blocker",
+    "sourceSha256": "0b2c280f238b80eb80944623576a5932a9abf41778cb9f215a7036a529b85101",
+    "testSha256": "b5c32dc7ff490b1a336a5876f56a7e8b63a1a6d0b1962a70c10d7a7cc3fd12a9"
+  },
+  "limits": [
+    "Candidate source/tree are real qualified main values supplied and API-confirmed by the parent; no host preparation performed. Native operator qualification and immutable183 publication are still required before user staging.",
+    "Local Git operations were confined to disposable synthetic repositories, fake Node only accepts --version, Bash only receives -n via stdin.",
+    "No actual host/SQL/SMTP/Push/backup/PC action, no application source edit, no remote ref/tag/release created, no Git commit/push.",
+    "No Linux hosted CHECK, closure status, native operator CI, user activation or metadata state is inferred.",
+    "Proposed workflow not run or published; pinned official action SHA and Node24.22.1 reused from qualified182 workflow.",
+    "Operator artifact directory is isolated and has no Git checkout claim; provenance.json documents byte-verified published182 sources."
+  ],
+  "updatedAt": "2026-10-22T22:31:35.156168+00:00",
+  "qualificationBeforePhaseIndependentTests": {
+    "command": "python3 operator183/ops/test-prepare-release183.py",
+    "tests": 20,
+    "pass": 20,
+    "fail": 0,
+    "skipped": 0,
+    "durationSeconds": 35.691,
+    "log": {
+      "path": "prepare183-tests-initial.log",
+      "sha256": "dc76f9045dc9d0ef5d65119b6008713f5b20d425dd66c373036046cc89edf81f",
+      "bytes": 3161
+    },
+    "static": {
+      "path": "prepare183-static-verification.json",
+      "sha256": "8f05f46c70e495e326ac4f9780482598ac92e2076b7a07995011e186753b7f75",
+      "bytes": 56
+    },
+    "coverage": [
+      "Actual shipped pending pins block before any file/process access",
+      "Exact staging and only four launcher substitutions, private sentinels unchanged",
+      "Wrong args/source/tree/tag/main ancestry/version/dependencies/migrations denied",
+      "Dirty source, prior receipts, symlinks/hardlinks/modes and all existing output refused",
+      "Active checkpoint pin, metadata and prewrite late mutation guard",
+      "Launcher syntax/command/profile/private-path binding and Node pin/version guard",
+      "Interrupted output preserved and no automatic retry"
+    ]
+  },
+  "qualifiedMain": {
+    "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "tree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+    "runId": 39864278371,
+    "event": "push",
+    "branch": "main",
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      "verify",
+      "MariaDB 10.11",
+      "MariaDB 11.4",
+      "Chrome keyboard and chat lifecycle",
+      "Chrome HTTPS authentication and messaging with MariaDB"
+    ],
+    "jobCount": 5,
+    "evidenceOrigin": "Parent independently verified GitHub API run/jobs/mainref and supplied these exact values. This agent performed no GitHub API/Git/host operation."
+  },
+  "phaseIndependentTestsBeforeRealPinFinalization": {
+    "status": "tests_only_production_guards_and_pins_unchanged",
+    "sourceSha256": "7393f11ded4c59c2dc06d7c245ec32777617a3e155bc7bdf0adcf917660264cd",
+    "workflowSha256": "d044816d26c51f7c3c15ed49c92424a0af917d0a1c0ae835a22de9c65458a615",
+    "shippedPinsUnchanged": {
+      "RELEASE_SOURCE": "QUALIFICATION_PENDING",
+      "RELEASE_TREE": "QUALIFICATION_PENDING"
+    },
+    "qualificationInferred": false
+  },
+  "qualificationBeforeRealPinFinalization": {
+    "command": "python3 operator183/ops/test-prepare-release183.py",
+    "tests": 22,
+    "pass": 22,
+    "fail": 0,
+    "skipped": 0,
+    "durationSeconds": 103.052,
+    "log": {
+      "path": "prepare183-tests-pin-states.log",
+      "sha256": "0521400e1d210fc3c60f8e086711d045cd09611b0a7a0e9155eed55561baaf10",
+      "bytes": 3570
+    },
+    "static": {
+      "path": "prepare183-static-verification.json",
+      "sha256": "8f05f46c70e495e326ac4f9780482598ac92e2076b7a07995011e186753b7f75",
+      "bytes": 56
+    },
+    "coverage": [
+      "Explicit all-pending variant refuses before private paths, file reads or commands, independent of actual shipped pin values",
+      "Exact staging and only four launcher substitutions, private sentinels unchanged",
+      "Wrong args/source/tree/tag/main ancestry/version/dependencies/migrations denied",
+      "Dirty source, prior receipts, symlinks/hardlinks/modes and all existing output refused",
+      "Active checkpoint pin, metadata and prewrite late mutation guard",
+      "Launcher syntax/command/profile/private-path binding and Node pin/version guard",
+      "Interrupted output preserved and no automatic retry",
+      "Source/tree partial qualification refused separately for each missing pin before all private/process access",
+      "Shipped coherent pending or full canonical SHA pair accepted as shapes only; injected finalized pair reaches exactly the first mocked precondition without accessing private data"
+    ]
+  },
+  "qualifiedPins": {
+    "RELEASE_SOURCE": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "RELEASE_TREE": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58"
+  },
+  "commandPreconditions": [
+    "Use the published immutable helper matching its SHA256, after native operator qualification",
+    "Candidate immutable tag/release v1.8.3 must exist on exact qualified main source/tree",
+    "Active182 protected checkpoint/launchers/Node/configuration must still satisfy unchanged guards"
+  ]
+}

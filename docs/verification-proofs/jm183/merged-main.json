@@ -1,0 +1,25 @@
+{
+  "type": "jm183-merged-main",
+  "pullRequest": 130,
+  "branchHead": "87df47aed43e464ef34c3cb15e4b2e0c7aced7e8",
+  "branchCi": 39863182670,
+  "branchCiJobsPassed": 5,
+  "mainSource": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+  "mainTree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+  "mergeParents": [
+    "38ccb3862f3d9ab4153b578dfb3abbd0dd94d857",
+    "87df47aed43e464ef34c3cb15e4b2e0c7aced7e8"
+  ],
+  "treeUnchangedFromQualifiedBranch": true,
+  "reviews": [],
+  "unresolvedReviewThreads": [],
+  "mainCi": 39864278371,
+  "mainCiStatus": "completed/success",
+  "productionVersion": "1.8.2",
+  "releasePublished": true,
+  "hostedChanged": false,
+  "mainCiJobsPassed": 5,
+  "releaseId": 421266798,
+  "publisherRun": 39865609026,
+  "latestTag": "v1.8.3"
+}

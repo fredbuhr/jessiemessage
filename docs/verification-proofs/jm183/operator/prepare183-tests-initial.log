@@ -1,0 +1,25 @@
+test_actual_exact_release_pins_reach_only_the_first_precondition (__main__.ProductionPinsTests.test_actual_exact_release_pins_reach_only_the_first_precondition) ... ok
+test_actual_release_pin_binding_precedes_all_file_and_process_access (__main__.ProductionPinsTests.test_actual_release_pin_binding_precedes_all_file_and_process_access) ... ok
+test_reviewed_production_constants (__main__.ProductionPinsTests.test_reviewed_production_constants) ... ok
+test_both_launcher_plans_are_checked_before_first_worktree (__main__.StagingTests.test_both_launcher_plans_are_checked_before_first_worktree) ... ok
+test_changed_normal_or_video_migrations_and_missing_video_migration_are_refused (__main__.StagingTests.test_changed_normal_or_video_migrations_and_missing_video_migration_are_refused) ... ok
+test_checkpoint_metadata_refuses_before_node_or_new_outputs (__main__.StagingTests.test_checkpoint_metadata_refuses_before_node_or_new_outputs) ... ok
+test_dependency_changes_and_tracked_node_modules_are_refused (__main__.StagingTests.test_dependency_changes_and_tracked_node_modules_are_refused) ... ok
+test_dirty_baseline_is_refused_before_node_invocation (__main__.StagingTests.test_dirty_baseline_is_refused_before_node_invocation) ... ok
+test_each_package_version_must_be_183 (__main__.StagingTests.test_each_package_version_must_be_183) ... ok
+test_existing_output_or_dangling_symlink_refuses_all_remaining_outputs (__main__.StagingTests.test_existing_output_or_dangling_symlink_refuses_all_remaining_outputs) ... ok
+test_existing_success_receipt_or_symlink_is_never_replaced (__main__.StagingTests.test_existing_success_receipt_or_symlink_is_never_replaced) ... ok
+test_file_metadata_guards_refuse_insecure_launcher_or_node (__main__.StagingTests.test_file_metadata_guards_refuse_insecure_launcher_or_node) ... ok
+test_launcher_or_node_pin_mismatch_refuses_staging (__main__.StagingTests.test_launcher_or_node_pin_mismatch_refuses_staging) ... ok
+test_pins_are_rechecked_after_launcher_validation_before_first_worktree (__main__.StagingTests.test_pins_are_rechecked_after_launcher_validation_before_first_worktree) ... ok
+test_post_gate_write_failure_preserves_partial_output_and_refuses_retry (__main__.StagingTests.test_post_gate_write_failure_preserves_partial_output_and_refuses_retry) ... ok
+test_stages_one_exact_release_preserving_all_existing_configuration_without_reading_it (__main__.StagingTests.test_stages_one_exact_release_preserving_all_existing_configuration_without_reading_it) ... ok
+test_unrelated_candidate_and_main_not_containing_candidate_are_refused (__main__.StagingTests.test_unrelated_candidate_and_main_not_containing_candidate_are_refused) ... ok
+test_wrong_argument_shapes_and_unpinned_source_tree_refuse_before_access (__main__.StagingTests.test_wrong_argument_shapes_and_unpinned_source_tree_refuse_before_access) ... ok
+test_wrong_node_version_refuses_staging (__main__.StagingTests.test_wrong_node_version_refuses_staging) ... ok
+test_wrong_release_tag_is_refused (__main__.StagingTests.test_wrong_release_tag_is_refused) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 35.691s
+
+OK

@@ -1,0 +1,129 @@
+{
+  "type": "jm183-native-evidence-index",
+  "reports": [
+    {
+      "path": "pr-native-final.json",
+      "sha256": "2343beddf4658ba8a19bc7daa64d0f7e8781a428373afb29b76a371521631eb7",
+      "bytes": 33916
+    },
+    {
+      "path": "main-native.json",
+      "sha256": "0f13a8180094d24e0e22feaba883da70b33c751d7444ac7218f0c7d50a86ba35",
+      "bytes": 30602
+    },
+    {
+      "path": "publication-native.json",
+      "sha256": "b49d25a784deb173d753f75502a31da31ee53d5266d9c289effa2c391f2a2490",
+      "bytes": 9818
+    }
+  ],
+  "logs": [
+    {
+      "path": "logs/pr130-final-auth-120118755328.log",
+      "report": "pr-native-final.json",
+      "jobId": 120118755328,
+      "sha256": "c872679ad43864427443a4611a8f4067f99c3b41ff4740a131c847b5ce3a48e7",
+      "gitBlobSha": "ac487dedd5dd10d81976712bd936501099d45255",
+      "bytes": 38876
+    },
+    {
+      "path": "logs/pr130-final-mariadb114-120118755453.log",
+      "report": "pr-native-final.json",
+      "jobId": 120118755453,
+      "sha256": "780994a214700676762ecacae7db178f24814b60279df6017d0fe984d0732e43",
+      "gitBlobSha": "aa4028e49586badc36eea80f0e20f1ff1f5dcea3",
+      "bytes": 341005
+    },
+    {
+      "path": "logs/pr130-final-browser-120118755507.log",
+      "report": "pr-native-final.json",
+      "jobId": 120118755507,
+      "sha256": "458f188ff8876fbd6090d8f338a520fc23789af22071f82d1b274f6efded59d7",
+      "gitBlobSha": "25e3db86d8577efc3f85dd09e58cbfeb91b7721b",
+      "bytes": 49745
+    },
+    {
+      "path": "logs/pr130-final-verify-120118755607.log",
+      "report": "pr-native-final.json",
+      "jobId": 120118755607,
+      "sha256": "632a9670844a979a6c3d2453eacc65bdcceb0ed9fe35a0d0e24b78757db76708",
+      "gitBlobSha": "f919a0cb100023d968a198c0b29d0ff6757b12cf",
+      "bytes": 559295
+    },
+    {
+      "path": "logs/pr130-final-mariadb1011-120118755688.log",
+      "report": "pr-native-final.json",
+      "jobId": 120118755688,
+      "sha256": "5fe3dce125f5b6f4f6eb74b1a8dafaff077d1b679a9d6f755736fa652dae4369",
+      "gitBlobSha": "aa700c356a5b5a2f6804ba3936a1d8d928356397",
+      "bytes": 340855
+    },
+    {
+      "path": "logs/main183-auth-120122416170.log",
+      "report": "main-native.json",
+      "jobId": 120122416170,
+      "sha256": "5c0137896d181ef4501efbdd78b1238469581706bc2ba7802b88de2a9132d9d2",
+      "gitBlobSha": "052947225c003e4257ed1abb58750ac6f2ba2654",
+      "bytes": 38168
+    },
+    {
+      "path": "logs/main183-mariadb114-120122416250.log",
+      "report": "main-native.json",
+      "jobId": 120122416250,
+      "sha256": "ae4b708c6835f3f1011b2f09957106bdcc0ec156de7d861f082ec776705ccff7",
+      "gitBlobSha": "4b1b3ac37690a9feddac0a328f1008ef7f8dd367",
+      "bytes": 340435
+    },
+    {
+      "path": "logs/main183-mariadb1011-120122416277.log",
+      "report": "main-native.json",
+      "jobId": 120122416277,
+      "sha256": "34633979378f35e7e02c2b8e3318c48fb61a55819df5ba8df747e24216055697",
+      "gitBlobSha": "f8312583402205606a1ea125144257a941e65707",
+      "bytes": 340089
+    },
+    {
+      "path": "logs/main183-browser-120122416423.log",
+      "report": "main-native.json",
+      "jobId": 120122416423,
+      "sha256": "5213eb68fa909f600ba4226ebee35d096ae070e6d33ffb44d7670928bdcf7baa",
+      "gitBlobSha": "97c8a0da27778704c8f375784223e017865dbae6",
+      "bytes": 48983
+    },
+    {
+      "path": "logs/main183-verify-120122416432.log",
+      "report": "main-native.json",
+      "jobId": 120122416432,
+      "sha256": "e7de21898e3304d2c4a4dde2e9370ce5d996bb8c952806f49002ff843c8e13ac",
+      "gitBlobSha": "faa71c59f5a9f0d93fd8a1aac9c7d51703fd575e",
+      "bytes": 558548
+    },
+    {
+      "path": "logs/publication183-operator-tests-120126917074.log",
+      "report": "publication-native.json",
+      "jobId": 120126917074,
+      "sha256": "c152b71d8ae259cd1ec68a7c74d849c331eaa1e3cda5bdd09157b9e0b5489b41",
+      "gitBlobSha": "470b330de836eaaff9ec4e9eabac4d62e9910481",
+      "bytes": 47287
+    },
+    {
+      "path": "logs/publication183-publish-120127109815.log",
+      "report": "publication-native.json",
+      "jobId": 120127109815,
+      "sha256": "f7f51269eb035fb6b36ac6650392cae9167f48d66fb925aae3b3ffdc4cf86460",
+      "gitBlobSha": "627f291c5a9ef2b058166faa9959d18bca857755",
+      "bytes": 22755
+    }
+  ],
+  "qualification": {
+    "pr": 39863182670,
+    "main": 39864278371,
+    "publication": 39865609026
+  },
+  "applicationSource": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+  "applicationTree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+  "releaseId": 421266798,
+  "hostedChanged": false,
+  "rawReportsUnmodified": true,
+  "rawLogsUnmodified": true
+}

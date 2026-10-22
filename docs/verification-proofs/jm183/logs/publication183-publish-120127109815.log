@@ -1,0 +1,238 @@
+﻿2026-10-22T22:32:13.2928704Z Current runner version: '2.338.0'
+2026-10-22T22:32:13.2949482Z ##[group]Runner Image Provisioner
+2026-10-22T22:32:13.2950076Z Hosted Compute Agent
+2026-10-22T22:32:13.2950441Z Version: 20261012.601
+2026-10-22T22:32:13.2950915Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+2026-10-22T22:32:13.2951421Z Build Date: 2026-10-12T17:48:21Z
+2026-10-22T22:32:13.2951856Z Worker ID: {2c07d6d1-7f42-425e-9897-56b5c34f0cae}
+2026-10-22T22:32:13.2952345Z Region: centralus
+2026-10-22T22:32:13.2952758Z Cloud: Azure
+2026-10-22T22:32:13.2953133Z ##[endgroup]
+2026-10-22T22:32:13.2953929Z ##[group]Operating System
+2026-10-22T22:32:13.2954282Z Ubuntu
+2026-10-22T22:32:13.2954948Z 24.04.5
+2026-10-22T22:32:13.2955305Z LTS
+2026-10-22T22:32:13.2955653Z ##[endgroup]
+2026-10-22T22:32:13.2956146Z ##[group]Runner Image
+2026-10-22T22:32:13.2956514Z Image: ubuntu-24.04
+2026-10-22T22:32:13.2956906Z Version: 20261012.334.1
+2026-10-22T22:32:13.2957763Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-22T22:32:13.2958731Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+2026-10-22T22:32:13.2959323Z ##[endgroup]
+2026-10-22T22:32:13.2960130Z ##[group]GITHUB_TOKEN Permissions
+2026-10-22T22:32:13.2961637Z Actions: read
+2026-10-22T22:32:13.2962070Z Contents: write
+2026-10-22T22:32:13.2962447Z Metadata: read
+2026-10-22T22:32:13.2962820Z ##[endgroup]
+2026-10-22T22:32:13.2964269Z Secret source: Actions
+2026-10-22T22:32:13.2964927Z Cache mode: write
+2026-10-22T22:32:13.2965536Z Prepare workflow directory
+2026-10-22T22:32:13.3255456Z Prepare all required actions
+2026-10-22T22:32:13.3289229Z Getting action download info
+2026-10-22T22:32:13.5845976Z Download action repository 'actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+2026-10-22T22:32:14.1656704Z Complete job name: publish
+2026-10-22T22:32:14.2303273Z ##[group]Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+2026-10-22T22:32:14.2303875Z with:
+2026-10-22T22:32:14.2304143Z   node-version: 24.22.1
+2026-10-22T22:32:14.2304436Z   package-manager-cache: false
+2026-10-22T22:32:14.2304747Z   check-latest: false
+2026-10-22T22:32:14.2307300Z   token: ***
+2026-10-22T22:32:14.2307629Z ##[endgroup]
+2026-10-22T22:32:14.3478798Z Attempting to download 24.22.1...
+2026-10-22T22:32:15.0529391Z Acquiring 24.22.1 - x64 from https://github.com/actions/node-versions/releases/download/24.22.1-39619001896/node-24.22.1-linux-x64.tar.gz
+2026-10-22T22:32:15.6014793Z Extracting ...
+2026-10-22T22:32:15.6094291Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/dfc8a480-1939-4060-add9-a6571319ea01 -f /home/runner/work/_temp/db002d63-3605-4ddb-b5ec-8e0a4fa824b3
+2026-10-22T22:32:16.6000789Z Adding to the cache ...
+2026-10-22T22:32:18.7649218Z ##[group]Environment details
+2026-10-22T22:32:18.9311553Z node: v24.22.1
+2026-10-22T22:32:18.9312231Z npm: 11.19.1
+2026-10-22T22:32:18.9312484Z yarn: 1.22.22
+2026-10-22T22:32:18.9313186Z ##[endgroup]
+2026-10-22T22:32:18.9509265Z ##[group]Run import base64, json, os, re, subprocess, urllib.error, urllib.request
+2026-10-22T22:32:18.9510031Z [36;1mimport base64, json, os, re, subprocess, urllib.error, urllib.request[0m
+2026-10-22T22:32:18.9510288Z [36;1m[0m
+2026-10-22T22:32:18.9510449Z [36;1mrepo = "fredbuhr/jessiemessage"[0m
+2026-10-22T22:32:18.9510644Z [36;1mversion = "1.8.3"[0m
+2026-10-22T22:32:18.9510865Z [36;1mtarget = "48fd42b808b2bc4d95d3f3ba21244c032d0a938f"[0m
+2026-10-22T22:32:18.9511138Z [36;1mtree = "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58"[0m
+2026-10-22T22:32:18.9511353Z [36;1mci_text = "39864278371"[0m
+2026-10-22T22:32:18.9511563Z [36;1mbaseline = "78e6b8b2f6b19020c060345b9313a81829e9c8da"[0m
+2026-10-22T22:32:18.9511823Z [36;1mbaseline_tree = "7b722ca1fbd3416acecffa3c122e967511184d4c"[0m
+2026-10-22T22:32:18.9512100Z [36;1mrollback_target = "6b3319a77c307ed7d6b003fe33de36807c70c266"[0m
+2026-10-22T22:32:18.9512331Z [36;1mrollback_id = 420600213[0m
+2026-10-22T22:32:18.9512754Z [36;1mlatest_tag = "v1.8.2"[0m
+2026-10-22T22:32:18.9512929Z [36;1mlatest_id = 421075470[0m
+2026-10-22T22:32:18.9513130Z [36;1massert re.fullmatch(r"[0-9a-f]{40}", target)[0m
+2026-10-22T22:32:18.9513358Z [36;1massert re.fullmatch(r"[0-9a-f]{40}", tree)[0m
+2026-10-22T22:32:18.9513578Z [36;1massert re.fullmatch(r"[1-9][0-9]*", ci_text)[0m
+2026-10-22T22:32:18.9513802Z [36;1massert re.fullmatch(r"[0-9a-f]{40}", baseline)[0m
+2026-10-22T22:32:18.9514034Z [36;1massert re.fullmatch(r"[0-9a-f]{40}", baseline_tree)[0m
+2026-10-22T22:32:18.9514253Z [36;1massert version == "1.8.3"[0m
+2026-10-22T22:32:18.9514459Z [36;1mci, tag = int(ci_text), "v" + version[0m
+2026-10-22T22:32:18.9514705Z [36;1massert os.environ["GITHUB_REPOSITORY"] == repo[0m
+2026-10-22T22:32:18.9514970Z [36;1massert os.environ["GITHUB_REF"] == "refs/heads/ops/publish-" + tag[0m
+2026-10-22T22:32:18.9515244Z [36;1massert os.environ["GITHUB_EVENT_NAME"] == "push"[0m
+2026-10-22T22:32:18.9515582Z [36;1massert subprocess.check_output(["node", "--version"], text=True, timeout=5).strip() == "v24.22.1"[0m
+2026-10-22T22:32:18.9515993Z [36;1mpublication_qualified = False[0m
+2026-10-22T22:32:18.9516175Z [36;1m[0m
+2026-10-22T22:32:18.9516347Z [36;1mdef api(path, data=None, optional=False):[0m
+2026-10-22T22:32:18.9516604Z [36;1m    if data is not None:[0m
+2026-10-22T22:32:18.9516882Z [36;1m        assert publication_qualified, "Publication requires every qualification gate first"[0m
+2026-10-22T22:32:18.9517180Z [36;1m    request = urllib.request.Request([0m
+2026-10-22T22:32:18.9517515Z [36;1m        "https://api.github.com/repos/" + repo + "/" + path,[0m
+2026-10-22T22:32:18.9517810Z [36;1m        data=None if data is None else json.dumps(data).encode(),[0m
+2026-10-22T22:32:18.9518143Z [36;1m        headers={"Authorization": "Bearer " + os.environ["GH_TOKEN"],[0m
+2026-10-22T22:32:18.9518412Z [36;1m                 "Accept": "application/vnd.github+json",[0m
+2026-10-22T22:32:18.9518655Z [36;1m                 "Content-Type": "application/json",[0m
+2026-10-22T22:32:18.9518890Z [36;1m                 "X-GitHub-Api-Version": "2022-11-28"},[0m
+2026-10-22T22:32:18.9519124Z [36;1m        method="GET" if data is None else "POST")[0m
+2026-10-22T22:32:18.9519327Z [36;1m    try:[0m
+2026-10-22T22:32:18.9519534Z [36;1m        with urllib.request.urlopen(request, timeout=30) as response:[0m
+2026-10-22T22:32:18.9519784Z [36;1m            return json.load(response)[0m
+2026-10-22T22:32:18.9520000Z [36;1m    except urllib.error.HTTPError as error:[0m
+2026-10-22T22:32:18.9520219Z [36;1m        if optional and error.code == 404:[0m
+2026-10-22T22:32:18.9520416Z [36;1m            return None[0m
+2026-10-22T22:32:18.9520657Z [36;1m        raise SystemExit("GitHub operation refused: HTTP " + str(error.code))[0m
+2026-10-22T22:32:18.9520914Z [36;1m[0m
+2026-10-22T22:32:18.9521058Z [36;1mdef source_file(path):[0m
+2026-10-22T22:32:18.9521263Z [36;1m    value = api("contents/" + path + "?ref=" + target)[0m
+2026-10-22T22:32:18.9521658Z [36;1m    assert value["type"] == "file" and value["encoding"] == "base64"[0m
+2026-10-22T22:32:18.9521967Z [36;1m    return base64.b64decode(value["content"], validate=False).decode("utf-8")[0m
+2026-10-22T22:32:18.9522215Z [36;1m[0m
+2026-10-22T22:32:18.9522371Z [36;1mrun = api("actions/runs/" + str(ci))[0m
+2026-10-22T22:32:18.9522617Z [36;1massert run["head_sha"] == target and run["head_branch"] == "main"[0m
+2026-10-22T22:32:18.9522913Z [36;1massert run["event"] == "push" and run["path"] == ".github/workflows/ci.yml"[0m
+2026-10-22T22:32:18.9523219Z [36;1massert run["status"] == "completed" and run["conclusion"] == "success"[0m
+2026-10-22T22:32:18.9523531Z [36;1massert run["run_attempt"] == 1, "Use the clean main qualification, not a rerun"[0m
+2026-10-22T22:32:18.9523831Z [36;1mjobs = api("actions/runs/" + str(ci) + "/jobs?per_page=100")[0m
+2026-10-22T22:32:18.9524092Z [36;1mexpected = {"verify", "MariaDB 10.11", "MariaDB 11.4",[0m
+2026-10-22T22:32:18.9524448Z [36;1m            "Chrome keyboard and chat lifecycle",[0m
+2026-10-22T22:32:18.9524698Z [36;1m            "Chrome HTTPS authentication and messaging with MariaDB"}[0m
+2026-10-22T22:32:18.9524970Z [36;1massert jobs["total_count"] == 5 and len(jobs["jobs"]) == 5[0m
+2026-10-22T22:32:18.9525230Z [36;1massert {job["name"] for job in jobs["jobs"]} == expected[0m
+2026-10-22T22:32:18.9525510Z [36;1massert all(job["status"] == "completed" and job["conclusion"] == "success"[0m
+2026-10-22T22:32:18.9525911Z [36;1m           and job["head_sha"] == target and job["run_id"] == ci and job["run_attempt"] == 1[0m
+2026-10-22T22:32:18.9526185Z [36;1m           for job in jobs["jobs"])[0m
+2026-10-22T22:32:18.9526417Z [36;1massert api("git/commits/" + target)["tree"]["sha"] == tree[0m
+2026-10-22T22:32:18.9526706Z [36;1m# Main may already contain the product release; never move this pin.[0m
+2026-10-22T22:32:18.9526980Z [36;1mcomparison = api("compare/" + target + "...main")[0m
+2026-10-22T22:32:18.9527329Z [36;1massert comparison["merge_base_commit"]["sha"] == target and comparison["status"] in {"identical", "ahead"}[0m
+2026-10-22T22:32:18.9527667Z [36;1mpackage = json.loads(source_file("package.json"))[0m
+2026-10-22T22:32:18.9527917Z [36;1mlock = json.loads(source_file("package-lock.json"))[0m
+2026-10-22T22:32:18.9528222Z [36;1massert package["name"] == lock["name"] == lock["packages"][""]["name"] == "jessiemessage"[0m
+2026-10-22T22:32:18.9528576Z [36;1massert package["version"] == lock["version"] == lock["packages"][""]["version"] == version[0m
+2026-10-22T22:32:18.9528927Z [36;1massert package["engines"]["node"] == lock["packages"][""]["engines"]["node"] == ">=24 <25"[0m
+2026-10-22T22:32:18.9529227Z [36;1mworkflow = source_file(".github/workflows/ci.yml")[0m
+2026-10-22T22:32:18.9529498Z [36;1m# Official Node24 action pins retained from prior qualification.[0m
+2026-10-22T22:32:18.9529812Z [36;1maction_uses = re.findall(r"(?m)^\s+uses: ([^\s#]+)(?:[ \t]+#[^\n]*)?[ \t]*$", workflow)[0m
+2026-10-22T22:32:18.9530076Z [36;1mexpected_uses = {[0m
+2026-10-22T22:32:18.9530334Z [36;1m    "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1": 4,[0m
+2026-10-22T22:32:18.9530636Z [36;1m    "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1": 4,[0m
+2026-10-22T22:32:18.9530946Z [36;1m    "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9": 2,[0m
+2026-10-22T22:32:18.9531195Z [36;1m}[0m
+2026-10-22T22:32:18.9531347Z [36;1massert len(action_uses) == 10[0m
+2026-10-22T22:32:18.9531617Z [36;1massert {name: action_uses.count(name) for name in set(action_uses)} == expected_uses[0m
+2026-10-22T22:32:18.9531958Z [36;1massert len(re.findall(r'(?m)^\s+node-version: "24\.22\.1"[ \t]*$', workflow)) == 4[0m
+2026-10-22T22:32:18.9532296Z [36;1massert len(re.findall(r"(?m)^\s+persist-credentials: false[ \t]*$", workflow)) == 4[0m
+2026-10-22T22:32:18.9532640Z [36;1massert len(re.findall(r"(?m)^\s+package-manager-cache: false[ \t]*$", workflow)) == 4[0m
+2026-10-22T22:32:18.9533043Z [36;1mgates = source_file("server/release-features.mjs")[0m
+2026-10-22T22:32:18.9533397Z [36;1mstatements = [line.strip() for line in gates.splitlines() if line.strip() and not line.lstrip().startswith("//")][0m
+2026-10-22T22:32:18.9533862Z [36;1massert statements == ["export const VIDEO_CREATION_ENABLED = true;", "export const QUICK_REPLIES_WRITABLE = true;"][0m
+2026-10-22T22:32:18.9534204Z [36;1mruntime = source_file("server/index.mjs")[0m
+2026-10-22T22:32:18.9534540Z [36;1massert 'import { VIDEO_CREATION_ENABLED, QUICK_REPLIES_WRITABLE } from "./release-features.mjs";' in runtime[0m
+2026-10-22T22:32:18.9534932Z [36;1massert runtime.count("creationEnabled: VIDEO_CREATION_ENABLED") == 3[0m
+2026-10-22T22:32:18.9535251Z [36;1massert runtime.count("videoCreationEnabled: VIDEO_CREATION_ENABLED") == 6[0m
+2026-10-22T22:32:18.9535557Z [36;1massert runtime.count("writable: QUICK_REPLIES_WRITABLE") == 3[0m
+2026-10-22T22:32:18.9535991Z [36;1m[0m
+2026-10-22T22:32:18.9536202Z [36;1massert api("git/commits/" + baseline)["tree"]["sha"] == baseline_tree[0m
+2026-10-22T22:32:18.9536584Z [36;1mold_tree = api("git/trees/" + baseline_tree + "?recursive=1")[0m
+2026-10-22T22:32:18.9536847Z [36;1mnew_tree = api("git/trees/" + tree + "?recursive=1")[0m
+2026-10-22T22:32:18.9537134Z [36;1massert old_tree["truncated"] is False and new_tree["truncated"] is False[0m
+2026-10-22T22:32:18.9537390Z [36;1mdef blobs(value, prefix):[0m
+2026-10-22T22:32:18.9537637Z [36;1m    return {item["path"]: (item["sha"], item["mode"]) for item in value["tree"][0m
+2026-10-22T22:32:18.9537946Z [36;1m            if item["type"] == "blob" and item["path"].startswith(prefix)}[0m
+2026-10-22T22:32:18.9538204Z [36;1mnormal = blobs(new_tree, "db/migrations/")[0m
+2026-10-22T22:32:18.9538466Z [36;1massert len(normal) == 33 and normal == blobs(old_tree, "db/migrations/")[0m
+2026-10-22T22:32:18.9538875Z [36;1massert sorted(int(re.fullmatch(r"db/migrations/([0-9]{4})_[a-z0-9_]+\.sql", path).group(1)) for path in normal) == list(range(1, 34))[0m
+2026-10-22T22:32:18.9539262Z [36;1mcandidates = blobs(new_tree, "server/video/migrations/")[0m
+2026-10-22T22:32:18.9539567Z [36;1massert set(candidates) == {"server/video/migrations/0034_video_storage_state.sql",[0m
+2026-10-22T22:32:18.9539872Z [36;1m                           "server/video/migrations/0035_video_assets.sql",[0m
+2026-10-22T22:32:18.9540138Z [36;1m                           "server/video/migrations/0036_message_video.sql"}[0m
+2026-10-22T22:32:18.9540417Z [36;1massert all(mode == "100644" for sha, mode in candidates.values())[0m
+2026-10-22T22:32:18.9540777Z [36;1massert candidates == blobs(old_tree, "server/video/migrations/"), "No schema change in this patch release"[0m
+2026-10-22T22:32:18.9541248Z [36;1massert {item["path"] for item in new_tree["tree"] if item["type"] == "blob" and item["path"].endswith(".sql")} == set(normal) | set(candidates)[0m
+2026-10-22T22:32:18.9541588Z [36;1m[0m
+2026-10-22T22:32:18.9541777Z [36;1mname = "JessieMessage 1.8.3 — Messagerie et fiabilité"[0m
+2026-10-22T22:32:18.9542184Z [36;1mdetails = ["Version publiée et qualifiée ; activation hébergée à effectuer séparément.",[0m
+2026-10-22T22:32:18.9542716Z [36;1m           "- Cohérence des sessions, renouvellements d’accès et liens e-mail ; correctifs de fiabilité et simplification de l’interface de messagerie.",[0m
+2026-10-22T22:32:18.9543241Z [36;1m           "- Protections des chemins historiques conservées, sans réactivation du témoin ou d’anciennes opérations.",[0m
+2026-10-22T22:32:18.9543929Z [36;1m           "- Node.js 24.22.1 et SQL36 inchangés : aucune migration ni nouvelle clé/configuration privée. Le repli technique [v1.7.2](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.7.2) est conservé, source `" + rollback_target + "`.",[0m
+2026-10-22T22:32:18.9544705Z [36;1m           "- Le test hébergé de sauvegarde reste reporté à la demande de l’utilisateur ; les réserves réseau, de croissance et d’appareils non essayés restent explicites."][0m
+2026-10-22T22:32:18.9545278Z [36;1mbody = "\n".join(details + ["", "Commit : `" + target + "`.",[0m
+2026-10-22T22:32:18.9545622Z [36;1m    "Validation : [CI complète, 5/5 jobs](https://github.com/" + repo + "/actions/runs/" + str(ci) + ").",[0m
+2026-10-22T22:32:18.9546235Z [36;1m    "", "La production reste 1.8.2 / SQL36 jusqu’à activation. L’état déployé est consigné dans [REPRISE](https://github.com/" + repo + "/blob/main/docs/REPRISE.md)."])[0m
+2026-10-22T22:32:18.9546648Z [36;1mdef verify_release(value):[0m
+2026-10-22T22:32:18.9546892Z [36;1m    assert value["tag_name"] == tag and value["target_commitish"] == target[0m
+2026-10-22T22:32:18.9547194Z [36;1m    assert value["draft"] is False and value["prerelease"] is False[0m
+2026-10-22T22:32:18.9547545Z [36;1m    assert value["name"] == name and value["body"] == body, "Existing release metadata must never be edited"[0m
+2026-10-22T22:32:18.9547848Z [36;1mdef verify_previous_latest():[0m
+2026-10-22T22:32:18.9548044Z [36;1m    value = api("releases/latest")[0m
+2026-10-22T22:32:18.9548464Z [36;1m    assert value["id"] == latest_id and value["tag_name"] == latest_tag, "Unexpected latest before creating this release"[0m
+2026-10-22T22:32:18.9548804Z [36;1m    assert value["target_commitish"] == baseline[0m
+2026-10-22T22:32:18.9549027Z [36;1mdef verify_published_latest(release):[0m
+2026-10-22T22:32:18.9549233Z [36;1m    value = api("releases/latest")[0m
+2026-10-22T22:32:18.9549494Z [36;1m    assert value["id"] == release["id"], "Latest must identify this exact release"[0m
+2026-10-22T22:32:18.9549753Z [36;1m    verify_release(value)[0m
+2026-10-22T22:32:18.9549923Z [36;1m[0m
+2026-10-22T22:32:18.9550096Z [36;1mrollback_reference = api("git/ref/tags/v1.7.2")[0m
+2026-10-22T22:32:18.9550446Z [36;1massert rollback_reference["object"]["type"] == "commit" and rollback_reference["object"]["sha"] == rollback_target[0m
+2026-10-22T22:32:18.9550789Z [36;1mrollback_release = api("releases/tags/v1.7.2")[0m
+2026-10-22T22:32:18.9551093Z [36;1massert rollback_release["id"] == rollback_id and rollback_release["tag_name"] == "v1.7.2"[0m
+2026-10-22T22:32:18.9551420Z [36;1massert rollback_release["target_commitish"] == rollback_target[0m
+2026-10-22T22:32:18.9551744Z [36;1massert rollback_release["draft"] is False and rollback_release["prerelease"] is False[0m
+2026-10-22T22:32:18.9552010Z [36;1m[0m
+2026-10-22T22:32:18.9552202Z [36;1m# Check every existing object before the first write. No PATCH,[0m
+2026-10-22T22:32:18.9552495Z [36;1m# DELETE or tag movement exists; identical interrupted retries only.[0m
+2026-10-22T22:32:18.9552774Z [36;1mreference = api("git/ref/tags/" + tag, optional=True)[0m
+2026-10-22T22:32:18.9552998Z [36;1mif reference is not None:[0m
+2026-10-22T22:32:18.9553317Z [36;1m    assert reference["object"]["type"] == "commit" and reference["object"]["sha"] == target, "Existing tag must never be moved"[0m
+2026-10-22T22:32:18.9553682Z [36;1mexisting = api("releases/tags/" + tag, optional=True)[0m
+2026-10-22T22:32:18.9553906Z [36;1mif existing is not None:[0m
+2026-10-22T22:32:18.9554171Z [36;1m    assert reference is not None, "A release without its expected tag is inconsistent"[0m
+2026-10-22T22:32:18.9554443Z [36;1m    verify_release(existing)[0m
+2026-10-22T22:32:18.9554635Z [36;1m    verify_published_latest(existing)[0m
+2026-10-22T22:32:18.9554820Z [36;1melse:[0m
+2026-10-22T22:32:18.9555034Z [36;1m    verify_previous_latest()[0m
+2026-10-22T22:32:18.9555371Z [36;1mpublication_qualified = True[0m
+2026-10-22T22:32:18.9555552Z [36;1mif existing is None:[0m
+2026-10-22T22:32:18.9555810Z [36;1m    if reference is None:[0m
+2026-10-22T22:32:18.9556031Z [36;1m        api("git/refs", {"ref": "refs/tags/" + tag, "sha": target})[0m
+2026-10-22T22:32:18.9556277Z [36;1m    reference = api("git/ref/tags/" + tag)[0m
+2026-10-22T22:32:18.9556563Z [36;1m    assert reference["object"]["type"] == "commit" and reference["object"]["sha"] == target[0m
+2026-10-22T22:32:18.9556888Z [36;1m    # Recheck immediately before the release write. GitHub's create[0m
+2026-10-22T22:32:18.9557319Z [36;1m    # endpoint advances latest in that same operation; no existing[0m
+2026-10-22T22:32:18.9557603Z [36;1m    # release is edited and no separate alignment is scheduled.[0m
+2026-10-22T22:32:18.9557839Z [36;1m    verify_previous_latest()[0m
+2026-10-22T22:32:18.9558068Z [36;1m    api("releases", {"tag_name": tag, "target_commitish": target,[0m
+2026-10-22T22:32:18.9558384Z [36;1m        "name": name, "body": body, "draft": False, "prerelease": False, "make_latest": "true"})[0m
+2026-10-22T22:32:18.9558671Z [36;1mreference = api("git/ref/tags/" + tag)[0m
+2026-10-22T22:32:18.9558954Z [36;1massert reference["object"]["type"] == "commit" and reference["object"]["sha"] == target[0m
+2026-10-22T22:32:18.9559236Z [36;1mrelease = api("releases/tags/" + tag)[0m
+2026-10-22T22:32:18.9559433Z [36;1mverify_release(release)[0m
+2026-10-22T22:32:18.9559617Z [36;1mverify_published_latest(release)[0m
+2026-10-22T22:32:18.9559882Z [36;1mprint(json.dumps({"status": "published_verified", "tag": tag, "commit": target,[0m
+2026-10-22T22:32:18.9560278Z [36;1m                  "tree": tree, "releaseUrl": release["html_url"], "ciRun": ci,[0m
+2026-10-22T22:32:18.9560606Z [36;1m                  "nodeVersion": "24.22.1", "normalMigrations": 33, "videoCandidateMigrations": 3,[0m
+2026-10-22T22:32:18.9561027Z [36;1m                  "videoCreationEnabled": True, "quickRepliesWritable": True, "schemaMigrations": 36, "migrationsChanged": False,[0m
+2026-10-22T22:32:18.9561449Z [36;1m                  "rollback": {"tag": "v1.7.2", "commit": rollback_target, "releaseId": rollback_id},[0m
+2026-10-22T22:32:18.9561763Z [36;1m                  "previousLatest": {"tag": latest_tag, "id": latest_id},[0m
+2026-10-22T22:32:18.9562046Z [36;1m                  "latest": {"tag": tag, "id": release["id"], "source": target},[0m
+2026-10-22T22:32:18.9562401Z [36;1m                  "publicationMode": "created_and_latest" if existing is None else "verified_existing_read_only",[0m
+2026-10-22T22:32:18.9562731Z [36;1m                  "deploymentPerformed": False}))[0m
+2026-10-22T22:32:18.9693824Z shell: /usr/bin/python {0}
+2026-10-22T22:32:18.9694047Z env:
+2026-10-22T22:32:18.9696140Z   GH_TOKEN: ***
+2026-10-22T22:32:18.9696299Z ##[endgroup]
+2026-10-22T22:32:27.1955058Z {"status": "published_verified", "tag": "v1.8.3", "commit": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f", "tree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58", "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.3", "ciRun": 39864278371, "nodeVersion": "24.22.1", "normalMigrations": 33, "videoCandidateMigrations": 3, "videoCreationEnabled": true, "quickRepliesWritable": true, "schemaMigrations": 36, "migrationsChanged": false, "rollback": {"tag": "v1.7.2", "commit": "6b3319a77c307ed7d6b003fe33de36807c70c266", "releaseId": 420600213}, "previousLatest": {"tag": "v1.8.2", "id": 421075470}, "latest": {"tag": "v1.8.3", "id": 421266798, "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f"}, "publicationMode": "created_and_latest", "deploymentPerformed": false}
+2026-10-22T22:32:27.2149901Z Post job cleanup.
+2026-10-22T22:32:27.3162677Z Cleaning up orphan processes

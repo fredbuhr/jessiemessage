@@ -1,0 +1,45 @@
+{
+  "status": "independent_comparison_confirms_scrollbar_only_difference_no_app_pixel_difference",
+  "timestamp": "2026-10-22T22:18:05.907021+00:00",
+  "reviewer": "versions_reprise/second_visual_review",
+  "finalRunId": 39863182670,
+  "finalHeadPrefixReportedByParent": "87df47ae",
+  "finalArtifactDigestReportedByParent": "sha256:d9138e664ade2c8be6af466c2675d8f7f310b7fa0871cb28a8e9eb88197c3cfd",
+  "filesReviewed": [
+    {
+      "file": "/workspace/scratch/bb431be72395/ux183/final-screenshots/admin-home-320-bottom.png",
+      "sha256": "5901f3bee0149ce35cd3c4e1ebd4643851e0ead17d78d1c16c7e3305808cdeff",
+      "width": 320,
+      "height": 844
+    },
+    {
+      "file": "/workspace/scratch/bb431be72395/ux183/second-screenshots/admin-home-320-bottom.png",
+      "sha256": "97fdd04f9a5cb8d336009b3f1c430beb56c9ced330dc1c003d6f9706299886fd",
+      "width": 320,
+      "height": 844
+    }
+  ],
+  "pixelComparison": {
+    "colourMode": "RGB",
+    "differentPixels": 1340,
+    "differenceBBoxExclusive": [
+      316,
+      505,
+      320,
+      840
+    ],
+    "identicalAppArea": [
+      0,
+      0,
+      316,
+      844
+    ],
+    "appAreaIdentical": true
+  },
+  "visualObservation": "Both images show the same administrator cards, Compte et appareils disclosure and footer. The only observed difference is the narrow right-edge vertical scrollbar segment; no label, layout, application colour or other app-content difference is visible.",
+  "openFindings": [],
+  "limits": [
+    "Only these two supplied PNGs were opened and compared. The parent performed archive digest verification and the14-file comparison; this review does not independently repeat either operation.",
+    "Read-only image inspection and pixel comparison only; no source edit, test, new capture, browser session or network action."
+  ]
+}

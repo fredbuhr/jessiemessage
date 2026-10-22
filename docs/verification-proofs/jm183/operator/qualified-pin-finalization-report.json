@@ -1,0 +1,189 @@
+{
+  "status": "actual_qualified_main_pins_fixed_synthetic_qualification_complete",
+  "updatedAt": "2026-10-22T22:31:35.156168+00:00",
+  "qualifiedMain": {
+    "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "tree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+    "runId": 39864278371,
+    "event": "push",
+    "branch": "main",
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      "verify",
+      "MariaDB 10.11",
+      "MariaDB 11.4",
+      "Chrome keyboard and chat lifecycle",
+      "Chrome HTTPS authentication and messaging with MariaDB"
+    ],
+    "jobCount": 5,
+    "evidenceOrigin": "Parent independently verified GitHub API run/jobs/mainref and supplied these exact values. This agent performed no GitHub API/Git/host operation."
+  },
+  "files": [
+    {
+      "path": "ops/prepare-release183.py",
+      "sha256": "0b2c280f238b80eb80944623576a5932a9abf41778cb9f215a7036a529b85101",
+      "bytes": 15612,
+      "changes": "qualification_literal_pins_only",
+      "previousSha256": "7393f11ded4c59c2dc06d7c245ec32777617a3e155bc7bdf0adcf917660264cd"
+    },
+    {
+      "path": "ops/test-prepare-release183.py",
+      "sha256": "b5c32dc7ff490b1a336a5876f56a7e8b63a1a6d0b1962a70c10d7a7cc3fd12a9",
+      "bytes": 32578,
+      "changes": "unchanged",
+      "previousSha256": "b5c32dc7ff490b1a336a5876f56a7e8b63a1a6d0b1962a70c10d7a7cc3fd12a9"
+    },
+    {
+      "path": "ops/record-release183.py",
+      "sha256": "097fdb5287d73abe52f219f7b66a8d3ce8d39d153e26cf5e505e56cd9b48b80e",
+      "bytes": 29171,
+      "changes": "qualification_literal_pins_only",
+      "previousSha256": "8dc68ca0ff63cfc45ff39a85ad849c064acdd80eaaabb6ae9d0efe2449a605ad"
+    },
+    {
+      "path": "ops/test_record_release183.py",
+      "sha256": "999538acc10d7cd45e04a09a5b07b7bbba963e6c51d1ac2431405e071391291e",
+      "bytes": 42096,
+      "changes": "unchanged",
+      "previousSha256": "999538acc10d7cd45e04a09a5b07b7bbba963e6c51d1ac2431405e071391291e"
+    },
+    {
+      "path": "ops/test-publish-qualified183.py",
+      "sha256": "a825791b1cdfa0dd67642c24488cd82f7eaab9d4541d0134bcc4fbc258a0efbb",
+      "bytes": 19012,
+      "changes": "unchanged",
+      "previousSha256": "a825791b1cdfa0dd67642c24488cd82f7eaab9d4541d0134bcc4fbc258a0efbb"
+    },
+    {
+      "path": ".github/workflows/prepare-release183.yml",
+      "sha256": "d044816d26c51f7c3c15ed49c92424a0af917d0a1c0ae835a22de9c65458a615",
+      "bytes": 1060,
+      "changes": "unchanged",
+      "previousSha256": "d044816d26c51f7c3c15ed49c92424a0af917d0a1c0ae835a22de9c65458a615"
+    },
+    {
+      "path": ".github/workflows/record-release183.yml",
+      "sha256": "dc20d11896e0af0bb0817ed62302868a953f09c1fa64918ef566d093c9c26c94",
+      "bytes": 1135,
+      "changes": "unchanged",
+      "previousSha256": "dc20d11896e0af0bb0817ed62302868a953f09c1fa64918ef566d093c9c26c94"
+    },
+    {
+      "path": ".github/workflows/publish-qualified183.yml",
+      "sha256": "ef61cef254456f6c3cd23af7656260d28fe9ae7eea442258a78a35eba4f97b18",
+      "bytes": 14745,
+      "changes": "qualification_literal_pins_only",
+      "previousSha256": "5e0286fb330e045acfbd9e24f05bfa9f18b1ad70071d7c09b1d30dcaec00b425"
+    }
+  ],
+  "changedFiles": 3,
+  "changedLiterals": 7,
+  "unchangedFiles": 5,
+  "testsUnchanged": true,
+  "qualification": [
+    {
+      "command": "python3 ops/test-prepare-release183.py > prepare183-tests-qualified-pins.log 2>&1",
+      "cwd": "/workspace/scratch/bb431be72395/operator183",
+      "tests": 22,
+      "pass": 22,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 33.175,
+      "log": {
+        "path": "prepare183-tests-qualified-pins.log",
+        "sha256": "f5cdb95b5ac20afcde4b1fabb59b2cffc486471efb69d854a240682d38e9cce1",
+        "bytes": 3569
+      },
+      "sourcePinsQualifiedBySyntheticTest": false,
+      "scope": "preparer"
+    },
+    {
+      "command": "python3 ops/test_record_release183.py > record183-tests-qualified-pins.log 2>&1",
+      "cwd": "/workspace/scratch/bb431be72395/operator183",
+      "tests": 26,
+      "pass": 26,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 0.649,
+      "log": {
+        "path": "record183-tests-qualified-pins.log",
+        "sha256": "372ebfa7b56d44c0e4585b2c1d7764b18ff5b5bc493cbc8294b8d82dc0f76c80",
+        "bytes": 4537
+      },
+      "sourcePinsQualifiedBySyntheticTest": false,
+      "scope": "writer"
+    },
+    {
+      "command": "python3 ops/test-publish-qualified183.py --output publication183-tests-qualified-pins.json > publication183-tests-qualified-pins.log 2>&1",
+      "cwd": "/workspace/scratch/bb431be72395/operator183",
+      "tests": 38,
+      "pass": 38,
+      "fail": 0,
+      "networkCalls": 0,
+      "realMutations": 0,
+      "evidence": {
+        "path": "publication183-tests-qualified-pins.json",
+        "sha256": "a748020ebec4439950fa1913bdde02b3d3cea5e939ac3ba06859b7909285ee52",
+        "bytes": 3025
+      },
+      "log": {
+        "path": "publication183-tests-qualified-pins.log",
+        "sha256": "b2ca6792b1ae5a08c39331e15952c7816efdc152e8ea6e07e29b35b2e90a2662",
+        "bytes": 2809
+      },
+      "sourcePinsQualifiedBySyntheticTest": false,
+      "realMainQualificationEvidence": "qualifiedMain (parent API evidence), distinct from synthetic fixtures",
+      "scope": "publisher"
+    }
+  ],
+  "independentReview": {
+    "reviewer": "writer183 child",
+    "method": "Read-only final constants and guards; reversing only seven literal substitutions recovers all three prior source/workflow hashes",
+    "result": "no_concrete_blocker",
+    "testsRerunByReviewer": false,
+    "writerBlockedBeforeIo": true
+  },
+  "guards": [
+    "Publisher requires main push CI attempt1 completed/success and exactly the five named jobs, each exact source/run/attempt and completed/success",
+    "Exact candidate commit/tree, current main ancestry, package/lock183, Node24.22.1 and official action pins",
+    "Unchanged33+3 migration blobs and baseline182 identity, latest182 before writes and after tag before release, rollback172 immutable identities",
+    "POST only immutable tag183 and release183 with make_latest; exact identical existing release retry read-only and already exact latest183",
+    "Writer still refuses STAGING_PENDING before private_directory; RELEASE_ID None independently blocks publication collector before network and later metadata verification before private paths"
+  ],
+  "writerRemainingUnknownPins": {
+    "STAGING_SHA": "STAGING_PENDING",
+    "RELEASE_ID": null
+  },
+  "prepareCommand": {
+    "command": "python3 prepare-release183.py 48fd42b808b2bc4d95d3f3ba21244c032d0a938f 1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+    "arguments": [
+      "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+      "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58"
+    ],
+    "helper": "ops/prepare-release183.py",
+    "helperSha256": "0b2c280f238b80eb80944623576a5932a9abf41778cb9f215a7036a529b85101",
+    "preconditions": [
+      "Immutable helper download/source operator commit must be supplied after parent publishes the operator branch; no operator commit or raw URL invented here",
+      "Native operator qualification and exact immutable candidate tag/release must be observed before running this command",
+      "Run in directory containing the downloaded SHA256-verified prepare-release183.py; no command was executed against hosting"
+    ],
+    "expectedCheckout": "/srv/customer/jessiemessage-operator/production-183-48fd42b8",
+    "expectedStart": "/srv/customer/jessiemessage-private/start-primary-release183-48fd42b8.sh",
+    "expectedCheck": "/srv/customer/jessiemessage-private/check-primary-release183-48fd42b8.sh",
+    "noStart": true,
+    "noCheckExecution": true,
+    "noRestart": true,
+    "noSql": true
+  },
+  "readyForParentNativeOperatorQualification": true,
+  "readyForHostedRecording": false,
+  "realPublicationPerformed": false,
+  "hostedPreparationPerformed": false,
+  "limits": [
+    "Parent API qualification is the source of real main evidence; synthetic tests do not independently establish it",
+    "No Git/API/host/publication/runtime/SQL/SMTP/Push/backup/PC action by this agent",
+    "No new source, CI run, release ID, hosted receipt or operator commit invented"
+  ]
+}

@@ -1,0 +1,388 @@
+{
+  "status": "qualified_source_tree_synthetic_pass_receipt_and_release_pending_not_ready_for_hosted_recording",
+  "createdAt": "2026-10-22T21:39:42.517789+00:00",
+  "runtime": "3.12.14",
+  "base": {
+    "operatorCommit": "9a52b4840b65d2c825020ffa81d4bdc2d29fc268",
+    "source": {
+      "path": "/workspace/scratch/bb431be72395/operator182/ops/record-release182.py",
+      "sha256": "48eb96eb3a75ec07a6e7baff861cfea24bc6d561a889723801f044734a38cbf1",
+      "bytes": 28035
+    },
+    "tests": {
+      "path": "/workspace/scratch/bb431be72395/operator182/ops/test_record_release182.py",
+      "sha256": "32632cceca00d50ca7fcd288b937b20e7f3f6d8328322b87d6fb9419116cb965",
+      "bytes": 31668
+    },
+    "workflow": {
+      "path": "/workspace/scratch/bb431be72395/operator182/.github/workflows/record-release182.yml",
+      "sha256": "d11e478400348b3a9fc274c560063da013ad02ea29d86ac156dfb3e0d2749413",
+      "bytes": 1051
+    },
+    "readMethod": "Complete source and test reads before adaptation; source SHA48eb96eb… and test SHA32632cce… confirmed against audited pins."
+  },
+  "files": [
+    {
+      "path": "/workspace/scratch/bb431be72395/operator183/ops/record-release183.py",
+      "sha256": "097fdb5287d73abe52f219f7b66a8d3ce8d39d153e26cf5e505e56cd9b48b80e",
+      "bytes": 29171
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/operator183/ops/test_record_release183.py",
+      "sha256": "999538acc10d7cd45e04a09a5b07b7bbba963e6c51d1ac2431405e071391291e",
+      "bytes": 42096
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/operator183/.github/workflows/record-release183.yml",
+      "sha256": "dc20d11896e0af0bb0817ed62302868a953f09c1fa64918ef566d093c9c26c94",
+      "bytes": 1135
+    }
+  ],
+  "readyForHostedRecording": false,
+  "pendingPins": {
+    "STAGING_SHA": "STAGING_PENDING",
+    "RELEASE_ID": null
+  },
+  "expectedActive": {
+    "version": "1.8.2",
+    "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+    "tree": "7b722ca1fbd3416acecffa3c122e967511184d4c",
+    "checkpointSha256": "148b1e0f1ef0e585aa0e0be99ba4e65517b30d2827e3dc26768684bfc5afa280",
+    "node": "v24.22.1",
+    "schemaMigrations": 36
+  },
+  "candidateVersion": "1.8.3",
+  "behavior": [
+    "Immutable182 and historical source/tree, receipts and protected checkpoint retained; candidate source/tree now fixed from actual qualified main evidence.",
+    "SOURCE/TREE guard, receipt pins and positive integer publication ID guard run before any private directory/file or network access; direct publication collector also refuses pending source/tree/ID.",
+    "Five release code inventories (172/180/181/182/183) require identical normalized dependencies, 33 normal migrations and the exact three video migration files; no SQL statement is executed.",
+    "183 staging receipt must assert expectedActiveServiceVersion182 and preservedActiveCheckpointSha256 matching the protected182 checkpoint.",
+    "Actual unique183 startup identity, matching public health/readiness/access.html home/anonymous entry, published release ID, lightweight tag commit and latest183 identity required before checkpoint replacement.",
+    "Historical release182/181/180/171/160 and all unknown blocks preserved exactly; rollback172 copied from current release182 history and must remain prechecked, SQL36, identityVerified false, never started.",
+    "File metadata/no-follow/link guards, exact pre-replacement drift observation, advisory lock, atomic replacement, fsync/readback, retry reconciliation and no-replace exact idempotence retained from182.",
+    "Proposed workflow only runs isolated synthetic Python tests with contents read; pinned checkout/setup-node actions and Node24.22.1 preserved. No publication or metadata writer execution step."
+  ],
+  "qualification": {
+    "command": "python3 operator183/ops/test_record_release183.py",
+    "initial": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "durationSeconds": 1.246,
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/operator183/record183-tests-initial.log",
+        "sha256": "8f7aa88fb8d421256f42b3ced258ae4edc2731c3f25eb9fd05700f3b86c4d6cf",
+        "bytes": 3655
+      }
+    },
+    "final": {
+      "command": "python3 ops/test_record_release183.py > record183-tests-qualified-pins.log 2>&1",
+      "cwd": "/workspace/scratch/bb431be72395/operator183",
+      "tests": 26,
+      "pass": 26,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 0.649,
+      "log": {
+        "path": "record183-tests-qualified-pins.log",
+        "sha256": "372ebfa7b56d44c0e4585b2c1d7764b18ff5b5bc493cbc8294b8d82dc0f76c80",
+        "bytes": 4537
+      },
+      "sourcePinsQualifiedBySyntheticTest": false,
+      "scope": "writer"
+    },
+    "whyFinalRerun": "Only real qualified source/tree literal pins changed; phase-independent tests re-executed once in finalized-source mode. Receipt/publication identity remain pending. No application/general/native suite run.",
+    "static": "Python source/tests AST parsed and proposed workflow YAML parsed; no helper CLI/host execution.",
+    "coverage": [
+      "Successful182-to183 metadata transition and full historical restoration equality",
+      "Exact retry and non-startup live log append read-only convergence",
+      "Pending source/staging/publication guards before private/network access, including shipped unqualified writer",
+      "Receipt, bundle, original six configurations, Node and launcher drift refusal",
+      "Historical182 rollback drift, missing histories, baseline/current identity, both migration inventories",
+      "Version2 CHECK requires no pending closures; rollback log empty",
+      "Unique startup, public health/home/entry and exact release/tag/latest",
+      "Only three anonymous bounded GET publication transport",
+      "Replace/fsync errors, concurrent drift, divergent retry, post-replace directory sync recovery",
+      "Modes, symlinks, hardlinks, FIFO, duplicate JSON keys and temporary cleanup",
+      "Current183 primary home fingerprint must equal public/access.html; index.html fingerprint explicitly refused before checkpoint mutation, correct access bytes then accepted.",
+      "HTTP collector handles actual anonymous183 entry object {status:available,client:{state:signed_out,href:/access},administrator:null}; returns its intended administrator-only projection with home SHA over access bytes.",
+      "Shipped constants accepted in coherent pending mode or finalized canonical source/tree format; receipt may remain pending and release ID absent while recording remains blocked. Filled shapes never qualify a real release.",
+      "All-pending refusal is explicitly injected into a fresh module namespace regardless of shipped values.",
+      "Partial source/tree qualification (each missing independently), qualified source with pending staging receipt, and fully shaped other fixture pins with missing release ID refuse before private paths, file opens, process or network access.",
+      "Direct publication collector separately refuses each partial source/tree variant before creating a network opener."
+    ],
+    "finalBeforeHomeCorrection": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 1.167,
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/operator183/record183-tests-final.log",
+        "sha256": "0630ced7bea16e84e64317358e0f2589605d8bf95131b74e790dd3636288bf27",
+        "bytes": 3655
+      },
+      "scope": "Earlier21-test fixture did not distinguish current183 access.html from inactive index.html; retained as historical result only."
+    },
+    "finalBeforePhaseIndependentTests": {
+      "tests": 23,
+      "pass": 23,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 1.122,
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/operator183/record183-tests-home-corrected.log",
+        "sha256": "602bf2cb816bded7a2ac84f2013138410c31dc416369640968c597a91e0a642f",
+        "bytes": 3977
+      }
+    },
+    "bimodalFirstRun": {
+      "command": "python3 ops/test_record_release183.py > record183-tests-bimodal.log 2>&1",
+      "cwd": "/workspace/scratch/bb431be72395/operator183",
+      "tests": 26,
+      "pass": 26,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 12.791,
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/operator183/record183-tests-bimodal.log",
+        "sha256": "cdd54bdd87dee3567c85478c301bfc636f95ed2005784a64274ccd5815301652",
+        "bytes": 4538
+      }
+    },
+    "finalBeforeRealPinFinalization": {
+      "command": "python3 ops/test_record_release183.py > record183-tests-bimodal-final.log 2>&1",
+      "cwd": "/workspace/scratch/bb431be72395/operator183",
+      "tests": 26,
+      "pass": 26,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 7.346,
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/operator183/record183-tests-bimodal-final.log",
+        "sha256": "5a8b57967e27783ac3b9c6df7eef82bc489ec8da3fb562131cd32d6d45e26bd3",
+        "bytes": 4537
+      }
+    }
+  },
+  "notPerformed": [
+    "No Git commit/push/ref/tag/publication or app branch change",
+    "No /srv private access, database/SQL/SMTP/Push call, process start/restart/Manager action, backup/restore/witness/PC operation",
+    "No real source/tree, staging receipt hash or publication ID invented",
+    "No production state or user data copied"
+  ],
+  "limits": [
+    "Tests substitute all candidate/receipt pins, source inspection and public HTTP with synthetic fixtures; passing them does not make this pending writer ready.",
+    "No current active PID/socket/binary/admin-session/physical-device or backup qualification inferred.",
+    "The inherited checkpoint protocol uses an advisory inode lock and a final exact drift observation before atomic replace; it does not claim universal OS compare-and-swap against arbitrary non-cooperating writers.",
+    "Qualified candidate source/tree are fixed. Actual publication ID and hosted staging receipt SHA still must be independently observed, fixed and requalified before an executable hosted writer is proposed."
+  ],
+  "updatedAt": "2026-10-22T22:31:35.156168+00:00",
+  "homeRoutingCorrection": {
+    "reason": "Parent identified that the183 configured primary access profile serves access.html as root; prior182 writer adaptation still compared index.html and would have refused PUBLIC_HOME after activation.",
+    "implementation": "Only current183 home reference changed to public/access.html; historical files/reader formats, pending guards and workflow unchanged.",
+    "sourcesReadOnly": [
+      {
+        "path": "/workspace/scratch/bb431be72395/jessiemessage/server/index.mjs",
+        "sha256": "b6d2d01d9fe5f68a18065d5c815d8ca8953d99a820eca86cd28a6a92803a24d2",
+        "bytes": 53081,
+        "readRange": "208-227"
+      },
+      {
+        "path": "/workspace/scratch/bb431be72395/jessiemessage/server/entry/http.mjs",
+        "sha256": "05e4139becf420629d6af34fc1426d9acf027fec272281c3227c964fc5f6dec8",
+        "bytes": 4419,
+        "readRange": "2-71"
+      }
+    ],
+    "noRuntimeExecution": "Application sources read statically only. Collector transport is mocked, no hosted or account operation."
+  },
+  "correctedDuringReview": [
+    {
+      "id": "writer183-primary-home",
+      "previousBehavior": "Inherited182 adaptation compared public/index.html even though configured183 primary root serves public/access.html. Earlier21/21 synthetic fixture used equal home bytes and did not cover this distinction.",
+      "correction": "Current183 reference is public/access.html; fixture candidate index/access bytes differ; dedicated test rejects index SHA and accepts access SHA. Actual anonymous183 entry transport shape also covered.",
+      "finalTests": "23/23 passed; earlier21-test logs retained as historical, no preparer/publisher rerun."
+    },
+    {
+      "id": "phase-dependent-test-assumptions",
+      "previousBehavior": "Test setup asserted literal shipped pending source/tree/staging/releaseID values; later legitimate pin finalization would make tests fail independently of writer behavior.",
+      "correction": "Coherent format modes accept pending or finalized pins; refusal cases inject pending values explicitly in fresh namespaces and cover partial qualification. Product script, guards, workflow and pending real pins unchanged.",
+      "finalTests": "26/26 writer tests passed; prior23/23 and21/21 logs retained as historical results."
+    }
+  ],
+  "qualifiedMain": {
+    "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "tree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+    "runId": 39864278371,
+    "event": "push",
+    "branch": "main",
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      "verify",
+      "MariaDB 10.11",
+      "MariaDB 11.4",
+      "Chrome keyboard and chat lifecycle",
+      "Chrome HTTPS authentication and messaging with MariaDB"
+    ],
+    "jobCount": 5,
+    "evidenceOrigin": "Parent independently verified GitHub API run/jobs/mainref and supplied these exact values. This agent performed no GitHub API/Git/host operation."
+  },
+  "phaseIndependentTestsBeforeRealPinFinalization": {
+    "status": "changed_tests_only_sources_and_product_pins_unchanged",
+    "sourceSha256": "8dc68ca0ff63cfc45ff39a85ad849c064acdd80eaaabb6ae9d0efe2449a605ad",
+    "workflowSha256": "dc20d11896e0af0bb0817ed62302868a953f09c1fa64918ef566d093c9c26c94",
+    "shippedPinsUnchanged": {
+      "SOURCE": "QUALIFICATION_PENDING",
+      "TREE": "QUALIFICATION_PENDING",
+      "STAGING_SHA": "STAGING_PENDING",
+      "RELEASE_ID": null
+    },
+    "configurationRules": "SOURCE/TREE finalize together; finalized values use full canonical lowercase hex. Receipt is pending or fullSHA256, release ID is absent or positive non-bool integer. Populated receipt/publication fields require qualified source/tree. These shape checks never establish real qualification."
+  },
+  "qualificationBeforeRealPinFinalization": {
+    "command": "python3 operator183/ops/test_record_release183.py",
+    "initial": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "durationSeconds": 1.246,
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/operator183/record183-tests-initial.log",
+        "sha256": "8f7aa88fb8d421256f42b3ced258ae4edc2731c3f25eb9fd05700f3b86c4d6cf",
+        "bytes": 3655
+      }
+    },
+    "final": {
+      "command": "python3 ops/test_record_release183.py > record183-tests-bimodal-final.log 2>&1",
+      "cwd": "/workspace/scratch/bb431be72395/operator183",
+      "tests": 26,
+      "pass": 26,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 7.346,
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/operator183/record183-tests-bimodal-final.log",
+        "sha256": "5a8b57967e27783ac3b9c6df7eef82bc489ec8da3fb562131cd32d6d45e26bd3",
+        "bytes": 4537
+      }
+    },
+    "whyFinalRerun": "Only test logic changed: pending/finalized format modes, explicit injected pending guards and distinct partial qualification variants. A second writer-only run followed canonical fullmatch tightening of the new test-side source/tree format check. No source, workflow or product pin changed; no preparer/publisher suite rerun.",
+    "static": "Python source/tests AST parsed and proposed workflow YAML parsed; no helper CLI/host execution.",
+    "coverage": [
+      "Successful182-to183 metadata transition and full historical restoration equality",
+      "Exact retry and non-startup live log append read-only convergence",
+      "Pending source/staging/publication guards before private/network access, including shipped unqualified writer",
+      "Receipt, bundle, original six configurations, Node and launcher drift refusal",
+      "Historical182 rollback drift, missing histories, baseline/current identity, both migration inventories",
+      "Version2 CHECK requires no pending closures; rollback log empty",
+      "Unique startup, public health/home/entry and exact release/tag/latest",
+      "Only three anonymous bounded GET publication transport",
+      "Replace/fsync errors, concurrent drift, divergent retry, post-replace directory sync recovery",
+      "Modes, symlinks, hardlinks, FIFO, duplicate JSON keys and temporary cleanup",
+      "Current183 primary home fingerprint must equal public/access.html; index.html fingerprint explicitly refused before checkpoint mutation, correct access bytes then accepted.",
+      "HTTP collector handles actual anonymous183 entry object {status:available,client:{state:signed_out,href:/access},administrator:null}; returns its intended administrator-only projection with home SHA over access bytes.",
+      "Shipped constants accepted in coherent pending mode or finalized canonical source/tree format; receipt may remain pending and release ID absent while recording remains blocked. Filled shapes never qualify a real release.",
+      "All-pending refusal is explicitly injected into a fresh module namespace regardless of shipped values.",
+      "Partial source/tree qualification (each missing independently), qualified source with pending staging receipt, and fully shaped other fixture pins with missing release ID refuse before private paths, file opens, process or network access.",
+      "Direct publication collector separately refuses each partial source/tree variant before creating a network opener."
+    ],
+    "finalBeforeHomeCorrection": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 1.167,
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/operator183/record183-tests-final.log",
+        "sha256": "0630ced7bea16e84e64317358e0f2589605d8bf95131b74e790dd3636288bf27",
+        "bytes": 3655
+      },
+      "scope": "Earlier21-test fixture did not distinguish current183 access.html from inactive index.html; retained as historical result only."
+    },
+    "finalBeforePhaseIndependentTests": {
+      "tests": 23,
+      "pass": 23,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 1.122,
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/operator183/record183-tests-home-corrected.log",
+        "sha256": "602bf2cb816bded7a2ac84f2013138410c31dc416369640968c597a91e0a642f",
+        "bytes": 3977
+      }
+    },
+    "bimodalFirstRun": {
+      "command": "python3 ops/test_record_release183.py > record183-tests-bimodal.log 2>&1",
+      "cwd": "/workspace/scratch/bb431be72395/operator183",
+      "tests": 26,
+      "pass": 26,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 12.791,
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/operator183/record183-tests-bimodal.log",
+        "sha256": "cdd54bdd87dee3567c85478c301bfc636f95ed2005784a64274ccd5815301652",
+        "bytes": 4538
+      }
+    }
+  },
+  "qualifiedPins": {
+    "SOURCE": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "TREE": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58"
+  },
+  "preparerCounterReviewBeforeRealPinFinalization": {
+    "status": "no_concrete_blocking_defect_found",
+    "source": {
+      "path": "/workspace/scratch/bb431be72395/operator183/ops/prepare-release183.py",
+      "sha256": "7393f11ded4c59c2dc06d7c245ec32777617a3e155bc7bdf0adcf917660264cd",
+      "bytes": 15574
+    },
+    "tests": {
+      "path": "/workspace/scratch/bb431be72395/operator183/ops/test-prepare-release183.py",
+      "sha256": "b5c32dc7ff490b1a336a5876f56a7e8b63a1a6d0b1962a70c10d7a7cc3fd12a9",
+      "bytes": 32578
+    },
+    "workflow": {
+      "path": "/workspace/scratch/bb431be72395/operator183/.github/workflows/prepare-release183.yml",
+      "sha256": "d044816d26c51f7c3c15ed49c92424a0af917d0a1c0ae835a22de9c65458a615",
+      "bytes": 1060
+    },
+    "readMethod": "Complete prepared source and workflow; targeted tests ranges180-225,425-485 and relevant success assertions, no test rerun. Supplemented by read-only lines180-292 after test-only phase-independent update; explicit pending, both partial pairs and finalized positive first-precondition variants reviewed. No test rerun.",
+    "checks": [
+      "Future source/tree pending before any IO; exact CLI binding after final pins",
+      "Correct182 checkout, source/tree, launcher Node and checkpoint pins",
+      "Checkpoint regular mode600/no-follow/single-link owned file; exact bytes rechecked before first output and after preparation",
+      "Exactly four launcher substitutions retain start-local-closures/check-local-closures, video profile, linux-dirfd, existing config/operations roots",
+      "Only version query and bash syntax validation, never start/CHECK/SQL/Manager",
+      "33+3 immutable migration inventories, normalized dependency equality, exclusive outputs, receipt explicitly unqualified/noRestart"
+    ],
+    "limits": "This is read-only source review, not hosted execution or native CHECK; the preparer20/20 evidence belongs to its owner.",
+    "testsBeforePhaseIndependentUpdate": {
+      "path": "/workspace/scratch/bb431be72395/operator183/ops/test-prepare-release183.py",
+      "sha256": "5e91c330c5109bfcb40769bbce0694ad33b4866117f7466d418974f46254b47a",
+      "bytes": 30038
+    }
+  },
+  "publisherTestCounterReviewBeforeRealPinFinalization": {
+    "status": "no_concrete_blocking_defect_found",
+    "workflow": {
+      "path": "/workspace/scratch/bb431be72395/operator183/.github/workflows/publish-qualified183.yml",
+      "sha256": "5e0286fb330e045acfbd9e24f05bfa9f18b1ad70071d7c09b1d30dcaec00b425",
+      "bytes": 14717
+    },
+    "tests": {
+      "path": "/workspace/scratch/bb431be72395/operator183/ops/test-publish-qualified183.py",
+      "sha256": "a825791b1cdfa0dd67642c24488cd82f7eaab9d4541d0134bcc4fbc258a0efbb",
+      "bytes": 19012
+    },
+    "readMethod": "Changed pending/partial qualification block lines27-100 reviewed in read-only mode after parent update; no publisher suite rerun.",
+    "checks": [
+      "All three PENDING literals always injected via AST independently of shipped constants.",
+      "Each target/tree/CI missing independently refuses before subprocess/API with other fixture pins valid.",
+      "AST replacement remains restricted to the three named literals; shipped workflow and product pins untouched."
+    ]
+  }
+}

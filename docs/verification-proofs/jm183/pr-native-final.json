@@ -1,0 +1,1135 @@
+{
+  "status": "completed_success",
+  "conclusion": "success",
+  "repository": "fredbuhr/jessiemessage",
+  "pullRequest": 130,
+  "runId": 39863182670,
+  "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39863182670",
+  "runNumber": 735,
+  "runAttempt": 1,
+  "event": "pull_request",
+  "head": "87df47aed43e464ef34c3cb15e4b2e0c7aced7e8",
+  "tree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+  "headAndTreeVerifiedFromNativeRunApi": true,
+  "requiredJobs": 5,
+  "requiredJobsSucceeded": 5,
+  "nativeNode": "24.22.1",
+  "jobs": [
+    {
+      "id": 120118755328,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 39863182670,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Create disposable DML-only runtime account",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Rehearse authentication and independent messaging sessions over loopback HTTPS",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        }
+      ]
+    },
+    {
+      "id": 120118755453,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 39863182670,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Install native MariaDB checkpoint clients",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Create disposable runtime and offline schema inspection accounts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Exercise migrations and constraints on disposable database",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        }
+      ],
+      "databaseCommandDeadlineMinutesObservedInLog": 10
+    },
+    {
+      "id": 120118755507,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 39863182670,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Exercise real Chrome with synthetic local fixtures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Homepage rendering in French and English",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        }
+      ]
+    },
+    {
+      "id": 120118755607,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 39863182670,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Verify private Node preparation with synthetic files",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Build offline workbench",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Downloadable preview (open HTML, no console)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        }
+      ],
+      "additionalValidation": {
+        "privateNodePythonTests": 15,
+        "privateNodePythonPassed": true,
+        "offlineWorkbenchBuild": "success"
+      }
+    },
+    {
+      "id": 120118755688,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 39863182670,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Install native MariaDB checkpoint clients",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Create disposable runtime and offline schema inspection accounts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Exercise migrations and constraints on disposable database",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        }
+      ],
+      "databaseCommandDeadlineMinutesObservedInLog": 10
+    }
+  ],
+  "polls": [
+    {
+      "at": "2026-10-22T22:13:04.333Z",
+      "jobs": [
+        {
+          "id": 120118755328,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Rehearse authentication and independent messaging sessions over loopback HTTPS"
+        },
+        {
+          "id": 120118755453,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120118755507,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise real Chrome with synthetic local fixtures"
+        },
+        {
+          "id": 120118755607,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Run tests"
+        },
+        {
+          "id": 120118755688,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:13:35.080Z",
+      "jobs": [
+        {
+          "id": 120118755328,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Rehearse authentication and independent messaging sessions over loopback HTTPS"
+        },
+        {
+          "id": 120118755453,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120118755507,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise real Chrome with synthetic local fixtures"
+        },
+        {
+          "id": 120118755607,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Run tests"
+        },
+        {
+          "id": 120118755688,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:14:05.687Z",
+      "jobs": [
+        {
+          "id": 120118755328,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755453,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120118755507,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise real Chrome with synthetic local fixtures"
+        },
+        {
+          "id": 120118755607,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Run tests"
+        },
+        {
+          "id": 120118755688,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:14:48.405Z",
+      "jobs": [
+        {
+          "id": 120118755328,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755453,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120118755507,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise real Chrome with synthetic local fixtures"
+        },
+        {
+          "id": 120118755607,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755688,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:15:30.073Z",
+      "jobs": [
+        {
+          "id": 120118755328,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755453,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120118755507,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise real Chrome with synthetic local fixtures"
+        },
+        {
+          "id": 120118755607,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755688,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:16:00.624Z",
+      "jobs": [
+        {
+          "id": 120118755328,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755453,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120118755507,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise real Chrome with synthetic local fixtures"
+        },
+        {
+          "id": 120118755607,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755688,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:16:31.322Z",
+      "jobs": [
+        {
+          "id": 120118755328,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755453,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120118755507,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755607,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755688,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:17:57.955Z",
+      "jobs": [
+        {
+          "id": 120118755328,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755453,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120118755507,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755607,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755688,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:18:28.581Z",
+      "jobs": [
+        {
+          "id": 120118755328,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755453,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755507,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755607,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755688,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:19:02.287Z",
+      "jobs": [
+        {
+          "id": 120118755328,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755453,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755507,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755607,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755688,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:19:32.982Z",
+      "jobs": [
+        {
+          "id": 120118755328,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755453,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755507,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755607,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755688,
+          "status": "in_progress",
+          "conclusion": null,
+          "activeStep": "Exercise migrations and constraints on disposable database"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:20:03.622Z",
+      "jobs": [
+        {
+          "id": 120118755328,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755453,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755507,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755607,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        },
+        {
+          "id": 120118755688,
+          "status": "completed",
+          "conclusion": "success",
+          "activeStep": null
+        }
+      ]
+    }
+  ],
+  "logs": [
+    {
+      "jobId": 120118755328,
+      "jobName": "Chrome HTTPS authentication and messaging with MariaDB",
+      "file": "/workspace/scratch/bb431be72395/ux183/logs/pr130-final-auth-120118755328.log",
+      "sha256": "c872679ad43864427443a4611a8f4067f99c3b41ff4740a131c847b5ce3a48e7",
+      "bytes": 38876,
+      "counters": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "durationMs": 70249.487836
+    },
+    {
+      "jobId": 120118755453,
+      "jobName": "MariaDB 11.4",
+      "file": "/workspace/scratch/bb431be72395/ux183/logs/pr130-final-mariadb114-120118755453.log",
+      "sha256": "780994a214700676762ecacae7db178f24814b60279df6017d0fe984d0732e43",
+      "bytes": 341005,
+      "counters": {
+        "tests": 576,
+        "suites": 0,
+        "pass": 576,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "durationMs": 318523.839253
+    },
+    {
+      "jobId": 120118755507,
+      "jobName": "Chrome keyboard and chat lifecycle",
+      "file": "/workspace/scratch/bb431be72395/ux183/logs/pr130-final-browser-120118755507.log",
+      "sha256": "458f188ff8876fbd6090d8f338a520fc23789af22071f82d1b274f6efded59d7",
+      "bytes": 49745,
+      "counters": {
+        "tests": 230,
+        "suites": 0,
+        "pass": 230,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "durationMs": 226918.817011
+    },
+    {
+      "jobId": 120118755607,
+      "jobName": "verify",
+      "file": "/workspace/scratch/bb431be72395/ux183/logs/pr130-final-verify-120118755607.log",
+      "sha256": "632a9670844a979a6c3d2453eacc65bdcceb0ed9fe35a0d0e24b78757db76708",
+      "bytes": 559295,
+      "counters": {
+        "tests": 3945,
+        "suites": 0,
+        "pass": 3897,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 48,
+        "todo": 0
+      },
+      "durationMs": 110358.425039
+    },
+    {
+      "jobId": 120118755688,
+      "jobName": "MariaDB 10.11",
+      "file": "/workspace/scratch/bb431be72395/ux183/logs/pr130-final-mariadb1011-120118755688.log",
+      "sha256": "5fe3dce125f5b6f4f6eb74b1a8dafaff077d1b679a9d6f755736fa652dae4369",
+      "bytes": 340855,
+      "counters": {
+        "tests": 576,
+        "suites": 0,
+        "pass": 576,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "durationMs": 407231.05256
+    }
+  ],
+  "artifact": {
+    "id": 12461899147,
+    "name": "homepage-render",
+    "size_in_bytes": 2773727,
+    "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12461899147",
+    "archive_download_url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12461899147/zip",
+    "expired": false,
+    "created_at": "2026-10-22T22:16:18Z",
+    "expires_at": "2026-10-29T22:16:17Z",
+    "updated_at": "2026-10-22T22:16:18Z",
+    "digest": "sha256:d9138e664ade2c8be6af466c2675d8f7f310b7fa0871cb28a8e9eb88197c3cfd",
+    "workflow_run": {
+      "id": 39863182670,
+      "repository_id": 1419524991,
+      "head_repository_id": 1419524991,
+      "head_branch": "fix/messaging-183",
+      "head_sha": "87df47aed43e464ef34c3cb15e4b2e0c7aced7e8"
+    },
+    "zip": "/workspace/scratch/bb431be72395/ux183/final-screenshots.zip",
+    "directory": "/workspace/scratch/bb431be72395/ux183/final-screenshots",
+    "apiDigestMatched": true,
+    "transferExitCode": 0,
+    "manifest": "/workspace/scratch/bb431be72395/ux183/final-screenshots-manifest.json",
+    "extractedManifest": {
+      "zip": "/workspace/scratch/bb431be72395/ux183/final-screenshots.zip",
+      "sha256": "sha256:d9138e664ade2c8be6af466c2675d8f7f310b7fa0871cb28a8e9eb88197c3cfd",
+      "apiDigestMatched": true,
+      "transferExitCode": 0,
+      "bytes": 2773727,
+      "files": [
+        {
+          "file": "admin-home-1280-bottom.png",
+          "bytes": 83765,
+          "sha256": "e2411cc083c4c5e9e69c636df37d0b1842213822f7735ff680fb17330fc7def2",
+          "ci2Sha256": "e2411cc083c4c5e9e69c636df37d0b1842213822f7735ff680fb17330fc7def2",
+          "identicalToCi2": true,
+          "relevant": true
+        },
+        {
+          "file": "admin-home-1280.png",
+          "bytes": 145179,
+          "sha256": "1398ef8ae8247b8dabdf6aaa7449e29d6975f7a189c76ab5c342297514c5e662",
+          "ci2Sha256": "1398ef8ae8247b8dabdf6aaa7449e29d6975f7a189c76ab5c342297514c5e662",
+          "identicalToCi2": true,
+          "relevant": true
+        },
+        {
+          "file": "admin-home-320-bottom.png",
+          "bytes": 40757,
+          "sha256": "5901f3bee0149ce35cd3c4e1ebd4643851e0ead17d78d1c16c7e3305808cdeff",
+          "ci2Sha256": "97fdd04f9a5cb8d336009b3f1c430beb56c9ced330dc1c003d6f9706299886fd",
+          "identicalToCi2": false,
+          "relevant": true
+        },
+        {
+          "file": "admin-home-320.png",
+          "bytes": 64243,
+          "sha256": "1f8245349d8eaa4069b7576533e720a67e8a442d6fd562b40a6b19bb004b27b1",
+          "ci2Sha256": "1f8245349d8eaa4069b7576533e720a67e8a442d6fd562b40a6b19bb004b27b1",
+          "identicalToCi2": true,
+          "relevant": true
+        },
+        {
+          "file": "client-home-1280.png",
+          "bytes": 170758,
+          "sha256": "58fe616b41f99b0bfa76f98d3c2395199c3f8023acb742fb8b92f0394ae6d5e8",
+          "ci2Sha256": "58fe616b41f99b0bfa76f98d3c2395199c3f8023acb742fb8b92f0394ae6d5e8",
+          "identicalToCi2": true,
+          "relevant": true
+        },
+        {
+          "file": "client-home-320.png",
+          "bytes": 64929,
+          "sha256": "027beeaa4a8618d9fe81f92d33a3297e6802bff85f0696e5ae14037b4e1b581f",
+          "ci2Sha256": "027beeaa4a8618d9fe81f92d33a3297e6802bff85f0696e5ae14037b4e1b581f",
+          "identicalToCi2": true,
+          "relevant": true
+        },
+        {
+          "file": "home-en-1280-bottom.png",
+          "bytes": 360559,
+          "sha256": "1a5a7cd0ab1061a5e04c626d1db23860c504b3e8f58ea86f8722bcbc8576eaa1",
+          "ci2Sha256": "1a5a7cd0ab1061a5e04c626d1db23860c504b3e8f58ea86f8722bcbc8576eaa1",
+          "identicalToCi2": true,
+          "relevant": false
+        },
+        {
+          "file": "home-en-1280-top.png",
+          "bytes": 408003,
+          "sha256": "35c192012e2935e230ab4fe62b7672a934e075118640ec03ce8160efd0786b36",
+          "ci2Sha256": "35c192012e2935e230ab4fe62b7672a934e075118640ec03ce8160efd0786b36",
+          "identicalToCi2": true,
+          "relevant": false
+        },
+        {
+          "file": "home-en-320-top.png",
+          "bytes": 138283,
+          "sha256": "45c9dcb776ab6a0a95606e8b8efd55627e1f3da10f1bd1b97bdec747c266b41b",
+          "ci2Sha256": "45c9dcb776ab6a0a95606e8b8efd55627e1f3da10f1bd1b97bdec747c266b41b",
+          "identicalToCi2": true,
+          "relevant": false
+        },
+        {
+          "file": "home-en-390-top.png",
+          "bytes": 159026,
+          "sha256": "8989fe22e1f3160520e6614b0952e0ecca5b76b936f23052a885e8006bf81259",
+          "ci2Sha256": "8989fe22e1f3160520e6614b0952e0ecca5b76b936f23052a885e8006bf81259",
+          "identicalToCi2": true,
+          "relevant": false
+        },
+        {
+          "file": "home-fr-1280-bottom.png",
+          "bytes": 396688,
+          "sha256": "ebbac0a0ad6916d2692c56426a2d58e04b059899d2cfa62ad3765c25c771f521",
+          "ci2Sha256": "ebbac0a0ad6916d2692c56426a2d58e04b059899d2cfa62ad3765c25c771f521",
+          "identicalToCi2": true,
+          "relevant": false
+        },
+        {
+          "file": "home-fr-1280-top.png",
+          "bytes": 455233,
+          "sha256": "16574c22af7665c3ca0ece8e50237b6389d29007fae47d879ced3a97cc308fbf",
+          "ci2Sha256": "16574c22af7665c3ca0ece8e50237b6389d29007fae47d879ced3a97cc308fbf",
+          "identicalToCi2": true,
+          "relevant": false
+        },
+        {
+          "file": "home-fr-320-top.png",
+          "bytes": 141059,
+          "sha256": "4d9c59446674333da0ad363aa9e1d14994914c170e69acfd666d9c60334638a9",
+          "ci2Sha256": "4d9c59446674333da0ad363aa9e1d14994914c170e69acfd666d9c60334638a9",
+          "identicalToCi2": true,
+          "relevant": false
+        },
+        {
+          "file": "home-fr-390-top.png",
+          "bytes": 161006,
+          "sha256": "566f1b281f132f453b66a298ebc475f02438ea23caf736e4895a349d87c6664c",
+          "ci2Sha256": "566f1b281f132f453b66a298ebc475f02438ea23caf736e4895a349d87c6664c",
+          "identicalToCi2": true,
+          "relevant": false
+        }
+      ],
+      "relevantPngCount": 6,
+      "allSixRelevantIdentical": false
+    }
+  },
+  "visualComparison": {
+    "comparedAll14PngHashes": true,
+    "identical": 13,
+    "changed": [
+      "admin-home-320-bottom.png"
+    ],
+    "relevantSixIdentical": 5,
+    "pixelDifference": {
+      "bbox": [
+        316,
+        505,
+        320,
+        840
+      ],
+      "changedPixels": 1340,
+      "totalPixels": 270080,
+      "scope": "Rightmost4px in the native vertical-scrollbar area only; every application-content pixel is identical."
+    },
+    "reviewedImages": [
+      "final-screenshots/admin-home-320-bottom.png",
+      "second-screenshots/admin-home-320-bottom.png"
+    ],
+    "observation": "Both images visually compared. No change in application layout, labels, cards or controls; no clipping or new concrete defect. No new capture/test; five identical relevant images retain the CI2 review.",
+    "independentReview": {
+      "report": "/workspace/scratch/bb431be72395/ux183/final-visual-difference-review.json",
+      "sha256": "02a3bc46ecdfe37f86085fcd86543e0608130026d42a2d113ef2cbf074193997",
+      "result": "Independent visual and RGB comparison confirms the same scrollbar-only difference, no application-content pixel change and no concrete defect."
+    },
+    "identicalImagesNotReopened": true,
+    "newCapturesOrReruns": 0
+  },
+  "remoteMutationsPerformed": [],
+  "limits": [
+    "This qualifies PR130 run39863182670 and its exact observed head/tree only, not a deployment or a future main commit.",
+    "verify has48skipped cases; skipped cases are not passed. Both MariaDB jobs and both Chrome jobs have0skipped.",
+    "Existing synthetic native fixtures executed in GitHub CI. This monitoring agent initiated no test, production/private-host operation, real account/message, SMTP/push, backup/restore or PC action.",
+    "Artifact ZIP SHA256 matches the GitHub API digest before extraction.13/14PNG hashes match CI2; the sole changed bottom PNG was visually and independently pixel-compared. The difference is confined to the native scrollbar; application-content pixels remain identical.",
+    "No application, Git, CI or remote mutation by this agent. Root owns merge and exact merged-main qualification."
+  ],
+  "completedAt": "2026-10-22T22:20:51.106Z",
+  "runUpdatedAt": "2026-10-22T22:19:43Z",
+  "pollingPolicy": "At least30000ms elapsed between workflow-job-list completions; enforced locally.",
+  "logSource": "Complete decoded text from github_fetch_workflow_job_logs, saved without truncation; SHA256 identifies the saved UTF-8 text, not a GitHub log archive digest.",
+  "logMetadata": [
+    {
+      "jobId": 120118755328,
+      "decodedUtf16CodeUnits": 38824
+    },
+    {
+      "jobId": 120118755453,
+      "decodedUtf16CodeUnits": 341003
+    },
+    {
+      "jobId": 120118755507,
+      "decodedUtf16CodeUnits": 49235
+    },
+    {
+      "jobId": 120118755607,
+      "decodedUtf16CodeUnits": 551293
+    },
+    {
+      "jobId": 120118755688,
+      "decodedUtf16CodeUnits": 340853
+    }
+  ],
+  "declaredDeltaFromCi2": {
+    "source": "Root's task instruction",
+    "application": "Two French/English help-copy texts only",
+    "ci": "Database command deadline8→10minutes; job deadline remains15minutes; required test criteria unchanged",
+    "proofs": "Previous CI evidence and log/blob references",
+    "note": "This monitoring agent made no source changes."
+  },
+  "nextAction": "Root merges the exact validated PR head, then qualifies the merged main SHA once with all required checks before any release/deployment claim."
+}

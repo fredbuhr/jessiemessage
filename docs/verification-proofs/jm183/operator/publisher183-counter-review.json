@@ -1,0 +1,105 @@
+{
+  "status": "no_concrete_blocker_real_main_pins_fixed_remaining_operational_evidence_pending",
+  "reviewedAt": "2026-10-22T21:43:44.258952+00:00",
+  "workflowSha256": "ef61cef254456f6c3cd23af7656260d28fe9ae7eea442258a78a35eba4f97b18",
+  "testSha256": "a825791b1cdfa0dd67642c24488cd82f7eaab9d4541d0134bcc4fbc258a0efbb",
+  "method": "Read-only final pin/guard comparison by writer183 child; only seven literal changes in three source artifacts, all other content unchanged. New focused suites executed once by owners, never rerun by reviewer.",
+  "checks": [
+    "Three unknown qualification pins remain explicit QUALIFICATION_PENDING and are checked before the embedded script first process/API call.",
+    "Scoped branch183 and operator-tests dependency retained; only publication job has contents write; no main push operation exists.",
+    "Actions remain official full SHA pins; Node24.22.1, no persisted checkout credentials/cache unchanged.",
+    "Qualified exact main SHA/tree/run attempt1 plus five successful exact jobs and source version/gates/workflow pins required.",
+    "Baseline182 source/tree/latest421075470 and unchanged33+3 migrations checked before any POST; rollback172 existing tag/release preserved.",
+    "POST only creates lightweight tag183 and release183; no PATCH/DELETE or movement of existing tag/release.",
+    "Prior latest182 is rechecked before release creation; creation advances latest in same POST make_latest true.",
+    "Existing exact183 release must already be exact latest183 to return read-only; tag-only exact interrupted retry creates only missing release.",
+    "Synthetic test replaces only three named AST literal pins and builds closed fake source/API payloads; no Git/app/future commit read or new qualification inferred.",
+    "All-pending refusal always injects the three named PENDING literals; each partial case independently injects one missing pin and two valid fixtures. Test logic remains usable after true pin finalization.",
+    "Real candidate main source/tree/CI are exact; writer receipt STAGING_PENDING and release ID None still block before private/network IO. Synthetic proof sourcePinsQualified=false describes the fixture capability, not a negation of independent parent API qualification."
+  ],
+  "observedEvidence": {
+    "command": "python3 ops/test-publish-qualified183.py --output publication183-tests-qualified-pins.json > publication183-tests-qualified-pins.log 2>&1",
+    "cwd": "/workspace/scratch/bb431be72395/operator183",
+    "tests": 38,
+    "pass": 38,
+    "fail": 0,
+    "networkCalls": 0,
+    "realMutations": 0,
+    "evidence": {
+      "path": "publication183-tests-qualified-pins.json",
+      "sha256": "a748020ebec4439950fa1913bdde02b3d3cea5e939ac3ba06859b7909285ee52",
+      "bytes": 3025
+    },
+    "log": {
+      "path": "publication183-tests-qualified-pins.log",
+      "sha256": "b2ca6792b1ae5a08c39331e15952c7816efdc152e8ea6e07e29b35b2e90a2662",
+      "bytes": 2809
+    },
+    "sourcePinsQualifiedBySyntheticTest": false,
+    "realMainQualificationEvidence": "qualifiedMain (parent API evidence), distinct from synthetic fixtures",
+    "scope": "publisher"
+  },
+  "limits": [
+    "Shipped pending workflow cannot publish183 and was never run remotely.",
+    "Published notes are a proposed deterministic minimum; publication and hosted activation remain separate.",
+    "Real main CI qualification/operator CI/GitHub responses and hosted state remain unobserved."
+  ],
+  "testsRerun": false,
+  "sourceEdited": false,
+  "reviewUpdatedAt": "2026-10-22T22:31:35.156168+00:00",
+  "beforeRealPinFinalization": {
+    "status": "no_concrete_blocker_in_pending_publisher",
+    "reviewedAt": "2026-10-22T21:43:44.258952+00:00",
+    "workflowSha256": "5e0286fb330e045acfbd9e24f05bfa9f18b1ad70071d7c09b1d30dcaec00b425",
+    "testSha256": "a825791b1cdfa0dd67642c24488cd82f7eaab9d4541d0134bcc4fbc258a0efbb",
+    "method": "Read complete qualified182 workflow/tests, complete183 workflow diff and complete new synthetic tests; inspected38-case evidence; no test rerun.; phase-independent pending/partial AST injection changes reviewed; original workflow unchanged",
+    "checks": [
+      "Three unknown qualification pins remain explicit QUALIFICATION_PENDING and are checked before the embedded script first process/API call.",
+      "Scoped branch183 and operator-tests dependency retained; only publication job has contents write; no main push operation exists.",
+      "Actions remain official full SHA pins; Node24.22.1, no persisted checkout credentials/cache unchanged.",
+      "Qualified exact main SHA/tree/run attempt1 plus five successful exact jobs and source version/gates/workflow pins required.",
+      "Baseline182 source/tree/latest421075470 and unchanged33+3 migrations checked before any POST; rollback172 existing tag/release preserved.",
+      "POST only creates lightweight tag183 and release183; no PATCH/DELETE or movement of existing tag/release.",
+      "Prior latest182 is rechecked before release creation; creation advances latest in same POST make_latest true.",
+      "Existing exact183 release must already be exact latest183 to return read-only; tag-only exact interrupted retry creates only missing release.",
+      "Synthetic test replaces only three named AST literal pins and builds closed fake source/API payloads; no Git/app/future commit read or new qualification inferred.",
+      "All-pending refusal always injects the three named PENDING literals; each partial case independently injects one missing pin and two valid fixtures. Test logic remains usable after true pin finalization."
+    ],
+    "observedEvidence": {
+      "tests": 38,
+      "pass": 38,
+      "fail": 0,
+      "networkCalls": 0,
+      "realMutations": 0,
+      "sourcePinsQualified": false,
+      "path": "publication183-tests-pin-states.json"
+    },
+    "limits": [
+      "Shipped pending workflow cannot publish183 and was never run remotely.",
+      "Published notes are a proposed deterministic minimum; publication and hosted activation remain separate.",
+      "Real main CI qualification/operator CI/GitHub responses and hosted state remain unobserved."
+    ],
+    "testsRerun": false,
+    "sourceEdited": false,
+    "reviewUpdatedAt": "2026-10-22T22:20:01.986328+00:00"
+  },
+  "qualifiedMain": {
+    "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "tree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+    "runId": 39864278371,
+    "event": "push",
+    "branch": "main",
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      "verify",
+      "MariaDB 10.11",
+      "MariaDB 11.4",
+      "Chrome keyboard and chat lifecycle",
+      "Chrome HTTPS authentication and messaging with MariaDB"
+    ],
+    "jobCount": 5,
+    "evidenceOrigin": "Parent independently verified GitHub API run/jobs/mainref and supplied these exact values. This agent performed no GitHub API/Git/host operation."
+  }
+}

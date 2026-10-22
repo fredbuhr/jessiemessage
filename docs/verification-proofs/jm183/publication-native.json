@@ -1,0 +1,292 @@
+{
+  "status": "completed_success_published_verified",
+  "conclusion": "success",
+  "repository": "fredbuhr/jessiemessage",
+  "runId": 39865609026,
+  "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39865609026",
+  "workflow": ".github/workflows/publish-qualified183.yml",
+  "event": "push",
+  "attempt": 1,
+  "operatorBranch": "ops/publish-v1.8.3",
+  "operatorHead": "234042bd59d1eb7c4f4ab7d73b665e5f0e2c12a5",
+  "operatorTree": "2e56f6e910d4dab303d3b209764565f6b839bfe5",
+  "sourceCommit": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+  "sourceTree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+  "expectedTag": "v1.8.3",
+  "requiredJobs": 2,
+  "jobs": [
+    {
+      "id": 120126917074,
+      "name": "operator-tests",
+      "status": "completed",
+      "conclusion": "success",
+      "finalStatusSource": "Root read-only GitHub API verification supplied in task steering"
+    },
+    {
+      "id": 120127109815,
+      "name": "publish",
+      "status": "completed",
+      "conclusion": "success",
+      "finalStatusSource": "Root read-only GitHub API verification supplied in task steering"
+    }
+  ],
+  "logs": [
+    {
+      "jobId": 120126917074,
+      "jobName": "operator-tests",
+      "file": "/workspace/scratch/bb431be72395/ux183/logs/publication183-operator-tests-120126917074.log",
+      "sha256": "c152b71d8ae259cd1ec68a7c74d849c331eaa1e3cda5bdd09157b9e0b5489b41",
+      "bytes": 47287,
+      "completeThroughJobCleanup": true,
+      "counters": {
+        "publisherSimulatedTests": 38,
+        "publisherPassed": 38,
+        "publisherFailed": 0,
+        "preparationPythonTests": 22,
+        "preparationPassed": 22,
+        "preparationFailed": 0
+      }
+    },
+    {
+      "jobId": 120127109815,
+      "jobName": "publish",
+      "file": "/workspace/scratch/bb431be72395/ux183/logs/publication183-publish-120127109815.log",
+      "sha256": "f7f51269eb035fb6b36ac6650392cae9167f48d66fb925aae3b3ffdc4cf86460",
+      "bytes": 22755,
+      "completeThroughJobCleanup": true,
+      "receipt": {
+        "status": "published_verified",
+        "tag": "v1.8.3",
+        "commit": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+        "tree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+        "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.3",
+        "ciRun": 39864278371,
+        "nodeVersion": "24.22.1",
+        "normalMigrations": 33,
+        "videoCandidateMigrations": 3,
+        "videoCreationEnabled": true,
+        "quickRepliesWritable": true,
+        "schemaMigrations": 36,
+        "migrationsChanged": false,
+        "rollback": {
+          "tag": "v1.7.2",
+          "commit": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+          "releaseId": 420600213
+        },
+        "previousLatest": {
+          "tag": "v1.8.2",
+          "id": 421075470
+        },
+        "latest": {
+          "tag": "v1.8.3",
+          "id": 421266798,
+          "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f"
+        },
+        "publicationMode": "created_and_latest",
+        "deploymentPerformed": false
+      }
+    }
+  ],
+  "polls": [
+    {
+      "at": "2026-10-22T22:32:21.457Z",
+      "jobs": [
+        {
+          "id": 120126917074,
+          "name": "operator-tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120127109815,
+          "name": "publish",
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    }
+  ],
+  "publicationVerification": {
+    "workflowLog": "published_verified receipt after tag/release/latest API checks",
+    "independentRootApiRead": {
+      "runId": 39865609026,
+      "runStatus": "completed",
+      "runConclusion": "success",
+      "runAttempt": 1,
+      "operatorHead": "234042bd59d1eb7c4f4ab7d73b665e5f0e2c12a5",
+      "jobIds": [
+        120126917074,
+        120127109815
+      ],
+      "tag": "v1.8.3",
+      "tagType": "lightweight commit ref",
+      "tagCommit": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+      "releaseId": 421266798,
+      "latestReleaseId": 421266798,
+      "releaseTag": "v1.8.3",
+      "releaseTarget": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+      "publishedAt": "2026-10-22T22:32:26Z",
+      "source": "Explicit /root task steering; no duplicate endpoint reads by this monitoring agent after root reported final state."
+    },
+    "corroboratedByNativePublishReceipt": true
+  },
+  "remoteMutationsPerformed": [],
+  "limits": [
+    "Published and verified tag/release/latest is distinct from deployed. The workflow receipt explicitly reports deploymentPerformed=false.",
+    "The publication was performed by the root-authorized existing workflow. This monitoring agent triggered no run, wrote no ref/tag/release and performed no host, production, backup or UI operation.",
+    "Final run/job/tag/release/latest endpoint verification was supplied by root; this agent read the initial native metadata and both complete job logs and independently parsed/corroborated the resulting receipt.",
+    "Simulated publisher tests38 and preparation tests22 are counted separately; simulated source pins are not represented as real-source validation. The publish step validates the real qualified source/main CI."
+  ],
+  "completedAt": "2026-10-22T22:33:55.567336+00:00",
+  "requiredJobsSucceeded": 2,
+  "initialJobs": [
+    {
+      "id": 120126917074,
+      "name": "operator-tests",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 39865609026,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Checkout exact operator commit",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Use qualified Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Test publication with simulated GitHub API",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Test isolated patch release preparation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Post Use qualified Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Post Checkout exact operator commit",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        }
+      ]
+    },
+    {
+      "id": 120127109815,
+      "name": "publish",
+      "status": "in_progress",
+      "conclusion": null,
+      "run_id": 39865609026,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Use qualified Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Verify and publish the immutable qualified 1.8.3 correction",
+          "status": "in_progress",
+          "conclusion": null,
+          "number": 3
+        },
+        {
+          "name": "Post Use qualified Node.js 24.22.1",
+          "status": "pending",
+          "conclusion": null,
+          "number": 6
+        }
+      ]
+    }
+  ],
+  "pollingPolicy": "Initial native run/jobs were read directly. Root supplied completed/success for both jobs before another status poll was needed; monitoring stopped as instructed. Only the remaining publish log was fetched afterward.",
+  "operatorTestResult": {
+    "publisher": {
+      "tests": 38,
+      "pass": 38,
+      "fail": 0,
+      "networkCalls": 0,
+      "realMutations": 0,
+      "qualificationScope": "Simulated GitHub API/source fixtures; sourcePinsQualified=false in test report is intentional and does not attest the real release source."
+    },
+    "preparation": {
+      "tests": 22,
+      "pass": 22,
+      "fail": 0
+    },
+    "workflowSha256ReportedByOperatorTests": "ef61cef254456f6c3cd23af7656260d28fe9ae7eea442258a78a35eba4f97b18"
+  },
+  "workflowPublicationReceipt": {
+    "status": "published_verified",
+    "tag": "v1.8.3",
+    "commit": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "tree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+    "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.3",
+    "ciRun": 39864278371,
+    "nodeVersion": "24.22.1",
+    "normalMigrations": 33,
+    "videoCandidateMigrations": 3,
+    "videoCreationEnabled": true,
+    "quickRepliesWritable": true,
+    "schemaMigrations": 36,
+    "migrationsChanged": false,
+    "rollback": {
+      "tag": "v1.7.2",
+      "commit": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+      "releaseId": 420600213
+    },
+    "previousLatest": {
+      "tag": "v1.8.2",
+      "id": 421075470
+    },
+    "latest": {
+      "tag": "v1.8.3",
+      "id": 421266798,
+      "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f"
+    },
+    "publicationMode": "created_and_latest",
+    "deploymentPerformed": false
+  },
+  "sourceMainQualification": {
+    "runId": 39864278371,
+    "status": "completed_success",
+    "report": "/workspace/scratch/bb431be72395/ux183/main-native.json",
+    "sha256": "0f13a8180094d24e0e22feaba883da70b33c751d7444ac7218f0c7d50a86ba35"
+  },
+  "deploymentPerformed": false,
+  "nextAction": "Root owns the documentation and any subsequent operations; this publication-monitoring task is complete."
+}

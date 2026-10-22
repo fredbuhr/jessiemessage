@@ -1,0 +1,65 @@
+{
+  "type": "jm183-root-publication-api-verification",
+  "observedUTC": "2026-10-22T22:35:12.586Z",
+  "run": [
+    {
+      "id": 39865609026,
+      "head": "234042bd59d1eb7c4f4ab7d73b665e5f0e2c12a5",
+      "event": "push",
+      "path": ".github/workflows/publish-qualified183.yml",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1
+    }
+  ],
+  "jobs": [
+    {
+      "id": 120126917074,
+      "name": "operator-tests",
+      "head": "234042bd59d1eb7c4f4ab7d73b665e5f0e2c12a5",
+      "status": "completed",
+      "conclusion": "success",
+      "run": 39865609026,
+      "attempt": 1
+    },
+    {
+      "id": 120127109815,
+      "name": "publish",
+      "head": "234042bd59d1eb7c4f4ab7d73b665e5f0e2c12a5",
+      "status": "completed",
+      "conclusion": "success",
+      "run": 39865609026,
+      "attempt": 1
+    }
+  ],
+  "tag": {
+    "ref": "refs/tags/v1.8.3",
+    "node_id": "REF_kwDOVJw7f7ByZWZzL3RhZ3MvdjEuOC4z",
+    "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/refs/tags/v1.8.3",
+    "object": {
+      "sha": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+      "type": "commit",
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/commits/48fd42b808b2bc4d95d3f3ba21244c032d0a938f"
+    }
+  },
+  "release": {
+    "id": 421266798,
+    "tag": "v1.8.3",
+    "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "draft": false,
+    "prerelease": false,
+    "publishedAt": "2026-10-22T22:32:26Z",
+    "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.3"
+  },
+  "latest": {
+    "id": 421266798,
+    "tag": "v1.8.3",
+    "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f"
+  },
+  "previousLatest": {
+    "id": 421075470,
+    "tag": "v1.8.2",
+    "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da"
+  },
+  "productionChanged": false
+}

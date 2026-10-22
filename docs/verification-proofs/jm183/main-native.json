@@ -1,0 +1,1061 @@
+{
+  "status": "completed_success",
+  "conclusion": "success",
+  "repository": "fredbuhr/jessiemessage",
+  "runId": 39864278371,
+  "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39864278371",
+  "runNumber": 736,
+  "runAttempt": 1,
+  "event": "push",
+  "head": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+  "tree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+  "headAndTreeVerifiedFromNativeRunApi": true,
+  "sameTreeAsQualifiedPrHead": "87df47aed43e464ef34c3cb15e4b2e0c7aced7e8",
+  "priorPrQualification": {
+    "runId": 39863182670,
+    "report": "/workspace/scratch/bb431be72395/ux183/pr-native-final.json",
+    "reportSha256": "2343beddf4658ba8a19bc7daa64d0f7e8781a428373afb29b76a371521631eb7"
+  },
+  "requiredJobs": 5,
+  "requiredJobsSucceeded": 5,
+  "nativeNode": "24.22.1",
+  "jobs": [
+    {
+      "id": 120122416170,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 39864278371,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Create disposable DML-only runtime account",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Rehearse authentication and independent messaging sessions over loopback HTTPS",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        }
+      ]
+    },
+    {
+      "id": 120122416250,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 39864278371,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Install native MariaDB checkpoint clients",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Create disposable runtime and offline schema inspection accounts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Exercise migrations and constraints on disposable database",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        }
+      ],
+      "databaseCommandDeadlineMinutesObservedInLog": 10
+    },
+    {
+      "id": 120122416277,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 39864278371,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Install native MariaDB checkpoint clients",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Create disposable runtime and offline schema inspection accounts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Exercise migrations and constraints on disposable database",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        }
+      ],
+      "databaseCommandDeadlineMinutesObservedInLog": 10
+    },
+    {
+      "id": 120122416423,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 39864278371,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Exercise real Chrome with synthetic local fixtures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Homepage rendering in French and English",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        }
+      ]
+    },
+    {
+      "id": 120122416432,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 39864278371,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Verify private Node preparation with synthetic files",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Build offline workbench",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Downloadable preview (open HTML, no console)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        }
+      ],
+      "additionalValidation": {
+        "privateNodePythonTests": 15,
+        "privateNodePythonPassed": true,
+        "offlineWorkbenchBuild": "success"
+      }
+    }
+  ],
+  "polls": [
+    {
+      "at": "2026-10-22T22:21:40.403Z",
+      "jobs": [
+        {
+          "id": 120122416170,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Rehearse authentication and independent messaging sessions over loopback HTTPS"
+        },
+        {
+          "id": 120122416250,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416277,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416423,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise real Chrome with synthetic local fixtures"
+        },
+        {
+          "id": 120122416432,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Run tests"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:22:11.136Z",
+      "jobs": [
+        {
+          "id": 120122416170,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Rehearse authentication and independent messaging sessions over loopback HTTPS"
+        },
+        {
+          "id": 120122416250,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416277,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416423,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise real Chrome with synthetic local fixtures"
+        },
+        {
+          "id": 120122416432,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Run tests"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:22:41.816Z",
+      "jobs": [
+        {
+          "id": 120122416170,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": null
+        },
+        {
+          "id": 120122416250,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416277,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416423,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise real Chrome with synthetic local fixtures"
+        },
+        {
+          "id": 120122416432,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Run tests"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:23:12.644Z",
+      "jobs": [
+        {
+          "id": 120122416170,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416250,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416277,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416423,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise real Chrome with synthetic local fixtures"
+        },
+        {
+          "id": 120122416432,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Build offline workbench"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:23:43.278Z",
+      "jobs": [
+        {
+          "id": 120122416170,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416250,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416277,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416423,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise real Chrome with synthetic local fixtures"
+        },
+        {
+          "id": 120122416432,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:24:29.410Z",
+      "jobs": [
+        {
+          "id": 120122416170,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416250,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416277,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416423,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise real Chrome with synthetic local fixtures"
+        },
+        {
+          "id": 120122416432,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:25:00.070Z",
+      "jobs": [
+        {
+          "id": 120122416170,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416250,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416277,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416423,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise real Chrome with synthetic local fixtures"
+        },
+        {
+          "id": 120122416432,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:25:30.673Z",
+      "jobs": [
+        {
+          "id": 120122416170,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416250,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416277,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416423,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise real Chrome with synthetic local fixtures"
+        },
+        {
+          "id": 120122416432,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:26:01.244Z",
+      "jobs": [
+        {
+          "id": 120122416170,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416250,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416277,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416423,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416432,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:26:47.066Z",
+      "jobs": [
+        {
+          "id": 120122416170,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416250,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416277,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416423,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416432,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:27:17.993Z",
+      "jobs": [
+        {
+          "id": 120122416170,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416250,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416277,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416423,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416432,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:27:48.617Z",
+      "jobs": [
+        {
+          "id": 120122416170,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416250,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": null
+        },
+        {
+          "id": 120122416277,
+          "status": "in_progress",
+          "conclusion": null,
+          "active": "Exercise migrations and constraints on disposable database"
+        },
+        {
+          "id": 120122416423,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416432,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-22T22:28:19.327Z",
+      "jobs": [
+        {
+          "id": 120122416170,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416250,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416277,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416423,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        },
+        {
+          "id": 120122416432,
+          "status": "completed",
+          "conclusion": "success",
+          "active": null
+        }
+      ]
+    }
+  ],
+  "logs": [
+    {
+      "jobId": 120122416170,
+      "jobName": "Chrome HTTPS authentication and messaging with MariaDB",
+      "file": "/workspace/scratch/bb431be72395/ux183/logs/main183-auth-120122416170.log",
+      "sha256": "5c0137896d181ef4501efbdd78b1238469581706bc2ba7802b88de2a9132d9d2",
+      "bytes": 38168,
+      "counters": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "durationMs": 78534.841773
+    },
+    {
+      "jobId": 120122416250,
+      "jobName": "MariaDB 11.4",
+      "file": "/workspace/scratch/bb431be72395/ux183/logs/main183-mariadb114-120122416250.log",
+      "sha256": "ae4b708c6835f3f1011b2f09957106bdcc0ec156de7d861f082ec776705ccff7",
+      "bytes": 340435,
+      "counters": {
+        "tests": 576,
+        "suites": 0,
+        "pass": 576,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "durationMs": 367553.909722
+    },
+    {
+      "jobId": 120122416277,
+      "jobName": "MariaDB 10.11",
+      "file": "/workspace/scratch/bb431be72395/ux183/logs/main183-mariadb1011-120122416277.log",
+      "sha256": "34633979378f35e7e02c2b8e3318c48fb61a55819df5ba8df747e24216055697",
+      "bytes": 340089,
+      "counters": {
+        "tests": 576,
+        "suites": 0,
+        "pass": 576,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "durationMs": 375403.347641
+    },
+    {
+      "jobId": 120122416423,
+      "jobName": "Chrome keyboard and chat lifecycle",
+      "file": "/workspace/scratch/bb431be72395/ux183/logs/main183-browser-120122416423.log",
+      "sha256": "5213eb68fa909f600ba4226ebee35d096ae070e6d33ffb44d7670928bdcf7baa",
+      "bytes": 48983,
+      "counters": {
+        "tests": 230,
+        "suites": 0,
+        "pass": 230,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "durationMs": 262017.167042
+    },
+    {
+      "jobId": 120122416432,
+      "jobName": "verify",
+      "file": "/workspace/scratch/bb431be72395/ux183/logs/main183-verify-120122416432.log",
+      "sha256": "e7de21898e3304d2c4a4dde2e9370ce5d996bb8c952806f49002ff843c8e13ac",
+      "bytes": 558548,
+      "counters": {
+        "tests": 3945,
+        "suites": 0,
+        "pass": 3897,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 48,
+        "todo": 0
+      },
+      "durationMs": 110052.179012
+    }
+  ],
+  "artifact": {
+    "id": 12463636763,
+    "name": "homepage-render",
+    "size_in_bytes": 2773826,
+    "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12463636763",
+    "archive_download_url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12463636763/zip",
+    "expired": false,
+    "created_at": "2026-10-22T22:25:35Z",
+    "expires_at": "2026-10-29T22:25:34Z",
+    "updated_at": "2026-10-22T22:25:35Z",
+    "digest": "sha256:370d76ab86e23442ba4de1282d26850a7faa7b0cbf31e9b7ec243e9b37819eba",
+    "workflow_run": {
+      "id": 39864278371,
+      "repository_id": 1419524991,
+      "head_repository_id": 1419524991,
+      "head_branch": "main",
+      "head_sha": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f"
+    },
+    "verification": "API metadata/digest and native workflow head checked; archive not downloaded or visually reopened by this monitoring agent.",
+    "continuity": "Source tree exactly matches already qualified PR tree; main Chrome suite passed again. No additional UI phase.",
+    "apiMetadataVerified": true,
+    "localArchiveDigestVerified": false,
+    "archiveDownloadPerformed": false,
+    "newVisualReviewOrCapturePerformed": false
+  },
+  "remoteMutationsPerformed": [],
+  "limits": [
+    "This report qualifies the exact main push commit48fd42b808b2bc4d95d3f3ba21244c032d0a938f/tree1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58, attempt1. It is not a tag/release/deployment or hosted-runtime attestation.",
+    "verify has48skipped cases, which are not counted as passed. Both database jobs and both Chrome jobs have0skipped.",
+    "All native checks ran in existing synthetic GitHub CI fixtures. This monitoring agent initiated no test or production/private-host, real message, SMTP/push, backup/restore or PC action.",
+    "Main artifact metadata and native head are verified from the API. The main archive was not downloaded or pixel-compared, and its API digest is not represented as a locally verified ZIP digest. No new UI phase was opened; source tree is identical to the visually qualified PR tree.",
+    "No Git/ref/tag/release/CI/host mutation was performed by this agent. Root owns the release and operations steps."
+  ],
+  "independentLogReview": {
+    "report": "/workspace/scratch/bb431be72395/ux183/main-log-counter-review.json",
+    "sha256": "18fa33b51bf87e856d2b4ab4414197b555790ad18a23d1943502c619698fa34c",
+    "scope": "Independent read-only review of completed auth and verify logs, no remote call or test."
+  },
+  "artifacts": [
+    {
+      "id": 12464080163,
+      "name": "JessieMessage-apercu-736",
+      "size_in_bytes": 202651,
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12464080163",
+      "archive_download_url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12464080163/zip",
+      "expired": false,
+      "created_at": "2026-10-22T22:23:17Z",
+      "expires_at": "2026-10-29T22:23:16Z",
+      "updated_at": "2026-10-22T22:23:17Z",
+      "digest": "sha256:989e899963c5df911a4da2ef0fe5697b5381dd1fcaf55dbec51a6b10b3f7a24a",
+      "workflow_run": {
+        "id": 39864278371,
+        "repository_id": 1419524991,
+        "head_repository_id": 1419524991,
+        "head_branch": "main",
+        "head_sha": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f"
+      }
+    },
+    {
+      "id": 12463636763,
+      "name": "homepage-render",
+      "size_in_bytes": 2773826,
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12463636763",
+      "archive_download_url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12463636763/zip",
+      "expired": false,
+      "created_at": "2026-10-22T22:25:35Z",
+      "expires_at": "2026-10-29T22:25:34Z",
+      "updated_at": "2026-10-22T22:25:35Z",
+      "digest": "sha256:370d76ab86e23442ba4de1282d26850a7faa7b0cbf31e9b7ec243e9b37819eba",
+      "workflow_run": {
+        "id": 39864278371,
+        "repository_id": 1419524991,
+        "head_repository_id": 1419524991,
+        "head_branch": "main",
+        "head_sha": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f"
+      }
+    }
+  ],
+  "completedAt": "2026-10-22T22:29:12.894Z",
+  "runCreatedAt": "2026-10-22T22:20:54Z",
+  "runUpdatedAt": "2026-10-22T22:27:58Z",
+  "pollingPolicy": "At least30000ms between workflow-job-list completions, enforced locally.",
+  "logSource": "Complete decoded text from github_fetch_workflow_job_logs, saved without truncation. SHA256 refers to the saved UTF-8 text, not a GitHub log archive digest.",
+  "logMetadata": [
+    {
+      "jobId": 120122416170,
+      "decodedUtf16CodeUnits": 38116
+    },
+    {
+      "jobId": 120122416250,
+      "decodedUtf16CodeUnits": 340433
+    },
+    {
+      "jobId": 120122416277,
+      "decodedUtf16CodeUnits": 340087
+    },
+    {
+      "jobId": 120122416423,
+      "decodedUtf16CodeUnits": 48473
+    },
+    {
+      "jobId": 120122416432,
+      "decodedUtf16CodeUnits": 550546
+    }
+  ],
+  "nextAction": "Root can finalize release/operations using this exact validated main SHA after its own remaining preconditions. Do not substitute a later unqualified source commit."
+}

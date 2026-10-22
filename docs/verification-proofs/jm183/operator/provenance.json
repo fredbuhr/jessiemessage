@@ -1,0 +1,55 @@
+{
+  "createdAt": "2026-10-22T21:40:41.933198+00:00",
+  "baseFiles": [
+    {
+      "path": "/workspace/scratch/bb431be72395/operator182/ops/prepare-release182.py",
+      "publishedCommit": "040701bb8239a85c0484d21c4f1a0d585ef07260",
+      "expectedSha256": "9b68d7a060e94781e6a2043a8b37c3a0039101bca912675a7ed8e6d4e55e407a",
+      "observedSha256": "9b68d7a060e94781e6a2043a8b37c3a0039101bca912675a7ed8e6d4e55e407a",
+      "match": true
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/operator182/ops/test-prepare-release182.py",
+      "publishedCommit": "040701bb8239a85c0484d21c4f1a0d585ef07260",
+      "expectedSha256": "6244740b859f53b905cfb4c42beae39b784d09957f5a035e6f57211e87b4d02e",
+      "observedSha256": "6244740b859f53b905cfb4c42beae39b784d09957f5a035e6f57211e87b4d02e",
+      "match": true
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/operator182/ops/record-release182.py",
+      "publishedCommit": "9a52b4840b65d2c825020ffa81d4bdc2d29fc268",
+      "expectedSha256": "48eb96eb3a75ec07a6e7baff861cfea24bc6d561a889723801f044734a38cbf1",
+      "observedSha256": "48eb96eb3a75ec07a6e7baff861cfea24bc6d561a889723801f044734a38cbf1",
+      "match": true
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/operator182/ops/test_record_release182.py",
+      "publishedCommit": "9a52b4840b65d2c825020ffa81d4bdc2d29fc268",
+      "expectedSha256": "32632cceca00d50ca7fcd288b937b20e7f3f6d8328322b87d6fb9419116cb965",
+      "observedSha256": "32632cceca00d50ca7fcd288b937b20e7f3f6d8328322b87d6fb9419116cb965",
+      "match": true
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/publisher182/.github/workflows/publish-qualified.yml",
+      "publishedCommit": "040701bb8239a85c0484d21c4f1a0d585ef07260",
+      "expectedSha256": "9d7fa415492ab5b153fac40dfb86c091038ed7bc1a1e354677e55e3cb947a42a",
+      "observedSha256": "9d7fa415492ab5b153fac40dfb86c091038ed7bc1a1e354677e55e3cb947a42a",
+      "match": true
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/publisher182/ops/test-publish-qualified.py",
+      "publishedCommit": "040701bb8239a85c0484d21c4f1a0d585ef07260",
+      "expectedSha256": "db62ae8e1b8ad7918187be3102cfe3426133db3e43a668ee7a57ce7465d1f49f",
+      "observedSha256": "db62ae8e1b8ad7918187be3102cfe3426133db3e43a668ee7a57ce7465d1f49f",
+      "match": true
+    }
+  ],
+  "evidencePaths": [
+    "jessiemessage/docs/verification-proofs/jm182-verification.json",
+    "jessiemessage/docs/verification-proofs/jm182-hosted-preparation.json",
+    "jessiemessage/docs/verification-proofs/jm182-hosted-metadata.json"
+  ],
+  "isolatedArtifactDirectory": "/workspace/scratch/bb431be72395/operator183",
+  "gitStatus": "The earlier operator182 scratch directory is not a Git checkout. The two immutable published operator commits are absent from the application local object database; no remote fetch or branch/ref creation was performed. This directory contains byte-verified derivative artifacts, not a published Git checkout.",
+  "privateDataCopied": false
+}

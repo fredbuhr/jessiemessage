@@ -1,0 +1,389 @@
+{
+  "status": "actual_main_pins_fixed_synthetically_qualified_native_operator_and_publication_pending",
+  "createdAt": "2026-10-22T21:47:21.154924+00:00",
+  "directory": "/workspace/scratch/bb431be72395/operator183",
+  "gitCheckout": false,
+  "applicationCheckoutModifiedByThisPreparation": false,
+  "candidateVersion": "1.8.3",
+  "expectedActive": {
+    "version": "1.8.2",
+    "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+    "tree": "7b722ca1fbd3416acecffa3c122e967511184d4c",
+    "checkpointSha256": "148b1e0f1ef0e585aa0e0be99ba4e65517b30d2827e3dc26768684bfc5afa280",
+    "node": "v24.22.1",
+    "sqlSchema": 36,
+    "latestTag": "v1.8.2",
+    "latestReleaseId": 421075470
+  },
+  "files": [
+    {
+      "path": "ops/prepare-release183.py",
+      "sha256": "0b2c280f238b80eb80944623576a5932a9abf41778cb9f215a7036a529b85101",
+      "bytes": 15612
+    },
+    {
+      "path": "ops/test-prepare-release183.py",
+      "sha256": "b5c32dc7ff490b1a336a5876f56a7e8b63a1a6d0b1962a70c10d7a7cc3fd12a9",
+      "bytes": 32578
+    },
+    {
+      "path": "ops/record-release183.py",
+      "sha256": "097fdb5287d73abe52f219f7b66a8d3ce8d39d153e26cf5e505e56cd9b48b80e",
+      "bytes": 29171
+    },
+    {
+      "path": "ops/test_record_release183.py",
+      "sha256": "999538acc10d7cd45e04a09a5b07b7bbba963e6c51d1ac2431405e071391291e",
+      "bytes": 42096
+    },
+    {
+      "path": "ops/test-publish-qualified183.py",
+      "sha256": "a825791b1cdfa0dd67642c24488cd82f7eaab9d4541d0134bcc4fbc258a0efbb",
+      "bytes": 19012
+    },
+    {
+      "path": ".github/workflows/prepare-release183.yml",
+      "sha256": "d044816d26c51f7c3c15ed49c92424a0af917d0a1c0ae835a22de9c65458a615",
+      "bytes": 1060
+    },
+    {
+      "path": ".github/workflows/record-release183.yml",
+      "sha256": "dc20d11896e0af0bb0817ed62302868a953f09c1fa64918ef566d093c9c26c94",
+      "bytes": 1135
+    },
+    {
+      "path": ".github/workflows/publish-qualified183.yml",
+      "sha256": "ef61cef254456f6c3cd23af7656260d28fe9ae7eea442258a78a35eba4f97b18",
+      "bytes": 14745
+    }
+  ],
+  "readyForActualPublication": false,
+  "readyForHostedStaging": false,
+  "readyForHostedRecording": false,
+  "pending": {
+    "prepare": [],
+    "publisher": [],
+    "writer": [
+      "STAGING_SHA",
+      "RELEASE_ID"
+    ]
+  },
+  "knownFutureValuesPolicy": "Qualified main source/tree/CI values supplied and API-verified by parent. Release ID, hosted staging receipt and future operator commit remain unknown and are not invented.",
+  "qualification": [
+    {
+      "command": "python3 ops/test-prepare-release183.py > prepare183-tests-qualified-pins.log 2>&1",
+      "cwd": "/workspace/scratch/bb431be72395/operator183",
+      "tests": 22,
+      "pass": 22,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 33.175,
+      "log": {
+        "path": "prepare183-tests-qualified-pins.log",
+        "sha256": "f5cdb95b5ac20afcde4b1fabb59b2cffc486471efb69d854a240682d38e9cce1",
+        "bytes": 3569
+      },
+      "sourcePinsQualifiedBySyntheticTest": false,
+      "scope": "preparer"
+    },
+    {
+      "command": "python3 ops/test_record_release183.py > record183-tests-qualified-pins.log 2>&1",
+      "cwd": "/workspace/scratch/bb431be72395/operator183",
+      "tests": 26,
+      "pass": 26,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 0.649,
+      "log": {
+        "path": "record183-tests-qualified-pins.log",
+        "sha256": "372ebfa7b56d44c0e4585b2c1d7764b18ff5b5bc493cbc8294b8d82dc0f76c80",
+        "bytes": 4537
+      },
+      "sourcePinsQualifiedBySyntheticTest": false,
+      "scope": "writer"
+    },
+    {
+      "command": "python3 ops/test-publish-qualified183.py --output publication183-tests-qualified-pins.json > publication183-tests-qualified-pins.log 2>&1",
+      "cwd": "/workspace/scratch/bb431be72395/operator183",
+      "tests": 38,
+      "pass": 38,
+      "fail": 0,
+      "networkCalls": 0,
+      "realMutations": 0,
+      "evidence": {
+        "path": "publication183-tests-qualified-pins.json",
+        "sha256": "a748020ebec4439950fa1913bdde02b3d3cea5e939ac3ba06859b7909285ee52",
+        "bytes": 3025
+      },
+      "log": {
+        "path": "publication183-tests-qualified-pins.log",
+        "sha256": "b2ca6792b1ae5a08c39331e15952c7816efdc152e8ea6e07e29b35b2e90a2662",
+        "bytes": 2809
+      },
+      "sourcePinsQualifiedBySyntheticTest": false,
+      "realMainQualificationEvidence": "qualifiedMain (parent API evidence), distinct from synthetic fixtures",
+      "scope": "publisher"
+    },
+    {
+      "scope": "static",
+      "result": "Seven-literal inversion recovered previous hashes; five Python files and embedded publisher parse. Workflows other than literal publisher pins byte-identical; no operator/helper remotely executed."
+    }
+  ],
+  "crossReviews": [
+    {
+      "scope": "preparer",
+      "reviewer": "writer183 child",
+      "result": "No concrete blocker after literal-only finalization; previous code/test review supplemented with real pin/guard read-only comparison, no reviewer rerun.",
+      "sourceSha256": "0b2c280f238b80eb80944623576a5932a9abf41778cb9f215a7036a529b85101",
+      "testSha256": "b5c32dc7ff490b1a336a5876f56a7e8b63a1a6d0b1962a70c10d7a7cc3fd12a9"
+    },
+    {
+      "path": "writer183-counter-review.json",
+      "sha256": "0ff9de058cd78754dcb9fa1663d13ea42b0cbb1978a7ab6bb9b2f2892138d502",
+      "bytes": 8808
+    },
+    {
+      "path": "publisher183-counter-review.json",
+      "sha256": "1413c78ff3f58347c54798224909d115a974d5f0a200a07f25bdd352ee3a5bdc",
+      "bytes": 6935
+    }
+  ],
+  "componentReports": [
+    {
+      "path": "prepare183-report.json",
+      "sha256": "acd980b157f79b68a44158f03270bdfbee4318a25cae6c4fb7149afc30f3f01c",
+      "bytes": 8961
+    },
+    {
+      "path": "writer183-report.json",
+      "sha256": "1927f3aed1a8addd48afc98df4640582d66b7a817d2a91d045f2f8502b05e8ee",
+      "bytes": 22241
+    },
+    {
+      "path": "publisher183-report.json",
+      "sha256": "20ea5cbfff3cb6209a7805328f4651795bbd3967901ff176140710fb7bbac752",
+      "bytes": 14119
+    },
+    {
+      "path": "provenance.json",
+      "sha256": "ac1d222aafdb662aa82ad6cf7b18b2fa685f5d25284afa785a3826fa37958347",
+      "bytes": 3020
+    },
+    {
+      "path": "pin-state-tests-review.json",
+      "sha256": "06980b71a78b2454c90495e849a8160d4e189119f14e6698e0cd948721cc91f1",
+      "bytes": 3925
+    },
+    {
+      "path": "qualified-pin-finalization-report.json",
+      "sha256": "58404e254cbdf9db06f94778c36a2492f53783b0fc3e0cd778877cad5aa12f8f",
+      "bytes": 8222
+    },
+    {
+      "path": "final-eight-files.json",
+      "sha256": "4e0d0cbb516ab7edd5109fdd4fd1579321915282778527b73e16506ba8a51f11",
+      "bytes": 2704
+    }
+  ],
+  "preservedContracts": [
+    "Preparer uses exact active182 checkout, source/tree, start/CHECK/Node/checkpoint pins; checkpoint rechecked before outputs and final, never written. Existing partial outputs refuse automatic retry.",
+    "Source/tree dynamic CLI interface remains exactly two independently qualified arguments; pinned values now equal the real qualified main source/tree and immutable candidate tag must match them.",
+    "Node24.22.1 and normalized dependencies/33normal+3video migration inventories identical; no SQL, install, configuration, secret, Manager, start/CHECK/restart execution in preparer.",
+    "Launchers preserve enabled local-closures, full video profile and linux-dirfd bindings. Start/CHECK remain distinct and only syntax-checked during preparation.",
+    "Writer requires receipt183 tied to checkpoint182, exact real183 startup, current health/readiness/home/anonymous-entry, release/tag/latest183 and rollback172 never-started before metadata-only atomic replacement.",
+    "Writer preserves all historical182/181/180/171/160 blocks, previous active and unknown blocks, with exact byte/hash/metadata drift checks and read-only identical retry.",
+    "Publication uses only a future explicit operator branch push, operator-tests before contents-write job, official pinned actions, exact qualified main SHA/tree/run+five jobs, immutable tag/release, existing182 latest guard and rollback172 guards.",
+    "Publication creates latest183 in the release POST only after old-latest182 pre-write and after-tag recheck. Existing identical183 release retry is read-only and already must be exact latest183. No PATCH, DELETE, main push or old tag/release mutation exists.",
+    "183 public home hash is compared with candidate public/access.html, which configured accessHandler actually serves; anonymous entry available/client signed_out href/access/administrator:null remains compatible without exposing an admin session."
+  ],
+  "finalizationSequence": [
+    "Qualified main source/tree/CI pins are finalized. Parent independently API-confirms them and publishes/qualifies the operator workflow; its operator-tests must pass before the limited publication job writes tag/release. No ref/tag/release created by this agent.",
+    "After real immutable183 publication, observe its exact release ID and insert it in writer; only after its genuine hosted staging receipt is returned insert that exact receipt SHA. Neither value is inferred from successful local tests.",
+    "Provide immutable verified operator helper to user and execute the complete source/tree preparation invocation. Preparation runs neither CHECK nor application; separate CHECK and activation remain later user operations.",
+    "Only after observed real183 startup/publication/health/rollback/protected-checkpoint evidence may finalized writer record metadata; historical blocks and exact read-only retry remain guarded."
+  ],
+  "limits": [
+    "Synthetic tests validate guards and transitions, not any future main source or hosted state; local Python3.12.14 and stubbed Node used, no native operator CI claimed.",
+    "No real host, private data copy, SQL, SMTP, Push, backup/restore, witness/PC, Manager, runtime start, secret, checkpoint or configuration operation occurred.",
+    "No Git commit/push, branch/ref/tag/release or workflow run created. Git commands occurred only inside disposable preparer fixtures; two application object-existence probes were read-only and found no old operator objects.",
+    "The isolated operator183 directory is an artifact folder, not a Git checkout or published branch; six baseline files were SHA256-verified against the immutable182 evidence.",
+    "Publisher pending guards precede its embedded program process/API calls; normal future Actions infrastructure network access is separate and no workflow was launched here.",
+    "Existing checkpoint checks plus advisory inode lock are not universal compare-and-swap against a non-cooperating writer.",
+    "Production remains182 by prior user-reported evidence. No activation183, backup/device/A11/SQL-growth success is inferred."
+  ],
+  "correctedDuringReview": {
+    "findingBy": "parent independent review before delivery",
+    "previousWriterSha256": "9bd0ee340b93ca1b2254f51c3a39bf007dcff623483a966aa747f03b3eff610f",
+    "problem": "Inherited PUBLIC_HOME guard compared public/index.html, while configured183 accessHandler routes /, /index.html and /app to public/access.html. Prior synthetic21-test fixtures did not distinguish these bytes.",
+    "fix": "183 writer now compares public/access.html; candidate fixture stores different index/access bytes; new regression refuses index hash and accepts access hash. Anonymous183 entry transport shape is also tested.",
+    "applicationSourceRead": "Unqualified PR130 routing inspected read-only: server/index.mjs clientEntry/static file selection and server/entry/http.mjs anonymous response. No application or hosted endpoint executed.",
+    "result": "23/23 targeted writer tests passed; preparer and publisher were unchanged and not rerun."
+  },
+  "updatedAt": "2026-10-22T22:31:35.156168+00:00",
+  "qualificationBeforePhaseIndependentTests": [
+    {
+      "scope": "preparer",
+      "command": "python3 operator183/ops/test-prepare-release183.py",
+      "tests": 20,
+      "pass": 20,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 35.691,
+      "evidence": {
+        "path": "prepare183-tests-initial.log",
+        "sha256": "dc76f9045dc9d0ef5d65119b6008713f5b20d425dd66c373036046cc89edf81f",
+        "bytes": 3161
+      }
+    },
+    {
+      "scope": "writer",
+      "command": "python3 operator183/ops/test_record_release183.py",
+      "tests": 23,
+      "pass": 23,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 1.122,
+      "evidence": {
+        "path": "record183-tests-home-corrected.log",
+        "sha256": "602bf2cb816bded7a2ac84f2013138410c31dc416369640968c597a91e0a642f",
+        "bytes": 3977
+      },
+      "priorRun": "Two prior21/21 runs remain preserved; they did not distinguish index/access. Actual183 route review found the inherited PUBLIC_HOME mismatch, corrected source plus two regressions justify this final writer-only rerun.",
+      "passCount": 23
+    },
+    {
+      "scope": "publisher",
+      "command": "python3 ops/test-publish-qualified183.py --output publication183-tests-initial.json (cwd operator183)",
+      "tests": 38,
+      "pass": 38,
+      "fail": 0,
+      "networkCalls": 0,
+      "realMutations": 0,
+      "sourcePinsQualified": false,
+      "evidence": {
+        "path": "publication183-tests-initial.json",
+        "sha256": "01b493b868236ba329df99ab26a3e516aba80ed3bf70f03843def7d166ea1009",
+        "bytes": 2931
+      }
+    },
+    {
+      "scope": "static",
+      "result": "All five Python artifacts, all three workflow YAML files and embedded publication Python parsed. No helper or workflow executed by this static check."
+    }
+  ],
+  "qualifiedMain": {
+    "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "tree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+    "runId": 39864278371,
+    "event": "push",
+    "branch": "main",
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      "verify",
+      "MariaDB 10.11",
+      "MariaDB 11.4",
+      "Chrome keyboard and chat lifecycle",
+      "Chrome HTTPS authentication and messaging with MariaDB"
+    ],
+    "jobCount": 5,
+    "evidenceOrigin": "Parent independently verified GitHub API run/jobs/mainref and supplied these exact values. This agent performed no GitHub API/Git/host operation."
+  },
+  "qualificationBeforeRealPinFinalization": [
+    {
+      "scope": "preparer",
+      "tests": 22,
+      "pass": 22,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 103.052,
+      "evidence": {
+        "path": "prepare183-tests-pin-states.log",
+        "sha256": "0521400e1d210fc3c60f8e086711d045cd09611b0a7a0e9155eed55561baaf10",
+        "bytes": 3570
+      },
+      "command": "python3 operator183/ops/test-prepare-release183.py > operator183/prepare183-tests-pin-states.log 2>&1 (cwd workspace root)"
+    },
+    {
+      "scope": "writer",
+      "tests": 26,
+      "pass": 26,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 7.346,
+      "evidence": {
+        "path": "record183-tests-bimodal-final.log",
+        "sha256": "5a8b57967e27783ac3b9c6df7eef82bc489ec8da3fb562131cd32d6d45e26bd3",
+        "bytes": 4537
+      },
+      "command": "python3 ops/test_record_release183.py > record183-tests-bimodal-final.log 2>&1 (cwd operator183)"
+    },
+    {
+      "scope": "publisher",
+      "tests": 38,
+      "pass": 38,
+      "fail": 0,
+      "networkCalls": 0,
+      "realMutations": 0,
+      "evidence": {
+        "path": "publication183-tests-pin-states.json",
+        "sha256": "0ee9aa74c35404e3c99390fbc8e0f591e82268e6c812617ca876c6d06952ff27",
+        "bytes": 2997
+      },
+      "command": "python3 ops/test-publish-qualified183.py --output publication183-tests-pin-states.json > publication183-tests-pin-states.log 2>&1 (cwd operator183)",
+      "sourcePinsQualified": false
+    },
+    {
+      "scope": "static",
+      "result": "All five Python artifacts, all three workflow YAML files and embedded publication Python parsed. No helper or workflow executed by this static check."
+    }
+  ],
+  "phaseIndependentTestUpdateBeforeRealPinFinalization": {
+    "status": "three_test_files_only_production_artifacts_unchanged",
+    "reason": "Literal shipped-pending assertions would fail after legitimate final pin filling; tests now model both phases and explicitly inject negative variants.",
+    "evidence": {
+      "path": "pin-state-tests-review.json",
+      "sha256": "06980b71a78b2454c90495e849a8160d4e189119f14e6698e0cd948721cc91f1",
+      "bytes": 3925
+    },
+    "allActualPinsStillPending": true,
+    "sourcePinsQualified": false
+  },
+  "actualPinFinalization": {
+    "evidence": {
+      "path": "qualified-pin-finalization-report.json",
+      "sha256": "58404e254cbdf9db06f94778c36a2492f53783b0fc3e0cd778877cad5aa12f8f",
+      "bytes": 8222
+    },
+    "changedLiterals": 7,
+    "changedFiles": 3,
+    "testsUnchanged": true,
+    "remainingUnknownPins": [
+      "STAGING_SHA",
+      "RELEASE_ID"
+    ],
+    "realPublicationPerformed": false
+  },
+  "prepareCommand": {
+    "command": "python3 prepare-release183.py 48fd42b808b2bc4d95d3f3ba21244c032d0a938f 1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+    "arguments": [
+      "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+      "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58"
+    ],
+    "helper": "ops/prepare-release183.py",
+    "helperSha256": "0b2c280f238b80eb80944623576a5932a9abf41778cb9f215a7036a529b85101",
+    "preconditions": [
+      "Immutable helper download/source operator commit must be supplied after parent publishes the operator branch; no operator commit or raw URL invented here",
+      "Native operator qualification and exact immutable candidate tag/release must be observed before running this command",
+      "Run in directory containing the downloaded SHA256-verified prepare-release183.py; no command was executed against hosting"
+    ],
+    "expectedCheckout": "/srv/customer/jessiemessage-operator/production-183-48fd42b8",
+    "expectedStart": "/srv/customer/jessiemessage-private/start-primary-release183-48fd42b8.sh",
+    "expectedCheck": "/srv/customer/jessiemessage-private/check-primary-release183-48fd42b8.sh",
+    "noStart": true,
+    "noCheckExecution": true,
+    "noRestart": true,
+    "noSql": true
+  }
+}

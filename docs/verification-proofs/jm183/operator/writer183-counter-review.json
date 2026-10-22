@@ -1,0 +1,119 @@
+{
+  "status": "no_concrete_blocker_real_main_pins_fixed_remaining_operational_evidence_pending",
+  "reviewedAt": "2026-10-22T21:47:21.154924+00:00",
+  "writerSha256": "097fdb5287d73abe52f219f7b66a8d3ce8d39d153e26cf5e505e56cd9b48b80e",
+  "method": "Read-only final pin/guard comparison by writer183 child; only seven literal changes in three source artifacts, all other content unchanged. New focused suites executed once by owners, never rerun by reviewer.",
+  "checks": [
+    "Unknown SOURCE/TREE, STAGING_SHA or RELEASE_ID refuse before private/network access; collect_published_release also guards direct calls.",
+    "Exact182 active/checkpoint and five historical sections retained; rollback copied from release182 remains172 prechecked/not started.",
+    "Source inventories, launcher/node/bundle receipts, CHECKv2, unique real183 startup identity, current publicHTTP and exact183 release/tag/latest precede checkpoint write.",
+    "New183 receipt ties preservedActiveCheckpointSha256 to checkpoint182 SHA.",
+    "Atomic write, cooperative inode lock, byte+metadata drift observations, restoration equivalence and identical retry read-only retained.",
+    "No new SQL, SMTP, start/restart, archive or private-key operation introduced.",
+    "PUBLIC_HOME now binds to public/access.html served by configured183 clientEntry; distinct-index negative regression and actual anonymous entry transport fixture passed.",
+    "Pin-shape helper accepts coherent pending and canonical finalized values without declaring them qualified. Every recording fixture overrides candidate source/tree/receipt/release identity locally.",
+    "All-pending, each partial source/tree, pending receipt and missing release ID are explicit variants independent of shipped values; private directory/file/os.open/process/network sentinels surround refusals.",
+    "Real candidate main source/tree/CI are exact; writer receipt STAGING_PENDING and release ID None still block before private/network IO. Synthetic proof sourcePinsQualified=false describes the fixture capability, not a negation of independent parent API qualification."
+  ],
+  "limits": [
+    "Writer remains intentionally non-executable against hosting until qualified source/tree, published release ID and hosted staging receipt SHA are independently known.",
+    "Existing drift checks are not universal compare-and-swap against a non-cooperating writer.",
+    "No host/real private evidence or native operator CI inferred from local fixtures."
+  ],
+  "testsRerun": false,
+  "fileEdited": false,
+  "testSha256": "999538acc10d7cd45e04a09a5b07b7bbba963e6c51d1ac2431405e071391291e",
+  "correctedDuringReview": {
+    "findingBy": "parent independent review before delivery",
+    "previousWriterSha256": "9bd0ee340b93ca1b2254f51c3a39bf007dcff623483a966aa747f03b3eff610f",
+    "problem": "Inherited PUBLIC_HOME guard compared public/index.html, while configured183 accessHandler routes /, /index.html and /app to public/access.html. Prior synthetic21-test fixtures did not distinguish these bytes.",
+    "fix": "183 writer now compares public/access.html; candidate fixture stores different index/access bytes; new regression refuses index hash and accepts access hash. Anonymous183 entry transport shape is also tested.",
+    "applicationSourceRead": "Unqualified PR130 routing inspected read-only: server/index.mjs clientEntry/static file selection and server/entry/http.mjs anonymous response. No application or hosted endpoint executed.",
+    "result": "23/23 targeted writer tests passed; preparer and publisher were unchanged and not rerun."
+  },
+  "reviewUpdatedAt": "2026-10-22T22:31:35.156168+00:00",
+  "phaseIndependentTestResult": {
+    "qualification": {
+      "command": "python3 ops/test_record_release183.py > record183-tests-qualified-pins.log 2>&1",
+      "cwd": "/workspace/scratch/bb431be72395/operator183",
+      "tests": 26,
+      "pass": 26,
+      "fail": 0,
+      "skipped": 0,
+      "durationSeconds": 0.649,
+      "log": {
+        "path": "record183-tests-qualified-pins.log",
+        "sha256": "372ebfa7b56d44c0e4585b2c1d7764b18ff5b5bc493cbc8294b8d82dc0f76c80",
+        "bytes": 4537
+      },
+      "sourcePinsQualifiedBySyntheticTest": false,
+      "scope": "writer"
+    },
+    "reviewerTestsRerun": false
+  },
+  "beforeRealPinFinalization": {
+    "status": "no_concrete_blocker_in_pending_writer",
+    "reviewedAt": "2026-10-22T21:47:21.154924+00:00",
+    "writerSha256": "8dc68ca0ff63cfc45ff39a85ad849c064acdd80eaaabb6ae9d0efe2449a605ad",
+    "method": "Qualified182 full source plus complete183 diff; corrected183 home/entry fixtures and new regressions read directly against read-only current183 route source. No reviewer rerun.; final test-only diff directly reviewed: format helper lines25-39 and explicit namespace injection cases569-631, no reviewer rerun",
+    "checks": [
+      "Unknown SOURCE/TREE, STAGING_SHA or RELEASE_ID refuse before private/network access; collect_published_release also guards direct calls.",
+      "Exact182 active/checkpoint and five historical sections retained; rollback copied from release182 remains172 prechecked/not started.",
+      "Source inventories, launcher/node/bundle receipts, CHECKv2, unique real183 startup identity, current publicHTTP and exact183 release/tag/latest precede checkpoint write.",
+      "New183 receipt ties preservedActiveCheckpointSha256 to checkpoint182 SHA.",
+      "Atomic write, cooperative inode lock, byte+metadata drift observations, restoration equivalence and identical retry read-only retained.",
+      "No new SQL, SMTP, start/restart, archive or private-key operation introduced.",
+      "PUBLIC_HOME now binds to public/access.html served by configured183 clientEntry; distinct-index negative regression and actual anonymous entry transport fixture passed.",
+      "Pin-shape helper accepts coherent pending and canonical finalized values without declaring them qualified. Every recording fixture overrides candidate source/tree/receipt/release identity locally.",
+      "All-pending, each partial source/tree, pending receipt and missing release ID are explicit variants independent of shipped values; private directory/file/os.open/process/network sentinels surround refusals."
+    ],
+    "limits": [
+      "Writer remains intentionally non-executable against hosting until qualified source/tree, published release ID and hosted staging receipt SHA are independently known.",
+      "Existing drift checks are not universal compare-and-swap against a non-cooperating writer.",
+      "No host/real private evidence or native operator CI inferred from local fixtures."
+    ],
+    "testsRerun": false,
+    "fileEdited": false,
+    "testSha256": "999538acc10d7cd45e04a09a5b07b7bbba963e6c51d1ac2431405e071391291e",
+    "correctedDuringReview": {
+      "findingBy": "parent independent review before delivery",
+      "previousWriterSha256": "9bd0ee340b93ca1b2254f51c3a39bf007dcff623483a966aa747f03b3eff610f",
+      "problem": "Inherited PUBLIC_HOME guard compared public/index.html, while configured183 accessHandler routes /, /index.html and /app to public/access.html. Prior synthetic21-test fixtures did not distinguish these bytes.",
+      "fix": "183 writer now compares public/access.html; candidate fixture stores different index/access bytes; new regression refuses index hash and accepts access hash. Anonymous183 entry transport shape is also tested.",
+      "applicationSourceRead": "Unqualified PR130 routing inspected read-only: server/index.mjs clientEntry/static file selection and server/entry/http.mjs anonymous response. No application or hosted endpoint executed.",
+      "result": "23/23 targeted writer tests passed; preparer and publisher were unchanged and not rerun."
+    },
+    "reviewUpdatedAt": "2026-10-22T22:20:01.986328+00:00",
+    "phaseIndependentTestResult": {
+      "tests": 26,
+      "pass": 26,
+      "fail": 0,
+      "skipped": 0,
+      "evidence": {
+        "path": "record183-tests-bimodal-final.log",
+        "sha256": "5a8b57967e27783ac3b9c6df7eef82bc489ec8da3fb562131cd32d6d45e26bd3",
+        "bytes": 4537
+      },
+      "reviewerTestsRerun": false
+    }
+  },
+  "qualifiedMain": {
+    "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "tree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+    "runId": 39864278371,
+    "event": "push",
+    "branch": "main",
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      "verify",
+      "MariaDB 10.11",
+      "MariaDB 11.4",
+      "Chrome keyboard and chat lifecycle",
+      "Chrome HTTPS authentication and messaging with MariaDB"
+    ],
+    "jobCount": 5,
+    "evidenceOrigin": "Parent independently verified GitHub API run/jobs/mainref and supplied these exact values. This agent performed no GitHub API/Git/host operation."
+  }
+}

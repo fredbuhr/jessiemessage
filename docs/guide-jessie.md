@@ -1,14 +1,17 @@
 # Jessie — guide quotidien
 
-Retrouve ton espace sur [jessiemessage.com](https://jessiemessage.com/app) et l’[aide du site](https://jessiemessage.com/help).
+Retrouve ton espace sur [jessiemessage.com](https://jessiemessage.com/) et l’[aide du site](https://jessiemessage.com/help).
 
-La version **1.8.2** est active et ses métadonnées sont alignées, selon le [reçu utilisateur](verification-proofs/jm182-hosted-metadata.json). [REPRISE](REPRISE.md) conserve les références techniques et les contrôles restant à vérifier. Les retours antérieurs confirment le fonctionnement de la [liste commune](verification-proofs/jm181-hosted-interface.json) et du [parcours vidéo](verification-proofs/jm180-hosted-interface.json), sans nouvelle recette complète présumée. La sauvegarde manuelle reste non vérifiée et son test est reporté à ta demande.
+**Ce guide décrit les parcours préparés pour la 1.8.3, dont le code est fusionné. La production confirmée reste en 1.8.2**, avec ses métadonnées alignées selon le [reçu utilisateur](verification-proofs/jm182-hosted-metadata.json). Une publication de la 1.8.3 ne vaut pas activation sur l’hébergement : consulte [REPRISE](REPRISE.md) pour l’état courant avant d’attendre les nouveaux écrans décrits ici. Les retours antérieurs confirment le fonctionnement de la [liste commune](verification-proofs/jm181-hosted-interface.json) et du [parcours vidéo](verification-proofs/jm180-hosted-interface.json), sans nouvelle recette hébergée présumée. La sauvegarde manuelle reste non vérifiée et son test est reporté à ta demande.
 
 ## Se connecter et gérer les accès
 
-- Ouvre [la connexion administrateur](https://jessiemessage.com/admin/login), sans barre finale après `login`, avec ton mot de passe et le code de ton application d’authentification. Chaque appareil possède sa propre connexion.
-- Choisis **Ouvrir les conversations** pour retrouver les messages.
-- Dans **Invitations et clients**, crée une invitation et copie son lien. Après la création du compte et la confirmation de l’e-mail par le client, approuve son accès depuis sa carte.
+- Côté client, [l’adresse principale](https://jessiemessage.com/) et l’app installée ouvrent directement la conversation si la connexion et l’accès sont actifs. Sinon, le formulaire de connexion s’affiche ; un accès encore en attente ou expiré mène à son état d’accès. La reprise depuis l’ancienne adresse reste un parcours de migration séparé.
+- Ouvre [la connexion administrateur](https://jessiemessage.com/admin/login), sans barre finale après `login`, avec ton adresse e-mail, ton mot de passe et le code de ton application d’authentification. Chaque appareil possède sa propre connexion. Après connexion, [Administration](https://jessiemessage.com/admin) affiche l’accueil et ses outils.
+- Choisis **Ouvrir les conversations** ou **Messagerie** pour retrouver les messages. Depuis la messagerie et les outils, **Accueil admin** revient à l’accueil.
+- Dans [Invitations et clients](https://jessiemessage.com/admin/clients), crée une invitation et copie son lien. Après la création du compte et la confirmation de l’e-mail par le client, approuve son accès depuis sa carte. Cette gestion est séparée de l’accueil administrateur.
+- Si les deux espaces sont connectés sur le même appareil, **Choisis ton espace.** propose **Ma conversation** et **Administration**. Le site attend ton choix.
+- Côté client, **Options → Mon accès** conserve l’accès au compte et le lien **Ouvrir ma conversation**.
 - **Compte et appareils → Appareils connectés** permet de consulter les connexions et de déconnecter l’appareil choisi.
 - Suspension, expiration, révocation d’accès et déconnexion conservent la conversation ; elles ne ferment pas définitivement le compte.
 
@@ -18,27 +21,29 @@ Dans [État du service](https://jessiemessage.com/admin/readiness), consulte les
 
 ## Profil et emojis
 
-Ces parcours sont disponibles dans la version active ; [REPRISE](REPRISE.md) reste la référence de livraison.
+Les fonctions de profil et le catalogue existent déjà ; les changements de présentation ci-dessous sont ceux de la 1.8.3. [REPRISE](REPRISE.md) reste la référence de livraison.
 
 **Mon profil.** Dans la messagerie, ouvre **Options → Mon profil** pour modifier ton **Nom public**, limité à 64 caractères et visible dans tes échanges. Il est distinct du surnom privé enregistré dans une **Fiche**. Avec **Choisir ou remplacer l’avatar**, sélectionne une photo et vérifie son aperçu rond ; **Retirer l’avatar** prépare son retrait. Choisis **Enregistrer le profil** pour appliquer le nom et l’avatar. Si le profil a changé ailleurs, recharge la version enregistrée ou garde ton brouillon, puis confirme l’enregistrement.
 
-**Emojis.** Ouvre `☺` (**Emojis**) à côté de la saisie : les 268 choix sont accessibles par catégories et par recherche en français ou en anglais. Le choix s’insère à la position du curseur ; adapte le message puis choisis **Envoyer**. La sélection ne déclenche aucun envoi automatique.
+**Emojis.** Ouvre `☺` (**Emojis**) à côté de la saisie : les 268 choix sont accessibles par catégories, sans champ de recherche en 1.8.3. Le choix s’insère à la position du curseur ; adapte le message puis choisis **Envoyer**. La sélection ne déclenche aucun envoi automatique.
 
-Le [catalogue enrichi en 1.3.0](emoji-inclusifs-130.md) ajoute **Doubles sens**, des gestes et des personnages adultes. Recherche les noms en français ou en anglais, par exemple « concombre », « courgette » ou « cucumber » pour 🥒. Dans **Couleur de peau**, choisis l’une des cinq carnations ou le rendu par défaut : la grille adapte les mains, doigts et personnages compatibles, y compris les peaux foncées. Le choix reste disponible pendant l’utilisation de la page et se réinitialise avec l’état du compte. Un emoji choisi s’ajoute toujours au brouillon ; vérifie le message avant **Envoyer**.
+Le [catalogue enrichi en 1.3.0](emoji-inclusifs-130.md) conserve **Doubles sens**, des gestes et des personnages adultes. Dans **Couleur de peau**, choisis l’une des cinq carnations ou le rendu par défaut : la grille adapte les mains, doigts et personnages compatibles, y compris les peaux foncées. Le choix reste disponible pendant l’utilisation de la page et se réinitialise avec l’état du compte. Un emoji choisi s’ajoute toujours au brouillon ; vérifie le message avant **Envoyer**.
 
-## Conversation mobile depuis 1.3.1
+## Conversation mobile en 1.8.3
 
-La [version active identifiée dans REPRISE](REPRISE.md) conserve la disposition mobile livrée depuis 1.3.1. La conversation mobile dispose d’une seule barre avec l’avatar, le nom et **Options** ; le retour aux conversations reste accessible dans l’administration.
+La conversation mobile dispose d’une barre avec l’avatar, le nom et **Options** ; le retour aux conversations reste accessible dans l’administration.
 
-**Options** regroupe le compte, le profil, les notifications, la langue, Contact et Aide. Les photos, les vidéos de la conversation et son téléchargement y sont accessibles lorsqu’ils sont disponibles pour ton compte. Sous les messages, `+` propose l’ajout d’une photo ou d’une vidéo, la bibliothèque et les réponses rapides selon les fonctions disponibles ; `☺` ouvre les emojis. La saisie et **Envoyer** restent directement accessibles. Choisir une photo, une vidéo, une réponse ou un emoji prépare toujours un brouillon avant envoi. Les erreurs et la reprise d’un envoi incertain restent affichées quand nécessaires.
+**Options** regroupe le compte, le profil, les notifications, la langue et les médias disponibles. **Autres options** contient Contact, **Aide et confidentialité** et, côté client, **Télécharger ma conversation**. Sous les messages, `+` propose l’ajout d’une photo ou d’une vidéo, la bibliothèque et les réponses rapides selon les fonctions disponibles ; `☺` ouvre les emojis. La saisie et **Envoyer** restent directement accessibles. Choisir une photo, une vidéo, une réponse ou un emoji prépare toujours un brouillon avant envoi. Les erreurs et la reprise d’un envoi incertain restent affichées quand nécessaires.
 
-La présentation mobile 1.3.1 a été validée visuellement par l’utilisateur. La 1.3.3 a conservé cette disposition, les textes côté client à la première personne de Jessie et les messages plus compacts du [socle 1.3.2](client-voice-message-details-132.md), avec un bouton de détails visible au toucher pour les photos. Le précontrôle hébergé, le relevé admin et le reçu final confirment la préparation, l’activation et l’enregistrement de cette livraison désormais historique et close dans [REPRISE](REPRISE.md). Tous les parcours sur téléphone physique et le clavier logiciel ne sont pas explicitement attestés.
+Sur appareil tactile, la 1.8.3 évite de remettre automatiquement le curseur dans la saisie après un envoi ou l’utilisation des menus, du profil, des médias et des emojis. Touche le champ lorsque tu veux écrire une légende ou poursuivre ton message. Le comportement réel du clavier dépend aussi de l’appareil.
 
-### Détails des messages depuis 1.3.3
+La présentation mobile 1.3.1 avait été validée visuellement par l’utilisateur ; la 1.3.3 et le [socle 1.3.2](client-voice-message-details-132.md) conservent leurs preuves historiques dans [REPRISE](REPRISE.md). Ces reçus antérieurs ne constituent pas une validation hébergée de tous les nouveaux parcours 1.8.3 sur téléphone physique.
 
-Touche ou clique sur le texte d’un message pour afficher sa date, ses métadonnées et les actions disponibles. Pour une photo, utilise le petit bouton `⋯` visible à côté de l’image, avec ou sans légende. Au clavier, rejoins le bouton **Détails du message du…** avec **Tab**, puis ouvre-le avec **Entrée** ou **Espace** ; pour les messages texte, le bouton `⋯` devient visible au focus. Pour masquer les détails, sélectionne de nouveau le message, choisis un autre message, clique en dehors ou utilise **Échap**. Une seule sélection reste ouverte à la fois.
+### Sélection et détails des messages
 
-La sélection n’envoie rien et ne supprime rien. Les commandes **Supprimer** et les informations **Envoyé** ou **Lu** se consultent dans ces détails selon tes droits ; le client conserve uniquement **Envoyé** sur ses propres messages. Clique sur une photo pour l’agrandir ; sélectionner sa légende ouvre les détails. Les erreurs et **Réessayer cet envoi** restent directement visibles quand une reprise est nécessaire.
+Touche ou clique sur le texte d’un message ou sa légende pour afficher la date, les métadonnées et les actions disponibles. La 1.8.3 retire le petit bouton `⋯` à côté des messages. Au clavier, rejoins le bouton **Détails** avec **Tab**, puis ouvre-le avec **Entrée** ou **Espace** ; il devient visible au focus et son nom accessible précise **Détails du message du…**. Pour masquer les détails, sélectionne de nouveau le message, choisis un autre message, clique en dehors ou utilise **Échap**. Une seule sélection reste ouverte à la fois.
+
+La sélection n’envoie rien et ne supprime rien. Dans l’interface 1.8.3, **Supprimer** est réservé à l’administrateur pour ses propres messages, avec confirmation. L’administration conserve la mention d’un message supprimé ; ce message disparaît de la conversation affichée au client. Les informations **Envoyé** ou **Lu** se consultent dans les détails selon le rôle ; le client conserve uniquement **Envoyé** sur ses propres messages. Clique sur une photo pour l’agrandir ; sélectionner sa légende ouvre les détails. Les erreurs et **Réessayer cet envoi** restent directement visibles quand une reprise est nécessaire.
 
 ## Échanger et partager une photo ou une vidéo
 
@@ -49,7 +54,7 @@ La sélection n’envoie rien et ne supprime rien. Les commandes **Supprimer** e
 - **+ → Mes photos** ouvre ta bibliothèque ; **Options → Photos** retrouve les images partagées dans cet échange.
 - Avec **+ → Ajouter une vidéo**, choisis un fichier **MP4 de 100 MiB maximum** et vérifie l’aperçu local. **Retirer la vidéo** annule la sélection. Le transfert et l’envoi commencent seulement avec **Envoyer** ; **Options → Vidéos** retrouve les vidéos partagées dans l’échange. La lecture dépend des codecs acceptés par l’appareil.
 - **+ → Réponses rapides** ajoute une phrase au brouillon, sans l’envoyer. Choisis sa langue, adapte le texte, puis utilise **Envoyer**.
-- Tu peux supprimer tes propres messages. Pour retirer aussi une photo de **Mes photos**, supprime d’abord les messages qui l’utilisent encore.
+- Dans l’administration, **Supprimer** retire tes propres messages après confirmation. Pour retirer aussi une photo de **Mes photos**, supprime d’abord les messages qui l’utilisent encore. Côté client, la 1.8.3 ne propose plus la suppression d’un message dans la conversation ; la gestion de **Mes photos** reste séparée.
 
 ### Tes réponses personnelles
 
@@ -78,7 +83,7 @@ Une phrase enregistrée dans **Réponses rapides** reste disponible dans le cata
 
 Depuis la conversation d’un client, ouvre **Options → Fiche → Tâches du client**, puis **Ajouter une tâche**. Écris ce que tu veux préparer ou envoyer, ajoute une échéance si utile, puis choisis **Enregistrer la tâche**. Tu peux garder plusieurs tâches pour le même client. Ces informations restent dans ton administration ; le client ne les voit pas.
 
-**Options → Mes tâches**, ou le lien **Mes tâches** dans Administration, rassemble les clients. Les filtres **À faire**, **À traiter maintenant** et **Terminées** retrouvent les tâches par pages ; **Autres tâches** affiche la suite. Le menu indique discrètement le nombre arrivé à échéance. **Reporter** ouvre la date à modifier ; **Terminer** et **Réouvrir** changent le statut sans créer une autre tâche.
+**Accueil admin → Tâches privées** rassemble les clients. Les filtres **À faire**, **À traiter maintenant** et **Terminées** retrouvent les tâches par pages ; **Autres tâches** affiche la suite. **Reporter** ouvre la date à modifier ; **Terminer** et **Réouvrir** changent le statut sans créer une autre tâche.
 
 Si la confirmation manque, utilise **Vérifier et réessayer** pour reprendre la même demande. Si une autre personne a modifié la tâche depuis un autre appareil, compare la version enregistrée : **Reprendre cette version** la recharge, **Enregistrer mon brouillon** confirme explicitement le remplacement. **Fermer** conserve le brouillon dans la page ; **Abandonner le brouillon** permet de passer à autre chose. Enregistre-le avant de fermer la page ou de te déconnecter.
 
@@ -88,15 +93,17 @@ Les rappels sont visibles lorsque l’application est ouverte et sont actualisé
 
 Ouvre **Options → Notifications** dans la messagerie, ou **Compte et appareils** dans Administration. Choisis **Activer sur cet appareil** et accepte la demande du navigateur sur chaque appareil souhaité.
 
+Les réglages concernent cet appareil et l’adresse Jessie ouverte. Après une reconnexion, le panneau peut proposer **Reconnecter sur cet appareil** : choisis ce bouton pour rétablir les notifications sur cette connexion. Si le site demande **Réinitialiser sur cet appareil**, utilise-le, puis choisis **Activer sur cet appareil** ; cette action laisse les autres appareils inchangés. L’ouverture du panneau vérifie son état sans activer les notifications à ta place.
+
 Sur iPhone ou iPad, utilise **Partager → Sur l’écran d’accueil** dans Safari, puis ouvre Jessie depuis son icône pour activer les notifications.
 
-Si une alerte manque, vérifie Internet, les autorisations du navigateur et le mode silencieux, puis **Vérifier à nouveau**. Une alerte peut être retardée : ouvre directement la conversation. Après une nouvelle connexion ou un changement de mot de passe, vérifie les notifications.
+Si une alerte manque, vérifie Internet, les autorisations du navigateur et le mode silencieux, puis choisis **Vérifier à nouveau**. Si le navigateur les bloque, autorise les notifications dans les réglages de ce site, puis vérifie de nouveau. Une alerte peut être retardée : ouvre directement la conversation. Après une nouvelle connexion ou un changement de mot de passe, vérifie les notifications. La 1.8.3 demande à l’appareil de signaler chaque nouvelle alerte ; le son et l’affichage restent soumis au navigateur et aux réglages du système.
 
 Une alerte n’affiche ni nom, ni texte, ni photo du message. La désactivation sur un appareil laisse les autres appareils inchangés. [Aide notifications](https://jessiemessage.com/help#notifications).
 
 ## Télécharger une conversation
 
-Dans **Fiche → Télécharger la conversation**, choisis **Inclure les photos partagées** et **Inclure les vidéos partagées** selon ton besoin, puis **Télécharger le ZIP**. Extrais-le et ouvre `Conversation.html` pour lire hors ligne ; `conversation.json` contient la version portable. Le ZIP est transmis progressivement, avec une limite totale de **256 MiB**. La lecture des vidéos exportées dépend des codecs de l’appareil.
+Dans ton administration, ouvre **Options → Fiche → Télécharger la conversation**. Côté client, la commande discrète se trouve dans **Options → Autres options → Télécharger ma conversation**. Choisis **Inclure les photos partagées** et **Inclure les vidéos partagées** selon les choix proposés à ton compte, puis **Télécharger le ZIP**. Extrais-le et ouvre `Conversation.html` pour lire hors ligne ; `conversation.json` contient la version portable. Le ZIP est transmis progressivement, avec une limite totale de **256 MiB**. La lecture des vidéos exportées dépend des codecs de l’appareil.
 
 L’export exclut les notes et surnoms privés, tags, groupes, tâches privées, réponses personnelles et médias non partagés. Il n’enregistre pas le brouillon de fiche. À partir de 1.1.0, l’export personnel du client ne contient pas non plus ton point de lecture ; les ZIP de conversation ne contiennent déjà aucun reçu de lecture. Le ZIP contient des échanges lisibles : garde-le dans un emplacement privé. [Détails de l’export](conversation-export-058.md).
 
@@ -104,9 +111,14 @@ L’export exclut les notes et surnoms privés, tags, groupes, tâches privées,
 
 Ce parcours est disponible depuis la livraison 1.4.0 close et reste présent dans la version active indiquée par [REPRISE](REPRISE.md). Les références et replis historiques y conservent leurs preuves propres.
 
-Dans [Diffusions](https://jessiemessage.com/admin/broadcasts), choisis une sélection manuelle, tous les clients ou tous les clients correspondant aux filtres. Un choix global comprend aussi les pages qui ne sont pas affichées. Le message peut inclure une photo ou une vidéo. La prévisualisation annonce le nombre réellement éligible et les éventuels médias déjà reçus ; seuls les premiers noms s’affichent comme aperçu. Confirme explicitement le nombre avant de lancer l’envoi.
+Depuis **Accueil admin → Diffusions**, ou [Diffusions](https://jessiemessage.com/admin/broadcasts), choisis une sélection manuelle, tous les clients ou tous les clients correspondant aux filtres. Un choix global comprend aussi les pages qui ne sont pas affichées. Renseigne **Titre pour ton historique**, puis prépare ton texte ou une pièce jointe, photo ou vidéo.
 
-Un changement d’audience, de filtres, de photo ou de vidéo demande une nouvelle prévisualisation. Si l’ensemble a changé entre l’aperçu et la confirmation, l’envoi doit être revérifié. Après un résultat d’envoi incertain, la commande de reprise réutilise la même demande. Le suivi présente les compteurs et les destinataires par pages, pendant que les messages sont traités progressivement. Chaque client reçoit son message dans sa conversation privée ; aucun salon collectif n’est créé.
+La 1.8.3 demande deux actions distinctes :
+
+1. **Vérifier et préparer l’envoi** calcule les destinataires éligibles. Le nombre de destinataires **choisis · à vérifier** devient un nombre d’envois **préparés** ; seuls les premiers noms s’affichent comme aperçu. Vérifie ce récapitulatif et les éventuels médias déjà reçus.
+2. **Envoyer à … clients** (ou **Envoyer à … client** pour une seule personne) lance la diffusion préparée. Le bouton reste indisponible tant que la préparation ne permet pas l’envoi. L’ancienne case générale de confirmation est retirée ; l’autorisation spécifique de renvoyer une pièce jointe déjà partagée peut encore être demandée.
+
+Un changement d’audience, de filtres, de titre, de texte, de photo ou de vidéo demande une nouvelle préparation. Si l’ensemble a changé entre l’aperçu et la confirmation, l’envoi doit être revérifié. Après un résultat d’envoi incertain, **Vérifier et réessayer cette diffusion** réutilise la même demande. Le suivi présente les compteurs et les destinataires par pages, pendant que les messages sont traités progressivement. Chaque client reçoit son message dans sa conversation privée ; aucun salon collectif n’est créé.
 
 ## Sauvegarde manuelle depuis l’administration
 

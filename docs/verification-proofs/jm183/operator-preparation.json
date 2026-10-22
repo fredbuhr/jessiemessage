@@ -1,0 +1,28 @@
+{
+  "type": "jm183-operator-publication-preparation",
+  "branch": "ops/publish-v1.8.3",
+  "commit": "234042bd59d1eb7c4f4ab7d73b665e5f0e2c12a5",
+  "tree": "2e56f6e910d4dab303d3b209764565f6b839bfe5",
+  "qualifiedApplication": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+  "qualifiedApplicationTree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+  "qualifiedMainRun": 39864278371,
+  "rootIndependentReview": "Every byte matched final-eight-files manifest; reversing only seven qualified literals exactly recovered the previously reviewed preparer/writer/publisher SHA256. Static AST parsed; temporary Git index and remote create_tree independently matched exact operator tree.",
+  "manifest": "operator/final-eight-files.json",
+  "manifestSha256": "4e0d0cbb516ab7edd5109fdd4fd1579321915282778527b73e16506ba8a51f11",
+  "report": "operator/qualified-pin-finalization-report.json",
+  "prepareSha256": "0b2c280f238b80eb80944623576a5932a9abf41778cb9f215a7036a529b85101",
+  "writerReady": false,
+  "writerPending": [
+    "STAGING_SHA",
+    "RELEASE_ID"
+  ],
+  "nativeOperatorQualificationPending": false,
+  "hostedActionPerformed": false,
+  "nativeOperatorQualificationRun": 39865609026,
+  "nativeCounts": {
+    "prepare": 22,
+    "publisher": 38
+  },
+  "writerReleaseIdNowObserved": 421266798,
+  "writerPinFinalization": "Deferred until actual hosted staging receipt exists, then both finalvalues qualified together"
+}
