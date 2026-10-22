@@ -1,0 +1,26 @@
+name: Qualify authorised accueil redirect helper
+
+on:
+  push:
+    branches: ["ops/redirect-accueil"]
+    paths: [".github/workflows/redirect-accueil.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: redirect-accueil
+  cancel-in-progress: false
+
+jobs:
+  operator-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout exact operator commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Test isolated routing patch and failure preservation
+        run: python3 ops/test-redirect-accueil.py
