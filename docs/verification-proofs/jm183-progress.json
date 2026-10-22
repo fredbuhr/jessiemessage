@@ -1,8 +1,8 @@
 {
   "type": "jm183-corrective-progress",
   "version": 1,
-  "recordedAtUTC": "2026-10-22T22:59:35.414503+00:00",
-  "status": "active_identity_user_reported_metadata_pending",
+  "recordedAtUTC": "2026-10-22T23:05:26.540360+00:00",
+  "status": "delivery_closed_active_checkpoint_latest_aligned",
   "branch": "fix/messaging-183",
   "base": "38ccb3862f3d9ab4153b578dfb3abbd0dd94d857",
   "candidateVersion": "1.8.3",
@@ -18,7 +18,7 @@
   "productionDataAccessed": false,
   "hostedBackupTestPerformed": false,
   "realNotificationSent": false,
-  "nextAction": "User executes immutable qualified writer183 once, which checks actual startup log and current public HTTP before metadata-only update; returns receipt. Do not repeat preparation/CHECK/Manager activation.",
+  "nextAction": "No technical delivery action remains. Do not repeat preparation/CHECK/Manager/startup/writer or green CI; preserve unverified physical-device cases and user-deferred backup.",
   "lastPublishedCheckpoint": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
   "localVerification": "jm183/local-verification.json",
   "pr": 130,
@@ -36,7 +36,7 @@
   "operatorCommit": "234042bd59d1eb7c4f4ab7d73b665e5f0e2c12a5",
   "hostedPrepared": true,
   "hostedPrechecked": true,
-  "metadataRecorded": false,
+  "metadataRecorded": true,
   "hostedPreparation": "jm183-hosted-preparation.json",
   "stagingReceiptSha256": "4a30e3c82d3cb8bc54b13e24aa8dcf9a9ca5800843f8dac39f96c41eaf0f0a09",
   "writerNativeQualified": true,
@@ -46,5 +46,9 @@
   "writerNativeTests": 26,
   "hostedIdentity": "jm183-hosted-identity.json",
   "startupDisplay": "23/10/2026 00:56:57",
-  "metadataCheckpointVersion": "1.8.2"
+  "metadataCheckpointVersion": "1.8.3",
+  "metadataCheckpointSha256": "17f575ebe83d0a9d9acf74e9436bff59eabcf8b5ed1bb8f0f99897c867c78a22",
+  "hostedMetadata": "jm183-hosted-metadata.json",
+  "publicReady": true,
+  "startedAtFromWriter": 1792709817104
 }

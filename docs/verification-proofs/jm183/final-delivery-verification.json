@@ -1,0 +1,51 @@
+{
+  "type": "jm183-final-delivery-verification",
+  "status": "closed_active_checkpoint_latest_aligned",
+  "recordedAtUTC": "2026-10-22T23:06:05.496395+00:00",
+  "version": "1.8.3",
+  "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+  "tree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+  "packageAndBothRootLockVersions": "1.8.3",
+  "currentRuntimeCodeMatchesQualifiedSource": true,
+  "documentationMayAdvanceBeyondRelease": true,
+  "qualification": {
+    "pr": 39863182670,
+    "main": 39864278371,
+    "requiredJobsEach": 5,
+    "publication": 39865609026,
+    "publicationJobs": 2,
+    "writer": 39867149619,
+    "writerTests": 26,
+    "noTestsRerunForClosure": true
+  },
+  "publication": {
+    "tag": "v1.8.3",
+    "releaseId": 421266798,
+    "latest": "v1.8.3",
+    "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "tagAndLatestIndependentlyRechecked": true
+  },
+  "hosted": {
+    "evidenceKind": "USER_REPORTED",
+    "preparation": "../jm183-hosted-preparation.json",
+    "identity": "../jm183-hosted-identity.json",
+    "metadata": "../jm183-hosted-metadata.json",
+    "activeVersion": "1.8.3",
+    "checkpointVersion": "1.8.3",
+    "checkpointSha256": "17f575ebe83d0a9d9acf74e9436bff59eabcf8b5ed1bb8f0f99897c867c78a22",
+    "nodeVersion": "v24.22.1",
+    "schemaMigrations": 36,
+    "publicReady": true,
+    "metadataOnly": true,
+    "noRestart": true,
+    "rollbackVersion": "1.7.2",
+    "rollbackPrecheckedNeverStarted": true,
+    "historicalStatesAndOtherBlocksPreserved": true
+  },
+  "remainingTechnicalDeliveryActions": [],
+  "limits": [
+    "UI/receipt evidence supplied by user; no direct private agent host/PID/socket/Manager inspection.",
+    "Real-device keyboard and Push receipt not established; missed notification incident cause remains unknown.",
+    "Hosted manual backup test user-deferred; A10/A11/A12 and historical constraints not reopened."
+  ]
+}

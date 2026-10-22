@@ -141,7 +141,10 @@
   "rawLogsUnmodified": true,
   "hostedPreparationUserReported": true,
   "hostedActivationAcquired": true,
-  "hostedCheckpointChanged": false,
+  "hostedCheckpointChanged": true,
   "hostedIdentityUserReported": true,
-  "hostedIdentityEvidence": "../jm183-hosted-identity.json"
+  "hostedIdentityEvidence": "../jm183-hosted-identity.json",
+  "hostedMetadataUserReported": true,
+  "hostedMetadataEvidence": "../jm183-hosted-metadata.json",
+  "metadataCheckpointSha256": "17f575ebe83d0a9d9acf74e9436bff59eabcf8b5ed1bb8f0f99897c867c78a22"
 }

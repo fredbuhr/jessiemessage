@@ -1,6 +1,6 @@
 {
   "type": "jm183-metadata-operator-progress",
-  "status": "native_qualified_startup_ui_reported_recording_pending",
+  "status": "executed_success_user_reported",
   "branch": "ops/record-v1.8.3",
   "commit": "b672859af00ffab9a59504a7c82406ac1e6db3fa",
   "tree": "172cd9e517b96bd473b3be3d055630454c921c0b",
@@ -24,10 +24,10 @@
     "skip": 0
   },
   "nativeQualified": true,
-  "hostedStartupVerified": false,
-  "executedOnHost": false,
-  "checkpointChanged": false,
-  "nextAction": "Execute immutable qualified writer183 once; real startup log and current HTTP must be verified by the writer before metadata-only update. Return actual receipt.",
+  "hostedStartupVerified": true,
+  "executedOnHost": true,
+  "checkpointChanged": true,
+  "nextAction": "None for delivery183; do not repeat the writer.",
   "nativeRun": 39867149619,
   "nativeJob": 120132092449,
   "nativeTests": 26,
@@ -46,5 +46,9 @@
     "latestReleaseId": 421266798,
     "latestSource": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
     "noTestsRerun": true
-  }
+  },
+  "hostedStartupVerificationProvenance": "Qualified writer result reported by user; no direct agent private-log inspection",
+  "executionActor": "user",
+  "checkpointSha256": "17f575ebe83d0a9d9acf74e9436bff59eabcf8b5ed1bb8f0f99897c867c78a22",
+  "receipt": "../jm183-hosted-metadata.json"
 }
