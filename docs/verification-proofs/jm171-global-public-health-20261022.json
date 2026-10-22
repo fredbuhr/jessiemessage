@@ -1,0 +1,34 @@
+{
+  "formatVersion": 1,
+  "type": "anonymous-public-service-health-observation",
+  "startedAtUTC": "2026-10-22T00:29:20.247186+00:00",
+  "checks": [
+    {
+      "url": "https://jessiemessage.com/api/health",
+      "status": 200,
+      "finalUrl": "https://jessiemessage.com/api/health",
+      "body": {
+        "status": "ok"
+      }
+    },
+    {
+      "url": "https://jessiemessage.com/api/ready",
+      "status": 200,
+      "finalUrl": "https://jessiemessage.com/api/ready",
+      "body": {
+        "status": "ready"
+      }
+    },
+    {
+      "url": "https://jessiemessage.com/",
+      "status": 200,
+      "finalUrl": "https://jessiemessage.com/"
+    }
+  ],
+  "method": "Read-only anonymous HTTPS GET using Python urllib; no authenticated session or application mutation.",
+  "limits": [
+    "Public health endpoints do not identify the active source, version or Node binary; use the existing application_started proof for production identity.",
+    "No real login, message, notification, account closure, PHP Manager or owner-PC test performed.",
+    "The web retrieval service could not access these URLs; that tool error was not interpreted as an application outage. Direct anonymous HTTPS requests subsequently succeeded."
+  ]
+}

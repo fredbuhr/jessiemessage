@@ -1,6 +1,8 @@
 # Cycle de vie vidéo 1.8.0 en développement — jalon 7.3
 
-**7.3a, 7.3b et 7.3c sont qualifiés sur `feat/video-messaging`. Le jalon 7.3 reste incomplet ; prochaine étape 7.3d.1, inventaire vidéo en lecture seule avant capture, restauration et anciens formats.** La version de développement demeure **1.8.0**, sans tag, release, fusion ou déploiement intermédiaire. Les [preuves du catalogue 7.1](video-catalogue-180.md) et du [message privé 7.2](video-messages-180.md) conservent leurs sources et résultats propres. La version active, son checkpoint et son repli restent exclusivement identifiés dans [REPRISE](REPRISE.md).
+**7.3a, 7.3b et 7.3c sont qualifiés sur `feat/video-messaging`. Le jalon 7.3 reste incomplet ; ses dépendances restantes font partie du livrable G1 de vidéo complète.** La version de développement demeure **1.8.0**, sans tag, release, fusion ou déploiement intermédiaire. Les [preuves du catalogue 7.1](video-catalogue-180.md) et du [message privé 7.2](video-messages-180.md) conservent leurs sources et résultats propres. La version active, son checkpoint et son repli restent exclusivement identifiés dans [REPRISE](REPRISE.md).
+
+Le [plan global révisé](PLAN-IMPLEMENTATION.md) regroupe maintenant ces dépendances dans **G1 — messagerie vidéo complète de bout en bout**. L’inventaire est la première tâche technique, pas un livrable produit séparé. Les numéros et prochaines actions des qualifications ci-dessous décrivent leur étape historique ; les preuves restent inchangées.
 
 ## Découpage borné de 7.3
 
@@ -91,4 +93,4 @@ La première source `53ef2d8923ad22ec63eb7a98e8042d5d9c09566b` conserve son éch
 
 Les 44 omissions générales sont 42 suites SQL opt-in et deux tests négatifs procfs inapplicables. Les trois scénarios Linux réels de stockage réussissent. Localement : syntaxe 654 sources, ciblés communs 110 réussis / zéro échec / six omissions explicites ; aucun succès complet de la suite générale locale n’est revendiqué faute de footer. La preuve distingue ces observations des résultats natifs CI. Le suivi documentaire seul utilise `[skip ci]` sans modification fonctionnelle.
 
-**Prochaine action unique : 7.3d.1 — inventaire vidéo candidat en lecture seule sur fixture isolée.** Capture authentifiée à deux racines, restauration, comparaison des données/empreintes et compatibilité des anciens formats viennent ensuite, avant promotion. Aucun branchement runtime/CLI/HTTP, fusion produit, publication, migration hébergée, activation, compte réel ou opération PC/Avast. Les limites navigateur 32 Mio/Blob et délai HTTP 35 secondes restent à traiter avant activation.
+**Première dépendance technique de G1 : 7.3d.1 — inventaire vidéo candidat en lecture seule sur fixture isolée.** Capture authentifiée à deux racines, restauration, comparaison des données/empreintes et compatibilité des anciens formats viennent ensuite, avant promotion. Aucun branchement runtime/CLI/HTTP, fusion produit, publication, migration hébergée, activation, compte réel ou opération PC/Avast. Les limites navigateur 32 Mio/Blob et délai HTTP 35 secondes restent à traiter avant activation.
