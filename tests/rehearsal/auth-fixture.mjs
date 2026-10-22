@@ -186,9 +186,11 @@ export async function createAuthenticationFixture({ messaging = false, video = f
       if (applicationClosed) {
         try { await removeMediaDirectory(mediaRoot, mediaIdentity); } catch { failed = true; }
         try { await removeMediaDirectory(videoRoot, videoIdentity, VIDEO_FILE); } catch { failed = true; }
-        // The rehearsal never submits a closure or backup. Any unexpected
-        // operation file preserves its owned directory instead of deleting it.
-        try { await removeMediaDirectory(operationsRoot, operationsIdentity, /a^/); } catch { failed = true; }
+        // Only this fixture's administrator catalogue may be created here.
+        // Any closure, backup, unknown file or writer lock preserves the owned
+        // directory instead of deleting potentially unfinished state.
+        try { await removeMediaDirectory(operationsRoot, operationsIdentity,
+          new RegExp(`^quick-replies-${adminId.toString("hex")}\\.json$`)); } catch { failed = true; }
       }
       try { await removeCertificateDirectory(certificateDirectory); } catch { failed = true; }
       key.fill(0); for (const value of Object.values(domainKeys)) value.fill(0); secret = ""; adminId.fill(0); clientId?.fill(0);

@@ -81,7 +81,7 @@ class Element {
   showModal() { this.open = true; }
   close() { this.open = false; for (const handler of this.events.get("close") ?? []) handler({}); }
 }
-function harness({ currentSession = session(), visible = true, intercept = null, prepare = async (file) => file, notification = null, profileFactory = null, profileLoader = null } = {}) {
+function harness({ currentSession = session(), visible = true, intercept = null, quickReplies = null, prepare = async (file) => file, notification = null, profileFactory = null, profileLoader = null } = {}) {
   const nodes = new Map(), documentEvents = new Map(), windowEvents = new Map(), calls = [], timers = new Map(), redirects = [], revoked = [], createdUrls = [];
   let timerId = 0, time = now, blobId = 0;
   const body = new Element("body", nodes);
@@ -95,7 +95,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
     querySelector: (selector) => selector === "dialog[open]" ? [...nodes.values()].find(node => node.open) ?? null : new Element("div", nodes),
     addEventListener: (name, handler) => documentEvents.set(name, handler) };
   nodes.document = document; document.activeElement = body; document.head._connected = true;
-  const state = { currentSession, conversations: new Map(), messages: new Map(), posts: 0 };
+  const state = { currentSession, conversations: new Map(), messages: new Map(), posts: 0, quickReplies: quickReplies ?? { version: "0", replies: [] }, quickReplyWrites: 0 };
   const conversation = (owner = state.currentSession?.user.id) => {
     if (!state.conversations.has(owner)) state.conversations.set(owner, { id: id(100 + Number.parseInt(owner, 16)), clientId: owner, clientPseudonym: `Synthetic ${owner}`,
       peerName: `Peer ${owner}`, createdAt: now, closedAt: null, lastActivityAt: now, latestSequence: "1", latestEventSequence: "1", lastReadSequence: "0", peerReadSequence: "0", unreadCount: 1, canSend: true });
@@ -115,6 +115,13 @@ function harness({ currentSession = session(), visible = true, intercept = null,
       // Intercepts deliberately can complete after abort, exercising the real
       // controller's generation checks rather than relying on fetch alone.
       const value = intercept?.(path, options, state, calls); if (value !== undefined) return await value;
+      if (path === "/api/admin/quick-replies") {
+        if (options.method !== "POST") return response(200, structuredClone(state.quickReplies));
+        state.quickReplyWrites += 1; const command = JSON.parse(options.body);
+        if (command.expectedVersion !== state.quickReplies.version) return response(409, { error: "quick_replies_conflict" });
+        state.quickReplies.version = String(BigInt(state.quickReplies.version) + 1n); state.quickReplies.replies = structuredClone(command.replies);
+        return response(200, structuredClone(state.quickReplies));
+      }
       if (/^\/api\/(?:auth|access)\/session$/.test(path)) return response(state.currentSession ? 200 : 401, state.currentSession ? structuredClone(state.currentSession) : { error: "authentication_required" });
       if (path.startsWith("/api/broadcast/") || path === "/api/admin/crm/capabilities" || /\/api\/media\/.*\/capabilities$/.test(path)) return response(404, { error: "not_found" });
       if (path.endsWith("/capabilities")) return response(200, { enabled: true });
@@ -1237,4 +1244,76 @@ test("a delayed close event from a cancelled dialog cannot cancel its next confi
   await f.click("accept-delete");
   assert.equal(f.calls.filter((call) => call.path.endsWith("/delete")).length, 1);
   assert.match(contents(f.element("messages")), /Message supprimé/);
+});
+
+async function openPersonalReplies(f) {
+  await flush();
+  if (!f.inspect().selected) { for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush(); }
+  await f.click("open-quick-replies");
+}
+async function submitPersonalReply(f, title, body, language = "fr") {
+  f.element("personal-reply-title").value = title; f.element("personal-reply-body").value = body; f.element("personal-reply-language").value = language;
+  for (const handler of f.element("personal-reply-editor").events.get("submit")) handler({ preventDefault() {} }); await flush();
+}
+async function clickPersonalNode(node) { for (const handler of node.events.get("click") ?? []) handler({}); await flush(); }
+function personalRow(f, replyId) { return f.element("personal-replies-list").children.find(node => node.dataset.personalId === replyId); }
+function personalAction(row, name) { return row.querySelectorAll("button").find(node => node.dataset.personalAction === name); }
+
+test("personal quick replies create, edit, insert without sending and delete across independent administrator sessions", async () => {
+  const catalogue = { version: "0", replies: [] }, first = harness({ currentSession: session(1, "A".repeat(43), "admin"), quickReplies: catalogue });
+  await openPersonalReplies(first); await first.click("new-personal-reply");
+  await submitPersonalReply(first, "Mon accueil 👩‍💻", "Texte personnel <b>brut</b> 😊");
+  assert.equal(catalogue.version, "1"); assert.equal(catalogue.replies.length, 1); assert.equal(first.state.posts, 0);
+  assert.equal(first.element("personal-reply-editor").hidden, true); assert.equal(first.element("personal-reply-body").value, "");
+  const replyId = catalogue.replies[0].id; assert.match(replyId, /^[0-9a-f]{32}$/);
+  const second = harness({ currentSession: session(1, "B".repeat(43), "admin"), quickReplies: catalogue }); await openPersonalReplies(second);
+  const insert = personalRow(second, replyId).querySelector(".personal-reply-insert"); second.element("message-body").value = "Brouillon";
+  await clickPersonalNode(insert); assert.equal(second.element("message-body").value, "Brouillon\nTexte personnel <b>brut</b> 😊"); assert.equal(second.state.posts, 0);
+  await second.click("open-quick-replies"); await clickPersonalNode(personalAction(personalRow(second, replyId), "edit"));
+  await submitPersonalReply(second, "Accueil modifié", "Texte modifié"); assert.equal(catalogue.version, "2");
+  await first.click("close-quick-replies"); await first.click("open-quick-replies"); assert.equal(personalRow(first, replyId).querySelector("strong").textContent, "Accueil modifié");
+  await clickPersonalNode(personalAction(personalRow(first, replyId), "delete")); assert.equal(catalogue.replies.length, 1);
+  await clickPersonalNode(personalAction(personalRow(first, replyId), "confirm-delete")); assert.equal(catalogue.version, "3"); assert.equal(catalogue.replies.length, 0);
+  assert.equal(first.state.posts + second.state.posts, 0); assert.equal(first.state.quickReplyWrites + second.state.quickReplyWrites, 3);
+});
+
+test("personal quick reply CAS conflicts preserve the editor and merge only after explicit reload and save", async () => {
+  const catalogue = { version: "1", replies: [{ id: id(901), title: "Initial", body: "Texte initial", language: "fr" }] };
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), quickReplies: catalogue }); await openPersonalReplies(f);
+  await clickPersonalNode(personalAction(personalRow(f, id(901)), "edit"));
+  catalogue.version = "2"; catalogue.replies.push({ id: id(902), title: "Autre session", body: "À conserver", language: "en" });
+  await submitPersonalReply(f, "Mon titre", "Mon brouillon"); assert.equal(catalogue.version, "2"); assert.equal(f.element("personal-reply-body").value, "Mon brouillon");
+  assert.match(f.element("personal-replies-status").textContent, /changé ailleurs/); assert.equal(f.element("personal-reply-save").disabled, true); assert.equal(f.state.quickReplyWrites, 1);
+  await submitPersonalReply(f, "Mon titre", "Mon brouillon"); assert.equal(f.state.quickReplyWrites, 1, "conflict never retries a mutation");
+  await f.click("reload-personal-replies"); assert.equal(f.element("personal-reply-body").value, "Mon brouillon"); assert.equal(f.element("personal-reply-save").disabled, false);
+  await submitPersonalReply(f, "Mon titre", "Mon brouillon"); assert.equal(catalogue.version, "3"); assert.equal(catalogue.replies.length, 2);
+  assert.equal(catalogue.replies.find(reply => reply.id === id(902)).body, "À conserver"); assert.equal(catalogue.replies.find(reply => reply.id === id(901)).body, "Mon brouillon");
+});
+
+test("an uncertain personal reply save requires explicit reload and never automatically repeats a POST", async () => {
+  let lost = true;
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: (path, options, state) => {
+    if (path !== "/api/admin/quick-replies" || options.method !== "POST" || !lost) return;
+    lost = false; const command = JSON.parse(options.body); state.quickReplies.version = "1"; state.quickReplies.replies = structuredClone(command.replies);
+    return Promise.reject(new Error("synthetic_lost_ack"));
+  } });
+  await openPersonalReplies(f); await f.click("new-personal-reply"); await submitPersonalReply(f, "Titre", "Réponse incertaine");
+  const mutations = () => f.calls.filter(call => call.path === "/api/admin/quick-replies" && call.options.method === "POST");
+  assert.equal(mutations().length, 1); assert.equal(f.element("personal-reply-body").value, "Réponse incertaine"); assert.equal(f.element("personal-reply-save").disabled, true);
+  await f.advance(60000); assert.equal(mutations().length, 1); await f.click("reload-personal-replies");
+  assert.equal(f.element("personal-reply-body").value, "Réponse incertaine"); assert.equal(f.state.quickReplies.replies.length, 1); assert.equal(mutations().length, 1);
+});
+
+test("personal replies respect caption limits and are erased on hide, stale network completion and owner replacement", async () => {
+  const catalogue = { version: "1", replies: [{ id: id(901), title: "Private title", body: "x".repeat(1001), language: "fr" }] };
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), quickReplies: catalogue }); await openPersonalReplies(f);
+  f.inspect().states.get(f.inspect().selected).videoDraft = { file: {} }; await clickPersonalNode(personalRow(f, id(901)).querySelector(".personal-reply-insert"));
+  assert.equal(f.element("message-body").value, ""); assert.match(f.element("quick-replies-status").textContent, /ne peut pas être ajoutée/);
+  await clickPersonalNode(personalAction(personalRow(f, id(901)), "edit")); assert.equal(f.element("personal-reply-body").value.length, 1001);
+  await f.hide(); assert.equal(f.element("personal-reply-body").value, ""); assert.equal(f.element("personal-replies-list").children.length, 0);
+  f.state.currentSession = session(2, "B".repeat(43), "admin"); await f.show(); assert.equal(f.element("personal-reply-title").value, ""); assert.equal(f.state.posts, 0);
+  const pending = pause(); const delayed = harness({ currentSession: session(1, "C".repeat(43), "admin"), intercept: path => path === "/api/admin/quick-replies" ? pending.promise : undefined });
+  await openPersonalReplies(delayed); await delayed.hide(); pending.resolve(response(200, catalogue)); await flush();
+  assert.equal(delayed.element("personal-replies-list").children.length, 0); assert.equal(delayed.element("quick-replies-dialog").open, false);
+  const client = harness(); await flush(); await client.click("open-quick-replies"); assert.equal(client.calls.some(call => call.path === "/api/admin/quick-replies"), false);
 });

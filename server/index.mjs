@@ -77,14 +77,14 @@ function reply(response, method, statusCode, contentType, body, headers = {}) {
   response.end(method === "HEAD" ? undefined : body);
 }
 
-export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, videoHandler, profileHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, announcementsHandler, tasksHandler, notificationsHandler, backupHandler, privacyHandler, closureHandler,
+export function createAppServer({ authHandler, accessHandler, chatHandler, mediaHandler, videoHandler, profileHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, announcementsHandler, tasksHandler, quickRepliesHandler, notificationsHandler, backupHandler, privacyHandler, closureHandler,
   entryHandler = createEntryHandler(), admission = createRequestAdmission(), operations = null, requestOrigin = null,
   legacyHandlers = null, transitionHandler = null, parentGateway = false } = {}) {
   if (typeof parentGateway !== "boolean") throw new RequestOriginError();
   const requestOriginAllowed = requestOrigin === null ? null : createRequestOriginGuard(requestOrigin);
   let legacyOriginAllowed = null, legacyChain = null;
   if (legacyHandlers !== null) {
-    const names = ["authHandler", "accessHandler", "chatHandler", "mediaHandler", "videoHandler", "profileHandler", "crmHandler", "resetHandler", "readinessHandler", "broadcastHandler", "announcementsHandler", "tasksHandler", "notificationsHandler", "entryHandler"];
+    const names = ["authHandler", "accessHandler", "chatHandler", "mediaHandler", "videoHandler", "profileHandler", "crmHandler", "resetHandler", "readinessHandler", "broadcastHandler", "announcementsHandler", "tasksHandler", "quickRepliesHandler", "notificationsHandler", "entryHandler"];
     if (requestOrigin !== PRIMARY_ORIGIN || !legacyHandlers || Object.getPrototypeOf(legacyHandlers) !== Object.prototype
       || Object.getOwnPropertySymbols(legacyHandlers).length
       || Object.getOwnPropertyNames(legacyHandlers).some(name => !names.includes(name))
@@ -96,7 +96,7 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   if (transitionHandler !== null && (typeof transitionHandler !== "function" || legacyChain === null)) throw new RequestOriginError();
   if (operations !== null && typeof operations?.publicStatus !== "function") throw new TypeError("A cached operations monitor is required.");
   if (typeof entryHandler !== "function") throw new TypeError("An entry handler is required.");
-  const privateHandlers = [closureHandler, privacyHandler, backupHandler, notificationsHandler, tasksHandler, announcementsHandler, broadcastHandler, readinessHandler, resetHandler, crmHandler, profileHandler, videoHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
+  const privateHandlers = [closureHandler, privacyHandler, backupHandler, notificationsHandler, quickRepliesHandler, tasksHandler, announcementsHandler, broadcastHandler, readinessHandler, resetHandler, crmHandler, profileHandler, videoHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
   const handlers = [transitionHandler, entryHandler, ...privateHandlers].filter(Boolean);
   const adminPages = new Map([["/admin", "authHandler"], ["/admin/messages", "chatHandler"], ["/admin/broadcasts", "broadcastHandler"], ["/admin/announcements", "announcementsHandler"], ["/admin/tasks", "tasksHandler"],
     ["/admin/readiness", "readinessHandler"], ["/admin/backups", "backupHandler"], ["/admin/privacy", "privacyHandler"], ["/admin/closures", "closureHandler"]]);
@@ -315,7 +315,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
   const { createAuthHandler } = await import("./auth/http.mjs");
   const { createOperationsStore } = await import("./operations/store.mjs");
   const { createOperationsMonitor } = await import("./operations/monitor.mjs");
-  let pool, transport, operations, notificationTransport, notificationWorker, closureHandler;
+  let pool, transport, operations, notificationTransport, notificationWorker, closureHandler, quickRepliesHandler;
   try {
     videoConfig = video ? (await import("./config/runtime-video-storage.mjs")).runtimeVideoConfiguration(env) : null;
     pool = await createRuntimePool(env);
@@ -374,7 +374,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     }
     let diagnosticClosing;
     const diagnostics = { close() {
-      if (!diagnosticClosing) diagnosticClosing = Promise.allSettled([readinessService.close(), operations.close(), closureHandler?.close(), privacyHandler?.close(), backupHandler?.close(), crmHandler?.close?.(), legacyHandlers?.crmHandler?.close?.(), chatHandler?.close?.(), legacyHandlers?.chatHandler?.close?.()]).then((results) => {
+      if (!diagnosticClosing) diagnosticClosing = Promise.allSettled([readinessService.close(), operations.close(), closureHandler?.close(), privacyHandler?.close(), backupHandler?.close(), quickRepliesHandler?.close?.(), crmHandler?.close?.(), legacyHandlers?.crmHandler?.close?.(), chatHandler?.close?.(), legacyHandlers?.chatHandler?.close?.()]).then((results) => {
         if (results.some((result) => result.status === "rejected")) throw new Error("Private diagnostics could not close cleanly.");
       });
       return diagnosticClosing;
@@ -488,6 +488,14 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         const crmStore = createCrmStore({ pool, chatStore });
         await crmStore.assertSchema(schemaOptions);
         const crmService = await createCrmService({ store: crmStore, authStore: store, authService: service, key: crmConfig.key, clock });
+        if (backupDirectory !== undefined) {
+          const [{ createQuickRepliesService }, { createQuickRepliesHandler }] = await Promise.all([
+            import("./quick-replies/service.mjs"), import("./quick-replies/http.mjs")]);
+          const quickRepliesService = createQuickRepliesService({ directory: backupDirectory, key: crmConfig.key,
+            chatService, chatStore, authStore: store, clock });
+          quickRepliesHandler = createQuickRepliesHandler(quickRepliesService, { origin: crmConfig.origin });
+          if (legacyHandlers) legacyHandlers.quickRepliesHandler = createQuickRepliesHandler(quickRepliesService, { origin: RECIPE_ORIGIN });
+        }
         const conversationExporter = exporter({ history: (token, id, options) => chatService.messages("admin", token, id, options),
           photo: mediaConfig.enabled ? (token, id, message) => mediaService.exportMessageAsset(token, id, message) : null,
           ...(video ? { video: (token, id, message, settings) => videoService.openMessage("admin", token, id, message, settings) } : {}), clock });
@@ -596,7 +604,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       legacyHandlers.entryHandler = createEntryHandler({ adminSession: (token) => service.session(token),
         clientSession: (token) => legacyAccessService.session(token), chatEnabled: chatConfig.enabled, clock });
     }
-    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin, clock }), chatHandler, mediaHandler, videoHandler, profileHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, announcementsHandler, tasksHandler, notificationsHandler, backupHandler, privacyHandler, closureHandler, operations, requestOrigin, parentGateway,
+    const server = createAppServer({ authHandler, accessHandler: createAccessHandler(accessService, { origin: config.origin, clock }), chatHandler, mediaHandler, videoHandler, profileHandler, crmHandler, resetHandler, readinessHandler, broadcastHandler, announcementsHandler, tasksHandler, quickRepliesHandler, notificationsHandler, backupHandler, privacyHandler, closureHandler, operations, requestOrigin, parentGateway,
       legacyHandlers, transitionHandler,
       entryHandler: createEntryHandler({ adminSession: (token) => service.session(token), clientSession: (token) => accessService.session(token), chatEnabled: chatConfig.enabled, deviceTransition, clock }) });
     const workers = [];
@@ -643,6 +651,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
   } catch (error) {
     videoConfig?.key.fill(0);
     closureHandler?.close();
+    quickRepliesHandler?.close?.();
     await notificationTransport?.close().catch(() => {});
     await notificationWorker?.stop().catch(() => {});
     await operations?.close().catch(() => {});

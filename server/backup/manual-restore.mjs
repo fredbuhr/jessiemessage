@@ -26,6 +26,7 @@ import { createLocalClosureOperations } from "../data/closure-operations.mjs";
 import { resumeManagedLocalClosureRuntime } from "./managed-closures.mjs";
 import { assertErasureSchema } from "../data/erasure-schema.mjs";
 import { ERASURE_PHASES, erasureTime, erasureSqlDate } from "../data/erasure-state.mjs";
+import { QUICK_REPLIES_FILENAME_PATTERN } from "../quick-replies/files.mjs";
 
 const HEX = /^[a-f0-9]{64}$/, HOLD = "operational-restore.json";
 const keyNames = ["totpKey", "mailKey", "messageKey", "mediaKey", "crmKey", "notificationKey"];
@@ -122,13 +123,15 @@ async function runManualRestore(input, publication = null) {
     if (publication && publication.expectedPlanSha256 !== planSha256) fail("PLAN_CHANGED");
     const privacy = selected.state.files.find(file => file.name === "privacy-preparation.json");
     const privacyBytes = privacy ? Buffer.from(privacy.content, "base64url") : null;
+    const settings = new Map(selected.state.files.filter(file => file.name === "privacy-preparation.json" || QUICK_REPLIES_FILENAME_PATTERN.test(file.name))
+      .map(file => [file.name, Buffer.from(file.content, "base64url")]));
     const hold = Buffer.from(`${JSON.stringify({ version: video ? 2 : 1, format: "manual-restore-hold", planSha256, sourceBinding, targetBinding, started: false })}\n`);
     const active = () => { if (signal?.aborted) fail("ABORTED"); };
     let workError;
     const result = await acquireRecurringLock(progressDirectory, async lease => {
       try { return await maintenance.withQuiescedProducers(async assertQuiescent => {
         if (typeof assertQuiescent !== "function") fail("MAINTENANCE");
-        let holdReady = false, holdReleased = false, privacyReady = false;
+        let holdReady = false, holdReleased = false, settingsReady = false;
         const resources = async () => {
           active(); await lease.assertReady(); await assertReady();
           if (operationalStateHash(await readRecentRegistry()) !== expectedRegistrySha256) fail("REGISTRY_CHANGED");
@@ -142,9 +145,12 @@ async function runManualRestore(input, publication = null) {
           if (actual.markerSha256 !== quarantine.markerSha256 || actual.stateSha256 !== quarantine.stateSha256) fail("QUARANTINE_CHANGED");
           if (holdReady) await withPrivateDirectory(journalDirectory, scope => held(scope, hold, false));
           if (holdReleased) await withPrivateDirectory(journalDirectory, async scope => { try { await lstat(scope.file(HOLD)); fail("HOLD"); } catch (error) { if (error.code !== "ENOENT") throw error; } });
-          if (privacyReady) await withPrivateDirectory(journalDirectory, async scope => {
-            if (privacyBytes) await held(scope, privacyBytes, false, "privacy-preparation.json");
-            else try { await lstat(scope.file("privacy-preparation.json")); fail("PRIVACY"); } catch (error) { if (error.code !== "ENOENT") throw error; }
+          if (settingsReady) await withPrivateDirectory(journalDirectory, async scope => {
+            for (const [name, content] of settings) await held(scope, content, false, name);
+            if (!privacyBytes) try { await lstat(scope.file("privacy-preparation.json")); fail("PRIVACY"); } catch (error) { if (error.code !== "ENOENT") throw error; }
+            const directory = await opendir(scope.path);
+            for await (const entry of directory) if (entry.name.startsWith("quick-replies-") && !settings.has(entry.name)
+              || entry.name.startsWith(".quick-replies-") && entry.name.endsWith(".tmp")) fail("SETTINGS");
           });
           active();
         };
@@ -161,10 +167,10 @@ async function runManualRestore(input, publication = null) {
         const readJobs = async () => { const found = new Map(); let afterName = null; do { const page = await batch({ afterName, limit: 100 }); for (const job of page.jobs) { if (found.has(job.clientId) || !clientIds.has(job.clientId)) fail("PROGRESS"); found.set(job.clientId, job); } afterName = page.nextCursor; } while (afterName !== null); return found; };
         const discovered = await readJobs();
         if ((run.record === null || run.record.phase === "prepared") && discovered.size || run.record?.phase === "completed" && (discovered.size !== clientIds.size || [...discovered.values()].some(job => job.phase !== "completed"))) fail("PROGRESS");
-        if (run.record === null) await withPrivateDirectory(journalDirectory, async scope => { const dir = await opendir(scope.path); for await (const entry of dir) if (entry.name !== HOLD && !(privacyBytes && entry.name === "privacy-preparation.json")) fail("JOURNAL_NOT_EMPTY"); });
+        if (run.record === null) await withPrivateDirectory(journalDirectory, async scope => { const dir = await opendir(scope.path); for await (const entry of dir) if (entry.name !== HOLD && !settings.has(entry.name)) fail("JOURNAL_NOT_EMPTY"); });
         await withPrivateDirectory(journalDirectory, scope => held(scope, hold, true)); holdReady = true;
-        if (privacyBytes) await withPrivateDirectory(journalDirectory, scope => held(scope, privacyBytes, true, "privacy-preparation.json"));
-        privacyReady = true; await guard();
+        await withPrivateDirectory(journalDirectory, async scope => { for (const [name, content] of settings) await held(scope, content, true, name); });
+        settingsReady = true; await guard();
         const savePhase = async phase => { await guard(); run = await progress.save({ version: video ? 2 : 1, planSha256, manifestSha256: receipt.manifest.sha256, targetBinding, phase }, run.revision, guard); };
         const snapshot = () => captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: target.pool, inspectionPool: target.inspectionPool, coverage: "application-tables", ...(video ? { video: true } : {}) }), signal });
         const verify = async value => { healthy(await verifyBackupStorage({ snapshot: value, storage: target.storage, ...(video ? { videoStorage: target.videoStorage } : {}), signal })); healthy(await (video ? verifyPhotoNotificationRecoveryCrmBroadcastVideoBackupData : verifyPhotoNotificationRecoveryCrmBroadcastBackupData)({ pool: target.pool, storage: target.storage, ...(video ? { videoStorage: target.videoStorage } : {}), keys, signal })); };

@@ -3,6 +3,7 @@ import fs from "node:fs";
 import { syncBuiltinESMExports } from "node:module";
 import { spawn } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
+import { performance } from "node:perf_hooks";
 import { chmod, lstat, mkdir, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
@@ -25,6 +26,7 @@ import { createVideoMessageStore } from "../../server/video/message-store.mjs";
 import { makeTotpSecret, sealTotpSecret } from "../../server/auth/crypto.mjs";
 import { encryptMessageBody, messageFingerprint, videoMessageFingerprint } from "../../server/chat/crypto.mjs";
 import { createErasureJournal } from "../../server/data/erasure-journal.mjs";
+import { createQuickRepliesFiles } from "../../server/quick-replies/files.mjs";
 import { withPrivateDirectory } from "../../server/files/private-directory.mjs";
 import { readCheckpointReceipt } from "../../server/backup/checkpoint-receipt.mjs";
 import { resumeCheckpointMedia, copyCheckpointMedia, verifyCheckpointMedia } from "../../server/backup/checkpoint-files.mjs";
@@ -34,7 +36,9 @@ import { captureBackupSnapshot, createBackupSnapshotStore } from "../../server/b
 import { readManifest, verifyBackupManifest } from "../../server/backup/manifest.mjs";
 import { main as backupMain } from "../../scripts/backup.mjs";
 import { main as captureMain, inspectApplicationCheckpointIdentity, inspectCheckpointTools, gzipCheckpointSql, archiveCheckpoint } from "../../scripts/private-checkpoint.mjs";
-import { importNativeSql, readApplicationSql } from "../../scripts/import-application-checkpoint.mjs";
+import { importNativeSql, run as importApplicationCheckpoint } from "../../scripts/import-application-checkpoint.mjs";
+import { run as resumeApplicationCheckpoint } from "../../scripts/resume-application-checkpoint.mjs";
+import { run as verifyPrivateCheckpoint, verifyApplicationCloneSnapshot } from "../../scripts/verify-private-checkpoint.mjs";
 import { dumpCloneSql } from "../../scripts/verify-text-clone.mjs";
 import { loadRuntimeVideoEnvironment } from "../../server/config/runtime-video.mjs";
 import { writeRuntimeDatabaseConfiguration, writeRuntimeAuthenticationConfiguration, writeRuntimeMessagingConfiguration,
@@ -193,9 +197,42 @@ export async function videoBackupFixture(t) {
       clientId, binding: selected, phase, cursor: null, startedAt: now, updatedAt: updatedAt++ }, revision, async () => {})).revision; }
     finally { journal.close(); }
   }
+  const quickRepliesOwner = hex(admin.id), quickRepliesName = `quick-replies-${quickRepliesOwner}.json`,
+    quickRepliesStore = createQuickRepliesFiles(dirs.sourceOperations, keys.crmKey, quickRepliesOwner);
+  let quickRepliesInitial;
+  try {
+    quickRepliesInitial = await quickRepliesStore.save([{ id: "7".repeat(32), title: "Synthetic saved reply", body: "Synthetic private answer retained in backup", language: "en" }], 0, async () => {
+      assert.equal(Number((await sourceConnection.query("SELECT COUNT(*) AS count FROM users WHERE id = ? AND role = 'admin' AND status = 'active'", [admin.id]))[0].count), 1);
+    });
+  } finally { quickRepliesStore.close(); }
+  const quickRepliesCiphertext = await readFile(path.join(dirs.sourceOperations, quickRepliesName));
+  assert.equal(quickRepliesCiphertext.includes(Buffer.from(quickRepliesInitial.replies[0].body)), false);
   const f = { root, dirs, keys, options, targetDatabase, targetEnv, limits, now, clock, environment, sourceEnvironment, sourceConnection, targetConnection,
     source, admin, clients, conversations, photo, clientPhoto, sharedVideo, clientVideos, pending, messages, broadcastCampaignId, broadcastPayload, binding, legacyBinding,
+    quickReplies: { owner: quickRepliesOwner, filename: quickRepliesName, initial: quickRepliesInitial, ciphertext: quickRepliesCiphertext },
     get target() { return target; } };
+  const measurements = [], operator = { imports: 0, resumes: 0, inspections: [] };
+  async function measure(phase, work) {
+    const started = performance.now();
+    try { return await work(); }
+    finally {
+      const value = { phase, durationMs: Math.round((performance.now() - started) * 1000) / 1000, peakNodeRssKiB: process.resourceUsage().maxRSS };
+      assert.ok(Number.isFinite(value.durationMs) && value.durationMs >= 0);
+      assert.ok(Number.isSafeInteger(value.peakNodeRssKiB) && value.peakNodeRssKiB > 0);
+      measurements.push(value);
+    }
+  }
+  f.operator = operator;
+  f.measure = measure;
+  f.measurements = measurements;
+  f.reportMetrics = () => {
+    const totals = files => files.reduce((bytes, file) => bytes + file.bytes, 0);
+    const value = { type: "video-backup-synthetic-metrics", sqlBytes: f.receipt.sql.uncompressedBytes,
+      encryptedPhotoBytes: totals(f.receipt.media.files), encryptedVideoBytes: totals(f.receipt.video.files),
+      measurements, peakNodeRssKiB: process.resourceUsage().maxRSS,
+      memoryScope: "Node test process peak RSS only; MariaDB, Chrome and child processes excluded", sqlTransport: "owned loopback without TLS" };
+    t.diagnostic(JSON.stringify(value)); return value;
+  };
   async function databaseHash(database) {
     const hash = createHash("sha256");
     for (const table of physical) {
@@ -208,7 +245,7 @@ export async function videoBackupFixture(t) {
   f.sourceState = async () => ({ sql: await databaseHash(options.database), photos: await fileInventory(dirs.sourceMedia), videos: await fileInventory(dirs.sourceVideo), operations: await fileInventory(dirs.sourceOperations) });
   baseline = await f.sourceState(); f.sourceBaseline = baseline;
   f.assertSourceUnchanged = async () => assert.deepEqual(await f.sourceState(), baseline, "native capture/import/rebind must not mutate its source");
-  f.capture = async () => {
+  f.capture = () => measure("capture", async () => {
     const phase = (label, operation) => async (...args) => {
       t.diagnostic(`Video backup capture: ${label} started`);
       try {
@@ -231,7 +268,7 @@ export async function videoBackupFixture(t) {
     const receipt = await phase("fixture receipt read", () => withPrivateDirectory(dirs.checkpoint, scope => readCheckpointReceipt(scope)))();
     const manifest = await phase("fixture manifest read", readManifest)(path.join(dirs.checkpoint, "manifest.json")), payload = await phase("fixture manifest authentication", verifyBackupManifest)({ manifest, keys });
     f.report = report; f.receipt = receipt; f.manifest = manifest; f.payload = payload; await f.assertSourceUnchanged(); return report;
-  };
+  });
   f.resetTarget = async () => {
     await reset(targetDatabase);
     for (const directory of [dirs.targetMedia, dirs.targetVideo, dirs.targetOperations, dirs.quarantine]) { await rm(directory, { recursive: true, force: true }); await mkdir(directory, { mode: 0o700 }); }
@@ -239,28 +276,74 @@ export async function videoBackupFixture(t) {
       storage: await createMediaStorage({ root: dirs.targetMedia, key: keys.mediaKey, pathMode: "linux-dirfd" }),
       videoStorage: await createVideoStorage({ root: dirs.targetVideo, key: keys.videoKey, pathMode: "linux-dirfd" }) };
   };
+  function loopbackConfiguration(value) {
+    assert.equal(value.JESSIEMESSAGE_DB_HOST, options.host); assert.equal(Number(value.JESSIEMESSAGE_DB_PORT), options.port);
+    assert.equal(value.JESSIEMESSAGE_DB_NAME, targetDatabase);
+    assert.equal(value.JESSIEMESSAGE_DB_TLS_CA_PATH, "/etc/ssl/certs/ca-certificates.crt");
+    const selected = local(value); delete selected.JESSIEMESSAGE_DB_TLS_CA_PATH; return selected;
+  }
+  const connectLoopback = value => connectDatabase(loopbackConfiguration(value));
+  async function operatorStage(name, work) {
+    t.diagnostic(`Video operator ${name} started`);
+    try { const result = await work(); t.diagnostic(`Video operator ${name} passed`); return result; }
+    catch (error) {
+      const codes = [error?.code, error?.detailCode].filter(value => typeof value === "string"
+        && /^(?:(?:APPLICATION_CHECKPOINT_(?:IMPORT|RESUME)|PRIVATE_CHECKPOINT_VERIFY|BACKUP)_[A-Z_]+|ERR_ASSERTION)$/.test(value));
+      t.diagnostic(`Video operator ${name} failed (${codes.join(",") || "closed error"})`); throw error;
+    }
+  }
+  // CI's database has no TLS listener. Do not invent a successful Ssl_cipher:
+  // assert that fact and classify the real disposable schema. Only these two
+  // TLS-only operator inspectors are replaced; the wrappers, exact application
+  // inspection/history, crypto, two native dumps and signed snapshot are real.
+  async function inspectLoopbackClone(connection, database, selection = { video: true }) {
+    assert.equal(database, targetDatabase); assert.equal(selection.video, true);
+    const identity = await connection.query("SELECT DATABASE() AS name"), transport = await connection.query("SHOW SESSION STATUS LIKE 'Ssl_cipher'");
+    assert.equal(identity.length, 1); assert.equal(identity[0].name, targetDatabase);
+    assert.equal(transport.length, 1); assert.equal(transport[0].Variable_name, "Ssl_cipher"); assert.equal(transport[0].Value, "");
+    const rows = await connection.query("SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT 37", [database]);
+    const state = !rows.length ? "empty" : rows.length === physical.length
+      && rows.every(row => row.kind === "BASE TABLE" && row.engine === "InnoDB")
+      && JSON.stringify(rows.map(row => row.name).sort()) === JSON.stringify([...physical].sort()) ? "application-schema" : "partial";
+    operator.inspections.push(state); return state;
+  }
+  const verifyOperator = (selection, dependencies) => operatorStage(`verification ${selection.command}`, () => verifyPrivateCheckpoint(selection, { ...dependencies, connect: connectLoopback,
+    dump: (scope, selected, configuration, password, parameters) => dumpCloneSql(scope, selected, configuration, password, { ...parameters, spawnClient: localSqlClient }),
+    verifyApplicationSnapshot: (source, selected, password, parameters) => verifyApplicationCloneSnapshot(source, selected, password, { ...parameters,
+      backup: (args, env, settings) => backupMain(args, loopbackConfiguration(env), settings) }),
+  }));
+  const importOperator = (selection, dependencies) => operatorStage(`import ${selection.command}`, () => importApplicationCheckpoint(selection, { ...dependencies, verify: verifyOperator, connect: connectLoopback,
+    async inspect(connection, database) { assert.equal(await inspectLoopbackClone(connection, database), "empty"); },
+    async importSql(scope, selected, configuration, password, sql, parameters) {
+      operator.imports++; return importNativeSql(scope, selected, configuration, password, sql, { ...parameters, spawnClient: localSqlClient });
+    },
+  }));
+  f.resumeImport = () => measure("operator-resume", async () => {
+    operator.resumes++;
+    const result = await resumeApplicationCheckpoint({ command: "resume", privateDirectory: dirs.privateDirectory, privatePathMode: "linux-dirfd",
+      checkpointDirectory: dirs.checkpoint, database: targetDatabase, confirmation: targetDatabase, user: options.user,
+      profile: BASE_PROFILE, sqlSha256: f.receipt.sql.uncompressedSha256 },
+    { inheritedEnv: environment, execArgv: [], readSecret: async () => options.password, connect: connectLoopback,
+      inspect: inspectLoopbackClone, importOperation: importOperator, verifyOperation: verifyOperator });
+    assert.equal(await databaseHash(targetDatabase), baseline.sql); await f.assertSourceUnchanged(); return result;
+  });
   f.import = async () => {
     const present = await targetConnection.query("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [targetDatabase]); assert.deepEqual(present, []);
-    await withPrivateDirectory(dirs.checkpoint, async scope => {
-      const receipt = await readCheckpointReceipt(scope), bytes = await readApplicationSql(scope, { backupBytes: receipt.sql.bytes, backupSha256: receipt.sql.sha256, sqlBytes: receipt.sql.uncompressedBytes, sqlSha256: receipt.sql.uncompressedSha256 }, { video: true });
-      try { assert.equal(fileHash(bytes), receipt.sql.uncompressedSha256); await importNativeSql(scope, { database: targetDatabase, user: options.user }, { host: options.host, port: String(options.port) }, options.password, bytes, { spawnClient: localSqlClient }); }
-      finally { bytes.fill(0); }
-    });
-    assert.equal(await databaseHash(targetDatabase), baseline.sql); await f.assertSourceUnchanged();
+    const result = await f.resumeImport(); assert.equal(result.action, "imported_empty_clone"); assert.equal(result.importedThisRun, true); return result;
   };
-  f.copy = async ({ signal } = {}) => {
+  f.copy = ({ signal } = {}) => measure("copy-two-roots", async () => {
     const photos = await withPrivateDirectory(dirs.checkpoint, checkpoint => withPrivateDirectory(path.join(dirs.checkpoint, "media"), source =>
       withPrivateDirectory(dirs.targetMedia, target => resumeCheckpointMedia(source, target, f.receipt.media, { signal }))));
     const videos = await withPrivateDirectory(dirs.checkpoint, checkpoint => withPrivateDirectory(path.join(dirs.checkpoint, "video"), source =>
       withPrivateDirectory(dirs.targetVideo, target => resumeCheckpointVideo(source, target, f.receipt.video, { signal }))));
     return { photos, videos };
-  };
-  f.backup = (command, extra = {}) => backupMain([command, "--offline", "--manifest", path.join(dirs.checkpoint, "manifest.json"), "--profile", VIDEO_BACKUP_PROFILE], targetEnv, {
+  });
+  f.backup = (command, extra = {}) => measure(`backup-${command}`, () => backupMain([command, "--offline", "--manifest", path.join(dirs.checkpoint, "manifest.json"), "--profile", VIDEO_BACKUP_PROFILE], targetEnv, {
     configure() { const copies = Object.fromEntries(Object.entries(keys).map(([name, key]) => [name, Buffer.from(key)]));
       return { databaseName: targetDatabase, media: { enabled: true, root: dirs.targetMedia, key: copies.mediaKey, capacity: { ...limits }, minimumFreeBytes: 0 },
         video: { root: dirs.targetVideo, capacity: { ...limits }, minimumFreeBytes: 0n }, keys: copies }; },
     clock, outputStream: { write() {} }, ...extra,
-  });
+  }));
   f.snapshot = (selected = f.target) => captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: selected.pool, inspectionPool: selected.inspectionPool, coverage: "application-tables", video: true }) });
   f.interruptVideoCopy = async () => {
     const names = new Set(f.receipt.video.files.map(file => file.name)), cancellation = new AbortController(), original = fs.promises.open;

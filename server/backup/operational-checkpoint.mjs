@@ -4,11 +4,15 @@ import { createCipheriv, createDecipheriv, createHash, hkdfSync, randomBytes } f
 import { erasureBinding, ERASURE_PHASES } from "../data/erasure-state.mjs";
 import { verifyScopedErasureJournalEnvelope, erasureJournalBindings } from "../data/erasure-journal.mjs";
 import { verifyPrivacyEnvelope } from "../privacy/files.mjs";
+import { QUICK_REPLIES_FILENAME_PATTERN, QUICK_REPLIES_LOCK_PATTERN, QUICK_REPLIES_FILE_MAX_BYTES, verifyQuickRepliesEnvelope } from "../quick-replies/files.mjs";
 
 const NAMESPACE = "jessiemessage:operational-checkpoint:https://jessiemessage.com:v1";
 const VIDEO_NAMESPACE = "jessiemessage:operational-checkpoint:https://jessiemessage.com:v2:video";
-const MAX_BYTES = 64 * 1024 * 1024, MAX_FILES = 9990;
+const MAX_BYTES = 64 * 1024 * 1024, MAX_FILES = 9990, MAX_STATE_FILE_BYTES = 42 * 1024 * 1024;
 const NAME = /^(?:privacy-preparation\.json|erasure-[a-f0-9]{64}\.json)$/;
+const admittedName = name => NAME.test(name) || QUICK_REPLIES_FILENAME_PATTERN.test(name);
+const fileMaximum = name => name === "privacy-preparation.json" ? 65536
+  : QUICK_REPLIES_FILENAME_PATTERN.test(name) ? QUICK_REPLIES_FILE_MAX_BYTES : 4096;
 const HEX = /^[a-f0-9]{64}$/;
 const STATS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
 export const OPERATIONAL_CHECKPOINT = "operations.enc.json";
@@ -76,9 +80,12 @@ async function names(scope, allowRestoreMarker = false) {
   for await (const entry of directory) {
     if (++count > 10000) fail("OPERATIONS_LIMIT");
     if (entry.name === OPERATIONAL_RESTORE_MARKER && !allowRestoreMarker) fail("OPERATIONS_RECONCILIATION_REQUIRED");
-    if (entry.name === "privacy-preparation.lock" || /^erasure-.*\.lock$/.test(entry.name)) fail("OPERATIONS_BUSY");
+    if (entry.name === "privacy-preparation.lock" || /^erasure-.*\.lock$/.test(entry.name)
+      || QUICK_REPLIES_LOCK_PATTERN.test(entry.name)
+      || entry.name.startsWith(".quick-replies-") && entry.name.endsWith(".tmp")) fail("OPERATIONS_BUSY");
     if (entry.name.startsWith("erasure-") && entry.name.endsWith(".json") && !NAME.test(entry.name)) fail("OPERATIONS_INPUT");
-    if (NAME.test(entry.name)) result.push(entry.name);
+    if (entry.name.startsWith("quick-replies-") && entry.name.endsWith(".json") && !QUICK_REPLIES_FILENAME_PATTERN.test(entry.name)) fail("OPERATIONS_INPUT");
+    if (admittedName(entry.name)) result.push(entry.name);
   }
   if (result.length > MAX_FILES) fail("OPERATIONS_LIMIT");
   await scope.assertReady(); return result.sort();
@@ -92,37 +99,41 @@ function state(value, key) {
     || !Buffer.isBuffer(key) || key.length !== 32 || !Array.isArray(value.files)
     || Object.getPrototypeOf(value.files) !== Array.prototype || value.files.length > MAX_FILES
     || Reflect.ownKeys(value.files).length !== value.files.length + 1) fail("OPERATIONS_INPUT");
-  let previous = null, total = 0; const jobs = new Map(); let privacy = null;
+  let previous = null, total = 0; const jobs = new Map(), quickReplies = new Map(); let privacy = null;
   for (let index = 0; index < value.files.length; index++) {
     const descriptor = Object.getOwnPropertyDescriptor(value.files, String(index));
     if (!descriptor || !Object.hasOwn(descriptor, "value")) fail("OPERATIONS_INPUT");
     const file = descriptor.value; fields(file, ["name", "content"]);
-    if (typeof file.name !== "string" || !NAME.test(file.name) || previous !== null && file.name <= previous) fail("OPERATIONS_INPUT");
-    const content = encoded(file.content, file.name === "privacy-preparation.json" ? 65536 : 4096);
+    if (typeof file.name !== "string" || !admittedName(file.name) || previous !== null && file.name <= previous) fail("OPERATIONS_INPUT");
+    const content = encoded(file.content, fileMaximum(file.name));
     try {
-      total += content.length; if (total > 42 * 1024 * 1024) fail("OPERATIONS_LIMIT");
+      total += content.length; if (total > MAX_STATE_FILE_BYTES) fail("OPERATIONS_LIMIT");
       if (file.name === "privacy-preparation.json") privacy = { ...verifyPrivacyEnvelope(content, key), file };
+      else if (QUICK_REPLIES_FILENAME_PATTERN.test(file.name)) quickReplies.set(file.name, { ...verifyQuickRepliesEnvelope(content, key, file.name), file });
       else jobs.set(file.name, { ...verifyScopedErasureJournalEnvelope({ key, binding, ...(video ? { legacyBinding: scopes.legacyBinding } : {}), filename: file.name, content }), file });
     } finally { content.fill(0); }
     previous = file.name;
   }
-  return { value: { version: video ? 2 : 1, binding, ...(video ? { legacyBinding: scopes.legacyBinding } : {}), files: value.files.map(file => ({ name: file.name, content: file.content })) }, jobs, privacy };
+  return { value: { version: video ? 2 : 1, binding, ...(video ? { legacyBinding: scopes.legacyBinding } : {}), files: value.files.map(file => ({ name: file.name, content: file.content })) }, jobs, privacy, quickReplies };
 }
 export const operationalStateHash = value => hash(JSON.stringify(value));
 
 /** Two complete inventories and byte comparisons detect a publication during
  * capture. The caller must additionally hold real producer quiescence. */
 async function readState(scope, { key, binding, signal }, allowRestoreMarker = false) {
-  const selected = await names(scope, allowRestoreMarker), files = [];
+  const selected = await names(scope, allowRestoreMarker), files = []; let total = 0;
   for (const name of selected) {
-    const content = await readFile(scope, name, name === "privacy-preparation.json" ? 65536 : 4096, signal);
-    try { files.push({ name, content: content.toString("base64url") }); } finally { content.fill(0); }
+    const content = await readFile(scope, name, fileMaximum(name), signal);
+    try {
+      total += content.length; if (total > MAX_STATE_FILE_BYTES) fail("OPERATIONS_LIMIT");
+      files.push({ name, content: content.toString("base64url") });
+    } finally { content.fill(0); }
   }
   const video = Object.hasOwn(binding, "videoRootFingerprint");
   const checked = state({ version: video ? 2 : 1, ...erasureJournalBindings(binding), files }, key).value;
   if (JSON.stringify(await names(scope, allowRestoreMarker)) !== JSON.stringify(selected)) fail("OPERATIONS_CHANGED");
   for (const file of checked.files) {
-    const content = await readFile(scope, file.name, file.name === "privacy-preparation.json" ? 65536 : 4096, signal);
+    const content = await readFile(scope, file.name, fileMaximum(file.name), signal);
     try { if (content.toString("base64url") !== file.content) fail("OPERATIONS_CHANGED"); } finally { content.fill(0); }
   }
   if (JSON.stringify(await names(scope, allowRestoreMarker)) !== JSON.stringify(selected)) fail("OPERATIONS_CHANGED");
@@ -238,6 +249,11 @@ export function planOperationalRestore({ backup, current, targetBinding, key }) 
     if (old.privacy) {
       if (!latest.privacy || latest.privacy.revision < old.privacy.revision) files.set(old.privacy.file.name, old.privacy.file);
       else if (latest.privacy.revision === old.privacy.revision && latest.privacy.file.content !== old.privacy.file.content) fail("OPERATIONS_CHANGED");
+    }
+    for (const [name, settings] of old.quickReplies) {
+      const newer = latest.quickReplies.get(name);
+      if (!newer || newer.revision < settings.revision) files.set(name, settings.file);
+      else if (newer.revision === settings.revision && newer.file.content !== settings.file.content) fail("OPERATIONS_CHANGED");
     }
     const merged = { version: old.value.version, binding: old.value.binding,
       ...(old.value.version === 2 ? { legacyBinding: old.value.legacyBinding } : {}), files: [...files.values()].sort((a, b) => a.name.localeCompare(b.name, "en")) };

@@ -9,6 +9,7 @@ import { createAccountErasure } from "../../server/data/erasure.mjs";
 import { createVideoStore } from "../../server/video/store.mjs";
 import { createVideoErasureExtension } from "../../server/video/erasure-store.mjs";
 import { composeVideoErasureStorage } from "../../server/video/erasure-storage.mjs";
+import { createQuickRepliesFiles } from "../../server/quick-replies/files.mjs";
 import { withPrivateDirectory } from "../../server/files/private-directory.mjs";
 import { captureOperationalState, operationalStateHash, readOperationalCheckpoint, restoreOperationalQuarantine,
   readOperationalQuarantine, OPERATIONAL_RESTORE_MARKER } from "../../server/backup/operational-checkpoint.mjs";
@@ -61,7 +62,13 @@ export async function qualifyVideoManualRestore(t, f) {
     const asset = (await connection.query("SELECT owner_id,owner_role,state FROM video_assets WHERE id = ?", [f.sharedVideo.id]))[0];
     assert.ok(asset.owner_id.equals(f.admin.id)); assert.equal(asset.owner_role, "admin"); assert.equal(asset.state, "committed");
   }
-  let latest, expectedRegistrySha256, sourceAfterClosure;
+  let latest, expectedRegistrySha256, sourceAfterClosure, currentReplies, currentRepliesCiphertext;
+  async function assertCurrentReplies(directory) {
+    const stored = createQuickRepliesFiles(directory, f.keys.crmKey, f.quickReplies.owner);
+    try { assert.deepEqual(await stored.read(), currentReplies); }
+    finally { stored.close(); }
+    assert.deepEqual(await readFile(path.join(directory, f.quickReplies.filename)), currentRepliesCiphertext);
+  }
   try {
     await t.test("a real IPC producer drains before a post-capture client closure removes only its own photo and video", async () => {
       await sourceProducer.runtime.start();
@@ -69,6 +76,12 @@ export async function qualifyVideoManualRestore(t, f) {
       assert.deepEqual(await sourceProducer.runtime.stop(), { exitCode: 0, signal: null }); assert.equal(await body, "starteddone");
       assert.equal(sourceProducer.children[0].exitCode, 0); assert.equal(sourceProducer.children[0].signalCode, null);
       const assertStopped = async () => assert.equal(sourceProducer.runtime.state().status, "stopped");
+      const savedReplies = createQuickRepliesFiles(f.dirs.sourceOperations, f.keys.crmKey, f.quickReplies.owner);
+      try { currentReplies = await savedReplies.save([], f.quickReplies.initial.revision, assertStopped); }
+      finally { savedReplies.close(); }
+      assert.equal(currentReplies.revision, 2); assert.deepEqual(currentReplies.replies, []);
+      currentRepliesCiphertext = await readFile(path.join(f.dirs.sourceOperations, f.quickReplies.filename));
+      assert.notDeepEqual(currentRepliesCiphertext, f.quickReplies.ciphertext, "deleting the catalogue creates a newer authenticated empty revision");
       const eraser = createAccountErasure({ store: sourceStore, storage: composeVideoErasureStorage({ storage: f.source.storage, videoStorage: f.source.videoStorage }),
         journalFor, clock: () => closeAt, maintenance: { async withQuiescedProducers(work) { await assertStopped(); return work(assertStopped, assertStopped); } } });
       let result, passes = 0;
@@ -81,6 +94,7 @@ export async function qualifyVideoManualRestore(t, f) {
       assert.equal(Number((await f.sourceConnection.query("SELECT COUNT(*) AS value FROM users WHERE id = ?", [peer.id]))[0].value), 1);
       assert.ok((await readFile(sourceProducer.marker, "utf8")).includes("producer-stopped"));
       await verifyRetainedVideoCampaign(f.sourceConnection);
+      await assertCurrentReplies(f.dirs.sourceOperations);
       latest = await withPrivateDirectory(f.dirs.sourceOperations, scope => captureOperationalState(scope, { key: f.keys.crmKey, binding: f.binding }));
       expectedRegistrySha256 = operationalStateHash(latest); sourceAfterClosure = await f.sourceState();
     });
@@ -97,6 +111,7 @@ export async function qualifyVideoManualRestore(t, f) {
     const preserved = new Map(latest.files.map(file => [file.name, file.content]));
     await withPrivateDirectory(f.dirs.quarantine, scope => restoreOperationalQuarantine(scope, { backup, current: latest, targetBinding, key: f.keys.crmKey,
       expectedCurrentSha256: expectedRegistrySha256, assertCurrent: async actual => { assert.equal(actual, expectedRegistrySha256); await assertReady(); } }));
+    await assertCurrentReplies(f.dirs.quarantine);
     const quarantineBefore = await fileInventory(f.dirs.quarantine), checkpointBefore = await checkpointInventory(f.dirs.checkpoint);
     const readRecentRegistry = () => withPrivateDirectory(f.dirs.sourceOperations, scope => captureOperationalState(scope, { key: f.keys.crmKey, binding: f.binding }));
     const input = { checkpointDirectory: f.dirs.checkpoint, quarantineDirectory: f.dirs.quarantine, journalDirectory: f.dirs.targetOperations, progressDirectory,
@@ -126,6 +141,7 @@ export async function qualifyVideoManualRestore(t, f) {
       assert.deepEqual(await fileInventory(f.dirs.quarantine), quarantineBefore);
       for (const [name, content] of preserved) assert.equal((await readFile(path.join(f.dirs.quarantine, name))).toString("base64url"), content);
       await verifyRetainedVideoCampaign(f.targetConnection);
+      await assertCurrentReplies(f.dirs.targetOperations);
       assert.deepEqual(await f.sourceState(), sourceAfterClosure);
     });
     await t.test("an incorrect publication confirmation retains the v2 hold and cannot start the target", async () => {
@@ -140,7 +156,8 @@ export async function qualifyVideoManualRestore(t, f) {
       assert.deepEqual(await (await fetch(`${targetProducer.origin}/api/ready`)).json(), { status: "ready" });
       assert.equal((await readdir(f.dirs.targetOperations)).includes(OPERATIONAL_RESTORE_MARKER), false);
       const quarantine = await withPrivateDirectory(f.dirs.quarantine, scope => readOperationalQuarantine(scope, { key: f.keys.crmKey, sourceBinding: f.binding, targetBinding }));
-      assert.equal(quarantine.marker.version, 2); assert.equal(quarantine.state.files.length, 3);
+      assert.equal(quarantine.marker.version, 2); assert.equal(quarantine.state.files.length, 4);
+      await assertCurrentReplies(f.dirs.quarantine); await assertCurrentReplies(f.dirs.targetOperations);
       assert.deepEqual(await fileInventory(f.dirs.quarantine), quarantineBefore); assert.deepEqual(await checkpointInventory(f.dirs.checkpoint), checkpointBefore);
       assert.deepEqual(await f.sourceState(), sourceAfterClosure);
       assert.deepEqual(await targetProducer.runtime.stop(), { exitCode: 0, signal: null }); assert.equal(targetProducer.children[0].exitCode, 0);

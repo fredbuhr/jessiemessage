@@ -5,6 +5,7 @@ import { readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createErasureJournal, erasureJournalBindings, readErasureJournalBatch,
   verifyScopedErasureJournalEnvelope } from "../server/data/erasure-journal.mjs";
+import { createQuickRepliesFiles } from "../server/quick-replies/files.mjs";
 import { assertRegistryAdvance, assertRegistryEnvelopeAdvance, authenticateRegistrySnapshot,
   registryEnvelope, registryIdentity, snapshotErasureRegistry, validateRegistrySnapshot } from "../server/backup/registry-snapshot.mjs";
 import { erasureDirectory, withErasureDirectory } from "./fixtures/erasure-files.mjs";
@@ -110,4 +111,26 @@ test("mixed snapshot advances retain each original scope, revision and byte iden
   assert.throws(() => assertRegistryEnvelopeAdvance(initial, changedVersion), { code: "ERASURE_CONTINUITY_ROLLBACK" });
   const legacyOnly = snapshotErasureRegistry({ version: 1, binding: legacyBinding, files: [legacy] }, { key, binding: legacyBinding });
   assert.throws(() => assertRegistryEnvelopeAdvance(legacyOnly, initial), { code: "ERASURE_CONTINUITY_BINDING" });
+});
+
+test("personal catalogues are authenticated then excluded from the erasure witness snapshot", async t => {
+  const f = await fixture(t), before = snapshotErasureRegistry(await f.state(), { key, binding }), ownerId = "9".repeat(32);
+  const replies = createQuickRepliesFiles(f.directory, key, ownerId, internal);
+  try { await replies.save([{ id: "1".repeat(32), title: "Admin only", body: "Private personal phrase", language: "en" }], 0, allow); }
+  finally { replies.close(); }
+  const state = await f.state(), files = await f.files();
+  const snapshot = snapshotErasureRegistry(state, { key, binding });
+  assert.deepEqual(snapshot, before); assert.equal(snapshot.files.length, 2);
+  assert.equal(authenticateRegistrySnapshot(snapshot, { key, binding }).jobs.size, 2);
+  assert.equal(snapshot.files.some(file => file.name.startsWith("quick-replies-")), false);
+  assert.deepEqual(await f.files(), files);
+  const settings = state.files.find(file => file.name.startsWith("quick-replies-"));
+  for (const mode of ["tag", "owner", "encoding", "name"]) {
+    const altered = structuredClone(state), file = altered.files.find(value => value.name === settings.name);
+    if (mode === "tag") { const value = JSON.parse(Buffer.from(file.content, "base64url")); value.envelope.tag = Buffer.alloc(16).toString("base64url"); file.content = Buffer.from(JSON.stringify(value) + "\n").toString("base64url"); }
+    if (mode === "owner") file.name = `quick-replies-${"8".repeat(32)}.json`;
+    if (mode === "encoding") file.content += "=";
+    if (mode === "name") file.name = "quick-replies-invalid.json";
+    assert.throws(() => snapshotErasureRegistry(altered, { key, binding }), mode);
+  }
 });

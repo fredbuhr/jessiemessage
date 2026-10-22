@@ -1,6 +1,7 @@
 import { createHash, createHmac } from "node:crypto";
 import { AccountErasureError, erasureBinding, erasureFields, erasureTransition } from "../data/erasure-state.mjs";
 import { erasureJournalBindings, verifyScopedErasureJournalEnvelope } from "../data/erasure-journal.mjs";
+import { QUICK_REPLIES_FILENAME_PATTERN, QUICK_REPLIES_FILE_MAX_BYTES, verifyQuickRepliesEnvelope } from "../quick-replies/files.mjs";
 
 export const REGISTRY_MAX_BYTES = 64 * 1024 * 1024;
 export const REGISTRY_NAME = /^erasure-[a-f0-9]{64}\.json$/;
@@ -90,6 +91,13 @@ export function snapshotErasureRegistry(value, { key, binding }) {
     || version === 2 && JSON.stringify(erasureBinding(value.legacyBinding)) !== JSON.stringify(scopes.legacyBinding)) failContinuity("ERASURE_CONTINUITY_BINDING");
   const files = array(value.files).filter(file => {
     registryFields(file, ["name", "content"]);
+    if (typeof file.name === "string" && QUICK_REPLIES_FILENAME_PATTERN.test(file.name)) {
+      let content;
+      try { content = decoded(file.content, 1, QUICK_REPLIES_FILE_MAX_BYTES); verifyQuickRepliesEnvelope(content, key, file.name); }
+      catch { failContinuity("ERASURE_CONTINUITY_AUTHENTICATION"); }
+      finally { content?.fill(0); }
+      return false;
+    }
     if (file.name !== "privacy-preparation.json" && (typeof file.name !== "string" || !REGISTRY_NAME.test(file.name))) failContinuity("ERASURE_CONTINUITY_INPUT");
     return file.name !== "privacy-preparation.json";
   });

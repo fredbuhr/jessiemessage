@@ -16,13 +16,13 @@ async function attest(page, fixture) {
 async function ready(page) {
   await waitUntil(() => page.execute("return !!document.getElementById('workspace')&&!document.getElementById('workspace').hidden&&!document.getElementById('message-body').disabled"), "SQL36 video conversation ready", 20000);
 }
-async function login(page, fixture, role) {
+async function login(page, fixture, role, recoveryIndex = 0) {
   await attest(page, fixture);
   if (role === "admin") {
     await page.navigate("/admin/login");
     await waitUntil(() => page.execute("return !!document.getElementById('login-form')&&!document.getElementById('login-form').hidden&&!document.getElementById('login-button').disabled"), "administrator login form");
     await page.type("#email", fixture.email); await page.type("#password", fixture.password);
-    await page.type("#factor", fixture.recoveryCodes[0]); await page.click("#login-button");
+    await page.type("#factor", fixture.recoveryCodes[recoveryIndex]); await page.click("#login-button");
     await waitUntil(() => page.execute("return !!document.getElementById('connected')&&!document.getElementById('connected').hidden"), "administrator MFA session");
     await page.navigate("/admin/messages");
     await waitUntil(() => page.execute("return !!document.querySelector('#conversations [data-conversation-id]')"), "synthetic client in administrator inbox");
@@ -96,6 +96,27 @@ test("real HTTPS SQL36 runtime: both roles upload H264, decode/seek, replay idem
     const client = await driver.browser({ origin: fixture.origin, primaryFixturePort: fixture.primaryFixturePort, width: 390, acceptInsecureCerts: true }); pages.push(client);
     const admin = await driver.browser({ origin: fixture.origin, primaryFixturePort: fixture.primaryFixturePort, width: 1280, acceptInsecureCerts: true }); pages.push(admin);
     await login(client, fixture, "client"); await login(admin, fixture, "admin");
+    const secondAdmin = await driver.browser({ origin: fixture.origin, primaryFixturePort: fixture.primaryFixturePort, width: 375, acceptInsecureCerts: true }); pages.push(secondAdmin);
+    await login(secondAdmin, fixture, "admin", 1);
+    const endpoint = "/api/admin/quick-replies";
+    const initialReplies = await json(admin, "admin", endpoint);
+    assert.equal(initialReplies.status, 200); assert.deepEqual(initialReplies.data, { version: "0", replies: [] });
+    const savedReply = { id: "c".repeat(32), title: "Synthetic saved phrase", body: "Private <saved phrase> 💛", language: "fr" };
+    const createdReplies = await json(admin, "admin", endpoint, { expectedVersion: "0", replies: [savedReply] });
+    assert.equal(createdReplies.status, 200); assert.deepEqual(createdReplies.data, { version: "1", replies: [savedReply] });
+    assert.deepEqual((await json(secondAdmin, "admin", endpoint)).data, createdReplies.data, "independent MFA sessions share the durable administrator catalogue");
+    const changedReply = { ...savedReply, body: "Private updated phrase 💛" };
+    const changedReplies = await json(admin, "admin", endpoint, { expectedVersion: "1", replies: [changedReply] });
+    assert.equal(changedReplies.status, 200); assert.deepEqual(changedReplies.data, { version: "2", replies: [changedReply] });
+    const stale = await json(secondAdmin, "admin", endpoint, { expectedVersion: "1", replies: [{ ...savedReply, body: "Stale draft must not overwrite" }] });
+    assert.equal(stale.status, 409);
+    assert.deepEqual((await json(secondAdmin, "admin", endpoint)).data, changedReplies.data);
+    const replayReplies = await json(admin, "admin", endpoint, { expectedVersion: "1", replies: [changedReply] });
+    assert.equal(replayReplies.status, 200); assert.deepEqual(replayReplies.data, changedReplies.data, "an exact uncertain save does not advance the revision again");
+    assert.equal((await json(client, "client", endpoint)).status, 401, "the client cookie cannot read the administrator's phrases");
+    const emptyReplies = await json(secondAdmin, "admin", endpoint, { expectedVersion: "2", replies: [] });
+    assert.equal(emptyReplies.status, 200); assert.deepEqual(emptyReplies.data, { version: "3", replies: [] });
+    assert.deepEqual((await json(admin, "admin", endpoint)).data, emptyReplies.data, "deleting the last phrase preserves the durable revision");
     const conversation = await json(client, "client", "/api/chat/client/conversation");
     assert.equal(conversation.status, 200); const id = conversation.data.id;
     const caption = "Synthetic client H264 caption", reply = "Synthetic Jessie H264 reply", draft = "Unsent private draft";
@@ -124,7 +145,7 @@ test("real HTTPS SQL36 runtime: both roles upload H264, decode/seek, replay idem
     assert.equal(removed.status, 200);
     assert.equal((await range(client, message.video.contentUrl)).status, 404, "a deleted message cannot fetch its former content");
     await waitUntil(() => admin.execute("return document.querySelectorAll('#messages .video-message video').length===1"), "peer polling removes the revoked video", 20000);
-    t.diagnostic("Real SQL36/configured index, independent MFA/client cookies, 390/1280px, raw upload, stored ciphertext, native H264 decode and seek, Range206, same-key replay, two-role captions, gallery and deletion denial passed on owned loopback only.");
+    t.diagnostic("Real SQL36/configured index, independent MFA/client cookies, personal reply CRUD across two admin sessions with conflict/exact replay and client denial, 375/390/1280px, raw upload, stored ciphertext, native H264 decode and seek, Range206, same-key replay, two-role captions, gallery and deletion denial passed on owned loopback only.");
   } finally {
     try { for (const page of pages) await page.close(); }
     finally { try { await fixture?.stop(); } finally { await driver.close(); } }

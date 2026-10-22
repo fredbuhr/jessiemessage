@@ -30,7 +30,8 @@ test("native SQL36 video backup captures two encrypted roots, resumes a separate
     assert.equal(f.receipt.media.files.length, 4); assert.equal(f.receipt.video.files.length, 5);
     assert.equal(f.receipt.sql.uncompressedSha256.length, 64);
     const operations = await withPrivateDirectory(f.dirs.checkpoint, scope => readOperationalCheckpoint(scope, f.receipt, f.keys.crmKey));
-    assert.equal(operations.version, 2); assert.equal(operations.files.length, 2);
+    assert.equal(operations.version, 2); assert.equal(operations.files.length, 3);
+    assert.equal(operations.files.find(file => file.name === f.quickReplies.filename).content, f.quickReplies.ciphertext.toString("base64url"));
     assert.deepEqual(operations.binding, f.binding); assert.deepEqual(operations.legacyBinding, f.legacyBinding);
     const registry = snapshotErasureRegistry(operations, { key: f.keys.crmKey, binding: f.binding });
     const { jobs } = authenticateRegistrySnapshot(registry, { key: f.keys.crmKey, binding: f.binding });
@@ -40,8 +41,11 @@ test("native SQL36 video backup captures two encrypted roots, resumes a separate
     assert.deepEqual(copied, f.sourceBaseline.videos);
     await f.assertSourceUnchanged();
   });
-  await t.test("native import targets an empty distinct database and an interrupted video copy resumes without replacing its retained file", async () => {
-    await f.import();
+  await t.test("real operator import/resume verifies an empty clone once, keeps an existing clone and resumes video files without replacement", async () => {
+    const imported = await f.import();
+    assert.equal(imported.status, "application_checkpoint_restored_verified"); assert.equal(imported.applicationSnapshotMatched, true);
+    assert.equal(imported.httpStarted, false); assert.equal(imported.smtpStarted, false); assert.equal(imported.workersStarted, false);
+    assert.equal(f.operator.imports, 1);
     const before = await f.snapshot(); assert.equal(before.version, 3); assert.equal(before.counts.tables, 36);
     const retained = await f.interruptVideoCopy(); assert.ok(retained);
     const retainedPath = path.join(f.dirs.targetVideo, retained.name), hash = fileHash(await readFile(retainedPath));
@@ -53,6 +57,15 @@ test("native SQL36 video backup captures two encrypted roots, resumes a separate
     assert.deepEqual(await fileInventory(f.dirs.targetMedia), f.sourceBaseline.photos);
     assert.deepEqual(await fileInventory(f.dirs.targetVideo), f.sourceBaseline.videos);
     assert.equal(await f.databaseHash(f.targetDatabase), f.sourceBaseline.sql);
+    const files = { photos: await fileInventory(f.dirs.targetMedia), videos: await fileInventory(f.dirs.targetVideo) },
+      checkpointNames = (await readdir(f.dirs.checkpoint)).sort();
+    const resumed = await f.resumeImport();
+    assert.equal(resumed.status, "application_checkpoint_existing_clone_verified"); assert.equal(resumed.action, "verified_existing_clone");
+    assert.equal(resumed.imported, false); assert.equal(resumed.importedThisRun, false); assert.equal(resumed.applicationSnapshotMatched, true);
+    assert.equal(f.operator.imports, 1, "the existing clone is verified through the real wrapper, never imported again");
+    assert.equal(f.operator.resumes, 2); assert.ok(f.operator.inspections.includes("empty")); assert.ok(f.operator.inspections.includes("application-schema"));
+    assert.deepEqual(await fileInventory(f.dirs.targetMedia), files.photos); assert.deepEqual(await fileInventory(f.dirs.targetVideo), files.videos);
+    assert.deepEqual((await readdir(f.dirs.checkpoint)).sort(), checkpointNames, "native import/dump defaults and temporary files are removed");
     await f.assertSourceUnchanged();
   });
   await t.test("a source photo root substitution and a corrupt checkpoint video fail before recovery or source mutation", async () => {
@@ -96,5 +109,8 @@ test("native SQL36 video backup captures two encrypted roots, resumes a separate
     assert.equal(await f.databaseHash(f.targetDatabase), database); assert.deepEqual(await fileInventory(f.dirs.targetMedia), photos); assert.deepEqual(await fileInventory(f.dirs.targetVideo), videos);
     await f.assertSourceUnchanged();
   });
-  await t.test("manual restoration respects a real later video closure and keeps mixed historical receipts", sub => qualifyVideoManualRestore(sub, f));
+  await t.test("manual restoration respects a real later video closure and keeps mixed historical receipts", sub => f.measure("manual-reconcile-publish", () => qualifyVideoManualRestore(sub, f)));
+  const metrics = f.reportMetrics();
+  assert.equal(metrics.encryptedPhotoBytes, f.receipt.media.bytes); assert.equal(metrics.encryptedVideoBytes, f.receipt.video.bytes);
+  for (const phase of ["capture", "operator-resume", "copy-two-roots", "backup-restore", "manual-reconcile-publish"]) assert.ok(metrics.measurements.some(value => value.phase === phase));
 });
