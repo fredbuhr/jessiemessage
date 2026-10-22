@@ -1,0 +1,95 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage182-publication-operator-local-qualification",
+  "status": "local_synthetic_checks_passed_native_publication_pending",
+  "publisher": {
+    "workflowPath": "/workspace/scratch/bb431be72395/publisher182/.github/workflows/publish-qualified.yml",
+    "workflowSha256": "9d7fa415492ab5b153fac40dfb86c091038ed7bc1a1e354677e55e3cb947a42a",
+    "fixtureTree": "7b722ca1fbd3416acecffa3c122e967511184d4c",
+    "sourcePin": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+    "ciPin": 39832723570,
+    "tests": 33,
+    "passCount": 33,
+    "failCount": 0,
+    "networkCalls": 0,
+    "realMutations": 0,
+    "productionAccess": false,
+    "checks": [
+      "successful immutable creation on pinned source advances latest in the same release write",
+      "identical tag and release retry is read-only",
+      "interrupted after exact tag with previous latest retries only the release",
+      "existing release with previous latest is refused before mutations, no automatic metadata edit",
+      "exact tag alone with unknown latest is refused before mutations",
+      "existing release with divergent latest source is refused before mutations",
+      "latest changed after tag creation refuses release creation without corrective mutation",
+      "refuse ci-incomplete before mutations",
+      "refuse ci-other-sha before mutations",
+      "refuse ci-rerun before mutations",
+      "refuse ci-missing-job before mutations",
+      "refuse ci-failed-job before mutations",
+      "refuse other-tree before mutations",
+      "refuse video-gate-closed before mutations",
+      "refuse quick-gate-closed before mutations",
+      "refuse normal-ddl-changed before mutations",
+      "refuse sql37 before mutations",
+      "refuse candidate-missing before mutations",
+      "refuse candidate-ddl-changed before mutations",
+      "refuse package-version before mutations",
+      "refuse old-node-pin before mutations",
+      "refuse mutable-action-pin before mutations",
+      "refuse untrusted-action before mutations",
+      "refuse credentials-persisted before mutations",
+      "refuse cache-enabled before mutations",
+      "refuse latest-before before mutations",
+      "refuse main-behind before mutations",
+      "refuse rollback-tag-diverged before mutations",
+      "refuse rollback-release-diverged before mutations",
+      "refuse divergent tag before mutations",
+      "refuse divergent release body before mutations",
+      "refuse divergent release source before mutations",
+      "detect an externally changed latest after publication without corrective mutation"
+    ]
+  },
+  "preparation": {
+    "status": "local_synthetic_qualified",
+    "tests": 19,
+    "pass_": 19,
+    "fail": 0,
+    "durationSeconds": 62.662,
+    "realDisposableGit": true,
+    "actualNodeAndRuntimeNotStarted": true,
+    "sql": false,
+    "hosting": false,
+    "firstAttempt": {
+      "status": "failed_cleanup_not_application_assertion",
+      "tests": 19,
+      "errors": 1,
+      "observed": "TemporaryDirectory cleanup OSError ENOTEMPTY on seed",
+      "causeNotEstablished": true,
+      "logPreserved": true,
+      "subsequentSuiteReason": "new exact source/tree pins replaced pending constants; retained first failure"
+    }
+  },
+  "metadataWriterReady": false,
+  "metadataWriterRequiresActualHostedStagingReceipt": true,
+  "independentReadOnlyReview": "No concrete blocking defect found; hashes confirmed; no extra test run.",
+  "productionActionsPerformed": false,
+  "files": [
+    {
+      "path": ".github/workflows/publish-qualified.yml",
+      "sha256": "9d7fa415492ab5b153fac40dfb86c091038ed7bc1a1e354677e55e3cb947a42a"
+    },
+    {
+      "path": "ops/test-publish-qualified.py",
+      "sha256": "db62ae8e1b8ad7918187be3102cfe3426133db3e43a668ee7a57ce7465d1f49f"
+    },
+    {
+      "path": "ops/prepare-release182.py",
+      "sha256": "9b68d7a060e94781e6a2043a8b37c3a0039101bca912675a7ed8e6d4e55e407a"
+    },
+    {
+      "path": "ops/test-prepare-release182.py",
+      "sha256": "6244740b859f53b905cfb4c42beae39b784d09957f5a035e6f57211e87b4d02e"
+    }
+  ]
+}
