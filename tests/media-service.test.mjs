@@ -34,6 +34,13 @@ async function fixture() {
       return state.reservationResult ?? { duplicate: false, reservation: { id: options.asset.id, storageKey: options.asset.storageKey,
         bytes, pendingBytes: state.pendingBytes ?? state.chargedBytes } };
     },
+    cancelAssetReservation: async (options) => {
+      record("cancelAssetReservation", options); if (state.cancelError) throw state.cancelError;
+      const hex = options.objectId.toString("hex");
+      if (state.objects.has(hex)) { state.chargedBytes -= state.objects.get(hex); state.objects.delete(hex); }
+      if (state.cancelAckError) throw state.cancelAckError;
+      return { released: true };
+    },
     registerAsset: async (options) => {
       record("registerAsset", options); state.registered = options.asset;
       if (state.registrationError) throw state.registrationError;
@@ -253,8 +260,8 @@ test("the disk margin includes every pending reservation and uses an exact BigIn
   const f = await fixture(), pendingBytes = 2000000; f.state.pendingBytes = pendingBytes;
   f.state.availableBytes = BigInt(pendingBytes) + 536870912n - 1n;
   await assert.rejects(f.service.upload("admin", f.token, await sourceImage), hasCode("MEDIA_STORAGE_LIMIT"));
-  assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace"]);
-  assert.ok(f.state.chargedBytes > 0, "margin refusal conservatively keeps the acknowledged reservation");
+  assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace", "cancelAssetReservation"]);
+  assert.equal(f.state.chargedBytes, 0, "a positively acknowledged reservation with no possible write can be cancelled");
   f.calls.length = 0; f.state.availableBytes += 1n;
   assert.equal((await f.service.upload("admin", f.token, await sourceImage)).duplicate, false);
   assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace", "storage.put", "registerAsset"]);
@@ -264,16 +271,62 @@ test("the disk margin includes every pending reservation and uses an exact BigIn
   assert.equal(clientUpload.duplicate, false); assert.match(clientUpload.asset.fullUrl, /^\/api\/media\/client\/assets\//);
 });
 
-test("unavailable or malformed disk capacity fails closed after reservation without unlink or release", async () => {
+test("unavailable or malformed disk capacity cancels only the confirmed unwritten reservation", async () => {
   for (const space of [null, {}, { availableBytes: 1000000000 }, { availableBytes: "1000000000" }, { availableBytes: -1n }]) {
     const f = await fixture(); f.storage.availableSpace = async () => { f.calls.push({ name: "storage.availableSpace" }); return space; };
     await assert.rejects(f.service.upload("admin", f.token, await sourceImage), hasCode("MEDIA_CAPACITY_UNAVAILABLE"));
-    assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace"]);
-    assert.ok(f.state.chargedBytes > 0);
+    assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace", "cancelAssetReservation"]);
+    assert.equal(f.state.chargedBytes, 0);
   }
   const f = await fixture(); f.state.capacityError = new Error("Private statfs path and device error");
   await assert.rejects(f.service.upload("admin", f.token, await sourceImage), (error) => hasCode("MEDIA_UNAVAILABLE")(error) && !error.message.includes("statfs"));
-  assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace"]);
+  assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace", "cancelAssetReservation"]);
+  assert.equal(f.state.chargedBytes, 0);
+});
+
+test("repeated disk refusals refund the exact unwritten photo for each role and leave a fresh retry usable", async () => {
+  for (const role of ["admin", "client"]) {
+    const f = await fixture(); f.state.availableBytes = 0n;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      f.calls.length = 0;
+      await assert.rejects(f.service.upload(role, f.token, await sourceImage), hasCode("MEDIA_STORAGE_LIMIT"));
+      assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace", "cancelAssetReservation"]);
+      const proposed = f.calls[0].options.asset, cancellation = f.calls[2].options;
+      assert.deepEqual(cancellation, { role, tokenHash: tokenDigest(f.token), now, objectId: proposed.id, storageKey: proposed.storageKey });
+      assert.equal(f.state.chargedBytes, 0); assert.equal(f.state.objects.size, 0);
+    }
+    f.state.availableBytes = 100000000000n; f.calls.length = 0;
+    assert.equal((await f.service.upload(role, f.token, await sourceImage)).duplicate, false);
+    assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace", "storage.put", "registerAsset"]);
+    assert.equal(f.state.objects.size, 1);
+    assert.equal(f.state.chargedBytes, f.state.registered.fullBytes + f.state.registered.thumbnailBytes + 80);
+  }
+});
+
+test("failed or revoked cancellation preserves its charge and uses a fresh authorization time without masking the disk refusal", async () => {
+  for (const code of ["CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN", "ER_CONNECTION_LOST"]) {
+    const f = await fixture(); let current = now;
+    f.storage.availableSpace = async () => { f.calls.push({ name: "storage.availableSpace" }); current += 2000; return { availableBytes: 0n }; };
+    f.state.cancelError = Object.assign(new Error("Private cancellation or current actor details"), { code });
+    const service = await createMediaService({ ...f.options, clock: () => current });
+    await assert.rejects(service.upload("admin", f.token, await sourceImage), hasCode("MEDIA_STORAGE_LIMIT"));
+    assert.deepEqual(f.calls.map((call) => call.name), ["reserveAsset", "storage.availableSpace", "cancelAssetReservation"]);
+    assert.equal(f.calls.at(-1).options.now, now + 2000);
+    assert.ok(f.state.chargedBytes > 0); assert.equal(f.state.objects.size, 1);
+  }
+});
+
+test("a lost cancellation acknowledgement is not replayed or replaced by a second refund", async () => {
+  const f = await fixture(); f.state.availableBytes = 0n;
+  f.state.cancelAckError = new Error("Private cancellation committed before response loss");
+  await assert.rejects(f.service.upload("client", f.token, await sourceImage), hasCode("MEDIA_STORAGE_LIMIT"));
+  assert.equal(f.calls.filter((call) => call.name === "cancelAssetReservation").length, 1);
+  assert.equal(f.state.chargedBytes, 0); assert.equal(f.state.objects.size, 0);
+  assert.equal(f.calls.some((call) => ["storage.put", "storage.remove", "registerAsset", "releaseStorageObject"].includes(call.name)), false);
+  f.state.cancelAckError = null; f.state.availableBytes = 100000000000n;
+  assert.equal((await f.service.upload("client", f.token, await sourceImage)).duplicate, false);
+  assert.equal(f.calls.filter((call) => call.name === "cancelAssetReservation").length, 1);
+  assert.equal(f.state.chargedBytes, f.state.registered.fullBytes + f.state.registered.thumbnailBytes + 80);
 });
 
 test("reservation acknowledgements must match the proposal and exact encrypted capacity before put", async () => {
@@ -301,7 +354,7 @@ test("partial file writes and unavailable registration retain their reservation 
     const f = await fixture(); f.state[step] = new Error("Private acknowledgement could be lost after the operation");
     await assert.rejects(f.service.upload("admin", f.token, await sourceImage), hasCode("MEDIA_UNAVAILABLE"));
     assert.ok(f.state.chargedBytes > 0); assert.equal(f.state.objects.size, 1);
-    assert.equal(f.calls.some((call) => ["storage.remove", "releaseStorageObject"].includes(call.name)), false);
+    assert.equal(f.calls.some((call) => ["storage.remove", "releaseStorageObject", "cancelAssetReservation"].includes(call.name)), false);
     assert.equal(f.calls.filter((call) => call.name === "storage.put").length, 1);
     assert.equal(f.calls.filter((call) => call.name === "registerAsset").length, step === "storageError" ? 0 : 1);
   }

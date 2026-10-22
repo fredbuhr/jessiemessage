@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_FILES, BACKUP_MEDIA_MAX_OBJECTS } from "../server/media/backup-limits.mjs";
+import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_FILES, BACKUP_MEDIA_MAX_OBJECTS, BACKUP_MEDIA_MAX_RECORDS } from "../server/media/backup-limits.mjs";
 import { validateVerification } from "../server/backup/verification-kit.mjs";
 
-test("the admitted media budget plus bounded metadata and tar overhead fit the existing PC archive contract", () => {
+test("the shared photo/video admission budget plus bounded metadata and tar overhead fit the existing archive contract", () => {
   const mib = 1024 * 1024, archiveLimit = 2048 * mib, cipherLimit = archiveLimit + 4 * mib;
   // Independent existing limits: manifest64MiB, receipt32MiB, SQL.gz16MiB,
   // operations64MiB. SQL rows and elapsed time remain separate safety limits.
@@ -16,6 +16,7 @@ test("the admitted media budget plus bounded metadata and tar overhead fit the e
   // worst-case expansion of this <1.3GiB input for the gzip producer.
   const gzipBound = tarBound + mib, encryptedBound = gzipBound + 4 * mib;
   assert.equal(BACKUP_MEDIA_MAX_FILES, BACKUP_MEDIA_MAX_OBJECTS * 2);
+  assert.equal(BACKUP_MEDIA_MAX_RECORDS, BACKUP_MEDIA_MAX_FILES);
   assert.ok(tarBound < 1298 * mib); assert.ok(gzipBound < archiveLimit); assert.ok(encryptedBound < cipherLimit);
   const id = "capture-1792340000000-cccccccccccccccc";
   const record = { format: "jessiemessage-backup-verification", version: 1,

@@ -267,7 +267,7 @@ test("send quotas use scoped secret HMAC buckets without tokens or bodies and re
   f.state.rateResults = [{ allowed: true }, { allowed: false, retryAfter: 17 }];
   await assert.rejects(f.service.send("admin", f.token, conversationHex, payload), (error) => hasCode("CHAT_RATE_LIMIT")(error) && error.retryAfter === 17);
   assert.equal(f.calls.length, 0); assert.equal(f.rateCalls.length, 3);
-  const [global, , personal] = f.rateCalls;
+  const [personal, , global] = f.rateCalls;
   assert.deepEqual(global.options, { now, windowSeconds: 60, limit: 300 });
   assert.deepEqual(personal.options, { now, windowSeconds: 60, limit: 30 });
   for (const [entry, name, identity] of [[global, "global-send", "all"], [personal, "user-send", adminHex]]) {
@@ -276,6 +276,61 @@ test("send quotas use scoped secret HMAC buckets without tokens or bodies and re
   }
   const serialized = JSON.stringify(f.rateCalls);
   assert.equal(serialized.includes(body), false); assert.equal(serialized.includes(f.token), false); assert.equal(serialized.includes(adminHex), false);
+});
+
+for (const kind of ["text", "photo", "video"]) test(`${kind} personal refusals cannot exhaust shared send capacity for another account`, async () => {
+  const f = await fixture(), ledger = new Map();
+  let absentConversation = true, persistenceCalls = 0;
+  const authStore = { async consumeRateLimit(bucket, options) {
+    const name = bucket.toString("hex"); let current = ledger.get(name);
+    if (!current || options.now - current.since >= options.windowSeconds * 1000) {
+      current = { since: options.now, count: 0 }; ledger.set(name, current);
+    }
+    current.count += 1;
+    return { allowed: current.count <= options.limit, retryAfter: 60 };
+  } };
+  const store = { ...f.store, async sendMessage(request) {
+    persistenceCalls += 1;
+    if (absentConversation) throw Object.assign(new Error("Synthetic absent conversation"), { code: "CHAT_NOT_FOUND" });
+    const message = { ...request.message, conversationId: request.conversationId,
+      senderId: Buffer.from(f.state.idOverride, "hex"), sequence: String(persistenceCalls), createdAt: f.state.now, deletedAt: null };
+    if (request.message.mediaId) message.media = { id: request.message.mediaId, width: 640, height: 480,
+      thumbnailWidth: 320, thumbnailHeight: 240, fullBytes: 900, thumbnailBytes: 200 };
+    if (request.message.videoId) message.video = { id: request.message.videoId, bytes: 901, mime: "video/mp4" };
+    return { message, duplicate: false };
+  } };
+  const service = await createChatService({ ...f.options, store, authStore, videoMessages: { sendMessage: store.sendMessage } });
+  const send = () => {
+    const clientMessageId = randomBytes(16).toString("hex");
+    if (kind === "photo") return service.sendImage("client", f.token, conversationHex,
+      { clientMessageId, mediaId: "e".repeat(32), caption: "Synthetic send" });
+    if (kind === "video") return service.sendVideo("client", f.token, conversationHex,
+      { clientMessageId, videoId: "f".repeat(32), caption: "Synthetic send" });
+    return service.send("client", f.token, conversationHex, { clientMessageId, body: "Synthetic send" });
+  };
+  const globalBucket = createHmac("sha256", f.key).update("jessiemessage:chat-rate:v1:")
+    .update("global-send").update("\0all").digest("hex");
+  f.state.idOverride = clientHex;
+  for (let index = 0; index < 30; index += 1) await assert.rejects(send(), hasCode("CHAT_NOT_FOUND"));
+  for (let index = 0; index < 270; index += 1) await assert.rejects(send(), hasCode("CHAT_RATE_LIMIT"));
+  assert.equal(persistenceCalls, 30);
+  assert.equal(ledger.get(globalBucket).count, 30, "personal refusals cannot debit the shared broadcast/manual-send bucket");
+  absentConversation = false; f.state.idOverride = "b".repeat(32);
+  const other = await send();
+  assert.equal(other.message.body, "Synthetic send"); assert.equal(other.duplicate, false);
+  assert.equal(other.message.sender, "me");
+  if (kind === "photo") assert.equal(other.message.media.id, "e".repeat(32));
+  if (kind === "video") assert.equal(other.message.video.id, "f".repeat(32));
+  assert.equal(persistenceCalls, 31); assert.equal(ledger.get(globalBucket).count, 31);
+  // Other admitted accounts really consume the remaining aggregate allowance.
+  for (let index = 0; index < 269; index += 1) {
+    f.state.idOverride = Buffer.alloc(16, 0x40 + Math.floor(index / 30)).toString("hex");
+    await send();
+  }
+  assert.equal(ledger.get(globalBucket).count, 300); assert.equal(persistenceCalls, 300);
+  f.state.idOverride = "9".repeat(32);
+  await assert.rejects(send(), hasCode("CHAT_RATE_LIMIT"));
+  assert.equal(persistenceCalls, 300, "the genuine aggregate limit still refuses before persistence");
 });
 
 test("every chat data read shares persistent global and authenticated-user budgets before private SQL reads", async (t) => {
@@ -469,7 +524,7 @@ test("chat read quotas do not consume or rename the send budgets shared with the
   await f.service.messages("admin", f.token, conversationHex);
   await f.service.send("admin", f.token, conversationHex, { clientMessageId: randomBytes(16).toString("hex"), body: "Synthetic independent send budget" });
   assert.equal(f.rateCalls.length, 4);
-  for (const [index, name, identity, limit] of [[0, "user-read", adminHex, 480], [1, "global-read", "all", 2400], [2, "global-send", "all", 300], [3, "user-send", adminHex, 30]]) {
+  for (const [index, name, identity, limit] of [[0, "user-read", adminHex, 480], [1, "global-read", "all", 2400], [2, "user-send", adminHex, 30], [3, "global-send", "all", 300]]) {
     assert.deepEqual(f.rateCalls[index].bucket, createHmac("sha256", f.key).update("jessiemessage:chat-rate:v1:").update(name).update("\0").update(identity).digest());
     assert.deepEqual(f.rateCalls[index].options, { now, windowSeconds: 60, limit });
   }

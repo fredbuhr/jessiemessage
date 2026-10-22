@@ -1383,3 +1383,73 @@ test("a read-only capability change preserves an unsaved reply draft for copying
   await submitPersonalReply(f, "Unsent title", "Unsent private draft"); assert.equal(f.state.quickReplyWrites, 0);
   await f.click("personal-reply-cancel"); assert.equal(f.element("personal-reply-body").value, ""); assert.equal(f.element("personal-reply-editor").hidden, true);
 });
+
+const ownedVideo = (value, cleanupPending = false) => ({ id: id(value), bytes: 100, mime: "video/mp4", createdAt: now,
+  cleanupPending, contentUrl: cleanupPending ? null : `/api/video/client/assets/${id(value)}/content` });
+async function videoLibraryFixture(intercept) {
+  const f = harness({ intercept: (path, options, state, calls) => videoCapability(path)
+    ?? (path.includes("/gallery?") ? response(200, { items: [], nextBefore: null, hasMore: false }) : intercept(path, options, state, calls)) });
+  await flush(); await f.click("open-video-gallery"); await f.click("video-gallery-library"); return f;
+}
+async function confirmVideoRemoval(f, button) {
+  for (const handler of button.events.get("click") ?? []) handler({}); await flush();
+  assert.equal(f.element("confirm-title").textContent, "Supprimer cette vidéo ?"); await f.click("accept-delete");
+}
+
+test("owned videos use strict owner URLs, paginate and expose interrupted cleanup for retry", async () => {
+  const f = await videoLibraryFixture(path => {
+    if (path === "/api/video/client/assets?limit=20") return response(200, { assets: [ownedVideo(910)], nextCursor: id(910), hasMore: true });
+    if (path === `/api/video/client/assets?limit=20&afterId=${id(910)}`) return response(200, { assets: [ownedVideo(911, true)], nextCursor: null, hasMore: false });
+  });
+  assert.equal(f.element("video-gallery-title").textContent, "Mes vidéos");
+  assert.equal(f.element("video-grid").querySelector("video").src, ownedVideo(910).contentUrl);
+  await f.click("more-videos"); assert.equal(f.element("video-grid").children.length, 2);
+  assert.equal(f.element("video-grid").querySelectorAll("video").length, 1);
+  assert.match(contents(f.element("video-grid")), /Terminer la suppression/);
+  for (const path of ["https://other.invalid" + ownedVideo(910).contentUrl, ownedVideo(910).contentUrl.replace("client", "admin"), ownedVideo(910).contentUrl + "?x=1"]) {
+    f.context.__candidate = path;
+    assert.equal(vm.runInContext(`validVideoUrl(__candidate,currentState(),null,'${id(910)}')`, f.context), false);
+  }
+});
+
+test("owned video deletion requires confirmation, preserves conflicts and retries the same uncertain asset", async () => {
+  let outcome = 409; const calls = [];
+  const f = await videoLibraryFixture((path, options) => {
+    if (path === "/api/video/client/assets?limit=20") return response(200, { assets: [ownedVideo(912)], nextCursor: null, hasMore: false });
+    if (path === `/api/video/client/assets/${id(912)}/delete`) { calls.push({ path, body: options.body }); return response(outcome,
+      outcome === 200 ? { deleted: true } : { error: outcome === 409 ? "video_in_use" : "video_unavailable" }); }
+  });
+  let button = f.element("video-grid").querySelector("button");
+  for (const handler of button.events.get("click")) handler({}); await flush(); await f.click("cancel-delete"); assert.equal(calls.length, 0);
+  await confirmVideoRemoval(f, button); assert.equal(calls.length, 1); assert.equal(f.element("video-grid").children.length, 1);
+  assert.match(f.element("video-gallery-status").textContent, /diffusion est en cours/);
+  outcome = 503; await confirmVideoRemoval(f, button); assert.equal(f.element("video-grid").children.length, 1); assert.equal(button.disabled, false);
+  outcome = 200; await confirmVideoRemoval(f, button); assert.equal(f.element("video-grid").children.length, 0);
+  assert.equal(calls.length, 3); assert.ok(calls.every(call => call.path === calls[0].path && call.body === "{}"));
+});
+
+test("owned videos protect uncertain sends and discard late pages after an account change", async () => {
+  const delayed = pause(); let reads = 0;
+  const f = await videoLibraryFixture(path => {
+    if (path === "/api/video/client/assets?limit=20") return ++reads === 1 ? response(200, { assets: [ownedVideo(913)], nextCursor: null, hasMore: false }) : delayed.promise;
+  });
+  const state = f.inspect().states.get(f.inspect().selected); state.pending = { kind: "video", videoId: id(913), status: "retry" };
+  vm.runInContext("renderVideoGallery()", f.context);
+  assert.equal(f.element("video-grid").querySelector("button").disabled, true);
+  await f.click("video-gallery-library"); await f.hide(); f.state.currentSession = session(2, "B".repeat(43));
+  delayed.resolve(response(200, { assets: [ownedVideo(913)], nextCursor: null, hasMore: false })); await f.show(); await flush();
+  assert.equal(f.element("video-gallery").open, false); assert.equal(f.element("video-grid").children.length, 0);
+});
+
+test("owned video deletion rechecks uncertain sends after an asynchronous confirmation", async () => {
+  let deletes = 0;
+  const f = await videoLibraryFixture(path => {
+    if (path === "/api/video/client/assets?limit=20") return response(200, { assets: [ownedVideo(914)], nextCursor: null, hasMore: false });
+    if (path === `/api/video/client/assets/${id(914)}/delete`) { deletes++; return response(200, { deleted: true }); }
+  });
+  const button = f.element("video-grid").querySelector("button"); assert.equal(button.disabled, false);
+  for (const handler of button.events.get("click")) handler({}); await flush();
+  const state = f.inspect().states.get(f.inspect().selected); state.pending = { kind: "video", videoId: id(914), status: "retry" };
+  await f.click("accept-delete");
+  assert.equal(deletes, 0); assert.equal(f.element("video-grid").children.length, 1);
+});

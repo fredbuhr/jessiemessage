@@ -34,7 +34,7 @@ function reserveUpload(userId) {
 export async function createMediaService({ store, chatService, authStore, storage, key, minimumFreeBytes = 536870912, clock = Date.now }) {
   if (!Buffer.isBuffer(key) || key.length !== 32 || typeof clock !== "function"
     || !Number.isSafeInteger(minimumFreeBytes) || minimumFreeBytes < 0) throw new MediaError("MEDIA_CONFIG");
-  for (const method of ["reserveAsset", "registerAsset", "releaseStorageObject", "listAssets", "getOwnedAsset", "getMessageAsset", "deleteAsset", "gallery"]) if (typeof store?.[method] !== "function") throw new MediaError("MEDIA_CONFIG");
+  for (const method of ["reserveAsset", "cancelAssetReservation", "registerAsset", "releaseStorageObject", "listAssets", "getOwnedAsset", "getMessageAsset", "deleteAsset", "gallery"]) if (typeof store?.[method] !== "function") throw new MediaError("MEDIA_CONFIG");
   for (const method of ["put", "get", "remove", "availableSpace"]) if (typeof storage?.[method] !== "function") throw new MediaError("MEDIA_CONFIG");
   if (typeof chatService?.actor !== "function" || typeof chatService?.sendImage !== "function" || typeof authStore?.consumeRateLimit !== "function") throw new MediaError("MEDIA_CONFIG");
   key = Buffer.from(key);
@@ -158,9 +158,20 @@ export async function createMediaService({ store, chatService, authStore, storag
         const reserved = await store.reserveAsset({ ...request, now: currentTime(), asset });
         if (reserved?.duplicate === true) return uploadResult(reserved, role, actor.user.id);
         const capacity = reservation(reserved, asset);
-        const space = await storage.availableSpace();
-        if (!space || typeof space.availableBytes !== "bigint" || space.availableBytes < 0n) fail("MEDIA_CAPACITY_UNAVAILABLE");
-        if (space.availableBytes < BigInt(capacity.pendingBytes) + BigInt(minimumFreeBytes)) fail("MEDIA_STORAGE_LIMIT");
+        try {
+          const space = await storage.availableSpace();
+          if (!space || typeof space.availableBytes !== "bigint" || space.availableBytes < 0n) fail("MEDIA_CAPACITY_UNAVAILABLE");
+          if (space.availableBytes < BigInt(capacity.pendingBytes) + BigInt(minimumFreeBytes)) fail("MEDIA_STORAGE_LIMIT");
+        } catch (error) {
+          // The reservation was positively acknowledged and put has never
+          // started. Only this exact allocation can be cancelled. A failed or
+          // lost cancellation acknowledgement is not retried automatically.
+          await (async () => {
+            const cancelled = await store.cancelAssetReservation({ ...request, now: currentTime(), objectId: assetId, storageKey });
+            if (cancelled?.released !== true) fail("MEDIA_UNAVAILABLE");
+          })().catch(() => {});
+          throw error;
+        }
         await storage.put({ assetId, storageKey, full: image.full, thumbnail: image.thumbnail });
         // A failed commit acknowledgement is ambiguous. Preserve encrypted
         // files; SQL still rechecks the current actor before metadata writes.

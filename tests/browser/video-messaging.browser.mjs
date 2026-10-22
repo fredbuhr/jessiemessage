@@ -16,7 +16,7 @@ const types = { ".js": "text/javascript", ".css": "text/css", ".html": "text/htm
 let server, driver, origin, fixture;
 function metadata(messageId) { return { id: videoId, bytes: mp4.length, mime: "video/mp4", contentUrl: "/api/video/client/conversations/" + conversationId + "/messages/" + messageId + "/content" }; }
 function reset() {
-  fixture = { signedIn: true, uploads: [], commands: [], ranges: [], uncertainSend: true, now: Date.now() - 10000,
+  fixture = { signedIn: true, uploads: [], commands: [], ranges: [], deletes: [], ownedDeleted: false, uncertainSend: true, now: Date.now() - 10000,
     messages: [{ id: initialMessageId, sequence: "1", sender: "peer", body: "Synthetic private video", createdAt: Date.now() - 9000, deletedAt: null, clientMessageId: null, video: metadata(initialMessageId) }] };
 }
 function conversation() { return { id: conversationId, peerName: "Synthetic peer", createdAt: fixture.now, closedAt: null, lastActivityAt: fixture.now,
@@ -45,6 +45,18 @@ async function startFixture() {
       assert.equal(Number(request.headers["content-length"]), mp4.length); assert.deepEqual(bytes, mp4); fixture.uploads.push(bytes.length);
       json(201, { id: id(31), bytes: bytes.length, mime: "video/mp4" }); return;
     }
+    if (url.pathname === "/api/video/client/assets" && request.method === "GET") {
+      json(200, { assets: [videoId, ...(fixture.ownedDeleted ? [] : [id(32)])].map(assetId => ({ id: assetId, bytes: mp4.length,
+        mime: "video/mp4", createdAt: fixture.now, cleanupPending: false, contentUrl: `/api/video/client/assets/${assetId}/content` })), nextCursor: null, hasMore: false }); return;
+    }
+    const remove = /^\/api\/video\/client\/assets\/([a-f0-9]{32})\/delete$/.exec(url.pathname);
+    if (remove && request.method === "POST") {
+      assert.equal(request.headers["x-csrf-token"], csrf); let body = ""; for await (const chunk of request) body += chunk;
+      assert.deepEqual(JSON.parse(body), {}); fixture.deletes.push(remove[1]);
+      if (remove[1] === videoId) json(409, { error: "video_in_use" });
+      else { assert.equal(remove[1], id(32)); fixture.ownedDeleted = true; json(200, { deleted: true }); }
+      return;
+    }
     const videoPath = "/api/video/client/conversations/" + conversationId;
     if (url.pathname === videoPath + "/messages" && request.method === "POST") {
       assert.equal(request.headers["x-csrf-token"], csrf); let body = ""; for await (const chunk of request) body += chunk;
@@ -56,7 +68,8 @@ async function startFixture() {
       json(duplicate ? 200 : 201, { message, duplicate }); return;
     }
     if (url.pathname === videoPath + "/gallery") { json(200, { items: [...fixture.messages].reverse().map(message => ({ messageId: message.id, sequence: message.sequence, sender: message.sender, createdAt: message.createdAt, video: message.video })), nextBefore: null, hasMore: false }); return; }
-    if (new RegExp("^" + videoPath + "/messages/[a-f0-9]{32}/content$").test(url.pathname)) {
+    if (new RegExp("^" + videoPath + "/messages/[a-f0-9]{32}/content$").test(url.pathname)
+      || /^\/api\/video\/client\/assets\/[a-f0-9]{32}\/content$/.test(url.pathname)) {
       const range = request.headers.range ?? null; fixture.ranges.push(range); let start = 0, end = mp4.length - 1;
       if (range) { const match = /^bytes=(\d+)-(\d*)$/.exec(range); if (!match) { response.writeHead(416); response.end(); return; } start = Number(match[1]); end = match[2] ? Math.min(Number(match[2]), end) : end; }
       if (start > end) { response.writeHead(416, { "Content-Range": "bytes */" + mp4.length }); response.end(); return; }
@@ -102,6 +115,15 @@ for (const width of [320, 375, 1280]) for (const language of ["fr", "en"]) test(
     assert.ok(fixture.ranges.some(range => typeof range === "string" && range.startsWith("bytes=")), "native media request uses Range");
     await page.click("#open-conversation-menu"); await tabUntil(page, "#open-video-gallery"); await page.key("\uE007");
     await waitUntil(() => page.execute("return document.getElementById('video-gallery').open && document.querySelectorAll('#video-grid video').length===2"), "private video gallery");
+    await page.click("#video-gallery-library");
+    await waitUntil(() => page.execute("return document.querySelectorAll('#video-grid article').length===2 && Array.from(document.querySelectorAll('#video-grid video')).every(v=>v.getAttribute('src')?.startsWith('/api/video/client/assets/'))"), "owned video library");
+    assert.equal(await page.execute("return document.getElementById('video-gallery-title').textContent"), language === "fr" ? "Mes vidéos" : "My videos");
+    await page.click("#video-grid article:first-child button"); await page.click("#accept-delete");
+    await waitUntil(() => page.execute("return document.getElementById('video-gallery-status').textContent.includes(arguments[0])", language === "fr" ? "diffusion est en cours" : "broadcast is in progress"), "live references or active broadcasts prevent deletion");
+    assert.equal(await page.execute("return document.querySelectorAll('#video-grid article').length"), 2);
+    await page.click("#video-grid article:last-child button"); await page.click("#accept-delete");
+    await waitUntil(() => page.execute("return document.querySelectorAll('#video-grid article').length===1"), "unreferenced original removed");
+    assert.deepEqual(fixture.deletes, [videoId, id(32)]); assert.equal(fixture.ownedDeleted, true);
     await page.key("\uE00C"); await waitUntil(() => page.execute("return !document.getElementById('video-gallery').open"), "Escape closes gallery");
     await page.execute("Object.defineProperty(document,'visibilityState',{configurable:true,get:()=> 'hidden'});document.dispatchEvent(new Event('visibilitychange'))");
     assert.deepEqual(await page.execute("return Array.from(document.querySelectorAll('video')).map(v=>({src:v.getAttribute('src'),paused:v.paused}))"), [{ src: null, paused: true }, { src: null, paused: true }]);

@@ -207,6 +207,63 @@ test("real MariaDB private CRM ownership, optimistic saves and inbox filters (sy
       await assert.rejects(crm.deleteLabel({ ...actor(a), labelId: tag.id, expectedVersion: "1" }), code("CRM_NOT_FOUND"));
     });
 
+    await t.test("label deletion waiting for a profile save uses the current SQL authorization time and preserves encrypted notes", async () => {
+      const fixture = await pair(), tag = await label(fixture, "Waiting deletion");
+      await save(fixture, { notesEncrypted: seal(fixture, "Initial notes", "1"), labelIds: [tag.id] });
+      let at = now, observed;
+      const lockRequested = new Promise(resolve => { observed = resolve; });
+      const observedChat = createChatStore({ getConnection: async () => {
+        const runtimeConnection = await pool.getConnection();
+        return { ...runtimeConnection, query: (...arguments_) => {
+          const result = runtimeConnection.query(...arguments_);
+          if (arguments_[0].startsWith("SELECT id, role, status, pseudonym")
+            && arguments_[1]?.[0]?.equals(fixture.admin.id)) observed();
+          return result;
+        } };
+      } }, { clock: () => at });
+      const observedCrm = createCrmStore({ pool, chatStore: observedChat });
+      let pending, timer;
+      await connection.beginTransaction();
+      try {
+        await connection.query("SELECT id FROM users WHERE id = ? FOR UPDATE", [fixture.admin.id]);
+        pending = observedCrm.deleteLabel({ ...actor(fixture), labelId: tag.id, expectedVersion: "1" });
+        void pending.catch(() => {});
+        await Promise.race([lockRequested, new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error("The synthetic CRM deletion did not request its owner lock.")), 5000);
+        })]);
+        clearTimeout(timer);
+        const encrypted = seal(fixture, "Concurrent notes", "2");
+        await connection.query(`UPDATE crm_profiles SET notes_encrypted = ?, notes_revision = 2, version = 2, updated_at = ?
+          WHERE admin_id = ? AND conversation_id = ?`, [encrypted, sqlDate(now + 1000), fixture.admin.id, fixture.conversationId]);
+        at = now + 2000;
+        await connection.commit();
+        assert.deepEqual(await pending, { deleted: true });
+        const profile = await observedCrm.getProfile(request(fixture));
+        assert.equal(profile.version, "3"); assert.equal(profile.notesRevision, "2");
+        assert.equal(profile.notesEncrypted, encrypted); assert.equal(open(fixture, profile), "Concurrent notes");
+        assert.equal(profile.updatedAt, at); assert.equal(profile.labels.length, 0);
+        assert.equal((await observedCrm.listLabels(actor(fixture))).labels.length, 0);
+      } finally {
+        clearTimeout(timer);
+        try { await connection.rollback(); } catch {}
+        if (pending) await pending.catch(() => {});
+      }
+    });
+
+    await t.test("a truly future profile date still blocks label deletion without changing notes or memberships", async () => {
+      const fixture = await pair(), tag = await label(fixture, "Future date guard");
+      const encrypted = seal(fixture, "Future protected notes", "1");
+      await save(fixture, { notesEncrypted: encrypted, labelIds: [tag.id] });
+      await connection.query("UPDATE crm_profiles SET updated_at = ? WHERE admin_id = ? AND conversation_id = ?",
+        [sqlDate(now + 1), fixture.admin.id, fixture.conversationId]);
+      await assert.rejects(crm.deleteLabel({ ...actor(fixture), labelId: tag.id, expectedVersion: "1" }), code("CRM_DATABASE_STATE"));
+      const profile = await crm.getProfile(request(fixture, { now: now + 1 }));
+      assert.equal(profile.version, "1"); assert.equal(profile.notesRevision, "1");
+      assert.equal(profile.notesEncrypted, encrypted); assert.equal(open(fixture, profile), "Future protected notes");
+      assert.equal(profile.labels.length, 1);
+      assert.equal((await crm.listLabels(actor(fixture))).labels[0].memberCount, 1);
+    });
+
     await t.test("profile or affected-profile overflow aborts the whole mutation", async () => {
       const fixture = await pair(), tag = await label(fixture, "Overflow guard"); await save(fixture, { labelIds: [tag.id] });
       await connection.query("UPDATE crm_profiles SET version = 4294967295 WHERE admin_id = ? AND conversation_id = ?", [fixture.admin.id, fixture.conversationId]);

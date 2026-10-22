@@ -48,7 +48,7 @@ async function fixture(t, overrides = {}) {
   // while these protocol tests keep decoding and metadata as explicit fakes.
   const unused = () => { throw new Error("No image or metadata operation belongs in admission"); };
   const admissionService = await createMediaService({
-    store: Object.fromEntries(["reserveAsset", "registerAsset", "releaseStorageObject", "listAssets", "getOwnedAsset", "getMessageAsset", "deleteAsset", "gallery"].map((name) => [name, unused])),
+    store: Object.fromEntries(["reserveAsset", "cancelAssetReservation", "registerAsset", "releaseStorageObject", "listAssets", "getOwnedAsset", "getMessageAsset", "deleteAsset", "gallery"].map((name) => [name, unused])),
     storage: { put: unused, get: unused, remove: unused, availableSpace: unused }, key: Buffer.alloc(32, 20), clock: () => now,
     chatService: { actor: (...args) => service.actor(...args), sendImage: unused },
     authStore: { async consumeRateLimit(bucket, options) { admissionRates.push({ bucket, options }); return { allowed: true }; } },

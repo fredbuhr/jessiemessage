@@ -237,3 +237,53 @@ test("message routes preserve method allowlists and malformed routes fall throug
     const response = await fetch(f.base + path); assert.equal(response.status, 404); await response.arrayBuffer();
   }
 });
+
+function libraryMethods(calls = []) {
+  return {
+    async listOwned(role, token, options) {
+      calls.push(["list", role, token, options]);
+      return { assets: [{ id: aid, bytes: video.length, mime: "video/mp4", createdAt: now, cleanupPending: false,
+        contentUrl: ownerPath(role), ownerId: "private-owner", digest: "private-digest" }], nextCursor: null, hasMore: false };
+    },
+    async remove(role, token, assetId) { calls.push(["remove", role, token, assetId]); return { deleted: true }; },
+  };
+}
+const deletePath = (role = "admin") => `/api/video/${role}/assets/${aid}/delete`;
+
+test("owned video listing and durable deletion authenticate both roles and expose only the public DTO", async t => {
+  const calls = [], f = await fixture(t, libraryMethods(calls));
+  for (const role of ["admin", "client"]) {
+    const listed = await fetch(f.base + `/api/video/${role}/assets?limit=1`, { headers: headers(role) });
+    assert.equal(listed.status, 200); const value = await listed.json(); noPrivateFields(value);
+    assert.equal(value.assets[0].contentUrl, ownerPath(role)); assert.equal(value.assets[0].cleanupPending, false);
+    assert.equal((await post(f, deletePath(role), {}, headers(role))).status, 200);
+  }
+  assert.equal(calls.filter(([kind]) => kind === "remove").length, 2);
+  assert.equal((await fetch(f.base + "/api/video/admin/assets")).status, 401);
+  assert.equal((await post(f, deletePath(), {}, headers("admin", { "X-CSRF-Token": "bad" }))).status, 403);
+  assert.equal((await post(f, deletePath(), {}, headers("admin", { Origin: "https://other.invalid" }))).status, 403);
+  for (const query of ["?afterId=bad", "?limit=0", "?limit=1&limit=2", "?other=1"]) assert.equal((await fetch(f.base + "/api/video/admin/assets" + query, { headers: headers() })).status, 400);
+  assert.equal((await post(f, deletePath(), { other: true })).status, 400);
+  assert.equal(calls.filter(([kind]) => kind === "remove").length, 2);
+});
+
+test("video deletion reports live references, retains uncertain failures and refuses read-only mutation", async t => {
+  const methods = libraryMethods(), used = await fixture(t, { ...methods, async remove() { throw failure("VIDEO_IN_USE"); } });
+  const conflict = await post(used, deletePath(), {}); assert.equal(conflict.status, 409); assert.deepEqual(await conflict.json(), { error: "video_in_use" });
+  const uncertain = await fixture(t, { ...methods, async remove() { throw failure("VIDEO_UNAVAILABLE"); } });
+  assert.equal((await post(uncertain, deletePath(), {})).status, 503);
+  const readOnly = await fixture(t, methods, { creationEnabled: false });
+  assert.equal((await post(readOnly, deletePath(), {})).status, 403);
+  assert.equal((await fetch(readOnly.base + "/api/video/admin/assets", { headers: headers() })).status, 200);
+});
+
+test("video library routing requires the complete optional service and validates cleanup pagination", async t => {
+  const methods = libraryMethods(), f = await fixture(t, methods);
+  for (const name of ["listOwned", "remove"]) assert.throws(() => createVideoHandler({ ...f.service, [name]: undefined }, { origin }));
+  const cleanup = await fixture(t, { ...methods, async listOwned() { return { assets: [{ id: aid, bytes: video.length,
+    mime: "video/mp4", createdAt: now, cleanupPending: true, contentUrl: null }], nextCursor: null, hasMore: false }; } });
+  const value = await (await fetch(cleanup.base + "/api/video/admin/assets", { headers: headers() })).json();
+  assert.equal(value.assets[0].cleanupPending, true); assert.equal(value.assets[0].contentUrl, null);
+  const invalid = await fixture(t, { ...methods, async listOwned() { return { assets: [], nextCursor: aid, hasMore: true }; } });
+  assert.equal((await fetch(invalid.base + "/api/video/admin/assets", { headers: headers() })).status, 503);
+});

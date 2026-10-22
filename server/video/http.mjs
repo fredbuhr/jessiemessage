@@ -17,7 +17,9 @@ const date = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 86
 
 function routeFor(pathname) {
   let match = /^\/api\/video\/(admin|client)\/assets(?:\/([a-f0-9]{32})\/content)?$/.exec(pathname);
-  if (match) return { role: match[1], assetId: match[2], kind: match[2] ? "owned" : "upload", methods: match[2] ? ["GET", "HEAD"] : ["POST"] };
+  if (match) return { role: match[1], assetId: match[2], kind: match[2] ? "owned" : "assets", methods: match[2] ? ["GET", "HEAD"] : ["GET", "POST"] };
+  match = /^\/api\/video\/(admin|client)\/assets\/([a-f0-9]{32})\/delete$/.exec(pathname);
+  if (match) return { role: match[1], assetId: match[2], kind: "delete", methods: ["POST"] };
   match = /^\/api\/video\/(admin|client)\/conversations\/([a-f0-9]{32})\/(messages|gallery)$/.exec(pathname);
   if (match) return { role: match[1], conversationId: match[2], kind: match[3] === "messages" ? "send" : "gallery", methods: match[3] === "messages" ? ["POST"] : ["GET"] };
   match = /^\/api\/video\/(admin|client)\/conversations\/([a-f0-9]{32})\/messages\/([a-f0-9]{32})\/content$/.exec(pathname);
@@ -34,6 +36,16 @@ function query(url, gallery) {
   if (values.before !== undefined && !sequence(values.before)
     || values.limit !== undefined && !/^(?:[1-9][0-9]?|100)$/.test(values.limit)) throw invalid();
   return { before: values.before ?? null, limit: values.limit === undefined ? 50 : Number(values.limit) };
+}
+function libraryQuery(url) {
+  const values = Object.create(null);
+  for (const [name, value] of url.searchParams) {
+    if (!["afterId", "limit"].includes(name) || Object.hasOwn(values, name)) throw invalid();
+    values[name] = value;
+  }
+  if (values.afterId !== undefined && !identifier(values.afterId)
+    || values.limit !== undefined && !/^(?:[1-9][0-9]?|100)$/.test(values.limit)) throw invalid();
+  return { afterId: values.afterId ?? null, limit: values.limit === undefined ? 20 : Number(values.limit) };
 }
 
 function safeActor(actor, role) {
@@ -87,6 +99,7 @@ function mappedError(error) {
   if (["VIDEO_NOT_FOUND", "MEDIA_NOT_FOUND", "CHAT_NOT_FOUND"].includes(error?.code)) return { status: 404, code: "not_found" };
   if (["VIDEO_INPUT", "MEDIA_INPUT", "CHAT_INPUT"].includes(error?.code)) return { status: 400, code: "invalid_request" };
   if (error?.code === "CHAT_CONFLICT") return { status: 409, code: "message_conflict" };
+  if (error?.code === "VIDEO_IN_USE") return { status: 409, code: "video_in_use" };
   if (error?.code === "VIDEO_FORMAT") return { status: 415, code: "video_format" };
   if (["VIDEO_STORAGE_LIMIT", "MEDIA_STORAGE_LIMIT"].includes(error?.code)) return { status: 507, code: "storage_limit" };
   if (["VIDEO_BUSY", "VIDEO_RATE_LIMIT", "CHAT_RATE_LIMIT", "AUTH_RATE_LIMIT", "AUTH_BUSY"].includes(error?.code)) return { status: 429, code: "try_again_later", retry: 5 };
@@ -206,17 +219,20 @@ export function createVideoHandler(service, { origin, uploadTimeoutMs = 300000, 
   for (const name of ["actor", "admitUpload", "releaseUpload", "upload", "open"]) if (typeof service?.[name] !== "function") throw new TypeError("A private video service is required.");
   const additions = ["send", "openMessage", "gallery"], messaging = additions.every((name) => typeof service[name] === "function");
   if (!messaging && additions.some((name) => service[name] !== undefined)) throw new TypeError("A complete private video message service is required.");
+  const managed = ["listOwned", "remove"].every(name => typeof service[name] === "function");
+  if (!managed && ["listOwned", "remove"].some(name => service[name] !== undefined)) throw new TypeError("A complete private video library service is required.");
   milliseconds(uploadTimeoutMs, 300000); milliseconds(readTimeoutMs, 30000); milliseconds(transferTimeoutMs, 300000);
   return async (request, response) => {
     let url;
     try { url = new URL(request.url ?? "/", "http://localhost"); } catch { return false; }
     const route = routeFor(url.pathname);
-    if (!route || !messaging && ["send", "gallery", "delivery"].includes(route.kind)) return false;
-    const { role, assetId, methods } = route, method = request.method ?? "GET", upload = route.kind === "upload", mutation = method === "POST";
+    if (!route || !messaging && ["send", "gallery", "delivery"].includes(route.kind) || !managed && route.kind === "delete") return false;
+    const { role, assetId } = route, methods = !managed && route.kind === "assets" ? ["POST"] : route.methods;
+    const method = request.method ?? "GET", upload = route.kind === "assets" && method === "POST", library = route.kind === "assets" && method === "GET", mutation = method === "POST";
     if (!methods.includes(method)) { reply(response, method, 405, { error: "method_not_allowed" }, { Allow: methods.join(", ") }); return true; }
     let release, operation, ticket, opened;
     try {
-      const options = query(url, route.kind === "gallery");
+      const options = library ? libraryQuery(url) : query(url, route.kind === "gallery");
       const bytes = upload ? uploadHeaders(request, origin) : null;
       if (mutation && !upload) checkMutation(request, origin, url.pathname, false);
       const token = sessionToken(request, COOKIES[role]);
@@ -225,7 +241,27 @@ export function createVideoHandler(service, { origin, uploadTimeoutMs = 300000, 
       safeActor(actor, role);
       if (mutation && !sameText(request.headers["x-csrf-token"], actor.csrf)) throw httpError(403, "csrf_failed");
       if (mutation && !creationEnabled) throw httpError(403, "feature_read_only");
-      if (route.kind === "send") {
+      if (library) {
+        const result = await service.listOwned(role, token, options);
+        if (!result || !Array.isArray(result.assets) || result.assets.length > options.limit || typeof result.hasMore !== "boolean"
+          || !(result.nextCursor === null || identifier(result.nextCursor))) throw unavailable();
+        let previous = options.afterId;
+        const assets = result.assets.map(value => {
+          if (!identifier(value?.id) || previous !== null && value.id <= previous || !Number.isSafeInteger(value.bytes)
+            || value.bytes < 1 || value.bytes > MAX_BYTES || value.mime !== "video/mp4" || !date(value.createdAt)
+            || typeof value.cleanupPending !== "boolean" || value.contentUrl !== (value.cleanupPending ? null : `/api/video/${role}/assets/${value.id}/content`)) throw unavailable();
+          previous = value.id;
+          return { id: value.id, bytes: value.bytes, mime: value.mime, createdAt: value.createdAt,
+            cleanupPending: value.cleanupPending, contentUrl: value.contentUrl };
+        });
+        if (result.hasMore ? !assets.length || result.nextCursor !== assets.at(-1).id : result.nextCursor !== null) throw unavailable();
+        reply(response, method, 200, { assets, nextCursor: result.nextCursor, hasMore: result.hasMore });
+      } else if (route.kind === "delete") {
+        if (Object.keys(await readJson(request)).length) throw invalid();
+        const result = await service.remove(role, token, assetId);
+        if (result?.deleted !== true) throw unavailable();
+        reply(response, method, 200, { deleted: true });
+      } else if (route.kind === "send") {
         const body = await readJson(request, { maxBytes: 8192 });
         if (Object.keys(body).length !== 3 || !["clientMessageId", "videoId", "caption"].every((name) => Object.hasOwn(body, name))
           || !identifier(body.clientMessageId) || !identifier(body.videoId) || typeof body.caption !== "string" || body.caption.length > 1000) throw invalid();
