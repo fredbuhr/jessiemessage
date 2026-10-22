@@ -1,0 +1,170 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-peer182-synthetic-checks",
+  "recordedAtUTC": "2026-10-22T19:19:24.153717+00:00",
+  "source": {
+    "path": "ops/observe-peer182.py",
+    "bytes": 3930,
+    "lines": 98,
+    "sha256": "492703c7e2a36cd105ac246a66c54de12dc632ed014ba16e51c97842b36e5043"
+  },
+  "python": "3.12.14",
+  "hostByteOrder": "little",
+  "checks": [
+    "native_word_endian_127.0.0.1",
+    "native_word_endian_10.2.3.4",
+    "native_word_endian_8.8.8.8",
+    "native_word_endian_::1",
+    "native_word_endian_2001:4860:4860::8888",
+    "mapped_ipv6_normalized",
+    "malformed_endpoint_width_hex_port_rejected",
+    "category_127.0.0.1",
+    "category_::1",
+    "category_10.2.3.4",
+    "category_172.16.4.5",
+    "category_192.168.1.2",
+    "category_fd00::1",
+    "category_8.8.8.8",
+    "category_2001:4860:4860::8888",
+    "category_169.254.1.2",
+    "category_192.0.2.1",
+    "uid_port_established_filters",
+    "ipv6_table_parse",
+    "malformed_table_refused",
+    "oversize_refused_not_truncated",
+    "exact_one_mib_read_bound",
+    "bounded_fake_time_22",
+    "full_observation_flags",
+    "full_observation_counts",
+    "bounded_fake_time_25",
+    "partial_read_never_complete",
+    "bounded_fake_time_27",
+    "no_connections_not_success",
+    "bounded_fake_time_29",
+    "unavailable_no_success_claim",
+    "output_contains_no_addresses_uid_remote_port_inode_or_exception_details",
+    "runtime_reports_no_writes_or_generated_network",
+    "source_line_count_max100"
+  ],
+  "passed": 34,
+  "failed": 0,
+  "fixtures": "Synthetic proc tables, bounded fake file handles, fake monotonic clock and filesystem reader; no actual host/network observation.",
+  "actualObservationExecuted": false,
+  "remoteAccess": false,
+  "filesWrittenDuringObservation": false,
+  "sampleResults": {
+    "full": {
+      "type": "A11_private_tcp_observation",
+      "status": "observed",
+      "scope": "local_port_3000_current_uid_established_only",
+      "samples": 40,
+      "completeTablesRead": true,
+      "partialObservation": false,
+      "successfulTableReads": {
+        "tcp": 40,
+        "tcp6": 40
+      },
+      "tableReadFailures": {
+        "tcp": 0,
+        "tcp6": 0
+      },
+      "distinctPeersByCategory": {
+        "loopback": 0,
+        "private": 1,
+        "public": 0,
+        "other": 0
+      },
+      "distinctConnectionsObserved": 1,
+      "peakConnectionsInOneSample": 1,
+      "rawAddressesPrinted": false,
+      "filesWritten": false,
+      "networkRequestsGenerated": false
+    },
+    "partial": {
+      "type": "A11_private_tcp_observation",
+      "status": "observed",
+      "scope": "local_port_3000_current_uid_established_only",
+      "samples": 40,
+      "completeTablesRead": false,
+      "partialObservation": true,
+      "successfulTableReads": {
+        "tcp": 40,
+        "tcp6": 0
+      },
+      "tableReadFailures": {
+        "tcp": 0,
+        "tcp6": 40
+      },
+      "distinctPeersByCategory": {
+        "loopback": 0,
+        "private": 1,
+        "public": 0,
+        "other": 0
+      },
+      "distinctConnectionsObserved": 1,
+      "peakConnectionsInOneSample": 1,
+      "rawAddressesPrinted": false,
+      "filesWritten": false,
+      "networkRequestsGenerated": false
+    },
+    "empty": {
+      "type": "A11_private_tcp_observation",
+      "status": "no_connection_observed",
+      "scope": "local_port_3000_current_uid_established_only",
+      "samples": 40,
+      "completeTablesRead": true,
+      "partialObservation": false,
+      "successfulTableReads": {
+        "tcp": 40,
+        "tcp6": 40
+      },
+      "tableReadFailures": {
+        "tcp": 0,
+        "tcp6": 0
+      },
+      "distinctPeersByCategory": {
+        "loopback": 0,
+        "private": 0,
+        "public": 0,
+        "other": 0
+      },
+      "distinctConnectionsObserved": 0,
+      "peakConnectionsInOneSample": 0,
+      "rawAddressesPrinted": false,
+      "filesWritten": false,
+      "networkRequestsGenerated": false
+    },
+    "unavailable": {
+      "type": "A11_private_tcp_observation",
+      "status": "unavailable",
+      "scope": "local_port_3000_current_uid_established_only",
+      "samples": 0,
+      "completeTablesRead": false,
+      "partialObservation": true,
+      "successfulTableReads": {
+        "tcp": 0,
+        "tcp6": 0
+      },
+      "tableReadFailures": {
+        "tcp": 1,
+        "tcp6": 1
+      },
+      "distinctPeersByCategory": {
+        "loopback": 0,
+        "private": 0,
+        "public": 0,
+        "other": 0
+      },
+      "distinctConnectionsObserved": 0,
+      "peakConnectionsInOneSample": 0,
+      "rawAddressesPrinted": false,
+      "filesWritten": false,
+      "networkRequestsGenerated": false
+    }
+  },
+  "limits": [
+    "Native current host endian exercised; native architecture on the remote host not observed.",
+    "Port/UID/netns scope does not identify the serving process alone.",
+    "No XFF contract or client/IP attribution claim."
+  ]
+}
