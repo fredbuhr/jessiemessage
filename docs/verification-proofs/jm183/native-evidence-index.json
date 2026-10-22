@@ -140,6 +140,8 @@
   "rawReportsUnmodified": true,
   "rawLogsUnmodified": true,
   "hostedPreparationUserReported": true,
-  "hostedActivationAcquired": false,
-  "hostedCheckpointChanged": false
+  "hostedActivationAcquired": true,
+  "hostedCheckpointChanged": false,
+  "hostedIdentityUserReported": true,
+  "hostedIdentityEvidence": "../jm183-hosted-identity.json"
 }

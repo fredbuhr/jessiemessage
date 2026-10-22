@@ -1,6 +1,6 @@
 {
   "type": "jm183-metadata-operator-progress",
-  "status": "native_qualified_hosted_startup_pending",
+  "status": "native_qualified_startup_ui_reported_recording_pending",
   "branch": "ops/record-v1.8.3",
   "commit": "b672859af00ffab9a59504a7c82406ac1e6db3fa",
   "tree": "172cd9e517b96bd473b3be3d055630454c921c0b",
@@ -27,8 +27,24 @@
   "hostedStartupVerified": false,
   "executedOnHost": false,
   "checkpointChanged": false,
-  "nextAction": "User activates prepared service239143 Run/Build once and returns actual startup identity; only then issue the immutable writer command.",
+  "nextAction": "Execute immutable qualified writer183 once; real startup log and current HTTP must be verified by the writer before metadata-only update. Return actual receipt.",
   "nativeRun": 39867149619,
   "nativeJob": 120132092449,
-  "nativeTests": 26
+  "nativeTests": 26,
+  "hostedStartupUiReported": true,
+  "hostedStartupUiEvidence": "../jm183-hosted-identity.json",
+  "deliveryReverification": {
+    "recordedAtUTC": "2026-10-22T23:01:28.127487+00:00",
+    "immutablePublishedFileVerified": true,
+    "gitBlob": "243bf99803b4d83d6f1c6def582f47b6351b0524",
+    "sha256": "1302195773a6568742db82aa0588a3741af299bea706f283a2a0a551f512fa3c",
+    "remoteBytesEqualLocallyQualifiedWriter": true,
+    "nativeRun": 39867149619,
+    "nativeStatus": "completed/success",
+    "nativeAttempt": 1,
+    "nativeJobsPassed": 1,
+    "latestReleaseId": 421266798,
+    "latestSource": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "noTestsRerun": true
+  }
 }

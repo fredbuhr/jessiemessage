@@ -2,7 +2,7 @@
 
 Retrouve ton espace sur [jessiemessage.com](https://jessiemessage.com/) et l’[aide du site](https://jessiemessage.com/help).
 
-**Ce guide décrit les parcours préparés pour la 1.8.3, dont le code est fusionné. La production confirmée reste en 1.8.2**, avec ses métadonnées alignées selon le [reçu utilisateur](verification-proofs/jm182-hosted-metadata.json). Une publication de la 1.8.3 ne vaut pas activation sur l’hébergement : consulte [REPRISE](REPRISE.md) pour l’état courant avant d’attendre les nouveaux écrans décrits ici. Les retours antérieurs confirment le fonctionnement de la [liste commune](verification-proofs/jm181-hosted-interface.json) et du [parcours vidéo](verification-proofs/jm180-hosted-interface.json), sans nouvelle recette hébergée présumée. La sauvegarde manuelle reste non vérifiée et son test est reporté à ta demande.
+**Ce guide décrit la 1.8.3 active selon ton relevé admin USER_REPORTED** : commit `48fd42b808b2bc4d95d3f3ba21244c032d0a938f`, Node `v24.22.1`, texte de démarrage exact **`23/10/2026 00:56:57`**. La [preuve d’identité](verification-proofs/jm183-hosted-identity.json) conserve ces champs sans conversion en epoch ni nouveau contrôle SQL déduit. La release et latest1.8.3 sont acquis ; le checkpoint privé reste en1.8.2 et son alignement des métadonnées attend le writer qualifié. Celui-ci lira le vrai journal et les HTTP publics avant son écriture, sans redémarrage. Consulte [REPRISE](REPRISE.md) pour cette seule prochaine étape. Les retours antérieurs sur la [liste commune](verification-proofs/jm181-hosted-interface.json) et le [parcours vidéo](verification-proofs/jm180-hosted-interface.json) restent distincts d’une nouvelle recette complète. Téléphone, clavier et notifications système réels restent à confirmer ; la sauvegarde manuelle reste non vérifiée et son test reporté à ta demande.
 
 ## Se connecter et gérer les accès
 
@@ -130,7 +130,7 @@ Une sauvegarde téléchargée ne certifie pas encore son déchiffrement ou une r
 
 ### Test de sauvegarde reporté
 
-La livraison 1.8.2 est alignée ; le [retour interface 1.8.1](verification-proofs/jm181-hosted-interface.json) conserve ta confirmation de fonctionnement de la liste commune sans détailler tous les sous-cas. La sauvegarde reste non vérifiée : tu as demandé de la tester un autre jour après la page Infomaniak affichée avant l’écran de sauvegarde. Aucun nouvel essai ni diagnostic n’est demandé aujourd’hui.
+L’alignement de la livraison1.8.2 reste un jalon historique acquis ; les métadonnées1.8.3 sont encore en attente. Le [retour interface1.8.1](verification-proofs/jm181-hosted-interface.json) conserve ta confirmation de fonctionnement de la liste commune sans détailler tous les sous-cas. La sauvegarde reste non vérifiée : tu as demandé de la tester un autre jour après la page Infomaniak affichée avant l’écran de sauvegarde. Aucun nouvel essai ni diagnostic n’est demandé aujourd’hui.
 
 Lorsque tu décideras de reprendre ce test, il s’agira de créer une sauvegarde, d’attendre sa fin puis de télécharger le fichier chiffré. Sa préparation peut interrompre brièvement la messagerie : conserver alors tes brouillons avant de commencer. Aucune manipulation du PC, fermeture de compte ou restauration n’est nécessaire à ce contrôle. Les parcours physiques et les performances de l’hébergement gardent leurs limites de qualification.
 

@@ -1,0 +1,51 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_183_hosted_identity",
+  "status": "application183_identity_user_reported_metadata_pending",
+  "date": "2026-10-23",
+  "provenance": {
+    "classification": "USER_REPORTED",
+    "surface": "admin_readiness",
+    "description": "User supplied exactly four startup identity fields from the live administration page after Manager activation. No direct agent PID, Manager or startup-log inspection.",
+    "startupDisplayIsUiTextOnly": true,
+    "observationTimestampProvided": false
+  },
+  "displayedFields": {
+    "Version de l’application": "1.8.3",
+    "Commit au démarrage": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "Version Node.js": "v24.22.1",
+    "Relevé au démarrage": "23/10/2026 00:56:57"
+  },
+  "sourceTreeFromQualifiedCommit": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+  "schemaEvidence": "jm180-hosted-schema36.json",
+  "schemaIsNotPartOfDisplayedIdentity": true,
+  "hostedPreparationEvidence": "jm183-hosted-preparation.json",
+  "qualificationEvidence": "jm183/main-native.json",
+  "publicationEvidence": "jm183/publication-native.json",
+  "currentState": {
+    "applicationVersion": "1.8.3",
+    "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "nodeVersion": "v24.22.1",
+    "schemaMigrations": 36,
+    "metadataCheckpointVersion": "1.8.2",
+    "metadataCheckpointSchema": 36,
+    "metadataCheckpointSha256": "148b1e0f1ef0e585aa0e0be99ba4e65517b30d2827e3dc26768684bfc5afa280",
+    "metadataAlignmentPending": true,
+    "latestLastVerified": "v1.8.3",
+    "releaseIdLastVerified": 421266798,
+    "rollback172Prechecked": true,
+    "rollback172Started": false,
+    "hostedFunctionalChecksComplete": false
+  },
+  "publicAvailability": {
+    "currentWriterHttpCheckPending": true,
+    "nextCheck": "The qualified metadata writer checks current startup log and public anonymous HTTP from the host before any metadata write."
+  },
+  "limits": [
+    "Startup display preserved verbatim: no epoch, milliseconds or timezone conversion invented.",
+    "SQL36 and prior prechecks derive from separate evidence, not these four identity fields.",
+    "No new direct agent PID, process-binary, Manager, private startup-log or logged-in browser observation.",
+    "No checkpoint alignment before actual successful writer receipt.",
+    "Physical keyboard and notifications, deferred backup and other untried cases remain unverified."
+  ]
+}
