@@ -23,6 +23,8 @@ Le déploiement sera réalisé depuis le terminal personnel de l’utilisateur, 
 
 ## Activation dans le terminal personnel
 
+**Préparation et CHECK acquis** selon les [deux résultats utilisateur](verification-proofs/jm181-hosted-preparation.json) du 22 octobre : `local_closure_precheck` v2 `passed`, `pendingClosures:false`, `started:false`. Le bloc de préparation ci-dessous est désormais une référence historique à ne pas rejouer. Passer aux étapes Manager après ces résultats ; activation et métadonnées 1.8.1 restent non acquises.
+
 État initial : service et métadonnées 1.8.0 actifs. Ouvrir le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal) et coller le bloc suivant une seule fois. Il prépare la référence publiée puis exécute seulement CHECK181, pendant que 1.8.0 continue de fonctionner. Le helper refuse de remplacer une préparation existante ; en cas d’échec ou de résultat incomplet, conserver les sorties sans relancer ni nettoyer.
 
 ```bash

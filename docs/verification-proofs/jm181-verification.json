@@ -1207,9 +1207,9 @@
     "deploymentPerformed": false
   },
   "operatorHosted": {
-    "status": "pending",
-    "release181PreparationAcquired": false,
-    "release181PrecheckAcquired": false,
+    "status": "staged_and_prechecked_not_started",
+    "release181PreparationAcquired": true,
+    "release181PrecheckAcquired": true,
     "release181ActivationAcquired": false,
     "release181MetadataAcquired": false,
     "migrationRequired": false,
@@ -1230,7 +1230,9 @@
       "precheckCommand": "bash /srv/customer/jessiemessage-private/check-primary-release181-1ae4c751.sh",
       "precheckCanRunBeforeStopping180": true,
       "automaticRetryAfterPartialStaging": false
-    }
+    },
+    "hostedPreparationProof": "jm181-hosted-preparation.json",
+    "evidenceKind": "USER_REPORTED"
   },
   "production": {
     "version": "1.8.0",
