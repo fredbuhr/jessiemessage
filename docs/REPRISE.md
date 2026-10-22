@@ -31,7 +31,7 @@ La [publication 39833775425](https://github.com/fredbuhr/jessiemessage/actions/r
 
 Le lot 2 qualifie brouillons texte dans le même onglet après rechargement, demandes incertaines conservant leur identité exacte sans envoi automatique, reprise des diffusions après revalidation du propriétaire et protection des dates/options d’annonce. Aucun fichier, identifiant média ou secret d’authentification réutilisable n’est persisté. Un navigateur refusant le stockage ne garantit pas la reprise après rechargement. Chrome **223/223**, HTTPS **4/4**, MariaDB **575/575 chacune**, sans omission ; général **3 869 tests / 3 821 réussis / 48 omissions**. Les omissions générales restent distinctes des essais natifs. Les premiers échecs et leurs corrections sont conservés dans les preuves.
 
-**Limites encore ouvertes :** les faits juridiques **D01–D07** de l’aide A10 restent à établir ; l’aide harmonisée n’est pas une notice complète ni une certification juridique. Le dossier privé reste `draft_only`. **A11** reste une observation privée du pair réseau à effectuer ; `publicReady:true` ne qualifie pas la topologie et n’autorise aucune confiance proxy supposée. Les appareils physiques et parcours non essayés restent non vérifiés. Le test de sauvegarde hébergée reste reporté : aucun diagnostic, nouvel essai, rappel ou surveillance automatique n’est ouvert.
+**Limites encore ouvertes :** les faits juridiques **D01–D07** de l’aide A10 restent à établir ; l’aide harmonisée n’est pas une notice complète ni une certification juridique. Le dossier privé reste `draft_only`. **A11** a fait l’objet d’un relevé complet mais vide, donc non concluant ; le risque conditionnel de pair partagé reste non levé. `publicReady:true` ne qualifie pas la topologie et n’autorise aucune confiance proxy supposée. Les appareils physiques et parcours non essayés restent non vérifiés. Le test de sauvegarde hébergée reste reporté : aucun diagnostic, nouvel essai, rappel ou surveillance automatique n’est ouvert.
 
 **Reprise de « Bilan de production » :** le commit du lot 3 était poussé le **22 octobre à 20:17:49, heure de Paris** ; la CI s’est achevée à **20:24:57**. Sa [preuve préalable](verification-proofs/jm182-lot3-verification.json) et les guides indiquaient encore les résultats en attente. La [collecte des sept journaux complets existants](verification-proofs/jm182-lot3-ci.json) termine ce jalon sans réimplémentation ni nouvelle exécution : général **3 869 / 3 821 réussis / 48 omissions**, Chrome **223/223**, HTTPS **4/4**, MariaDB **576/576 chacune**, tests de sonde **24/24**, Windows natif réussi sur données synthétiques. L’arbre du merge de test est identique à la source de branche. Les 33 empreintes d’implémentation, 6 ressources préservées, trois versions package/lock et 36 fichiers SQL ont été recroisés. La cause interne du blocage ChatGPT reste **non établie**, faute de télémétrie correspondante.
 
@@ -43,27 +43,15 @@ Le [diagnostic SQL A12](capacity-182.md) est acquis sur les deux versions native
 
 Le writer182 est **qualifié et exécuté avec succès selon le reçu utilisateur** : [qualification native39835184817](verification-proofs/jm182-metadata-operator-verification.json), **19/19 tests**, tentative1. Source opérateur `9a52b4840b65d2c825020ffa81d4bdc2d29fc268`, `ops/record-release182.py`, SHA-256 `48eb96eb3a75ec07a6e7baff861cfea24bc6d561a889723801f044734a38cbf1`. Ses gardes ont conservé le checkpoint181 antérieur `53bd5312…` dans les preuves/historiques, les anciens blocs et le repli, après contrôles du démarrage182, du HTTP courant et de la publication. Ce résultat reste distinct d’une inspection directe du PID/socket, d’A11 ou des essais fonctionnels non réalisés.
 
-## Prochaine observation — A11
+## Observation A11 — exécutée, résultat non concluant
 
-Le [relevé ponctuel A11](https://github.com/fredbuhr/jessiemessage/blob/ea94eb697a12ef5056a86430ca6f327c6c6d9eea/ops/observe-peer182.py) est publié sur la branche opérateur `ops/audit182-peer`, source `ea94eb697a12ef5056a86430ca6f327c6c6d9eea`, SHA-256 `492703c7e2a36cd105ac246a66c54de12dc632ed014ba16e51c97842b36e5043`. Ses [34 vérifications synthétiques](https://github.com/fredbuhr/jessiemessage/blob/ea94eb697a12ef5056a86430ca6f327c6c6d9eea/docs/verification-proofs/jm182-peer-observer-synthetic.json) sont réussies et le script a été relu indépendamment ; aucune observation hébergée n’est encore acquise.
+Le [relevé ponctuel A11](https://github.com/fredbuhr/jessiemessage/blob/ea94eb697a12ef5056a86430ca6f327c6c6d9eea/ops/observe-peer182.py), source `ea94eb697a12ef5056a86430ca6f327c6c6d9eea`, SHA-256 `492703c7e2a36cd105ac246a66c54de12dc632ed014ba16e51c97842b36e5043`, a été exécuté par l’utilisateur. Ses [34 vérifications synthétiques](https://github.com/fredbuhr/jessiemessage/blob/ea94eb697a12ef5056a86430ca6f327c6c6d9eea/docs/verification-proofs/jm182-peer-observer-synthetic.json) et sa revue indépendante restent distinctes de ce [résultat hébergé USER_REPORTED](verification-proofs/jm182-hosted-peer-observation.json).
 
-Ouvrir Jessie dans son onglet habituel. Dans le terminal SSH personnel, exécuter une fois la commande ci-dessous ; au signal `A11_EN_COURS`, recharger Jessie, puis fournir uniquement le JSON. Le script observe les connexions établies du port local3000 appartenant à l’utilisateur courant pendant une fenêtre d’environ huit secondes, avec lecture bornée à1Mio par table. Il ne montre que des agrégats, sans adresse réseau, ne crée aucun fichier et n’émet aucune requête réseau ; le téléchargement initial du script reste distinct de l’observation.
+**Reçu acquis :** `no_connection_observed`, 40 échantillons, 40 lectures de chacune des tables `tcp` et `tcp6`, aucune erreur et aucune lecture partielle ; zéro pair et zéro connexion correspondant aux filtres `ESTABLISHED`, port local3000 et UID courant. Aucune adresse affichée, aucun fichier écrit ni requête générée par l’observateur. Cette lecture complète des tables ne qualifie pas une observation exhaustive du service.
 
-```bash
-env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_A11'
-import hashlib, urllib.request
+**Conclusion : tentative terminée, A11 non résolu.** Le relevé vide ne prouve ni l’adresse du pair de Node, ni l’absence de trafic, ni un proxy partagé ou un accès direct. Des connexions courtes peuvent échapper aux échantillons ; le PID, l’UID et l’identité des espaces réseau SSH/application n’ont pas été établis. Le résultat ne contredit pas la disponibilité vérifiée séparément par le writer.
 
-url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/ea94eb697a12ef5056a86430ca6f327c6c6d9eea/ops/observe-peer182.py"
-code = urllib.request.urlopen(url, timeout=30).read()
-expected = "492703c7e2a36cd105ac246a66c54de12dc632ed014ba16e51c97842b36e5043"
-if hashlib.sha256(code).hexdigest() != expected:
-    raise SystemExit("Empreinte incorrecte : arrêt.")
-print("A11_EN_COURS : actualise Jessie maintenant.", flush=True)
-exec(compile(code, "<observation-A11>", "exec"), {"__name__": "__main__"})
-PY_A11
-```
-
-Un relevé partiel, indisponible ou sans connexion reste non concluant ; ne pas le relancer automatiquement. Même un relevé complet ne prouve ni le PID du service, ni l’identité des espaces réseau SSH/application, ni le visiteur réel, ni un contrat de confiance XFF. Un pair privé ou local signale seulement un intermédiaire possible dans le périmètre observé. Aucun changement de confiance proxy ou de quota n’est déduit automatiquement. Aucune suite applicative verte, action de déploiement ou sauvegarde n’est rouverte.
+La revue du code confirme l’usage de `socket.remoteAddress`, le refus du parent gateway en profil vidéo et le maintien des budgets réseau aux côtés des budgets globaux/individuels. **Aucun correctif, relèvement de quota ou ajout de confiance XFF n’est justifié par ce reçu. Ne pas relancer le relevé ni étendre automatiquement les sondes.** A11 sera réexaminé seulement si un élément nouveau établit le périmètre du processus servant l’application ou le contrat de forwarding applicable. Aucune opération de déploiement ou de sauvegarde n’est rouverte ; les informations A10 manquantes et les cas réellement non essayés restent les seuls contrôles complémentaires à préparer.
 
 ## Accès et commandes de l’application active
 

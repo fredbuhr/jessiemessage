@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "type": "jessiemessage182-delivery-state",
-  "recordedAtUTC": "2026-10-22T19:22:58.165874+00:00",
+  "recordedAtUTC": "2026-10-22T19:26:55.756245+00:00",
   "status": "deployed_aligned_user_reported_residual_checks_explicit",
   "version": "1.8.2",
   "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
@@ -72,12 +72,12 @@
     "started": false
   },
   "remaining": [
-    "A11: finite private peer observation remains unperformed; public readiness does not establish proxy topology.",
+    "A11: bounded observation executed with complete table reads but zero matching sockets; result is inconclusive and the conditional shared-peer risk remains unverified. No repeat or proxy/quota change is queued.",
     "A10: unestablished operator facts D01-D07 remain open; no full legal-compliance claim.",
     "Available physical-device/hosted functional cases not actually tried remain unverified.",
     "Hosted manual backup UI creation/completion/download remains deferred by user; no resumption, reminder or new probe."
   ],
-  "nextAction": "User executes the pinned read-only A11 observer once in their own Infomaniak terminal, reloads Jessie during the eight-second observation and supplies only its aggregate JSON. No automatic retry, proxy/quota change, deployment action or backup action.",
+  "nextAction": "No further deployment or A11 operator command is queued. Complete only genuinely missing A10 notice facts and group available-device cases not already confirmed; preserve the deferred backup decision and do not repeat successful qualifications.",
   "operationsNotRepeated": [
     "PR merge",
     "existing successful branch/main CI",
@@ -85,7 +85,8 @@
     "old hosted preparations or migration",
     "hosted182 preparation and CHECK",
     "Manager activation and startup",
-    "metadata writer already recorded"
+    "metadata writer already recorded",
+    "completed bounded A11 observation"
   ],
   "cloudBrowserUsed": false,
   "deploymentPerformed": true,
@@ -101,7 +102,7 @@
     "syntheticProof": "https://github.com/fredbuhr/jessiemessage/blob/ea94eb697a12ef5056a86430ca6f327c6c6d9eea/docs/verification-proofs/jm182-peer-observer-synthetic.json",
     "syntheticChecksPassed": 34,
     "independentReviewPassed": true,
-    "hostedObservationAcquired": false,
+    "hostedObservationAcquired": true,
     "readOnly": true,
     "durationBudgetSeconds": 8,
     "tableByteLimit": 1048576,
@@ -110,6 +111,12 @@
     "filesWrittenByObserver": false,
     "proxyTrustInferred": false,
     "partialOrEmptyOrUnavailableInconclusive": true,
-    "automaticRetry": false
+    "automaticRetry": false,
+    "hostedEvidence": "jm182-hosted-peer-observation.json",
+    "hostedResult": "no_connection_observed",
+    "hostedTableReadsComplete": true,
+    "hostedObservationConclusive": false,
+    "conditionalRiskResolved": false,
+    "attemptClosed": true
   }
 }

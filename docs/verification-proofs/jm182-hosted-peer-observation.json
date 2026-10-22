@@ -1,0 +1,79 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage182-hosted-peer-observation",
+  "recordedAtUTC": "2026-10-22T19:26:55.756245+00:00",
+  "status": "observation_executed_inconclusive_host_peer_and_trust_contract_unverified",
+  "provenance": {
+    "classification": "USER_REPORTED",
+    "description": "User supplied the complete aggregate JSON after executing the immutable SHA256-pinned helper in their own Infomaniak SSH terminal. No direct agent host inspection; the actual reload timing, application UID and network namespace are not independently observed.",
+    "operatorSource": "ea94eb697a12ef5056a86430ca6f327c6c6d9eea",
+    "helperPath": "ops/observe-peer182.py",
+    "helperSha256": "492703c7e2a36cd105ac246a66c54de12dc632ed014ba16e51c97842b36e5043"
+  },
+  "receipt": {
+    "type": "A11_private_tcp_observation",
+    "status": "no_connection_observed",
+    "scope": "local_port_3000_current_uid_established_only",
+    "samples": 40,
+    "completeTablesRead": true,
+    "partialObservation": false,
+    "successfulTableReads": {
+      "tcp": 40,
+      "tcp6": 40
+    },
+    "tableReadFailures": {
+      "tcp": 0,
+      "tcp6": 0
+    },
+    "distinctPeersByCategory": {
+      "loopback": 0,
+      "private": 0,
+      "public": 0,
+      "other": 0
+    },
+    "distinctConnectionsObserved": 0,
+    "peakConnectionsInOneSample": 0,
+    "rawAddressesPrinted": false,
+    "filesWritten": false,
+    "networkRequestsGenerated": false
+  },
+  "interpretation": {
+    "executionAcquired": true,
+    "tableReadsComplete": true,
+    "observationConclusive": false,
+    "applicationPeerIdentified": false,
+    "sharedProxyEstablished": false,
+    "directVisitorPeerEstablished": false,
+    "topologyVerified": false,
+    "trustedForwardingContractVerified": false,
+    "conditionalRiskA11StillOpen": true,
+    "applicationAvailabilityConclusion": "none; guarded publicReady metadata receipt remains independent"
+  },
+  "codeReview": {
+    "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+    "peerAddress": "server/http/peer-address.mjs uses an explicitly bound parent stamp or socket.remoteAddress; arbitrary public forwarding headers are not trusted.",
+    "authentication": "server/auth/service.mjs and server/access/service.mjs retain 20 attempts per network budget per 900 seconds, alongside distinct global/account budgets.",
+    "admission": "server/http/admission.mjs retains 16 simultaneous requests per peer, alongside global/token limits.",
+    "videoProfile": "server/index.mjs refuses parentGateway with video and binds directly to 0.0.0.0 when parentGateway is false.",
+    "newTestsExecuted": false,
+    "independentReadOnlyReviewCompleted": true
+  },
+  "limits": [
+    "Zero matching rows means no established local-port-3000/current-UID socket was captured during the sample window; it does not establish absence of application traffic or an application failure.",
+    "Short-lived connections can fall between samples; application PID, UID, listening port and network namespace equivalence were not proven by this helper.",
+    "No peer identity, shared-proxy topology, direct-client path or XFF trust contract can be inferred from this empty result."
+  ],
+  "decision": {
+    "attemptClosed": true,
+    "riskResolved": false,
+    "codeChangeJustifiedByReceipt": false,
+    "automaticRetry": false,
+    "additionalProbeScheduled": false,
+    "forwardingTrustChanged": false,
+    "quotasChanged": false,
+    "restartPerformed": false,
+    "migrationPerformed": false,
+    "backupWorkReopened": false,
+    "nextCondition": "Reassess A11 only when material new evidence establishes the serving-process scope or the applicable trusted-forwarding contract. No further operator command is queued for this attempt."
+  }
+}
