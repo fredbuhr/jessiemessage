@@ -1,0 +1,363 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-manual-admin-backup-verification",
+  "source": "e190217b890e57e9693fea9e03c654c9b465d7d3",
+  "tree": "15d036866fdd0d99cd7e071a0dd7dec9af5c8915",
+  "implementationSource": "148fbf0a194c76e202b6f836db28423616c01fc5",
+  "branch": "feat/video-messaging",
+  "pr": "https://github.com/fredbuhr/jessiemessage/pull/125",
+  "ci": {
+    "id": 39706108306,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39706108306",
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "successfulJobs": 5,
+    "totalJobs": 5
+  },
+  "testedMerge": "9c2bd44d071fa356f4c7862bb68267339051ba60",
+  "testedTreeEqualsSource": true,
+  "jobs": [
+    {
+      "name": "verify",
+      "id": 119586400710,
+      "conclusion": "success",
+      "counts": {
+        "tests": 3604,
+        "suites": 0,
+        "pass": 3559,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 45,
+        "todo": 0
+      },
+      "log": {
+        "filename": "jm180-g1-fixed-verify.log",
+        "sha256": "b330aa44a3889ea1de0e3540e53a7b9bd463088e68f9c2130821880480689fc7",
+        "bytes": 508665,
+        "encoding": "utf-8",
+        "lineEndings": "LF",
+        "finalNewline": true,
+        "bomPreserved": true
+      },
+      "checkout": "9c2bd44d071fa356f4c7862bb68267339051ba60",
+      "nodeVersion": "v24.22.1"
+    },
+    {
+      "name": "browser",
+      "id": 119586400816,
+      "conclusion": "success",
+      "counts": {
+        "tests": 205,
+        "suites": 0,
+        "pass": 205,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": {
+        "filename": "jm180-g1-fixed-browser.log",
+        "sha256": "00ba0c2f07bd7d550759af16f6a887f990ac02d301db87d5605e558862ea1c17",
+        "bytes": 42066,
+        "encoding": "utf-8",
+        "lineEndings": "LF",
+        "finalNewline": true,
+        "bomPreserved": false
+      },
+      "checkout": "9c2bd44d071fa356f4c7862bb68267339051ba60",
+      "nodeVersion": "v24.22.1"
+    },
+    {
+      "name": "https",
+      "id": 119586400331,
+      "conclusion": "success",
+      "counts": {
+        "tests": 3,
+        "suites": 0,
+        "pass": 3,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": {
+        "filename": "jm180-g1-fixed-https.log",
+        "sha256": "836bab03a8d5346199fde1936069e0cfcec5b9067de8f32dca05d48130217516",
+        "bytes": 33860,
+        "encoding": "utf-8",
+        "lineEndings": "LF",
+        "finalNewline": true,
+        "bomPreserved": true
+      },
+      "checkout": "9c2bd44d071fa356f4c7862bb68267339051ba60",
+      "nodeVersion": "v24.22.1"
+    },
+    {
+      "name": "mariadb1011",
+      "id": 119586400630,
+      "conclusion": "success",
+      "counts": {
+        "tests": 553,
+        "suites": 0,
+        "pass": 553,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": {
+        "filename": "jm180-g1-fixed-mariadb1011.log",
+        "sha256": "a441bfd34f518c54014d2815be5f5bb2684c88989f764518312d8bd68d26563f",
+        "bytes": 311572,
+        "encoding": "utf-8",
+        "lineEndings": "LF",
+        "finalNewline": true,
+        "bomPreserved": true
+      },
+      "checkout": "9c2bd44d071fa356f4c7862bb68267339051ba60",
+      "nodeVersion": "v24.22.1",
+      "manualCaptureE2E": "passed; native SQL33/photo/GPG/decrypt/IPC resume/catalogue/download SHA/idempotence"
+    },
+    {
+      "name": "mariadb114",
+      "id": 119586400898,
+      "conclusion": "success",
+      "counts": {
+        "tests": 553,
+        "suites": 0,
+        "pass": 553,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": {
+        "filename": "jm180-g1-fixed-mariadb114.log",
+        "sha256": "5b40672ef66860935c54aeb69269c61edc944821a71ce2a4f528b280c5f1597c",
+        "bytes": 311960,
+        "encoding": "utf-8",
+        "lineEndings": "LF",
+        "finalNewline": true,
+        "bomPreserved": true
+      },
+      "checkout": "9c2bd44d071fa356f4c7862bb68267339051ba60",
+      "nodeVersion": "v24.22.1",
+      "manualCaptureE2E": "passed; native SQL33/photo/GPG/decrypt/IPC resume/catalogue/download SHA/idempotence"
+    }
+  ],
+  "initialFailedQualification": {
+    "source": "148fbf0a194c76e202b6f836db28423616c01fc5",
+    "tree": "6925bc508096da8a141cc2ab7fb59addeb912b3f",
+    "testedMerge": "e6d584b8418cfbab2e5a1a587bd3bf88633f4c14",
+    "testedTreeEqualsSource": true,
+    "ci": {
+      "id": 39705198536,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39705198536",
+      "attempt": 1,
+      "conclusion": "failure",
+      "successfulJobs": 2,
+      "totalJobs": 5
+    },
+    "jobs": [
+      {
+        "name": "verify",
+        "id": 119583491240,
+        "conclusion": "success",
+        "counts": {
+          "tests": 3604,
+          "suites": 0,
+          "pass": 3559,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 45,
+          "todo": 0
+        },
+        "log": {
+          "filename": "jm180-g1-verify.log",
+          "sha256": "1d8dfeed05da25f7e9e2d26611469294a8b2984bc95f8c416d8c86b0a13fd700",
+          "bytes": 509074,
+          "encoding": "utf-8",
+          "lineEndings": "LF",
+          "finalNewline": true,
+          "bomPreserved": true
+        },
+        "checkout": "e6d584b8418cfbab2e5a1a587bd3bf88633f4c14",
+        "nodeVersion": "v24.22.1"
+      },
+      {
+        "name": "browser",
+        "id": 119583491306,
+        "conclusion": "failure",
+        "counts": {
+          "tests": 205,
+          "suites": 0,
+          "pass": 204,
+          "fail": 1,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "log": {
+          "filename": "jm180-g1-browser.log",
+          "sha256": "670cd0e34ded5c9108a6202d01346d9200d23be403a5631d3a45c0b55762f732",
+          "bytes": 43217,
+          "encoding": "utf-8",
+          "lineEndings": "LF",
+          "finalNewline": true,
+          "bomPreserved": false
+        },
+        "checkout": "e6d584b8418cfbab2e5a1a587bd3bf88633f4c14",
+        "nodeVersion": "v24.22.1"
+      },
+      {
+        "name": "https",
+        "id": 119583491058,
+        "conclusion": "success",
+        "counts": {
+          "tests": 3,
+          "suites": 0,
+          "pass": 3,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "log": {
+          "filename": "jm180-g1-https.log",
+          "sha256": "b0e6994c5ae52766d0523c224fc41eaa7a263fb83a7fd1d06382b7d3988478b6",
+          "bytes": 33945,
+          "encoding": "utf-8",
+          "lineEndings": "LF",
+          "finalNewline": true,
+          "bomPreserved": true
+        },
+        "checkout": "e6d584b8418cfbab2e5a1a587bd3bf88633f4c14",
+        "nodeVersion": "v24.22.1"
+      },
+      {
+        "name": "mariadb1011",
+        "id": 119583491302,
+        "conclusion": "failure",
+        "counts": {
+          "tests": 553,
+          "suites": 0,
+          "pass": 552,
+          "fail": 1,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "log": {
+          "filename": "jm180-g1-mariadb1011.log",
+          "sha256": "53efe77122da59c3aa66f606b98bbdcb3ecbd8492e1eb3ccf6f8c3dc36987475",
+          "bytes": 312488,
+          "encoding": "utf-8",
+          "lineEndings": "LF",
+          "finalNewline": true,
+          "bomPreserved": true
+        },
+        "checkout": "e6d584b8418cfbab2e5a1a587bd3bf88633f4c14",
+        "nodeVersion": "v24.22.1"
+      },
+      {
+        "name": "mariadb114",
+        "id": 119583491208,
+        "conclusion": "failure",
+        "counts": {
+          "tests": 553,
+          "suites": 0,
+          "pass": 552,
+          "fail": 1,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "log": {
+          "filename": "jm180-g1-mariadb114.log",
+          "sha256": "7fe25a895cf495947c36c0a53cfe4d0612eb51ecfd9ba197df2e09b4d272036a",
+          "bytes": 313767,
+          "encoding": "utf-8",
+          "lineEndings": "LF",
+          "finalNewline": true,
+          "bomPreserved": true
+        },
+        "checkout": "e6d584b8418cfbab2e5a1a587bd3bf88633f4c14",
+        "nodeVersion": "v24.22.1"
+      }
+    ],
+    "causes": [
+      "Both MariaDB jobs: noncanonical synthetic CSRF B repeated43 times was correctly rejected with503 before capture; replace only the fixture token with canonical32-byte base64url.",
+      "Chrome: the fixture destroyed its socket before response headers; multiple received transport attempts made an HTTP-count assertion fail. Send202 headers plus a truncated body and independently observe the one application fetch/requestId before and after visibility/refresh."
+    ],
+    "productionGuardsRelaxed": false
+  },
+  "local": {
+    "nodeVersion": "v24.22.1",
+    "syntaxSources": 665,
+    "targeted": {
+      "tests": 115,
+      "pass": 106,
+      "fail": 0,
+      "skipped": 9,
+      "omissionReason": "procfs paths unavailable in the local sandbox"
+    },
+    "ui": {
+      "tests": 15,
+      "pass": 15,
+      "fail": 0,
+      "skipped": 0
+    },
+    "nativeIntegration": {
+      "tests": 3,
+      "skipped": 3,
+      "qualified": false,
+      "reason": "Local MariaDB/native clients/procfs/GPG environment unavailable"
+    },
+    "chromeQualifiedLocally": false,
+    "chromeLimit": "ChromeDriver not available; initial local3scenarios failed on this prerequisite. No complete local Chrome pass claimed.",
+    "crossReviews": "Parent/store/HTTP/restore gate and UI independently reviewed; allow-manual-requests gate moved after successful restoration publication."
+  },
+  "generalOmissions": {
+    "total": 45,
+    "sqlOptIn": 43,
+    "negativeProcfsCasesInapplicableOnRealLinux": 2
+  },
+  "contracts": [
+    "Explicit administrator POST returns202 after durable idempotent intent, before any drain.",
+    "Same accepted requestId never repeats a capture; uncertain running intent after restart fails rather than replaying.",
+    "Manual parent never schedules daily captures or starts backup monitors, copy-PC services or observer.",
+    "Shared closure lock, actual drain, fresh closure check and controlled resume remain required; uncertain stop never authorizes capture/reopen.",
+    "Manual intents are excluded from the encrypted operational restoration capsule; manual requests remain gated until restore publication.",
+    "Administrator mutations require current session, Origin and CSRF; native encrypted download streams after a current-administrator recheck and pinned-file integrity check."
+  ],
+  "developmentVersion": "1.8.0",
+  "productionVersion": "1.7.1",
+  "normalMigrations": 33,
+  "videoActivated": false,
+  "deployed": false,
+  "next": "G2: one combined result for video inventory, manual capture of two roots and native compared restore with old-format continuity; then usable video interface and broadcasts.",
+  "limits": [
+    "G1normal capture remainsSQL33/photos; candidatevideoSQL36 and two roots are not captured or restored by this qualification.",
+    "The production1.7.1 code still runs its historical backup mechanisms until the finalG4 deployment.",
+    "Native manual-capture fixture uses a real IPC synthetic child and loopback SQL transport adapters; existing following integration scenarios exercise publication and restart of the actual application.",
+    "No hosted restart/migration, client content/account action, real-phone test, owner-PC key change or archive deletion."
+  ],
+  "nextTechnicalNotes": [
+    "Candidate SQL36 has35 application tables plus the migration ledger, hence36 physical tables; normalSQL33 has32 application tables plus ledger.",
+    "The video storage API still needs a strict physical inventory with authenticated streaming checks for committed files, reservations, cleanup states, temporary files and orphans.",
+    "Manual capture/restore must bind both distinct roots and preserve old formats; capacity/catalogue data need separate digests to permit guarded rebind without disguising a core SQL drift.",
+    "Existing v1 closure receipts and candidate v2 receipts do not currently cohabit in the single-binding journal reader, v1 registry envelope or operational capsule. Preserve and authenticate both original scopes explicitly; never rename, convert, skip or delete historical receipts to make a new capture pass."
+  ],
+  "nativeScenarios": [
+    "A canonical administrator POST202 is durably queued before capture.",
+    "Historical enabled daily configuration never creates a capture without a manual request.",
+    "An actual IPC synthetic messaging producer is stopped with confirmed zero exit before SQL33/photo capture.",
+    "Actual native MariaDB dumps, application checkpoint child, photo verification, tar and GPG encryption complete.",
+    "GPG decrypts the ciphertext byte-for-byte to the produced checkpoint archive.",
+    "The authenticated operational capsule excludes manual request intents, preventing restoration replay.",
+    "The producer restarts, the catalogue publishes the completed archive, and HTTP downloaded bytes and SHA match the pinned ciphertext.",
+    "The same accepted requestId and another parent tick do not capture again.",
+    "Existing subsequent native operator scenarios publish and drain the actual application and verify guarded ordinary restart."
+  ]
+}

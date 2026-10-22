@@ -38,7 +38,7 @@ Les réponses rapides existent déjà : six phrases FR/EN proposées à l’admi
 
 **Abandonnés : IA, paiements carte/crypto, stickers/GIF, vocaux, réponse citée, édition, transfert de messages et épingles.** Ces sujets sortent des actions futures ; ils ne sont plus différés à arbitrer après la vidéo. Les emojis Unicode, diffusions, suppressions et exports déjà livrés restent conservés.
 
-**Sauvegardes et archivage automatiques : abandon de l’automatisation, remplacement par une sauvegarde simple à la demande via l’administration.** Le parcours cible ne dépend pas du PC et n’ajoute aucun service. Archives, clés, autorités, reçus et fermetures locales restent préservés. La production 1.7.1 conserve encore ses mécanismes existants : le remplacement est codé sur la branche et doit être qualifié puis livré avant d’être annoncé effectif.
+**Sauvegardes et archivage automatiques : abandon de l’automatisation, remplacement par une sauvegarde simple à la demande via l’administration.** Le parcours cible ne dépend pas du PC et n’ajoute aucun service. Archives, clés, autorités, reçus et fermetures locales restent préservés. La production 1.7.1 conserve encore ses mécanismes existants : le remplacement est codé et qualifié sur la branche, CI 5/5, et attend sa livraison avant d’être annoncé effectif.
 
 Le [plan global courant](PLAN-IMPLEMENTATION.md) et le [bilan de l’application](BILAN-GLOBAL-20261022.md) retiennent quatre résultats :
 
@@ -47,7 +47,7 @@ Le [plan global courant](PLAN-IMPLEMENTATION.md) et le [bilan de l’application
 3. **G3 — Réponses personnelles et qualification globale**, incluant les parcours combinés, corrections utiles, sécurité, mesures et restauration/repli sur cibles synthétiques isolées.
 4. **G4 — Livraison unique vérifiée**, avec identité réelle, métadonnées, repli et contrôles hébergés.
 
-L’ancien décompte de huit résultats vidéo puis l’estimation de six à neuf séquences sont dépassés par cette modification de portée. Aucun nouveau décompte précis n’est étayé avant le traitement des dépendances ; les sous-étapes restent des repères techniques. **À chaque étape, indiquer ce qui est fait et ce qui reste.** G1 devient la prochaine action ; les qualifications vidéo acquises sur la branche sont conservées pour G2.
+L’ancien décompte de huit résultats vidéo puis l’estimation de six à neuf séquences sont dépassés par cette modification de portée. Aucun nouveau décompte précis n’est étayé avant le traitement des dépendances ; les sous-étapes restent des repères techniques. **À chaque étape, indiquer ce qui est fait et ce qui reste.** G1 est qualifié sur branche, non livré ; G2 devient la prochaine action, puis G3 et G4. Les qualifications vidéo acquises sur la branche sont conservées.
 
 **À préciser, non ouverts : Lovense, rendez-vous partagés, recherche de messages/notes, réactions et rappels privés push.** Ils ne sont pas réputés abandonnés ; aucun fournisseur, service ni chantier n’est ajouté implicitement. Les tâches privées ne sont pas des rendez-vous partagés. La personnalisation des réponses reste, elle, prévue en G3.
 

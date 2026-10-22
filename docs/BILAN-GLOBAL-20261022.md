@@ -33,7 +33,7 @@ Les preuves et parcours sont regroupés dans [PRODUCT](PRODUCT.md), le [guide qu
 
 **La vidéo n’est pas utilisable dans la conversation.** Catalogue, accès privé, exports et suppression/fermeture/capacité ont des qualifications backend sur branche. Inventaire, capture/restauration et compatibilité restent incomplets ; l’interface avec sélection, progression, lecteur, avance/recul et galerie reste absente, ainsi que la diffusion vidéo complète.
 
-**La sauvegarde simple à la demande via l’administration n’est pas encore livrée.** La production 1.7.1 conserve ses mécanismes automatiques existants ; leur remplacement effectif est le premier résultat codé sur la branche, en attente de qualification CI et de livraison. Les réponses rapides personnelles restent à développer : les six phrases actuelles sont fixes.
+**La sauvegarde simple à la demande via l’administration n’est pas encore livrée.** La production 1.7.1 conserve ses mécanismes automatiques existants ; leur remplacement effectif est le premier résultat codé et qualifié sur la branche, [CI 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39706108306), en attente de livraison. Les réponses rapides personnelles restent à développer : les six phrases actuelles sont fixes.
 
 **Abandonnés par décision du 22 octobre :** IA, paiements carte et crypto, stickers/GIF, vocaux, réponse citée, édition, transfert de messages et épingles. Ils sortent du backlog ; leur absence ne devient plus une évolution différée. Les textes « Voix de Jessie » des anciennes livraisons décrivent leur formulation, sans fonction audio.
 
@@ -53,9 +53,9 @@ Authenticator sur téléphone physique reste non vérifié. PHP du site secondai
 
 | Résultat | Critère de fin |
 | --- | --- |
-| **G1 — Sauvegarde manuelle admin** | Déclenchement explicite, résultat visible et archive récupérable, sans dépendance PC ni déclenchements/copies/archivage automatiques inutiles dans le nouveau parcours. Archives, clés, autorités et fermetures locales préservées et vérifiées. |
+| **G1 — Sauvegarde manuelle admin, qualifiée sur branche et non livrée** | Déclenchement explicite, résultat visible et archive récupérable, sans dépendance PC ni déclenchements/copies/archivage automatiques inutiles dans le nouveau parcours. Archives, clés, autorités et fermetures locales préservées et vérifiées. |
 | **G2 — Vidéo complète** | Cycle de vie, sauvegarde/restauration manuelle, interface lisant une vraie vidéo décodable, galerie, export, suppression et diffusion cohérents. |
 | **G3 — Réponses personnelles et qualification globale** | Jessie crée/modifie/retrouve ses phrases avec envoi explicite ; parcours combinés, corrections utiles, sécurité, performances et transfert/restauration/repli qualifiés sur des cibles isolées. |
 | **G4 — Livraison unique et contrôles** | Sources qualifiées, publication, repli compatible, préparation/migration/activation distinctement attestées ; identité active et comportements réellement vérifiés, dont remplacement des automatismes. |
 
-L’ancien ordre de grandeur de six à neuf séquences précède cette nouvelle portée et n’est plus retenu. Aucun nouveau nombre précis de séquences ni pourcentage global n’est étayé à ce stade. Le [plan détaillé](PLAN-IMPLEMENTATION.md) contient les critères ; [REPRISE](REPRISE.md) garde les sources et preuves courantes. À chaque étape, annoncer **fait** et **restant**. La prochaine action est G1 ; la vidéo déjà qualifiée sur branche reste acquise et sera reprise en G2.
+L’ancien ordre de grandeur de six à neuf séquences précède cette nouvelle portée et n’est plus retenu. Aucun nouveau nombre précis de séquences ni pourcentage global n’est étayé à ce stade. Le [plan détaillé](PLAN-IMPLEMENTATION.md) contient les critères ; [REPRISE](REPRISE.md) garde les sources et preuves courantes. À chaque étape, annoncer **fait** et **restant**. G1 est qualifié sur branche et attend sa livraison ; la prochaine action est G2, qui conserve les qualifications vidéo acquises. Il reste trois lots : G2, G3 et G4.
