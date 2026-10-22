@@ -116,9 +116,10 @@ test("help offers fixed destinations, official contact subjects and the shared t
   for (const href of destinations) {
     assert.ok(href === "/app" || ["#access", "#notifications", "#privacy", "#contact"].includes(href)
       || href === "https://jessiemessage.com/recover"
+      || href === "https://www.cnil.fr/fr/plaintes"
       || /^mailto:contact@jessiemessage\.com\?subject=(?:Aide%20JessieMessage|Mes%20donn%C3%A9es%20JessieMessage|Signalement%20JessieMessage)$/.test(href), href);
   }
-  assert.equal([...html.matchAll(/<details>/g)].length, 9);
+  assert.equal([...html.matchAll(/<details>/g)].length, 11);
   for (const section of ["access", "notifications", "privacy", "contact", "report"]) assert.match(html, new RegExp(`id="${section}"`));
 });
 
@@ -211,17 +212,41 @@ test("public help describes the confirmed private-space choices without promisin
   const script = await readFile(new URL("../public/help.js", import.meta.url), "utf8");
   assert.match(html, /Jessie est responsable de cet espace privé sur invitation/);
   assert.doesNotMatch(html, /Jessie, en France|Jessie et les personnes autorisées à gérer cet espace peuvent lire les échanges/);
-  assert.match(html, /Le service chiffre les messages et les photos sur le serveur/);
+  assert.match(html, /Le service chiffre les messages, les photos et les vidéos sur le serveur/);
   assert.match(html, /Il ne s’agit pas d’un chiffrement de bout en bout/);
   assert.match(html, /Je conserve notre conversation jusqu’à la fermeture définitive de ton compte/);
-  assert.match(html, /sauf les messages et photos supprimés volontairement/);
+  assert.match(html, /sauf les messages et médias supprimés volontairement/);
   assert.match(html, /Une déconnexion, une expiration ou une suspension de l’accès ne ferme pas définitivement le compte/);
   assert.match(html, /La suppression du compte n’est pas disponible directement dans l’application/);
   assert.match(html, /Ces copies sont traitées séparément/);
   assert.doesNotMatch(html, /Les durées de conservation du compte, des échanges et des sauvegardes ne sont pas encore fixées/);
   assert.match(script, /Jessie is responsible/); assert.match(script, /until your account is permanently closed/);
   assert.doesNotMatch(script, /Jessie, in France|Jessie and the people authorised to manage this space can read the exchanges/);
-  assert.match(script, /The service encrypts messages and photos on the server/);
+  assert.match(script, /The service encrypts messages, photos and videos on the server/);
   assert.match(script, /This is not end-to-end encryption/);
   assert.doesNotMatch(html, /exempt.{0,20}RGPD|GDPR.{0,20}exempt|suppression automatique immédiate/i);
+});
+
+test("public privacy help distinguishes live files, retained records, providers and available rights", async () => {
+  const html = await readFile(new URL("../public/help.html", import.meta.url), "utf8");
+  assert.match(html, /Des notes, classements et rappels privés servent au suivi de nos échanges/);
+  assert.match(html, /L’hébergement est assuré chez Infomaniak/);
+  assert.match(html, /prestataire de messagerie/); assert.match(html, /service Push de ton navigateur/);
+  assert.match(html, /Les vidéos peuvent garder celles de leur fichier d’origine/);
+  assert.match(html, /Après confirmation de la suppression, le fichier est retiré du stockage actif, mais des informations techniques et une trace de suppression restent conservées/);
+  assert.match(html, /pour l’administration, il faut aussi attendre la fin des diffusions en cours/);
+  assert.match(html, /Ce téléchargement ne contient pas toutes les données du compte/);
+  assert.match(html, /Dans la conversation, quand ton navigateur le permet, les brouillons texte restent temporairement dans cet onglet/);
+  assert.match(html, /Ils ne sont pas envoyés automatiquement/);
+  assert.match(html, /Ce brouillon n’inclut pas les fichiers photo ou vidéo/);
+  assert.match(html, /leur rectification, leur effacement ou la limitation de leur utilisation/);
+  assert.match(html, /Selon le traitement concerné/);
+  assert.match(html, /href="https:\/\/www\.cnil\.fr\/fr\/plaintes" rel="noreferrer"/);
+  assert.doesNotMatch(html, /\[À COMPLÉTER|\[TO COMPLETE|draft_only|D0[1-8]/);
+  const p = controllerPage({ stored: "en" });
+  for (const [french, english] of [
+    ["Quels sont mes droits ?", "What are my rights?"],
+    ["Adresser une réclamation à la CNIL", "Lodge a complaint with the CNIL"],
+    ["À quoi servent ces informations et qui peut y accéder ?", "What is this information used for and who can access it?"],
+  ]) assert.equal(p.ui.t(french), english);
 });

@@ -5,6 +5,7 @@ import vm from "node:vm";
 import { quickReplyOptions, appendQuickReply } from "../public/quick-replies.js";
 import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "../public/emoji-catalog.js";
 import { webcrypto } from "node:crypto";
+import { createChatDrafts } from "../public/chat-drafts.js";
 
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
 const sessionClockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
@@ -86,7 +87,7 @@ class Element {
   showModal() { this.open = true; }
   close() { this.open = false; for (const handler of this.events.get("close") ?? []) handler({}); }
 }
-function harness({ currentSession = session(), visible = true, intercept = null, quickReplies = null, prepare = async (file) => file, notification = null, profileFactory = null, profileLoader = null } = {}) {
+function harness({ currentSession = session(), visible = true, intercept = null, quickReplies = null, prepare = async (file) => file, notification = null, profileFactory = null, profileLoader = null, draftStorage = undefined, serverState = null } = {}) {
   const nodes = new Map(), documentEvents = new Map(), windowEvents = new Map(), calls = [], timers = new Map(), redirects = [], revoked = [], createdUrls = [];
   let timerId = 0, time = now, blobId = 0;
   const body = new Element("body", nodes);
@@ -100,7 +101,8 @@ function harness({ currentSession = session(), visible = true, intercept = null,
     querySelector: (selector) => selector === "dialog[open]" ? [...nodes.values()].find(node => node.open) ?? null : new Element("div", nodes),
     addEventListener: (name, handler) => documentEvents.set(name, handler) };
   nodes.document = document; document.activeElement = body; document.head._connected = true;
-  const state = { currentSession, conversations: new Map(), messages: new Map(), posts: 0, quickReplies: quickReplies ?? { version: "0", replies: [] }, quickReplyWrites: 0 };
+  const state = serverState ?? { currentSession, conversations: new Map(), messages: new Map(), posts: 0, quickReplies: quickReplies ?? { version: "0", replies: [] }, quickReplyWrites: 0 };
+  state.currentSession = currentSession;
   const conversation = (owner = state.currentSession?.user.id) => {
     if (!state.conversations.has(owner)) state.conversations.set(owner, { id: id(100 + Number.parseInt(owner, 16)), clientId: owner, clientPseudonym: `Synthetic ${owner}`,
       peerName: `Peer ${owner}`, createdAt: now, closedAt: null, lastActivityAt: now, latestSequence: "1", latestEventSequence: "1", lastReadSequence: "0", peerReadSequence: "0", unreadCount: 1, canSend: true });
@@ -110,8 +112,8 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   const worker = {}, workerEvents = new Map(), acknowledgements = [];
   const location = { origin: "https://example.invalid", pathname: currentSession?.user.role === "admin" ? "/admin/messages" : "/messages", hash: notification ? `#notification=${notification}` : "", replace: (path) => redirects.push(path), reload() { redirects.push("reload"); } };
   const history = { replaceState(_state, _title, path) { const next = new URL(path, location.origin); location.pathname = next.pathname; location.hash = next.hash; } };
-  const context = vm.createContext({ __loadProfile: async () => { if (profileLoader) return profileLoader(); if (!profileFactory) throw new Error("Optional profile disabled in fixture"); return { createProfileUI: profileFactory }; }, __emojis: { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji }, __quickReplies: { quickReplyOptions, appendQuickReply }, __prepareImageUpload: prepare, document, window: { addEventListener: (name, handler) => windowEvents.set(name, handler) },
-    location, history, navigator: { serviceWorker: { controller: worker, addEventListener: (name, handler) => workerEvents.set(name, handler) } },
+  const context = vm.createContext({ __chatDrafts: { createChatDrafts }, __loadProfile: async () => { if (profileLoader) return profileLoader(); if (!profileFactory) throw new Error("Optional profile disabled in fixture"); return { createProfileUI: profileFactory }; }, __emojis: { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji }, __quickReplies: { quickReplyOptions, appendQuickReply }, __prepareImageUpload: prepare, document, window: { addEventListener: (name, handler) => windowEvents.set(name, handler) },
+    location, history, sessionStorage: draftStorage, navigator: { serviceWorker: { controller: worker, addEventListener: (name, handler) => workerEvents.set(name, handler) } },
     Date: class extends Date { static now() { return time; } }, AbortController, TextEncoder, Uint8Array, Blob, crypto: webcrypto, queueMicrotask,
     URL: { createObjectURL: () => { const value = `blob:synthetic-${++blobId}`; createdUrls.push(value); return value; }, revokeObjectURL: (url) => revoked.push(url) },
     setTimeout: (handler, delay) => { const value = ++timerId; timers.set(value, { handler, at: time + delay }); return value; }, clearTimeout: (value) => timers.delete(value),
@@ -152,7 +154,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   vm.runInContext(sessionClockSource, context, { filename: "public/session-clock.js" });
   vm.runInContext(notificationLinkSource, context, { filename: "public/notification-link.js" });
   vm.runInContext(`globalThis.__model = (() => {${modelSource.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}};})();`, context, { filename: "public/chat-model.js" });
-  const executable = source.replace('await import("/profile.js")', 'await __loadProfile()').replace('import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,emojiSkinTones,insertEmoji} = __emojis;').replace('import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";', 'const {quickReplyOptions,appendQuickReply} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = __prepareImageUpload;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
+  const executable = source.replace('import { createChatDrafts } from "/chat-drafts.js";', 'const {createChatDrafts} = __chatDrafts;').replace('await import("/profile.js")', 'await __loadProfile()').replace('import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,emojiSkinTones,insertEmoji} = __emojis;').replace('import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";', 'const {quickReplyOptions,appendQuickReply} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = __prepareImageUpload;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
     "\nglobalThis.__inspect = () => ({ready, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration, pendingNotification, fetchProfileBinary, avatarImageUrl, avatarContainers});";
   vm.runInContext(executable, context, { filename: "public/chat.js", importModuleDynamically: async () => { throw new Error("Optional feature disabled in fixture"); } });
   return { element, document, state, calls, redirects, timers, revoked, createdUrls, context, conversation, inspect: () => context.__inspect(),
@@ -1452,4 +1454,91 @@ test("owned video deletion rechecks uncertain sends after an asynchronous confir
   const state = f.inspect().states.get(f.inspect().selected); state.pending = { kind: "video", videoId: id(914), status: "retry" };
   await f.click("accept-delete");
   assert.equal(deletes, 0); assert.equal(f.element("video-grid").children.length, 1);
+});
+
+function persistentTabStore() {
+  const values = new Map();
+  return { values, getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key) };
+}
+async function readyDraftFixture(f) {
+  for (let attempt = 0; attempt < 100 && !f.inspect().ready && !f.redirects.length; attempt += 1) await flush();
+  assert.equal(f.inspect().ready, true);
+}
+async function enterPersistentDraft(f, text) {
+  f.element("message-body").value = text;
+  for (const handler of f.element("message-body").events.get("input")) handler({});
+  await flush();
+}
+
+test("same-tab reload restores text for each role only after the conversation is authorized and never sends automatically", async () => {
+  for (const role of ["admin", "client"]) {
+    const store = persistentTabStore(), actor = session(1, "A".repeat(43), role);
+    const first = harness({ currentSession: actor, draftStorage: store }); await readyDraftFixture(first);
+    if (role === "admin") await first.context.selectConversation(first.conversation().id);
+    const text = `Synthetic ${role} 😀\nUnsent draft`;
+    await enterPersistentDraft(first, text); await first.event("pagehide");
+    let reloaded, authorized = false;
+    reloaded = harness({ currentSession: actor, draftStorage: store, serverState: first.state, intercept(path, options) {
+      if (path.includes("/messages?") && options.method === "GET") { assert.equal(reloaded.element("message-body").value, ""); authorized = true; }
+    } });
+    await readyDraftFixture(reloaded);
+    assert.equal(authorized, true); assert.equal(reloaded.element("message-body").value, text);
+    assert.equal(posts(reloaded).length, 0); assert.equal(reloaded.inspect().selected, first.conversation().id);
+  }
+});
+
+test("a lost text response reloads as the same explicit retry, and only the retry click sends its exact key", async () => {
+  const store = persistentTabStore(), first = harness({ draftStorage: store, intercept(path, options) {
+    if (path.endsWith("/messages") && options.method === "POST") return response(503, { error: "synthetic_lost_response" });
+  } });
+  await readyDraftFixture(first); await first.send("Synthetic uncertain text");
+  const exact = JSON.parse(posts(first)[0].options.body); await first.event("pagehide");
+  const reloaded = harness({ draftStorage: store, serverState: first.state }); await readyDraftFixture(reloaded);
+  const state = reloaded.inspect().states.get(reloaded.inspect().selected);
+  assert.equal(state.pending.status, "retry"); assert.equal(state.pending.clientMessageId, exact.clientMessageId);
+  assert.equal(reloaded.element("pending-controls").hidden, false); assert.equal(posts(reloaded).length, 0);
+  await reloaded.click("retry-send"); assert.equal(posts(reloaded).length, 1);
+  assert.deepEqual(JSON.parse(posts(reloaded)[0].options.body), exact);
+  assert.equal(state.pending, null); assert.equal(reloaded.element("message-body").value, "");
+  assert.equal(JSON.parse([...store.values.values()][0]).entries.length, 0);
+});
+
+test("the authorized history after reload acknowledges an already committed text without another POST", async () => {
+  const store = persistentTabStore();
+  const first = harness({ draftStorage: store, intercept(path, options, state) {
+    if (!path.endsWith("/messages") || options.method !== "POST") return;
+    const command = JSON.parse(options.body), conv = [...state.conversations.values()][0]; state.posts += 1;
+    state.messages.get(conv.id).push({ id: id(980), sequence: "2", sender: "me", body: command.body, createdAt: now, deletedAt: null, clientMessageId: command.clientMessageId });
+    throw new Error("Synthetic response lost after commit");
+  } });
+  await readyDraftFixture(first); await first.send("Synthetic committed text"); await first.event("pagehide");
+  const next = harness({ draftStorage: store, serverState: first.state }); await readyDraftFixture(next);
+  const state = next.inspect().states.get(next.inspect().selected);
+  assert.equal(state.pending, null); assert.equal(state.draft, ""); assert.equal(next.element("message-body").value, "");
+  assert.equal(posts(next).length, 0); assert.equal(first.state.posts, 1);
+  assert.equal(JSON.parse([...store.values.values()][0]).entries.length, 0);
+});
+
+test("changed cookie ownership and a rejected conversation cannot expose the previous stored draft", async () => {
+  for (const changed of ["owner", "session", "conversation"]) {
+    const store = persistentTabStore(), first = harness({ draftStorage: store }); await readyDraftFixture(first);
+    await enterPersistentDraft(first, "Synthetic private old draft"); await first.event("pagehide");
+    let next;
+    next = harness({ draftStorage: store, currentSession: changed === "owner" ? session(2) : changed === "session" ? session(1, "B".repeat(43)) : session(), intercept(path, options) {
+      if (changed === "conversation" && path.includes("/messages?") && options.method === "GET") {
+        assert.equal(next.element("message-body").value, ""); return response(403, { error: "request_rejected" });
+      }
+    } });
+    for (let attempt = 0; attempt < 100 && !next.inspect().ready && !next.redirects.length; attempt += 1) await flush();
+    assert.equal(next.element("message-body").value, ""); assert.equal(posts(next).length, 0);
+    assert.equal([...store.values.values()].join("").includes("Synthetic private old draft"), false);
+  }
+});
+
+test("explicit logout purges restored text and an unavailable store leaves a visible memory-only fallback", async () => {
+  const store = persistentTabStore(), first = harness({ draftStorage: store }); await readyDraftFixture(first);
+  await enterPersistentDraft(first, "Synthetic sign-out draft"); await first.click("logout"); assert.equal(store.values.size, 0);
+  const fallback = harness(); await readyDraftFixture(fallback); await enterPersistentDraft(fallback, "Synthetic memory draft");
+  assert.equal(fallback.element("composer-help").textContent, "Ce navigateur ne peut pas garder ce brouillon après rechargement. Il reste dans cet onglet.");
+  await fallback.send("Synthetic normal send"); assert.equal(posts(fallback).length, 1);
 });

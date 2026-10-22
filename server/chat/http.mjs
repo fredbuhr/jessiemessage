@@ -10,6 +10,7 @@ const cookies = Object.freeze({ admin: "__Host-jessie_session", client: "__Host-
 const files = new Map([
   ["/chat.js", ["chat.js", "text/javascript; charset=utf-8"]],
   ["/chat-model.js", ["chat-model.js", "text/javascript; charset=utf-8"]],
+  ["/chat-drafts.js", ["chat-drafts.js", "text/javascript; charset=utf-8"]],
   ["/quick-replies.js", ["quick-replies.js", "text/javascript; charset=utf-8"]],
   ["/chat.css", ["chat.css", "text/css; charset=utf-8"]],
 ]);

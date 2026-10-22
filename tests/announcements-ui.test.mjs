@@ -66,7 +66,7 @@ function harness(respond) {
   run(`globalThis.model=(()=>{${model.replaceAll("export function ","function ").replaceAll("export const ","const ")}return {${exports.join(",")}};})();`);
   const code=files["announcements.js"].replace(/^import \{([^\n]+)\} from "\/announcements-model.js";/,"const {$1}=model;");
   run(`(()=>{${code}\nglobalThis.feature={state,bootstrap,mutate,loadCurrent};})();`);
-  return {ids,calls,context,document,run,timers,async event(id,name){for(const fn of ids.get(id).events.get(name)??[])fn({preventDefault(){}});await flush();},
+  return {ids,calls,context,document,run,timers,beforeUnload(){let prevented=false;const event={preventDefault(){prevented=true;}};for(const fn of windowEvents.get("beforeunload")??[])fn(event);return prevented;},async event(id,name){for(const fn of ids.get(id).events.get(name)??[])fn({preventDefault(){}});await flush();},
     async visibility(value){document.visibilityState=value;for(const fn of events.get("visibilitychange")??[])fn();await flush();}};
 }
 
@@ -169,4 +169,70 @@ test("a removal on another device permits an explicit rebase while preserving th
   assert.equal(h.run("feature.state.baseRevision"),"1");await h.event("use-current","click");
   assert.equal(h.ids.get("body").value,"Preserve this local draft");assert.equal(h.run("feature.state.baseRevision"),"2");
   assert.equal(h.run("feature.state.preview"),null);assert.equal(h.run("feature.state.acknowledged"),false);
+});
+
+test("navigation warns for date-only and option-only edits, then stops warning when their visible values are restored", async () => {
+  const current = { ...item("1", "Fermer"), startsAt: now + 60123, expiresAt: now + 3600123, status: "scheduled" };
+  const h = harness(async path => {
+    if (path.endsWith("/session")) return ok(session());
+    if (path.endsWith("/current")) return ok({ serverTime: now, revision: "1", announcement: current });
+    throw new Error("Unexpected fixture path " + path);
+  });
+  await flush(); assert.equal(h.beforeUnload(), false);
+  for (const [field, event, value] of [
+    ["starts-at", "input", h.run(`model.localAnnouncementDate(${now + 120000})`)],
+    ["expires-at", "input", h.run(`model.localAnnouncementDate(${now + 7200000})`)],
+    ["expires-at", "input", ""], ["start-mode", "change", "now"], ["send-message", "change", true], ["body", "input", ""],
+  ]) {
+    const element = h.ids.get(field), property = field === "send-message" ? "checked" : "value", original = element[property];
+    element[property] = value; await h.event(field, event); assert.equal(h.beforeUnload(), true, field);
+    element[property] = original; await h.event(field, event); assert.equal(h.beforeUnload(), false, field + " restored");
+  }
+  h.run('JessieI18n.setLanguage("en")');
+  assert.equal(h.ids.get("body").value, "Fermer"); assert.equal(h.beforeUnload(), false);
+  h.ids.get("body").value = "Close"; await h.event("body", "input"); assert.equal(h.beforeUnload(), true);
+  h.ids.get("body").value = "Fermer"; await h.event("body", "input"); assert.equal(h.beforeUnload(), false);
+});
+
+test("explicit reset and confirmed save clear navigation warnings while same-owner visibility keeps unsaved dates", async () => {
+  let current = item("1", "Initial text");
+  const h = harness(async (path, options) => {
+    if (path.endsWith("/session")) return ok(session());
+    if (path.endsWith("/current") && options.method === "POST") {
+      const payload = JSON.parse(options.body);
+      current = { ...item("2", payload.body), startsAt: now + 123, expiresAt: payload.expiresAt };
+      return ok({ serverTime: now + 123, revision: "2", announcement: current, duplicate: false });
+    }
+    if (path.endsWith("/current")) return ok({ serverTime: now, revision: current.revision, announcement: current });
+    throw new Error("Unexpected fixture path " + path);
+  });
+  await flush(); assert.equal(h.beforeUnload(), false);
+  h.ids.get("expires-at").value = h.run(`model.localAnnouncementDate(${now + 7200000})`);
+  await h.event("expires-at", "input"); assert.equal(h.beforeUnload(), true);
+  await h.visibility("hidden"); assert.equal(h.beforeUnload(), true);
+  await h.visibility("visible"); assert.equal(h.beforeUnload(), true);
+  await h.event("use-current", "click"); assert.equal(h.beforeUnload(), false);
+  h.ids.get("body").value = "  Saved new text  "; await h.event("body", "input");
+  await h.event("announcement-form", "submit");
+  assert.equal(h.ids.get("body").value, "Saved new text"); assert.equal(h.beforeUnload(), false);
+  h.ids.get("send-message").checked = true; await h.event("send-message", "change"); assert.equal(h.beforeUnload(), true);
+  h.ids.get("send-message").checked = false; await h.event("send-message", "change"); assert.equal(h.beforeUnload(), false);
+});
+
+test("pending removal warns without any changed draft field, then confirmation and logout remove that warning", async () => {
+  let resolveRemoval;
+  const h = harness(async path => {
+    if (path.endsWith("/session")) return ok(session());
+    if (path.endsWith("/current/remove")) return new Promise(resolve => { resolveRemoval = resolve; });
+    if (path === "/api/auth/logout") return ok({});
+    if (path.endsWith("/current")) return ok({ serverTime: now, revision: "1", announcement: item() });
+    throw new Error("Unexpected fixture path " + path);
+  });
+  await flush(); assert.equal(h.beforeUnload(), false);
+  await h.event("remove-announcement", "click"); assert.equal(typeof resolveRemoval, "function");
+  assert.equal(h.beforeUnload(), true);
+  resolveRemoval(ok({ serverTime: now, revision: "2", announcement: null, duplicate: false }));
+  await flush(); assert.equal(h.beforeUnload(), false);
+  h.ids.get("body").value = "Private next draft"; await h.event("body", "input"); assert.equal(h.beforeUnload(), true);
+  await h.event("logout", "click"); assert.equal(h.beforeUnload(), false); assert.match(h.context.destination, /admin\/login/);
 });

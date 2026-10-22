@@ -1,6 +1,6 @@
 # JessieMessage
 
-**Audit final du 22 octobre :** [bilan backend/frontend/opérations](docs/AUDIT-FINAL-20261022.md) et [plan de correction](docs/PLAN-IMPLEMENTATION.md). Le code actif reste 1.8.1 ; le lot1 est [qualifié sur `fix/audit-182`](docs/verification-proofs/jm182-lot1-verification.json) (développement1.8.2, CI5/5). Aucun correctif n’est encore déployé. Les incohérences historiques de l’index ci-dessous sont recensées pour le lot d’entretien.
+**Audit final du 22 octobre :** [bilan backend/frontend/opérations](docs/AUDIT-FINAL-20261022.md) et [plan de correction](docs/PLAN-IMPLEMENTATION.md). Le code actif reste 1.8.1 ; le lot1 est [qualifié sur `fix/audit-182`](docs/verification-proofs/jm182-lot1-verification.json) (développement1.8.2, CI5/5). Le [lot2 est codé](docs/verification-proofs/jm182-lot2-verification.json), avec qualification native encore à acquérir. Aucun correctif n’est encore déployé. Les incohérences historiques de l’index ci-dessous sont recensées pour le lot d’entretien.
 
 Messagerie privée sur invitation entre Jessie et chaque personne invitée : texte, photos, notifications, sessions indépendantes et outils d’administration. L’application utilise l’hébergement mutualisé existant, sans infrastructure ni budget ajoutés.
 

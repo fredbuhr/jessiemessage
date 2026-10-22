@@ -1,0 +1,383 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-audit-lot2-implementation",
+  "recordedAtUTC": "2026-10-22T17:33:06.347189+00:00",
+  "status": "implemented_targeted_passed_native_ci_pending",
+  "branch": "fix/audit-182",
+  "baseSource": "e47a883c8f2a7087f18027de88e889e3e4f65dea",
+  "baseTree": "8fb54159346bedebd0824c28a54994867b034ed2",
+  "developmentVersion": "1.8.2",
+  "productionVersion": "1.8.1",
+  "productionSource": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+  "node": "v24.22.1",
+  "schema": 36,
+  "sqlMigrationsChanged": false,
+  "lot1Proof": "jm182-lot1-verification.json",
+  "findings": {
+    "A06": {
+      "status": "implemented_targeted_passed_native_browser_pending",
+      "sameOwnerBackgroundResume": true,
+      "draftAudienceMediaPreservedInMemory": true,
+      "uncertainCampaignPayloadAndKeyPreserved": true,
+      "ownerAndCapabilitiesRevalidatedBeforeDisplay": true,
+      "oldResponsesAndDoubleResumeGuarded": true,
+      "cookieRenewalPreserved": true,
+      "cancelAndBootstrapResumeByGetOnly": true,
+      "automaticPostOnResume": false,
+      "logoutOrChangedIdentityPurges": true
+    },
+    "A08": {
+      "status": "implemented_targeted_passed_native_browser_pending",
+      "storage": "sessionStorage of current tab and origin",
+      "maxEntries": 20,
+      "maxUtf8JsonBytes": 65536,
+      "ordinaryDraftRestorableMilliseconds": 86400000,
+      "expiration": "lazy at bind/read; no physical erasure timing claimed",
+      "uncertainText": "immutable text and clientMessageId survive TTL and clock rollback until acknowledgement/purge; never evicted for capacity",
+      "binding": "role, account id, SHA256 fingerprint of role/id/CSRF; no reusable credential stored",
+      "restore": "only after fresh authenticated session and authorized conversation GET; history may acknowledge before presenting retry",
+      "automaticSend": false,
+      "purge": [
+        "explicit logout",
+        "account or session changed",
+        "conversation access rejected",
+        "confirmed send"
+      ],
+      "excluded": [
+        "password",
+        "TOTP",
+        "raw CSRF",
+        "keys",
+        "files",
+        "media asset identifiers",
+        "uncertain media captions"
+      ],
+      "mediaDrafts": "only unsent text may restore with a reselect-attachment notice; before media POST its saved caption is invalidated",
+      "unavailableStorage": "memory-only fallback with visible help; no promise of reload recovery",
+      "failedPromotion": "invalidate old ordinary record before POST without evicting other pending keys; if impossible, only the new POST remains local"
+    },
+    "A16": {
+      "status": "implemented_targeted_passed",
+      "editableDatesModesTextOptionsAndAcknowledgementCompared": true,
+      "referenceIsLoadedOrConfirmedFormNotPollingResult": true,
+      "sameVisibleMinuteDoesNotCreateFalseDirtyState": true,
+      "resetSuccessAndIdentityPurgePreserved": true,
+      "newPersistentAnnouncementStorage": false
+    },
+    "A10": {
+      "status": "public_help_harmonized_legal_notice_not_complete",
+      "frEnUpdatedForVideoMetadataDeletionCopiesRightsAndRecipients": true,
+      "tabTextDraftNoticeScopedToConversationAndBrowserAvailability": true,
+      "legalDraftPublicationChanged": false,
+      "completeLegalComplianceClaim": false,
+      "remainingUnestablished": [
+        {
+          "decision": "D01",
+          "missing": "Precise legal-controller identity/qualification and DPO if one is appointed; public alias Jessie and contact are the established facts"
+        },
+        {
+          "decision": "D02",
+          "missing": "Lawful basis and justification for each purpose; development permission selects no Article 6 basis"
+        },
+        {
+          "decision": "D03",
+          "missing": "Applicable Article 9 condition for possible sex-life information; no explicit legal consent or exception is inferred from invitation, age declaration or Push permission"
+        },
+        {
+          "decision": "D04",
+          "missing": "Retention durations/criteria for data families beyond the stated conversation policy and technical session lifetime"
+        },
+        {
+          "decision": "D05",
+          "missing": "Full legal scope and handling of erasure exceptions; factual file/tombstone/copy behavior is described without promising erasure of all records"
+        },
+        {
+          "decision": "D06",
+          "missing": "Actual lifetime and lifecycle of all copies, old archives, provider backups and recovery evidence"
+        },
+        {
+          "decision": "D07",
+          "missing": "Precise provider entities, processing locations, transfers/safeguards and infrastructure traces beyond known recipient categories"
+        }
+      ]
+    }
+  },
+  "localTestRuns": [
+    {
+      "file": "lot2-chat-targeted-final.log",
+      "bytes": 15495,
+      "sha256": "b89e6265be453458b59e540df11a3b2691a5ba008336fae5a5722c7c921b73ee",
+      "counts": {
+        "tests": 138,
+        "pass": 138,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "lot2-broadcast-qualified-local.log",
+      "bytes": 8665,
+      "sha256": "b5e5376c9c7d8b493c1b09ce6d165b46706bb5c685cc68dda90ebc2c4c0da842",
+      "counts": {
+        "tests": 85,
+        "pass": 85,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "announcements-a16-tests.log",
+      "bytes": 2536,
+      "sha256": "f74c19c68fc663c9e7eb311337c94a3445992c39c13d73036b859b4c3d68681a",
+      "counts": {
+        "tests": 21,
+        "pass": 21,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "lot2-help-http-link-scoped-final.log",
+      "bytes": 4346,
+      "sha256": "c01f741736d0463c196a72fa93576e849c9c6a8b3c30990f464e3b47192764ca",
+      "counts": {
+        "tests": 16,
+        "pass": 16,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    },
+    {
+      "file": "lot2-chat-static-route.log",
+      "bytes": 201,
+      "sha256": "5a465543967c517be2ea172fc61831112dc943254d6ca2b60dcb1478af8ac69f",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    }
+  ],
+  "localRunsOverlapDoNotSumAsUnique": true,
+  "initialLocalFailuresPreserved": [
+    {
+      "finding": "A08",
+      "tests": 133,
+      "passed": 132,
+      "failed": 1,
+      "cause": "Existing memory-only fixture expected absent sessionStorage; its new optional value defaulted to null. The optional fixture default was corrected to undefined; application behavior unchanged by this test adaptation.",
+      "log": "lot2-chat-targeted.log",
+      "file": "lot2-chat-targeted.log",
+      "bytes": 15609,
+      "sha256": "1610f979985e3ce7e6cf27d969200010424e2629ca189f9284c171634195a6d1"
+    },
+    {
+      "finding": "A06",
+      "tests": 8,
+      "pass": 7,
+      "fail": 1,
+      "reason": "An i18n regression detected missing auth-cookie renewal during resume; corrected before final targeted pass.",
+      "file": "lot2-broadcast-compat-i18n.log",
+      "bytes": 1847,
+      "sha256": "cd1ef635a05c1968c5883fbc447543761727eb4b8d4ce73b4cc010f6539cfc2c"
+    }
+  ],
+  "syntax": {
+    "status": "passed",
+    "exitCode": 0,
+    "sourceFiles": 712,
+    "log": {
+      "file": "lot2-syntax.log",
+      "bytes": 425,
+      "sha256": "02ce2566af17ba24f29cbf8c3ce8b39b1014c590fa323606c23aae92d8a4e295"
+    }
+  },
+  "review": {
+    "status": "independent_frozen_source_review_no_additional_blocker",
+    "proof": {
+      "file": "lot2-chat-review.json",
+      "bytes": 7704,
+      "sha256": "5a76d9fae5695a00416030788970446490a70d24c3cb834b107f71615cb294cc"
+    },
+    "scope": "No global duplicate guarantee; storage-unavailable fallback and native browser cases remain explicitly bounded."
+  },
+  "browser": {
+    "status": "not_executed_locally",
+    "reason": "Chrome/ChromeDriver unavailable locally; required CI uses synthetic loopback fixtures.",
+    "newChatCases": [
+      "real same-tab document reload and WebCrypto/sessionStorage for client/admin; changed session purges text",
+      "uncertain text reload has no automatic POST; explicit retry reuses exact clientMessageId and body"
+    ],
+    "newBroadcastCases": 2,
+    "realBrowserQualificationStillRequired": true,
+    "physicalOsBfcacheAndEvictionNotQualified": true
+  },
+  "ci": {
+    "status": "not_requested_yet",
+    "pullRequest": "https://github.com/fredbuhr/jessiemessage/pull/129",
+    "run": null
+  },
+  "references": [
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage",
+      "purpose": "Tab/origin partitioning, reload lifetime, opener copy and storage exceptions; no physical erasure guarantee."
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html",
+      "purpose": "Browser storage is JavaScript-readable; reusable authentication credentials are excluded."
+    },
+    {
+      "url": "https://www.cnil.fr/fr/conformite-rgpd-information-des-personnes-et-transparence",
+      "purpose": "Public information requirements do not fill operator facts missing from the project."
+    },
+    {
+      "url": "https://www.cnil.fr/fr/definition/donnee-sensible",
+      "purpose": "Potential sensitive-content legal qualification remains unestablished."
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "public/announcements-model.js",
+      "bytes": 8270,
+      "sha256": "98591f79d2d1ebfabfc8f47d50e4fcf762dda70de811d6a70e12f7791701bb63"
+    },
+    {
+      "path": "public/announcements.js",
+      "bytes": 16658,
+      "sha256": "3951e98b24df3b2c2af68dc45446dfbb43e8cdbafd663c5d8248e00cebf96cec"
+    },
+    {
+      "path": "public/broadcast-model.js",
+      "bytes": 22410,
+      "sha256": "c56980821240fe452ee27521c9d27c094832f02a7a53dbcdd53b6977a64e0778"
+    },
+    {
+      "path": "public/broadcast.js",
+      "bytes": 61651,
+      "sha256": "29c8bf4a04ec2c7b91cef7b567b1ba7cabf5ac9b07fe0a9812f30339c2894455"
+    },
+    {
+      "path": "public/chat-drafts.js",
+      "bytes": 9108,
+      "sha256": "36ee8d3609f26dcfaec4e74ed8941409258a8c76383ebeb7670c44263ef0e74d"
+    },
+    {
+      "path": "public/chat.js",
+      "bytes": 159173,
+      "sha256": "a23ef5787395b082ca3efeb466dc457d38a3ed9eacd82948bcffe1a93c635ffd"
+    },
+    {
+      "path": "public/help.html",
+      "bytes": 20574,
+      "sha256": "7f3604fbc7ecaac816687e16e9c7765e195ede364aa01b5768ce1cfa42e3fd94"
+    },
+    {
+      "path": "public/help.js",
+      "bytes": 15579,
+      "sha256": "2ec15d1caae154e7505e30a888389c54f9608ba69961b4bd5eb0db5ef9c0d695"
+    },
+    {
+      "path": "server/chat/http.mjs",
+      "bytes": 21443,
+      "sha256": "f888fd677ec20e53a07a48caa431339c09ee98739ab9e32ca4b9032b390bbf8e"
+    },
+    {
+      "path": "tests/announcements-model.test.mjs",
+      "bytes": 12010,
+      "sha256": "1642b22b5c3b5ca2b7a91a5a8e2da7e53c49cd7fee8e2c3edaf1599bf23fb2a4"
+    },
+    {
+      "path": "tests/announcements-ui.test.mjs",
+      "bytes": 19919,
+      "sha256": "5ff9cd130b6f7c21a704abf0e9f33fa6a03537037c296ff1f4a2b2ee24f31d58"
+    },
+    {
+      "path": "tests/broadcast-lifecycle.test.mjs",
+      "bytes": 51371,
+      "sha256": "606ad79ebc27d1d70f510d3f2f18b5017565fe3ddecce1ceb2235f78682d8ddb"
+    },
+    {
+      "path": "tests/broadcast-model.test.mjs",
+      "bytes": 26430,
+      "sha256": "b5212acc09c3105dce1d23ad0f07c26e4114330d34aea31aba6c3e9bc7507058"
+    },
+    {
+      "path": "tests/browser/announcements.browser.mjs",
+      "bytes": 21219,
+      "sha256": "2db8f4368e18c90396a991ac974742d1e40f7ddb82504837cf3461aeff5dc38f"
+    },
+    {
+      "path": "tests/browser/broadcast-scale.browser.mjs",
+      "bytes": 41052,
+      "sha256": "4b721afbbad2ef19f74c0a27a1acff2037ae919f8d05fc155033cafec1f37044"
+    },
+    {
+      "path": "tests/browser/chat-accessibility.browser.mjs",
+      "bytes": 122330,
+      "sha256": "c781fe073292eed2db3ca3c819876d378e2d80d76c01ee35e7870d0ce3c7e588"
+    },
+    {
+      "path": "tests/browser/help.browser.mjs",
+      "bytes": 21122,
+      "sha256": "5e668305453a1487de912c11af8a4354820c7ffd17208ff6119519cbac3e3a99"
+    },
+    {
+      "path": "tests/browser/video-messaging.browser.mjs",
+      "bytes": 15965,
+      "sha256": "c4b28b1caf01d65ba17ba4a68930214a595751f8d46f1ec31b46cb91bfdce8ae"
+    },
+    {
+      "path": "tests/chat-accessibility.test.mjs",
+      "bytes": 42052,
+      "sha256": "dd7b1640c477122e9dc86b94794022324161007fd25ef8d5c7509e9de25206bb"
+    },
+    {
+      "path": "tests/chat-drafts.test.mjs",
+      "bytes": 10573,
+      "sha256": "80ba54338fd9366523fdcfe60d34ffe690a1578b3b31c25e063518fdc372541c"
+    },
+    {
+      "path": "tests/chat-http.test.mjs",
+      "bytes": 41914,
+      "sha256": "3a6192bdfea5722a0450bf47fb730de2bf556978c4af4036d3677a67928225b2"
+    },
+    {
+      "path": "tests/chat-i18n.test.mjs",
+      "bytes": 40621,
+      "sha256": "ce6238af46840ae357f7f8cb7368805ca84cef83ff7f53b211037ce6f3fa9803"
+    },
+    {
+      "path": "tests/chat-lifecycle.test.mjs",
+      "bytes": 129258,
+      "sha256": "7144c1d6c268cf342c91efe19ba6a677b328bbccdc73a1440af5bced5c2182d7"
+    },
+    {
+      "path": "tests/help-http.test.mjs",
+      "bytes": 16100,
+      "sha256": "bf0dc6a47549fe60e4a5ba9eb55a3e7beac94eee4d60b66f90f04ae6c7a7e717"
+    }
+  ],
+  "productionActions": {
+    "managerChanged": false,
+    "runtimeRestarted": false,
+    "migrated": false,
+    "dnsApachePhpChanged": false,
+    "customerMessageOrDeletion": false,
+    "cloudBrowserUsed": false,
+    "hostedBackupTestPerformed": false
+  },
+  "backupHostedTest": "deferred_by_user",
+  "remaining": [
+    "Acquire exact-source CI for this lot on PR129.",
+    "Lot3 documentation, proven unused code and CI maintenance remains.",
+    "Lot4 final exact-source merge/release/deployment and grouped hosted checks remains.",
+    "Unestablished privacy-notice operator facts and A11 topology remain explicit; no legal foundation or proxy trust is invented."
+  ],
+  "nextAction": "Publish the coherent lot2 checkpoint and qualify its exact source once in PR129; no production operation."
+}

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createBroadcastState, clearBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, contactPageQuery, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, compositionValid, canConfirmBroadcast, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, mergeCampaign, acceptCampaign, updateAudience, parseRecipientPage } from "../public/broadcast-model.js";
+import { createBroadcastState, clearBroadcast, suspendBroadcast, broadcastTicket, currentBroadcast, acceptBroadcastSession, resetContacts, contactPageQuery, acceptContacts, selectRecipient, clearSelection, updateComposition, previewTicket, acceptPreview, compositionValid, canConfirmBroadcast, prepareCampaign, retryCampaign, rejectCampaign, parseCampaign, mergeCampaign, acceptCampaign, updateAudience, parseRecipientPage } from "../public/broadcast-model.js";
 import "../public/session-clock.js";
 
 const now = 1800000000000;
@@ -123,11 +123,29 @@ test("acknowledgment must match the immutable caller ID and contents before rele
   const accepted = acceptCampaign(state, ticket, { campaign: campaign(payload, { privateField: "secret" }), duplicate: true });
   assert.equal(accepted.id, id(9000)); assert.equal(Object.hasOwn(accepted, "privateField"), false); assert.equal(state.pending, null); assert.equal(state.selected.size, 0); assert.equal(state.draft.body, "");
 });
-test("hiding or logging out drops content, recipients and pending acknowledgments even after the same admin returns", () => {
+test("logging out drops content, recipients and pending acknowledgments even after the same admin returns", () => {
   const state = ready(); const payload = prepareCampaign(state, id(90), now); const ticket = broadcastTicket(state); const oldPreview = previewTicket(state); clearBroadcast(state);
   assert.equal(state.pending, null); assert.equal(state.preview, null); assert.equal(state.contacts.size, 0); assert.equal(state.selected.size, 0); assert.equal(state.draft.body, "");
   acceptBroadcastSession(state, clearBroadcast(state, { visible: true }), admin(), now);
   assert.equal(acceptCampaign(state, ticket, { campaign: campaign(payload), duplicate: false }), null); assert.equal(acceptPreview(state, oldPreview, { recipients: [], eligibleCount: 0, repeatCount: 0 }), false);
+});
+test("suspension retains the draft and exact uncertain payload while invalidating every old response", () => {
+  const state = ready(); updateComposition(state, { mediaId: id(300) }); acceptPreview(state, previewTicket(state), preview(state)); state.acknowledged = true;
+  const payload = prepareCampaign(state, id(90), now), old = broadcastTicket(state), oldPreview = previewTicket(state);
+  suspendBroadcast(state);
+  assert.equal(state.visible, false); assert.equal(state.session.id, admin().user.id); assert.equal(state.draft.mediaId, id(300)); assert.equal(state.selected.size, 2);
+  assert.equal(state.pending.status, "uncertain"); assert.strictEqual(state.pending.payload, payload); assert.equal(state.acknowledged, false);
+  assert.equal(retryCampaign(state), null); assert.equal(currentBroadcast(state, old), false);
+  state.visible = true; assert.equal(acceptBroadcastSession(state, broadcastTicket(state), admin(), now), true);
+  assert.equal(acceptCampaign(state, old, { campaign: campaign(payload), duplicate: false }), null);
+  assert.equal(acceptPreview(state, oldPreview, preview(state)), false); assert.strictEqual(retryCampaign(state), payload);
+});
+test("a different session or feature proof after suspension purges the retained private work", () => {
+  for (const input of [admin({ csrf: "z".repeat(43) }), admin({ user: { ...admin().user, id: id(1001) } }), admin({ mediaEnabled: false })]) {
+    const state = ready(); prepareCampaign(state, id(90), now); suspendBroadcast(state); state.visible = true;
+    assert.equal(acceptBroadcastSession(state, broadcastTicket(state), input, now), false);
+    assert.equal(state.pending, null); assert.equal(state.selected.size, 0); assert.equal(state.draft.body, "");
+  }
 });
 test("campaign detail discards private server fields and retains only individual recipient status", () => {
   const state = ready(); const payload = prepareCampaign(state, id(90), now); const row = campaign(payload, { recipients: payload.conversationIds.map((conversationId) => ({ conversationId, client: { id: id(400), pseudonym: "Client fictif", email: "private@example.invalid" }, state: "pending", reason: null, messageId: null, deliveredAt: null, notes: "Secret" })) });

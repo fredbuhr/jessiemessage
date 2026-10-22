@@ -23,6 +23,14 @@ export function clearBroadcast(state, { visible = false } = {}) {
   state.audienceMode = "selected"; state.audienceFilters = defaultFilters();
   state.acknowledged = false; state.pending = null; state.csrfFailed = false; return broadcastTicket(state);
 }
+export function suspendBroadcast(state) {
+  if (!state.visible) return broadcastTicket(state);
+  state.epoch += 1; state.filterEpoch += 1; state.previewEpoch += 1; state.visible = false; state.acknowledged = false;
+  // An aborted confirmation may already have committed. Keep its exact key and
+  // immutable payload for an explicit retry after the owner is verified again.
+  if (state.pending) state.pending.status = "uncertain";
+  return broadcastTicket(state);
+}
 export function broadcastTicket(state) { return { epoch: state.epoch, adminId: state.session?.id ?? null }; }
 export function currentBroadcast(state, ticket) { return state.visible && ticket.epoch === state.epoch && (ticket.adminId === null || ticket.adminId === state.session?.id); }
 export function acceptBroadcastSession(state, ticket, input, now = Date.now()) {
@@ -35,7 +43,7 @@ export function acceptBroadcastSession(state, ticket, input, now = Date.now()) {
     || input.videoEnabled === true && input.largeAudiencesEnabled !== true
     || input.largeAudiencesEnabled !== undefined && typeof input.largeAudiencesEnabled !== "boolean") { clearBroadcast(state); return false; }
   const largeAudiencesEnabled = input.largeAudiencesEnabled === true;
-  if (state.session && (state.session.id !== user.id || state.session.csrf !== input.csrf || state.session.largeAudiencesEnabled !== largeAudiencesEnabled || (state.session.videoEnabled === true) !== (input.videoEnabled === true) || (state.session.videoCreationEnabled !== false) !== (input.videoCreationEnabled !== false))) { clearBroadcast(state, { visible: true }); return false; }
+  if (state.session && (state.session.id !== user.id || state.session.csrf !== input.csrf || state.session.mediaEnabled !== input.mediaEnabled || state.session.largeAudiencesEnabled !== largeAudiencesEnabled || (state.session.videoEnabled === true) !== (input.videoEnabled === true) || (state.session.videoCreationEnabled !== false) !== (input.videoCreationEnabled !== false))) { clearBroadcast(state, { visible: true }); return false; }
   state.session = { id: user.id, csrf: input.csrf, expiresAt: input.expiresAt, mediaEnabled: input.mediaEnabled, largeAudiencesEnabled, ...(input.videoEnabled === true ? { videoEnabled: true, ...(input.videoCreationEnabled === false ? { videoCreationEnabled: false } : {}) } : {}) }; return true;
 }
 export function resetContacts(state, query = "limit=50") { state.filterEpoch += 1; state.contactQuery = query; state.contacts.clear(); return state.filterEpoch; }

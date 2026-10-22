@@ -2,6 +2,7 @@ import { makeConversationState, belongsTo, orderedMessages, mergeMessages, merge
 import { prepareImageUpload } from "/image-preparation.js";
 import { quickReplyOptions, appendQuickReply } from "/quick-replies.js";
 import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";
+import { createChatDrafts } from "/chat-drafts.js";
 
 const ui = globalThis.JessieI18n ?? {
   register() {}, t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
@@ -12,6 +13,13 @@ const ui = globalThis.JessieI18n ?? {
   numberParam(value, options = {}) { return value.toLocaleString("fr-FR", options); },
   getLanguage() { return "fr"; }, onChange() { return () => {}; }, apply() {},
 };
+ui.register({
+  "Ton brouillon texte a été retrouvé.": "Your text draft has been restored.",
+  "Ton brouillon texte a été retrouvé. Ajoute à nouveau les pièces jointes.": "Your text draft has been restored. Add the attachments again.",
+  "Un envoi reste à confirmer. Réessaie cet envoi pour reprendre la même demande.": "A send still needs confirmation. Retry this send to resume the same request.",
+  "Ce navigateur ne peut pas garder ce brouillon après rechargement. Il reste dans cet onglet.": "This browser cannot keep this draft after reloading. It remains in this tab.",
+  "Cet envoi n’a pas commencé. Réessaie sans recharger la page pour conserver ton brouillon.": "This send has not started. Retry without reloading the page to keep your draft.",
+});
 
 const el = (id) => document.getElementById(id);
 const role = location.pathname === "/admin/messages" ? "admin" : location.pathname === "/messages" ? "client" : null;
@@ -20,6 +28,7 @@ const chatBase = `/api/chat/${role}`;
 const mediaBase = `/api/media/${role}`;
 const videoBase = "/api/video/" + role;
 const states = new Map(); const inbox = new Map(); const controllers = new Set();
+const drafts = createChatDrafts({ storage: () => globalThis.sessionStorage, clock: () => Date.now(), digest: bytes => crypto.subtle.digest("SHA-256", bytes) });
 const messageRows = new Map();
 let generation = 0; let visibilityGeneration = 0; let selectionEpoch = 0;
 let selected = null; let csrf = null; let ready = false; let expiryTimer = null;
@@ -336,7 +345,12 @@ async function refreshTasksMenu(force = false) {
     if (tasksRefresh === pending && fresh(ticket, true) && !error.stale && [401, 403].includes(error.status)) await handleError(error);
   } finally { if (tasksRefresh === pending) tasksRefresh = null; }
 }
-function clearPrivate() {
+function clearPrivate({ purgeDrafts = false } = {}) {
+  if (purgeDrafts) drafts.clear(role);
+  else {
+    for (const state of states.values()) if (state.conversation) drafts.write(state, { selected: state.id === selected });
+    drafts.detach();
+  }
   closeChatMenu(); closeComposerTools(); menuOpener = null;
   quickReplyLanguage = null;
   tasksCapability = false; tasksRefresh = null; lastTasksRefresh = 0;
@@ -409,7 +423,7 @@ function hasUnsavedWork() {
   return !loggingOut && (crm?.hasUnsavedWork?.() === true || [...states.values()].some((state) => state.draft?.length || state.pending || state.imageDraft || state.videoDraft));
 }
 function signOut() {
-  clearPrivate();
+  clearPrivate({ purgeDrafts: true });
   location.replace(pendingNotification ? globalThis.JessieNotificationLink.destination(role, pendingNotification, true) : role === "admin" ? "/admin/login" : "/access");
 }
 function snapshot(state = null) { return { generation, visibilityGeneration, selectionEpoch, id: state?.id, epoch: state?.epoch }; }
@@ -458,8 +472,11 @@ async function refreshSession({ allowLoggingOut = false } = {}) {
   const owner = sessionIdentity(session);
   if (!owner) { signOut(); throw staleResponse(); }
   const changed = Boolean(sessionOwner && !sameOwner(sessionOwner, owner));
-  if (changed) clearPrivate();
+  if (changed) clearPrivate({ purgeDrafts: true });
   sessionOwner = owner; csrf = session.csrf; sessionCheckedAt = Date.now();
+  const ticket = snapshot();
+  await drafts.bind(owner);
+  if (!fresh(ticket, true) || !sameOwner(owner, sessionOwner) || !visible() || loggingOut && !allowLoggingOut) throw staleResponse();
   expiryTimer?.();
   expiryTimer = globalThis.JessieSessionClock.scheduleSessionCheck(session.expiresAt, () => { void resumeConnection(); });
   return { session, changed };
@@ -522,7 +539,7 @@ async function handleError(error, state = null) {
   }
   if (error.status === 401 || (role === "client" && error.status === 403)) { signOut(); return; }
   if (state && error.status === 404 && belongsTo(currentState(), state.id, state.epoch)) {
-    states.delete(state.id); inbox.delete(state.id); selected = null; crm?.removeConversation(state.id); selectionEpoch += 1; selectionLoading = false; clearChat(); renderInbox(); notice("Cette conversation n’est plus accessible.", true); schedulePolling(); return;
+    drafts.forget(state.id); states.delete(state.id); inbox.delete(state.id); selected = null; crm?.removeConversation(state.id); selectionEpoch += 1; selectionLoading = false; clearChat(); renderInbox(); notice("Cette conversation n’est plus accessible.", true); schedulePolling(); return;
   }
   if (role === "admin" && error.status === 403) {
     try {
@@ -1016,6 +1033,7 @@ async function refreshCrmCapability() {
       tasksEnabled: tasksCapability,
       onError: (error) => handleError(error),
       onUnavailable(id) {
+        drafts.forget(id);
         states.delete(id); inbox.delete(id);
         if (selected === id) { selected = null; selectionEpoch += 1; selectionLoading = false; clearChat(); }
         renderInbox(); notice("Cette conversation n’est plus accessible.", true); schedulePolling();
@@ -1259,6 +1277,10 @@ function renderMeta(state) {
   for (const id of ["pick-image", "open-library"]) el(id).disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
   renderImageDraft(state);
   renderVideoDraft(state);
+  if (!drafts.write(state) && state.draft.length) {
+    ui.text(el("composer-help"), "Ce navigateur ne peut pas garder ce brouillon après rechargement. Il reste dans cet onglet.");
+    el("composer-help").classList.remove("sr-only");
+  }
   resizeComposer();
   el("pending-controls").hidden = state.pending?.status !== "retry";
   el("retry-send").disabled = !conversation.canSend || sendBusy;
@@ -1414,11 +1436,20 @@ async function selectConversation(id, { focus = false, target = null } = {}) {
     else {
       const anchor = target ? `&after=${(BigInt(target.sequence) - 1n).toString()}` : "";
       const result = await request(`${conversationPath(state)}/messages?limit=50${anchor}`, { state });
+      const recovered = state.draftHydrated ? null : drafts.read(state.id);
+      state.draftHydrated = true;
+      if (recovered && !state.draft && !state.pending && !state.imageDraft && !state.videoDraft) {
+        state.draft = recovered.text;
+        if (recovered.pending) state.pending = { clientMessageId: recovered.pending.clientMessageId, body: recovered.text, status: "retry" };
+      }
       mergeMessagePage(state, result);
+      el("message-body").value = state.draft;
       state.eventCursor = sequence(result.eventCursor); state.hasMoreBefore = result.hasMoreBefore; state.nextBefore = result.nextBefore;
       state.hasMoreAfter = result.hasMoreAfter === true; state.nextAfter = result.nextAfter ?? null;
       inbox.set(id, result.conversation);
       renderMessages(state, { initial: true });
+      if (recovered && state.pending) notice("Un envoi reste à confirmer. Réessaie cet envoi pour reprendre la même demande.");
+      else if (recovered && state.draft) notice(recovered.hadAttachment ? "Ton brouillon texte a été retrouvé. Ajoute à nouveau les pièces jointes." : "Ton brouillon texte a été retrouvé.");
     }
     if (!moreHistory) armMessageAnnouncement(state); schedulePolling(moreHistory ? 300 : retryDelay);
   } catch (error) { await handleError(error, state); }
@@ -1537,6 +1568,8 @@ async function sendMessage(retry = false) {
   const body = retry ? state.pending?.body : el("message-body").value;
   if (!validBody(body)) { notice("Écris un message de 1 à 4 096 caractères.", true); return; }
   const pending = prepareSend(state, body, state.pending?.clientMessageId ?? newClientId());
+  state.draft = body;
+  if (!drafts.beforeSend(state).safeToSend) { retrySend(state); renderMeta(state); notice("Cet envoi n’a pas commencé. Réessaie sans recharger la page pour conserver ton brouillon.", true); return; }
   state.draft = body; sendBusy = true; renderMeta(state); notice("Envoi en cours…");
   try {
     const result = await request(`${conversationPath(state)}/messages`, { state, mutation: true, body: { clientMessageId: pending.clientMessageId, body: pending.body } });
@@ -1555,6 +1588,8 @@ async function sendImage(retry = false) {
   if (!validCaption(caption)) { notice("Ajoute une légende de 1 000 caractères maximum, ou laisse le champ vide.", true); return; }
   const draft = state.imageDraft;
   const pending = prepareImageSend(state, { caption, mediaId: retry ? state.pending?.mediaId : draft?.asset?.id ?? null, file: retry ? state.pending?.file : draft?.file ?? null }, state.pending?.clientMessageId ?? newClientId());
+  state.draft = caption;
+  if (!drafts.beforeSend(state).safeToSend) { retrySend(state); renderMeta(state); notice("Cet envoi n’a pas commencé. Réessaie sans recharger la page pour conserver ton brouillon.", true); return; }
   state.draft = caption; sendBusy = true; let preparing = false; renderMeta(state); notice(pending.mediaId ? "Envoi de la photo…" : "Préparation de la photo…");
   try {
     if (!pending.mediaId) {
@@ -1591,6 +1626,8 @@ async function sendVideo(retry = false) {
   if (!retry && (!state.videoDraft?.ready || state.videoDraft.invalid)) return;
   const pending = prepareVideoSend(state, { caption, videoId: retry ? state.pending?.videoId : null,
     file: retry ? state.pending?.file : state.videoDraft?.file }, state.pending?.clientMessageId ?? newClientId());
+  state.draft = caption;
+  if (!drafts.beforeSend(state).safeToSend) { retrySend(state); renderMeta(state); notice("Cet envoi n’a pas commencé. Réessaie sans recharger la page pour conserver ton brouillon.", true); return; }
   const transfer = { controller: new AbortController(), state, pending, cancelled: false };
   videoTransfer = transfer; controllers.add(transfer.controller); el("video-progress").value = 0;
   state.draft = caption; sendBusy = true; renderMeta(state);
@@ -1654,7 +1691,7 @@ async function markRead() {
 }
 async function logout() {
   if (logoutBusy) return; logoutBusy = true; loggingOut = true;
-  const logoutCsrf = csrf; clearPrivate(); csrf = logoutCsrf;
+  const logoutCsrf = csrf; clearPrivate({ purgeDrafts: true }); csrf = logoutCsrf;
   el("logout").disabled = true; notice("Déconnexion en cours…", false, "session-status");
   try { await request(`${sessionBase}/logout`, { mutation: true, verifyOwner: false }); signOut(); }
   catch (error) {
@@ -2091,6 +2128,8 @@ async function start({ session = null } = {}) {
       if (session) {
         const owner = sessionIdentity(session); if (!owner) { signOut(); return; }
         sessionOwner = owner; csrf = session.csrf; sessionCheckedAt = Date.now();
+        await drafts.bind(owner);
+        if (!fresh(task.ticket, true) || !sameOwner(owner, sessionOwner) || !visible() || loggingOut) throw staleResponse();
         expiryTimer = globalThis.JessieSessionClock.scheduleSessionCheck(session.expiresAt, () => { void resumeConnection(); });
       } else await refreshSession();
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
@@ -2113,7 +2152,11 @@ async function start({ session = null } = {}) {
       el("workspace").classList.toggle("is-admin", role === "admin");
       el("inbox").hidden = role !== "admin"; el("client-aside").hidden = role !== "client"; el("back-to-inbox").hidden = role !== "admin";
       clearChat();
-      if (role === "admin") await loadInbox();
+      if (role === "admin") {
+        await loadInbox();
+        const remembered = drafts.selected();
+        if (remembered && !pendingNotification) await selectConversation(remembered);
+      }
       else {
         const conversation = await request(`${chatBase}/conversation`, { account: true });
         await selectConversation(conversation.id);

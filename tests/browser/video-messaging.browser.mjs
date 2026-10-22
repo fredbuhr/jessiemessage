@@ -11,7 +11,7 @@ const id = number => number.toString(16).padStart(32, "0");
 const conversationId = id(10), initialMessageId = id(20), videoId = id(30);
 const mp4 = Buffer.from(await readFile(new URL("../fixtures/video-decodable.mp4.base64", import.meta.url), "utf8"), "base64");
 const csrf = Buffer.alloc(32, 1).toString("base64url");
-const publicFiles = new Set(["chat.html", "chat.js", "chat-model.js", "chat.css", "session-clock.js", "notification-link.js", "i18n.js", "i18n-chat.js", "i18n-tools.js", "i18n.css", "help-link.js", "notifications.js", "notifications.css", "emoji-catalog.js", "emoji.css", "quick-replies.js", "image-preparation.js", "profile.css", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css", "brand/icon-32.png", "brand/icon-128.png", "brand/icon-192.png"]);
+const publicFiles = new Set(["chat.html", "chat.js", "chat-model.js", "chat-drafts.js", "chat.css", "session-clock.js", "notification-link.js", "i18n.js", "i18n-chat.js", "i18n-tools.js", "i18n.css", "help-link.js", "notifications.js", "notifications.css", "emoji-catalog.js", "emoji.css", "quick-replies.js", "image-preparation.js", "profile.css", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css", "brand/icon-32.png", "brand/icon-128.png", "brand/icon-192.png"]);
 const types = { ".js": "text/javascript", ".css": "text/css", ".html": "text/html", ".png": "image/png", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json" };
 let server, driver, origin, fixture;
 function metadata(messageId) { return { id: videoId, bytes: mp4.length, mime: "video/mp4", contentUrl: "/api/video/client/conversations/" + conversationId + "/messages/" + messageId + "/content" }; }
