@@ -295,6 +295,42 @@ test("admin page is protected, public login preserves the approved brand, assets
   }
 });
 
+test("only the exact login slash alias redirects locally without reading or changing a session", async (t) => {
+  const { base, calls } = await fixture(t);
+  for (const query of ["", "?continue=%2Fadmin%2Fbackups", "?continue=https%3A%2F%2Fattacker.example%2Fx&continue=%2F%2Fattacker.example"]) {
+    for (const method of ["GET", "HEAD"]) for (const value of [undefined, cookie, "__Host-jessie_session=invalid", `__Host-jessie_session=${Buffer.alloc(32, 99).toString("base64url")}`]) {
+      const response = await fetch(`${base}/admin/login/${query}`, { method, redirect: "manual", headers: value ? { Cookie: value } : {} });
+      assert.equal(response.status, 308);
+      assertHeaders(response);
+      const location = response.headers.get("location");
+      assert.equal(location, `/admin/login${query}`);
+      assert.equal(new URL(location, origin).origin, origin);
+      assert.equal(new URL(location, origin).pathname, "/admin/login");
+      assert.equal(response.headers.get("set-cookie"), null);
+      assert.equal(await response.text(), "");
+    }
+  }
+  for (const method of ["POST", "PUT", "PATCH", "DELETE", "OPTIONS"]) {
+    const response = await fetch(`${base}/admin/login/?continue=%2Fadmin%2Fbackups`, {
+      method, redirect: "manual", headers: { Cookie: cookie, Origin: "https://attacker.example", "Content-Type": "text/plain" }, body: "not-json",
+    });
+    assert.equal(response.status, 405);
+    assert.equal(response.headers.get("allow"), "GET, HEAD");
+    assert.equal(response.headers.get("location"), null);
+    assert.equal(response.headers.get("set-cookie"), null);
+    assertHeaders(response);
+    assert.deepEqual(await response.json(), { error: "method_not_allowed" });
+  }
+  for (const path of ["/api/auth/login/", "/admin/login//"]) for (const method of ["GET", "HEAD", "POST"]) {
+    const response = await fetch(`${base}${path}`, { method, redirect: "manual", headers: { Cookie: cookie } });
+    assert.equal(response.status, 404, `${method} ${path}`);
+    assert.equal(response.headers.get("location"), null);
+    assert.equal(response.headers.get("set-cookie"), null);
+    assert.equal(await response.text(), method === "HEAD" ? "" : "fallback");
+  }
+  assert.deepEqual(calls, [], "canonicalization must neither read nor mutate authentication state");
+});
+
 test("auth routes enforce methods and HEAD never contains a page or JSON body", async (t) => {
   const { base, calls } = await fixture(t);
   for (const [path, method, allow] of [["/api/auth/login", "GET", "POST"], ["/api/auth/session", "POST", "GET"], ["/api/auth/logout", "GET", "POST"], ["/admin/login", "OPTIONS", "GET, HEAD"], ["/admin-login.js", "POST", "GET, HEAD"]]) {

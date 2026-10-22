@@ -1726,7 +1726,7 @@ function closeQuickReplies(restoreFocus = false, compose = false) {
   quickReplyContext = null; personalReplyAbort?.abort(); personalReplyAbort = null;
   personalReplies = null; personalReplyDraft = null; personalReplyBusy = null; personalReplyConflict = false; personalReplyUncertain = false; personalReplyDelete = null;
   if (el("quick-replies-dialog").open) el("quick-replies-dialog").close();
-  for (const id of ["quick-replies-list", "personal-replies-list"]) { ui.forget(el(id)); el(id).replaceChildren(); }
+  ui.forget(el("quick-replies-list")); el("quick-replies-list").replaceChildren();
   for (const id of ["personal-reply-title", "personal-reply-body"]) el(id).value = "";
   el("personal-reply-language").value = "fr"; el("personal-reply-editor").hidden = true;
   notice("", false, "quick-replies-status"); notice("", false, "personal-replies-status");
@@ -1743,15 +1743,6 @@ function insertQuickReply(text) {
   el("message-body").value = value; state.draft = value; closeQuickReplies(true, true); renderMeta(state);
   el("message-body").setSelectionRange?.(value.length, value.length);
   notice("Réponse ajoutée au brouillon. Relis le message avant de l’envoyer.");
-}
-function renderQuickReplies() {
-  ui.forget(el("quick-replies-list")); el("quick-replies-list").replaceChildren();
-  for (const reply of quickReplyOptions(quickReplyLanguage)) {
-    const button = document.createElement("button"); button.type = "button"; button.className = "quick-reply";
-    button.dataset.quickReply = reply.id; button.lang = quickReplyLanguage; ui.rawText(button, reply.text);
-    button.disabled = Boolean(personalReplyDraft || personalReplyBusy === "write");
-    button.addEventListener("click", () => insertQuickReply(reply.text)); el("quick-replies-list").append(button);
-  }
 }
 function validPersonalReplyTitle(value) {
   return typeof value === "string" && value.length >= 1 && value.length <= 64 && value.isWellFormed() && value.trim() === value
@@ -1775,7 +1766,7 @@ function personalReplyControls() {
   el("personal-reply-cancel").disabled = Boolean(personalReplyBusy);
   for (const id of ["personal-reply-title", "personal-reply-body"]) { el(id).disabled = Boolean(personalReplyBusy); el(id).readOnly = personalReplies?.writable === false; }
   el("personal-reply-language").disabled = Boolean(personalReplyBusy) || personalReplies?.writable === false;
-  for (const button of el("quick-replies-list").children) button.disabled = Boolean(personalReplyDraft || personalReplyBusy === "write");
+  for (const button of el("quick-replies-list").querySelectorAll(".quick-reply")) button.disabled = Boolean(personalReplyDraft || personalReplyBusy === "write");
 }
 function personalReplyAction(source, handler, marker) {
   const button = document.createElement("button"); button.type = "button"; button.className = "text-button"; ui.text(button, source);
@@ -1783,28 +1774,37 @@ function personalReplyAction(source, handler, marker) {
   button.disabled = Boolean(personalReplyBusy || personalReplyConflict || personalReplyUncertain || personalReplyDraft || !personalReplies?.writable);
   button.addEventListener("click", () => { if (quickRepliesCurrent() && !button.disabled) handler(); }); return button;
 }
-function renderPersonalReplies() {
-  const list = el("personal-replies-list"); ui.forget(list); list.replaceChildren();
+function renderQuickReplies() {
+  const list = el("quick-replies-list");
+  if (list.querySelector("[data-quick-reply]")?.lang !== quickReplyLanguage) {
+    ui.forget(list); list.replaceChildren();
+    for (const reply of quickReplyOptions(quickReplyLanguage)) {
+      const button = document.createElement("button"); button.type = "button"; button.className = "quick-reply";
+      button.dataset.quickReply = reply.id; button.lang = quickReplyLanguage; ui.rawText(button, reply.text);
+      button.disabled = Boolean(personalReplyDraft || personalReplyBusy === "write");
+      button.addEventListener("click", () => insertQuickReply(reply.text)); list.append(button);
+    }
+  } else {
+    for (const row of list.querySelectorAll(".personal-reply-row")) { ui.forget(row); row.remove(); }
+  }
   for (const reply of personalReplies?.replies ?? []) {
     if (reply.language !== quickReplyLanguage) continue;
     const row = document.createElement("div"); row.className = "personal-reply-row"; row.dataset.personalId = reply.id;
+    row.setAttribute("role", "group"); row.setAttribute("aria-label", reply.title);
     const insert = document.createElement("button"); insert.type = "button"; insert.className = "quick-reply personal-reply-insert"; insert.lang = reply.language;
     insert.dataset.personalQuickReply = reply.id; insert.disabled = Boolean(personalReplyDraft || personalReplyBusy === "write");
-    const title = document.createElement("strong"), body = document.createElement("span"); ui.rawText(title, reply.title); ui.rawText(body, reply.body); insert.append(title, body);
+    ui.rawText(insert, reply.body);
     insert.addEventListener("click", () => insertQuickReply(reply.body)); row.append(insert);
     const actions = document.createElement("div"); actions.className = "personal-reply-actions"; actions.hidden = personalReplies.writable === false;
-    actions.append(personalReplyAction("Modifier", () => editPersonalReply(reply), "edit"), personalReplyAction("Supprimer", () => { personalReplyDelete = reply.id; renderPersonalReplies(); focusVisible(el("personal-replies-list").querySelector(".personal-reply-confirm")?.querySelector("button")); }, "delete"));
+    actions.append(personalReplyAction("Modifier", () => editPersonalReply(reply), "edit"), personalReplyAction("Supprimer", () => { personalReplyDelete = reply.id; renderQuickReplies(); focusVisible(el("quick-replies-list").querySelector(".personal-reply-confirm")?.querySelector("button")); }, "delete"));
     row.append(actions);
     if (personalReplyDelete === reply.id) {
       const confirmation = document.createElement("div"), prompt = document.createElement("p"); ui.text(prompt, "Supprimer cette réponse personnelle ?");
       confirmation.className = "personal-reply-confirm"; confirmation.append(prompt,
         personalReplyAction("Confirmer la suppression", () => { void savePersonalReplies(personalReplies.replies.filter(value => value.id !== reply.id)); }, "confirm-delete"),
-        personalReplyAction("Annuler", () => { personalReplyDelete = null; renderPersonalReplies(); }, "cancel-delete")); row.append(confirmation);
+        personalReplyAction("Annuler", () => { personalReplyDelete = null; renderQuickReplies(); }, "cancel-delete")); row.append(confirmation);
     }
     list.append(row);
-  }
-  if (personalReplies && !list.children.length) {
-    const empty = document.createElement("p"); empty.className = "media-help"; ui.text(empty, "Aucune réponse personnelle dans cette langue."); list.append(empty);
   }
   personalReplyControls();
 }
@@ -1818,7 +1818,7 @@ function editPersonalReply(reply = null) {
   personalReplyDraft = reply ? { ...reply } : { id: newClientId(), title: "", body: "", language: quickReplyLanguage };
   personalReplyDelete = null; el("personal-reply-editor").hidden = false;
   el("personal-reply-title").value = personalReplyDraft.title; el("personal-reply-body").value = personalReplyDraft.body; el("personal-reply-language").value = personalReplyDraft.language;
-  notice("", false, "personal-replies-status"); renderPersonalReplies(); focusVisible(el("personal-reply-title"));
+  notice("", false, "personal-replies-status"); renderQuickReplies(); focusVisible(el("personal-reply-title"));
 }
 function reportPersonalReplyError(error) {
   if (error.status === 401) { signOut(); return; }
@@ -1835,7 +1835,7 @@ async function loadPersonalReplies() {
     personalReplies = value; personalReplyConflict = false; personalReplyUncertain = false; personalReplyDelete = null;
     notice(!value.writable ? personalReplyDraft ? "Les réponses sont en lecture seule. Ton brouillon est conservé." : "Les réponses personnelles sont en lecture seule." : personalReplyDraft ? "Liste rechargée. Ton brouillon est conservé : vérifie-le puis enregistre." : "", false, "personal-replies-status");
   } catch (error) { if (quickRepliesCurrent(context) && !error.stale) reportPersonalReplyError(error); }
-  finally { if (quickRepliesCurrent(context)) { personalReplyBusy = null; personalReplyAbort = null; renderPersonalReplies(); } }
+  finally { if (quickRepliesCurrent(context)) { personalReplyBusy = null; personalReplyAbort = null; renderQuickReplies(); } }
 }
 async function savePersonalReplies(replies) {
   const context = quickReplyContext; if (!quickRepliesCurrent(context) || !personalReplies?.writable || personalReplyBusy || personalReplyConflict || personalReplyUncertain) return;
@@ -1843,7 +1843,7 @@ async function savePersonalReplies(replies) {
     notice("Vérifie la réponse : titre de 1 à 64 caractères, texte de 1 à 4 096 caractères et 50 réponses maximum.", true, "personal-replies-status"); return;
   }
   const command = { expectedVersion: personalReplies.version, replies }; personalReplyBusy = "write";
-  const abort = new AbortController(); personalReplyAbort = abort; renderPersonalReplies(); notice("Enregistrement…", false, "personal-replies-status");
+  const abort = new AbortController(); personalReplyAbort = abort; renderQuickReplies(); notice("Enregistrement…", false, "personal-replies-status");
   try {
     const value = personalReplyView(await request("/api/admin/quick-replies", { account: true, mutation: true, body: command, signal: abort.signal }));
     if (!quickRepliesCurrent(context)) return;
@@ -1855,7 +1855,7 @@ async function savePersonalReplies(replies) {
     else if (!error.status || error.status >= 500 || error.status === 408) {
       personalReplyUncertain = true; notice("La confirmation manque. Recharge les réponses enregistrées avant toute nouvelle modification ; ton brouillon est conservé.", true, "personal-replies-status");
     } else reportPersonalReplyError(error);
-  } finally { if (quickRepliesCurrent(context)) { personalReplyBusy = null; personalReplyAbort = null; renderPersonalReplies(); } }
+  } finally { if (quickRepliesCurrent(context)) { personalReplyBusy = null; personalReplyAbort = null; renderQuickReplies(); } }
 }
 el("open-quick-replies").addEventListener("click", () => {
   closeComposerTools();
@@ -1863,19 +1863,19 @@ el("open-quick-replies").addEventListener("click", () => {
   closeEmojis();
   quickReplyContext = { ticket: snapshot(currentState()), owner: sessionOwner.id, csrf };
   quickReplyLanguage ??= ui.getLanguage() === "en" ? "en" : "fr";
-  el("quick-reply-language").value = quickReplyLanguage; renderQuickReplies(); renderPersonalReplies();
+  el("quick-reply-language").value = quickReplyLanguage; renderQuickReplies();
   el("quick-replies-dialog").showModal(); focusVisible(el("quick-reply-language")); void loadPersonalReplies();
 });
 el("quick-reply-language").addEventListener("change", () => {
   if (!quickRepliesCurrent() || !["fr", "en"].includes(el("quick-reply-language").value)) return;
-  quickReplyLanguage = el("quick-reply-language").value; renderQuickReplies(); renderPersonalReplies(); notice("", false, "quick-replies-status");
+  quickReplyLanguage = el("quick-reply-language").value; renderQuickReplies(); notice("", false, "quick-replies-status");
 });
 el("new-personal-reply").addEventListener("click", () => editPersonalReply());
 el("reload-personal-replies").addEventListener("click", () => { void loadPersonalReplies(); });
 el("personal-reply-cancel").addEventListener("click", () => {
   if (!quickRepliesCurrent() || personalReplyBusy) return;
   personalReplyDraft = null; el("personal-reply-title").value = ""; el("personal-reply-body").value = ""; el("personal-reply-editor").hidden = true;
-  renderPersonalReplies(); focusVisible(el("new-personal-reply"));
+  renderQuickReplies(); focusVisible(el("new-personal-reply"));
 });
 for (const id of ["personal-reply-title", "personal-reply-body", "personal-reply-language"]) el(id).addEventListener("input", capturePersonalReplyDraft);
 el("personal-reply-editor").addEventListener("submit", event => {

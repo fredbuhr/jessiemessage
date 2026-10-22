@@ -7,9 +7,9 @@ import { request as httpRequest } from "node:http";
 const token = Buffer.alloc(32, 17).toString("base64url"), csrf = Buffer.alloc(32, 18).toString("base64url");
 const origin = "https://jessiemessage.com";
 const paths = ["/admin", "/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/admin/privacy"];
-async function fixture(t, { legacy = false, backups = true } = {}) {
+async function fixture(t, { legacy = false, backups = true, auth = true } = {}) {
   const session = { user: { id: "1".repeat(32), role: "admin", pseudonym: "Synthetic" }, csrf, expiresAt: Date.now() + 86400000 };
-  const authHandler = createAuthHandler({ login() {}, logout() {}, logoutAll() {}, async session(value) { return value === token ? session : null; } }, { origin });
+  const authHandler = auth ? createAuthHandler({ login() {}, logout() {}, logoutAll() {}, async session(value) { return value === token ? session : null; } }, { origin }) : undefined;
   const restricted = async (request, response) => {
     const path = new URL(request.url, origin).pathname;
     if (!paths.slice(1).includes(path)) return false;
@@ -42,6 +42,28 @@ test("external administrator page navigation keeps the Strict cookie and a close
   assert.equal(navigation.status, 303, "navigation metadata also works without Accept");
 });
 
+test("backup navigation keeps its canonical login target and the slash alias retains the return query", async t => {
+  const request = await fixture(t);
+  for (const method of ["GET", "HEAD"]) {
+    const options = { method, headers: { Accept: "text/html", "Sec-Fetch-Site": "cross-site" } };
+    const navigation = await request("/admin/backups?untrusted=https://attacker.example", options);
+    const destination = "/admin/login?continue=%2Fadmin%2Fbackups";
+    assert.equal(navigation.status, 303);
+    assert.equal(navigation.headers.get("location"), destination);
+    const alias = await request("/admin/login/?continue=%2Fadmin%2Fbackups", options);
+    assert.equal(alias.status, 308);
+    assert.equal(alias.headers.get("location"), destination);
+    assert.equal(alias.headers.get("cache-control"), "no-store");
+    assert.equal(alias.headers.get("set-cookie"), null);
+    assert.equal(await alias.text(), "");
+    const login = await request(alias.headers.get("location"), options);
+    assert.equal(login.status, 200);
+    assert.equal(login.headers.get("set-cookie"), null);
+    assert.equal((await request("/admin/backups", { method })).status, 401, "the public login document does not authenticate protected reads");
+  }
+  assert.equal((await request("/api/auth/session")).status, 401);
+});
+
 test("navigation bridge never authenticates APIs, changes mutation checks or intercepts a presented session", async t => {
   const request = await fixture(t);
   const good = await request("/admin", { headers: { Accept: "text/html", Cookie: `__Host-jessie_session=${token}` } });
@@ -63,5 +85,15 @@ test("disabled routes and the recipe origin cannot acquire a primary-only backup
   for (const path of ["/admin/unknown", "/admin/backups/extra", "/admin-login.js"]) {
     const response = await disabled(path, { headers: { Accept: "text/html" } });
     assert.notEqual(response.status, 303);
+  }
+});
+
+test("a server without authentication does not acquire the login slash alias", async t => {
+  const request = await fixture(t, { auth: false });
+  for (const path of ["/admin/login", "/admin/login/", "/admin/login/?continue=%2Fadmin%2Fbackups"]) for (const method of ["GET", "HEAD"]) {
+    const response = await request(path, { method, headers: { Accept: "text/html" } });
+    assert.equal(response.status, 404);
+    assert.equal(response.headers.get("location"), null);
+    assert.equal(response.headers.get("set-cookie"), null);
   }
 });

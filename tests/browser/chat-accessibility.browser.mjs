@@ -120,7 +120,18 @@ async function startFixtureServer() {
       }
       if (url.pathname === "/api/admin/quick-replies") {
         if (!fixture.signedIn) { sendJson(401, { error: "authentication_required" }); return; }
-        if (request.method === "GET") { fixture.quickReplyReads += 1; sendJson(200, { ...fixture.quickReplies, ...(fixture.quickRepliesWritable === false ? { writable: false } : {}) }); return; }
+        if (request.method === "GET") {
+          fixture.quickReplyReads += 1;
+          if (fixture.holdNextQuickReplyRead) {
+            const held = fixture; held.holdNextQuickReplyRead = false;
+            await new Promise(resolve => {
+              const release = () => { response.off("close", release); if (held.releaseQuickReplyRead === release) held.releaseQuickReplyRead = null; resolve(); };
+              held.releaseQuickReplyRead = release; response.once("close", release);
+            });
+            if (response.destroyed) return;
+          }
+          sendJson(200, { ...fixture.quickReplies, ...(fixture.quickRepliesWritable === false ? { writable: false } : {}) }); return;
+        }
         if (request.method === "POST") {
           if (fixture.quickRepliesWritable === false) { sendJson(403, { error: "feature_read_only" }); return; }
           let raw = ""; for await (const chunk of request) { raw += chunk; if (raw.length > 65536) throw new Error("oversized_fixture_quick_replies"); }
@@ -1124,7 +1135,7 @@ for (const width of [320, 1280]) for (const language of ["fr", "en"]) {
 }
 
 test("Chrome: clients have no quick replies; Escape, full drafts and returning to the inbox never send", { timeout: 35000 }, async () => {
-  resetFixture(); fixture.holdInitialAdminMessages = true; const page = await browser(320);
+  resetFixture(); fixture.holdInitialAdminMessages = true; fixture.holdNextQuickReplyRead = true; const page = await browser(320);
   try {
     await loaded(page, "/messages"); assert.equal(await page.execute("return document.querySelector('#open-quick-replies').hidden"), true);
     await loaded(page, "/admin/messages"); await page.click(".contact");
@@ -1135,7 +1146,13 @@ test("Chrome: clients have no quick replies; Escape, full drafts and returning t
     fixture.releaseInitialAdminMessages();
     await waitUntil(() => page.execute(`const reply=document.querySelector('#open-quick-replies'),body=document.querySelector('#message-body');
       return !reply.hidden && !reply.disabled && !body.disabled && !body.readOnly && body.getClientRects().length>0;`), "quick replies and editable message field available after history");
-    await page.type("#message-body", "Unsent draft"); await clickComposerAction(page, "#open-quick-replies"); await page.key("\uE00C");
+    await page.type("#message-body", "Unsent draft"); await clickComposerAction(page, "#open-quick-replies");
+    await waitUntil(() => Boolean(fixture.releaseQuickReplyRead), "personal catalogue GET held while presets are usable");
+    await page.execute("window.__heldQuickReplyPresets=[...document.querySelectorAll('#quick-replies-list [data-quick-reply]')];document.querySelector('[data-quick-reply=thanks]').focus()");
+    fixture.releaseQuickReplyRead();
+    await waitUntil(() => page.execute("return !document.querySelector('#new-personal-reply').disabled"), "held personal catalogue response applied");
+    assert.equal(await page.execute("const current=[...document.querySelectorAll('#quick-replies-list [data-quick-reply]')];return current.length===6 && current.every((node,index)=>node===window.__heldQuickReplyPresets[index]) && document.activeElement===current.find(node=>node.dataset.quickReply==='thanks')"), true);
+    await page.key("\uE00C");
     assert.equal(await page.execute("return document.querySelector('#quick-replies-dialog').open"), false);
     assert.equal(await page.execute("return document.querySelector('#message-body').value"), "Unsent draft");
     await page.type("#message-body", "x".repeat(4096)); await clickComposerAction(page, "#open-quick-replies"); await page.click('[data-quick-reply="thanks"]');
@@ -1146,7 +1163,7 @@ test("Chrome: clients have no quick replies; Escape, full drafts and returning t
     assert.equal(await page.execute("return document.querySelector('#quick-replies-dialog').open"), false);
     assert.equal(await page.execute("return document.querySelector('#quick-replies-list').children.length"), 0);
     assert.equal(fixture.sent.length, 0); await noJavascriptErrors(page);
-  } finally { fixture.releaseInitialAdminMessages?.(); await page.close(); }
+  } finally { fixture.releaseInitialAdminMessages?.(); fixture.releaseQuickReplyRead?.(); await page.close(); }
 });
 
 async function openPersonalRepliesBrowser(page, language = "fr") {
@@ -1159,18 +1176,30 @@ async function openPersonalRepliesBrowser(page, language = "fr") {
 async function fillPersonalReply(page, title, body) {
   await page.type("#personal-reply-title", title); await page.type("#personal-reply-body", body); await page.click("#personal-reply-save");
 }
-for (const [width, language] of [[320, "fr"], [1280, "en"]]) test(`Chrome ${width}px ${language}: personal replies persist between sessions and CAS conflicts preserve both catalogue and draft`, { timeout: 90000 }, async () => {
+for (const [width, language] of [[320, "fr"], [1280, "en"]]) test(`Chrome ${width}px ${language}: personal replies join the preset list, persist between sessions and CAS conflicts preserve both catalogue and draft`, { timeout: 90000 }, async () => {
   resetFixture(); const first = await browser(width), second = await browser(width);
   try {
     await openPersonalRepliesBrowser(first, language);
     await first.click("#new-personal-reply"); await fillPersonalReply(first, "Envoyer", "Mes photos <b>texte personnel</b>");
     await waitUntil(() => fixture.quickReplies.version === "1" && first.execute("return document.querySelector('#personal-reply-editor').hidden"), "first personal reply saved");
     const replyId = fixture.quickReplies.replies[0].id;
+    assert.equal(await first.execute(`const list=document.querySelector('#quick-replies-list'),row=document.querySelector('[data-personal-id="${replyId}"]');
+      return document.querySelectorAll('.quick-replies-list').length===1 && list.querySelectorAll('[data-quick-reply]').length===6
+        && list.querySelectorAll('.quick-reply').length===7 && row?.parentElement===list
+        && document.querySelector('#personal-replies-title')===null && document.querySelector('#personal-replies-list')===null
+        && [...list.querySelectorAll('[data-quick-reply]')].every(button=>button.tagName==='BUTTON'&&!button.querySelector('[data-personal-action]'));`), true);
+    await first.click("#quick-reply-language"); await first.key(language === "fr" ? "\uE015" : "\uE013"); await first.key("\uE007");
+    const otherLanguage = language === "fr" ? "en" : "fr";
+    await waitUntil(() => first.execute("return document.querySelector('#quick-reply-language').value===arguments[0]", otherLanguage), "common catalogue changes phrase language");
+    assert.equal(await first.execute("return document.querySelectorAll('#quick-replies-list [data-quick-reply]').length===6 && document.querySelectorAll('#quick-replies-list [data-personal-id]').length===0"), true);
+    await first.click("#quick-reply-language"); await first.key(language === "fr" ? "\uE013" : "\uE015"); await first.key("\uE007");
+    await waitUntil(() => first.execute(`return document.querySelector('#quick-replies-list [data-personal-id="${replyId}"]')!==null`), "saved phrase returns to the same list in its language");
     assert.equal(fixture.quickReplyRequests.length, 1); assert.equal(fixture.sent.length, 0);
     await openPersonalRepliesBrowser(second, language);
-    assert.equal(await second.execute(`return document.querySelector('[data-personal-id="${replyId}"] strong').textContent`), "Envoyer");
-    assert.equal(await second.execute(`return document.querySelector('[data-personal-id="${replyId}"] span').textContent`), "Mes photos <b>texte personnel</b>");
-    assert.equal(await second.execute("return document.querySelectorAll('#personal-replies-list b').length"), 0);
+    assert.equal(await second.execute(`return document.querySelector('[data-personal-id="${replyId}"]').getAttribute('aria-label')`), "Envoyer");
+    assert.equal(await second.execute(`return document.querySelector('[data-personal-id="${replyId}"] .personal-reply-insert').textContent`), "Mes photos <b>texte personnel</b>");
+    assert.equal(await second.execute("return document.querySelectorAll('#quick-replies-list b').length"), 0);
+    assert.equal(await second.execute(`const row=document.querySelector('[data-personal-id="${replyId}"]');return row.getAttribute('role')==='group' && row.querySelector('strong')===null && row.querySelector('.personal-reply-insert').children.length===0;`), true);
     await second.click(`[data-personal-id="${replyId}"] [data-personal-action="edit"]`);
     await second.type("#personal-reply-title", "Mon titre"); await second.type("#personal-reply-body", "Brouillon conservé");
     await first.click("#new-personal-reply"); await fillPersonalReply(first, "Autre réponse", "À conserver depuis la première session");
@@ -1186,10 +1215,10 @@ for (const [width, language] of [[320, "fr"], [1280, "en"]]) test(`Chrome ${widt
     await second.click("#personal-reply-save"); await waitUntil(() => fixture.quickReplies.version === "3", "explicit save keeps the concurrent addition");
     assert.equal(fixture.quickReplies.replies.length, 2); assert.equal(fixture.quickReplies.replies.find(reply => reply.id === replyId).body, "Brouillon conservé");
     await waitUntil(() => second.execute("return document.querySelector('#personal-reply-editor').hidden"), "editor cleared after acknowledgement");
-    await second.execute("document.querySelector('#message-body').value='Personal draft'"); await second.click(`[data-personal-quick-reply="${replyId}"]`);
+    await second.execute("document.querySelector('#message-body').value='Personal draft'"); await tabUntil(second, `[data-personal-quick-reply="${replyId}"]`); await second.key("\uE007");
     assert.equal(await second.execute("return document.querySelector('#message-body').value"), "Personal draft\nBrouillon conservé"); assert.equal(fixture.sent.length, 0);
     await first.click("#close-quick-replies"); await clickComposerAction(first, "#open-quick-replies");
-    await waitUntil(() => first.execute(`return document.querySelector('[data-personal-id="${replyId}"] span')?.textContent==='Brouillon conservé'`), "reopening refreshes personal replies");
+    await waitUntil(() => first.execute(`return document.querySelector('[data-personal-id="${replyId}"] .personal-reply-insert')?.textContent==='Brouillon conservé'`), "reopening refreshes personal replies");
     await first.click(`[data-personal-id="${replyId}"] [data-personal-action="delete"]`); assert.equal(fixture.quickReplies.replies.length, 2);
     await first.click(`[data-personal-id="${replyId}"] [data-personal-action="confirm-delete"]`);
     await waitUntil(() => fixture.quickReplies.version === "4", "confirmed deletion persists"); assert.equal(fixture.quickReplies.replies.length, 1);
