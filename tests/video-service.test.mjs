@@ -3,10 +3,48 @@ import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { readdir } from "node:fs/promises";
 import { createVideoService } from "../server/video/service.mjs";
+import { tokenDigest } from "../server/auth/crypto.mjs";
 import { VIDEO_BLOCK_BYTES, videoStoredBytes } from "../server/video/storage.mjs";
 import { videoFixture, mp4Source, uploadFixture, collectVideo } from "./helpers/video-transport-fixture.mjs";
 
 const code = (wanted) => (error) => error.code === wanted;
+
+async function deletionFixture(t) {
+  const f = await videoFixture(t), fingerprint = await f.storage.fingerprint();
+  const failure = (value) => { throw Object.assign(new Error("synthetic lifecycle failure"), { code: value }); };
+  const owned = (request) => {
+    const owner = f.accounts.find((a) => a.active && a.role === request.role && tokenDigest(a.token).equals(request.tokenHash));
+    if (!owner) failure("CHAT_UNAUTHORIZED");
+    const row = f.state.rows.get(request.assetId.toString("hex"));
+    if (!row || !row.ownerId.equals(owner.id)) failure("VIDEO_NOT_FOUND");
+    return row;
+  };
+  f.state.deletionFault = null; f.state.references = new Set(); f.state.refunds = 0;
+  Object.assign(f.store, {
+    binding: Object.freeze({ rootFingerprint: fingerprint.toString("hex") }),
+    async deleteAsset(request) {
+      f.state.calls.push("deleteAsset"); const row = owned(request);
+      if (f.state.references.has(row.id.toString("hex"))) failure("VIDEO_IN_USE");
+      if (row.state === "reserved") failure("VIDEO_INPUT");
+      if (row.state === "registered") { row.state = "cleanup_pending"; row.deletedAt = f.state.now; }
+      if (f.state.deletionFault === "mark_ack") throw new Error("synthetic SQL acknowledgement lost after mark");
+      return { ...row };
+    },
+    async releaseDeletedStorage(request) {
+      f.state.calls.push("releaseDeletedStorage"); const row = owned(request);
+      assert.ok(row.storageKey.equals(request.storageKey));
+      if (row.state === "released") return { released: true };
+      assert.equal(row.state, "cleanup_pending");
+      if (f.state.deletionFault === "release_before") throw new Error("synthetic SQL failure before commit");
+      row.state = "released"; f.state.held -= row.storedBytes; f.state.refunds++;
+      if (f.state.deletionFault === "release_ack") throw new Error("synthetic SQL acknowledgement lost after release");
+      return { released: true };
+    },
+  });
+  const originalRemove = f.options.storage.remove;
+  f.options.storage.remove = async (request) => { f.state.calls.push("remove"); return originalRemove(request); };
+  return f;
+}
 
 test("video foundation requires an explicit catalog, live authorization, persistent rate limits and private storage", async (t) => {
   const f = await videoFixture(t);
@@ -137,4 +175,96 @@ test("return or throw before the first video read closes both descriptor and own
     await assert.rejects(stream.throw(new Error("consumer stopped")), /consumer stopped/); await h.close();
   }
   const h = await f.service.open(a.role, a.token, result.id); await h.close();
+});
+
+test("owner deletion uses durable marking, real encrypted file removal and one final refund", async (t) => {
+  const f = await deletionFixture(t), a = f.accounts[0], result = await uploadFixture(f), before = f.state.calls.length;
+  assert.deepEqual(await f.service.remove(a.role, a.token, result.id), { deleted: true });
+  assert.deepEqual(await readdir(f.root), []); assert.equal(f.state.held, 0); assert.equal(f.state.refunds, 1);
+  assert.deepEqual(f.state.calls.slice(before).filter((name) => ["deleteAsset", "remove", "releaseDeletedStorage"].includes(name)),
+    ["deleteAsset", "remove", "releaseDeletedStorage"]);
+  await assert.rejects(f.service.open(a.role, a.token, result.id), code("VIDEO_NOT_FOUND"));
+  assert.deepEqual(await f.service.remove(a.role, a.token, result.id), { deleted: true });
+  assert.equal(f.state.held, 0); assert.equal(f.state.refunds, 1);
+});
+
+test("owner deletion rejects missing lifecycle composition, a peer and live message references before I/O", async (t) => {
+  const legacy = await videoFixture(t), a = legacy.accounts[0];
+  await assert.rejects(legacy.service.remove(a.role, a.token, "a".repeat(32)), code("VIDEO_CONFIG"));
+  const f = await deletionFixture(t), original = await uploadFixture(f), held = f.state.held, files = await readdir(f.root);
+  await assert.rejects(f.service.remove("client", f.accounts[1].token, original.id), code("VIDEO_NOT_FOUND"));
+  f.state.references.add(original.id);
+  await assert.rejects(f.service.remove("admin", f.accounts[0].token, original.id), code("VIDEO_IN_USE"));
+  assert.deepEqual(await readdir(f.root), files); assert.equal(f.state.held, held);
+  assert.equal(f.state.calls.includes("remove"), false); assert.equal(f.state.calls.includes("releaseDeletedStorage"), false);
+});
+
+test("lost deletion-mark acknowledgement keeps the original charged and a retry completes it", async (t) => {
+  const f = await deletionFixture(t), a = f.accounts[0], result = await uploadFixture(f), held = f.state.held;
+  f.state.deletionFault = "mark_ack";
+  await assert.rejects(f.service.remove(a.role, a.token, result.id), code("VIDEO_UNAVAILABLE"));
+  assert.equal((await readdir(f.root)).length, 1); assert.equal(f.state.held, held); assert.equal(f.state.refunds, 0);
+  await assert.rejects(f.service.open(a.role, a.token, result.id), code("VIDEO_NOT_FOUND"));
+  f.state.deletionFault = null;
+  await f.service.remove(a.role, a.token, result.id);
+  assert.equal(f.state.held, 0); assert.equal(f.state.refunds, 1);
+});
+
+test("ambiguous or failed physical removal never releases durable video capacity", async (t) => {
+  for (const fault of ["before_remove", "after_remove", "missing_positive_result"]) await t.test(fault, async (t) => {
+    const f = await deletionFixture(t), a = f.accounts[0], result = await uploadFixture(f), held = f.state.held;
+    const original = f.options.storage.remove;
+    f.options.storage.remove = async (request) => {
+      if (fault === "before_remove") throw new Error("synthetic storage unavailable");
+      await original(request);
+      if (fault === "after_remove") throw new Error("synthetic lost durable-removal result");
+      return { removed: false };
+    };
+    await assert.rejects(f.service.remove(a.role, a.token, result.id), code("VIDEO_UNAVAILABLE"));
+    assert.equal(f.state.held, held); assert.equal(f.state.refunds, 0);
+    assert.equal(f.state.calls.includes("releaseDeletedStorage"), false);
+    f.options.storage.remove = original;
+    await f.service.remove(a.role, a.token, result.id);
+    assert.deepEqual(await readdir(f.root), []); assert.equal(f.state.held, 0); assert.equal(f.state.refunds, 1);
+  });
+});
+
+test("SQL release failures retain an exact charge or preserve the completed one-refund result", async (t) => {
+  for (const fault of ["release_before", "release_ack"]) await t.test(fault, async (t) => {
+    const f = await deletionFixture(t), a = f.accounts[0], result = await uploadFixture(f), held = f.state.held;
+    f.state.deletionFault = fault;
+    await assert.rejects(f.service.remove(a.role, a.token, result.id), code("VIDEO_UNAVAILABLE"));
+    assert.deepEqual(await readdir(f.root), []);
+    assert.equal(f.state.held, fault === "release_before" ? held : 0);
+    f.state.deletionFault = null;
+    await f.service.remove(a.role, a.token, result.id);
+    await f.service.remove(a.role, a.token, result.id);
+    assert.equal(f.state.held, 0); assert.equal(f.state.refunds, 1);
+  });
+});
+
+test("deletion revalidates its physical root before marking, before removal and before refund", async (t) => {
+  for (const changeAt of [1, 2, 3]) await t.test(`root changes at guard ${changeAt}`, async (t) => {
+    const f = await deletionFixture(t), a = f.accounts[0], result = await uploadFixture(f), held = f.state.held;
+    const original = f.options.storage.fingerprint; let reads = 0;
+    f.options.storage.fingerprint = async () => ++reads === changeAt ? randomBytes(32) : original();
+    await assert.rejects(f.service.remove(a.role, a.token, result.id), code("VIDEO_UNAVAILABLE"));
+    assert.equal(f.state.held, held); assert.equal(f.state.refunds, 0);
+    assert.equal(f.state.calls.includes("releaseDeletedStorage"), false);
+    assert.equal((await readdir(f.root)).length, changeAt === 3 ? 0 : 1);
+    f.options.storage.fingerprint = original;
+    await f.service.remove(a.role, a.token, result.id);
+    assert.equal(f.state.held, 0); assert.equal(f.state.refunds, 1);
+  });
+});
+
+test("revocation after unlink prevents release until an authorized retry or closure", async (t) => {
+  const f = await deletionFixture(t), a = f.accounts[0], result = await uploadFixture(f), held = f.state.held;
+  const original = f.options.storage.remove;
+  f.options.storage.remove = async (request) => { const result = await original(request); a.active = false; return result; };
+  await assert.rejects(f.service.remove(a.role, a.token, result.id), code("CHAT_UNAUTHORIZED"));
+  assert.deepEqual(await readdir(f.root), []); assert.equal(f.state.held, held); assert.equal(f.state.refunds, 0);
+  f.options.storage.remove = original; a.active = true;
+  await f.service.remove(a.role, a.token, result.id);
+  assert.equal(f.state.held, 0); assert.equal(f.state.refunds, 1);
 });

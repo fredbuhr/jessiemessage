@@ -12,7 +12,7 @@ export class VideoError extends Error {
 }
 const fail = (code) => { throw new VideoError(code); };
 const PREFIX_BYTES = 65536, ADMISSION_MS = 305000;
-const permitted = new Set(["VIDEO_INPUT", "VIDEO_FORMAT", "VIDEO_BUSY", "VIDEO_NOT_FOUND", "VIDEO_RATE_LIMIT", "VIDEO_STORAGE_LIMIT",
+const permitted = new Set(["VIDEO_INPUT", "VIDEO_FORMAT", "VIDEO_BUSY", "VIDEO_NOT_FOUND", "VIDEO_IN_USE", "VIDEO_RATE_LIMIT", "VIDEO_STORAGE_LIMIT",
   "CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN", "CHAT_NOT_FOUND", "CHAT_CONFLICT", "CHAT_INPUT", "CHAT_RATE_LIMIT",
   "ACCESS_FORBIDDEN", "ACCESS_EXPIRED", "ACCESS_PREREQUISITES", "AUTH_RATE_LIMIT", "AUTH_BUSY"]);
 let activeUploads = 0, activeReads = 0;
@@ -258,6 +258,28 @@ export async function createVideoService({ store, chatService, authStore, storag
     open: (role, raw, assetId, { signal } = {}) => guarded(async () => {
       const target = identifier(assetId);
       return openContent(role, raw, (request) => store.getOwned({ ...request, assetId: target }), { signal, expectedId: target });
+    }),
+    remove: (role, raw, assetId) => guarded(async () => {
+      const target = identifier(assetId), { actor, request } = await context(role, raw);
+      if (["deleteAsset", "releaseDeletedStorage"].some((name) => typeof store[name] !== "function")
+        || typeof storage.remove !== "function" || typeof storage.fingerprint !== "function"
+        || typeof store.binding?.rootFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(store.binding.rootFingerprint)) fail("VIDEO_CONFIG");
+      const binding = store.binding.rootFingerprint;
+      const assertRoot = async () => {
+        const fingerprint = await storage.fingerprint();
+        if (!sized(fingerprint, 32) || fingerprint.toString("hex") !== binding) fail();
+      };
+      await budget(actor.user.id, "delete", request.now); await assertRoot();
+      const row = await store.deleteAsset({ ...request, now: now(), assetId: target });
+      if (!sized(row?.id, 16) || !row.id.equals(target) || !sized(row.ownerId, 16) || row.ownerId.toString("hex") !== actor.user.id
+        || !sized(row.storageKey, 32) || !Number.isSafeInteger(row.deletedAt) || row.deletedAt < 0 || row.deletedAt > now()) fail();
+      await assertRoot();
+      const removed = await storage.remove({ storageKey: row.storageKey });
+      if (removed?.removed !== true) fail();
+      await assertRoot();
+      const released = await store.releaseDeletedStorage({ ...request, now: now(), assetId: target, storageKey: row.storageKey });
+      if (released?.released !== true) fail();
+      return { deleted: true };
     }),
     ...(messages === null ? {} : {
       send: (role, raw, conversationId, input) => guarded(async () => {

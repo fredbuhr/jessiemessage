@@ -29,6 +29,7 @@ CREATE TABLE video_assets (
   CONSTRAINT video_assets_state_rules CHECK (
     (state = 'reserved' AND content_digest IS NULL AND released_at IS NULL) OR
     (state = 'committed' AND content_digest IS NOT NULL AND released_at IS NULL) OR
+    (state = 'cleanup_pending' AND released_at IS NULL) OR
     (state = 'released' AND released_at IS NOT NULL AND released_at >= created_at AND released_at <= updated_at)
   ),
   CONSTRAINT video_assets_owner_fk FOREIGN KEY (owner_id, owner_role)

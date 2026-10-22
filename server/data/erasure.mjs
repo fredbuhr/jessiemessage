@@ -1,4 +1,4 @@
-import { AccountErasureError, erasureBinding, erasureId, erasureRecord, erasureTime, failErasure } from "./erasure-state.mjs";
+import { AccountErasureError, erasureBinding, erasureCursor, erasureId, erasureRecord, erasureTime, failErasure } from "./erasure-state.mjs";
 
 /** No HTTP route, worker or production maintenance adapter is installed here.
  * withQuiescedProducers must hold an external exclusion/drain of ALL writers,
@@ -8,6 +8,8 @@ export function createAccountErasure({ store, storage, journalFor, maintenance, 
   if (typeof store?.withLease !== "function" || typeof storage?.fingerprint !== "function" || typeof storage?.remove !== "function"
     || typeof journalFor !== "function" || typeof maintenance?.withQuiescedProducers !== "function" || typeof clock !== "function") failErasure("ERASURE_INPUT");
   const binding = erasureBinding(store.binding);
+  const video = Object.hasOwn(binding, "videoRootFingerprint"), version = video ? 2 : 1;
+  if (video && typeof storage.videoFingerprint !== "function") failErasure("ERASURE_INPUT");
   const view = (record, processedMedia) => Object.freeze({ phase: record.phase, completed: record.phase === "completed", processedMedia,
     scope: "active_database_and_client_owned_media", backupCopies: "separate_not_erased", externalCopies: "not_checked" });
   return Object.freeze({
@@ -27,6 +29,11 @@ export function createAccountErasure({ store, storage, journalFor, maintenance, 
             await proof();
             const root = await storage.fingerprint();
             if (!Buffer.isBuffer(root) || root.length !== 32 || root.toString("hex") !== binding.rootFingerprint) failErasure("ERASURE_BINDING");
+            if (video) {
+              const videoRoot = await storage.videoFingerprint();
+              if (!Buffer.isBuffer(videoRoot) || videoRoot.length !== 32 || videoRoot.toString("hex") !== binding.videoRootFingerprint) failErasure("ERASURE_BINDING");
+              await proof();
+            }
           };
           const guard = () => guardWith(assertQuiescent);
           // A complete registry capture refuses active journal writer locks.
@@ -57,7 +64,7 @@ export function createAccountErasure({ store, storage, journalFor, maintenance, 
               current = checked(await journal.read());
               if (current.record === null) {
                 await guard(); await scope.inspect(now());
-                const at = now(); await save({ version: 1, clientId, binding, phase: "requested", cursor: null, startedAt: at, updatedAt: at });
+                const at = now(); await save({ version, clientId, binding, phase: "requested", cursor: null, startedAt: at, updatedAt: at });
               }
               if (current.record.phase === "completed") {
                 // A restored account is a blocker, never silently reported as erased.
@@ -73,12 +80,15 @@ export function createAccountErasure({ store, storage, journalFor, maintenance, 
                   await guard(); const object = await scope.nextMedia(current.record.cursor, now());
                   if (object === null) break;
                   erasureId(object?.id);
-                  if (current.record.cursor !== null && object.id <= current.record.cursor || !Buffer.isBuffer(object.storageKey) || object.storageKey.length !== 32) failErasure("ERASURE_BINDINGS");
+                  const cursor = video ? erasureCursor(object.cursor, 2) : object.id;
+                  if (video && (!["photo", "video"].includes(object.kind) || cursor !== `${object.kind === "photo" ? "p" : "v"}:${object.id}`)
+                    || current.record.cursor !== null && cursor <= current.record.cursor || !Buffer.isBuffer(object.storageKey) || object.storageKey.length !== 32) failErasure("ERASURE_BINDINGS");
                   if (processedMedia >= maxMedia) return view(current.record, processedMedia);
-                  await guard(); await storage.remove({ storageKey: object.storageKey });
-                  await guard(); const released = await scope.releaseMedia(object.id, object.storageKey, now());
+                  await guard(); const removed = await storage.remove({ storageKey: object.storageKey, ...(video ? { kind: object.kind } : {}) });
+                  if (video && removed?.removed !== true) failErasure("ERASURE_FILES");
+                  await guard(); const released = await scope.releaseMedia(object.id, object.storageKey, now(), ...(video ? [object.kind] : []));
                   if (released?.released !== true) failErasure();
-                  await save({ ...current.record, cursor: object.id, updatedAt: now() }); processedMedia++;
+                  await save({ ...current.record, cursor, updatedAt: now() }); processedMedia++;
                 }
                 await advance("files_erased");
               }

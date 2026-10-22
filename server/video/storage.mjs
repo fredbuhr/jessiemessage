@@ -1,5 +1,5 @@
 import { constants } from "node:fs";
-import { lstat, realpath, open as openFile, link, unlink, statfs } from "node:fs/promises";
+import { lstat, realpath, open as openFile, link, unlink, statfs, readdir } from "node:fs/promises";
 import { createCipheriv, createDecipheriv, createHmac, createHash, randomBytes } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -238,20 +238,76 @@ export async function createVideoStorage({ root, key, pathMode = privatePathMode
   }
 
   async function remove({ storageKey: rawStorage } = {}) {
-    const storageKey = identifier(rawStorage, 32); let scope, handle;
+    const storageKey = identifier(rawStorage, 32); let scope, failure;
     try {
-      scope = await directory(); const target = scope.file(filename(storageKey));
-      let before; try { before = await lstat(target, { bigint: true }); } catch (error) { if (error?.code === "ENOENT") { await scope.sync(); return { removed: true }; } throw error; }
-      if (!safeFile(before)) throw new VideoStorageError(); ({ handle } = await privateFile(target));
-      if (!unchanged(before, await handle.stat({ bigint: true })) || !unchanged(before, await lstat(target, { bigint: true }))) throw new VideoStorageError();
-      await scope.assertReady(); await unlink(target); await scope.sync(); return { removed: true };
-    } catch (error) { throw wrapped(error); }
-    finally { await handle?.close().catch(() => {}); await scope?.close().catch(() => {}); }
+      scope = await directory();
+      const finalName = filename(storageKey), staging = new RegExp(`^\\.${storageKey.toString("hex")}\\.video\\.[a-f0-9]{32}\\.tmp$`);
+      const selected = (name) => name === finalName || staging.test(name);
+      const cleanupFile = (stats) => stats.isFile() && owner(stats) && (stats.mode & 0o7777n) === 0o600n && stats.nlink >= 1n;
+      const names = (await readdir(scope.path)).filter(selected).sort();
+      const groups = new Map();
+      // Validate the complete selection before unlinking anything. The one
+      // supported hardlink group is the interrupted put publication: all its
+      // links must be the exact final/staging names for this storage key.
+      for (const name of names) {
+        const stats = await lstat(scope.file(name), { bigint: true });
+        if (!cleanupFile(stats)) throw new VideoStorageError();
+        const key = `${stats.dev}:${stats.ino}`;
+        if (!groups.has(key)) groups.set(key, { stats, names: [] });
+        const group = groups.get(key);
+        if (!unchanged(group.stats, stats) || group.stats.nlink !== stats.nlink) throw new VideoStorageError();
+        group.names.push(name);
+      }
+      for (const group of groups.values()) {
+        if (group.stats.nlink !== BigInt(group.names.length)
+          || group.names.length > 1 && !group.names.includes(finalName)) throw new VideoStorageError();
+      }
+      for (const group of groups.values()) {
+        const handle = await openFile(scope.file(group.names[0]), constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+        try {
+          let before = group.stats, remaining = BigInt(group.names.length);
+          for (const name of group.names) {
+            const opened = await handle.stat({ bigint: true }), named = await lstat(scope.file(name), { bigint: true });
+            if (![opened, named].every((stats) => cleanupFile(stats) && unchanged(before, stats) && stats.nlink === remaining)) throw new VideoStorageError();
+            await scope.assertReady(); await unlink(scope.file(name));
+            remaining -= 1n;
+            const after = await handle.stat({ bigint: true });
+            if (!after.isFile() || !owner(after) || (after.mode & 0o7777n) !== 0o600n || after.dev !== before.dev
+              || after.ino !== before.ino || after.size !== before.size || after.mtimeNs !== before.mtimeNs || after.nlink !== remaining) throw new VideoStorageError();
+            try { await lstat(scope.file(name), { bigint: true }); throw new VideoStorageError(); }
+            catch (error) { if (error?.code !== "ENOENT") throw error; }
+            before = after;
+          }
+        } finally { await handle.close(); }
+      }
+      await scope.sync();
+      // A sync alone does not prove absence: refuse a name recreated during
+      // unlink/sync, and never remove that replacement as part of this call.
+      if ((await readdir(scope.path)).some(selected)) throw new VideoStorageError();
+      try { await lstat(scope.file(finalName), { bigint: true }); throw new VideoStorageError(); }
+      catch (error) { if (error?.code !== "ENOENT") throw error; }
+      await scope.assertReady();
+    } catch (error) { failure = wrapped(error); }
+    finally { try { await scope?.close(); } catch (error) { failure ??= wrapped(error); } }
+    if (failure) throw failure;
+    return { removed: true };
+  }
+  async function fingerprint() {
+    let scope, result, failure;
+    try {
+      scope = await directory(); const stats = await scope.assertReady();
+      result = createHmac("sha256", secret).update("jessiemessage:video-root:v1:\0", "ascii")
+        .update(root, "utf8").update("\0").update(stats.dev.toString()).update("\0").update(stats.ino.toString()).digest();
+      await scope.assertReady();
+    } catch (error) { failure = wrapped(error); }
+    finally { try { await scope?.close(); } catch (error) { failure ??= wrapped(error); } }
+    if (failure) throw failure;
+    return result;
   }
   async function availableSpace() {
     let scope;
     try { scope = await directory(); const stats = await statfs(`${scope.path}/.`, { bigint: true }); await scope.assertReady(); if (stats.bavail < 0n || stats.bsize <= 0n) throw new VideoStorageError(); return { availableBytes: stats.bavail * stats.bsize }; }
     catch (error) { throw wrapped(error); } finally { await scope?.close().catch(() => {}); }
   }
-  return Object.freeze({ put, open, remove, availableSpace });
+  return Object.freeze({ put, open, remove, fingerprint, availableSpace });
 }
