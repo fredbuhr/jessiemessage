@@ -1,10 +1,10 @@
-# Adapted from the qualified operator workflow at
-# 245dc7c543665e303d47ed105f3620df4d711bd1; application pins stay immutable.
+# Adapted from the qualified 1.7.2 operator at
+# 3fd11939a89a5bff89e6d183324019b793df8eaf; application pins stay immutable.
 name: Publish qualified JessieMessage release
 
 on:
   push:
-    branches: ["ops/publish-v1.7.2"]
+    branches: ["ops/publish-v1.8.0"]
     paths: [".github/workflows/publish-qualified.yml"]
 
 permissions: {}
@@ -26,10 +26,22 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Use qualified Node.js 24.22.1
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.22.1"
       - name: Test publication with simulated GitHub API
         run: python3 ops/test-publish-qualified.py
       - name: Test isolated release preparation
         run: python3 ops/test-prepare-release180.py
+      - name: Test bounded upgrade with synthetic inputs
+        env:
+          JM180_REQUIRE_NATIVE: "1"
+        run: python3 ops/test-upgrade-release180.py
+      - name: Test native private video bundle preparation
+        env:
+          JM180_REQUIRE_NATIVE: "1"
+        run: node --test ops/test-prepare-video-runtime180.mjs
   publish:
     needs: operator-tests
     runs-on: ubuntu-latest
@@ -42,7 +54,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24.22.1"
-      - name: Verify and publish the immutable SQL36 compatibility rollback
+      - name: Verify and publish the immutable qualified 1.8.0 product
         env:
           GH_TOKEN: ${{ github.token }}
         shell: python
@@ -50,17 +62,19 @@ jobs:
           import base64, json, os, re, subprocess, urllib.error, urllib.request
 
           repo = "fredbuhr/jessiemessage"
-          version = "1.7.2"
-          target = "6b3319a77c307ed7d6b003fe33de36807c70c266"
-          tree = "924d500375a69ae50bc63414b15df71271e2bf8a"
-          ci_text = "39761371046"
+          version = "1.8.0"
+          target = "fd6e53b14b520231b0b307a2761331dd8c740a5b"
+          tree = "324c3563fc6b1cfce669bcf58d90962c23c966b8"
+          ci_text = "39762468466"
           baseline = "c2d7b3b31c6d0955892829f808dc4135d7d8debf"
+          rollback_target = "6b3319a77c307ed7d6b003fe33de36807c70c266"
+          rollback_id = 420600213
           latest_tag = "v1.7.1"
           latest_id = 420135576
           assert re.fullmatch(r"[0-9a-f]{40}", target)
           assert re.fullmatch(r"[0-9a-f]{40}", tree)
           assert re.fullmatch(r"[1-9][0-9]*", ci_text)
-          assert version == "1.7.2"
+          assert version == "1.8.0"
           ci, tag = int(ci_text), "v" + version
           assert os.environ["GITHUB_REPOSITORY"] == repo
           assert os.environ["GITHUB_REF"] == "refs/heads/ops/publish-" + tag
@@ -120,7 +134,7 @@ jobs:
           assert len(re.findall(r'(?m)^\s+node-version: "24\.22\.1"\s*$', workflow)) == 4
           gates = source_file("server/release-features.mjs")
           statements = [line.strip() for line in gates.splitlines() if line.strip() and not line.lstrip().startswith("//")]
-          assert statements == ["export const VIDEO_CREATION_ENABLED = false;", "export const QUICK_REPLIES_WRITABLE = false;"]
+          assert statements == ["export const VIDEO_CREATION_ENABLED = true;", "export const QUICK_REPLIES_WRITABLE = true;"]
           runtime = source_file("server/index.mjs")
           assert 'import { VIDEO_CREATION_ENABLED, QUICK_REPLIES_WRITABLE } from "./release-features.mjs";' in runtime
           assert runtime.count("creationEnabled: VIDEO_CREATION_ENABLED") == 3
@@ -143,14 +157,14 @@ jobs:
           assert all(mode == "100644" for sha, mode in candidates.values())
           assert {item["path"] for item in new_tree["tree"] if item["type"] == "blob" and item["path"].endswith(".sql")} == set(normal) | set(candidates)
 
-          name = "JessieMessage 1.7.2 — Repli technique compatible SQL36"
-          details = ["Repli technique pour les données de la livraison 1.8.0, sans activation en service.",
-                     "- Lectures des messages vidéo, des campagnes v3, des capsules et des réponses personnelles conservées ; insertion des phrases au brouillon disponible.",
-                     "- Créations fermées : upload et envoi vidéo, nouvelles campagnes vidéo et modification des réponses personnelles ; les campagnes v3 existantes continuent.",
-                     "- Sauvegarde manuelle à la demande admin, exports, suppressions et fermetures conservés, sans nouveau service ni dépendance au PC.",
-                     "- Les 33 migrations normales restent identiques à 1.7.1 ; les trois candidates vidéo sont explicites dans server/video/migrations, sans SQL37.",
-                     "- Node.js 24.22.1 ; cette publication ne migre aucune base et ne déploie aucun processus.",
-                     "- Préparation du repli avant migration, puis précontrôle sur SQL36 avant activation de la 1.8.0.",
+          name = "JessieMessage 1.8.0 — Sauvegarde manuelle, vidéo et réponses personnelles"
+          details = ["Livraison produit publiée et qualifiée, non déployée et non activée en service.",
+                     "- Sauvegarde chiffrée à la demande depuis l'administration, sans automatisme de sauvegarde/archivage, sans nouveau service ni dépendance au PC.",
+                     "- Vidéo privée complète : upload et envoi, lecture authentifiée et plages, galerie, ZIP de conversation et campagnes v3 ; suppressions et fermetures conservées.",
+                     "- Réponses personnelles privées du compte admin, partagées entre ses sessions, avec insertion au brouillon sans envoi automatique.",
+                     "- Repli associé déjà publié : [v1.7.2](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.7.2), source `" + rollback_target + "`, compatible SQL36 avec lecteurs et capsules conservés et nouvelles créations fermées.",
+                     "- Les 33 migrations normales restent identiques à 1.7.1 ; les trois candidates vidéo SQL34–36 sont explicites, sans SQL37 ni migration exécutée par cette publication.",
+                     "- Node.js 24.22.1 ; préparation hébergée, migration bornée, précontrôle du repli sur SQL36 puis activation restent à effectuer.",
                      "- Qualification synthétique isolée uniquement ; appareils physiques et mémoire/débit du mutualisé restent non vérifiés."]
           body = "\n".join(details + ["", "Commit : `" + target + "`.",
               "Validation : [CI complète, 5/5 jobs](https://github.com/" + repo + "/actions/runs/" + str(ci) + ").",
@@ -162,6 +176,13 @@ jobs:
           def verify_latest():
               value = api("releases/latest")
               assert value["id"] == latest_id and value["tag_name"] == latest_tag, "Preserve the existing latest product release"
+
+          rollback_reference = api("git/ref/tags/v1.7.2")
+          assert rollback_reference["object"]["type"] == "commit" and rollback_reference["object"]["sha"] == rollback_target
+          rollback_release = api("releases/tags/v1.7.2")
+          assert rollback_release["id"] == rollback_id and rollback_release["tag_name"] == "v1.7.2"
+          assert rollback_release["target_commitish"] == rollback_target
+          assert rollback_release["draft"] is False and rollback_release["prerelease"] is False
 
           # Check every existing object before the first write. No PATCH,
           # DELETE or tag movement exists; identical interrupted retries only.
@@ -189,5 +210,6 @@ jobs:
           print(json.dumps({"status": "published_verified", "tag": tag, "commit": target,
                             "tree": tree, "releaseUrl": release["html_url"], "ciRun": ci,
                             "nodeVersion": "24.22.1", "normalMigrations": 33, "videoCandidateMigrations": 3,
-                            "videoCreationEnabled": False, "quickRepliesWritable": False,
+                            "videoCreationEnabled": True, "quickRepliesWritable": True,
+                            "rollback": {"tag": "v1.7.2", "commit": rollback_target, "releaseId": rollback_id},
                             "latestPreserved": {"tag": latest_tag, "id": latest_id}, "deploymentPerformed": False}))

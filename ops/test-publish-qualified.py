@@ -38,10 +38,10 @@ def literal(name):
 
 target, tree, ci = literal("target"), literal("tree"), int(literal("ci_text"))
 baseline = literal("baseline")
-assert target == "6b3319a77c307ed7d6b003fe33de36807c70c266"
-assert tree == "924d500375a69ae50bc63414b15df71271e2bf8a"
-assert ci == 39761371046
-assert 'branches: ["ops/publish-v1.7.2"]' in raw
+assert target == "fd6e53b14b520231b0b307a2761331dd8c740a5b"
+assert tree == "324c3563fc6b1cfce669bcf58d90962c23c966b8"
+assert ci == 39762468466
+assert 'branches: ["ops/publish-v1.8.0"]' in raw
 assert 'paths: [".github/workflows/publish-qualified.yml"]' in raw
 assert "permissions: {}" in raw
 operator, publisher = raw.split("  operator-tests:\n", 1)[1].split("  publish:\n", 1)
@@ -50,6 +50,10 @@ assert "ref: ${{ github.sha }}" in operator and "persist-credentials: false" in 
 assert "fetch-depth: 0" in operator
 assert "python3 ops/test-publish-qualified.py" in operator
 assert "python3 ops/test-prepare-release180.py" in operator
+assert "python3 ops/test-upgrade-release180.py" in operator
+assert "node --test ops/test-prepare-video-runtime180.mjs" in operator
+assert operator.count('JM180_REQUIRE_NATIVE: "1"') == 2
+assert 'node-version: "24.22.1"' in operator
 assert "needs: operator-tests" in publisher
 assert "contents: write" in publisher and "actions: read" in publisher
 assert "actions/checkout" not in publisher
@@ -127,28 +131,34 @@ class Fixture:
         elif path.startswith("contents/"):
             name = path[len("contents/"):].split("?")[0]
             content = files[name]
-            if self.change == "video-gate-open" and name == "server/release-features.mjs":
-                content = content.replace("VIDEO_CREATION_ENABLED = false", "VIDEO_CREATION_ENABLED = true")
-            elif self.change == "quick-gate-open" and name == "server/release-features.mjs":
-                content = content.replace("QUICK_REPLIES_WRITABLE = false", "QUICK_REPLIES_WRITABLE = true")
+            if self.change == "video-gate-closed" and name == "server/release-features.mjs":
+                content = content.replace("VIDEO_CREATION_ENABLED = true", "VIDEO_CREATION_ENABLED = false")
+            elif self.change == "quick-gate-closed" and name == "server/release-features.mjs":
+                content = content.replace("QUICK_REPLIES_WRITABLE = true", "QUICK_REPLIES_WRITABLE = false")
             elif self.change == "package-version" and name == "package.json":
                 value = json.loads(content)
-                value["version"] = "1.8.0"
+                value["version"] = "1.7.2"
                 content = json.dumps(value)
             elif self.change == "old-node-pin" and name == ".github/workflows/ci.yml":
                 content = content.replace("24.22.1", "24.22.0")
             value = dict(type="file", encoding="base64", content=base64.b64encode(content.encode()).decode())
+        elif path == "git/ref/tags/v1.7.2":
+            value = dict(object=dict(type="commit", sha="4" * 40 if self.change == "rollback-tag-diverged" else "6b3319a77c307ed7d6b003fe33de36807c70c266"))
+        elif path == "releases/tags/v1.7.2":
+            value = dict(id=420600213, tag_name="v1.7.2", target_commitish="6b3319a77c307ed7d6b003fe33de36807c70c266", draft=False, prerelease=False)
+            if self.change == "rollback-release-diverged":
+                value["target_commitish"] = "5" * 40
         elif path == "releases/latest":
             value = copy.deepcopy(self.latest)
             if self.change == "latest-before" or self.change == "latest-after" and "release" in self.state:
-                value.update(id=999, tag_name="v1.7.2")
-        elif path in {"git/ref/tags/v1.7.2", "releases/tags/v1.7.2"}:
+                value.update(id=999, tag_name="v1.8.0")
+        elif path in {"git/ref/tags/v1.8.0", "releases/tags/v1.8.0"}:
             key = "tag" if path.startswith("git/") else "release"
             if key not in self.state:
                 raise urllib.error.HTTPError(request.full_url, 404, "synthetic absent object", {}, None)
             value = self.state[key]
         elif method == "POST" and path == "git/refs":
-            assert payload == dict(ref="refs/tags/v1.7.2", sha=target)
+            assert payload == dict(ref="refs/tags/v1.8.0", sha=target)
             value = dict(object=dict(type="commit", sha=target))
             self.state["tag"] = value
         elif method == "POST" and path == "releases":
@@ -161,7 +171,7 @@ class Fixture:
 
 def execute(fixture, success=True, allow_prior_writes=False):
     output, failure = io.StringIO(), None
-    environment = {"GITHUB_REPOSITORY": "fredbuhr/jessiemessage", "GITHUB_REF": "refs/heads/ops/publish-v1.7.2",
+    environment = {"GITHUB_REPOSITORY": "fredbuhr/jessiemessage", "GITHUB_REF": "refs/heads/ops/publish-v1.8.0",
                    "GITHUB_EVENT_NAME": "push", "GH_TOKEN": "synthetic-token-only"}
     with patch("urllib.request.urlopen", fixture), patch("subprocess.check_output", return_value="v24.22.1\n"), \
             patch.dict(os.environ, environment, clear=True), contextlib.redirect_stdout(output):
@@ -194,8 +204,9 @@ tag_only.pop("release")
 assert execute(Fixture(existing=tag_only)) == ["releases"]
 checks.append("interrupted after exact tag retries only the release")
 for change in ["ci-incomplete", "ci-other-sha", "ci-rerun", "ci-missing-job", "ci-failed-job", "other-tree",
-               "video-gate-open", "quick-gate-open", "normal-ddl-changed", "sql37", "candidate-missing",
-               "package-version", "old-node-pin", "latest-before", "main-behind"]:
+               "video-gate-closed", "quick-gate-closed", "normal-ddl-changed", "sql37", "candidate-missing",
+               "package-version", "old-node-pin", "latest-before", "main-behind",
+               "rollback-tag-diverged", "rollback-release-diverged"]:
     execute(Fixture(change=change), success=False)
     checks.append("refuse " + change + " before mutations")
 for name, mutate in [
@@ -209,7 +220,7 @@ for name, mutate in [
     checks.append("refuse " + name + " before mutations")
 assert execute(Fixture(change="latest-after"), success=False, allow_prior_writes=True) == ["git/refs", "releases"]
 checks.append("detect an externally changed latest after publication without corrective mutation")
-assert len(checks) == 22
+assert len(checks) == 24
 receipt = dict(workflowPath=str(workflow.resolve()), workflowSha256=hashlib.sha256(workflow.read_bytes()).hexdigest(),
                fixtureTree=tree, sourcePin=target, ciPin=ci, tests=len(checks), passCount=len(checks), failCount=0,
                networkCalls=0, realMutations=0, productionAccess=False, checks=checks)
