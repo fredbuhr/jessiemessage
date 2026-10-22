@@ -2,6 +2,10 @@
 
 **22 octobre 2026 — application active, checkpoint privé et latest : 1.8.2 / Node v24.22.1 / SQL36, alignés.** L’identité et les reçus hébergés sont rapportés par l’utilisateur (**USER_REPORTED**), sans inspection privée directe par l’agent. La livraison technique182 est close : qualification, publication, préparation, CHECK, activation et enregistrement final acquis. Aucun chantier technique ne reste ouvert pour ce lot ; les réserves et contrôles non réalisés sont conservés ci-dessous.
 
+## Second audit explicitement demandé — en cours
+
+Après clôture du lot technique182, l’utilisateur demande un **second audit complet backend/frontend/sécurité de chaque partie du code**. La revue porte sur la source exacte ci-dessus, sans modifier l’application active. [Rapport en cours](AUDIT-2-20261022.md), [inventaire et progression](verification-proofs/audit2-182-progress.json). Terminer la couverture des sources, les reproductions locales nouvelles et leur contre-revue avant de conclure. Le dossier juridique, les essais de sauvegarde hébergée et les comptes réels restent hors des manipulations de cet audit. La clôture182 précédente reste acquise ; elle ne doit pas faire ignorer cette nouvelle demande explicite.
+
 ## État de livraison courant
 
 | Élément | Référence acquise |
