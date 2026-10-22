@@ -1,0 +1,568 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-audit-lot3-verification",
+  "recordedAtUTC": "2026-10-22T18:15:17.723736+00:00",
+  "status": "implemented_and_targeted_checked_exact_source_native_ci_pending",
+  "branch": "fix/audit-182",
+  "baseSource": "2ee7ee355a594cbf275526a59dc231f90583cd27",
+  "baseTree": "d7851f2c9cedc8d0518ad8a665c0da186d5f474c",
+  "developmentVersion": "1.8.2",
+  "production": {
+    "version": "1.8.1",
+    "source": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+    "node": "v24.22.1",
+    "schema": 36,
+    "newHostedObservation": false
+  },
+  "priorQualifications": [
+    "jm182-lot1-verification.json",
+    "jm182-lot2-verification.json"
+  ],
+  "findings": {
+    "A09": {
+      "status": "current_guides_corrected_history_separated_local_checks_passed",
+      "reprise": {
+        "beforeBytes": 148530,
+        "afterBytes": 9332,
+        "afterLines": 57,
+        "originalHistoricalSuffixBytes": 135528,
+        "originalHistoricalSuffixSha256": "48a78c3c372d84b534eb6b7c0567440acc732de383ea8d69f1a4d12317cd7d51",
+        "historicalSuffixByteIdentical": true,
+        "activeManagerUrlsAndLauncherLiteralsPreserved": true,
+        "savedHistoryPath": "docs/REPRISE-HISTORIQUE-20261022.md"
+      },
+      "historicalLinks": {
+        "retargets": [
+          {
+            "path": "docs/tasks-compat-151.md",
+            "occurrences": 1
+          },
+          {
+            "path": "docs/tasks-reminders-160.md",
+            "occurrences": 1
+          },
+          {
+            "path": "docs/announcements-compat-141.md",
+            "occurrences": 1
+          },
+          {
+            "path": "docs/announcements-150.md",
+            "occurrences": 1
+          },
+          {
+            "path": "docs/PRODUCT.md",
+            "occurrences": 1
+          },
+          {
+            "path": "docs/broadcast-scale-140.md",
+            "occurrences": 3
+          },
+          {
+            "path": "docs/broadcast-compat-134.md",
+            "occurrences": 1
+          },
+          {
+            "path": "docs/PLAN-IMPLEMENTATION.md",
+            "occurrences": 1
+          }
+        ],
+        "readmeOldOccurrencesRemovedWithDuplicateHistory": 2
+      },
+      "markdownLinks": {
+        "scope": "Git-tracked and newly created repository Markdown; local inline and reference targets, Markdown heading/explicit HTML anchors; no external URL fetching",
+        "relativeTargets": 1301,
+        "markdownFiles": 171,
+        "anchorChecks": 16,
+        "errors": [],
+        "absoluteHostPathReferences": [
+          {
+            "source": "docs/REPRISE-HISTORIQUE-20261019.md",
+            "line": 25,
+            "target": "/srv/customer/jessiemessage-private/jm0691-origin-diagnostic.log",
+            "status": "not_checked_host_filesystem_reference"
+          }
+        ],
+        "limitations": [
+          "No external URL/account/hosting validation",
+          "No rendering validation for arbitrary embedded HTML/complex nested Markdown"
+        ]
+      },
+      "currentMetadataLinksAddedByRoot": {
+        "count": 3,
+        "existingTarget": "jm182-lot3-verification.json",
+        "externalVerificationClaim": false
+      },
+      "rootMetadataFollowup": "Plan/README/REPRISE qualification state appended after the documentation freeze; link check repeated on the changed Markdown,1301 targets/16 anchors with zero errors."
+    },
+    "A13": {
+      "status": "workflow_patch_reviewed_native_ci_pending",
+      "officialSourceProof": "jm182-lot3-action-sources.json",
+      "counts": {
+        "checkoutPins": 7,
+        "setupNodePins": 7,
+        "artifactPins": 2
+      },
+      "changes": {
+        "checkoutPersistCredentials": false,
+        "setupNodePackageManagerCache": false,
+        "newCache": false,
+        "applicationNode": "24.22.1",
+        "verifyTimeoutMinutes": 15,
+        "syntaxStepRemoved": "npm run check remains inside unchanged npm run build",
+        "scheduledMonitorTests": "skipped only for schedule; existing probe still permitted after intentional skip",
+        "windowsPushBranches": [
+          "main"
+        ],
+        "windowsPullRequestBranchesAndPaths": "preserved"
+      },
+      "monitor": {
+        "testsIf": "github.event_name != 'schedule'",
+        "serviceNeeds": "tests",
+        "serviceIf": "${{ !cancelled() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && (needs.tests.result == 'success' || (github.event_name == 'schedule' && needs.tests.result == 'skipped')) }}",
+        "conditionReview": {
+          "method": "manual GitHub Actions job/status semantics review plus independent agent review; not a native workflow execution",
+          "statusFunction": "!cancelled() removes implicit success() so intentional dependency skip can be admitted",
+          "allowed": [
+            "schedule on main with tests intentionally skipped",
+            "push or workflow_dispatch on main after tests success"
+          ],
+          "blocked": [
+            "pull_request even when tests succeed",
+            "any secondary ref",
+            "cancelled run",
+            "failed or cancelled tests",
+            "skipped tests outside schedule"
+          ]
+        },
+        "probeCommand": "node scripts/check-private-service.mjs",
+        "probeCommandChanged": false,
+        "scheduleChanged": false,
+        "networkProbeExecuted": false
+      },
+      "localValidation": {
+        "yamlParser": "PyYAML6.0.3 BaseLoader, all three parse and preserve mapping structure",
+        "actionInputs": "all with keys exist in supplied official action.yml; all three action runtimes are node24",
+        "preserved": "permissions, concurrency, runners, service definitions, matrices and run command sequence; only duplicate syntax step removed",
+        "diffCheckExitCode": 0,
+        "testSuiteExecuted": false,
+        "reasonNoUnitSuite": "workflow-only structural/condition change; no implementation-mirroring test added",
+        "parentReview": "Root reviewed the entire three-workflow diff; no correction requested."
+      },
+      "nativeQualification": {
+        "ci": "pending on final PR source",
+        "windows": "required by changed Windows workflow path, pending on PR",
+        "dispatchTriggered": false,
+        "rerunTriggered": false,
+        "localChromeOrSqlExecuted": false,
+        "realPcUsed": false
+      }
+    },
+    "A14": {
+      "status": "historical_tool_and_guides_explicit_not_current_routing",
+      "sourceBoundaries": {
+        "videoMigrationExecutableBodyUnchanged": true,
+        "neutralBuilderExportAndRoutingUnchanged": true,
+        "neutralBuilderOnlyHeaderAndHelpChanged": true,
+        "generatedExport": false
+      },
+      "targetedChecks": {
+        "node": "v24.22.1",
+        "checks": [
+          {
+            "command": "/workspace/scratch/661996893e4c/node24221-verified/bin/node --check server/video/migrations.mjs",
+            "exitCode": 0,
+            "log": "lot3-docs-syntax-help-1.log",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command": "/workspace/scratch/661996893e4c/node24221-verified/bin/node --check scripts/build-neutral-site.mjs",
+            "exitCode": 0,
+            "log": "lot3-docs-syntax-help-2.log",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command": "/workspace/scratch/661996893e4c/node24221-verified/bin/node scripts/build-neutral-site.mjs --help",
+            "exitCode": 0,
+            "log": "lot3-docs-syntax-help-3.log",
+            "sha256": "a956392fcdc1b56a6e654f142655e04ae1e74de3756d3982fdae673fbf755f4f"
+          }
+        ],
+        "generatedExport": false
+      }
+    },
+    "A15": {
+      "status": "implemented_targeted_passed",
+      "changes": [
+        "Removed only unused appendQuickReply controller import and adjusted 3 VM fixture import seams",
+        "Removed unused peerAvatarUrl export",
+        "Removed unused queueCountText export and only its 3 orphan assertions; retained scheduling test",
+        "Removed orphan PC-backup translation pair",
+        "Clarified retained historical broadcast_preferences metadata without changing export formats or readers"
+      ],
+      "preservedRuntimeContracts": {
+        "public/quick-replies.js": true,
+        "server/chat/profile-avatar.mjs": true,
+        "server/data/store.mjs": true,
+        "server/data/export.mjs": true,
+        "scripts/data-export.mjs": true
+      },
+      "remainingReferences": {
+        "appendQuickReply": [
+          "public/quick-replies.js:18",
+          "tests/quick-replies.test.mjs:3",
+          "tests/quick-replies.test.mjs:14",
+          "tests/quick-replies.test.mjs:15",
+          "tests/quick-replies.test.mjs:19",
+          "tests/quick-replies.test.mjs:27",
+          "tests/quick-replies.test.mjs:28",
+          "tests/quick-replies.test.mjs:33",
+          "tests/quick-replies.test.mjs:35"
+        ],
+        "peerAvatarUrl": [],
+        "queueCountText": [],
+        "Les sauvegardes sur ton PC": []
+      }
+    },
+    "A12": {
+      "status": "bounded_native_diagnostic_added_results_pending",
+      "document": "../capacity-182.md",
+      "fixture": {
+        "ownContacts": 51,
+        "otherOwnerContacts": 1,
+        "historyEventCounts": [
+          1000,
+          10000
+        ],
+        "contactPageSizes": [
+          50,
+          1
+        ],
+        "physicalMedia": false
+      },
+      "diagnosticType": "latest-activity-capacity-synthetic-metrics",
+      "assertionsAdded": [
+        "exact last activity/sequence/unread counts",
+        "message read remains bounded to one",
+        "stable50+1 contact keyset pages with all51 unique own contacts",
+        "other-owner inbox isolated and cross-owner profile reads rejected"
+      ],
+      "nativeDatabaseExecutedLocally": false,
+      "schemaIndexQuotaPurgeChanged": false,
+      "independentReadOnlyReview": "No concrete fixture, query-capture, pagination or isolation blocker found; native versions remain to qualify."
+    },
+    "A10": {
+      "status": "unestablished_operator_facts_D01_D07_still_open",
+      "proof": "jm182-lot2-verification.json",
+      "newLegalComplianceClaim": false
+    },
+    "A11": {
+      "status": "host_peer_topology_not_observed_forwarding_guards_preserved",
+      "priorProof": "jm182-lot1-verification.json",
+      "newHostingAccess": false,
+      "newTrustAdded": false
+    }
+  },
+  "targetedTests": {
+    "files": [
+      "tests/quick-replies.test.mjs",
+      "tests/chat-lifecycle.test.mjs",
+      "tests/chat-i18n.test.mjs",
+      "tests/chat-accessibility.test.mjs",
+      "tests/profile-http.test.mjs",
+      "tests/profile-service.test.mjs",
+      "tests/chat-model.test.mjs",
+      "tests/chat-service.test.mjs",
+      "tests/readiness-model.test.mjs",
+      "tests/readiness-i18n.test.mjs",
+      "tests/tools-i18n.test.mjs",
+      "tests/privacy-http.test.mjs",
+      "tests/data-store.test.mjs",
+      "tests/data-export.test.mjs",
+      "tests/data-cli.test.mjs",
+      "tests/data-deletion.test.mjs"
+    ],
+    "summary": {
+      "tests": 313,
+      "suites": 0,
+      "pass": 313,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 26574.675336
+    },
+    "exitCode": 0,
+    "log": "/workspace/scratch/661996893e4c/audit-implementation/lot3-deadcode-targeted.log",
+    "logSha256": "c641906b69ce3887590e803b56125700a3c3ce8f84fe91ca708fca985bebdbb9"
+  },
+  "localRunsDoNotQualifyNativeDatabaseOrPhysicalDevices": true,
+  "syntax": {
+    "command": "npm run check",
+    "node": "v24.22.1",
+    "completeSourceCount": 712,
+    "confirmationExitCode": 0,
+    "confirmationLog": "lot3-syntax-confirmation.log",
+    "confirmationLogSha256": "e7e7620ec64c119b2499482db269b35271504f012bd153d126ed55802ee8cbb4",
+    "initialLocalFailurePreserved": {
+      "log": "lot3-syntax.log",
+      "sha256": "60317f8a8686108eb7ab56725ea8a644d049b8d8bd87965494ebeb3f0d426831",
+      "result": "checker stopped on unchanged server/backup/recurring-supervisor.mjs without stderr; cause not established",
+      "isolatedDiagnostic": {
+        "status": "finished",
+        "exitCode": 0,
+        "elapsedMs": 85,
+        "stdout": "",
+        "stderr": "",
+        "sourceUnchangedFromParent": true
+      },
+      "retryReason": "new local check failure; no source guard or timeout relaxed",
+      "sameSuiteRepeatedAfterPassing": false
+    }
+  },
+  "runtimePreservation": {
+    "formatVersion": 1,
+    "type": "jessiemessage-lot3-preserved-runtime-resources",
+    "base": "2ee7ee355a594cbf275526a59dc231f90583cd27",
+    "sqlFilesCompared": 36,
+    "sqlFilesByteIdentical": true,
+    "privacyDraftByteIdentical": true,
+    "brandAndDynamicClientArchivePreserved": true,
+    "packageAndLockByteIdentical": true,
+    "legacyPowerShellKitsByteIdentical": true,
+    "noSqlExecuted": true
+  },
+  "runtimeResources": [
+    {
+      "path": "docs/privacy-notice-draft.md",
+      "bytes": 11972,
+      "sha256": "bd80b7403b879dbdf4a0cbfc372d3df87ebb65a3189dd0e2d10f51ae757902d7",
+      "unchanged": true
+    },
+    {
+      "path": "public/brand/asset-manifest.json",
+      "bytes": 2214,
+      "sha256": "c18d162c50d7d75968cb603bc790ac7b5f6469ecde44536a713a7272ed70a126",
+      "unchanged": true
+    },
+    {
+      "path": "public/private-archive.js",
+      "bytes": 4981,
+      "sha256": "4160501a726cdd36b9245d9d9ddebcc1cc02a8b247f18006880cce21d206b788",
+      "unchanged": true
+    },
+    {
+      "path": "scripts/JessieMessage-sauvegardes-055.ps1",
+      "bytes": 27559,
+      "sha256": "31b95cd516028a9be43430bddeb461631279d077ad916df767114cd29bc1e436",
+      "unchanged": true
+    },
+    {
+      "path": "scripts/JessieMessage-temoin-067.ps1",
+      "bytes": 25178,
+      "sha256": "c0fbcbc64096b7a3d2e2766c00636ab332e62126b65298713aa17e4ae69c6bd4",
+      "unchanged": true
+    },
+    {
+      "path": "scripts/JessieMessage-verifier-056.ps1",
+      "bytes": 20513,
+      "sha256": "b6165194fc4ae5b6e0a0b74c79647bfae98e1fa671f3974d3022b8b28cd028d1",
+      "unchanged": true
+    }
+  ],
+  "privacyDraftHeadingsUnchanged": true,
+  "sqlMigrationsChanged": false,
+  "ci": {
+    "status": "pending_publication_and_automatic_exact_source_pr_runs",
+    "pullRequest": "https://github.com/fredbuhr/jessiemessage/pull/129",
+    "expectedWorkflows": [
+      "CI",
+      "Windows backup recovery instructions",
+      "Private service monitor"
+    ],
+    "expectedScope": "Five core jobs, native Windows retained-format qualification, synthetic probe tests; monitor hosting service must be skipped for pull_request. No dispatch or same-run rerun."
+  },
+  "backupHostedTest": "deferred_by_user_not_attempted",
+  "productionActions": {
+    "merge": false,
+    "tagOrRelease": false,
+    "deployment": false,
+    "sql": false,
+    "manager": false,
+    "realMessagesOrDeletion": false,
+    "cloudBrowser": false,
+    "externalProbeOrTestMail": false
+  },
+  "remaining": [
+    "Acquire the exact-source core CI and changed Windows/probe workflows.",
+    "Lot4 final exact-source main/release/deployment and grouped available-device/hosting checks.",
+    "Unestablished A10 facts and A11 observation remain explicit; hosted backup UI test stays deferred."
+  ],
+  "nextAction": "Publish this coherent lot3, collect its automatic exact-source CI once, and record qualification before preparing the single final delivery.",
+  "implementationFilesAtThisCheckpoint": [
+    {
+      "path": ".github/workflows/backup-recovery-instructions.yml",
+      "bytes": 10536,
+      "sha256": "fedec4105b3140e88819808937e967f2b614ed9ac4f1de6005d7b6afb8da0cfc"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 9762,
+      "sha256": "18395ea99c9cb2f13ff252a3ad33503c87c7da64fd43ae6af98f63b2d6e84545"
+    },
+    {
+      "path": ".github/workflows/service-monitor.yml",
+      "bytes": 2043,
+      "sha256": "7a4479c174f7df07724e76b63530461807eb09997e9b340650d98fa1c8d9ecff"
+    },
+    {
+      "path": "MONITORING.md",
+      "bytes": 8619,
+      "sha256": "9b7954b23d2426fb93b355b73966d69f1175a28e52ea0ab34d0de92660c327c3"
+    },
+    {
+      "path": "README.md",
+      "bytes": 9891,
+      "sha256": "87b83705fba0e31e9cd064ecb0a332b81ad71b6b2bf5750ebd5808c49130e2ea"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "bytes": 25270,
+      "sha256": "b5b3143d353bb847145e8d3e49c5699137014ccf993c99777972b7c836b9eedf"
+    },
+    {
+      "path": "docs/DATABASE.md",
+      "bytes": 35140,
+      "sha256": "376fab1f1bf256714d5c557d799ae9c4fb2cf9edab7ca1038d6a8325472c50e1"
+    },
+    {
+      "path": "docs/PLAN-IMPLEMENTATION.md",
+      "bytes": 20831,
+      "sha256": "17ee0a8998f0bd362791c3dff6221eecf45ca8041c25648caecd02fee6630c43"
+    },
+    {
+      "path": "docs/PRODUCT.md",
+      "bytes": 22071,
+      "sha256": "fa541c029690a752ea2887a7faf70bfe33471c3dd2fb3ca99b2851114a7af66c"
+    },
+    {
+      "path": "docs/REPRISE-HISTORIQUE-20261022.md",
+      "bytes": 136324,
+      "sha256": "90423d32b9463bb461b752ef674ba7ace8a89f4990335366be0bb1c407e79d54"
+    },
+    {
+      "path": "docs/REPRISE.md",
+      "bytes": 9332,
+      "sha256": "659db32a2043920d967db3eb7cbe7985229a58738741a8bc99be6421fdc27f5c"
+    },
+    {
+      "path": "docs/announcements-150.md",
+      "bytes": 8047,
+      "sha256": "355db9cb996652bf91df82db12e1660c5976d77036bf751505d28ef780a7de50"
+    },
+    {
+      "path": "docs/announcements-compat-141.md",
+      "bytes": 5942,
+      "sha256": "b86145a2e54ef9d6ab6f65acc4bb463c081802d7ef0dccf2f107a4fcd8f6929f"
+    },
+    {
+      "path": "docs/broadcast-compat-134.md",
+      "bytes": 11953,
+      "sha256": "06f4976263307051b164ec2a6dd431711e086993f8390d27ee5ee05d02bb2904"
+    },
+    {
+      "path": "docs/broadcast-scale-140.md",
+      "bytes": 6551,
+      "sha256": "c658bb88ba5cfe0ab027c7519b846cacbb861957a538e8a692733af15e1cf96e"
+    },
+    {
+      "path": "docs/capacity-182.md",
+      "bytes": 6346,
+      "sha256": "0a9f02c000b1b59cab20464b6158996f27b4e5dba1e979476021a4b845175930"
+    },
+    {
+      "path": "docs/neutral-public-host.md",
+      "bytes": 16229,
+      "sha256": "1d6c9511e1805eec83d6cdc361aae5056f55b17f988e45eaa6e4373e50a2d354"
+    },
+    {
+      "path": "docs/public-entry-transition.md",
+      "bytes": 8334,
+      "sha256": "c4e37c70cb7821c17dbb71d00590ad076b33220666a449ab0e8e02a09b0ce7c2"
+    },
+    {
+      "path": "docs/tasks-compat-151.md",
+      "bytes": 5356,
+      "sha256": "5bd79cea74f283108323ef95bfa107a4b9a0e3e46b6847e638d325bf7f7eb4b3"
+    },
+    {
+      "path": "docs/tasks-reminders-160.md",
+      "bytes": 8856,
+      "sha256": "9bc1668d1d086e8ef9283c4ce8ebf8e05d6e31d0317dea59aabad79df8385f75"
+    },
+    {
+      "path": "docs/verification-proofs/jm182-lot3-action-sources.json",
+      "bytes": 3992,
+      "sha256": "66e9e6a396e8c9430e3486f5544a24f7f80f3c1f3414eb8de1de63b26c079274"
+    },
+    {
+      "path": "public/chat.js",
+      "bytes": 159155,
+      "sha256": "ab5b825b328badd5c117e9fab95cf2855ad64761f45551f2d0f07cb24348008f"
+    },
+    {
+      "path": "public/i18n-privacy.js",
+      "bytes": 8602,
+      "sha256": "8ce1be00722e508f59a0edce978c4aa5d0e189b44409d716ac41d1babc070c05"
+    },
+    {
+      "path": "public/readiness-model.js",
+      "bytes": 11687,
+      "sha256": "2155697d21525f2bf071fe8182a8f98080fb7a974b9b72f23b9646190e15fc10"
+    },
+    {
+      "path": "scripts/build-neutral-site.mjs",
+      "bytes": 10663,
+      "sha256": "33ec05190cd86213444bb802450c489453f99f496c03dfabc5a66ba9ba90f381"
+    },
+    {
+      "path": "server/data/policy.mjs",
+      "bytes": 5798,
+      "sha256": "f0e995017447ece48253d68f8e249377cc956e7f03897f6de6777bc1b3bf3d9d"
+    },
+    {
+      "path": "server/profile/validation.mjs",
+      "bytes": 937,
+      "sha256": "feef40a5465dd161c353ea0fefaa86cba328e69e1c873b123a24ab869500b9fb"
+    },
+    {
+      "path": "server/video/migrations.mjs",
+      "bytes": 1176,
+      "sha256": "be8e208aa44be99963b668c79e41330942eeb3427a7eeaa6eb52a588dea2bbc1"
+    },
+    {
+      "path": "tests/chat-accessibility.test.mjs",
+      "bytes": 41981,
+      "sha256": "ce1722229f45ae0f862aed54152f90cabff78dfd46e3caf8f05fbd03f3ed142d"
+    },
+    {
+      "path": "tests/chat-i18n.test.mjs",
+      "bytes": 40550,
+      "sha256": "5a7eae5eda336dcebd0a0fefd7f7711dbe1196709d167ccbd96333e5a1a57d78"
+    },
+    {
+      "path": "tests/chat-lifecycle.test.mjs",
+      "bytes": 129187,
+      "sha256": "692a9aaeddf01439e16051dfbe98edb0c1ebc914cabcf5bc7d40bedd6cb8bacb"
+    },
+    {
+      "path": "tests/crm-store.integration.test.mjs",
+      "bytes": 39904,
+      "sha256": "3cfd5c6391c55c5af9d9ccd99bdb967a7eb4bb585123476ab9da347b5a039c81"
+    },
+    {
+      "path": "tests/readiness-model.test.mjs",
+      "bytes": 23062,
+      "sha256": "7f700d22f11e89ba6511d58b1939e9afc808dfa1f8b9a1c00da14a6cac71c3fd"
+    }
+  ]
+}

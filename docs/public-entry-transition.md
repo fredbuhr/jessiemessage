@@ -1,5 +1,7 @@
 # Adresses et entrée publique — étape 0.32
 
+> **Document et outil historiques.** Ce contrat décrit l’ancien accueil Apache et sa transition 0.32 ; il ne doit pas régénérer le routage actuel. Le générateur `scripts/build-neutral-site.mjs` conserve ce contrat pour ses preuves et fixtures, hors build/démarrage courant. Principal et recette utilisent désormais le même service Node ; accueil/www redirigent vers le principal avec chemins et paramètres conservés. Voir [REPRISE](REPRISE.md) et les [domaines confirmés le 22 octobre](public-domains-20261022.md). Aucune édition Apache, DNS, certificat ou PHP n’est à rejouer.
+
 **Suite 0.35 préparée et vérifiée :** la [reprise des sessions et le runtime des deux adresses](device-origin-transition.md) sont implémentés avec un profil primaire explicite ; cinq jobs CI et le préflight hébergé sur le candidat réel passent pour `a0b17ce0`. Le routage hébergeur et les appareils restent à basculer après checkpoint du schéma 30.
 
 **Préparation 0.34 terminée :** un [candidat privé pour l’origine principale](primary-origin-preparation.md) conserve les cinq fichiers runtime et leurs six clés, en ne changeant que les quatre origines. Le [bilan du 17 octobre](AUDIT-2026-10-17.md) actualise les priorités. Le candidat `4a355851` est préparé sur l’hébergement, ses cinq jobs CI passent et le service existant est recontrôlé. Il ne modifie pas encore les lanceurs, le domaine ou les appareils ; l’étape 2 ci-dessous reste partiellement réalisée, la bascule reste à faire.

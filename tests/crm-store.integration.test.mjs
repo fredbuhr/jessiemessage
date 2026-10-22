@@ -351,6 +351,93 @@ test("real MariaDB private CRM ownership, optimistic saves and inbox filters (sy
       assert.equal((await crm.getProfile(request(stranger, { conversationId: first.conversationId }))).version, "0", "new owner cannot read old owner's private profile");
     });
 
+    await t.test("latest activity diagnostics retain exact results, bounded contact pages and owner isolation on long synthetic histories", { timeout: 60000 }, async context => {
+      const first = await pair(), fixtures = [first], metricNow = now + 60000;
+      for (let index = 1; index < 51; index++) fixtures.push(await pair(first.admin));
+      const stranger = await pair(), histories = [{ fixture: first, count: 1000 }, { fixture: fixtures[1], count: 10000 }];
+      await connection.beginTransaction();
+      try {
+        for (const { fixture, count } of histories) {
+          for (let offset = 0; offset < count; offset += 200) {
+            const batch = Array.from({ length: Math.min(200, count - offset) }, (_, index) => {
+              const sequence = offset + index + 1;
+              return { id: id(), sequence: String(sequence), occurredAt: sqlDate(now + sequence) };
+            });
+            await connection.query(`INSERT INTO messages (id, conversation_id, sequence_no, sender_id, sender_role,
+              client_message_id, body_encrypted, body_fingerprint, created_at) VALUES ${batch.map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?)").join(", ")}`,
+            batch.flatMap(row => [row.id, fixture.conversationId, row.sequence, fixture.client.id, "client", id(),
+              "v1.synthetic-capacity-message", digest(), row.occurredAt]));
+            await connection.query(`INSERT INTO chat_events (conversation_id, event_sequence, message_id, kind, occurred_at)
+              VALUES ${batch.map(() => "(?, ?, ?, ?, ?)").join(", ")}`,
+            batch.flatMap(row => [fixture.conversationId, row.sequence, row.id, "message", row.occurredAt]));
+          }
+        }
+        await connection.commit();
+      } catch (error) { await connection.rollback(); throw error; }
+
+      // Observe only store query calls, not fixture seeding, driver transaction
+      // methods or the pool's own connection setup. Never log SQL parameters.
+      let queries = [];
+      const observedPool = { getConnection: async () => {
+        const native = await pool.getConnection();
+        return { ...native, query: async (sql, parameters) => {
+          queries.push({ sql, parameters }); return native.query(sql, parameters);
+        } };
+      } };
+      const observedChat = createChatStore(observedPool), observedCrm = createCrmStore({ pool: observedPool, chatStore: observedChat });
+      const measurements = [], plans = [];
+      async function measure(operation, details, work) {
+        queries = []; const started = performance.now(), result = await work();
+        measurements.push({ operation, ...details, queryCalls: queries.length, elapsedMs: Number((performance.now() - started).toFixed(3)) });
+        return { result, statements: queries };
+      }
+      async function explain(operation, statement, details = {}) {
+        assert.ok(statement && typeof statement.sql === "string", "the actual store statement must have been observed");
+        const rows = await connection.query(`EXPLAIN ${statement.sql}`, statement.parameters);
+        assert.ok(Array.isArray(rows) && rows.length > 0, "native EXPLAIN must return a plan");
+        plans.push({ operation, ...details, plan: rows.map(row => ({ selectType: row.select_type ?? null,
+          table: row.table ?? null, type: row.type ?? null, key: row.key ?? null,
+          rows: row.rows == null ? null : Number(row.rows), extra: row.Extra ?? null })) });
+      }
+      for (const { fixture, count } of histories) {
+        const measured = await measure("conversationLatestActivity", { historyEvents: count }, () => observedChat.readMessages({
+          ...request(fixture, { now: metricNow }), role: "admin", limit: 1,
+        }));
+        const page = measured.result;
+        assert.equal(page.conversation.lastActivityAt, now + count);
+        assert.equal(page.conversation.latestEventSequence, String(count));
+        assert.equal(page.conversation.latestSequence, String(count)); assert.equal(page.conversation.unreadCount, count);
+        assert.equal(page.messages.length, 1); assert.equal(page.messages[0].sequence, String(count));
+        assert.equal(page.hasMoreBefore, true); assert.equal(page.hasMoreAfter, false);
+        await explain("conversationSummary", measured.statements.find(statement => statement.sql.includes("AS lastActivityAt")), { historyEvents: count });
+        await explain("latestActivityMaximum", { sql: "SELECT MAX(occurred_at) AS lastActivityAt FROM chat_events WHERE conversation_id = ?",
+          parameters: [fixture.conversationId] }, { historyEvents: count });
+      }
+      const firstPage = await measure("contactsFirstPage", { requestedLimit: 50 }, () => observedCrm.listContacts({ ...actor(first, { now: metricNow }), limit: 50 }));
+      assert.equal(firstPage.result.contacts.length, 50); assert.equal(firstPage.result.hasMore, true);
+      assert.ok(firstPage.result.nextCursor.equals(firstPage.result.contacts.at(-1).id));
+      await explain("contactsFirstPage", firstPage.statements.find(statement => statement.sql.includes("AS last_activity_at")));
+      const secondPage = await measure("contactsNextPage", { requestedLimit: 50 }, () => observedCrm.listContacts({
+        ...actor(first, { now: metricNow }), limit: 50, afterId: firstPage.result.nextCursor,
+      }));
+      assert.equal(secondPage.result.contacts.length, 1); assert.equal(secondPage.result.hasMore, false); assert.equal(secondPage.result.nextCursor, null);
+      const contacts = [...firstPage.result.contacts, ...secondPage.result.contacts];
+      assert.deepEqual(contacts.map(row => row.id.toString("hex")), fixtures.map(fixture => fixture.conversationId.toString("hex")).sort());
+      for (const { fixture, count } of histories) {
+        const contact = contacts.find(row => row.id.equals(fixture.conversationId));
+        assert.equal(contact.lastActivityAt, now + count); assert.equal(contact.latestSequence, String(count)); assert.equal(contact.unreadCount, count);
+      }
+      const other = await observedCrm.listContacts(actor(stranger, { now: metricNow }));
+      assert.equal(other.contacts.length, 1); assert.ok(other.contacts[0].id.equals(stranger.conversationId));
+      await assert.rejects(observedCrm.getProfile(request(stranger, { now: metricNow, conversationId: first.conversationId })), code("CHAT_NOT_FOUND"));
+      await assert.rejects(observedCrm.getProfile(request(first, { now: metricNow, conversationId: stranger.conversationId })), code("CHAT_NOT_FOUND"));
+      const mariaDbVersion = (await connection.query("SELECT VERSION() AS version"))[0].version;
+      context.diagnostic(JSON.stringify({ type: "latest-activity-capacity-synthetic-metrics", mariaDbVersion,
+        data: { ownerContacts: 51, otherOwnerContacts: 1, histories: histories.map(row => row.count) }, measurements, plans,
+        limits: { syntheticOnly: true, loopbackOnly: true, elapsedTimesInformational: true, noHostingConcurrencyClaim: true,
+          queryCountsExcludePoolSetupAndDriverTransactionMethods: true } }));
+    });
+
     await t.test("database constraints prevent malformed IDs, wrong owners and impossible note revisions", async () => {
       const a = await pair(), b = await pair(), tag = await label(a, "Owner FK"), foreign = await label(b, "Other FK"); await save(a, { labelIds: [tag.id] });
       await assert.rejects(connection.query("UPDATE crm_profiles SET notes_revision = version + 1 WHERE admin_id = ? AND conversation_id = ?", [a.admin.id, a.conversationId]));

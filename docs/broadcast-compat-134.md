@@ -12,7 +12,7 @@ La 1.3.4 doit lire, traiter et consulter les campagnes historiques et compactes,
 
 `largeAudiencesEnabled` reste **false par défaut** dans le code et l’interface du runtime normal de 1.3.4. La création manuelle historique reste limitée à cent ; les nouveaux modes globaux ou filtrés ne doivent pas être proposés comme actifs. Les qualifications synthétiques pourront activer explicitement la capacité pour exercer le code destiné à 1.4.0, sans présenter ce test comme une activation de la fonction dans 1.3.4.
 
-La [1.4.0 publiée](broadcast-scale-140.md) active cette capacité sur son propre snapshot qualifié. Les deux livraisons ont leurs sources, CI, tags immuables et preuves propres. Le [helper commun](REPRISE.md#préparation-hébergée-acquise) a préparé et précontrôlé les deux références sur Infomaniak ; le reçu SSH confirme `bothPrechecksPassed:true` et `rollback134HostedQualified:true`, sans activation intermédiaire de 1.3.4. La 1.3.3 est préservée, mais ne doit pas être annoncée comme repli capable de lire les campagnes compactes.
+La [1.4.0 publiée](broadcast-scale-140.md) active cette capacité sur son propre snapshot qualifié. Les deux livraisons ont leurs sources, CI, tags immuables et preuves propres. Le [helper commun](REPRISE-HISTORIQUE-20261022.md#préparation-hébergée-acquise) a préparé et précontrôlé les deux références sur Infomaniak ; le reçu SSH confirme `bothPrechecksPassed:true` et `rollback134HostedQualified:true`, sans activation intermédiaire de 1.3.4. La 1.3.3 est préservée, mais ne doit pas être annoncée comme repli capable de lire les campagnes compactes.
 
 ## Critères de qualification
 

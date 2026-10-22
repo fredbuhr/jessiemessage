@@ -51,7 +51,6 @@ export function parseOperations(input) {
     || workers.some((worker) => !["idle", "running"].includes(worker.state) || worker.lastCompletedAt === null || worker.consecutiveFailures !== 0))) invalid();
   return { status: input.status, database: { state: input.database.state, checkedAt: input.database.checkedAt }, workers, queues, queuesCheckedAt: input.queuesCheckedAt };
 }
-export function queueCountText(value) { return `${value.truncated ? "au moins " : ""}${value.count.toLocaleString("fr-FR")}`; }
 export function queueDelayMinutes(oldestDueAt, measuredAt) {
   return oldestDueAt === null || measuredAt === null ? null : Math.max(0, Math.floor((measuredAt - oldestDueAt) / 60000));
 }

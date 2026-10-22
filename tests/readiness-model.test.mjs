@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CONTACT_EMAIL, createReadinessState, clearReadiness, readinessTicket, currentReadiness, acceptAdminSession, parseReadinessSummary, acceptReadinessSummary, beginSmtpCheck, acceptSmtpProof, rejectSmtpCheck, parseOperations, queueCountText, queueDelayMinutes, formatOperationsReport } from "../public/readiness-model.js";
+import { CONTACT_EMAIL, createReadinessState, clearReadiness, readinessTicket, currentReadiness, acceptAdminSession, parseReadinessSummary, acceptReadinessSummary, beginSmtpCheck, acceptSmtpProof, rejectSmtpCheck, parseOperations, queueDelayMinutes, formatOperationsReport } from "../public/readiness-model.js";
 
 const now = 1800000000000;
 const admin = (extra = {}) => ({ user: { id: "a".repeat(32), role: "admin", pseudonym: "Jessie" }, csrf: "x".repeat(43), expiresAt: now + 3600000, ...extra });
@@ -243,10 +243,7 @@ test("operational counters preserve safe totals and refuse invalid numbers or qu
   }
 });
 
-test("queue presentation distinguishes capped counts and scheduling age at the sample from delivery", () => {
-  assert.equal(queueCountText({ count: 0, truncated: false }), "0");
-  assert.equal(queueCountText({ count: 1000, truncated: false }), (1000).toLocaleString("fr-FR"));
-  assert.equal(queueCountText({ count: 1000, truncated: true }), `au moins ${(1000).toLocaleString("fr-FR")}`);
+test("queue scheduling age uses the measurement time without implying delivery", () => {
   assert.equal(queueDelayMinutes(now - 150000, now), 2);
   assert.equal(queueDelayMinutes(now + 60000, now), 0);
   assert.equal(queueDelayMinutes(null, now), null); assert.equal(queueDelayMinutes(now, null), null);

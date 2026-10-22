@@ -15,4 +15,3 @@ export function canonicalProfileName(value) {
 }
 
 export const ownAvatarUrl = (role, version) => `/api/profile/${role}/avatar?v=${version}`;
-export const peerAvatarUrl = (role, conversationId, version) => `/api/profile/${role}/conversations/${conversationId}/avatar?v=${version}`;

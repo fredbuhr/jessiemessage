@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+// Historical Apache export for the 0.32 entry transition. It is not the current
+// deployment/routing contract and is not part of the application build/start.
+// Preserve this fixture/tool for its original evidence; use docs/REPRISE.md and
+// docs/public-domains-20261022.md for the active service and canonical domains.
 // Public, static export only. No environment/configuration, database, private
 // controller, authentication handler, PHP or general directory copy is used.
 import { constants } from "node:fs";
@@ -172,7 +176,7 @@ export async function buildNeutralSite({ output, connectRecipe = false } = {}) {
 }
 
 async function main(args) {
-  if (args.length === 1 && args[0] === "--help") { process.stdout.write("Usage: node scripts/build-neutral-site.mjs --output /absolute/new-directory [--connect-recipe]\n"); return; }
+  if (args.length === 1 && args[0] === "--help") { process.stdout.write("Historical tool: the 0.32 Apache export does not represent current production routing. See docs/REPRISE.md and docs/public-domains-20261022.md.\nUsage (historical fixture): node scripts/build-neutral-site.mjs --output /absolute/new-directory [--connect-recipe]\n"); return; }
   if (![2, 3].includes(args.length) || args[0] !== "--output" || args.length === 3 && args[2] !== "--connect-recipe") fail();
   process.stdout.write(`${JSON.stringify(await buildNeutralSite({ output: args[1], connectRecipe: args.length === 3 }))}\n`);
 }

@@ -3,10 +3,11 @@ import { checksumSql, loadMigrations, MigrationError, validateMigrationPlan } fr
 
 const CANDIDATES = Object.freeze(["0034_video_storage_state.sql", "0035_video_assets.sql", "0036_message_video.sql"]);
 
-/** Read the complete candidate plan for isolated qualification only. The
- * ordinary migration loader still sees exactly the 33 production migrations.
- * This function executes no SQL and is not imported by the normal runtime.
- * Promotion requires the lifecycle work in lot 7.3, not an implicit append. */
+/** Read the explicit 36-migration video profile used since release 1.8.0.
+ * The ordinary loader intentionally retains its separate 33-migration plan.
+ * This function only composes and validates immutable sources; it executes no
+ * SQL. The configured video runtime, migrations and prechecks select this plan
+ * explicitly; importing it never upgrades a database. */
 export async function loadVideoMigrations() {
   const base = await loadMigrations();
   if (base.length !== 33) throw new MigrationError("MIGRATION_PLAN", "Video candidates require the unchanged 33-migration base.");

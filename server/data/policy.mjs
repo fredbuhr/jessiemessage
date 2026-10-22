@@ -21,7 +21,7 @@ const catalogue = [
   ["crm_memberships", "subject", "Related membership count only; no label names or other clients."],
   ["client_password_resets", "subject", "Owned challenge count only; tokens and hashes excluded."],
   ["password_reset_outbox", "subject", "Owned job count only; encrypted recovery material excluded."],
-  ["broadcast_preferences", "subject", "The client's current consent and update date."],
+  ["broadcast_preferences", "subject", "Historical client broadcast preference and update date; retained for compatibility, not a current delivery consent or eligibility gate."],
   ["broadcast_campaigns", "administrator", "Campaign bodies and audiences are outside client content."],
   ["broadcast_recipients", "subject", "Count scoped to both selected client and conversation; no campaign details."],
   ["media_storage_state", "global", "Shared storage accounting cannot be attributed to one client."],
