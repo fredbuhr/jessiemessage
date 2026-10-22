@@ -1,8 +1,8 @@
 # JessieMessage — bilan global du 22 octobre 2026
 
-**JessieMessage fonctionne en production pour la messagerie texte et photo et les outils de Jessie. G1 sauvegarde manuelle admin et G2 vidéo complète sont qualifiés sur la branche 1.8.0, non livrés. Il reste G3, réponses personnelles et qualification globale, puis G4, livraison unique et contrôles.** Le périmètre simplifié et les abandons du 22 octobre restent conservés.
+**JessieMessage fonctionne en production pour la messagerie texte et photo et les outils de Jessie. G1 sauvegarde manuelle admin, G2 vidéo complète et G3 réponses personnelles et qualification globale sont qualifiés sur la branche 1.8.0, non livrés. Il reste G4, livraison unique et contrôles en service.** Le périmètre simplifié et les abandons du 22 octobre restent conservés.
 
-Ce bilan distingue ce qui est livré, les acquis sur branche et les deux lots restants. Les subdivisions techniques servent à reprendre le travail après une interruption ; elles ne deviennent pas autant de livraisons ou de nouvelles décisions demandées à l’utilisateur.
+Ce bilan distingue ce qui est livré, les acquis sur branche et le dernier lot de livraison. Les subdivisions techniques servent à reprendre le travail après une interruption ; elles ne deviennent pas autant de livraisons ou de nouvelles décisions demandées à l’utilisateur.
 
 ## La référence réellement en service
 
@@ -10,7 +10,7 @@ La production est **1.7.1**, commit `c2d7b3b31c6d0955892829f808dc4135d7d8debf`, 
 
 Le [contrôle public du 22 octobre](verification-proofs/jm171-global-public-health-20261022.json) confirme santé, disponibilité et accueil HTTP 200 ; il ne prouve ni la version active ni une session réelle.
 
-La branche de développement `feat/video-messaging` prépare **1.8.0**. G2 est qualifié sur la source `cecd60ced91d7eaf79025f06233833dad52ddef0`, arbre `a2d639166576d24aaa233f333a13f3959f5ddd53` : [CI 39721685571 réussie 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39721685571), [preuve détaillée](verification-proofs/jm180-video-integration-verification.json). Cette qualification ne signifie ni fusion produit, ni migration hébergée, ni activation vidéo.
+La branche de développement `feat/video-messaging` prépare **1.8.0**. G3 est qualifié sur la source `4f6587aee355b213b58734b576809eae0943553c`, arbre `3a1defe079e2095fb0ee89ad51312c91916cd292` : [CI 39755558913 réussie 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39755558913), [preuve détaillée](verification-proofs/jm180-personal-replies-verification.json). La qualification G2 et ses preuves restent conservées. Cette qualification ne signifie ni fusion produit, ni migration hébergée, ni activation des nouveautés.
 
 ## Ce qui est disponible et branché en production
 
@@ -24,7 +24,7 @@ La branche de développement `feat/video-messaging` prépare **1.8.0**. G2 est q
 | **Profils et expressions** | Nom public, avatar privé partagé dans les échanges, remplacement/retrait et gestion des conflits. **268 emojis Unicode locaux**, recherche FR/EN et cinq carnations sur les choix compatibles. | Nom public limité à 64 caractères, distinct du surnom CRM. Le rendu Unicode dépend de l’appareil. Ce catalogue ne constitue pas un pack de stickers illustrés. |
 | **CRM et organisation** | Fiches privées, surnoms, notes, tags, groupes, filtres et **recherche de clients** ; conflits conservant le brouillon. | Les groupes organisent les clients, sans salon collectif. La recherche ne porte pas sur le contenu des messages. L’ancienne date de suivi CRM ne produit pas d’alerte automatique. |
 | **Diffusions et annonces** | Diffusions individuelles globales, filtrées ou manuelles au-delà de cent personnes, aperçu confirmé et suivi paginé. Annonce immédiate ou programmée, expiration et message privé facultatif. | 2 500 destinataires **synthétiques** qualifiés, sans mesure équivalente sur le mutualisé. Envois progressifs, sans délai garanti. Une annonce courante, fin obligatoire au plus tard sept jours après enregistrement. |
-| **Outils quotidiens de Jessie** | Plusieurs tâches privées par client, échéances, report, terminer/réouvrir, vue commune et compteur. **Six réponses rapides fixes FR/EN**, insérées dans le brouillon avant envoi explicite. | Aucun rappel push lorsque l’application est fermée, aucune alerte au client. Les réponses rapides personnelles ne sont pas encore enregistrables. |
+| **Outils quotidiens de Jessie** | Plusieurs tâches privées par client, échéances, report, terminer/réouvrir, vue commune et compteur. **Six réponses rapides fixes FR/EN**, insérées dans le brouillon avant envoi explicite. | Aucun rappel push lorsque l’application est fermée, aucune alerte au client. Les réponses personnelles sont disponibles dans le candidat 1.8.0, encore non livré. |
 | **Exports et fermeture** | ZIP de conversation client/admin avec photos partagées facultatives. Fermeture définitive locale activée, confirmée par l’admin, journalisée et soumise aux contrôles d’arrêt des producteurs et d’effacement. | ZIP limité à 10 000 messages, 8 Mio de texte et 32 Mio d’archive ; notes, tags, groupes, tâches et photos non partagées exclus. La fermeture ne réécrit pas les sauvegardes ou téléchargements existants. |
 
 Les preuves et parcours sont regroupés dans [PRODUCT](PRODUCT.md), le [guide quotidien](guide-jessie.md), les bilans [diffusions](broadcast-scale-140.md), [annonces](announcements-150.md), [tâches](tasks-reminders-160.md), [profils](profile-expressions-120.md), [emojis](emoji-inclusifs-130.md) et [exports](client-conversation-export-060.md). La [CI propre 1.7.1](verification-proofs/jm171-verification.json) est verte sur ses cinq contrôles ; ses 39 omissions générales restent des omissions.
@@ -33,7 +33,9 @@ Les preuves et parcours sont regroupés dans [PRODUCT](PRODUCT.md), le [guide qu
 
 **G2 vidéo complète est qualifié sur branche, non livré.** Le candidat couvre sélection, chargement, lecture native et déplacement dans la vidéo, galerie, diffusions, ZIP et sauvegarde/restauration à deux racines, avec compatibilité des anciens formats et fermetures. Les essais utilisent des comptes, médias et bases synthétiques isolés ; ils ne prouvent aucune activation hébergée, utilisation sur téléphone physique ou mesure du débit du mutualisé. Le [guide G2](video-integration-180.md) précise le périmètre et les limites des essais.
 
-**La sauvegarde simple à la demande via l’administration n’est pas encore livrée.** La production 1.7.1 conserve ses mécanismes automatiques existants ; leur remplacement effectif est le premier résultat codé et qualifié sur la branche, [CI 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39706108306), en attente de livraison. Les réponses rapides personnelles restent à développer : les six phrases actuelles sont fixes.
+**La sauvegarde simple à la demande via l’administration n’est pas encore livrée.** La production 1.7.1 conserve ses mécanismes automatiques existants ; leur remplacement effectif est le premier résultat codé et qualifié sur la branche, [CI 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39706108306), en attente de livraison. Les réponses personnelles sont maintenant qualifiées dans G3 ; la production conserve ses six phrases fixes jusqu’à livraison.
+
+**G3 réponses personnelles et qualification globale est qualifié sur branche, non livré.** Jessie peut créer, modifier et supprimer jusqu’à 50 réponses privées en français ou en anglais, puis les insérer au brouillon avant envoi explicite. Elles persistent entre les sessions du même compte admin ; un conflit conserve le texte en cours et exige un rechargement explicite. La même source passe les cinq contrôles CI. Les essais natifs couvrent aussi l’import et la reprise vidéo sans réimportation, ainsi que la conservation des réponses dans la capture et la restauration. Les métriques consignent les octets, les durées et le pic mémoire du seul processus Node de test ; elles ne mesurent pas les autres processus ni le mutualisé.
 
 **Abandonnés par décision du 22 octobre :** IA, paiements carte et crypto, stickers/GIF, vocaux, réponse citée, édition, transfert de messages et épingles. Ils sortent du backlog ; leur absence ne devient plus une évolution différée. Les textes « Voix de Jessie » des anciennes livraisons décrivent leur formulation, sans fonction audio.
 
@@ -49,13 +51,14 @@ Fermeture locale et restauration manuelle sous maintenance conservent leurs gard
 
 Authenticator sur téléphone physique reste non vérifié. PHP du site secondaire relève d’Infomaniak et sort des actions du projet. L’ancien aperçu de `accueil.jessiemessage.com` reste constaté ; le principal et www ont le nouvel accueil. La redirection du sous-domaine a été refusée par le contrôle automatique pour autorisation explicite manquante ; elle n’est pas appliquée et n’est pas reprise dans ce chantier.
 
-## Suite retenue : deux lots restants
+## Suite retenue : un seul lot, G4
 
-G1 sauvegarde manuelle admin et G2 vidéo complète sont qualifiés sur branche et attendent leur livraison. La production conserve son code 1.7.1 et ses automatismes jusqu’à G4.
+G1, G2 et G3 sont qualifiés sur branche et attendent leur livraison commune. La production conserve son code 1.7.1 et ses automatismes jusqu’à G4.
 
 | Résultat | Critère de fin |
 | --- | --- |
-| **G3 — Réponses personnelles et qualification globale** | Jessie crée/modifie/retrouve ses phrases avec envoi explicite ; parcours combinés, corrections utiles, sécurité, performances et transfert/restauration/repli qualifiés sur des cibles isolées. |
-| **G4 — Livraison unique et contrôles** | Sources qualifiées, publication, repli compatible, préparation/migration/activation distinctement attestées ; identité active et comportements réellement vérifiés, dont remplacement des automatismes. |
+| **G4 — Livraison unique et contrôles** | Adapter, qualifier et préparer une référence de repli exacte compatible avec le schéma et les données à activer, avant migration ; puis fusion, CI requises, publication, préparation, migration, activation et contrôles en service. L’identité active, les métadonnées, la sauvegarde manuelle et le remplacement des automatismes doivent être réellement attestés. |
 
-Le [plan détaillé](PLAN-IMPLEMENTATION.md) contient les critères ; [REPRISE](REPRISE.md) garde les sources et preuves courantes. À chaque étape, annoncer **fait** et **restant**. La prochaine action est G3 ; il reste G3 et G4. Aucun nombre supplémentaire de séquences ni pourcentage global n’est étayé.
+**Le repli actuel 1.6.0 est compatible avec SQL 33, pas avec le candidat SQL 36.** L’ancien lecteur G2 refuse les nouvelles capsules contenant les réponses personnelles. Aucun repli utilisable sur SQL 36 n’est annoncé prêt : son adaptation et sa qualification font partie de G4, avant la migration.
+
+Le [plan détaillé](PLAN-IMPLEMENTATION.md) contient les critères ; [REPRISE](REPRISE.md) garde les sources et preuves courantes. À chaque étape, annoncer **fait** et **restant**. La prochaine action est G4. Les appareils physiques, les notifications système hors application et les performances réelles du mutualisé restent non vérifiés ; les essais synthétiques ne les remplacent pas.

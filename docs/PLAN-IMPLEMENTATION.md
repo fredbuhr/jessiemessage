@@ -6,7 +6,7 @@ Révisé le 22 octobre 2026 après le bilan de **l’ensemble de l’application
 
 La production identifiée est **1.7.1 / Node 24.22.1 / schéma 33**. Invitations, authentification et sessions multiples, texte/photos, profils et avatars, 268 emojis Unicode, lecture privée, CRM, diffusions élargies, annonces, tâches privées et exports photo sont livrés. Les réponses rapides se limitent à six phrases fixes FR/EN. La fermeture locale des comptes est disponible sous ses gardes, sans nouveau raccordement PC.
 
-La branche `feat/video-messaging`, [PR 125](https://github.com/fredbuhr/jessiemessage/pull/125), prépare **1.8.0**. **G1 sauvegarde manuelle admin et G2 vidéo complète sont qualifiés sur branche, non livrés.** La source G2 est `cecd60ced91d7eaf79025f06233833dad52ddef0`, arbre `a2d639166576d24aaa233f333a13f3959f5ddd53`, [CI 39721685571 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39721685571) ; [preuve G2](verification-proofs/jm180-video-integration-verification.json). La [preuve G1](verification-proofs/jm180-manual-backup-verification.json) est conservée. Les 36 migrations candidates ne sont pas promues ; le plan normal en conserve 33 et aucune vidéo n’est activée en production.
+La branche `feat/video-messaging`, [PR 125](https://github.com/fredbuhr/jessiemessage/pull/125), prépare **1.8.0**. **G1 sauvegarde manuelle admin, G2 vidéo complète et G3 réponses personnelles et qualification globale sont qualifiés sur branche, non livrés.** La source G3 est `4f6587aee355b213b58734b576809eae0943553c`, arbre `3a1defe079e2095fb0ee89ad51312c91916cd292`, [CI 39755558913 5/5](https://github.com/fredbuhr/jessiemessage/actions/runs/39755558913) ; [preuve G3](verification-proofs/jm180-personal-replies-verification.json). Les [preuves G2](verification-proofs/jm180-video-integration-verification.json) et [G1](verification-proofs/jm180-manual-backup-verification.json) sont conservées. G3 n’ajoute ni migration ni clé : le candidat conserve 36 migrations, le plan normal 33 ; aucune nouveauté n’est activée en production.
 
 ## Périmètre décidé le 22 octobre
 
@@ -14,18 +14,17 @@ La branche `feat/video-messaging`, [PR 125](https://github.com/fredbuhr/jessieme
 
 **Les sauvegardes et l’archivage automatiques sont remplacés dans le périmètre cible par une sauvegarde simple, déclenchée à la demande depuis l’administration.** Aucun exécuteur d’archivage automatique n’est à développer. Les copies, clés, autorités et historiques existants sont préservés ; les fermetures locales et leurs contrôles restent opérationnels. Cette décision ne décrit pas encore la production : **1.7.1 conserve ses automatismes existants tant que leur remplacement n’a pas été livré et vérifié**.
 
-## Deux lots restants : G3 et G4
+## Un seul lot restant : G4
 
-Ces lots regroupent le travail selon le résultat utile. G1 et G2 sont acquis sur branche et attendent leur livraison commune ; leurs subdivisions techniques ne deviennent pas de nouveaux lots ou arrêts à faire valider par l’utilisateur.
+G1, G2 et G3 sont acquis sur branche et attendent leur livraison commune. Les subdivisions techniques ne deviennent pas de nouveaux lots ou arrêts à faire valider par l’utilisateur.
 
 | Lot | Travail regroupé | Critère de fin concret |
 | --- | --- | --- |
-| **G3 — Réponses personnelles et qualification globale** | Permettre à Jessie de créer, modifier et supprimer ses phrases enregistrées, partagées entre les sessions autorisées du même compte admin, avec insertion au brouillon et envoi explicite. Qualifier ensemble accès, sessions, texte/photo/vidéo, notifications, CRM, annonces, tâches, diffusions, sauvegarde manuelle et exports ; corriger les défauts observés, vérifier droits/confidentialité/révocation et mesurer mémoire/débit/délais. Qualifier transfert/restauration isolés et repli compatible. | Les phrases personnelles persistent entre appareils sans perte silencieuse lors d’un conflit et restent privées. Les parcours combinés passent sur les sources exactes ; limites justifiées et un parcours complet reproductible de transfert/restauration comparé. Répéter seulement après changement, échec ou préoccupation concrète. Les appareils absents restent non vérifiés. |
-| **G4 — Livraison unique et contrôle en service** | Fusion finale, CI requises, version/tag/release, préparation, migration et activation bornées ; contrôle HTTP et identité du processus actif, métadonnées et repli, guide quotidien cohérent. | La version exacte est réellement active ; sauvegarde manuelle et vidéo sont accessibles, absence des automatismes abandonnés vérifiée, contrôles hébergés consignés. Publication et déploiement restent distingués. |
+| **G4 — Livraison unique et contrôle en service** | Adapter, qualifier et préparer d’abord le repli exact compatible avec le schéma et les données à activer. Réaliser ensuite fusion finale, CI requises, version/tag/release, préparation, migration et activation bornées ; contrôler HTTP, identité du processus actif, métadonnées et guide quotidien. | Le repli est qualifié et préparé avant migration. La version exacte est réellement active ; sauvegarde manuelle, vidéo et réponses personnelles sont accessibles, remplacement des automatismes vérifié et contrôles hébergés consignés. Publication et déploiement restent distingués. |
 
-**Prochaine action : G3 — réponses personnelles et qualification globale.** La production conserve son code 1.7.1 jusqu’à G4. La livraison produit reste unique ; aucune nouvelle version ni aucun déploiement ne sont nécessaires à chaque sous-tâche.
+**Prochaine action : G4 — préparer et qualifier le repli exact, puis effectuer la livraison unique.** Le repli courant **1.6.0 / SQL 33** ne peut pas être présenté comme un repli du candidat SQL 36. Le lecteur du jalon G2 refuse les capsules contenant le nouveau type de fichier des réponses personnelles ; son runtime qui conserve ces fichiers ne suffit pas à qualifier un repli complet. L’adaptation et les contrôles de cette référence restent donc réellement à faire dans G4, avant la migration.
 
-Il reste deux lots ; aucun nombre précis de séquences internes ni pourcentage d’achèvement n’est justifié. G3 conserve un parcours complet comparé de transfert/restauration et le repli compatible ; les essais G2 ne sont pas présentés comme une qualification hébergée ou sur téléphone physique.
+G3 a qualifié sur sa source unique les réponses personnelles, les suites globales et les wrappers d’import/reprise natifs, avec métriques CI. Il ne revendique ni une exécution intégrale du CLI de restauration manuelle de plus haut niveau, ni un téléphone physique, une notification système hors application ou une mesure du mutualisé. Ces limites restent explicites ; elles ne deviennent pas des micro-lots supplémentaires. La production conserve son code 1.7.1 jusqu’à G4.
 
 ## Fonctions non abandonnées, à préciser et non ouvertes
 
@@ -39,11 +38,11 @@ La décision cite les fonctions abandonnées ci-dessus. Elle ne suffit pas à su
 | **Recherche de messages/notes** | Recherche de clients livrée ; recherche dans les contenus absente. | Périmètre à préciser, sans ajout au lot en cours. |
 | **Réactions** | Absentes. | Usage à préciser, sans engagement de développement automatique. |
 
-La **personnalisation des réponses**, absente des six phrases fixes actuelles, reste incluse dans G3. Les sujets de cette table ne bloquent pas les deux lots restants et n’autorisent pas l’ouverture simultanée d’autres évolutions.
+La **personnalisation des réponses** est maintenant qualifiée dans G3, sur branche et non livrée. La production conserve ses six phrases fixes jusqu’à G4. Les sujets de cette table restent à préciser et non ouverts ; ils ne bloquent pas le dernier lot et n’autorisent pas l’ouverture simultanée d’autres évolutions.
 
 ## Exploitation et limites conservées
 
-- **Authenticator et notifications sur appareils réels :** les correctifs/parcours navigateur existent, mais l’aller-retour téléphone, le clavier mobile et les notifications système avec application fermée ne sont pas entièrement attestés. Compléter les essais disponibles en G3 sans compter une absence d’appareil comme une réussite.
+- **Authenticator et notifications sur appareils réels :** les correctifs/parcours navigateur existent, mais l’aller-retour téléphone, le clavier mobile et les notifications système avec application fermée ne sont pas entièrement attestés. Les essais synthétiques G3 ne remplacent pas un appareil absent ; les plateformes non essayées restent non vérifiées.
 - **PHP du site secondaire :** relève d’Infomaniak ; aucune vérification ni intervention PHP n’est une action de ce plan. L’application Node utilise 24.22.1.
 - **Accueil secondaire :** ancien aperçu au dernier contrôle ; principal et www ont le nouvel accueil. La redirection a été refusée automatiquement et n’a pas été appliquée. Ne pas la retenter dans ce chantier ; [preuve et motif historiques](verification-proofs/jm171-secondary-entry.json).
 - **PC/Avast :** le blocage signalé et le défaut de confirmation du kit restent non résolus, sans recette PC à reprendre pour G1. Le raccordement et ses clés restent préservés. Le parcours manuel qualifié sur branche ne dépend pas du PC ; aucune API cloud ou nouvelle infrastructure n’est ajoutée.
@@ -55,7 +54,7 @@ La récupération autonome après perte totale de l’hôte, le témoin frais à
 
 Conserver des checkpoints Git reprenables et la preuve de chaque opération distante, tout en poursuivant plusieurs sous-tâches cohérentes d’un même livrable sans demander une nouvelle permission générale. Ne pas relancer les mêmes audits et suites vertes sans changement, échec ou préoccupation nouvelle. Regrouper les contrôles quand leurs dépendances le permettent ; ne jamais promouvoir une omission ou un test unitaire en essai réel sur téléphone, hébergement ou compte client.
 
-**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Un export interne, compteur SQL ou document ne constitue pas à lui seul une nouvelle fonction utilisable. G1 et G2 sont qualifiés sur branche ; aucun mécanisme n’est encore désactivé et ni la sauvegarde manuelle ni la vidéo ne sont activées en production. Les contrats techniques et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) restent conservés sans réétiquetage.
+**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Un export interne, compteur SQL ou document ne constitue pas à lui seul une nouvelle fonction utilisable. G1, G2 et G3 sont qualifiés sur branche ; les nouveautés 1.8.0 ne sont pas encore activées en production et les automatismes existants n’y sont pas encore remplacés. Les contrats techniques et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) restent conservés sans réétiquetage.
 
 ## Livraisons closes
 

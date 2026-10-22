@@ -105,9 +105,13 @@ Le raccourci **JessieMessage — Sauvegardes** sur le Bureau indique le dossier 
 
 Le reçu confirme le fichier chiffré reçu, sans certifier une restauration de l’application. [Copies PC](backup-destinations-055.md).
 
-### Sur branche, non livré : sauvegarde à la demande et vidéo
+### Sur branche, non livré : nouveautés 1.8.0
 
-La sauvegarde simple à la demande depuis l’administration et la vidéo complète sont codées et qualifiées sur branche, selon [REPRISE](REPRISE.md) et le [bilan G2](video-integration-180.md). **Ces parcours ne sont pas encore disponibles en production** ; leurs boutons et étapes seront décrits après livraison vérifiée. Le nouveau parcours ne dépend pas du PC et l’archivage automatique est abandonné. Les archives déjà créées, les clés et le raccordement existant sont conservés ; aucun nouveau raccordement ni manipulation de clé n’est demandé.
+La sauvegarde à la demande depuis l’administration, la vidéo et les réponses personnelles sont codées et qualifiées sur branche, selon [REPRISE](REPRISE.md). **Ces nouveautés ne sont pas encore disponibles en production.** Le nouveau parcours de sauvegarde ne dépend pas du PC et l’archivage automatique est abandonné. Les anciennes archives, clés et le raccordement existant sont conservés.
+
+Dans le candidat 1.8.0, ouvre `+`, puis **Réponses rapides**. La rubrique **Mes réponses** contient tes phrases enregistrées. **Nouvelle réponse** permet de saisir un titre, une langue et un texte, puis **Enregistrer la réponse**. **Modifier** reprend une phrase ; **Supprimer**, puis sa confirmation, la retire. Le catalogue peut contenir jusqu’à 50 phrases, chacune de 4 096 caractères au maximum. Choisir une phrase l’ajoute au brouillon ; relis-la puis utilise **Envoyer**.
+
+Les réponses enregistrées se retrouvent dans tes sessions administrateur. Si une autre session les a modifiées ou si la confirmation manque, ton texte en cours reste affiché : utilise **Recharger les réponses enregistrées**, vérifie le résultat, puis enregistre explicitement si nécessaire.
 
 ## Fermeture définitive et remise en service
 
