@@ -93,7 +93,7 @@ await run(process.argv.slice(2),{loadMain:async()=>(args,settings)=>main(args,{.
     await supervisor.start(); await supervisor.tick();
     assert.equal(synthetic.children.length, 1, "enabled historical configuration never triggers an automatic capture");
     assert.equal(await requests.status(), null);
-    const token = "A".repeat(43), csrf = "B".repeat(43), adminId = "a".repeat(32), requestId = "b".repeat(32);
+    const token = "A".repeat(43), csrf = Buffer.alloc(32, 2).toString("base64url"), adminId = "a".repeat(32), requestId = "b".repeat(32);
     handler = createManualBackupHandler(createManualBackupService(operationsDirectory), { origin: "https://jessiemessage.com",
       actor: async value => value === token ? { user: { id: adminId, role: "admin", pseudonym: "Synthetic operator" }, csrf, expiresAt: Date.now() + 3600000 } : null });
     server = createServer(async (request, response) => { if (!await handler(request, response)) { response.writeHead(404); response.end(); } });

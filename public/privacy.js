@@ -7,7 +7,7 @@ const decisions = [
   ["D03", "Comment encadrer les contenus sensibles ?", "Précise la condition retenue pour les informations sur la vie sexuelle et ses modalités. Si un consentement est retenu, il faut prévoir son recueil et son retrait."],
   ["D04", "Combien de temps conserver les données ?", "Pour les comptes, échanges, photos, suivis, traces de sécurité et files : indique le point de départ, la durée ou le critère, et le sort final."],
   ["D05", "Que doit couvrir une suppression ?", "Précise le sort du compte, des échanges et des photos, y compris les photos réutilisées, et les éventuelles exceptions justifiées."],
-  ["D06", "Que deviennent les copies et sauvegardes ?", "La copie automatique sur le PC fonctionne. Il reste à préciser les lieux, la rotation, la fin de vie des copies et le traitement d’une restauration."],
+  ["D06", "Que deviennent les copies et sauvegardes ?", "Les sauvegardes et fichiers téléchargés sont des copies séparées. Il reste à préciser leurs lieux de conservation, leur fin de vie et le traitement d’une restauration."],
   ["D07", "Quels prestataires et quels lieux ?", "L’hébergement Infomaniak, les e-mails et les services Push sont utilisés. Précise les entités, lieux, transferts, journaux et autres sources de données réellement applicables."],
   ["D08", "Qui traite les demandes de données ?", "Le contact est contact@jessiemessage.com. Indique qui répond, comment les données sont remises et où le suivi privé est conservé, avec sa durée."],
 ];

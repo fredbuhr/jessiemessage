@@ -22,8 +22,16 @@ async function fixture({ loseAcknowledgement = false, availableArchive = false }
       assert.equal(request.headers["x-csrf-token"], "A".repeat(43));
       const { requestId } = JSON.parse(text); assert.match(requestId, /^[0-9a-f]{32}$/);
       current = snapshot(backupRequest(requestId, "running"), current.latestArchive);
-      if (loseAcknowledgement) { response.destroy(); return; }
-      return json({ version: 1, mode: "manual", request: current.request }, 202);
+      const acknowledgement = { version: 1, mode: "manual", request: current.request };
+      if (loseAcknowledgement) {
+        // Start the actual response before severing its body. Closing a socket
+        // without headers can make Chrome retry the transport itself, which is
+        // distinct from an application replay after a lost acknowledgement.
+        const body = JSON.stringify(acknowledgement);
+        response.writeHead(202, { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body), "Cache-Control": "no-store" });
+        response.flushHeaders(); response.write(body.slice(0, 16), () => response.destroy()); return;
+      }
+      return json(acknowledgement, 202);
     }
     if (path === `/api/admin/backups/archives/${archive().id}`) {
       response.writeHead(200, { "Content-Type": "application/octet-stream", "Content-Disposition": `attachment; filename="${archive().filename}"`, "Cache-Control": "no-store" });
@@ -79,8 +87,11 @@ test("real Chrome: a lost capture acknowledgement survives a visibility handoff 
   try {
     page = await driver.browser({ origin: source.origin, width: 375 }); await page.navigate("/admin/backups");
     await waitUntil(() => page.execute("return !document.getElementById('backup-content').hidden"), "initial backup page");
+    await page.execute("const nativeFetch=window.fetch;window.__captureFetches=[];window.fetch=function(path,options){if(path==='/api/admin/backups/captures')window.__captureFetches.push(JSON.parse(options.body).requestId);return nativeFetch.call(this,path,options);};");
     await page.click("#create-backup");
     await waitUntil(() => page.execute("return document.getElementById('backup-status').textContent.includes('pas encore confirmé')"), "lost acknowledgement remains unconfirmed");
+    const requestId = JSON.parse(source.requests.find(request => request.method === "POST").text).requestId;
+    assert.deepEqual(await page.execute("return window.__captureFetches"), [requestId], "one explicit application fetch with the exact received identifier");
     assert.equal(countPosts(source), 1);
     await page.execute("Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'});document.dispatchEvent(new Event('visibilitychange'));JessieI18n.setLanguage('en')");
     assert.equal(await page.execute("return document.getElementById('backup-content').hidden && document.getElementById('capture-details').textContent==='' && document.getElementById('archive-details').textContent===''"), true);
@@ -90,6 +101,7 @@ test("real Chrome: a lost capture acknowledgement survives a visibility handoff 
     assert.equal(await page.execute("return !document.getElementById('backup-status').classList.contains('is-error')"), true);
     source.unavailable(false); source.complete(); await page.click("#refresh");
     await waitUntil(() => page.execute("return document.getElementById('capture-state').textContent==='Backup complete.' && !document.getElementById('download-backup').hidden"), "durable completed state");
+    assert.deepEqual(await page.execute("return window.__captureFetches"), [requestId], "visibility and refresh never replay the application capture request");
     assert.equal(countPosts(source), 1);
   } finally { try { await page?.close(); } finally { try { await source.close(); } finally { await driver.close(); } } }
 });
