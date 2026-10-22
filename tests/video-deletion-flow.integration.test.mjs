@@ -6,7 +6,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { databaseOptions, connectDatabase } from "../server/db/connection.mjs";
-import { applyMigrations, createdMigrationTables, loadMigrations } from "../server/db/migrations.mjs";
+import { applyMigrations, createdMigrationTables, loadMigrations, MigrationError } from "../server/db/migrations.mjs";
 import { createRuntimePool } from "../server/db/runtime.mjs";
 import { newToken, tokenDigest } from "../server/auth/crypto.mjs";
 import { createAuthStore } from "../server/auth/store.mjs";
@@ -25,6 +25,7 @@ import { loadVideoMigrations } from "../server/video/migrations.mjs";
 import { createVideoErasureExtension } from "../server/video/erasure-store.mjs";
 import { composeVideoErasureStorage } from "../server/video/erasure-storage.mjs";
 import { createErasureStore } from "../server/data/erasure-store.mjs";
+import { AccountErasureError } from "../server/data/erasure-state.mjs";
 import { createAccountErasure } from "../server/data/erasure.mjs";
 import { assertErasureSchema } from "../server/data/erasure-schema.mjs";
 import { createErasureJournal, readErasureJournalBatch } from "../server/data/erasure-journal.mjs";
@@ -263,9 +264,33 @@ test("candidate video deletion and account closure remain durable and preserve o
       assert.deepEqual(await normal.service.remove("client", f.client.token, hex(asset.id)), { deleted: true }); assert.equal(await videoHeld(), held - asset.storedBytes);
     });
     await t.test("the ordinary schema-33 eraser refuses the candidate graph instead of overlooking video references", async () => {
-      await assert.rejects(assertErasureSchema(connection, options.database), code("ERASURE_SCHEMA"));
+      const f = await pair(), asset = await video(f.client); await send(f, f.client, asset);
+      async function snapshot() {
+        const values = [];
+        for (const table of [...createdMigrationTables(candidates), "schema_migrations"])
+          values.push([table, (await connection.query("SELECT * FROM " + table)).map(entry => serialize(entry)).sort()]);
+        for (const root of [photoRoot, videoRoot, journalRoot]) {
+          const files = [];
+          for (const name of (await readdir(root)).sort()) files.push([name, createHash("sha256").update(await readFile(path.join(root, name))).digest("hex")]);
+          values.push([root, files]);
+        }
+        return serialize(values);
+      }
+      const before = await snapshot();
+      // The immutable migration ledger rejects version 34 against the ordinary
+      // plan of 33 before the subsequent dependency-graph checks are reached.
+      await assert.rejects(assertErasureSchema(connection, options.database), error => {
+        assert.ok(error instanceof MigrationError); assert.equal(error.code, "HISTORY_DIVERGED");
+        assert.deepEqual(error.details, { version: 34 }); return true;
+      });
+      assert.equal(await snapshot(), before);
       const legacy = createErasureStore({ pool, database: options.database, capacity: photoCapacity, broadcastKey });
-      const f = await pair(); await assert.rejects(legacy.withLease(hex(f.client.id), scope => scope.inspect(now)), code("ERASURE_SCHEMA"));
+      let entered = false;
+      // The store boundary intentionally hides non-erasure implementation
+      // errors; it must still refuse before exposing the destructive scope.
+      await assert.rejects(legacy.withLease(hex(f.client.id), scope => { entered = true; return scope.inspect(now); }),
+        error => error instanceof AccountErasureError && error.code === "ERASURE_UNAVAILABLE" && error.cause === undefined);
+      assert.equal(entered, false); assert.equal(await snapshot(), before);
       assert.equal((await connection.query("SELECT status FROM users WHERE id = ?", [f.client.id]))[0].status, "active");
     });
     await t.test("a bounded closure resumes with typed photo/video cursors, reserved staging and a complete peer preserved", async () => {
