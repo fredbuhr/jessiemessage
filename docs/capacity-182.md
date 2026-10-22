@@ -1,6 +1,6 @@
 # Capacité et dernière activité — correctif 1.8.2
 
-**État : diagnostic natif ajouté, résultats MariaDB en attente de CI.** Cette fiche décrit A12 et ses limites ; elle ne certifie ni une vitesse du mutualisé, ni un nombre de clients simultanés. [REPRISE](REPRISE.md) reste la référence de production et le [plan](PLAN-IMPLEMENTATION.md) conserve les lots en cours. Aucun index, migration, plafond ou mécanisme de purge n’est modifié par cette mesure.
+**État : diagnostic natif réussi sur MariaDB 10.11.19 et 11.4.13**, source `3d0daff8bce9028b41879904ae167268537ca84c`, [CI et journaux vérifiés](verification-proofs/jm182-lot3-ci.json). Cette fiche décrit A12 et ses limites ; elle ne certifie ni une vitesse du mutualisé, ni un nombre de clients simultanés. [REPRISE](REPRISE.md) reste la référence de production et le [plan](PLAN-IMPLEMENTATION.md) conserve les lots en cours. Aucun index, migration, plafond ou mécanisme de purge n’est modifié par cette mesure.
 
 ## Mesure bornée et résultat attendu
 
@@ -16,18 +16,29 @@ Le diagnostic structuré porte le type **`latest-activity-capacity-synthetic-met
 
 Les plans **`EXPLAIN` natifs** concernent les requêtes de résumé et de page CRM effectivement capturées pendant ces lectures, ainsi que le maximum de date isolé par conversation. Le diagnostic conserve `table`, `type`, `key`, `rows`, `Extra` et le type de sélection ; aucun paramètre, identifiant de session ou contenu n’est journalisé. `rows` est une estimation de l’optimiseur. Aucun plan précis ni seuil de millisecondes n’est imposé aux runners.
 
-| Contrôle | État avant qualification native |
+| Contrôle | Résultat natif sur cette source |
 | --- | --- |
-| Syntaxe sous Node 24.22.1 | Vérifiée localement ; ne qualifie pas l’exécution SQL. |
-| MariaDB 10.11 | **En attente** ; aucun résultat natif local revendiqué. |
-| MariaDB 11.4 | **En attente** ; aucun résultat natif local revendiqué. |
-| Charge et concurrence du mutualisé | **Non mesurées** par ce diagnostic local synthétique. |
+| Syntaxe sous Node 24.22.1 | 712 sources vérifiées dans le build CI réussi. |
+| MariaDB 10.11.19 | Diagnostic réussi ; suite SQL complète **576/576**, sans omission. |
+| MariaDB 11.4.13 | Diagnostic réussi ; suite SQL complète **576/576**, sans omission. |
+| Charge et concurrence du mutualisé | **Non mesurées** par ce diagnostic synthétique sur runner. |
+
+| Opération synthétique | MariaDB 10.11, durée | MariaDB 11.4, durée | Appels `query` |
+| --- | ---: | ---: | ---: |
+| Dernière activité, 1 000 événements | 8,365 ms | 7,260 ms | 16 |
+| Dernière activité, 10 000 événements | 22,696 ms | 7,392 ms | 14 |
+| Première page CRM, 50 contacts | 46,265 ms | 32,357 ms | 11 |
+| Page suivante CRM, dernier contact | 4,891 ms | 3,291 ms | 11 |
+
+Chaque durée est **une observation**, sans concurrence, et ne permet pas de classer les moteurs ou de promettre un débit. Les assertions de résultat, pagination et séparation des propriétaires passent sur les deux versions. La collecte après interruption a lu les runs existants, sans nouvelle exécution.
 
 La suite est déjà incluse dans `npm run test:db`, exécuté séquentiellement dans la matrice MariaDB 10.11/11.4 existante. Sa fixture CRM utilise le plan normal SQL33 ; les tables et requêtes examinées sont aussi présentes dans le profil vidéo SQL36. Ce sous-test ne remplace pas les autres qualifications du runtime vidéo. Un test ignoré faute de base reste une omission, jamais un succès natif.
 
 ## Pourquoi mesurer le maximum de date
 
-Les résumés chat et les pages CRM calculent `MAX(occurred_at)` dans `chat_events`. La migration immuable `0015_chat_events.sql` possède les index `(conversation_id, event_sequence)` et `(conversation_id, message_id)`, sans index `(conversation_id, occurred_at)`. Les maxima de séquence disposent de leur préfixe utile ; le maximum de date ne bénéficie pas de cet index adapté. **Aucune lenteur réelle n’est établie avant les mesures.** Les résultats serviront à décider si un correctif est utile ; ils ne déclenchent pas automatiquement un nouvel index ou une migration. Les autorisations et verrous ne doivent pas être affaiblis pour améliorer une durée.
+Les résumés chat et les pages CRM calculent `MAX(occurred_at)` dans `chat_events`. La migration immuable `0015_chat_events.sql` possède les index `(conversation_id, event_sequence)` et `(conversation_id, message_id)`, sans index `(conversation_id, occurred_at)`. Les maxima de séquence disposent de leur préfixe utile ; le maximum de date ne bénéficie pas de cet index adapté. À 1 000 événements, les plans utilisent `PRIMARY/ref` pour ce maximum, avec une estimation de 1 000 lignes. À 10 000, MariaDB 11.4 choisit `ALL` sur `chat_events` (11 004 lignes estimées) et sur `messages` dans le résumé (11 003), tandis que 10.11 conserve des accès `ref` avec environ 5 502/5 501 lignes estimées. Ces estimations ne comptent pas les lignes réellement parcourues.
+
+**Aucun blocage de lancement n’est établi par ces observations**, dont les lectures restent à quelques dizaines de millisecondes dans la fixture. Elles confirment néanmoins un coût dépendant de l’historique. La décision est de poursuivre le lot4 sans nouvel index ni migration, en conservant cette dette de croissance et les limites ci-dessus. Les autorisations et verrous ne doivent pas être affaiblis pour améliorer une durée.
 
 ## Polling et budgets actuels
 
