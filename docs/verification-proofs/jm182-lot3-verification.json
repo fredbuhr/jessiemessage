@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "type": "jessiemessage-audit-lot3-verification",
-  "recordedAtUTC": "2026-10-22T18:15:17.723736+00:00",
-  "status": "implemented_and_targeted_checked_exact_source_native_ci_pending",
+  "recordedAtUTC": "2026-10-22T18:38:03.466488+00:00",
+  "status": "qualified_on_branch_not_merged_not_deployed_operator_facts_explicit",
   "branch": "fix/audit-182",
   "baseSource": "2ee7ee355a594cbf275526a59dc231f90583cd27",
   "baseTree": "d7851f2c9cedc8d0518ad8a665c0da186d5f474c",
@@ -20,11 +20,11 @@
   ],
   "findings": {
     "A09": {
-      "status": "current_guides_corrected_history_separated_local_checks_passed",
+      "status": "guides_and_history_corrected_local_links_and_full_ci_qualified",
       "reprise": {
         "beforeBytes": 148530,
-        "afterBytes": 9332,
-        "afterLines": 57,
+        "afterBytes": 11366,
+        "afterLines": 64,
         "originalHistoricalSuffixBytes": 135528,
         "originalHistoricalSuffixSha256": "48a78c3c372d84b534eb6b7c0567440acc732de383ea8d69f1a4d12317cd7d51",
         "historicalSuffixByteIdentical": true,
@@ -70,7 +70,7 @@
       },
       "markdownLinks": {
         "scope": "Git-tracked and newly created repository Markdown; local inline and reference targets, Markdown heading/explicit HTML anchors; no external URL fetching",
-        "relativeTargets": 1301,
+        "relativeTargets": 1310,
         "markdownFiles": 171,
         "anchorChecks": 16,
         "errors": [],
@@ -92,10 +92,10 @@
         "existingTarget": "jm182-lot3-verification.json",
         "externalVerificationClaim": false
       },
-      "rootMetadataFollowup": "Plan/README/REPRISE qualification state appended after the documentation freeze; link check repeated on the changed Markdown,1301 targets/16 anchors with zero errors."
+      "rootMetadataFollowup": "Documentary recovery checkpoint retained as parent; both native evidence records preserved. Final relative paths/anchors:1310 targets/16 anchors, zero errors. No code/test change or CI replay."
     },
     "A13": {
-      "status": "workflow_patch_reviewed_native_ci_pending",
+      "status": "official_pins_and_workflows_qualified_three_automatic_pr_runs",
       "officialSourceProof": "jm182-lot3-action-sources.json",
       "counts": {
         "checkoutPins": 7,
@@ -149,16 +149,18 @@
         "parentReview": "Root reviewed the entire three-workflow diff; no correction requested."
       },
       "nativeQualification": {
-        "ci": "pending on final PR source",
-        "windows": "required by changed Windows workflow path, pending on PR",
-        "dispatchTriggered": false,
-        "rerunTriggered": false,
-        "localChromeOrSqlExecuted": false,
-        "realPcUsed": false
+        "status": "passed",
+        "executedJobsSucceeded": 7,
+        "expectedHostedMonitorSkip": 1,
+        "probeSyntheticTests": 24,
+        "nativeWindowsFixturesPassed": true,
+        "realUserPcTested": false,
+        "cronChangeAlreadyOnMain": false,
+        "proof": "jm182-lot3-ci-complete.json"
       }
     },
     "A14": {
-      "status": "historical_tool_and_guides_explicit_not_current_routing",
+      "status": "historical_tool_and_guides_explicit_full_ci_qualified_routing_unchanged",
       "sourceBoundaries": {
         "videoMigrationExecutableBodyUnchanged": true,
         "neutralBuilderExportAndRoutingUnchanged": true,
@@ -191,7 +193,7 @@
       }
     },
     "A15": {
-      "status": "implemented_targeted_passed",
+      "status": "targeted_and_full_ci_passed_contracts_preserved",
       "changes": [
         "Removed only unused appendQuickReply controller import and adjusted 3 VM fixture import seams",
         "Removed unused peerAvatarUrl export",
@@ -224,7 +226,7 @@
       }
     },
     "A12": {
-      "status": "bounded_native_diagnostic_added_results_pending",
+      "status": "native_diagnostic_passed_on_both_supported_engines",
       "document": "../capacity-182.md",
       "fixture": {
         "ownContacts": 51,
@@ -248,7 +250,15 @@
       ],
       "nativeDatabaseExecutedLocally": false,
       "schemaIndexQuotaPurgeChanged": false,
-      "independentReadOnlyReview": "No concrete fixture, query-capture, pagination or isolation blocker found; native versions remain to qualify."
+      "independentReadOnlyReview": "No concrete fixture, query-capture, pagination or isolation blocker found; native versions remain to qualify.",
+      "nativeProof": "jm182-lot3-ci-complete.json",
+      "nativeEngines": [
+        "10.11.19-MariaDB-ubu2204",
+        "11.4.13-MariaDB-ubu2404"
+      ],
+      "nativeTestsPerEngine": 576,
+      "nativeOmissions": 0,
+      "decision": "Exact results, ownership and paging passed on both fixture volumes. Plans expose growth cost and differ by engine; no hosted capacity, current latency incident or mandatory new index is established. SQL36 and all quotas remain unchanged."
     },
     "A10": {
       "status": "unestablished_operator_facts_D01_D07_still_open",
@@ -372,14 +382,125 @@
   "privacyDraftHeadingsUnchanged": true,
   "sqlMigrationsChanged": false,
   "ci": {
-    "status": "pending_publication_and_automatic_exact_source_pr_runs",
+    "status": "three_automatic_pr_runs_passed",
     "pullRequest": "https://github.com/fredbuhr/jessiemessage/pull/129",
-    "expectedWorkflows": [
-      "CI",
-      "Windows backup recovery instructions",
-      "Private service monitor"
+    "source": "3d0daff8bce9028b41879904ae167268537ca84c",
+    "tree": "f3ac13619dc1a50c5494900229beb76e4bbe6759",
+    "testedCheckout": "ca1a9aad2c9b0a302a4eaddc94d88cd772c85157",
+    "testedTreeEqualsSource": true,
+    "testedParents": [
+      "422c8ac0b75b945d280c3a84225cd3e2b0025087",
+      "3d0daff8bce9028b41879904ae167268537ca84c"
     ],
-    "expectedScope": "Five core jobs, native Windows retained-format qualification, synthetic probe tests; monitor hosting service must be skipped for pull_request. No dispatch or same-run rerun."
+    "proof": "jm182-lot3-ci-complete.json",
+    "runs": [
+      {
+        "id": 39830136303,
+        "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39830136303",
+        "event": "pull_request",
+        "path": ".github/workflows/ci.yml",
+        "head_sha": "3d0daff8bce9028b41879904ae167268537ca84c",
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-22T18:18:10Z",
+        "updated_at": "2026-10-22T18:24:57Z"
+      },
+      {
+        "id": 39830136293,
+        "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39830136293",
+        "event": "pull_request",
+        "path": ".github/workflows/backup-recovery-instructions.yml",
+        "head_sha": "3d0daff8bce9028b41879904ae167268537ca84c",
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-22T18:18:10Z",
+        "updated_at": "2026-10-22T18:19:14Z"
+      },
+      {
+        "id": 39830136279,
+        "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39830136279",
+        "event": "pull_request",
+        "path": ".github/workflows/service-monitor.yml",
+        "head_sha": "3d0daff8bce9028b41879904ae167268537ca84c",
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-22T18:18:10Z",
+        "updated_at": "2026-10-22T18:18:25Z"
+      }
+    ],
+    "executedJobsSucceeded": 7,
+    "expectedSkippedHostedJobs": 1,
+    "testResults": {
+      "MariaDB 11.4": {
+        "tests": 576,
+        "suites": 0,
+        "pass": 576,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 312116.638335
+      },
+      "Chrome keyboard and chat lifecycle": {
+        "tests": 223,
+        "suites": 0,
+        "pass": 223,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 251667.99011
+      },
+      "verify": {
+        "tests": 3869,
+        "suites": 0,
+        "pass": 3821,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 48,
+        "todo": 0,
+        "duration_ms": 100615.716673
+      },
+      "Chrome HTTPS authentication and messaging with MariaDB": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 70562.809289
+      },
+      "MariaDB 10.11": {
+        "tests": 576,
+        "suites": 0,
+        "pass": 576,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 366215.318196
+      },
+      "Windows PowerShell 5.1 instructions": null,
+      "Probe failure and privacy tests": {
+        "tests": 24,
+        "suites": 0,
+        "pass": 24,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 187.786037
+      }
+    },
+    "omissionsCountedAsSuccess": false,
+    "legacyNode20WarningsAbsent": true,
+    "sameRunRerunPerformed": false,
+    "workflowDispatchPerformed": false,
+    "alsoPreservedRecoveryProof": "jm182-lot3-ci.json"
   },
   "backupHostedTest": "deferred_by_user_not_attempted",
   "productionActions": {
@@ -393,12 +514,15 @@
     "externalProbeOrTestMail": false
   },
   "remaining": [
-    "Acquire the exact-source core CI and changed Windows/probe workflows.",
     "Lot4 final exact-source main/release/deployment and grouped available-device/hosting checks.",
-    "Unestablished A10 facts and A11 observation remain explicit; hosted backup UI test stays deferred."
+    "Unestablished A10 operator facts D01-D07 and hosted A11 peer observation remain explicit.",
+    "Hosted backup UI test remains deferred until the user explicitly requests resumption."
   ],
-  "nextAction": "Publish this coherent lot3, collect its automatic exact-source CI once, and record qualification before preparing the single final delivery.",
-  "implementationFilesAtThisCheckpoint": [
+  "nextAction": "Prepare the single lot4 delivery from the qualified application source, preserving SQL36, compatible rollback1.7.2 and the deferred hosted backup test.",
+  "qualifiedSource": "3d0daff8bce9028b41879904ae167268537ca84c",
+  "qualifiedTree": "f3ac13619dc1a50c5494900229beb76e4bbe6759",
+  "postQualificationDocumentationOnly": true,
+  "implementationFilesAtQualifiedSource": [
     {
       "path": ".github/workflows/backup-recovery-instructions.yml",
       "bytes": 10536,
@@ -564,5 +688,44 @@
       "bytes": 23062,
       "sha256": "7f700d22f11e89ba6511d58b1939e9afc808dfa1f8b9a1c00da14a6cac71c3fd"
     }
-  ]
+  ],
+  "versionReferencesReadOnly": {
+    "latest": {
+      "id": 420741528,
+      "tag": "v1.8.1",
+      "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.1",
+      "draft": false,
+      "prerelease": false
+    },
+    "productionTag": {
+      "ref": "refs/tags/v1.8.1",
+      "type": "commit",
+      "source": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31"
+    },
+    "rollbackTag": {
+      "ref": "refs/tags/v1.7.2",
+      "type": "commit",
+      "source": "6b3319a77c307ed7d6b003fe33de36807c70c266"
+    },
+    "serverIdentity": "last_user_reported1.8.1/24.22.1/SQL36; no new private host inspection",
+    "development": "1.8.2, branch only",
+    "tagOrReleaseMutated": false,
+    "checkedDateUTC": "2026-10-22",
+    "newReadmeHistoryLink": {
+      "source": "bbd733d85b49b892d78c7cd90509ced04a990939",
+      "path": "README.md",
+      "confirmed": true,
+      "notCurrentInstructions": true
+    }
+  },
+  "publicationReconciliation": {
+    "observedRemoteCheckpoint": "bb692ef2c38f17420d43092abd7d7472326bba29",
+    "observedRemoteTree": "7b722ca1fbd3416acecffa3c122e967511184d4c",
+    "qualifiedApplicationSourceUnchanged": true,
+    "preservedRecoveryProof": "jm182-lot3-ci.json",
+    "preservedRecoveryProofSha256": "2f72066840a201e675657d21f88b41efd2766135a6186ef301218557ff8c22d8",
+    "additionalCompleteProof": "jm182-lot3-ci-complete.json",
+    "additionalCompleteProofSha256": "8a6ca8ba97bc49ca5bf9d5db952e4edcd39e2e6d0abd6fb367de67844093e344",
+    "result": "Ref update returned an error; actual branch was read before further mutation. Its documentary recovery checkpoint is retained as parent; both independent evidence records are preserved. No CI or hosting operation replayed."
+  }
 }

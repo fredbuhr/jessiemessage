@@ -35,6 +35,8 @@ Le lot 2 qualifie brouillons texte dans le même onglet après rechargement, dem
 
 Le [diagnostic SQL A12](capacity-182.md) est acquis sur les deux versions natives ; ces mesures synthétiques ne justifient pas d’ajouter un index ou une migration au lot. Aucun débit ni nombre de clients simultanés du mutualisé n’est garanti.
 
+La [fiche consolidée du lot 3](verification-proofs/jm182-lot3-verification.json) réunit la qualification et les références de version ; la [collecte complète parallèle](verification-proofs/jm182-lot3-ci-complete.json) est conservée avec la collecte de reprise ci-dessus. Le checkpoint documentaire `bb692ef2` est préservé, sans nouvel essai ni changement de code.
+
 **Prochaine action : préparer la livraison unique du lot 4**, sur cette branche et avec les limites ci-dessus. Aucun merge, tag/release, déploiement, migration ou changement Manager n’est effectué par cette reprise documentaire. Ne pas relancer les CI vertes de `3d0daff8` ; une nouvelle qualification main sera nécessaire pour la source fusionnée.
 
 ## Accès et commandes de l’application active
