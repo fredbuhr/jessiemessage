@@ -1,6 +1,6 @@
 # Cycle de vie vidéo 1.8.0 en développement — jalon 7.3
 
-**7.3a et 7.3b sont qualifiés ; 7.3c est codé et attend sa qualification native sur `feat/video-messaging`. Le jalon 7.3 reste incomplet.** La version de développement demeure **1.8.0**, sans tag, release, fusion ou déploiement intermédiaire. Les [preuves du catalogue 7.1](video-catalogue-180.md) et du [message privé 7.2](video-messages-180.md) conservent leurs sources et résultats propres. La version active, son checkpoint et son repli restent exclusivement identifiés dans [REPRISE](REPRISE.md).
+**7.3a, 7.3b et 7.3c sont qualifiés sur `feat/video-messaging`. Le jalon 7.3 reste incomplet ; prochaine étape 7.3d.1, inventaire vidéo en lecture seule avant capture, restauration et anciens formats.** La version de développement demeure **1.8.0**, sans tag, release, fusion ou déploiement intermédiaire. Les [preuves du catalogue 7.1](video-catalogue-180.md) et du [message privé 7.2](video-messages-180.md) conservent leurs sources et résultats propres. La version active, son checkpoint et son repli restent exclusivement identifiés dans [REPRISE](REPRISE.md).
 
 ## Découpage borné de 7.3
 
@@ -10,7 +10,7 @@ Le diagnostic du code établit trois couplages : l’export photo assemble un JP
 | --- | --- | --- |
 | **7.3a — Export opérateur candidat** | Export privé en flux depuis un snapshot SQL en lecture seule ; déduplication, légendes, tombstones et fichiers vérifiés par taille/SHA-256 ; aucun marqueur complet avant le commit de lecture. Qualification synthétique des interruptions, corruption de bloc et perte d’accusé. | Qualifié sur branche, CI 5/5. |
 | **7.3b — ZIP de conversation** | Adapter l’archive au flux sans charger la vidéo entière ni réutiliser implicitement la limite historique de 32 Mio ; droits, annulation et erreurs qualifiés sur un téléchargement synthétique. | Qualifié sur branche, CI 5/5. |
-| **7.3c — Suppression, fermeture et capacité** | Suppression durable et reprise après interruption, références partagées préservées, absence de fichiers vérifiée avant remboursement de charge ; fermeture synthétique sans toucher le client témoin. | Codé ; qualification native en attente. |
+| **7.3c — Suppression, fermeture et capacité** | Suppression durable et reprise après interruption, références partagées préservées, absence de fichiers vérifiée avant remboursement de charge ; fermeture synthétique sans toucher le client témoin. | Qualifié sur branche, CI 5/5, MariaDB 552/552 chacune sans omission. |
 | **7.3d — Inventaire, capture et restauration** | Recenser les vidéos et réservations, capturer/restaurer une fixture non vide, comparer données et empreintes, préserver les anciens formats selon leur propre version et qualifier la compatibilité avant promotion des migrations. | À réaliser. |
 
 Ces sous-étapes restent dans la même branche et la même PR de travail. Elles n’ajoutent aucune livraison produit, version ou activation ; 7.3 n’est terminé qu’après les quatre critères. Le [lot 7](PLAN-IMPLEMENTATION.md) conserve une seule livraison complète en 7.6.
@@ -71,7 +71,7 @@ Localement : syntaxe **647 sources**, parcours historiques **93/93**, nouveaux c
 
 **Prochaine action unique : 7.3c — suppression, fermeture et capacité.** 7.3 reste incomplet ; 7.3d doit encore qualifier inventaire, capture/restauration et anciens formats avant promotion. Plans SQL normal **33** / candidat **36** inchangés. Aucune fusion, publication, migration hébergée, activation ou opération PC/Avast.
 
-## Contrat candidat de 7.3c — suppression, fermeture et capacité
+## Contrat qualifié de 7.3c — suppression, fermeture et capacité
 
 Le catalogue passe un original sans référence vivante de `committed` à `cleanup_pending` avant toute I/O ; cette transition bloque lectures et nouveaux envois. `service.remove()` lie le catalogue à la racine physique avant et après le nettoyage. Le compteur est décrémenté seulement après `removed:true`, dans la transaction qui passe l’asset à `released`. Les réessais conservent les tombstones et ne redécrémentent pas. Le nettoyage de réservation `release()` reste distinct et ne rembourse jamais un original enregistré.
 
@@ -81,4 +81,14 @@ Le catalogue passe un original sans référence vivante de `committed` à `clean
 
 La migration candidate 0035 ajoute `cleanup_pending`. Les 33 migrations du parcours normal restent identiques ; les 36 candidates ne sont pas promues. Le schéma candidat est contrôlé sur ses sources exactes, 35 tables et 49 clés étrangères. **7.3d doit encore qualifier inventaire, capture/restauration et compatibilité des anciens formats avant promotion.**
 
-La nouvelle fixture native utilise les vrais fichiers GCM, le journal chiffré et un runtime synthétique réellement démarré puis arrêté avant fermeture. Ses douze scénarios couvrent les références vivantes, la mauvaise racine, les réponses perdues après unlink ou commit SQL réel, la reprise bornée, la collision des identifiants photo/vidéo, les réservations temporaires, le client témoin et une seule connexion SQL. **Ces scénarios attendent la qualification MariaDB 10.11/11.4 ; leur omission locale n’est pas un succès.**
+La nouvelle fixture native utilise les vrais fichiers GCM, le journal chiffré et un runtime synthétique réellement démarré puis arrêté avant fermeture. Ses douze scénarios couvrent les références vivantes, la mauvaise racine, les réponses perdues après unlink ou commit SQL réel, la reprise bornée, la collision des identifiants photo/vidéo, les réservations temporaires, le client témoin et une seule connexion SQL. **Ces douze scénarios et leur parent réussissent sur MariaDB 10.11 et 11.4 ; leur omission locale reste distincte de cette qualification native.**
+
+## Qualification de 7.3c et prochaine action
+
+Source corrigée **`231315cc17fd992eb3d9b261ea1e4448b90fd1d3`**, arbre **`29c765ad216a2ad0ab140145e836caeb920dc482`**. La [CI propre 39698017769](https://github.com/fredbuhr/jessiemessage/actions/runs/39698017769) réussit **5/5, tentative 1**, sous Node **24.22.1** : général **3 559 tests / 3 515 réussis / zéro échec / 44 ignorés**, Chrome **196/196**, HTTPS **3/3**, MariaDB **10.11 et 11.4 chacune 552/552 sans omission**. Merge synthétique **`c36d46cb1c195e702bfa92d2fffcc3e6ba548255`**, arbre identique à la source ; cinq journaux complets relus, aucun rerun. [Preuve structurée](verification-proofs/jm180-video-deletion-verification.json).
+
+La première source `53ef2d8923ad22ec63eb7a98e8042d5d9c09566b` conserve son échec **3/5**, [CI 39697059270](https://github.com/fredbuhr/jessiemessage/actions/runs/39697059270), dans la même preuve. Chaque moteur avait 550 réussites et deux échecs : le test attendait `ERASURE_SCHEMA` alors que le ledger vidéo était déjà correctement refusé par `HISTORY_DIVERGED`, puis neutralisé en `ERASURE_UNAVAILABLE` par le store. La correction attend ces erreurs exactes sans modifier le code métier ; une fixture non vide et la comparaison intégrale des tables, capacités et fichiers prouvent l’absence de mutation à chaque refus et que le callback destructif n’est jamais appelé.
+
+Les 44 omissions générales sont 42 suites SQL opt-in et deux tests négatifs procfs inapplicables. Les trois scénarios Linux réels de stockage réussissent. Localement : syntaxe 654 sources, ciblés communs 110 réussis / zéro échec / six omissions explicites ; aucun succès complet de la suite générale locale n’est revendiqué faute de footer. La preuve distingue ces observations des résultats natifs CI. Le suivi documentaire seul utilise `[skip ci]` sans modification fonctionnelle.
+
+**Prochaine action unique : 7.3d.1 — inventaire vidéo candidat en lecture seule sur fixture isolée.** Capture authentifiée à deux racines, restauration, comparaison des données/empreintes et compatibilité des anciens formats viennent ensuite, avant promotion. Aucun branchement runtime/CLI/HTTP, fusion produit, publication, migration hébergée, activation, compte réel ou opération PC/Avast. Les limites navigateur 32 Mio/Blob et délai HTTP 35 secondes restent à traiter avant activation.
