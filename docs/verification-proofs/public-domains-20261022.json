@@ -1,0 +1,502 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-public-domain-audit",
+  "observedAtUTC": "2026-10-22T14:53:05.450782+00:00",
+  "evidenceKind": "ANONYMOUS_HTTP_VIA_ENVIRONMENT_TRANSPORT",
+  "activeApplicationSource": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+  "requests": [
+    {
+      "url": "https://jessiemessage.com/",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 3416,
+      "bodySha256": "f66af81b9c69d01386a86e3195aff5cf791d120bae63112c1b3dc24d51d55e9f",
+      "transportBlockReason": null,
+      "oldIllustrationPresent": false
+    },
+    {
+      "url": "https://jessiemessage.com/admin/login",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 12702,
+      "bodySha256": "d6a4adba277981d978511e6d88276eb8597ffe92e91288a534caa4afc015607c",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/admin/login/?continue=%2Fadmin%2Fmessages",
+      "status": 308,
+      "location": "/admin/login?continue=%2Fadmin%2Fmessages",
+      "bodyBytes": 0,
+      "bodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/admin/messages",
+      "status": 303,
+      "location": "/admin/login",
+      "bodyBytes": 0,
+      "bodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/admin/readiness",
+      "status": 401,
+      "location": null,
+      "bodyBytes": 35,
+      "bodySha256": "94f52329fae0081ae8bc88617360b2c4d80e8c0ea3d8916d3c8d526cdf81d889",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/api/entry",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 107,
+      "bodySha256": "4f05319b6222826a3572763579f9fda713603e0c145af7acda5cee121a0ad22b",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/api/health",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 15,
+      "bodySha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288",
+      "transportBlockReason": null,
+      "body": {
+        "status": "ok"
+      }
+    },
+    {
+      "url": "https://jessiemessage.com/api/ready",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 18,
+      "bodySha256": "31bf75f4c0a97cc1f7b60df824fa390b3be9ba014f29b63c87c698ba63d9a9fd",
+      "transportBlockReason": null,
+      "body": {
+        "status": "ready"
+      }
+    },
+    {
+      "url": "https://jessiemessage.com/app",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 4998,
+      "bodySha256": "524af111ab19c59f0538f8050a253856cda410442b2227233670db2ae561970e",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/app.js",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 2713,
+      "bodySha256": "e50d43420be2592f74d26d26b91a62958064fcf34c3d15eed8abb1026478023a",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/apple-touch-icon.png",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 29891,
+      "bodySha256": "7e301411f82a11c61643f12fe75457ba3d24adc464dfcaa6c81b14ae75525946",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/brand/brand.css",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 1199,
+      "bodySha256": "e2ab67e7314020ad26aeddb6670ee039d8c2de5d611cbdbced1e97c58de33ab1",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/brand/icon-128.png",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 19971,
+      "bodySha256": "476ef6a5f6fbcfc1fa425eb5a2a829d6fd5d5d0b30980592bce2a041c664adca",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/brand/icon-32.png",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 2363,
+      "bodySha256": "6d19eb66bfc3ec9a45ac30786d82c06319b653fc638027309a264b7e249db5aa",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/brand/icon-48.png",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 4196,
+      "bodySha256": "3a585bfff8925a4bb693daa48c1f9ac3f7dc83898232762abe8712c8e7bf5abc",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/entry.css",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 4115,
+      "bodySha256": "e2f81bfbe90eb98ff2a9a6d0ec34c08ecc26874db53de03673156604fb480fb0",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/entry.js",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 14580,
+      "bodySha256": "bb2968eb73334833de1cdfd77e2a17b0bdce2b514ac412939fdf1b3208d77e9c",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/favicon.ico?v=identity-01",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 7515,
+      "bodySha256": "d7c4168563ecda525ac9d6aeb83770635319925c722a8b461512043df43b6f16",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/help",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 15532,
+      "bodySha256": "f24e192d82932bd918b5ada58553d36e2eb55dc962a1c68096b954e1ce7bfafa",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/help-link.js",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 528,
+      "bodySha256": "2a35ac29cbafb5db31db2e4b6103c02ecfff796b5296b42923b9e1978486589c",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/help.css",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 4380,
+      "bodySha256": "ab5a1d27ac75c6449c908b5e625f6960cc146031bcc79d781040fd60256dd245",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/help.js",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 11333,
+      "bodySha256": "3aa3fe43fc858cf4f1f797c88579b0ea13a0f2b48e24ebcad6e9d0e19e6d945e",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/i18n.css",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 979,
+      "bodySha256": "f4d26c4cf054e9bf34c7e40b28499ef2e17a39fc60e5a4252ff471878234f5ad",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/i18n.js",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 12774,
+      "bodySha256": "d80c14a673f4535feb91e1102e13b180a0f76aba4ab996b95425ddcf1f22e10c",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/manifest.webmanifest",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 654,
+      "bodySha256": "5836f05989c46a0d377457c4f6662126fd6d9fbfee4e011012e624bce3359bcf",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/recover",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 5162,
+      "bodySha256": "eb3d8d122cc1a155c35733b0b7d52a1dff4f93989baeb2d55adeb55bc722b878",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/styles.css",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 3773,
+      "bodySha256": "1a571e095802d0197f6b974aad005c7c762e072d560749cfbdc1ba9e7782ba80",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://jessiemessage.com/sw.js",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 3374,
+      "bodySha256": "1ed45c3fbac18948828dfce91cf42402e73f38b99a3d58bcb2a6a2f03fff019c",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://www.jessiemessage.com/",
+      "status": 308,
+      "location": "https://jessiemessage.com/",
+      "bodyBytes": 276,
+      "bodySha256": "ca2c99a52e4a7d1c92fd4d48ade74ad09014e67787aa891ac48933cb81ae3137",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://www.jessiemessage.com/app?jm_redirect_probe=1%2B2&lang=fr",
+      "status": 308,
+      "location": "https://jessiemessage.com/app?jm_redirect_probe=1%2B2&lang=fr",
+      "bodyBytes": 315,
+      "bodySha256": "579845ce192b20959c61b8343c210114a4a9dbb7e65ce65abf9400d327715e90",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://accueil.jessiemessage.com/",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 3731,
+      "bodySha256": "202f8e6a0995abdb2ec2d2a158af95d78d93e179213b192ccf1f382d3d3f8759",
+      "transportBlockReason": null,
+      "oldIllustrationPresent": true
+    },
+    {
+      "url": "https://accueil.jessiemessage.com/app?jm_redirect_probe=1%2B2&lang=fr",
+      "status": 302,
+      "location": "https://recette.jessiemessage.com/app",
+      "bodyBytes": 261,
+      "bodySha256": "1a62f3ae17ec25e58153c4e65a5e07b95b9e42adddf888fc1274ddd6fbe49928",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://recette.jessiemessage.com/",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 3416,
+      "bodySha256": "f66af81b9c69d01386a86e3195aff5cf791d120bae63112c1b3dc24d51d55e9f",
+      "transportBlockReason": null,
+      "oldIllustrationPresent": false
+    },
+    {
+      "url": "https://recette.jessiemessage.com/app?jm_redirect_probe=1%2B2&lang=fr",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 4998,
+      "bodySha256": "524af111ab19c59f0538f8050a253856cda410442b2227233670db2ae561970e",
+      "transportBlockReason": null
+    },
+    {
+      "url": "https://recette.jessiemessage.com/api/ready",
+      "status": 200,
+      "location": null,
+      "bodyBytes": 18,
+      "bodySha256": "31bf75f4c0a97cc1f7b60df824fa390b3be9ba014f29b63c87c698ba63d9a9fd",
+      "transportBlockReason": null,
+      "body": {
+        "status": "ready"
+      }
+    },
+    {
+      "url": "http://jessiemessage.com/app?jm_redirect_probe=1%2B2&lang=fr",
+      "status": 301,
+      "location": "https://jessiemessage.com/app?jm_redirect_probe=1%2B2&lang=fr",
+      "bodyBytes": 0,
+      "bodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transportBlockReason": null
+    },
+    {
+      "url": "http://www.jessiemessage.com/app?jm_redirect_probe=1%2B2&lang=fr",
+      "status": 308,
+      "location": "https://jessiemessage.com/app?jm_redirect_probe=1%2B2&lang=fr",
+      "bodyBytes": 315,
+      "bodySha256": "579845ce192b20959c61b8343c210114a4a9dbb7e65ce65abf9400d327715e90",
+      "transportBlockReason": null
+    },
+    {
+      "url": "http://accueil.jessiemessage.com/app?jm_redirect_probe=1%2B2&lang=fr",
+      "status": 308,
+      "location": "https://jessiemessage.com/app?jm_redirect_probe=1%2B2&lang=fr",
+      "bodyBytes": 315,
+      "bodySha256": "579845ce192b20959c61b8343c210114a4a9dbb7e65ce65abf9400d327715e90",
+      "transportBlockReason": null
+    }
+  ],
+  "noAuthenticatedSession": true,
+  "noStateChangingRequest": true,
+  "accueilRedirectAppliedByThisAudit": false,
+  "backupCheckExcluded": true,
+  "limits": [
+    "No browser or authenticated session. Response status and locations are recorded without following redirects.",
+    "Environment-blocked HTTP requests do not establish real hosting HTTP behaviour.",
+    "This audit neither changes DNS/site domains/runtime nor qualifies actual e-mail sending, push delivery or manual backup."
+  ],
+  "interpretation": {
+    "requestsChecked": 38,
+    "primaryPathsAndLinkedAssetsAsExpected": true,
+    "principalAnonymousAdminProtectionAsExpected": true,
+    "wwwHttpsAndHttpPreservePathAndQuery": true,
+    "principalHttpUsesHttpsPreservingPathAndQuery": true,
+    "accueilHttpAlreadyCanonical": true,
+    "accueilHttpsStillOldIllustration": true,
+    "accueilHttpsAppStillRedirectsToRecetteAndDropsQuery": true,
+    "recetteCompatibilityOriginResponds": true,
+    "authorizedCorrectionNeeded": "Extend the existing Apache host condition from www only to www or accueil, preserving every other configuration byte.",
+    "service181Unchanged": true,
+    "backupTestDeferredUnchanged": true
+  },
+  "routingChange": {
+    "status": "qualified_published_not_applied",
+    "authorizationDate": "2026-10-22",
+    "authorizationEvidenceKind": "USER_REQUEST",
+    "authorizedFromHost": "accueil.jessiemessage.com",
+    "fixedTargetOrigin": "https://jessiemessage.com",
+    "preservePath": true,
+    "preserveQuery": true,
+    "plannedStatus": 308,
+    "expectedBeforeConfigSha256": "daa58abe55ca39cfb2a931f2caa8d6fc5f19e01c872e32603abc9cea8d6eff63",
+    "beforeConfigHashEvidence": "jm171-secondary-entry.json; historical guarded read, not a new server-file observation",
+    "hostApplyReceiptAcquired": false,
+    "noCloudBrowser": true,
+    "nextAction": "User executes the pinned helper once in their own Infomaniak terminal, reports the JSON; record the actual file-change receipt and then recheck public redirects before declaring completion.",
+    "operatorSource": "1f5b5239530c96c3b780f629b8510758f5dc02fe",
+    "operatorTree": "0cecd0fe54c8070b61bc1b5c45fd83a880194014",
+    "operatorBranch": "ops/redirect-accueil",
+    "helper": {
+      "rawUrl": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/1f5b5239530c96c3b780f629b8510758f5dc02fe/ops/redirect-accueil.py",
+      "bytes": 5692,
+      "sha256": "a5ba6c1f3796413fd5196634b24145f812ee366b5855130a1a2be77630b61fb1",
+      "remoteBytesEqualQualifiedLocalFile": true,
+      "hostExecuted": false,
+      "privateConfigCopyOnly": "/srv/customer/jessiemessage-private/accueil-redirect-before-20261022.htaccess",
+      "noRuntimeOrSqlOrDnsChange": true
+    }
+  },
+  "recetteDecision": {
+    "keepTechnicalNodeService": true,
+    "nodeApplicationId": 239143,
+    "keepCompatibilityOrigin": true,
+    "reason": "The documented same Node runtime serves the principal and legacy recette sessions, PWA installations and push destinations. No completed migration/removal evidence is available.",
+    "publicCanonicalOrigin": "https://jessiemessage.com",
+    "deleteOrRedirectRecettePerformed": false,
+    "domainInversionRequiredForPublicLaunch": false
+  },
+  "operatorQualification": {
+    "formatVersion": 1,
+    "type": "jessiemessage-accueil-redirect-operator-log-qualification",
+    "status": "run_success_and_complete_test_log_verified_host_not_executed",
+    "repository": "fredbuhr/jessiemessage",
+    "operatorSource": "1f5b5239530c96c3b780f629b8510758f5dc02fe",
+    "operatorTree": "0cecd0fe54c8070b61bc1b5c45fd83a880194014",
+    "run": {
+      "id": 39800596245,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39800596245",
+      "head_branch": "ops/redirect-accueil",
+      "event": "push",
+      "path": ".github/workflows/redirect-accueil.yml",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "head_sha": "1f5b5239530c96c3b780f629b8510758f5dc02fe"
+    },
+    "jobs": [
+      {
+        "id": 119899853318,
+        "name": "operator-tests",
+        "statusObserved": "in_progress",
+        "conclusionObserved": null,
+        "allStepsCompletedSuccess": true,
+        "run_id": 39800596245,
+        "run_attempt": 1,
+        "head_sha": "1f5b5239530c96c3b780f629b8510758f5dc02fe"
+      }
+    ],
+    "verification": {
+      "completeDecodedLogRead": true,
+      "operatorCheckoutExact": true,
+      "credentialsPersisted": false,
+      "tests": {
+        "tests": 14,
+        "passCount": 14,
+        "failCount": 0,
+        "skipped": 0,
+        "seconds": 0.029,
+        "networkCallsDuringTests": 0,
+        "hostActionsDuringTests": 0
+      },
+      "workflowOnlyExecutesIsolatedTests": true,
+      "noGitHubErrorAnnotation": true,
+      "hostHelperExecuted": false,
+      "publicRoutingChangedByWorkflow": false
+    },
+    "nonBlockingWarnings": [
+      "actions/checkout@v4 targets deprecated runner Node20 and is forced to runner Node24; distinct from the application runtime."
+    ],
+    "limits": [
+      "The run API reports completed/success and the full log finishes successfully, with all five job steps completed/success. The job collection API still reports in_progress/null; its terminal job conclusion is not invented.",
+      "Logs are decoded UTF-8 connector output, not original archive bytes.",
+      "No additional test, host/public HTTP request, SQL, DNS, Manager, PHP or application runtime action was performed during this qualification.",
+      "Root independently verifies the remote helper bytes; hosted execution and its live HTTP result remain separate operator steps."
+    ],
+    "checkedAtUTC": "2026-10-22T15:04:44.760043+00:00",
+    "evidence": [
+      {
+        "file": "accueil-redirect-ci-run39800596245.json",
+        "bytes": 13778,
+        "sha256": "2fa8ad83ab0b7cd8071b47fd25995fa143130b7d38589d468a0f4e56ab5e82d6"
+      },
+      {
+        "file": "accueil-redirect-ci-jobs39800596245.json",
+        "bytes": 2479,
+        "sha256": "146a72277d621cbdfa31025d88aa56843791b99aeeda16998719d4da896b1cac"
+      },
+      {
+        "file": "accueil-redirect-ci-job119899853318.log",
+        "bytes": 14770,
+        "sha256": "7bab9ef110654870ffef94cf3b97fb289ba792c9c082cda22193e594cf2af9d6"
+      }
+    ]
+  },
+  "localQualification": {
+    "tests": {
+      "tests": 14,
+      "passCount": 14,
+      "skipped": 0,
+      "networkCalls": 0,
+      "hostActions": 0
+    },
+    "initialFailure": {
+      "tests": 13,
+      "passCount": 12,
+      "failCount": 1,
+      "case": "repinned fixture with text appended to the expected RewriteRule",
+      "cause": "The rule adjacency guard accepted a literal-rule prefix rather than requiring its exact line ending.",
+      "correction": "Require the newline after the complete RewriteRule; all 13 cases then pass."
+    },
+    "qualificationLog": {
+      "file": "qualification.log",
+      "bytes": 2015,
+      "sha256": "e66f397808b3eb8143de2682469e173dc1f2847c2045fcfe6cd48e1c10a12992"
+    },
+    "files": [
+      {
+        "path": "ops/redirect-accueil.py",
+        "bytes": 5692,
+        "sha256": "a5ba6c1f3796413fd5196634b24145f812ee366b5855130a1a2be77630b61fb1",
+        "lines": 142
+      },
+      {
+        "path": "ops/test-redirect-accueil.py",
+        "bytes": 7638,
+        "sha256": "4d5aeb2bc4682a517ed359ce6964d8ff1634fb7d31c393dc2f7d79e19ac65675",
+        "lines": 151
+      },
+      {
+        "path": ".github/workflows/redirect-accueil.yml",
+        "bytes": 620,
+        "sha256": "a3cbfe20345d9ee7445b2b6ff7e08ef8f7b409af0317e63b3a4e906745b7277e",
+        "lines": 26
+      }
+    ]
+  }
+}
