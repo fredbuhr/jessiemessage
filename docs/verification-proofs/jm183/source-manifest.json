@@ -1,7 +1,13 @@
 {
   "type": "jm183-corrective-source-manifest",
   "base": "38ccb3862f3d9ab4153b578dfb3abbd0dd94d857",
+  "count": 128,
   "records": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "ba8569513192f8a0a22eb2aacd67a1ccb553d59d12fc940fbf292060cb919421",
+      "lines": 210
+    },
     {
       "path": "package-lock.json",
       "sha256": "94042d9cce20356da9f0ac7c9093509e7061bb2dec4d1b6a03a8d15f8d5fbac6",
@@ -109,12 +115,12 @@
     },
     {
       "path": "public/help.html",
-      "sha256": "86c90d76b4309a20379c63ec27182c164e9c14d300dc36b500266fbb899c4194",
+      "sha256": "8c9a9437efd019fc86230e182071c396329df8f1982e2687d901c3d7e03a066a",
       "lines": 117
     },
     {
       "path": "public/help.js",
-      "sha256": "81f4d0741f9b9c9402b0ede466bf1aad53350ce750e89e6763e598fa98d15f12",
+      "sha256": "36bfd12eb5f3b883ac188b6e7bbd1c7c61ffa0fcf37391f1c212b30d6e7551b7",
       "lines": 84
     },
     {
@@ -637,6 +643,5 @@
       "sha256": "70f43ca8bac3f91220a6fd96df3e01385eb8344d3c478cc443ca7b94993dff1d",
       "lines": 194
     }
-  ],
-  "count": 127
+  ]
 }
