@@ -1,0 +1,303 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-version-audit-and-alignment",
+  "initialGitHubAudit": {
+    "type": "jessiemessage-version-audit",
+    "observedAt": "2026-10-22T00:56:28.337Z",
+    "repository": "fredbuhr/jessiemessage",
+    "scope": "Read-only GitHub references and local tracked source. No deployment, CI rerun, git fetch, reference mutation, commit or push performed.",
+    "auditedDevelopmentHead": "9f3c2e52d1055df7c04224ab46ba861f4cc9a49b",
+    "remote": {
+      "main": {
+        "sha": "5eef6b2b8d98efedf3dfaae67bf4791da6c99edd",
+        "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/ref/heads/main"
+      },
+      "development": {
+        "sha": "9f3c2e52d1055df7c04224ab46ba861f4cc9a49b",
+        "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/ref/heads/feat/video-messaging"
+      },
+      "tag171": {
+        "sha": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+        "type": "commit",
+        "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/refs/tags/v1.7.1"
+      },
+      "tag170": {
+        "sha": "ba639f7bc2c89e3d35afc55ca72efa94c3ccfefb",
+        "type": "commit",
+        "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/refs/tags/v1.7.0"
+      },
+      "release171": {
+        "id": 420135576,
+        "tag": "v1.7.1",
+        "target": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+        "name": "JessieMessage 1.7.1 — Sécurité Node et entrée privée",
+        "draft": false,
+        "prerelease": false,
+        "publishedAt": "2026-10-21T22:57:08Z",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.7.1"
+      },
+      "release170": {
+        "id": 419960010,
+        "tag": "v1.7.0",
+        "target": "ba639f7bc2c89e3d35afc55ca72efa94c3ccfefb",
+        "name": "JessieMessage 1.7.0 — Socle transport vidéo privé dormant",
+        "draft": false,
+        "prerelease": false,
+        "publishedAt": "2026-10-21T19:18:36Z",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.7.0"
+      },
+      "latestRelease": {
+        "id": 419841377,
+        "tag": "v1.6.0",
+        "target": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+        "name": "JessieMessage 1.6.0 — Mes tâches et rappels",
+        "draft": false,
+        "prerelease": false,
+        "publishedAt": "2026-10-21T17:17:53Z",
+        "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.6.0"
+      },
+      "commits": [
+        {
+          "sha": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+          "tree": "d4945207f25375abb5d89c3a23ae91b6e34ea115",
+          "message": "Merge PR #126: security runtime, private entry and mobile login",
+          "parents": [
+            "a318b0ecc8a7b1e8bcda4a5e66677708abe9e058",
+            "fb28cf353e814e657e0c42ba98ef209e630d4060"
+          ],
+          "url": "https://github.com/fredbuhr/jessiemessage/commit/c2d7b3b31c6d0955892829f808dc4135d7d8debf"
+        },
+        {
+          "sha": "5eef6b2b8d98efedf3dfaae67bf4791da6c99edd",
+          "tree": "7158324bd967e12f2c73b74a2b9906d26770750f",
+          "message": "docs: close verified 1.7.1 deployment and record remaining entry restriction [skip ci]",
+          "parents": [
+            "c2d7b3b31c6d0955892829f808dc4135d7d8debf"
+          ],
+          "url": "https://github.com/fredbuhr/jessiemessage/commit/5eef6b2b8d98efedf3dfaae67bf4791da6c99edd"
+        },
+        {
+          "sha": "9f3c2e52d1055df7c04224ab46ba861f4cc9a49b",
+          "tree": "cc1d39a10e4322b0f6103b13cf2b5f55fa9cf4ba",
+          "message": "Replace video-only task count with global app assessment and delivery plan [skip ci]",
+          "parents": [
+            "34da07ad4ac1b23b1b2f00396d39de8b8c004122"
+          ],
+          "url": "https://github.com/fredbuhr/jessiemessage/commit/9f3c2e52d1055df7c04224ab46ba861f4cc9a49b"
+        }
+      ]
+    },
+    "versions": {
+      "production": {
+        "application": "1.7.1",
+        "commit": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+        "tree": "d4945207f25375abb5d89c3a23ae91b6e34ea115",
+        "packageVersion": "1.7.1",
+        "lockVersion": "1.7.1",
+        "lockRootPackageVersion": "1.7.1",
+        "nodeEngine": ">=24 <25",
+        "identifiedNode": "v24.22.1",
+        "normalSqlMigrations": 33,
+        "identitySource": "docs/verification-proofs/jm171-hosted-identity.json",
+        "identityLimit": "Existing recorded hosted evidence; no new private process observation by this audit."
+      },
+      "main": {
+        "application": "1.7.1",
+        "commit": "5eef6b2b8d98efedf3dfaae67bf4791da6c99edd",
+        "tree": "7158324bd967e12f2c73b74a2b9906d26770750f",
+        "packageVersion": "1.7.1",
+        "lockVersion": "1.7.1",
+        "lockRootPackageVersion": "1.7.1",
+        "normalSqlMigrations": 33
+      },
+      "development": {
+        "application": "1.8.0",
+        "commit": "9f3c2e52d1055df7c04224ab46ba861f4cc9a49b",
+        "tree": "cc1d39a10e4322b0f6103b13cf2b5f55fa9cf4ba",
+        "packageVersion": "1.8.0",
+        "lockVersion": "1.8.0",
+        "lockRootPackageVersion": "1.8.0",
+        "nodeEngine": ">=24 <25",
+        "normalSqlMigrations": 33,
+        "candidateVideoMigrations": 3,
+        "candidateSqlPlan": 36,
+        "candidateLoader": "server/video/migrations.mjs:4-17",
+        "videoActivated": false
+      },
+      "node": {
+        "ci": "24.22.1",
+        "preparationHelper": "ops/prepare-node24221.py",
+        "binarySha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb",
+        "currentRollbackApplication": "1.6.0",
+        "currentRollbackNode": "v24.22.1",
+        "rollbackStarted": false
+      },
+      "formats": {
+        "normalExportAndClosure": 1,
+        "candidateVideoExportAndClosure": 2,
+        "independentOfApplicationVersion": true,
+        "sources": [
+          "server/data/writer.mjs:251",
+          "server/data/export.mjs:210",
+          "server/data/erasure-journal.mjs:10"
+        ]
+      }
+    },
+    "mismatches": [
+      {
+        "id": "github-latest",
+        "observed": "GitHub releases/latest is v1.6.0 although v1.7.1 is published and identified as deployed.",
+        "evidence": "https://api.github.com/repos/fredbuhr/jessiemessage/releases/latest",
+        "cause": {
+          "operatorCommit": "245dc7c543665e303d47ed105f3620df4d711bd1",
+          "file": ".github/workflows/publish-qualified.yml",
+          "line": 199,
+          "value": "\"make_latest\": \"false\""
+        },
+        "safeRemedy": "If intended, set only the latest marker to the existing v1.7.1 release; preserve tags, targets, release name and body."
+      },
+      {
+        "id": "readme-current-active",
+        "files": [
+          "README.md:42",
+          "README.md:73"
+        ],
+        "observed": "Unqualified current references still say active 1.6.0; line73 says current rollback1.5.1.",
+        "expected": "Current active 1.7.1 / SQL33 and current rollback1.6.0 on Node24.22.1; preserve historical1.6.0 evidence."
+      },
+      {
+        "id": "guide-current-active",
+        "files": [
+          "docs/guide-jessie.md:66"
+        ],
+        "observed": "Tasks section says active version1.6.0.",
+        "expected": "Distinguish tasks introduced in1.6.0 from current active1.7.1."
+      },
+      {
+        "id": "next-action-outdated",
+        "files": [
+          "docs/NEXT-STEPS.md:5"
+        ],
+        "observed": "Next action still integrates1.7.1, resumes7.3c and counts9video results, despite qualified integration and7.3c/current G1.",
+        "expected": "Follow the current REPRISE and revised implementation plan."
+      }
+    ],
+    "notMismatches": [
+      "Application1.7.1, Node24.22.1, normalSQL33, candidateSQL36 and data-format1/2 use independent version systems.",
+      "Development package1.8.0 is intentionally distinct from deployed1.7.1.",
+      "Main has a later documentation commit; deployed tag still identifies c2d7b3b3.",
+      "Technical release1.7.0 remains a dormant transport foundation and must retain its recorded source and historic Node qualification.",
+      "Historical qualifications on Node24.22.0 and historical application versions remain unchanged.",
+      "Current local main branch and absent local v1.7.1 tag are stale local refs, not evidence against live GitHub refs; no refs were modified."
+    ],
+    "limits": [
+      "No hosted process, Manager, SQL history, secrets, clients or private media accessed by this audit.",
+      "No full CI suites rerun.",
+      "Action tags@v4 and MariaDB10.11/11.4 image tags float; this is a reproducibility limit rather than a Node version mismatch.",
+      "Documentary pointers identify the original audited HEAD before concurrent authorized documentation edits."
+    ]
+  },
+  "hostedReadOnlyObservation": {
+    "startedAtUTC": "2026-10-22T00:58:22.659512+00:00",
+    "provenance": "Agent observed Infomaniak SSH terminal output and existing Manager Run/Build form; read-only checks.",
+    "application": {
+      "version": "1.7.1",
+      "packageVersion": "1.7.1",
+      "lockVersion": "1.7.1",
+      "lockRootPackageVersion": "1.7.1",
+      "commit": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+      "tree": "d4945207f25375abb5d89c3a23ae91b6e34ea115"
+    },
+    "startupRecord": {
+      "records": 1,
+      "release": {
+        "version": "1.7.1",
+        "commit": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+        "nodeVersion": "v24.22.1",
+        "startedAt": 1792623724937
+      }
+    },
+    "serverMetadata": {
+      "release": "1.7.1",
+      "source": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+      "tree": "d4945207f25375abb5d89c3a23ae91b6e34ea115",
+      "nodeAfterDeployment": "v24.22.1",
+      "schemaMigrations": 33,
+      "mode": "start-local-closures",
+      "closuresEnabled": true,
+      "port": 3000
+    },
+    "pinnedNode": {
+      "version": "v24.22.1",
+      "sha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb"
+    },
+    "manager": {
+      "application": "recette.jessiemessage.com",
+      "run": "bash /srv/customer/jessiemessage-private/start-primary-release171-c2d7b3b3.sh",
+      "build": "bash /srv/customer/jessiemessage-private/check-primary-release171-c2d7b3b3.sh",
+      "port": 3000,
+      "providerMajorVersion": "24"
+    },
+    "rollback": {
+      "release": "1.6.0",
+      "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+      "tree": "38e72545ab4fd6feb4a04e934b2eb8685f82b970",
+      "nodeVersion": "v24.22.1",
+      "schemaMigrations": 33,
+      "previouslyPrecheckedNotStarted": true
+    },
+    "changesPerformed": false,
+    "limits": [
+      "No process matched the restricted /proc observation; PID, socket and exact executed process binary were not newly qualified. Identity remains the application_started record plus the installed checkout and configured launchers.",
+      "The installed pinned Node binary was checked independently by --version and SHA-256; this is not a process-to-binary binding.",
+      "SQL count is the existing private metadata and prior precheck evidence; no new SQL migration or data query was performed.",
+      "Automatic backups in the deployed 1.7.1 code have not been switched to the newly developed manual mode by this audit."
+    ]
+  },
+  "githubLatestAlignment": {
+    "operatorCommit": "f2e90e5f34a290ffff80108f830f21b09d87813b",
+    "operatorTree": "f91ac271c7983334a2d1aad764751d3621a0b3d2",
+    "operatorBranch": "ops/align-release171-latest-20261022",
+    "workflowPath": ".github/workflows/align-release171-latest.yml",
+    "run": {
+      "id": 39703548161,
+      "conclusion": "success",
+      "attempt": 1,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39703548161",
+      "completedAt": "2026-10-22T01:04:42Z"
+    },
+    "jobId": 119578131596,
+    "receipt": {
+      "status": "latest_release_aligned",
+      "observedAtUTC": "2026-10-22T01:04:40.192719+00:00",
+      "releaseId": 420135576,
+      "tag": "v1.7.1",
+      "source": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+      "tree": "d4945207f25375abb5d89c3a23ae91b6e34ea115",
+      "previousLatest": "v1.6.0",
+      "latest": "v1.7.1",
+      "releaseBodySha256": "958484707e6c17406e2955d4197363f8565e2d72ad7dddeabe8159c439109d0b",
+      "tagSourceUnchanged": true,
+      "releaseContentUnchanged": true,
+      "assetsUnchanged": true,
+      "newReleaseCreated": false,
+      "applicationDeployed": false
+    },
+    "readBack": {
+      "id": 420135576,
+      "tag": "v1.7.1",
+      "target": "c2d7b3b31c6d0955892829f808dc4135d7d8debf"
+    }
+  },
+  "documentationCorrections": [
+    "README: current application 1.7.1 and compatible rollback 1.6.0 on Node 24.22.1; preserve historical introductions.",
+    "Daily guide: tasks introduced in 1.6.0, not a claim that 1.6.0 remains active.",
+    "NEXT-STEPS: outdated integration/7.3c/9-result pointer replaced by current scope and manual backup G1.",
+    "Current scope: explicitly abandoned features and automatic backup/archive work are not an unresolved future backlog; PHP provider maintenance removed from app work."
+  ],
+  "limits": [
+    "Only the existing GitHub latest marker changed remotely. Tags, release targets, names, body, dates and assets were verified unchanged.",
+    "No new application release, deployment, hosted restart, migration, private account action or owner-PC action was performed.",
+    "Development remains 1.8.0 on its branch, distinct from deployed 1.7.1; Node, SQL and authenticated-format versions remain independent."
+  ]
+}

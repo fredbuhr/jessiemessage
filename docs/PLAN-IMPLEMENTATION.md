@@ -1,5 +1,11 @@
 # Plan de travail de JessieMessage
 
+> **Plan remplacé le 22 octobre 2026.** Le [plan courant de la branche `feat/video-messaging`](https://github.com/fredbuhr/jessiemessage/blob/feat/video-messaging/docs/PLAN-IMPLEMENTATION.md) prépare **1.8.0** en quatre livrables : **G1 sauvegarde manuelle admin, G2 vidéo complète, G3 réponses personnelles et qualification globale, G4 livraison unique vérifiée**. La production reste **1.7.1 / Node 24.22.1 / schéma 33**, avec ses mécanismes de sauvegarde actuels jusqu’au remplacement livré et vérifié.
+>
+> IA, paiements carte/crypto, stickers/GIF, vocaux, réponse citée, édition, transfert de messages et épingles sont abandonnés. Les sauvegardes et l’archivage automatiques sont remplacés dans la cible par la sauvegarde à la demande ; aucun exécuteur d’archivage automatique n’est à construire. Le PHP du site secondaire relève d’Infomaniak et sort des actions du projet.
+>
+> **Tout le contenu ci-dessous conserve le bilan et le plan antérieurs. Ses prochaines actions, décomptes et sujets à développer sont historiques et ne constituent plus le travail courant.** Les preuves et leurs réserves restent conservées ; consulter le plan de branche pour la suite et [REPRISE](REPRISE.md) pour le service actif.
+
 La V1 initiale est terminée dans le périmètre convenu. L’état réellement déployé, ses preuves et les commandes opérateur sont exclusivement dans **[REPRISE](REPRISE.md)**. Ce plan décrit le travail restant ; les anciens lots correctifs restent historiques.
 
 Les livraisons 1.0.0, 1.1.0, 1.2.0, 1.3.0, 1.3.1, 1.3.3, 1.4.0, 1.5.0, 1.6.0 et 1.7.1 sont closes ; leurs bilans et preuves sont conservés ci-dessous. La numérotation suit le [README](../README.md#versions-et-livraisons). Une publication ne prouve pas un déploiement.

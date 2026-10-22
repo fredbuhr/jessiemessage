@@ -4,12 +4,16 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 
 **[REPRISE — version réellement déployée, commit, preuves, prochaine action et repli](docs/REPRISE.md)** est l’unique référence de l’état courant. La V1 désigne le périmètre produit déjà livré ; la livraison `1.0.0` en harmonise la numérotation. Un travail préparé dans une branche ne devient disponible qu’après son déploiement vérifié.
 
+Au 22 octobre 2026, la production identifiée est **1.7.1**, commit `c2d7b3b31c6d0955892829f808dc4135d7d8debf`, **Node 24.22.1 / schéma SQL 33** ; le repli compatible est **1.6.0 sur Node 24.22.1**, préparé et précontrôlé sans démarrage. [Audit des versions](docs/verification-proofs/jm171-version-audit-20261022.json).
+
+La branche `feat/video-messaging` prépare **1.8.0**, sans déploiement. Le [plan révisé sur cette branche](https://github.com/fredbuhr/jessiemessage/blob/feat/video-messaging/docs/PLAN-IMPLEMENTATION.md) regroupe **G1 sauvegarde manuelle admin, G2 vidéo complète, G3 réponses personnelles et qualification globale, G4 livraison**. IA, paiements, stickers/GIF, vocaux, réponse citée, édition, transfert et épingles sont abandonnés, ainsi que sauvegardes/archivage automatiques dans la cible. Le PHP secondaire relève d’Infomaniak. Les mécanismes de sauvegarde de la production 1.7.1 ne sont pas encore remplacés.
+
 | Document | Rôle |
 | --- | --- |
 | [Passation vers une nouvelle discussion](docs/PASSATION-20261021-160.md) | Contexte, références exactes, vérification du versionnage et texte de reprise. |
 | [Périmètre produit](docs/PRODUCT.md) | Fonctions disponibles, conservation et limites. |
 | [Guide quotidien](docs/guide-jessie.md) | Utilisation des messages, photos, fiches, notifications et exports. |
-| [Plan de travail](docs/PLAN-IMPLEMENTATION.md) | Harmonisation et évolutions restantes. |
+| [Plan de travail antérieur](docs/PLAN-IMPLEMENTATION.md) | Historique conservé, avec renvoi au plan courant de la branche 1.8.0. |
 | [Profil et expressions, 1.2.0](docs/profile-expressions-120.md) | Périmètre du lot et préconditions de migration/repli. |
 | [Emojis enrichis et inclusifs, 1.3.0](docs/emoji-inclusifs-130.md) | Catalogue Unicode, carnations et critères de livraison. |
 | [Messagerie mobile, 1.3.1 historique close](docs/chat-mobile-131.md) | Barre de conversation unique, menus discrets et espace rendu aux messages ; lot clos et ancienne référence conservée. |
@@ -17,12 +21,12 @@ Messagerie privée sur invitation entre Jessie et chaque personne invitée : tex
 | [Détails des photos, correctif 1.3.3 clos](docs/photo-message-details-133.md) | Bouton de détails visible au toucher pour les photos, avec les métadonnées masquées au repos. |
 | [Compatibilité des diffusions, 1.3.4 publiée](docs/broadcast-compat-134.md) | Code compatible qualifié et publié ; repli historique précontrôlé pour la 1.4.0, sans démarrage. |
 | [Diffusions à grande échelle, 1.4.0 close](docs/broadcast-scale-140.md) | Audiences globales ou filtrées, aperçu confirmé et suivi paginé ; livraison close, avec repli compatible 1.3.4 enregistré. |
-| [Compatibilité du schéma des annonces, 1.4.1](docs/announcements-compat-141.md) | Référence publiée et préparée sur l’hébergement ; ancien repli compatible schéma 32, précontrôle hébergé confirmé sans démarrage ; le repli courant est 1.5.1. |
+| [Compatibilité du schéma des annonces, 1.4.1](docs/announcements-compat-141.md) | Référence publiée et préparée sur l’hébergement ; ancien repli compatible schéma 32, précontrôle hébergé confirmé sans démarrage ; le repli courant est indiqué dans REPRISE. |
 | [Annonces, livraison 1.5.0 historique close](docs/announcements-150.md) | Bandeau programmé et messages privés facultatifs ; migration, précontrôles, identité HTTP et alignement final des métadonnées confirmés. |
-| [Compatibilité des tâches, 1.5.1 publiée](docs/tasks-compat-151.md) | Référence compatible avec le schéma 33, qualifiée, publiée, préparée, précontrôlée et enregistrée comme repli ; jamais démarrée. |
-| [Tâches et rappels, 1.6.0 active et close](docs/tasks-reminders-160.md) | Plusieurs tâches privées par client et vue commune ; migration, précontrôles, identité HTTP et alignement final des métadonnées confirmés ; livraison close. |
-| [Transport vidéo, socle 1.7.0](docs/video-transport-170.md) | Fusionné, qualifié et publié, dormant : transport privé par blocs ; intégration produit au lot 7, production 1.6.0 conservée. |
-| [Bilan et plan de production du 22 octobre](docs/PLAN-PRODUCTION-20261022.md) | Sécurité Node/PHP, entrée privée, auth mobile et accueil ; onze itérations jusqu’à la version vidéo complète. |
+| [Compatibilité des tâches, 1.5.1 publiée](docs/tasks-compat-151.md) | Référence compatible avec le schéma 33, qualifiée, publiée, préparée, précontrôlée et enregistrée comme repli historique de la 1.6.0 ; jamais démarrée. |
+| [Tâches et rappels, 1.6.0 historique close](docs/tasks-reminders-160.md) | Plusieurs tâches privées par client et vue commune ; migration, précontrôles, identité HTTP et alignement final des métadonnées confirmés ; livraison close. |
+| [Transport vidéo, socle 1.7.0](docs/video-transport-170.md) | Fusionné, qualifié et publié, dormant : transport privé par blocs ; intégration produit sur la branche 1.8.0, version active dans REPRISE. |
+| [Bilan et plan de production du 22 octobre](docs/PLAN-PRODUCTION-20261022.md) | Bilan historique de la livraison 1.7.1 ; ancien décompte remplacé par les quatre livrables du plan de branche. |
 | [REPRISE](docs/REPRISE.md) | État de production unique et références opérateur. |
 | [AGENTS](AGENTS.md) | Règles stables pour travailler et livrer. |
 | [Principes KISS et aperçu](docs/DESIGN-KISS.md) | Simplicité de l’interface et du développement. |
@@ -35,9 +39,9 @@ Le [correctif mobile 1.3.1](docs/chat-mobile-131.md) est désormais clos : le re
 
 **Évolution 3 — Diffusions à grande échelle : livraison 1.4.0 close.** Les versions [1.3.4 de compatibilité](docs/broadcast-compat-134.md) et [1.4.0](docs/broadcast-scale-140.md) sont fusionnées, qualifiées par leurs propres CI PR/main **5/5** et publiées sur leurs commits exacts. Les précontrôles hébergés et l’identité active de la **1.4.0** sont confirmés ; le reçu final confirme le checkpoint aligné et le repli **1.3.4** compatible enregistré, sans démarrage de cette dernière. La création élargie reste désactivée dans le runtime normal de 1.3.4. L’ancienne 1.3.3 reste préservée avec son empreinte, marquée non utilisable en repli immédiat pour les campagnes compactes. **Aucune nouvelle opération n’est requise pour ce lot.** Les [évolutions suivantes](docs/PLAN-IMPLEMENTATION.md) restent planifiées.
 
-**Version active : [1.6.0 — Tâches et rappels, livraison close](docs/tasks-reminders-160.md), schéma 33.** Le relevé admin utilisateur confirme `1.6.0` / `9590741e7065067aee9d1ad5d1206739cc27eb6b` / `v24.22.0` / démarrage affiché exactement **`21/10/2026 19:56:14`**. Le repli compatible est la [1.5.1 préparée et précontrôlée](docs/tasks-compat-151.md), jamais démarrée. Le [reçu final](docs/verification-proofs/jm160-hosted-metadata.json) confirme le checkpoint aligné sur 1.6.0/schéma 33, sans redémarrage, avec le repli 1.5.1 précontrôlé et enregistré, jamais démarré, l’ancien état 1.5.0 intégral et les autres blocs préservés. [Clôture et preuves](docs/REPRISE.md#alignement-final-acquis--livraison-160-close).
+**Référence historique : [1.6.0 — Tâches et rappels, livraison close](docs/tasks-reminders-160.md), schéma 33.** Le relevé admin utilisateur confirme `1.6.0` / `9590741e7065067aee9d1ad5d1206739cc27eb6b` / `v24.22.0` / démarrage affiché exactement **`21/10/2026 19:56:14`**. Le repli compatible de cette livraison était la [1.5.1 préparée et précontrôlée](docs/tasks-compat-151.md), jamais démarrée. Le [reçu final](docs/verification-proofs/jm160-hosted-metadata.json) confirme le checkpoint aligné sur 1.6.0/schéma 33, sans redémarrage, avec le repli 1.5.1 précontrôlé et enregistré, jamais démarré, l’ancien état 1.5.0 intégral et les autres blocs préservés. [Clôture et preuves](docs/REPRISE.md#alignement-final-acquis--livraison-160-close).
 
-**Évolution 5 — [Tâches et rappels 1.6.0](docs/tasks-reminders-160.md), livraison close.** Les références 1.5.1 de compatibilité et 1.6.0 sont fusionnées, qualifiées par leurs propres CI PR/main et publiées sur leurs commits exacts. Les [reçus de migration et précontrôles](docs/verification-proofs/jm160-hosted-schema33.json) confirment le schéma 33 et les deux CHECK 1.5.1/1.6.0 réussis, avec arrêt du service attesté par l’opérateur. Le [relevé admin utilisateur](docs/verification-proofs/jm160-hosted-identity.json) confirme ensuite l’identité HTTP 1.6.0. Le [reçu final des métadonnées](docs/verification-proofs/jm160-hosted-metadata.json) clôt la livraison sans redémarrage. **Aucune nouvelle commande ou manipulation utilisateur n’est requise.** Les évolutions 6 à 8 restent planifiées, sans ouverture automatique. [Clôture](docs/REPRISE.md#alignement-final-acquis--livraison-160-close).
+**Évolution 5 — [Tâches et rappels 1.6.0](docs/tasks-reminders-160.md), livraison close.** Les références 1.5.1 de compatibilité et 1.6.0 sont fusionnées, qualifiées par leurs propres CI PR/main et publiées sur leurs commits exacts. Les [reçus de migration et précontrôles](docs/verification-proofs/jm160-hosted-schema33.json) confirment le schéma 33 et les deux CHECK 1.5.1/1.6.0 réussis, avec arrêt du service attesté par l’opérateur. Le [relevé admin utilisateur](docs/verification-proofs/jm160-hosted-identity.json) confirme ensuite l’identité HTTP 1.6.0. Le [reçu final des métadonnées](docs/verification-proofs/jm160-hosted-metadata.json) clôt la livraison sans redémarrage. **Aucune nouvelle commande ou manipulation utilisateur n’est requise.** La suite relève du [plan courant de la branche 1.8.0](https://github.com/fredbuhr/jessiemessage/blob/feat/video-messaging/docs/PLAN-IMPLEMENTATION.md). [Clôture](docs/REPRISE.md#alignement-final-acquis--livraison-160-close).
 
 ## Versions et livraisons
 
@@ -49,7 +53,7 @@ Chaque livraison suit le même parcours : commit validé → tag immuable `vX.Y.
 
 Les fermetures définitives sont traitées localement. Une restauration applicative se prépare sur une cible isolée, en maintenance, avec contrôle des fermetures connues et réouverture explicite. Voir le [parcours opérateur](docs/manual-restore-operator-078.md).
 
-Le mécanisme de copies chiffrées vers le PC déjà raccordé est conservé ; son état réel, notamment après le signalement antivirus, est suivi dans REPRISE. Un reçu historique ne prouve pas son fonctionnement actuel, son déchiffrement ou une restauration. Le traitement PC/Avast et l’exécuteur d’archivage restent différés sans conditionner les évolutions de messagerie. La récupération autonome après perte complète de l’hôte, le témoin frais par phase, la succession et l’inventaire SQL exhaustif restent hors du périmètre V1.
+La production 1.7.1 conserve encore son mécanisme de copies chiffrées vers le PC déjà raccordé ; son état réel, notamment après le signalement antivirus, est suivi dans REPRISE. Un reçu historique ne prouve pas son fonctionnement actuel, son déchiffrement ou une restauration. La cible G1 remplace les sauvegardes et copies automatiques par une sauvegarde à la demande depuis l’administration, sans dépendance au PC ; ce remplacement n’est pas encore livré. L’exécuteur d’archivage automatique est abandonné. Les archives, clés, autorités, reçus et raccordements existants sont préservés ; aucun nouveau chantier PC n’est ouvert. La récupération autonome après perte complète de l’hôte, le témoin frais par phase, la succession et l’inventaire SQL exhaustif restent hors du périmètre V1.
 
 ## Développement et vérification
 
@@ -66,7 +70,7 @@ Le build produit l’aperçu autonome, pas un déploiement. `npm run test:browse
 
 Les identités SQL d’exécution et de migration sont séparées ; aucune migration ne s’exécute au démarrage du serveur. Voir la [configuration de la base](docs/DATABASE.md). Pour le service existant, utiliser la composition et les pins de REPRISE plutôt qu’un démarrage de développement.
 
-Les migrations `0031` des profils, `0032` des annonces et `0033` des tâches sont appliquées : le schéma SQL courant est **33**, avec la **1.5.1 compatible précontrôlée** comme repli prévu ; la version active identifiée est la 1.6.0. Le [bilan des profils](docs/profile-expressions-120.md#migration-et-repli) conserve ses références historiques au schéma 31 ; [REPRISE](docs/REPRISE.md) fournit les références actuelles.
+Les migrations `0031` des profils, `0032` des annonces et `0033` des tâches sont appliquées : le schéma SQL courant est **33**, la version active identifiée **1.7.1** et le repli compatible **1.6.0 sur Node 24.22.1**, précontrôlé sans démarrage. Le [bilan des profils](docs/profile-expressions-120.md#migration-et-repli) conserve ses références historiques au schéma 31 ; [REPRISE](docs/REPRISE.md) fournit les références actuelles.
 
 ## Aperçu sans terminal
 

@@ -1,5 +1,11 @@
 # JessieMessage — bilan et plan du 22 octobre 2026
 
+> **Plan remplacé le 22 octobre 2026.** Le [plan courant de la branche `feat/video-messaging`](https://github.com/fredbuhr/jessiemessage/blob/feat/video-messaging/docs/PLAN-IMPLEMENTATION.md) prépare **1.8.0** en quatre livrables : **G1 sauvegarde manuelle admin, G2 vidéo complète, G3 réponses personnelles et qualification globale, G4 livraison unique vérifiée**. La production reste **1.7.1 / Node 24.22.1 / schéma 33**, avec ses mécanismes de sauvegarde actuels jusqu’au remplacement livré et vérifié.
+>
+> IA, paiements carte/crypto, stickers/GIF, vocaux, réponse citée, édition, transfert de messages et épingles sont abandonnés. Les sauvegardes et l’archivage automatiques sont remplacés dans la cible par la sauvegarde à la demande ; aucun exécuteur d’archivage automatique n’est à construire. Le PHP du site secondaire relève d’Infomaniak et sort des actions du projet.
+>
+> **Tout le contenu ci-dessous conserve le bilan et le plan antérieurs. Ses prochaines actions, décomptes et sujets à développer sont historiques et ne constituent plus le travail courant.** Les preuves et leurs réserves restent conservées ; consulter le plan de branche pour la suite et [REPRISE](REPRISE.md) pour le service actif.
+
 ## État vérifié et priorité immédiate
 
 La messagerie est en service en **1.7.1 / Node 24.22.1 / schéma 33** ; son identité réelle, les contrôles HTTP et l’alignement final des métadonnées sont confirmés dans [REPRISE](REPRISE.md). « Passer vraiment en production » signifie ici terminer la **version complète avec vidéo**, sans confondre la branche de développement avec l’application active. Le socle vidéo 1.7.0 publié reste dormant ; la branche 1.8.0 a qualifié 7.1, 7.2 et 7.3a/b sur la PR 125. La suppression, la restauration et l’interface vidéo restent incomplètes.
