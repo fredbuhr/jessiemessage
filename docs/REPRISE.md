@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**22 octobre 2026 — production, checkpoint privé et latest : 1.8.1 / Node v24.22.1 / SQL36.** L’identité et les reçus hébergés sont rapportés par l’utilisateur (**USER_REPORTED**), sans nouvelle observation du processus par l’agent. La branche de correction développe **1.8.2**, sans fusion, publication ni déploiement.
+**22 octobre 2026 — production, checkpoint privé et latest : 1.8.1 / Node v24.22.1 / SQL36.** L’identité et les reçus hébergés sont rapportés par l’utilisateur (**USER_REPORTED**), sans nouvelle observation du processus par l’agent. La correction **1.8.2 est fusionnée**, sans publication ni déploiement ; sa qualification main est en cours.
 
 ## État de livraison courant
 
@@ -19,7 +19,7 @@
 
 ## Développement courant — audit 1.8.2
 
-Branche **`fix/audit-182`**, [PR 129 en brouillon](https://github.com/fredbuhr/jessiemessage/pull/129). Les [lots 1](verification-proofs/jm182-lot1-verification.json), [2](verification-proofs/jm182-lot2-verification.json) et [3](verification-proofs/jm182-lot3-ci.json) sont qualifiés. Le lot 4 regroupera qualification finale et livraison. Le [plan courant](PLAN-IMPLEMENTATION.md) fixe les critères et limites ; l’[audit initial](AUDIT-FINAL-20261022.md) et sa [preuve](verification-proofs/audit-final-20261022.json) décrivent le code avant correction.
+La [PR 129](https://github.com/fredbuhr/jessiemessage/pull/129), branche **`fix/audit-182`**, est **fusionnée** sur `78e6b8b2f6b19020c060345b9313a81829e9c8da`, arbre `7b722ca1fbd3416acecffa3c122e967511184d4c`. Les [lots 1](verification-proofs/jm182-lot1-verification.json), [2](verification-proofs/jm182-lot2-verification.json) et [3](verification-proofs/jm182-lot3-ci.json) sont qualifiés sur branche. Le lot 4 est en cours : [CI main 39832723570](https://github.com/fredbuhr/jessiemessage/actions/runs/39832723570) automatique, pas de release avant son résultat exact ; [Windows](https://github.com/fredbuhr/jessiemessage/actions/runs/39832723644) et [sonde existante](https://github.com/fredbuhr/jessiemessage/actions/runs/39832723552) associées. Le [plan courant](PLAN-IMPLEMENTATION.md) fixe les critères et limites ; l’[audit initial](AUDIT-FINAL-20261022.md) et sa [preuve](verification-proofs/audit-final-20261022.json) décrivent le code avant correction.
 
 | Qualification acquise sur branche | Source et arbre qualifiés | CI |
 | --- | --- | --- |
@@ -35,7 +35,7 @@ Le lot 2 qualifie brouillons texte dans le même onglet après rechargement, dem
 
 Le [diagnostic SQL A12](capacity-182.md) est acquis sur les deux versions natives ; ces mesures synthétiques ne justifient pas d’ajouter un index ou une migration au lot. Aucun débit ni nombre de clients simultanés du mutualisé n’est garanti.
 
-**Prochaine action : préparer la livraison unique du lot 4**, sur cette branche et avec les limites ci-dessus. Aucun merge, tag/release, déploiement, migration ou changement Manager n’est effectué par cette reprise documentaire. Ne pas relancer les CI vertes de `3d0daff8` ; une nouvelle qualification main sera nécessaire pour la source fusionnée.
+**Prochaine action : acquérir la qualification main du lot 4 et préparer les outils de livraison 1.8.2.** Ne pas rejouer la fusion ni les suites vertes de `3d0daff8`. Aucun tag/release, déploiement, migration ou changement Manager n’est encore effectué. Les outils seront épinglés à la source fusionnée et conserveront les reçus 1.8.1 et le repli 1.7.2 ; aucun parcours de sauvegarde n’est rouvert.
 
 ## Accès et commandes de l’application active
 
