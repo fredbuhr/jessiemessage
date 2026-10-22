@@ -1,8 +1,10 @@
-# JessieMessage — bilan et plan du 22 octobre 2026
+# JessieMessage — bilan historique du 22 octobre 2026
 
-## État vérifié et priorité immédiate
+> **Document historique :** ce relevé décrit son jalon avant la livraison 1.8.0. Ses états, prochaines actions et mentions du candidat ne sont pas l’état actuel. La production, le checkpoint, le repli et la seule recette restante figurent dans [REPRISE](REPRISE.md) et le [plan courant](PLAN-IMPLEMENTATION.md). Les sources, preuves et détails ci-dessous sont conservés pour leur étape.
 
-La messagerie est en service en **1.7.1 / Node 24.22.1 / schéma 33** ; son identité réelle, les contrôles HTTP et l’alignement final des métadonnées sont confirmés dans [REPRISE](REPRISE.md). La prochaine version complète doit intégrer **la sauvegarde à la demande dans l’administration et la vidéo**, sans confondre la branche de développement avec l’application active. La décision de simplification du 22 octobre ne désactive encore aucun automatisme en service. Le socle vidéo 1.7.0 publié reste dormant ; la branche 1.8.0 a qualifié 7.1, 7.2 et 7.3a/b/c sur la PR 125. La suppression/fermeture est qualifiée ; inventaire, capture/restauration et interface vidéo restent incomplets.
+## État vérifié à cette étape et priorité d’alors
+
+À ce relevé, la messagerie était en service en **1.7.1 / Node 24.22.1 / schéma 33** ; son identité réelle, les contrôles HTTP et l’alignement final des métadonnées sont confirmés dans [REPRISE](REPRISE.md). La prochaine version complète devait intégrer **la sauvegarde à la demande dans l’administration et la vidéo**, sans confondre la branche de développement avec l’application active. La décision de simplification du 22 octobre ne désactivait encore aucun automatisme à cette étape. Le socle vidéo 1.7.0 publié reste dormant ; la branche 1.8.0 a qualifié 7.1, 7.2 et 7.3a/b/c sur la PR 125. La suppression/fermeture est qualifiée ; inventaire, capture/restauration et interface vidéo restent incomplets.
 
 Le correctif **1.7.1** est fusionné, qualifié par ses CI PR/main propres et publié sur son commit exact ; [preuves CI](verification-proofs/jm171-verification.json), [publication](verification-proofs/jm171-publication.json), [préparation Node et repli](verification-proofs/jm171-hosted-node-preparation.json), [identité hébergée](verification-proofs/jm171-hosted-identity.json). Le [reçu final de métadonnées](verification-proofs/jm171-hosted-metadata.json), `release171_metadata_recorded`, clôt la livraison sans redémarrage, avec repli 1.6.0 sur Node corrigé précontrôlé et jamais démarré, états historiques et autres blocs préservés. L’entrée discrète, l’authentification mobile et le nouvel accueil sont intégrés, sans migration SQL ni activation vidéo. L’identité et les commandes réellement utilisées restent exclusivement dans REPRISE.
 
@@ -38,7 +40,7 @@ Les réponses rapides existent déjà : six phrases FR/EN proposées à l’admi
 
 **Abandonnés : IA, paiements carte/crypto, stickers/GIF, vocaux, réponse citée, édition, transfert de messages et épingles.** Ces sujets sortent des actions futures ; ils ne sont plus différés à arbitrer après la vidéo. Les emojis Unicode, diffusions, suppressions et exports déjà livrés restent conservés.
 
-**Sauvegardes et archivage automatiques : abandon de l’automatisation, remplacement par une sauvegarde simple à la demande via l’administration.** Le parcours cible ne dépend pas du PC et n’ajoute aucun service. Archives, clés, autorités, reçus et fermetures locales restent préservés. La production 1.7.1 conserve encore ses mécanismes existants : le remplacement est codé et qualifié sur la branche, CI 5/5, et attend sa livraison avant d’être annoncé effectif.
+**Sauvegardes et archivage automatiques : abandon de l’automatisation, remplacement par une sauvegarde simple à la demande via l’administration.** Le parcours cible ne dépend pas du PC et n’ajoute aucun service. Archives, clés, autorités, reçus et fermetures locales restent préservés. À cette étape, la production 1.7.1 conservait encore ses mécanismes existants : le remplacement était codé et qualifié sur la branche, CI 5/5, en attente de livraison.
 
 Le [plan global courant](PLAN-IMPLEMENTATION.md) et le [bilan de l’application](BILAN-GLOBAL-20261022.md) retiennent quatre résultats :
 
@@ -47,7 +49,7 @@ Le [plan global courant](PLAN-IMPLEMENTATION.md) et le [bilan de l’application
 3. **G3 — Réponses personnelles et qualification globale**, incluant les parcours combinés, corrections utiles, sécurité, mesures et restauration/repli sur cibles synthétiques isolées.
 4. **G4 — Livraison unique vérifiée**, avec identité réelle, métadonnées, repli et contrôles hébergés.
 
-L’ancien décompte de huit résultats vidéo puis l’estimation de six à neuf séquences sont dépassés par cette modification de portée. Aucun nouveau décompte précis n’est étayé avant le traitement des dépendances ; les sous-étapes restent des repères techniques. **À chaque étape, indiquer ce qui est fait et ce qui reste.** G1 est qualifié sur branche, non livré ; G2 devient la prochaine action, puis G3 et G4. Les qualifications vidéo acquises sur la branche sont conservées.
+L’ancien décompte de huit résultats vidéo puis l’estimation de six à neuf séquences sont dépassés par cette modification de portée. Aucun nouveau décompte précis n’est étayé avant le traitement des dépendances ; les sous-étapes restent des repères techniques. **À chaque étape, indiquer ce qui est fait et ce qui reste.** À ce relevé, G1 était qualifié sur branche, non livré ; G2 constituait la suite prévue, puis G3 et G4. Les qualifications vidéo acquises sur la branche sont conservées.
 
 **À préciser, non ouverts : Lovense, rendez-vous partagés, recherche de messages/notes, réactions et rappels privés push.** Ils ne sont pas réputés abandonnés ; aucun fournisseur, service ni chantier n’est ajouté implicitement. Les tâches privées ne sont pas des rendez-vous partagés. La personnalisation des réponses reste, elle, prévue en G3.
 

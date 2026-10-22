@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "type": "jessiemessage_172_compatibility_verification",
-  "status": "published_not_deployed",
+  "status": "published_hosted_prechecked_not_started",
   "version": "1.7.2",
   "source": "6b3319a77c307ed7d6b003fe33de36807c70c266",
   "tree": "924d500375a69ae50bc63414b15df71271e2bf8a",
@@ -663,5 +663,14 @@
     "Upper manual-restore CLI job loading is covered by targeted tests, not claimed as full native end-to-end.",
     "Physical phones, closed-app OS notifications and hosting performance remain unverified.",
     "Node resource metrics exclude MariaDB, Chrome and child-process memory."
-  ]
+  ],
+  "delivery": {
+    "role": "prechecked_rollback_not_started",
+    "metadataProof": "jm180-hosted-metadata.json",
+    "schemaAndPrechecksProof": "jm180-hosted-schema36.json",
+    "hostedPrecheckPassed": true,
+    "started": false,
+    "deploymentPerformed": false,
+    "recordedAsRollbackFor": "1.8.0"
+  }
 }

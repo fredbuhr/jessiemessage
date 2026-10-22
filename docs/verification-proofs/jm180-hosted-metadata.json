@@ -1,0 +1,76 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_180_hosted_metadata",
+  "status": "deployment_and_metadata_aligned_hosted_interface_acceptance_pending",
+  "date": "2026-10-22",
+  "provenance": {
+    "classification": "USER_REPORTED",
+    "description": "User executed the pinned metadata writer in their personal terminal and supplied this exact receipt; no direct agent host observation.",
+    "receiptObservationTimestampProvided": false,
+    "startedAtOrigin": "Actual application startup journal read by the writer; not inferred from the earlier UI display."
+  },
+  "operator": {
+    "source": "56420b9a5e33c7342e7a36353ca91648532442a1",
+    "tree": "e9a3bfdc5e18a57114f49989f217e747325ff84a",
+    "helper": "ops/record-release180.py",
+    "helperSha256": "41e818cc5ae036191d7a9b8789989c4985bcdd12a63f0c0474f49cc482536041",
+    "qualificationProof": "jm180-metadata-operator-verification.json"
+  },
+  "receipt": {
+    "status": "release180_metadata_recorded",
+    "version": "1.8.0",
+    "source": "fd6e53b14b520231b0b307a2761331dd8c740a5b",
+    "tree": "324c3563fc6b1cfce669bcf58d90962c23c966b8",
+    "metadataOnly": true,
+    "noRestart": true,
+    "schemaMigrations": 36,
+    "release": {
+      "version": "1.8.0",
+      "commit": "fd6e53b14b520231b0b307a2761331dd8c740a5b",
+      "nodeVersion": "v24.22.1",
+      "startedAt": 1792668820030
+    },
+    "publicReady": true,
+    "rollbackRelease": "1.7.2",
+    "rollbackPrecheckedNotStarted": true,
+    "historicalRelease171Preserved": true,
+    "historicalRelease160Preserved": true,
+    "priorActivePreserved": true,
+    "otherBlocksPreserved": true,
+    "checkpointSha256": "c7bbecf40233a0f8626fdca5af3e48fc5725a14dff202e1f378fdc3082db3a41"
+  },
+  "derivedStartup": {
+    "startedAt": 1792668820030,
+    "timezone": "Europe/Paris",
+    "iso8601": "2026-10-22T13:33:40.030+02:00",
+    "basis": "Integer milliseconds from the startup journal reported by the writer."
+  },
+  "references": {
+    "initialAdminIdentity": "jm180-hosted-identity.json",
+    "schemaAndPrechecks": "jm180-hosted-schema36.json",
+    "latestAlignment": "jm180-metadata-operator-verification.json"
+  },
+  "currentState": {
+    "productionVersion": "1.8.0",
+    "checkpointVersion": "1.8.0",
+    "latest": "v1.8.0",
+    "nodeVersion": "v24.22.1",
+    "schemaMigrations": 36,
+    "rollbackVersion": "1.7.2",
+    "rollbackPrecheckedNotStarted": true,
+    "publicReadyByWriterGuards": true,
+    "deploymentAndAlignmentComplete": true,
+    "hostedInterfaceAcceptancePending": [
+      "manual admin backup",
+      "personal replies",
+      "video selection without sending"
+    ],
+    "g4Complete": false
+  },
+  "limits": [
+    "publicReady:true is the writer guard result; no detailed HTTP status or response absent from the receipt is invented.",
+    "The original user-reported admin identity proof remains unchanged; the epoch here comes from the actual startup journal read by the writer.",
+    "Hosted interface acceptance remains for manual backup, personal replies and video selection without a real send.",
+    "Physical devices, the complete upper manual-restore CLI and real hosting performance remain outside the proven scope."
+  ]
+}

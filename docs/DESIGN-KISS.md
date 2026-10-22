@@ -7,19 +7,19 @@ Le [périmètre produit](PRODUCT.md) décrit les fonctions. **[REPRISE](REPRISE.
 ## Interface
 
 - Une conversation claire côté client ; les outils administrateur restent dans leur espace.
-- Texte, photos et états d’envoi lisibles sur mobile et ordinateur. Le nom du destinataire reste visible avant l’envoi.
+- Texte, photos, vidéos et états d’envoi lisibles sur mobile et ordinateur. Le nom du destinataire reste visible avant l’envoi.
 - Fiches, notes, tags et rappels dans une vue secondaire. Les groupes internes ne deviennent pas des salons clients.
 - Confirmation explicite des destinataires pour une diffusion et de la portée d’une fermeture définitive.
 - Brouillons conservés dans la page et conflits signalés. Ne pas promettre leur synchronisation entre appareils ou leur survie à une fermeture d’onglet.
 - Notifications facultatives par appareil, sans aperçu intime. Expliquer la prochaine action utile sans accumuler installation, autorisations et consentements.
-- Sauvegardes : dates et état de copie visibles, accès au dossier depuis le PC expliqué ; outils ponctuels repliés et vocabulaire adapté à l’action. Une copie reçue ne devient pas une promesse de restauration.
+- Sauvegardes : création à la demande, état, date, taille et téléchargement chiffré depuis l’administration, sans PC requis ; vocabulaire adapté à l’action. Un fichier téléchargé ne devient pas une promesse de restauration.
 - Aucun compteur de fans, fausse présence en ligne ou mécanisme public de découverte.
 
 ## Développement et exploitation
 
 Réutiliser le parcours existant le plus simple qui atteint le résultat demandé. Choisir un objectif borné, corriger le défaut avec une régression utile, puis livrer son état exact. Une petite duplication ne justifie pas à elle seule une nouvelle abstraction.
 
-Le mutualisé, les copies PC et la restauration manuelle en maintenance forment le périmètre choisi, sans infrastructure ni budget ajoutés. Les limites de récupération du [produit](PRODUCT.md) restent explicites. Ne pas simplifier un refus en retirant un garde, un journal, un ancrage de dossier, une quarantaine ou un état PC. Les preuves historiques restent conservées.
+Le mutualisé, la sauvegarde manuelle admin et la restauration manuelle en maintenance forment le périmètre choisi, sans infrastructure ni budget ajoutés. Les anciennes copies PC restent préservées ; le parcours courant ne dépend pas du PC. Les limites de récupération du [produit](PRODUCT.md) restent explicites. Ne pas simplifier un refus en retirant un garde, un journal, un ancrage de dossier, une quarantaine ou un état PC. Les preuves historiques restent conservées.
 
 Les tests utilisent des comptes, médias et cibles isolés synthétiques. Distinguer code, CI, déploiement, observation réelle et omission ; un aperçu ou une réponse perdue ne prouve pas une activation.
 

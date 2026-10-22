@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "type": "jessiemessage_180_final_delivery_verification",
-  "status": "published_not_deployed",
+  "status": "deployed_metadata_recorded_hosted_interface_acceptance_pending",
   "version": "1.8.0",
   "source": "fd6e53b14b520231b0b307a2761331dd8c740a5b",
   "tree": "324c3563fc6b1cfce669bcf58d90962c23c966b8",
@@ -334,7 +334,7 @@
     "migrated": false,
     "precheckPassed": false
   },
-  "deploymentPerformed": false,
+  "deploymentPerformed": true,
   "previousFailedRuns": [],
   "scope": {
     "manualAdminBackup": true,
@@ -678,5 +678,16 @@
     "Upper manual-restore CLI job loading is covered by targeted tests, not claimed as full native end-to-end.",
     "Physical phones, closed-app OS notifications and hosting performance remain unverified.",
     "Node resource metrics exclude MariaDB, Chrome and child-process memory."
-  ]
+  ],
+  "delivery": {
+    "status": "deployment_and_metadata_aligned",
+    "metadataProof": "jm180-hosted-metadata.json",
+    "identityProof": "jm180-hosted-identity.json",
+    "schemaAndPrechecksProof": "jm180-hosted-schema36.json",
+    "version": "1.8.0",
+    "nodeVersion": "v24.22.1",
+    "schemaMigrations": 36,
+    "hostedInterfaceAcceptancePending": true,
+    "g4Complete": false
+  }
 }

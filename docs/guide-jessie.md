@@ -2,6 +2,8 @@
 
 Retrouve ton espace sur [jessiemessage.com](https://jessiemessage.com/app) et l’[aide du site](https://jessiemessage.com/help).
 
+La version **1.8.0** est active. La [preuve de mise en service et d’alignement](verification-proofs/jm180-hosted-metadata.json), transmise par l’utilisateur, confirme la source `fd6e53b14b520231b0b307a2761331dd8c740a5b`, Node **24.22.1** et SQL **36** ; la mise à jour est enregistrée et la dernière livraison publiée est aussi 1.8.0. [REPRISE](REPRISE.md) conserve les références techniques. Les essais des nouveaux parcours dans ton navigateur restent à terminer.
+
 ## Se connecter et gérer les accès
 
 - Ouvre [Administration](https://jessiemessage.com/admin) avec ton mot de passe et le code de ton application d’authentification. Chaque appareil possède sa propre connexion.
@@ -28,7 +30,7 @@ Le [catalogue enrichi en 1.3.0](emoji-inclusifs-130.md) ajoute **Doubles sens**,
 
 La [version active identifiée dans REPRISE](REPRISE.md) conserve la disposition mobile livrée depuis 1.3.1. La conversation mobile dispose d’une seule barre avec l’avatar, le nom et **Options** ; le retour aux conversations reste accessible dans l’administration.
 
-**Options** regroupe le compte, le profil, les notifications, la langue, Contact et Aide. Les photos de la conversation et son téléchargement y sont accessibles lorsqu’ils sont disponibles pour ton compte. Sous les messages, `+` propose l’ajout d’une photo, la bibliothèque et les réponses rapides selon les fonctions disponibles ; `☺` ouvre les emojis. La saisie et **Envoyer** restent directement accessibles. Choisir une photo, une réponse ou un emoji prépare toujours un brouillon avant envoi. Les erreurs et la reprise d’un envoi incertain restent affichées quand nécessaires.
+**Options** regroupe le compte, le profil, les notifications, la langue, Contact et Aide. Les photos, les vidéos de la conversation et son téléchargement y sont accessibles lorsqu’ils sont disponibles pour ton compte. Sous les messages, `+` propose l’ajout d’une photo ou d’une vidéo, la bibliothèque et les réponses rapides selon les fonctions disponibles ; `☺` ouvre les emojis. La saisie et **Envoyer** restent directement accessibles. Choisir une photo, une vidéo, une réponse ou un emoji prépare toujours un brouillon avant envoi. Les erreurs et la reprise d’un envoi incertain restent affichées quand nécessaires.
 
 La présentation mobile 1.3.1 a été validée visuellement par l’utilisateur. La 1.3.3 a conservé cette disposition, les textes côté client à la première personne de Jessie et les messages plus compacts du [socle 1.3.2](client-voice-message-details-132.md), avec un bouton de détails visible au toucher pour les photos. Le précontrôle hébergé, le relevé admin et le reçu final confirment la préparation, l’activation et l’enregistrement de cette livraison désormais historique et close dans [REPRISE](REPRISE.md). Tous les parcours sur téléphone physique et le clavier logiciel ne sont pas explicitement attestés.
 
@@ -38,15 +40,22 @@ Touche ou clique sur le texte d’un message pour afficher sa date, ses métadon
 
 La sélection n’envoie rien et ne supprime rien. Les commandes **Supprimer** et les informations **Envoyé** ou **Lu** se consultent dans ces détails selon tes droits ; le client conserve uniquement **Envoyé** sur ses propres messages. Clique sur une photo pour l’agrandir ; sélectionner sa légende ouvre les détails. Les erreurs et **Réessayer cet envoi** restent directement visibles quand une reprise est nécessaire.
 
-## Échanger et partager une photo
+## Échanger et partager une photo ou une vidéo
 
 - Dans [Messages](https://jessiemessage.com/admin/messages), sélectionne la conversation et vérifie le nom avant d’envoyer.
 - Écris ton texte, puis choisis **Envoyer**. **Envoyé** confirme l’enregistrement ; dans ton administration, **Lu** indique que le client a affiché le message dans sa conversation visible. Cela ne certifie pas une lecture attentive. À partir de **1.1.0**, le client voit seulement **Envoyé** sur ses propres messages, sans indication de ta lecture. La [version réellement active](REPRISE.md) détermine la disponibilité de cette évolution ; les accusés restent symétriques en 1.0.0.
 - Si la confirmation manque, utilise **Réessayer cet envoi** : ce bouton reprend le même message.
 - Avec **+ → Ajouter une photo**, choisis l’image et vérifie l’aperçu et la légende avant **Envoyer**. **Retirer la photo** annule la sélection.
 - **+ → Mes photos** ouvre ta bibliothèque ; **Options → Photos** retrouve les images partagées dans cet échange.
+- Avec **+ → Ajouter une vidéo**, choisis un fichier **MP4 de 100 MiB maximum** et vérifie l’aperçu local. **Retirer la vidéo** annule la sélection. Le transfert et l’envoi commencent seulement avec **Envoyer** ; **Options → Vidéos** retrouve les vidéos partagées dans l’échange. La lecture dépend des codecs acceptés par l’appareil.
 - **+ → Réponses rapides** ajoute une phrase au brouillon, sans l’envoyer. Choisis sa langue, adapte le texte, puis utilise **Envoyer**.
 - Tu peux supprimer tes propres messages. Pour retirer aussi une photo de **Mes photos**, supprime d’abord les messages qui l’utilisent encore.
+
+### Tes réponses personnelles
+
+Dans [Messages](https://jessiemessage.com/admin/messages), sélectionne une conversation, ouvre **+ → Réponses rapides**, puis retrouve la section **Mes réponses**. Choisis **Nouvelle réponse**, remplis **Titre de la réponse**, **Langue de la réponse** et **Texte de la réponse**, puis **Enregistrer la réponse**. Le catalogue accepte jusqu’à 50 phrases, avec un titre de 64 caractères et un texte de 4 096 caractères au maximum. **Modifier** reprend une phrase ; **Supprimer**, puis sa confirmation, la retire.
+
+Les réponses enregistrées restent privées et se retrouvent dans tes sessions administrateur. Clique sur une phrase pour l’insérer dans le brouillon : cela n’envoie aucun message. Si une autre session les a modifiées ou si la confirmation manque, ton texte en cours reste affiché : utilise **Recharger les réponses enregistrées**, vérifie le résultat, puis enregistre explicitement si nécessaire.
 
 ## Fiches, notes et travail sur deux appareils
 
@@ -85,40 +94,42 @@ Une alerte n’affiche ni nom, ni texte, ni photo du message. La désactivation 
 
 ## Télécharger une conversation
 
-Dans **Fiche → Télécharger la conversation**, choisis d’inclure ou non les photos partagées, puis **Télécharger le ZIP**. Extrais-le et ouvre `Conversation.html` pour lire hors ligne ; `conversation.json` contient la version portable.
+Dans **Fiche → Télécharger la conversation**, choisis **Inclure les photos partagées** et **Inclure les vidéos partagées** selon ton besoin, puis **Télécharger le ZIP**. Extrais-le et ouvre `Conversation.html` pour lire hors ligne ; `conversation.json` contient la version portable. Le ZIP est transmis progressivement, avec une limite totale de **256 MiB**. La lecture des vidéos exportées dépend des codecs de l’appareil.
 
-L’export exclut les notes et surnoms privés, tags, groupes, tâches privées et photos non partagées. Il n’enregistre pas le brouillon de fiche. À partir de 1.1.0, l’export personnel du client ne contient pas non plus ton point de lecture ; les ZIP de conversation ne contiennent déjà aucun reçu de lecture. Le ZIP contient des échanges lisibles : garde-le dans un emplacement privé. [Détails de l’export](conversation-export-058.md).
+L’export exclut les notes et surnoms privés, tags, groupes, tâches privées, réponses personnelles et médias non partagés. Il n’enregistre pas le brouillon de fiche. À partir de 1.1.0, l’export personnel du client ne contient pas non plus ton point de lecture ; les ZIP de conversation ne contiennent déjà aucun reçu de lecture. Le ZIP contient des échanges lisibles : garde-le dans un emplacement privé. [Détails de l’export](conversation-export-058.md).
 
 ## Diffusions à grande échelle
 
 Ce parcours est disponible depuis la livraison 1.4.0 close et reste présent dans la version active indiquée par [REPRISE](REPRISE.md). Les références et replis historiques y conservent leurs preuves propres.
 
-Dans [Diffusions](https://jessiemessage.com/admin/broadcasts), choisis une sélection manuelle, tous les clients ou tous les clients correspondant aux filtres. Un choix global comprend aussi les pages qui ne sont pas affichées. La prévisualisation annonce le nombre réellement éligible et les éventuelles photos déjà reçues ; seuls les premiers noms s’affichent comme aperçu. Confirme explicitement le nombre avant de lancer l’envoi.
+Dans [Diffusions](https://jessiemessage.com/admin/broadcasts), choisis une sélection manuelle, tous les clients ou tous les clients correspondant aux filtres. Un choix global comprend aussi les pages qui ne sont pas affichées. Le message peut inclure une photo ou une vidéo. La prévisualisation annonce le nombre réellement éligible et les éventuels médias déjà reçus ; seuls les premiers noms s’affichent comme aperçu. Confirme explicitement le nombre avant de lancer l’envoi.
 
-Un changement d’audience, de filtres ou de photo demande une nouvelle prévisualisation. Si l’ensemble a changé entre l’aperçu et la confirmation, l’envoi doit être revérifié. Après un résultat d’envoi incertain, la commande de reprise réutilise la même demande. Le suivi présente les compteurs et les destinataires par pages, pendant que les messages sont traités progressivement. Chaque client reçoit son message dans sa conversation privée ; aucun salon collectif n’est créé.
+Un changement d’audience, de filtres, de photo ou de vidéo demande une nouvelle prévisualisation. Si l’ensemble a changé entre l’aperçu et la confirmation, l’envoi doit être revérifié. Après un résultat d’envoi incertain, la commande de reprise réutilise la même demande. Le suivi présente les compteurs et les destinataires par pages, pendant que les messages sont traités progressivement. Chaque client reçoit son message dans sa conversation privée ; aucun salon collectif n’est créé.
 
-## Copies sur le PC — mécanisme actuellement livré
+## Sauvegarde manuelle depuis l’administration
 
-Dans [Sauvegardes](https://jessiemessage.com/admin/backups), consulte les dates de sauvegarde et de copie. La version actuellement livrée utilise encore le mécanisme automatique : le PC doit être allumé, connecté à Internet et ta session Windows ouverte. Son fonctionnement reste bloqué ou incertain après le signalement antivirus ; les dates et anciens reçus ne prouvent pas une copie actuelle. Les copies en attente peuvent se rattraper lorsque ce mécanisme fonctionne.
+Dans [Sauvegardes](https://jessiemessage.com/admin/backups), choisis **Créer une sauvegarde**. Le site affiche **Demande de sauvegarde en attente.**, puis **Sauvegarde en cours. La messagerie peut être momentanément indisponible.**, et enfin **Sauvegarde terminée.** **Actualiser l’état** consulte le résultat sans lancer une nouvelle sauvegarde. Si la confirmation manque, vérifie cet état avant de réessayer.
 
-Le raccourci **JessieMessage — Sauvegardes** sur le Bureau indique le dossier choisi et permet de le changer. Aucune manipulation de clé ni nouveau raccordement n’est nécessaire au quotidien. En cas d’erreur, conserve les copies, le dossier de récupération et le raccordement existants. Aucune sauvegarde n’est supprimée automatiquement.
+Sous **Dernière sauvegarde disponible**, vérifie la date et la taille, puis choisis **Télécharger**. Le fichier reste chiffré ; conserve-le dans un endroit privé. Ce parcours fonctionne sans PC raccordé et sans sauvegarde ni archivage automatiques. Les archives historiques, clés, reçus et anciens raccordements restent préservés ; aucune manipulation de clé ni nouveau raccordement n’est nécessaire.
 
-Le reçu confirme le fichier chiffré reçu, sans certifier une restauration de l’application. [Copies PC](backup-destinations-055.md).
+Une sauvegarde téléchargée ne certifie pas encore son déchiffrement ou une restauration de l’application. Les [copies PC](backup-destinations-055.md) décrivent le parcours historique, qui n’est pas nécessaire à cette sauvegarde manuelle.
 
-### Sur branche, non livré : nouveautés 1.8.0
+### Derniers essais dans ton navigateur
 
-La sauvegarde à la demande depuis l’administration, la vidéo et les réponses personnelles sont codées et qualifiées sur branche, selon [REPRISE](REPRISE.md). **Ces nouveautés ne sont pas encore disponibles en production.** Le nouveau parcours de sauvegarde ne dépend pas du PC et l’archivage automatique est abandonné. Les anciennes archives, clés et le raccordement existant sont conservés.
+La mise en service et l’alignement des métadonnées sont terminés. Pour clore les vérifications de l’interface hébergée, effectue d’abord la sauvegarde : sa préparation peut interrompre brièvement la messagerie. Fais cet essai avant de préparer des brouillons.
 
-Dans le candidat 1.8.0, ouvre `+`, puis **Réponses rapides**. La rubrique **Mes réponses** contient tes phrases enregistrées. **Nouvelle réponse** permet de saisir un titre, une langue et un texte, puis **Enregistrer la réponse**. **Modifier** reprend une phrase ; **Supprimer**, puis sa confirmation, la retire. Le catalogue peut contenir jusqu’à 50 phrases, chacune de 4 096 caractères au maximum. Choisir une phrase l’ajoute au brouillon ; relis-la puis utilise **Envoyer**.
+- Crée une sauvegarde, attends sa fin, puis télécharge le fichier chiffré.
+- Enregistre une phrase de test sans données client, recharge les réponses enregistrées pour vérifier sa présence, puis clique dessus pour l’insérer dans le brouillon, sans **Envoyer**.
+- Choisis un petit MP4 de test sans données client, vérifie son aperçu, puis **Retirer la vidéo**, sans **Envoyer**.
 
-Les réponses enregistrées se retrouvent dans tes sessions administrateur. Si une autre session les a modifiées ou si la confirmation manque, ton texte en cours reste affiché : utilise **Recharger les réponses enregistrées**, vérifie le résultat, puis enregistre explicitement si nécessaire.
+Ces essais ne demandent aucun envoi à un destinataire réel, aucune fermeture ni suppression de compte. La prévisualisation vidéo ne valide pas un transfert serveur. La restauration réelle, les téléphones physiques, les notifications système et les performances de l’hébergement restent distincts de ces vérifications.
 
 ## Fermeture définitive et remise en service
 
 Voir l’[état courant](REPRISE.md) pour le service déployé et ses limites.
 
-L’administrateur peut choisir **Fermer définitivement** dans la carte du client, vérifier le compte et la portée, cocher la confirmation et écrire **FERMER**. **Fermeture des comptes** affichera le suivi. L’action irréversible efface le compte, sa conversation, ses notes privées et les photos appartenant au client dans l’application. Le service peut être brièvement interrompu ; sauvegardes et téléchargements restent des copies séparées.
+L’administrateur peut choisir **Fermer définitivement** dans la carte du client, vérifier le compte et la portée, cocher la confirmation et écrire **FERMER**. **Fermeture des comptes** affichera le suivi. L’action irréversible efface le compte, sa conversation, ses notes privées et les médias appartenant au client dans l’application. Le service peut être brièvement interrompu ; sauvegardes et téléchargements restent des copies séparées.
 
-Une restauration se fait manuellement en maintenance, avec la personne chargée de l’exploitation et un contrôle des comptes fermés avant réouverture. Les messages postérieurs à la capture choisie peuvent être perdus ; PC éteint, la copie disponible peut être plus ancienne. [Parcours opérateur](manual-restore-operator-078.md).
+Une restauration se fait manuellement en maintenance, avec la personne chargée de l’exploitation et un contrôle des comptes fermés avant réouverture. Les messages postérieurs à la sauvegarde choisie peuvent être perdus ; la récupération dépend de la copie effectivement conservée. [Parcours opérateur](manual-restore-operator-078.md).
 
 Pour une question, consulte l’[aide](https://jessiemessage.com/help) ou [contact@jessiemessage.com](mailto:contact@jessiemessage.com). Ne transmets jamais ton mot de passe ni tes codes.

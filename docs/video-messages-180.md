@@ -1,6 +1,8 @@
-# Messagerie vidéo 1.8.0 en développement — jalon 7.2
+# Messagerie vidéo 1.8.0 — qualification historique du jalon 7.2
 
-**Jalon 7.2 codé et qualifié sur `feat/video-messaging`, non fusionné.** Ce travail poursuit le [catalogue qualifié en 7.1](video-catalogue-180.md) et le [transport dormant 1.7.0](video-transport-170.md). La cible de développement reste **1.8.0**, sans nouvelle version, tag, release ou déploiement pour ce jalon. L’état de production **1.6.0 / schéma 33** et son repli **1.5.1** restent ceux de [REPRISE](REPRISE.md).
+> **Document historique :** ce relevé décrit son jalon avant la livraison 1.8.0. Ses états, prochaines actions et mentions du candidat ne sont pas l’état actuel. La production, le checkpoint, le repli et la seule recette restante figurent dans [REPRISE](REPRISE.md) et le [plan courant](PLAN-IMPLEMENTATION.md). Les sources, preuves et détails ci-dessous sont conservés pour leur étape.
+
+**À ce relevé, le jalon 7.2 était codé et qualifié sur `feat/video-messaging`, non fusionné.** Ce travail poursuit le [catalogue qualifié en 7.1](video-catalogue-180.md) et le [transport dormant 1.7.0](video-transport-170.md). La cible de développement était **1.8.0**, sans nouvelle version, tag, release ou déploiement pour ce jalon. L’état de production était alors **1.6.0 / schéma 33**, avec repli **1.5.1** ; ces références sont historiques et l’état actuel est dans [REPRISE](REPRISE.md).
 
 Ce jalon relie une vidéo enregistrée à un message privé, avec légende, accès du destinataire et galerie côté serveur. La composition candidate est injectée explicitement dans les tests ; le serveur normal n’enregistre aucune route vidéo et ne charge aucun catalogue candidat. L’interface, l’aperçu et le lecteur restent à réaliser en 7.4.
 

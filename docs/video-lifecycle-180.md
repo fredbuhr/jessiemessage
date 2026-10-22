@@ -1,8 +1,10 @@
-# Cycle de vie vidéo 1.8.0 en développement — jalon 7.3
+# Cycle de vie vidéo 1.8.0 — qualification historique du jalon 7.3
 
-**7.3a, 7.3b et 7.3c sont qualifiés sur `feat/video-messaging`. Le jalon 7.3 reste incomplet ; ses dépendances restantes font partie du livrable G1 de vidéo complète.** La version de développement demeure **1.8.0**, sans tag, release, fusion ou déploiement intermédiaire. Les [preuves du catalogue 7.1](video-catalogue-180.md) et du [message privé 7.2](video-messages-180.md) conservent leurs sources et résultats propres. La version active, son checkpoint et son repli restent exclusivement identifiés dans [REPRISE](REPRISE.md).
+> **Document historique :** ce relevé décrit son jalon avant la livraison 1.8.0. Ses états, prochaines actions et mentions du candidat ne sont pas l’état actuel. La production, le checkpoint, le repli et la seule recette restante figurent dans [REPRISE](REPRISE.md) et le [plan courant](PLAN-IMPLEMENTATION.md). Les sources, preuves et détails ci-dessous sont conservés pour leur étape.
 
-Le [plan global révisé](PLAN-IMPLEMENTATION.md) regroupe maintenant ces dépendances dans **G1 — messagerie vidéo complète de bout en bout**. L’inventaire est la première tâche technique, pas un livrable produit séparé. Les numéros et prochaines actions des qualifications ci-dessous décrivent leur étape historique ; les preuves restent inchangées.
+**À ce relevé, 7.3a, 7.3b et 7.3c étaient qualifiés sur `feat/video-messaging`. Le jalon 7.3 restait incomplet ; ses dépendances étaient alors regroupées sous le nom G1 de vidéo complète.** La version de développement était **1.8.0**, sans tag, release, fusion ou déploiement intermédiaire. Les [preuves du catalogue 7.1](video-catalogue-180.md) et du [message privé 7.2](video-messages-180.md) conservent leurs sources et résultats propres. La version active, son checkpoint et son repli restent exclusivement identifiés dans [REPRISE](REPRISE.md).
+
+Le regroupement envisagé à cette étape appelait ces dépendances **G1 — messagerie vidéo complète de bout en bout**. Cet ancien nom n’est pas le découpage final ; le [plan courant](PLAN-IMPLEMENTATION.md) contient uniquement le travail restant. L’inventaire est la première tâche technique, pas un livrable produit séparé. Les numéros et prochaines actions des qualifications ci-dessous décrivent leur étape historique ; les preuves restent inchangées.
 
 ## Découpage borné de 7.3
 

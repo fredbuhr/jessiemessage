@@ -1,8 +1,10 @@
-# Messagerie vidéo 1.8.0 en développement — jalon 7.1
+# Messagerie vidéo 1.8.0 — qualification historique du jalon 7.1
 
-Branche du lot : `feat/video-messaging`, issue de `a318b0ecc8a7b1e8bcda4a5e66677708abe9e058`. La version **1.8.0 est une cible de développement**, sans tag, release ou déploiement. Le [transport 1.7.0](video-transport-170.md) reste dormant dans le runtime normal. L’état réellement déployé est exclusivement dans [REPRISE](REPRISE.md).
+> **Document historique :** ce relevé décrit son jalon avant la livraison 1.8.0. Ses états, prochaines actions et mentions du candidat ne sont pas l’état actuel. La production, le checkpoint, le repli et la seule recette restante figurent dans [REPRISE](REPRISE.md) et le [plan courant](PLAN-IMPLEMENTATION.md). Les sources, preuves et détails ci-dessous sont conservés pour leur étape.
 
-Le jalon 7.1 définit le contrat et qualifie le catalogue durable ; il ne livre pas encore l’interface ou le cycle de vie vidéo. Le lot 7 conserve une seule branche et une PR de travail jusqu’à la qualification complète en 7.6. Les [étapes suivantes](PLAN-IMPLEMENTATION.md) restent séparées.
+Branche du lot : `feat/video-messaging`, issue de `a318b0ecc8a7b1e8bcda4a5e66677708abe9e058`. À ce jalon, la version **1.8.0 était une cible de développement**, sans tag, release ou déploiement. Le [transport 1.7.0](video-transport-170.md) restait dormant dans le runtime normal de cette étape. L’état réellement déployé est exclusivement dans [REPRISE](REPRISE.md).
+
+Le jalon 7.1 définit le contrat et qualifie le catalogue durable ; il ne livre pas encore l’interface ou le cycle de vie vidéo. Le lot 7 conservait une seule branche et une PR de travail jusqu’à la qualification complète envisagée en 7.6. Ce découpage est historique ; les seules étapes restantes figurent dans le [plan courant](PLAN-IMPLEMENTATION.md).
 
 ## Format vidéo et aperçu
 
