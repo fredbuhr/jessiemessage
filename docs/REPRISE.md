@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**22 octobre 2026 — production, checkpoint privé et latest : 1.8.1 / Node v24.22.1 / SQL36.** L’identité et les reçus hébergés sont rapportés par l’utilisateur (**USER_REPORTED**), sans nouvelle observation du processus par l’agent. La correction **1.8.2 est fusionnée**, sans publication ni déploiement ; sa qualification main est en cours.
+**22 octobre 2026 — production et checkpoint privé : 1.8.1 / Node v24.22.1 / SQL36. Livraison publiée et latest GitHub : 1.8.2, non déployée.** L’identité et les reçus hébergés sont rapportés par l’utilisateur (**USER_REPORTED**), sans nouvelle observation du processus par l’agent. La 1.8.2 est fusionnée, qualifiée sur main et publiée ; sa préparation sur l’hôte reste à effectuer.
 
 ## État de livraison courant
 
@@ -19,7 +19,9 @@
 
 ## Développement courant — audit 1.8.2
 
-La [PR 129](https://github.com/fredbuhr/jessiemessage/pull/129), branche **`fix/audit-182`**, est **fusionnée** sur `78e6b8b2f6b19020c060345b9313a81829e9c8da`, arbre `7b722ca1fbd3416acecffa3c122e967511184d4c`. Les [lots 1](verification-proofs/jm182-lot1-verification.json), [2](verification-proofs/jm182-lot2-verification.json) et [3](verification-proofs/jm182-lot3-ci.json) sont qualifiés sur branche. Le lot 4 est en cours : [CI main 39832723570](https://github.com/fredbuhr/jessiemessage/actions/runs/39832723570) automatique, pas de release avant son résultat exact ; [Windows](https://github.com/fredbuhr/jessiemessage/actions/runs/39832723644) et [sonde existante](https://github.com/fredbuhr/jessiemessage/actions/runs/39832723552) associées. Le [plan courant](PLAN-IMPLEMENTATION.md) fixe les critères et limites ; l’[audit initial](AUDIT-FINAL-20261022.md) et sa [preuve](verification-proofs/audit-final-20261022.json) décrivent le code avant correction.
+La [PR 129](https://github.com/fredbuhr/jessiemessage/pull/129), branche **`fix/audit-182`**, est **fusionnée** sur `78e6b8b2f6b19020c060345b9313a81829e9c8da`, arbre `7b722ca1fbd3416acecffa3c122e967511184d4c`. Les [lots 1](verification-proofs/jm182-lot1-verification.json), [2](verification-proofs/jm182-lot2-verification.json) et [3](verification-proofs/jm182-lot3-ci.json) sont qualifiés sur branche. La [qualification main](verification-proofs/jm182-main-ci.json) est acquise : [CI 39832723570](https://github.com/fredbuhr/jessiemessage/actions/runs/39832723570) **5/5**, tentative 1, Chrome223/223, HTTPS4/4, MariaDB576/576 chacune, général3869/3821 réussis/48 omissions ; Windows et sonde existante réussis, huit journaux complets empreintés. Aucun résultat hébergé privé n’en est déduit.
+
+La [publication 39833775425](https://github.com/fredbuhr/jessiemessage/actions/runs/39833775425) a réussi **2/2**, tentative 1 : tests opérateur33/33 et préparation19/19 sur le runner natif, puis [tag/release v1.8.2](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.2) sur cette source exacte. **Latest = v1.8.2**, release `421075470`, vérifié séparément ; aucun ancien tag ou release modifié. [Preuve de publication](verification-proofs/jm182-publication.json), [état de livraison](verification-proofs/jm182-verification.json). Le repli1.7.2 reste conservé. Le [plan courant](PLAN-IMPLEMENTATION.md) fixe la suite ; l’[audit initial](AUDIT-FINAL-20261022.md) conserve ses constats avant correction.
 
 | Qualification acquise sur branche | Source et arbre qualifiés | CI |
 | --- | --- | --- |
@@ -35,7 +37,7 @@ Le lot 2 qualifie brouillons texte dans le même onglet après rechargement, dem
 
 Le [diagnostic SQL A12](capacity-182.md) est acquis sur les deux versions natives ; ces mesures synthétiques ne justifient pas d’ajouter un index ou une migration au lot. Aucun débit ni nombre de clients simultanés du mutualisé n’est garanti.
 
-**Prochaine action : acquérir la qualification main du lot 4 et préparer les outils de livraison 1.8.2.** Ne pas rejouer la fusion ni les suites vertes de `3d0daff8`. Aucun tag/release, déploiement, migration ou changement Manager n’est encore effectué. Les outils seront épinglés à la source fusionnée et conserveront les reçus 1.8.1 et le repli 1.7.2 ; aucun parcours de sauvegarde n’est rouvert.
+**Prochaine action personnelle : préparation isolée 1.8.2 puis CHECK182 dans le terminal SSH Infomaniak**, avec le helper qualifié `ops/prepare-release182.py` du commit opérateur `040701bb8239a85c0484d21c4f1a0d585ef07260`, SHA-256 `9b68d7a060e94781e6a2043a8b37c3a0039101bca912675a7ed8e6d4e55e407a`. Arguments : source `78e6b8b2f6b19020c060345b9313a81829e9c8da`, arbre `7b722ca1fbd3416acecffa3c122e967511184d4c`. Le helper crée un checkout et des lanceurs distincts, puis le CHECK utilise `bash /srv/customer/jessiemessage-private/check-primary-release182-78e6b8b2.sh`. **Aucun reçu hébergé182 acquis pour l’instant** ; ne pas changer Run/Build ou arrêter le service avant cette preuve. Ne pas rejouer la fusion, la publication ou les CI vertes. Aucun déploiement, migration ou changement Manager n’a été fait. Le writer182 reste indisponible tant que l’empreinte du reçu réel de préparation n’est pas acquise ; reçus181 et repli172 restent préservés.
 
 ## Accès et commandes de l’application active
 

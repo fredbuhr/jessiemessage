@@ -1,0 +1,253 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage182-native-publication",
+  "recordedAtUTC": "2026-10-22T18:44:22.398367+00:00",
+  "run": {
+    "id": 39833775425,
+    "head": "040701bb8239a85c0484d21c4f1a0d585ef07260",
+    "branch": "ops/publish-v1.8.2",
+    "path": ".github/workflows/publish-qualified.yml",
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "attempt": 1,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39833775425",
+    "createdAt": "2026-10-22T18:42:54Z",
+    "updatedAt": "2026-10-22T18:43:35Z"
+  },
+  "jobs": [
+    {
+      "id": 120016594832,
+      "name": "operator-tests",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Checkout exact operator commit",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Use qualified Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Test publication with simulated GitHub API",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Test isolated patch release preparation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Post Use qualified Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Post Checkout exact operator commit",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        }
+      ],
+      "completeDecodedLog": {
+        "file": "native-job-120016594832.log",
+        "bytes": 45379,
+        "sha256": "5072e0b87eaf38e0f89de78fbbc1a145c94fbcd8269dd7c89299cabb7bacc327",
+        "encoding": "UTF-8 of complete connector-decoded log; BOM and line endings preserved",
+        "readCompletely": true
+      },
+      "errorAnnotations": [],
+      "warningAnnotations": [],
+      "publisherSyntheticTests": {
+        "workflowPath": "/home/runner/work/jessiemessage/jessiemessage/.github/workflows/publish-qualified.yml",
+        "workflowSha256": "9d7fa415492ab5b153fac40dfb86c091038ed7bc1a1e354677e55e3cb947a42a",
+        "fixtureTree": "7b722ca1fbd3416acecffa3c122e967511184d4c",
+        "sourcePin": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+        "ciPin": 39832723570,
+        "tests": 33,
+        "passCount": 33,
+        "failCount": 0,
+        "networkCalls": 0,
+        "realMutations": 0,
+        "productionAccess": false,
+        "checks": [
+          "successful immutable creation on pinned source advances latest in the same release write",
+          "identical tag and release retry is read-only",
+          "interrupted after exact tag with previous latest retries only the release",
+          "existing release with previous latest is refused before mutations, no automatic metadata edit",
+          "exact tag alone with unknown latest is refused before mutations",
+          "existing release with divergent latest source is refused before mutations",
+          "latest changed after tag creation refuses release creation without corrective mutation",
+          "refuse ci-incomplete before mutations",
+          "refuse ci-other-sha before mutations",
+          "refuse ci-rerun before mutations",
+          "refuse ci-missing-job before mutations",
+          "refuse ci-failed-job before mutations",
+          "refuse other-tree before mutations",
+          "refuse video-gate-closed before mutations",
+          "refuse quick-gate-closed before mutations",
+          "refuse normal-ddl-changed before mutations",
+          "refuse sql37 before mutations",
+          "refuse candidate-missing before mutations",
+          "refuse candidate-ddl-changed before mutations",
+          "refuse package-version before mutations",
+          "refuse old-node-pin before mutations",
+          "refuse mutable-action-pin before mutations",
+          "refuse untrusted-action before mutations",
+          "refuse credentials-persisted before mutations",
+          "refuse cache-enabled before mutations",
+          "refuse latest-before before mutations",
+          "refuse main-behind before mutations",
+          "refuse rollback-tag-diverged before mutations",
+          "refuse rollback-release-diverged before mutations",
+          "refuse divergent tag before mutations",
+          "refuse divergent release body before mutations",
+          "refuse divergent release source before mutations",
+          "detect an externally changed latest after publication without corrective mutation"
+        ]
+      },
+      "preparationSyntheticTests": {
+        "tests": 19,
+        "pass": 19,
+        "fail": 0,
+        "observedNativeLogText": "Ran 19 tests in 11.844s / OK"
+      }
+    },
+    {
+      "id": 120016796436,
+      "name": "publish",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Use qualified Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Verify and publish the immutable qualified 1.8.2 correction",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Post Use qualified Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        }
+      ],
+      "completeDecodedLog": {
+        "file": "native-job-120016796436.log",
+        "bytes": 22237,
+        "sha256": "67bd35e95a928dd9f730d3efe8274039d13605b25659af63c783173064799c4b",
+        "encoding": "UTF-8 of complete connector-decoded log; BOM and line endings preserved",
+        "readCompletely": true
+      },
+      "errorAnnotations": [],
+      "warningAnnotations": [],
+      "receipt": {
+        "status": "published_verified",
+        "tag": "v1.8.2",
+        "commit": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+        "tree": "7b722ca1fbd3416acecffa3c122e967511184d4c",
+        "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.2",
+        "ciRun": 39832723570,
+        "nodeVersion": "24.22.1",
+        "normalMigrations": 33,
+        "videoCandidateMigrations": 3,
+        "videoCreationEnabled": true,
+        "quickRepliesWritable": true,
+        "schemaMigrations": 36,
+        "migrationsChanged": false,
+        "rollback": {
+          "tag": "v1.7.2",
+          "commit": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+          "releaseId": 420600213
+        },
+        "previousLatest": {
+          "tag": "v1.8.1",
+          "id": 420741528
+        },
+        "latest": {
+          "tag": "v1.8.2",
+          "id": 421075470,
+          "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da"
+        },
+        "publicationMode": "created_and_latest",
+        "deploymentPerformed": false
+      }
+    }
+  ],
+  "sameRunRerun": false,
+  "collectorGitHubMutation": false,
+  "collectorHostingAccess": false,
+  "deploymentPerformed": false,
+  "independentTagReleaseLatestVerification": "performed_separately_by_parent_not_claimed_by_this_collection",
+  "publicationReceipt": {
+    "status": "published_verified",
+    "tag": "v1.8.2",
+    "commit": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+    "tree": "7b722ca1fbd3416acecffa3c122e967511184d4c",
+    "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.2",
+    "ciRun": 39832723570,
+    "nodeVersion": "24.22.1",
+    "normalMigrations": 33,
+    "videoCandidateMigrations": 3,
+    "videoCreationEnabled": true,
+    "quickRepliesWritable": true,
+    "schemaMigrations": 36,
+    "migrationsChanged": false,
+    "rollback": {
+      "tag": "v1.7.2",
+      "commit": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+      "releaseId": 420600213
+    },
+    "previousLatest": {
+      "tag": "v1.8.1",
+      "id": 420741528
+    },
+    "latest": {
+      "tag": "v1.8.2",
+      "id": 421075470,
+      "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da"
+    },
+    "publicationMode": "created_and_latest",
+    "deploymentPerformed": false
+  }
+}
