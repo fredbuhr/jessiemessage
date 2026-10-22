@@ -15,6 +15,11 @@
       "path": "publication-native.json",
       "sha256": "b49d25a784deb173d753f75502a31da31ee53d5266d9c289effa2c391f2a2490",
       "bytes": 9818
+    },
+    {
+      "path": "writer-native.json",
+      "sha256": "2000d49b4919d7395ae68b0a5f1e77c3bc5a07d0da2c90938b1a17191a791ff5",
+      "bytes": 4794
     }
   ],
   "logs": [
@@ -113,17 +118,28 @@
       "sha256": "f7f51269eb035fb6b36ac6650392cae9167f48d66fb925aae3b3ffdc4cf86460",
       "gitBlobSha": "627f291c5a9ef2b058166faa9959d18bca857755",
       "bytes": 22755
+    },
+    {
+      "path": "logs/writer183-operator-tests-120132092449.log",
+      "report": "writer-native.json",
+      "jobId": 120132092449,
+      "sha256": "3da1d361855f13c2aff456fc5991803f3aeb6ffdfe1c4e640e2092d8509fcdad",
+      "gitBlobSha": "524f83d7aa48805478740579ad6a276e16e42738",
+      "bytes": 22980
     }
   ],
   "qualification": {
     "pr": 39863182670,
     "main": 39864278371,
-    "publication": 39865609026
+    "publication": 39865609026,
+    "writer": 39867149619
   },
   "applicationSource": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
   "applicationTree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
   "releaseId": 421266798,
-  "hostedChanged": false,
   "rawReportsUnmodified": true,
-  "rawLogsUnmodified": true
+  "rawLogsUnmodified": true,
+  "hostedPreparationUserReported": true,
+  "hostedActivationAcquired": false,
+  "hostedCheckpointChanged": false
 }

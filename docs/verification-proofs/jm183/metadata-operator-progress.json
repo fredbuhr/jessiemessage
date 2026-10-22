@@ -1,0 +1,34 @@
+{
+  "type": "jm183-metadata-operator-progress",
+  "status": "native_qualified_hosted_startup_pending",
+  "branch": "ops/record-v1.8.3",
+  "commit": "b672859af00ffab9a59504a7c82406ac1e6db3fa",
+  "tree": "172cd9e517b96bd473b3be3d055630454c921c0b",
+  "writer": "ops/record-release183.py",
+  "writerSha256": "1302195773a6568742db82aa0588a3741af299bea706f283a2a0a551f512fa3c",
+  "stagingReceiptSha256": "4a30e3c82d3cb8bc54b13e24aa8dcf9a9ca5800843f8dac39f96c41eaf0f0a09",
+  "releaseId": 421266798,
+  "exactApiDiff": {
+    "changedFiles": [
+      "ops/record-release183.py"
+    ],
+    "additions": 2,
+    "deletions": 2,
+    "gitBlob": "243bf99803b4d83d6f1c6def582f47b6351b0524"
+  },
+  "independentPinReview": "Root and peer independently reversed the two pins and recovered SHA256097fdb5287d73abe52f219f7b66a8d3ce8d39d153e26cf5e505e56cd9b48b80e; all runtime/private/publication guards unchanged.",
+  "localSyntheticTests": {
+    "tests": 26,
+    "passCount": 26,
+    "fail": 0,
+    "skip": 0
+  },
+  "nativeQualified": true,
+  "hostedStartupVerified": false,
+  "executedOnHost": false,
+  "checkpointChanged": false,
+  "nextAction": "User activates prepared service239143 Run/Build once and returns actual startup identity; only then issue the immutable writer command.",
+  "nativeRun": 39867149619,
+  "nativeJob": 120132092449,
+  "nativeTests": 26
+}

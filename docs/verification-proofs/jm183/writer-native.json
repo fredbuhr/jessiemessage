@@ -1,0 +1,129 @@
+{
+  "status": "completed_success_writer_qualified",
+  "conclusion": "success",
+  "repository": "fredbuhr/jessiemessage",
+  "runId": 39867149619,
+  "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39867149619",
+  "workflow": ".github/workflows/record-release183.yml",
+  "event": "push",
+  "attempt": 1,
+  "head": "b672859af00ffab9a59504a7c82406ac1e6db3fa",
+  "tree": "172cd9e517b96bd473b3be3d055630454c921c0b",
+  "headAndTreeVerifiedFromNativeApi": true,
+  "writerSha256Expected": "1302195773a6568742db82aa0588a3741af299bea706f283a2a0a551f512fa3c",
+  "observedPinsSuppliedByRoot": {
+    "stagingSha256": "4a30e3c82d3cb8bc54b13e24aa8dcf9a9ca5800843f8dac39f96c41eaf0f0a09",
+    "releaseId": 421266798
+  },
+  "requiredJobs": 1,
+  "expectedNativeTests": 26,
+  "nativeNode": "24.22.1",
+  "jobs": [
+    {
+      "id": 120132092449,
+      "name": "operator-tests",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 39867149619,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Checkout exact operator commit",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Use qualified Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Test metadata recording with isolated synthetic files",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Post Use qualified Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Post Checkout exact operator commit",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        }
+      ]
+    }
+  ],
+  "polls": [
+    {
+      "at": "2026-10-22T22:45:14.978Z",
+      "jobs": [
+        {
+          "id": 120132092449,
+          "name": "operator-tests",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "logs": [
+    {
+      "jobId": 120132092449,
+      "jobName": "operator-tests",
+      "file": "/workspace/scratch/bb431be72395/ux183/logs/writer183-operator-tests-120132092449.log",
+      "sha256": "3da1d361855f13c2aff456fc5991803f3aeb6ffdfe1c4e640e2092d8509fcdad",
+      "bytes": 22980,
+      "completeThroughJobCleanup": true,
+      "counters": {
+        "tests": 26,
+        "pass": 26,
+        "fail": 0
+      },
+      "rootPersistedGitBlob": "524f83d7aa48805478740579ad6a276e16e42738",
+      "savedBytesMatchRootBlob": true
+    }
+  ],
+  "hostExecutionPerformed": false,
+  "startup183Attested": false,
+  "activeVersionAsReportedByRoot": "1.8.2",
+  "remoteMutationsPerformed": [],
+  "limits": [
+    "This qualifies the metadata writer's existing native CI only. It does not attest a host write, a Manager switch or startup of1.8.3.",
+    "The 26 tests use isolated synthetic files; successful operator tests are distinct from executing the writer against the real host.",
+    "The writer SHA256 and observed staging/release pins are retained exactly as supplied by root; no private path, host, ref or dispatch operation was performed by this agent.",
+    "Root reports the active application remains1.8.2. Publication of1.8.3 and qualification of this writer do not imply the active version changed."
+  ],
+  "completedAt": "2026-10-22T22:46:13.880Z",
+  "runCreatedAt": "2026-10-22T22:44:46Z",
+  "runUpdatedAt": "2026-10-22T22:45:03Z",
+  "requiredJobsSucceeded": 1,
+  "expectedOperatorParentSuppliedByRoot": "234042bd59d1eb7c4f4ab7d73b665e5f0e2c12a5",
+  "pollingPolicy": "The unique exact-head run and its only job were already completed/success at the first native read. No subsequent status poll, new dispatch or rerun was performed.",
+  "pinProvenance": "Writer fingerprint and the two observed pins were supplied by root; this monitoring task qualifies the exact immutable operator commit's native tests and does not independently execute or modify that writer.",
+  "rootApiVerification": "Root separately confirmed completed/success, attempt1, exact head/tree/parent and the same successful job; no duplicate status request was made.",
+  "nextAction": "User performs the Manager version switch using root's precise instructions. Root owns subsequent checks/documentation; this monitoring task is complete.",
+  "nativeCounters": {
+    "tests": 26,
+    "pass": 26,
+    "fail": 0
+  }
+}

@@ -1,8 +1,8 @@
 {
   "type": "jm183-corrective-progress",
   "version": 1,
-  "recordedAtUTC": "2026-10-22T22:33:33.131280+00:00",
-  "status": "published_qualified_hosted_preparation_pending",
+  "recordedAtUTC": "2026-10-22T22:44:01.281401+00:00",
+  "status": "hosted_prepared_prechecked_activation_pending",
   "branch": "fix/messaging-183",
   "base": "38ccb3862f3d9ab4153b578dfb3abbd0dd94d857",
   "candidateVersion": "1.8.3",
@@ -18,7 +18,7 @@
   "productionDataAccessed": false,
   "hostedBackupTestPerformed": false,
   "realNotificationSent": false,
-  "nextAction": "User executes immutable prepare183+CHECK once and returns actual staging receipt and CHECK_OK; only then configure Manager activation.",
+  "nextAction": "User configures prepared Run/Build on Node service239143, activates once and returns actual startup identity; no repeat preparation/CHECK.",
   "lastPublishedCheckpoint": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
   "localVerification": "jm183/local-verification.json",
   "pr": 130,
@@ -34,7 +34,14 @@
   "releaseId": 421266798,
   "latestTag": "v1.8.3",
   "operatorCommit": "234042bd59d1eb7c4f4ab7d73b665e5f0e2c12a5",
-  "hostedPrepared": false,
-  "hostedPrechecked": false,
-  "metadataRecorded": false
+  "hostedPrepared": true,
+  "hostedPrechecked": true,
+  "metadataRecorded": false,
+  "hostedPreparation": "jm183-hosted-preparation.json",
+  "stagingReceiptSha256": "4a30e3c82d3cb8bc54b13e24aa8dcf9a9ca5800843f8dac39f96c41eaf0f0a09",
+  "writerNativeQualified": true,
+  "writerNativeRun": 39867149619,
+  "writerCommit": "b672859af00ffab9a59504a7c82406ac1e6db3fa",
+  "writerSha256": "1302195773a6568742db82aa0588a3741af299bea706f283a2a0a551f512fa3c",
+  "writerNativeTests": 26
 }

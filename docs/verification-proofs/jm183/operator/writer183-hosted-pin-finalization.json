@@ -1,0 +1,81 @@
+{
+  "status": "observed_receipt_and_release_pins_finalized_native_writer_qualification_pending",
+  "updatedAt": "2026-10-22T22:44:14.795984+00:00",
+  "scope": "Only STAGING_SHA and RELEASE_ID literals changed in ops/record-release183.py; tests/workflow/application/docs untouched",
+  "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+  "tree": "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58",
+  "pins": {
+    "STAGING_SHA": "4a30e3c82d3cb8bc54b13e24aa8dcf9a9ca5800843f8dac39f96c41eaf0f0a09",
+    "RELEASE_ID": 421266798
+  },
+  "providedEvidence": {
+    "origin": "Parent supplied actual USER_REPORTED hosted preparation/CHECK receipt and independently API-verified release/latest identity",
+    "receiptSha256": "4a30e3c82d3cb8bc54b13e24aa8dcf9a9ca5800843f8dac39f96c41eaf0f0a09",
+    "launcherSha256": "84d22476c47377ed9e3810ff4dce55d0e2b9698c15acd2d50f9d3bf21019b7e1",
+    "checkLauncherSha256": "0eb137e82c17dea3e6f0dd26f9897246655d6c5fb4682604574c0b7b5d4c3c9e",
+    "precheckVersion": 2,
+    "precheckStatus": "passed",
+    "pendingClosures": false,
+    "precheckStarted": false,
+    "marker": "PREPARATION_183_CHECK_OK",
+    "releaseAndLatestId": 421266798
+  },
+  "files": [
+    {
+      "path": "ops/record-release183.py",
+      "sha256": "1302195773a6568742db82aa0588a3741af299bea706f283a2a0a551f512fa3c",
+      "bytes": 29225
+    },
+    {
+      "path": "ops/test_record_release183.py",
+      "sha256": "999538acc10d7cd45e04a09a5b07b7bbba963e6c51d1ac2431405e071391291e",
+      "bytes": 42096
+    },
+    {
+      "path": ".github/workflows/record-release183.yml",
+      "sha256": "dc20d11896e0af0bb0817ed62302868a953f09c1fa64918ef566d093c9c26c94",
+      "bytes": 1135
+    }
+  ],
+  "previousWriterSha256": "097fdb5287d73abe52f219f7b66a8d3ce8d39d153e26cf5e505e56cd9b48b80e",
+  "changedLiteralCount": 2,
+  "qualification": {
+    "command": "python3 ops/test_record_release183.py > record183-tests-hosted-pins.log 2>&1",
+    "cwd": "/workspace/scratch/bb431be72395/operator183",
+    "runs": 1,
+    "tests": 26,
+    "pass": 26,
+    "fail": 0,
+    "skipped": 0,
+    "durationSeconds": 0.508,
+    "evidence": {
+      "path": "record183-tests-hosted-pins.log",
+      "sha256": "d01947fb705bff48b7233dc5fcd0a683cc057ad9dfdc70d454eb82592483fd0e",
+      "bytes": 4537
+    },
+    "kind": "isolated synthetic fixtures; no real network or private host data"
+  },
+  "independentReview": {
+    "reviewer": "writer183 child",
+    "status": "no_concrete_blocker",
+    "method": "Read-only guards and two-literal inversion reproducing exact previous writer SHA256",
+    "testsRerun": false
+  },
+  "preservedGuards": [
+    "Pinned actual183 receipt binds source/tree, launchers and protected182 checkpoint; launchers are rehashed against the receipt rather than separately invented constants",
+    "CHECKv2 passed without pending closures; rollback172 prechecked and log empty; unchanged33+3 migrations/Node24.22.1/bundle/history checks",
+    "Real unique183 startup log identity and bounded timestamp, exact source/Node; live HTTP200 health/readiness, access.html fingerprint and anonymous entry",
+    "Three bounded anonymous GETs verify exact real release421266798, immutable tag source and current latest183",
+    "Only after all evidence checks: protected checkpoint182 identity/history/rollback, byte+metadata drift observations, advisory lock, atomic replace/fsync/readback; exact retry read-only"
+  ],
+  "readyForNativeWriterQualification": true,
+  "hostedWriterExecuted": false,
+  "activationObservedByThisAgent": false,
+  "metadataRecorded": false,
+  "limits": [
+    "Preparation/CHECK receipt is before activation; no startup time, PID/socket identity, activation or metadata success inferred",
+    "Actual startup and public/publication/checkpoint evidence must still be verified by writer when separately executed after activation",
+    "No Git/API/host/SQL/SMTP/Push/backup/PC operation by this agent; no general or other operator suite rerun",
+    "Earlier final-eight/global reports are historical snapshots before these two pins; this compact report supplies the current writer/test/workflow hashes"
+  ]
+}
