@@ -120,7 +120,18 @@ async function startFixtureServer() {
       }
       if (url.pathname === "/api/admin/quick-replies") {
         if (!fixture.signedIn) { sendJson(401, { error: "authentication_required" }); return; }
-        if (request.method === "GET") { fixture.quickReplyReads += 1; sendJson(200, { ...fixture.quickReplies, ...(fixture.quickRepliesWritable === false ? { writable: false } : {}) }); return; }
+        if (request.method === "GET") {
+          fixture.quickReplyReads += 1;
+          if (fixture.holdNextQuickReplyRead) {
+            const held = fixture; held.holdNextQuickReplyRead = false;
+            await new Promise(resolve => {
+              const release = () => { response.off("close", release); if (held.releaseQuickReplyRead === release) held.releaseQuickReplyRead = null; resolve(); };
+              held.releaseQuickReplyRead = release; response.once("close", release);
+            });
+            if (response.destroyed) return;
+          }
+          sendJson(200, { ...fixture.quickReplies, ...(fixture.quickRepliesWritable === false ? { writable: false } : {}) }); return;
+        }
         if (request.method === "POST") {
           if (fixture.quickRepliesWritable === false) { sendJson(403, { error: "feature_read_only" }); return; }
           let raw = ""; for await (const chunk of request) { raw += chunk; if (raw.length > 65536) throw new Error("oversized_fixture_quick_replies"); }
@@ -1124,7 +1135,7 @@ for (const width of [320, 1280]) for (const language of ["fr", "en"]) {
 }
 
 test("Chrome: clients have no quick replies; Escape, full drafts and returning to the inbox never send", { timeout: 35000 }, async () => {
-  resetFixture(); fixture.holdInitialAdminMessages = true; const page = await browser(320);
+  resetFixture(); fixture.holdInitialAdminMessages = true; fixture.holdNextQuickReplyRead = true; const page = await browser(320);
   try {
     await loaded(page, "/messages"); assert.equal(await page.execute("return document.querySelector('#open-quick-replies').hidden"), true);
     await loaded(page, "/admin/messages"); await page.click(".contact");
@@ -1135,7 +1146,13 @@ test("Chrome: clients have no quick replies; Escape, full drafts and returning t
     fixture.releaseInitialAdminMessages();
     await waitUntil(() => page.execute(`const reply=document.querySelector('#open-quick-replies'),body=document.querySelector('#message-body');
       return !reply.hidden && !reply.disabled && !body.disabled && !body.readOnly && body.getClientRects().length>0;`), "quick replies and editable message field available after history");
-    await page.type("#message-body", "Unsent draft"); await clickComposerAction(page, "#open-quick-replies"); await page.key("\uE00C");
+    await page.type("#message-body", "Unsent draft"); await clickComposerAction(page, "#open-quick-replies");
+    await waitUntil(() => Boolean(fixture.releaseQuickReplyRead), "personal catalogue GET held while presets are usable");
+    await page.execute("window.__heldQuickReplyPresets=[...document.querySelectorAll('#quick-replies-list [data-quick-reply]')];document.querySelector('[data-quick-reply=thanks]').focus()");
+    fixture.releaseQuickReplyRead();
+    await waitUntil(() => page.execute("return !document.querySelector('#new-personal-reply').disabled"), "held personal catalogue response applied");
+    assert.equal(await page.execute("const current=[...document.querySelectorAll('#quick-replies-list [data-quick-reply]')];return current.length===6 && current.every((node,index)=>node===window.__heldQuickReplyPresets[index]) && document.activeElement===current.find(node=>node.dataset.quickReply==='thanks')"), true);
+    await page.key("\uE00C");
     assert.equal(await page.execute("return document.querySelector('#quick-replies-dialog').open"), false);
     assert.equal(await page.execute("return document.querySelector('#message-body').value"), "Unsent draft");
     await page.type("#message-body", "x".repeat(4096)); await clickComposerAction(page, "#open-quick-replies"); await page.click('[data-quick-reply="thanks"]');
@@ -1146,7 +1163,7 @@ test("Chrome: clients have no quick replies; Escape, full drafts and returning t
     assert.equal(await page.execute("return document.querySelector('#quick-replies-dialog').open"), false);
     assert.equal(await page.execute("return document.querySelector('#quick-replies-list').children.length"), 0);
     assert.equal(fixture.sent.length, 0); await noJavascriptErrors(page);
-  } finally { fixture.releaseInitialAdminMessages?.(); await page.close(); }
+  } finally { fixture.releaseInitialAdminMessages?.(); fixture.releaseQuickReplyRead?.(); await page.close(); }
 });
 
 async function openPersonalRepliesBrowser(page, language = "fr") {

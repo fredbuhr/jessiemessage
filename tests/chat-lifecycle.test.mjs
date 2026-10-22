@@ -67,9 +67,9 @@ class Element {
     this.parentElement = null; this._connected = false;
   }
   querySelectorAll(selector) {
-    const data = /^\[data-([a-z-]+)="([^"]*)"\]$/.exec(selector);
+    const data = /^\[data-([a-z-]+)(?:="([^"]*)")?\]$/.exec(selector);
     const dataKey = data?.[1].replace(/-([a-z])/g, (_whole, letter) => letter.toUpperCase());
-    const matches = (child) => data ? child.dataset[dataKey] === data[2]
+    const matches = (child) => data ? data[2] === undefined ? Object.hasOwn(child.dataset, dataKey) : child.dataset[dataKey] === data[2]
       : selector.startsWith(".") ? child.className?.split(" ").includes(selector.slice(1)) : child.tagName === selector;
     return this.children.flatMap((child) => [...(matches(child) ? [child] : []), ...child.querySelectorAll(selector)]);
   }
@@ -1294,16 +1294,19 @@ test("personal quick replies join the preset list, edit, insert without sending 
   assert.equal(first.state.posts + second.state.posts, 0); assert.equal(first.state.quickReplyWrites + second.state.quickReplyWrites, 3);
 });
 
-test("loading personal replies into the common list preserves keyboard focus on a preset", { timeout: 5000 }, async () => {
+test("loading personal replies preserves the six preset nodes and keyboard focus in the common list", { timeout: 5000 }, async () => {
   const pending = pause(), catalogue = { version: "1", replies: [{ id: id(901), title: "Saved title", body: "Saved phrase", language: "fr" }] };
   const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: path => path === "/api/admin/quick-replies" ? pending.promise : undefined });
   await openPersonalReplies(f);
-  const preset = f.element("quick-replies-list").children.find(node => node.dataset.quickReply === "good-night");
+  const list = f.element("quick-replies-list"), presets = list.children.filter(node => node.dataset.quickReply);
+  assert.equal(presets.length, 6);
+  const preset = presets.find(node => node.dataset.quickReply === "good-night");
   preset.focus(); assert.equal(f.document.activeElement === preset, true);
   pending.resolve(response(200, catalogue)); await flush();
-  const loadedPreset = f.element("quick-replies-list").children.find(node => node.dataset.quickReply === "good-night");
-  assert.equal(loadedPreset === preset, false); assert.equal(f.document.activeElement === loadedPreset, true);
-  assert.equal(personalRow(f, id(901)).parentElement, loadedPreset.parentElement); assert.equal(f.state.posts, 0);
+  const loadedPresets = list.children.filter(node => node.dataset.quickReply);
+  assert.equal(loadedPresets.length, 6); assert.equal(loadedPresets.every((node, index) => node === presets[index]), true);
+  assert.equal(f.document.activeElement === preset, true);
+  assert.equal(personalRow(f, id(901)).parentElement, list); assert.equal(f.state.posts, 0);
 });
 
 test("personal quick reply CAS conflicts preserve the editor and merge only after explicit reload and save", async () => {

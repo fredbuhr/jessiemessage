@@ -1775,13 +1775,17 @@ function personalReplyAction(source, handler, marker) {
   button.addEventListener("click", () => { if (quickRepliesCurrent() && !button.disabled) handler(); }); return button;
 }
 function renderQuickReplies() {
-  const list = el("quick-replies-list"), focusedReply = document.activeElement?.dataset?.quickReply;
-  ui.forget(list); list.replaceChildren();
-  for (const reply of quickReplyOptions(quickReplyLanguage)) {
-    const button = document.createElement("button"); button.type = "button"; button.className = "quick-reply";
-    button.dataset.quickReply = reply.id; button.lang = quickReplyLanguage; ui.rawText(button, reply.text);
-    button.disabled = Boolean(personalReplyDraft || personalReplyBusy === "write");
-    button.addEventListener("click", () => insertQuickReply(reply.text)); list.append(button);
+  const list = el("quick-replies-list");
+  if (list.querySelector("[data-quick-reply]")?.lang !== quickReplyLanguage) {
+    ui.forget(list); list.replaceChildren();
+    for (const reply of quickReplyOptions(quickReplyLanguage)) {
+      const button = document.createElement("button"); button.type = "button"; button.className = "quick-reply";
+      button.dataset.quickReply = reply.id; button.lang = quickReplyLanguage; ui.rawText(button, reply.text);
+      button.disabled = Boolean(personalReplyDraft || personalReplyBusy === "write");
+      button.addEventListener("click", () => insertQuickReply(reply.text)); list.append(button);
+    }
+  } else {
+    for (const row of list.querySelectorAll(".personal-reply-row")) { ui.forget(row); row.remove(); }
   }
   for (const reply of personalReplies?.replies ?? []) {
     if (reply.language !== quickReplyLanguage) continue;
@@ -1803,7 +1807,6 @@ function renderQuickReplies() {
     list.append(row);
   }
   personalReplyControls();
-  if (focusedReply) focusVisible(list.querySelector(`[data-quick-reply="${focusedReply}"]`));
 }
 function capturePersonalReplyDraft() {
   if (!personalReplyDraft) return;
