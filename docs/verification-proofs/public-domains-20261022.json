@@ -346,7 +346,7 @@
     "backupTestDeferredUnchanged": true
   },
   "routingChange": {
-    "status": "host_attempt_refused_source_not_found_not_applied",
+    "status": "manual_webftp_edit_reported_http_verified",
     "authorizationDate": "2026-10-22",
     "authorizationEvidenceKind": "USER_REQUEST",
     "authorizedFromHost": "accueil.jessiemessage.com",
@@ -358,7 +358,7 @@
     "beforeConfigHashEvidence": "jm171-secondary-entry.json; historical guarded read, not a new server-file observation",
     "hostApplyReceiptAcquired": false,
     "noCloudBrowser": true,
-    "nextAction": "Use Apache/PHP Web FTP through the documented FTP/SSH Manager page, download original .htaccess and replace the one host condition; do not replay the Node helper. Confirm the edit, then verify public redirects.",
+    "nextAction": "No further routing operation. Preserve recette compatibility origin and the active Node service; the manual backup check remains deferred by the user.",
     "operatorSource": "1f5b5239530c96c3b780f629b8510758f5dc02fe",
     "operatorTree": "0cecd0fe54c8070b61bc1b5c45fd83a880194014",
     "operatorBranch": "ops/redirect-accueil",
@@ -380,8 +380,21 @@
       "managerUrl": "https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ftp-ssh",
       "siteRootWithinWebFtp": "/sites/jessiemessage-entry-1f669e45",
       "file": ".htaccess",
-      "applied": false
-    }
+      "applied": true,
+      "applicationEvidenceKind": "USER_REPORTED",
+      "directServerFileInspection": false,
+      "publicHttpVerified": true,
+      "replayRequired": false
+    },
+    "hostApplyReceiptNote": "No successful helper receipt: the Node helper refused before writing. The manual edit report and subsequent public HTTP observations establish the final routing state separately.",
+    "manualEditReported": true,
+    "manualEditEvidenceKind": "USER_REPORTED",
+    "manualEditReportExact": "enregistré",
+    "publicHttpVerified": true,
+    "publicHttpProof": "accueil-redirect-confirmed-20261022.json",
+    "publicHttpObservedAtUTC": "2026-10-22T15:20:07.245408+00:00",
+    "publicHttpChecksPassed": 13,
+    "publicHttpChecksTotal": 13
   },
   "recetteDecision": {
     "keepTechnicalNodeService": true,

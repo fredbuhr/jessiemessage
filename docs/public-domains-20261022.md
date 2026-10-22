@@ -1,30 +1,42 @@
 # Domaines publics de JessieMessage — 22 octobre 2026
 
-**État : redirection accueil autorisée explicitement, pas encore appliquée. Le helper Node s’est arrêté sans écriture sur `SOURCE_NOT_FOUND` ; utiliser la procédure Web FTP ci-dessous.** L’application est déjà en production en **1.8.1**, source `1ae4c75152795ea6f31c2ff364e337a1d5a04e31`, Node **24.22.1**, SQL **36** ; [REPRISE](REPRISE.md) conserve l’identité, le checkpoint et le repli. Cette opération corrige uniquement le routage de l’ancien accueil secondaire.
+**État : redirection accueil achevée.** L’utilisateur a annoncé le fichier enregistré après l’édition Web FTP autorisée ; la [confirmation publique après édition](verification-proofs/accueil-redirect-confirmed-20261022.json) réussit **13/13 GET**, avec le 308 vers le principal et conservation des chemins et paramètres. Aucun nouvel accès au fichier Apache n’est déduit. Le refus `SOURCE_NOT_FOUND` du helper Node, sans écriture, est conservé comme étape historique ; aucune procédure ci-dessous n’est à rejouer. L’application est déjà en production en **1.8.1**, source `1ae4c75152795ea6f31c2ff364e337a1d5a04e31`, Node **24.22.1**, SQL **36** ; [REPRISE](REPRISE.md) conserve l’identité, le checkpoint et le repli. Cette opération corrige uniquement le routage de l’ancien accueil secondaire.
 
 ## Adresses à conserver
 
 | Adresse | Rôle et comportement attendu | État de cette opération |
 | --- | --- | --- |
-| `https://jessiemessage.com/` | Adresse publique principale, servie par l’unique application Node. | Déjà en production ; 200 dans l’audit initial, disponibilité à conserver après correction. |
+| `https://jessiemessage.com/` | Adresse publique principale, servie par l’unique application Node. | Déjà en production ; 200 confirmé après correction. |
 | `https://jessiemessage.com/app` | Entrée de la messagerie ; les nouveaux liens et e-mails utilisent le principal. | Adresse à communiquer aux utilisateurs. |
 | `https://jessiemessage.com/help` | Aide publique. | Chemin à conserver sur le principal. |
 | `https://jessiemessage.com/admin/login` | Connexion administrative canonique. | Adresse privée d’usage courant ; mot de passe et second facteur restent nécessaires. |
 | `https://jessiemessage.com/admin/messages` | Messages administrateur, sous contrôle de session. | Chemin à conserver sur le principal. |
 | `https://jessiemessage.com/admin/readiness` | Identité et état du service, sous contrôle administratif. | Référence de version active. |
-| `www.jessiemessage.com` | Canonicalisation Apache vers `https://jessiemessage.com`, chemin et paramètres conservés. | GET HTTP et HTTPS : 308 direct vers le principal, chemin et query conservés dans le contrôle initial. |
-| `accueil.jessiemessage.com` | Même canonicalisation 308 vers le principal, afin que l’ancien accueil ne soit plus présenté. | HTTP déjà à 308 ; HTTPS sert encore l’ancien accueil ou redirige `/app` vers recette en perdant la query. Correction autorisée et préparée, non appliquée. |
-| `recette.jessiemessage.com` | Ancienne origine compatible, rattachée au même runtime et à la même base que le principal. | À garder sans redirection : GET HTTPS `/`, `/app` et disponibilité à 200 dans le contrôle initial ; ce n’est pas un environnement isolé. |
+| `www.jessiemessage.com` | Canonicalisation Apache vers `https://jessiemessage.com`, chemin et paramètres conservés. | 308 direct vers le principal, chemin et query conservés ; HTTPS reconfirmé après édition, HTTP conservé dans l’audit initial. |
+| `accueil.jessiemessage.com` | Même canonicalisation 308 vers le principal, afin que l’ancien accueil ne soit plus présenté. | 308 vers le principal confirmé après édition en HTTP et HTTPS, avec chemin et paramètres conservés ; ancien accueil retiré du parcours public. |
+| `recette.jessiemessage.com` | Ancienne origine compatible, rattachée au même runtime et à la même base que le principal. | À garder sans redirection ; disponibilité à 200 reconfirmée après édition, `/` et `/app` à 200 dans l’audit initial ; même runtime que le principal. |
 
-Les requêtes HTTP des domaines secondaires doivent aboutir à la même destination HTTPS fixe. Exemple attendu : `https://accueil.jessiemessage.com/app?source=ancien` → `https://jessiemessage.com/app?source=ancien`. La conservation du chemin ne garantit pas l’existence de chaque chemin sur l’application principale.
+Les requêtes HTTP des domaines secondaires doivent aboutir à la même destination HTTPS fixe. Exemple du comportement confirmé : `https://accueil.jessiemessage.com/app?source=ancien` → `https://jessiemessage.com/app?source=ancien`. La conservation du chemin ne garantit pas l’existence de chaque chemin sur l’application principale.
 
 ## Contrôle public initial
 
 L’[audit HTTP initial](verification-proofs/public-domains-20261022.json) porte sur **38 requêtes GET anonymes**, avant modification. Les pages publiques du principal et leurs ressources attendues répondent à 200 ; la redirection `/admin/login/` conserve ses paramètres. Les protections privées restent présentes : `/admin/messages` renvoie une redirection de connexion à 303 et `/admin/readiness` refuse la requête anonyme à 401. Ce sont des réponses attendues, pas un défaut d’accès public.
 
-HTTP sur le principal redirige en 301 vers HTTPS. `www` redirige en 308 directement vers le principal, en HTTP et HTTPS, y compris le contrôle synthétique `/app?jm_redirect_probe=1%2B2&lang=fr`. **Le défaut restant est borné à l’ancienne entrée HTTPS accueil** : sa racine répond à 200 avec l’ancien aperçu ; `/app` redirige en 302 vers recette et perd les paramètres. La règle préparée doit remplacer ces deux comportements par le 308 canonique avec chemin et query conservés. Aucun changement de DNS n’est nécessaire pour cette correction.
+HTTP sur le principal redirige en 301 vers HTTPS. `www` redirige en 308 directement vers le principal, en HTTP et HTTPS, y compris le contrôle synthétique `/app?jm_redirect_probe=1%2B2&lang=fr`. **Avant modification, le défaut était borné à l’ancienne entrée HTTPS accueil** : sa racine répondait à 200 avec l’ancien aperçu ; `/app` redirigeait en 302 vers recette et perdait les paramètres. Ces faits demeurent ceux de l’audit initial ; le contrôle après édition ci-dessous confirme le remplacement de ces comportements par le 308 canonique avec chemin et query conservés.
 
-Ces observations anonymes ne qualifient ni une session administrateur, ni un appareil/PWA réel, ni la réception de Push, ni la sauvegarde. Les vérifications après application de la règle restent à acquérir.
+Ces observations anonymes ne qualifient ni une session administrateur, ni un appareil/PWA réel, ni la réception de Push, ni la sauvegarde.
+
+## Confirmation après édition Web FTP
+
+L’utilisateur a répondu **« enregistré »** après la procédure d’édition de la seule condition. La [preuve HTTP après édition](verification-proofs/accueil-redirect-confirmed-20261022.json), relevée le `2026-10-22T15:20:07.245408+00:00`, conserve **13 GET anonymes réussis sur 13** :
+
+- Accueil HTTPS : `/`, `/app` avec paramètres, `/help` avec paramètres et `/admin/login` avec paramètres renvoient **308** vers le principal, au même chemin et avec la même query.
+- Accueil HTTP : la sonde `/app` avec paramètres renvoie aussi le 308 attendu.
+- `www` HTTPS : racine et sonde `/app` conservent le 308 canonique avec chemin et paramètres.
+- Principal : `/`, `/app`, `/help`, `/api/health` et `/api/ready` répondent à **200**.
+- Recette : `/api/ready` répond à **200** et conserve le rôle de compatibilité.
+
+L’édition est **USER_REPORTED** ; les statuts et destinations sont observés par HTTP. Aucun octet du `.htaccess` ni copie privée de configuration n’a été relu par l’agent. L’application reste 1.8.1, sans nouveau script, test de sauvegarde ou changement de runtime à entreprendre.
 
 ## Pourquoi garder recette
 
@@ -36,7 +48,7 @@ L’ancienne origine reste utile aux sessions, installations PWA et destinations
 
 Le site Apache **1532641**, nommé **accueil.jessiemessage.com**, est distinct du service Node. Son document root Manager documenté est `/sites/jessiemessage-entry-1f669e45`. Le helper a testé `/sites/jessiemessage-entry-1f669e45/.htaccess` et `/srv/customer/sites/jessiemessage-entry-1f669e45/.htaccess` dans le terminal Node : les deux chemins y sont absents. Ce constat ne prouve pas la disparition du fichier ou du site. Le [rappel d’accès déjà consigné](application-table-checkpoint.md) précise que le Web FTP du Manager concerne Apache/PHP, tandis que l’accès SSH/SFTP utilisé concerne Node.js. L’empreinte source historique attendue reste `daa58abe55ca39cfb2a931f2caa8d6fc5f19e01c872e32603abc9cea8d6eff63` ; aucune nouvelle empreinte du fichier Apache n’a été lue lors de cet échec.
 
-La modification préparée remplace seulement :
+La consigne manuelle appliquée selon le retour utilisateur remplaçait seulement :
 
 ```apache
 RewriteCond %{HTTP_HOST} ^www\.jessiemessage\.com(?::(?:80|443))?$ [NC]
@@ -56,7 +68,7 @@ RewriteRule ^(.*)$ https://jessiemessage.com/$1 [R=308,END]
 
 L’origine de destination est fixe. Aucun retrait des paramètres par `QSD`, aucune modification de DNS, certificat, PHP, service Node, clé ou schéma SQL n’est inclus. Le [refus automatique antérieur](verification-proofs/jm171-secondary-entry.json) reste une preuve historique intacte ; l’autorisation précise de l’utilisateur est maintenant acquise. Le helper et ses 14 tests restent qualifiés historiquement ; cette qualification n’établissait pas que son fichier cible serait accessible depuis le terminal Node.
 
-## Arrêt observé, sans modification
+## Arrêt historique du helper, sans modification
 
 L’utilisateur a transmis le reçu exact :
 
@@ -68,7 +80,7 @@ Le refus survient dans `select_source()`, premier appel de l’opération, avant
 
 ## Procédure manuelle via Web FTP
 
-Depuis le navigateur personnel de l’utilisateur :
+**Historique acquis, à ne pas rejouer.** L’utilisateur a annoncé le fichier enregistré après cette procédure, puis les 13 contrôles HTTP ont confirmé le résultat public. Les étapes suivantes conservent la consigne exécutée dans son navigateur personnel :
 
 1. Ouvrir [FTP / SSH dans le Manager Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ftp-ssh), pour l’hébergement **812119**.
 2. Ouvrir le **Web FTP de l’environnement Apache/PHP**, celui du site **accueil.jessiemessage.com**, site **1532641**. L’accès Node.js utilisé précédemment ne donne pas le fichier attendu ; aucun nouveau compte ni mot de passe n’est à créer ou à transmettre dans le chat.
@@ -92,7 +104,7 @@ Depuis le navigateur personnel de l’utilisateur :
    RewriteRule ^(.*)$ https://jessiemessage.com/$1 [R=308,END]
    ```
 
-8. Enregistrer puis signaler que le fichier est enregistré. Les réponses HTTP réelles seront alors vérifiées avant de déclarer la redirection appliquée.
+8. Enregistrer puis signaler que le fichier est enregistré. Cette confirmation utilisateur est acquise ; les réponses HTTP réelles ont ensuite validé le résultat.
 
 Si le dossier, le fichier ou la ligne exacte n’est pas présent, ne rien créer ni remplacer ailleurs : conserver ce constat pour retrouver le bon site Apache. La copie locale du seul fichier de configuration est propre à cette intervention manuelle ; elle ne relance pas le test de sauvegarde métier reporté.
 
@@ -100,9 +112,9 @@ Le [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/h
 
 ## Commande SSH historique — ne pas rejouer
 
-Le helper opérateur est publié sur `1f5b5239530c96c3b780f629b8510758f5dc02fe`, arbre `0cecd0fe54c8070b61bc1b5c45fd83a880194014`, distinct de la source applicative active 1.8.1. Ses octets distants sont comparés au fichier qualifié localement ; la [CI opérateur 39800596245](https://github.com/fredbuhr/jessiemessage/actions/runs/39800596245) a réussi à sa première tentative. Les 14 tests isolés ne démarrent pas Apache ; le reçu reste `httpVerified:false` jusqu’aux observations réelles après application.
+Le helper opérateur est publié sur `1f5b5239530c96c3b780f629b8510758f5dc02fe`, arbre `0cecd0fe54c8070b61bc1b5c45fd83a880194014`, distinct de la source applicative active 1.8.1. Ses octets distants sont comparés au fichier qualifié localement ; la [CI opérateur 39800596245](https://github.com/fredbuhr/jessiemessage/actions/runs/39800596245) a réussi à sa première tentative. Les 14 tests isolés ne démarrent pas Apache et ne vérifient pas le routage public ; la confirmation HTTP après édition figure dans une preuve distincte.
 
-Le bloc ci-dessous est conservé comme historique du helper qualifié puis refusé sur ce terminal. **Ne pas le relancer et ne pas le déplacer vers un autre terminal** : ses chemins de cible et de copie privée étaient conçus pour l’environnement Node, sans accès Apache établi. La procédure courante est l’édition Web FTP décrite plus haut.
+Le bloc ci-dessous est conservé comme historique du helper qualifié puis refusé sur ce terminal. **Ne pas le relancer et ne pas le déplacer vers un autre terminal** : ses chemins de cible et de copie privée étaient conçus pour l’environnement Node, sans accès Apache établi. L’édition Web FTP décrite plus haut est elle aussi désormais acquise et ne doit pas être rejouée.
 
 ```bash
 env -i PATH=/usr/bin:/bin python3 - <<'PY_ACCUEIL'
@@ -118,8 +130,8 @@ exec(compile(code, url, 'exec'), {'__name__': '__main__'})
 PY_ACCUEIL
 ```
 
-L’ancien résultat attendu `accueil_redirect_applied` n’a pas été obtenu. Le seul résultat hébergé acquis est `SOURCE_NOT_FOUND`, sans copie ou écriture. Les 14 tests isolés et le run réussi restent leur qualification historique, sans valider l’accessibilité du `.htaccess` réel. Aucun nouveau helper, script, workflow ou changement de version applicative n’est requis pour l’édition manuelle.
+L’ancien résultat attendu `accueil_redirect_applied` n’a pas été obtenu. Le seul résultat hébergé acquis pour ce helper est `SOURCE_NOT_FOUND`, sans copie ou écriture. Les 14 tests isolés et le run réussi restent leur qualification historique, sans valider l’accessibilité du `.htaccess` réel. Aucun nouveau helper, script, workflow ou changement de version applicative n’est requis pour l’édition manuelle.
 
-Les réponses publiques à acquérir ensuite sont le 308 de la racine HTTPS accueil et celui de `/app?jm_redirect_probe=1%2B2&lang=fr` vers les mêmes chemins/paramètres sur le principal ; vérifier aussi `www` et la disponibilité du principal. La configuration Apache n’est pas une nouvelle version de l’application : celle-ci reste 1.8.1, sans nouveau tag ni migration. Ne pas redéployer un ancien bundle d’accueil neutre qui rétablirait la condition `www` seule.
+Les réponses publiques ont été acquises dans la confirmation après édition, dont le 308 de la racine HTTPS accueil et celui de `/app?jm_redirect_probe=1%2B2&lang=fr` vers les mêmes chemins/paramètres sur le principal, avec `www` cohérent et principal disponible. Aucun contrôle supplémentaire n’est ouvert. La configuration Apache n’est pas une nouvelle version de l’application : celle-ci reste 1.8.1, sans nouveau tag ni migration. Ne pas redéployer un ancien bundle d’accueil neutre qui rétablirait la condition `www` seule.
 
 Références techniques : [Apache, mod_rewrite et conservation de la query](https://httpd.apache.org/docs/2.4/mod/mod_rewrite.html#rewriterule), [Infomaniak, domaine principal et alias](https://www.infomaniak.com/fr/support/faq/2070/modifier-le-nom-de-domaine-dun-site).
