@@ -1,0 +1,728 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-final-prelaunch-audit",
+  "assembledAtUTC": "2026-10-22T15:52:50.688962+00:00",
+  "status": "audit_complete_corrections_proposed_not_implemented",
+  "report": "../AUDIT-FINAL-20261022.md",
+  "auditedCommit": "6950e3e0af0c573933d41fabf89564e320e16a1f",
+  "auditedTree": "586930fe28137437b4cba9310a41a1f7444e72ca",
+  "applicationVersion": "1.8.1",
+  "codeMatchesReleasedSource": true,
+  "versionLocal": {
+    "checkedAtUTC": "2026-10-22T15:38:56.015333+00:00",
+    "auditCommit": "6950e3e0af0c573933d41fabf89564e320e16a1f",
+    "auditTree": "586930fe28137437b4cba9310a41a1f7444e72ca",
+    "activeSource": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+    "runtimePathsIdenticalToRelease": true,
+    "nonRuntimeChangesSinceRelease": [
+      "AGENTS.md",
+      "README.md",
+      "docs/PLAN-IMPLEMENTATION.md",
+      "docs/PRODUCT.md",
+      "docs/REPRISE.md",
+      "docs/guide-jessie.md",
+      "docs/public-domains-20261022.md",
+      "docs/quick-replies-login-181.md",
+      "docs/verification-proofs/accueil-redirect-attempt-20261022.json",
+      "docs/verification-proofs/accueil-redirect-confirmed-20261022.json",
+      "docs/verification-proofs/jm181-hosted-identity.json",
+      "docs/verification-proofs/jm181-hosted-interface.json",
+      "docs/verification-proofs/jm181-hosted-metadata.json",
+      "docs/verification-proofs/jm181-hosted-preparation.json",
+      "docs/verification-proofs/jm181-metadata-operator-verification.json",
+      "docs/verification-proofs/jm181-public-http.json",
+      "docs/verification-proofs/jm181-verification.json",
+      "docs/verification-proofs/public-domains-20261022.json"
+    ],
+    "lockPackages": 59,
+    "registryResolutionsAllHttpsNpm": true,
+    "integrityAllPresent": true,
+    "dependencyLicenseCounts": {
+      "MIT": 20,
+      "Apache-2.0": 16,
+      "LGPL-3.0-or-later": 10,
+      "Apache-2.0 AND LGPL-3.0-or-later AND MIT": 1,
+      "Apache-2.0 AND LGPL-3.0-or-later": 3,
+      "BSD-3-Clause": 1,
+      "ISC": 3,
+      "BlueOak-1.0.0": 1,
+      "LGPL-2.1-or-later": 1,
+      "MIT-0": 1,
+      "0BSD": 1,
+      "MPL-2.0": 1
+    }
+  },
+  "githubObserved": {
+    "latest": {
+      "tag": "v1.8.1",
+      "releaseId": 420741528,
+      "source": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+      "draft": false,
+      "prerelease": false
+    },
+    "tag181DirectCommit": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+    "tag172DirectCommit": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+    "openPullRequests": 0,
+    "rulesets": [],
+    "classicMainBranchProtection": {
+      "status": "unverified",
+      "apiStatus": 403,
+      "reason": "Resource not accessible by integration"
+    }
+  },
+  "serverIdentity": {
+    "evidenceKind": "USER_REPORTED_PREVIOUS_RECEIPTS_IN_THIS_CONVERSATION",
+    "proof": "jm181-hosted-metadata.json",
+    "version": "1.8.1",
+    "source": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+    "tree": "eb427f887248fa9db5c656c3773e016f8688efc9",
+    "nodeVersion": "v24.22.1",
+    "schemaMigrations": 36,
+    "checkpointSha256": "53bd5312c42f34934de04d1e4e7994a864892cdf5a945c6a72c7b4c46ef5be76",
+    "newPrivateProcessInspection": false,
+    "rollbackVersion": "1.7.2",
+    "rollbackPrecheckedNotStarted": true
+  },
+  "npmAudit": {
+    "command": "npm audit --omit=dev --ignore-scripts --json --fetch-timeout=15000 --fetch-retries=0",
+    "exitCode": 0,
+    "result": {
+      "auditReportVersion": 2,
+      "vulnerabilities": {},
+      "metadata": {
+        "vulnerabilities": {
+          "info": 0,
+          "low": 0,
+          "moderate": 0,
+          "high": 0,
+          "critical": 0,
+          "total": 0
+        },
+        "dependencies": {
+          "prod": 32,
+          "dev": 0,
+          "optional": 28,
+          "peer": 0,
+          "peerOptional": 0,
+          "total": 59
+        }
+      }
+    },
+    "scope": "Known npm advisories at audit time only; no fix or dependency change"
+  },
+  "sourceInventory": {
+    "trackedFiles": 1145,
+    "pathsByRoot": {
+      ".github": 3,
+      ".gitignore": 1,
+      "AGENTS.md": 1,
+      "MONITORING.md": 1,
+      "README.md": 1,
+      "artifacts": 1,
+      "db": 33,
+      "design": 5,
+      "docs": 313,
+      "ops": 20,
+      "package-lock.json": 1,
+      "package.json": 1,
+      "public": 101,
+      "scripts": 56,
+      "server": 223,
+      "tests": 384
+    },
+    "trackedPrivateKeyBlocks": [],
+    "suspectCredentialPatterns": [
+      {
+        "path": "ops/test-release150-migration-synthetic.py",
+        "line": 26,
+        "kind": "credential_literal"
+      },
+      {
+        "path": "ops/test-release150-migration-synthetic.py",
+        "line": 112,
+        "kind": "credential_literal"
+      },
+      {
+        "path": "ops/test-release160-migration-synthetic.py",
+        "line": 26,
+        "kind": "credential_literal"
+      },
+      {
+        "path": "ops/test-release160-migration-synthetic.py",
+        "line": 112,
+        "kind": "credential_literal"
+      },
+      {
+        "path": "scripts/prepare-runtime-messaging.mjs",
+        "line": 35,
+        "kind": "credential_literal"
+      },
+      {
+        "path": "scripts/provision-runtime-stdin.mjs",
+        "line": 54,
+        "kind": "credential_literal"
+      }
+    ],
+    "secretHitsReviewedSeparately": true
+  },
+  "secretHitReview": {
+    "sixHitsAreSyntheticFixturesOrValidationPlaceholders": true,
+    "actualSecretIdentifiedAmongHits": false,
+    "entireGitHistoryAudited": false
+  },
+  "structuralChecks": {
+    "markdownRelativeLinksChecked": 1287,
+    "missingRepositoryTargets": 0,
+    "allAnchorsOrExternalUrlsChecked": false,
+    "publicHtmlChecked": 16,
+    "publicJavascriptChecked": 49,
+    "duplicateHtmlIds": 0,
+    "missingAriaIdTargets": 0,
+    "missingLocalHtmlAssets": 0,
+    "missingLiteralLocalJsImports": 0,
+    "exactDuplicateCompleteSourceDocScriptFiles": 0,
+    "integrationFilesListed": 42,
+    "integrationFilesIncludedInSqlCommand": 42,
+    "currentServerModules": 220,
+    "literalServerModuleReachabilityFromIndex": 157,
+    "literalServerModuleReachabilityFromAllScriptRoots": 217,
+    "reachabilityDoesNotCoverWorkerUrlOrExternalOperatorContracts": true
+  },
+  "publicSecurityHeaders": {
+    "observedAtUTC": "2026-10-22T15:40:28.790110+00:00",
+    "type": "anonymous_public_security_header_audit",
+    "noAuthenticatedSession": true,
+    "noStateChangingRequest": true,
+    "noBackupTest": true,
+    "requests": [
+      {
+        "path": "/",
+        "status": 200,
+        "headers": {
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "no-store",
+          "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; worker-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'",
+          "strict-transport-security": "max-age=31536000",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "referrer-policy": "no-referrer",
+          "permissions-policy": "camera=(), microphone=(), geolocation=()",
+          "cross-origin-opener-policy": null,
+          "cross-origin-resource-policy": "same-origin",
+          "service-worker-allowed": null,
+          "server": "envoy"
+        },
+        "bodySha256": "f66af81b9c69d01386a86e3195aff5cf791d120bae63112c1b3dc24d51d55e9f",
+        "bodyBytes": 3416,
+        "setCookiePresent": false
+      },
+      {
+        "path": "/app",
+        "status": 200,
+        "headers": {
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "no-store",
+          "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; worker-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'",
+          "strict-transport-security": "max-age=31536000",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "referrer-policy": "no-referrer",
+          "permissions-policy": "camera=(), microphone=(), geolocation=()",
+          "cross-origin-opener-policy": null,
+          "cross-origin-resource-policy": "same-origin",
+          "service-worker-allowed": null,
+          "server": "envoy"
+        },
+        "bodySha256": "524af111ab19c59f0538f8050a253856cda410442b2227233670db2ae561970e",
+        "bodyBytes": 4998,
+        "setCookiePresent": false
+      },
+      {
+        "path": "/help",
+        "status": 200,
+        "headers": {
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "no-store",
+          "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; worker-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'",
+          "strict-transport-security": "max-age=31536000",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "referrer-policy": "no-referrer",
+          "permissions-policy": "camera=(), microphone=(), geolocation=()",
+          "cross-origin-opener-policy": null,
+          "cross-origin-resource-policy": "same-origin",
+          "service-worker-allowed": null,
+          "server": "envoy"
+        },
+        "bodySha256": "f24e192d82932bd918b5ada58553d36e2eb55dc962a1c68096b954e1ce7bfafa",
+        "bodyBytes": 15532,
+        "setCookiePresent": false
+      },
+      {
+        "path": "/admin/login",
+        "status": 200,
+        "headers": {
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "no-store",
+          "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; worker-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'",
+          "strict-transport-security": "max-age=31536000",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "referrer-policy": "no-referrer",
+          "permissions-policy": "camera=(), microphone=(), geolocation=()",
+          "cross-origin-opener-policy": null,
+          "cross-origin-resource-policy": "same-origin",
+          "service-worker-allowed": null,
+          "server": "envoy"
+        },
+        "bodySha256": "d6a4adba277981d978511e6d88276eb8597ffe92e91288a534caa4afc015607c",
+        "bodyBytes": 12702,
+        "setCookiePresent": false
+      },
+      {
+        "path": "/sw.js",
+        "status": 200,
+        "headers": {
+          "content-type": "text/javascript; charset=utf-8",
+          "cache-control": "no-store",
+          "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; worker-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'",
+          "strict-transport-security": "max-age=31536000",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "referrer-policy": "no-referrer",
+          "permissions-policy": "camera=(), microphone=(), geolocation=()",
+          "cross-origin-opener-policy": null,
+          "cross-origin-resource-policy": "same-origin",
+          "service-worker-allowed": "/",
+          "server": "envoy"
+        },
+        "bodySha256": "1ed45c3fbac18948828dfce91cf42402e73f38b99a3d58bcb2a6a2f03fff019c",
+        "bodyBytes": 3374,
+        "setCookiePresent": false
+      },
+      {
+        "path": "/manifest.webmanifest",
+        "status": 200,
+        "headers": {
+          "content-type": "application/manifest+json",
+          "cache-control": "no-store",
+          "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; worker-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'",
+          "strict-transport-security": "max-age=31536000",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "referrer-policy": "no-referrer",
+          "permissions-policy": "camera=(), microphone=(), geolocation=()",
+          "cross-origin-opener-policy": null,
+          "cross-origin-resource-policy": "same-origin",
+          "service-worker-allowed": null,
+          "server": "envoy"
+        },
+        "bodySha256": "5836f05989c46a0d377457c4f6662126fd6d9fbfee4e011012e624bce3359bcf",
+        "bodyBytes": 654,
+        "setCookiePresent": false
+      },
+      {
+        "path": "/api/health",
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "cache-control": "no-store",
+          "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; worker-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'",
+          "strict-transport-security": "max-age=31536000",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "referrer-policy": "no-referrer",
+          "permissions-policy": "camera=(), microphone=(), geolocation=()",
+          "cross-origin-opener-policy": null,
+          "cross-origin-resource-policy": "same-origin",
+          "service-worker-allowed": null,
+          "server": "envoy"
+        },
+        "bodySha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288",
+        "bodyBytes": 15,
+        "setCookiePresent": false
+      },
+      {
+        "path": "/api/ready",
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "cache-control": "no-store",
+          "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; worker-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'",
+          "strict-transport-security": "max-age=31536000",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "referrer-policy": "no-referrer",
+          "permissions-policy": "camera=(), microphone=(), geolocation=()",
+          "cross-origin-opener-policy": null,
+          "cross-origin-resource-policy": "same-origin",
+          "service-worker-allowed": null,
+          "server": "envoy"
+        },
+        "bodySha256": "31bf75f4c0a97cc1f7b60df824fa390b3be9ba014f29b63c87c698ba63d9a9fd",
+        "bodyBytes": 18,
+        "setCookiePresent": false
+      }
+    ]
+  },
+  "publicMailDns": {
+    "observedAtUTC": "2026-10-22T15:42:07.938941+00:00",
+    "noMailSent": true,
+    "queries": [
+      {
+        "name": "jessiemessage.com",
+        "type": "MX",
+        "dnsStatus": 0,
+        "answers": [
+          {
+            "type": 15,
+            "data": "5 mta-gw.infomaniak.ch."
+          }
+        ]
+      },
+      {
+        "name": "jessiemessage.com",
+        "type": "TXT",
+        "dnsStatus": 0,
+        "answers": [
+          {
+            "type": 16,
+            "data": "v=spf1 include:spf.infomaniak.ch -all"
+          }
+        ]
+      },
+      {
+        "name": "_dmarc.jessiemessage.com",
+        "type": "TXT",
+        "dnsStatus": 0,
+        "answers": [
+          {
+            "type": 16,
+            "data": "v=DMARC1; p=reject;"
+          }
+        ]
+      }
+    ]
+  },
+  "previousDomainConfirmation": "accueil-redirect-confirmed-20261022.json",
+  "domainRedirectChecksNotRerunInThisAudit": true,
+  "findings": [
+    {
+      "id": "A01",
+      "priority": "P1",
+      "evidence": "confirmed_synthetic_reproduction",
+      "summary": "Quotas d’envoi : refus personnels débitent le budget global",
+      "plannedLot": "lot1",
+      "fixedByThisAudit": false
+    },
+    {
+      "id": "A02",
+      "priority": "P1",
+      "evidence": "confirmed_code_and_synthetic_inventory",
+      "summary": "Capacité vidéo admise supérieure aux limites de capture/copie",
+      "plannedLot": "lot1",
+      "fixedByThisAudit": false
+    },
+    {
+      "id": "A03",
+      "priority": "P2",
+      "evidence": "confirmed_synthetic_reproduction",
+      "summary": "Réservations photo retenues avant toute écriture",
+      "plannedLot": "lot1",
+      "fixedByThisAudit": false
+    },
+    {
+      "id": "A04",
+      "priority": "P2",
+      "evidence": "confirmed_static_runtime_gap",
+      "summary": "Libération d’originaux vidéo sans parcours applicatif",
+      "plannedLot": "lot1",
+      "fixedByThisAudit": false
+    },
+    {
+      "id": "A05",
+      "priority": "P2",
+      "evidence": "confirmed_synthetic_reproduction",
+      "summary": "Export de121vidéos interrompu par quota d’affichage",
+      "plannedLot": "lot1",
+      "fixedByThisAudit": false
+    },
+    {
+      "id": "A06",
+      "priority": "P2",
+      "evidence": "confirmed_model_reproduction_and_code",
+      "summary": "Diffusion purgée au changement de visibilité",
+      "plannedLot": "lot2",
+      "fixedByThisAudit": false
+    },
+    {
+      "id": "A07",
+      "priority": "P2",
+      "evidence": "confirmed_synthetic_reproduction",
+      "summary": "Suppression de label CRM avec heure antérieure à l’attente",
+      "plannedLot": "lot1",
+      "fixedByThisAudit": false
+    },
+    {
+      "id": "A08",
+      "priority": "P2",
+      "evidence": "known_user_requirement_gap_confirmed_code",
+      "summary": "Brouillon texte absent après rechargement",
+      "plannedLot": "lot2",
+      "fixedByThisAudit": false
+    },
+    {
+      "id": "A09",
+      "priority": "P2",
+      "evidence": "confirmed_documentation_drift",
+      "summary": "Guides courants avec états historiques périmés",
+      "plannedLot": "lot3",
+      "fixedByThisAudit": false
+    },
+    {
+      "id": "A10",
+      "priority": "P2",
+      "evidence": "confirmed_public_information_gap_not_legal_verdict",
+      "summary": "Aide/notice incomplète pour traitements actuels et vidéo",
+      "plannedLot": "lot2",
+      "fixedByThisAudit": false
+    },
+    {
+      "id": "A11",
+      "priority": "P2",
+      "evidence": "conditional_host_peer_unobserved",
+      "summary": "Quotas réseau potentiellement communs derrière frontal",
+      "plannedLot": "lot1_verification_before_any_change",
+      "fixedByThisAudit": false
+    },
+    {
+      "id": "A12",
+      "priority": "P2",
+      "evidence": "capacity_limits_confirmed_performance_impact_unmeasured",
+      "summary": "Seuil campagnes, index activité et budgets simultanéité",
+      "plannedLot": "lot3_measure_or_document_escalate_only_if_needed",
+      "fixedByThisAudit": false
+    },
+    {
+      "id": "A13",
+      "priority": "P2",
+      "evidence": "confirmed_maintenance_hardening",
+      "summary": "Actions mutables, timeout et répétitions CI",
+      "plannedLot": "lot3",
+      "fixedByThisAudit": false
+    },
+    {
+      "id": "A14",
+      "priority": "P3",
+      "evidence": "conditional_historical_tool_regression",
+      "summary": "Ancien générateur pouvant rétablir routage précédent",
+      "plannedLot": "lot3",
+      "fixedByThisAudit": false
+    },
+    {
+      "id": "A15",
+      "priority": "P3",
+      "evidence": "maintenance_candidates_no_blanket_deadcode_claim",
+      "summary": "Reliquats et duplications à traiter sélectivement",
+      "plannedLot": "lot3",
+      "fixedByThisAudit": false
+    },
+    {
+      "id": "A16",
+      "priority": "P3",
+      "evidence": "confirmed_handler_reproduction",
+      "summary": "Dates d’annonce ignorées par avertissement navigation",
+      "plannedLot": "lot2",
+      "fixedByThisAudit": false
+    }
+  ],
+  "reproductions": [
+    {
+      "sourceName": "repro-chat-quota.mjs",
+      "sourceSha256": "5891392335eb3ff36d999c69f355cf8a499fa533ac56478ca35fc6036430a766",
+      "sourceBytes": 1674,
+      "sourceUtf8": "import {createChatService} from '../jessiemessage/server/chat/service.mjs';\nimport {createHmac} from 'node:crypto';\nconst key=Buffer.alloc(32,7), token=Buffer.alloc(32,8).toString('base64url'), userA='a'.repeat(32),userB='b'.repeat(32);\nlet current=userA, persistenceCalls=0;const ledger=new Map();\nconst authStore={async consumeRateLimit(hash,{limit}){let k=hash.toString('hex');let n=(ledger.get(k)||0)+1;ledger.set(k,n);return {allowed:n<=limit,retryAfter:60}}};\nconst methods=['listConversations','getClientConversation','readMessages','readEvents','sendMessage','markRead','deleteMessage'];\nconst store=Object.fromEntries(methods.map(m=>[m,async()=>{persistenceCalls++;throw Object.assign(new Error('synthetic absent conversation'),{code:'CHAT_NOT_FOUND'})}]));\nconst service=await createChatService({key,authStore,store,clock:()=>1700000000000,authService:{session:async()=>null},accessService:{requireActiveClient:async()=>({user:{id:current,role:'client'}})}});\nconst counts={};\nfor(let i=0;i<300;i++){try{await service.send('client',token,'c'.repeat(32),{clientMessageId:'d'.repeat(32),body:'Synthetic'});}catch(e){counts[e.code]=(counts[e.code]||0)+1;}}\ncurrent=userB;let other;\ntry{await service.send('client',token,'c'.repeat(32),{clientMessageId:'e'.repeat(32),body:'Synthetic'});}catch(e){other=e.code;}\nconst globalHash=createHmac('sha256',key).update('jessiemessage:chat-rate:v1:').update('global-send').update('\\0').update('all').digest('hex');\nconsole.log(JSON.stringify({synthetic:true,requestsUserA:300,errorsUserA:counts,persistenceCalls,globalCounter:ledger.get(globalHash),firstRequestUserB:other,noNetwork:true,noDatabase:true,noPrivateData:true}));\n",
+      "result": {
+        "synthetic": true,
+        "requestsUserA": 300,
+        "errorsUserA": {
+          "CHAT_NOT_FOUND": 30,
+          "CHAT_RATE_LIMIT": 270
+        },
+        "persistenceCalls": 30,
+        "globalCounter": 301,
+        "firstRequestUserB": "CHAT_RATE_LIMIT",
+        "noNetwork": true,
+        "noDatabase": true,
+        "noPrivateData": true
+      },
+      "executionRuntime": "v24.19.0",
+      "productionRuntimeQualified": false,
+      "noProductionActions": true
+    },
+    {
+      "sourceName": "repro-media-operations.mjs",
+      "sourceSha256": "2b7cca4598f0fa57378aa7c10bad4460cbf3eee0573bdfa84769befaf3d042c8",
+      "sourceBytes": 7043,
+      "sourceUtf8": "import assert from 'node:assert/strict';\nimport { createRequire } from 'node:module';\nimport { randomBytes } from 'node:crypto';\nimport { createMediaService } from '../jessiemessage/server/media/service.mjs';\nimport { newToken } from '../jessiemessage/server/auth/crypto.mjs';\nimport { createVideoHandler } from '../jessiemessage/server/video/http.mjs';\nimport { inspectVideoBackupInventory } from '../jessiemessage/server/backup/video-inventory.mjs';\nimport { videoStoredBytes } from '../jessiemessage/server/video/storage.mjs';\nconst require=createRequire(new URL('../jessiemessage/package.json',import.meta.url));\nconst sharp=require('sharp');\nconst now=1792677600000, key=randomBytes(32), token=newToken(), owner=Buffer.alloc(16,1).toString('hex');\nlet held=0, writes=0, releases=0;\nconst store={\n async reserveAsset({asset}) {const bytes=asset.fullBytes+asset.thumbnailBytes+80;held+=bytes;return {duplicate:false,reservation:{id:asset.id,storageKey:asset.storageKey,bytes,pendingBytes:held}};},\n async releaseStorageObject(){releases++; return {released:true};},\n ...Object.fromEntries(['registerAsset','listAssets','getOwnedAsset','getMessageAsset','deleteAsset','gallery'].map(k=>[k,async()=>{throw new Error('Unexpected '+k);}]))\n};\nconst chatService={actor:async role=>({user:{id:owner,role},expiresAt:now+60000}),sendImage:async()=>{throw new Error('Unexpected send');}};\nconst storage={availableSpace:async()=>({availableBytes:0n}),put:async()=>{writes++;},get:async()=>{},remove:async()=>{}};\nconst service=await createMediaService({store,chatService,authStore:{consumeRateLimit:async()=>({allowed:true})},storage,key,clock:()=>now});\nconst image=await sharp({create:{width:12,height:8,channels:3,background:'#112233'}}).png().toBuffer();\nconst balances=[];\nfor(let i=0;i<3;i++){await assert.rejects(service.upload('admin',token,image),e=>e.code==='MEDIA_STORAGE_LIMIT');balances.push(held);}\nassert.equal(writes,0);assert.equal(releases,0);assert.ok(balances[0]>0&&balances[1]>balances[0]&&balances[2]>balances[1]);\nconst videoService={actor:async()=>{throw new Error('Unexpected actor');},admitUpload:async()=>{},releaseUpload:async()=>{},upload:async()=>{},open:async()=>{},remove:async()=>{throw new Error('Unexpected remove');}};\nconst handler=createVideoHandler(videoService,{origin:'https://jessiemessage.com'});\nconst routes=[];\nfor(const [method,url] of [['POST','/api/video/admin/assets/'+owner+'/delete'],['DELETE','/api/video/admin/assets/'+owner],['POST','/api/video/client/assets/'+owner+'/delete']]){const handled=await handler({method,url},{});assert.equal(handled,false);routes.push({method,url,handled});}\nconst rawBytes=100*1024*1024, stored=videoStoredBytes(rawBytes), fingerprint=Buffer.alloc(32,2), date='2026-10-22 00:00:00.000000';\nconst assets=Array.from({length:11},(_,i)=>({id:(i+1).toString(16).padStart(32,'0'),owner_id:(i%2+1).toString(16).padStart(32,'0'),owner_role:'client',storage_key:(i+1).toString(16).padStart(64,'0'),reserve_token_hash:'3'.repeat(64),content_digest:null,bytes:rawBytes,stored_bytes:stored,mime:'video/mp4',state:'reserved',created_at:date,updated_at:date,released_at:null}));\nconst video={capacity:{ownerBytes:1073741824,totalBytes:10737418240,heldBytes:stored*assets.length,rootFingerprint:fingerprint.toString('hex'),initializedAt:date},assets};\nconst report=await inspectVideoBackupInventory({video,storage:{fingerprint:async()=>Buffer.from(fingerprint),inspectEntry:async()=>({exists:false}),async *scanEntries(){},availableSpace:async()=>({availableBytes:100000000000n})},authenticate:false});\nassert.equal(report.complete,true);assert.equal(report.healthy,false);assert.deepEqual(report.issues.map(x=>x.code),['backup_byte_limit']);\nconsole.log(JSON.stringify({node:process.version,syntheticOnly:true,productionActions:0,photoDiskRefusal:{attempts:3,chargedBytesAfterEach:balances,writes,releases},missingVideoDeletionRoute:routes,videoCaptureCapacity:{permittedRuntimeHeldBytes:video.capacity.heldBytes,totalQuota:video.capacity.totalBytes,backupByteLimit:report.backupAdmission.maxBytes,complete:report.complete,healthy:report.healthy,issues:report.issues}},null,2));\n\n// Actual video read service + actual streaming exporter, synthetic catalog/storage.\nconst {createVideoService}=await import('../jessiemessage/server/video/service.mjs');\nconst {createStreamingConversationExporter}=await import('../jessiemessage/server/chat/streaming-conversation-export.mjs');\nconst buckets=new Map();let originalReads=0;\nconst mediaBytes=16, mediaStored=videoStoredBytes(mediaBytes), fixedOwner=Buffer.alloc(16,1), assetKey=Buffer.alloc(32,5), digest=Buffer.alloc(32,6);\nconst smallVideo=await createVideoService({key,clock:()=>now,minimumFreeBytes:0,\n store:Object.fromEntries(['reserve','commit','getOwned','release'].map(k=>[k,async()=>{throw new Error('Unexpected '+k);}])) ,\n messages:{async getMessageAsset({messageId}){return {id:messageId,ownerId:fixedOwner,storageKey:assetKey,digest,bytes:mediaBytes,storedBytes:mediaStored,mime:'video/mp4',deletedAt:null,createdAt:now-1000};},async gallery(){}},\n chatService:{async actor(role){return {user:{role,id:fixedOwner.toString('hex')},expiresAt:now+60000};},async sendVideo(){}},\n authStore:{async consumeRateLimit(bucket,{limit}){const b=bucket.toString('hex');const used=(buckets.get(b)??0)+1;buckets.set(b,used);return {allowed:used<=limit,retryAfter:60};}},\n storage:{async put(){},async availableSpace(){return {availableBytes:100000n};},async open(){originalReads++;return {bytes:mediaBytes,storedBytes:mediaStored,async *stream(){yield Buffer.alloc(mediaBytes);},async close(){}};}}\n});\nconst cid='a'.repeat(32),client='b'.repeat(32),hex=n=>n.toString(16).padStart(32,'0');\nconst allMessages=Array.from({length:121},(_,i)=>({id:hex(i+1),sequence:String(i+1),sender:'me',createdAt:now-500,body:'',deletedAt:null,video:{id:hex(i+1),bytes:mediaBytes,mime:'video/mp4',contentUrl:`/api/video/admin/conversations/${cid}/messages/${hex(i+1)}/content`}}));\nconst exporter=createStreamingConversationExporter({clock:()=>now,history:async(_t,_c,{before})=>{const page=before===null?allMessages.slice(21):allMessages.slice(0,21);return {conversation:{id:cid,client:{id:client,pseudonym:'Synthetic'},peerName:'Synthetic',latestSequence:'121'},messages:page,hasMoreBefore:before===null,nextBefore:before===null?'22':null};},video:(t,c,m,o)=>smallVideo.openMessage('admin',t,c,m,o)});\nconst archive=await exporter.create({token,conversationId:cid,expectedClientId:client,includePhotos:false,includeVideos:true});\nlet bytesEmitted=0, exportError=null;\ntry{for await(const chunk of archive.stream()){bytesEmitted+=chunk.length;}}catch(error){exportError={name:error.name,code:error.code};}finally{await archive.close();}\nassert.equal(originalReads,120);assert.equal(exportError.code,'busy');assert.ok(bytesEmitted<archive.bytes);\nconsole.log(JSON.stringify({syntheticOnly:true,videoConversationExport:{requestedOriginals:121,originalReads,bytesEmitted,expectedArchiveBytes:archive.bytes,error:exportError,completed:false}},null,2));\n",
+      "result": {
+        "observations": [
+          {
+            "node": "v24.19.0",
+            "syntheticOnly": true,
+            "productionActions": 0,
+            "photoDiskRefusal": {
+              "attempts": 3,
+              "chargedBytesAfterEach": [
+                616,
+                1232,
+                1848
+              ],
+              "writes": 0,
+              "releases": 0
+            },
+            "missingVideoDeletionRoute": [
+              {
+                "method": "POST",
+                "url": "/api/video/admin/assets/01010101010101010101010101010101/delete",
+                "handled": false
+              },
+              {
+                "method": "DELETE",
+                "url": "/api/video/admin/assets/01010101010101010101010101010101",
+                "handled": false
+              },
+              {
+                "method": "POST",
+                "url": "/api/video/client/assets/01010101010101010101010101010101/delete",
+                "handled": false
+              }
+            ],
+            "videoCaptureCapacity": {
+              "permittedRuntimeHeldBytes": 1153504528,
+              "totalQuota": 10737418240,
+              "backupByteLimit": "1073741824",
+              "complete": true,
+              "healthy": false,
+              "issues": [
+                {
+                  "code": "backup_byte_limit"
+                }
+              ]
+            }
+          },
+          {
+            "syntheticOnly": true,
+            "videoConversationExport": {
+              "requestedOriginals": 121,
+              "originalReads": 120,
+              "bytesEmitted": 83585,
+              "expectedArchiveBytes": 94592,
+              "error": {
+                "name": "ConversationExportError",
+                "code": "busy"
+              },
+              "completed": false
+            }
+          }
+        ],
+        "scope": "Local synthetic reproduction only; no hosted backup or production data operation.",
+        "node": "v24.19.0",
+        "expectedHostedNode": "v24.22.1"
+      },
+      "executionRuntime": "v24.19.0",
+      "productionRuntimeQualified": false,
+      "noProductionActions": true
+    },
+    {
+      "sourceName": "reproduce-crm-clock.mjs",
+      "sourceSha256": "95bc4a313f4cad7a72ed9077efaa5a4378e4c414cfa7dd98abdc960af6b2320f",
+      "sourceBytes": 1713,
+      "sourceUtf8": "import assert from 'node:assert/strict';\nimport { createCrmStore } from '../jessiemessage/server/crm/store.mjs';\nconst adminId=Buffer.alloc(16,1), labelId=Buffer.alloc(16,2);\nasync function run(requestTime){\n let writes=0;\n const label={id:labelId,kind:'tag',name:'Existant',version:'1',created_at:new Date(100),updated_at:new Date(500),member_count:1};\n const connection={async query(sql,args){\n  if(sql.startsWith('SELECT l.id'))return [{...label}];\n  if(sql.startsWith('SELECT p.version'))return Date.parse(args[2].replace(' ','T')+'Z')<1500 ? [{version:'2',updated_at:new Date(1500)}] : [];\n  if(sql.startsWith('UPDATE crm_profiles')||sql.startsWith('DELETE FROM crm_memberships')||sql.startsWith('DELETE FROM crm_labels')){writes++;return {affectedRows:1};}\n  throw new Error('Unexpected synthetic query');\n }};\n const chatStore={withActor:async(_request,work)=>work(connection,{actor:{id:adminId},now:2000}),withConversation(){throw Error('Unused');}};\n const store=createCrmStore({pool:{getConnection(){throw Error('Unused');}},chatStore});\n try{const result=await store.deleteLabel({tokenHash:Buffer.alloc(32,3),now:requestTime,labelId,expectedVersion:'1'});return {result:result.deleted?'deleted':'unexpected',writes};}\n catch(error){return {result:error.code,writes};}\n}\nconst stale=await run(1000),fresh=await run(2000);\nassert.equal(stale.result,'CRM_DATABASE_STATE');assert.equal(stale.writes,0);\nassert.equal(fresh.result,'deleted');assert.equal(fresh.writes,3);\nconsole.log(JSON.stringify({kind:'isolated_crm_concurrent_profile_label_delete_clock_reproduction',stale,fresh,liveAuthorizationTime:2000,labelUnchangedSince:500,profileUpdatedAtWhileRequestWaiting:1500,network:false,database:false}));\n",
+      "result": {
+        "type": "audit_backend_crm_clock_reproduction",
+        "evidenceKind": "EXACT_RECORDED_TOOL_STDOUT",
+        "executionAlreadyCompleted": true,
+        "rerunForRecording": false,
+        "command": "node /workspace/scratch/661996893e4c/audit-final/reproduce-crm-clock.mjs",
+        "nodeVersion": "v24.19.0",
+        "fixtureOnly": true,
+        "realSqlExecuted": false,
+        "network": false,
+        "productionNodeQualified": false,
+        "stdoutExact": "{\"kind\":\"isolated_crm_concurrent_profile_label_delete_clock_reproduction\",\"stale\":{\"result\":\"CRM_DATABASE_STATE\",\"writes\":0},\"fresh\":{\"result\":\"deleted\",\"writes\":3},\"liveAuthorizationTime\":2000,\"labelUnchangedSince\":500,\"profileUpdatedAtWhileRequestWaiting\":1500,\"network\":false,\"database\":false}\n",
+        "result": {
+          "kind": "isolated_crm_concurrent_profile_label_delete_clock_reproduction",
+          "stale": {
+            "result": "CRM_DATABASE_STATE",
+            "writes": 0
+          },
+          "fresh": {
+            "result": "deleted",
+            "writes": 3
+          },
+          "liveAuthorizationTime": 2000,
+          "labelUnchangedSince": 500,
+          "profileUpdatedAtWhileRequestWaiting": 1500,
+          "network": false,
+          "database": false
+        }
+      },
+      "executionRuntime": "v24.19.0",
+      "productionRuntimeQualified": false,
+      "noProductionActions": true
+    }
+  ],
+  "frontendReproduction": {
+    "nodeVersion": "v24.19.0",
+    "isolatedSyntheticModelAndHandlerOnly": true,
+    "productionRuntimeQualified": false,
+    "broadcastAfterClear": {
+      "body": "",
+      "selected": 0,
+      "pending": null
+    },
+    "announcementDateOnlyNavigationWarning": false,
+    "noRepositoryWrite": true,
+    "noNetwork": true
+  },
+  "fixturePortability": "Fixture source is preserved as executed, including original workspace import paths. Reproduction elsewhere requires pointing imports to a checkout of the audited source. These are documentation evidence, not production operators.",
+  "independentReview": {
+    "securityAndProxyFindingsReviewed": true,
+    "mediaAndBackupStaticFindingsReviewed": true,
+    "noConcreteOverclaimIdentifiedByReviewers": true
+  },
+  "plan": {
+    "lots": 4,
+    "lot1": "backend_media_reliability",
+    "lot2": "draft_continuity_and_public_information",
+    "lot3": "documentation_targeted_cleanup_ci",
+    "lot4": "single_final_qualification_and_delivery",
+    "normallyTargetCompatibleCorrection": "1.8.2",
+    "versionBumpedByAudit": false
+  },
+  "backupHostedTest": {
+    "status": "deferred_by_user",
+    "performed": false,
+    "causeOfPreviousInfomaniakPageEstablished": false,
+    "reminderOrAutomationCreated": false
+  },
+  "mutations": {
+    "applicationSourceModified": false,
+    "serverStateChanged": false,
+    "schemaChanged": false,
+    "dnsOrApacheChanged": false,
+    "realMailOrPushSent": false,
+    "realAccountCreatedOrDeleted": false,
+    "documentationOnly": true
+  },
+  "limits": [
+    "New reproductions use synthetic adapters and Node24.19.0, not hosted24.22.1 or a native MariaDB run.",
+    "No already passing global suite or CI was rerun; new regression qualification belongs to correction lots.",
+    "Public HTTP through environment transport is anonymous and does not prove authenticated flows or physical PWA/Push/mobile behaviour.",
+    "Private server files, full Manager state and classic branch protection were not directly inspected.",
+    "The report is a broad repository audit with targeted manual review and structural checks, not proof that every line and combination was exhaustively tested.",
+    "Legal information gaps are observations against current official guidance, not a blanket legal compliance verdict.",
+    "No abandoned feature or automatic backup/archive work is reopened."
+  ]
+}

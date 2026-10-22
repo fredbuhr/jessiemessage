@@ -1,6 +1,6 @@
 # Plan global de JessieMessage
 
-Révisé le 22 octobre 2026 après le bilan de **l’ensemble de l’application** et la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan global](BILAN-GLOBAL-20261022.md) distingue déployé, absent, défectueux et non vérifié. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
+Révisé le 22 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan global](BILAN-GLOBAL-20261022.md) distingue déployé, absent, défectueux et non vérifié. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
 ## Point de départ acquis
 
@@ -14,27 +14,37 @@ L’[identité active **1.8.1 / Node 24.22.1**](verification-proofs/jm181-hosted
 
 **La production 1.8.0 remplace les sauvegardes et l’archivage automatiques par une sauvegarde simple, déclenchée à la demande depuis l’administration.** Aucun exécuteur d’archivage automatique n’est à développer. Les copies, clés, autorités et historiques existants sont préservés ; les fermetures locales et leurs contrôles restent opérationnels. Le code est qualifié et déployé ; **la création, la fin et le téléchargement d’une sauvegarde restent non vérifiés ; le test est reporté à un autre jour à la demande de l’utilisateur**.
 
-## Domaines de production — opération terminée
+## Audit final et plan de correction
 
-**La redirection d’accueil est achevée.** L’utilisateur a annoncé le fichier enregistré après l’édition Web FTP autorisée ; les [13 GET publics après édition](verification-proofs/accueil-redirect-confirmed-20261022.json) réussissent : accueil redirige en **308** vers l’origine fixe `https://jessiemessage.com`, avec chemins et paramètres conservés, `www` reste cohérent et le principal reste disponible. Aucune nouvelle lecture des octets Apache n’est revendiquée. L’[audit initial de 38 GET](verification-proofs/public-domains-20261022.json), l’échec du helper `SOURCE_NOT_FOUND` avant toute écriture et la qualification de ses tests restent conservés comme preuves de leurs étapes. **Ne rejouer ni helper ni édition manuelle.**
+L’[audit global du 22 octobre](AUDIT-FINAL-20261022.md) porte sur le backend, le frontend/PWA, les données et médias, les opérations, la CI, les documents, dépendances et références de livraison. Sa [preuve structurée](verification-proofs/audit-final-20261022.json) conserve les observations et reproductions. **L’application reste 1.8.1 ; aucun correctif de l’audit n’est encore implémenté.** Le code audité est identique à la source de production rapportée. Les défauts nouveaux exigent des régressions complémentaires malgré les CI existantes réussies.
 
-L’application reste en production en **1.8.1**. Conserver le service Node **239143**, nommé `recette.jessiemessage.com`, et recette comme origine de compatibilité pour les anciennes installations PWA et les liens Push ; sa disponibilité est confirmée dans le même contrôle. Aucune suppression ou inversion de domaine, intervention DNS/SSL/PHP, migration ou nouvelle version n’est ouverte. Les nouveaux liens publics utilisent `https://jessiemessage.com`.
+Le plan regroupe le travail en **quatre lots, une qualification finale et une livraison cohérente**. Chaque lot peut contenir plusieurs commits publiés sur la même branche de correction ; il ne nécessite pas une nouvelle version ni une nouvelle permission générale. Les corrections ne doivent pas réintroduire les fonctions abandonnées ou les anciennes opérations automatiques.
 
-**Aucun travail d’implémentation ou de routage ne reste ouvert dans le périmètre retenu.** Seul le contrôle de sauvegarde manuelle reste non vérifié et reporté à la demande de l’utilisateur.
-
-## Livraison alignée ; vérification sauvegarde reportée
-
-**Aucun chantier d’implémentation applicative n’est ouvert dans le périmètre retenu ; l’opération de domaines ci-dessus est terminée.** G1, G2 et G3 sont intégrés à la livraison 1.8.1 ; G4 a qualifié, publié, déployé puis aligné la source `1ae4c75152795ea6f31c2ff364e337a1d5a04e31`. Le [reçu final](verification-proofs/jm181-hosted-metadata.json) confirme SQL36, `publicReady:true`, aucune migration ni redémarrage pour l’enregistrement, et préservation des historiques et du repli **1.7.2** précontrôlé, jamais démarré. Les CI et opérations acquises ne sont pas à rejouer.
-
-Le [retour utilisateur](verification-proofs/jm181-hosted-interface.json) valide le fonctionnement de la liste commune. Il ne détaille pas séparément tous les sous-cas de rechargement et d’insertion. La vidéo avait déjà été rapportée réussie. Pour la sauvegarde, la capture montre une page Infomaniak avant l’écran concerné ; la cause de cette page n’est pas établie. L’utilisateur demande de reporter ce test : **aucun diagnostic, nouvel essai, rappel ou surveillance automatique n’est lancé aujourd’hui**.
-
-| Suivi différé | État | Reprise |
+| Lot restant | Résultat attendu | Fin vérifiable |
 | --- | --- | --- |
-| Sauvegarde manuelle admin | **Non vérifiée** : création, fin et téléchargement non attestés dans l’interface hébergée. | À reprendre uniquement lorsque l’utilisateur le demandera, dans son propre navigateur ; ce contrôle reporté ne devient pas un nouveau lot d’implémentation. |
+| **1 — Fiabilité backend et médias** | Corriger A01–A05 et A07 : isolation des quotas d’envoi, capacité vidéo/sauvegarde compatible, réservations photo, nettoyage des originaux vidéo, exports et temps CRM après attente. Conclure A11 sur le proxy réel avant toute modification des budgets réseau. | Reproductions converties en régressions ciblées ; références vivantes/partagées, autorisations, révocations, états incertains et reprise protégés ; capacité compatible avec l’existant sans purge. Aucun test de sauvegarde hébergée imposé. |
+| **2 — Continuité de saisie et information client** | Corriger A06/A08/A16 : diffusion en arrière-plan, texte après rechargement, dates d’annonce. Harmoniser l’aide/notice FR/EN A10 avec les médias et choix réels. | Brouillon retrouvé uniquement pour le bon propriétaire/conversation ; même identité de demande incertaine ; aucun envoi automatique ou doublon ; purge à la déconnexion/changement de compte ; information publique exacte. |
+| **3 — Documentation, entretien et CI** | Corriger A09/A13–A15 : guides courants, index/historique, ressources runtime conservées, reliquats prouvés, SHA officiels, timeouts et contrôles dupliqués. Consigner les plafonds A12 et mesurer synthétiquement les points qui pourraient changer la décision de lancement. | Reprise courte et unique, versions/profils explicites, liens/ancres vérifiés après rangement, aucun outil historique présenté comme commande active ; preuves conservées ; pas de refonte générale. |
+| **4 — Qualification et livraison uniques** | Qualifier la source stabilisée, CI PR puis main, release immuable, déploiement exact et contrôle regroupé sur les appareils disponibles. | Identité source/Node/SQL/domaines et reçu final acquis ; repli compatible conservé ; aucune omission comptée comme succès. La sauvegarde hébergée reste non vérifiée jusqu’à reprise explicite par l’utilisateur. |
 
-Ne rejouer ni préparation, ni CHECK, ni migration, ni bascule, ni writer pour ce suivi. **1.7.1 et 1.6.0 ne doivent plus démarrer sur SQL36.** Le brouillon du composeur reste en mémoire dans la page ouverte et disparaît au rechargement ; sa persistance n’est pas implémentée. Le lecteur historique G2 seul refuse les capsules avec réponses personnelles ; la 1.7.2 qualifiée conserve ces lecteurs à jour.
+**Prochaine action de développement : lot 1**, en commençant par les deux P1 A01/A02. Les tests ciblés suivent les modifications ; la CI globale requise qualifie ensuite la source finale, sans répétition de suites vertes identiques. La correction compatible vise normalement **1.8.2**, sous réserve de la portée finale ; cet audit documentaire ne change pas la version. Si une migration devient nécessaire, qualifier explicitement son impact et le repli avant activation.
 
-G3 a qualifié sur sa source unique les réponses personnelles, les suites globales et les wrappers d’import/reprise natifs, avec métriques CI. Il ne revendique ni une exécution intégrale du CLI de restauration manuelle de plus haut niveau, ni un téléphone physique, une notification système hors application ou une mesure du mutualisé. Ces limites restent explicites ; elles ne deviennent pas des micro-lots supplémentaires. La dernière identité active 1.7.1 est historique ; son runtime ne doit plus être démarré sur SQL36.
+A12 décrit aussi de la dette de croissance, sans panne actuelle prouvée : fermeture au-delà de 10 000 campagnes globales, calcul de dernière activité à mesurer et budgets de polling. Ne pas augmenter les plafonds, migrer SQL ou purger l’histoire par principe. Si un seuil ou une mesure démontre un blocage pour l’usage retenu, intégrer le correctif au lot concerné avant qualification. Les extractions générales de parseurs CHECK/contrôleurs restent facultatives après lancement ; retirer seulement les reliquats sans usage démontré.
+
+## État de livraison et contrôles reportés
+
+La livraison **1.8.1** reste déployée et alignée : source `1ae4c75152795ea6f31c2ff364e337a1d5a04e31`, Node24.22.1, SQL36, repli **1.7.2** précontrôlé et jamais démarré. G1–G4 et les opérations déjà acquises ne sont pas à rejouer. L’audit et les correctifs à venir ne réétiquettent pas les preuves historiques comme une qualification de leurs nouveaux cas.
+
+**Les domaines sont terminés :** édition Web FTP annoncée enregistrée et [13 GET publics réussis](verification-proofs/accueil-redirect-confirmed-20261022.json), accueil/www vers le principal avec chemins et paramètres conservés. Conserver le service Node239143 et `recette.jessiemessage.com` comme origine de compatibilité ; même runtime/base que le principal, jamais cible de test destructible. Aucun changement Apache, DNS, certificat ou PHP à rejouer.
+
+Le retour utilisateur valide la liste commune et le parcours vidéo. Il ne détaille pas tous leurs sous-cas ; l’audit identifie notamment le nettoyage serveur et les exports à compléter. Le brouillon de chat après rechargement est une lacune connue, désormais incluse au lot2.
+
+| Contrôle différé | État et reprise |
+| --- | --- |
+| Sauvegarde manuelle admin | Création, fin et téléchargement **non vérifiés dans l’interface hébergée**. Test reporté à un autre jour à la demande de l’utilisateur, à reprendre uniquement lorsqu’il le demandera ; aucun diagnostic fournisseur, nouvel essai, rappel ou surveillance automatique n’est lancé. A02 est un constat statique/reproduit sur fixture, pas ce test hébergé. |
+| Appareils physiques | Regrouper les essais disponibles au lot4 ; pas de succès présumé pour un téléphone, clavier, Authenticator ou notification système non essayé. |
+
+**1.7.1 et 1.6.0 ne doivent plus démarrer sur SQL36.** Préserver clés, autorités, reçus, copies, quarantaines, fermetures et états historiques ; aucun nouveau parcours PC ni récupération totale de l’hôte n’est ouvert.
 
 ## Fonctions non abandonnées, à préciser et non ouvertes
 
@@ -64,7 +74,7 @@ La récupération autonome après perte totale de l’hôte, le témoin frais à
 
 Conserver des checkpoints Git reprenables et la preuve de chaque opération distante, tout en poursuivant plusieurs sous-tâches cohérentes d’un même livrable sans demander une nouvelle permission générale. Ne pas relancer les mêmes audits et suites vertes sans changement, échec ou préoccupation nouvelle. Regrouper les contrôles quand leurs dépendances le permettent ; ne jamais promouvoir une omission ou un test unitaire en essai réel sur téléphone, hébergement ou compte client.
 
-**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** La livraison 1.8.1 est déployée et alignée ; la liste commune est validée par retour utilisateur. La sauvegarde manuelle reste non vérifiée et volontairement reportée. Ce report n’est ni un succès de sauvegarde ni un chantier à relancer sans demande. Le parcours vidéo est rapporté réussi, sans précision sur l’appareil ou le destinataire. Les contrats et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) sont conservés sans réétiquetage.
+**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Les quatre lots de correction ci-dessus remplacent l’ancien état « aucun chantier ouvert ». Conserver un checkpoint publié après chaque résultat cohérent : branche/commit/arbre, contrôles acquis, limites et prochaine action unique. Après interruption, lire le résultat durable avant toute nouvelle mutation. La livraison active reste 1.8.1 et ses retours utilisateur restent bornés ; les nouvelles régressions de l’audit seront qualifiées avec leurs corrections. La sauvegarde hébergée reste volontairement reportée. Les contrats et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) sont conservés sans réétiquetage.
 
 ## Livraisons closes
 
