@@ -1605,7 +1605,7 @@ test("Chrome 320px: profile preference draft resumes after same-owner verificati
       await waitUntil(() => page.execute("return !document.getElementById('workspace').hidden && !document.getElementById('open-profile').hidden"), "replaced session bootstraps a new profile owner");
       assert.equal(await page.execute("return !!document.querySelector('.profile-dialog')?.open"), false, "the old profile is not reopened for a new session");
       await clickOptionsAction(page, "#open-profile");
-      await waitUntil(() => page.execute("return !document.querySelector('.preferences-search').disabled"), "new owner preferences loaded");
+      await waitUntil(() => page.execute("const section=document.querySelector('.preferences-section');return !!section&&!section.hidden&&section.getAttribute('aria-busy')==='false'&&!document.querySelector('.preferences-search').disabled"), "new owner preferences fully loaded");
       assert.equal(await page.execute("return document.querySelector('.preferences-search').value"), "");
       assert.equal(await page.execute("return document.querySelector('.preferences-selected').textContent"), "Aucune sélection.");
       assert.equal(fixture.preferenceRequests.length, 0); await noJavascriptErrors(page);
