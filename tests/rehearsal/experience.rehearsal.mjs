@@ -141,7 +141,9 @@ async function selectPhotos(page, bytes, count, offset = 0) {
         context.fillStyle='rgb('+(20+(offset+i)*30)+',80,160)';context.fillRect(0,0,24,24);
         const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg'));if(!blob)return false;
         files.items.add(new File([blob],'synthetic-photo-'+(offset+i)+'.jpg',{type:'image/jpeg'}));}
-        const input=document.getElementById('image-file');input.files=files.files;input.dispatchEvent(new Event('change',{bubbles:true}));return files.files.length;
+        // chooseFile clears input.value synchronously. Chrome also clears the
+        // assigned live FileList, so snapshot its count before that event.
+        const added=files.files.length,input=document.getElementById('image-file');input.files=files.files;input.dispatchEvent(new Event('change',{bubbles:true}));return added;
       }finally{bitmap.close();}})().then(done,()=>done(false));`, bytes, count, offset);
   assert.equal(added, count, "each synthetic photo has distinct pixels so existing content deduplication remains meaningful");
 }
@@ -242,6 +244,7 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
       } finally { await restoreFetch(client); }
     });
     await t.test("real reply controls keep reads pending and synchronize manual handling, reopening and one observed individual reply", async () => {
+      assert.equal(await client.execute("return document.getElementById('photo-batch').hidden&&document.getElementById('image-draft').hidden&&document.getElementById('message-body').value===''"), true, "the previous photo exercise finished without leaving an accidental attachment or caption");
       const question = "Synthetic client request requiring an individual answer";
       await client.type("#message-body", question); await client.click("#send");
       await waitUntil(() => admin.execute("return [...document.querySelectorAll('#messages article')].some(node=>node.textContent.includes(arguments[0]))", question), "real incoming client text reaches the administrator", 20000);
