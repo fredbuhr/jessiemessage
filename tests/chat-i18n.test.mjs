@@ -305,7 +305,7 @@ test("photo rows, images, gallery cards and accessibility names translate in pla
   assert.equal(f.document.activeElement, galleryPhoto); assert.equal(article.querySelector(".photo-caption").textContent, "Envoyer");
   assert.equal(photo.getAttribute("aria-label"), "Enlarge this message’s photo"); assert.equal(image.getAttribute("aria-label"), "Private photo");
   assert.equal(galleryPhoto.getAttribute("aria-label"), "Enlarge this private photo"); assert.equal(galleryImage.getAttribute("aria-label"), "Private photo");
-  assert.equal(f.element("media-title").textContent, "Conversation photos"); assert.match(card.textContent, new RegExp(dateText("en").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.equal(f.element("media-title").textContent, "Conversation photos"); assert.match(card.textContent, new RegExp(new Date(now).toLocaleString("en-US", {...dateOptions,year:"numeric"}).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   f.language("fr"); assert.equal(f.element("media-title").textContent, "Photos de la conversation");
   assert.equal(f.calls.length, before); assert.deepEqual(f.createdUrls, urls); assert.equal(f.revoked.length, 0);
 });
@@ -460,4 +460,16 @@ test("personal replies keep their title and body verbatim while management contr
   assert.equal(row.querySelector("strong"), null);
   for (const handler of row.querySelector(".personal-reply-insert").events.get("click")) handler({}); await flush();
   assert.equal(f.element("message-body").value, "Mes photos <b>texte brut</b>"); assert.equal(f.state.posts, 0);
+});
+
+test("an old gallery photo shows its year and translates that exact date without loading another image", async () => {
+  let f; const oldDate=Date.UTC(2020,0,15,12);
+  f=harness({intercept:path=>path.endsWith('/full')?photoResponse():undefined});await flush();
+  const item=photoFixture(f);f.context.__oldGalleryPhoto={media:item.media,messageId:item.id,sequence:item.sequence,createdAt:oldDate};
+  f.run("openLightbox(__oldGalleryPhoto,currentState(),el('open-gallery'))");await flush();
+  assert.equal(f.element('lightbox-status').textContent,`Photo privée · ${new Date(oldDate).toLocaleString('fr-FR',{...dateOptions,year:'numeric'})}`);
+  const before=f.calls.length, image=f.element('lightbox-image').querySelector('img');
+  f.language('en');
+  assert.equal(f.element('lightbox-status').textContent,`Private photo · ${new Date(oldDate).toLocaleString('en-US',{...dateOptions,year:'numeric'})}`);
+  assert.equal(f.element('lightbox-image').querySelector('img'),image);assert.equal(f.calls.length,before);
 });

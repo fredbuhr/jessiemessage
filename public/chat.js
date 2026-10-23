@@ -1246,7 +1246,7 @@ function renderMediaPanel() {
     const photo = document.createElement("button"); photo.type = "button"; photo.className = "photo-open"; ui.attr(photo, "aria-label", "Agrandir cette photo privée");
     photo.addEventListener("click", () => { void openLightbox({ media, messageId: activePanel.kind === "gallery" ? item.messageId : null, sequence: item.sequence, createdAt: item.createdAt }, state, photo); });
     card.append(photo);
-    const caption = document.createElement("p"); ui.text(caption, "{width} × {height} · {date}", { width: ui.numberParam(media.width), height: ui.numberParam(media.height), date: dateParameter(activePanel.kind === "library" ? media.createdAt : item.createdAt, true) }); card.append(caption);
+    const caption = document.createElement("p"); ui.text(caption, "{width} × {height} · {date}", { width: ui.numberParam(media.width), height: ui.numberParam(media.height), date: dateParameter(activePanel.kind === "library" ? media.createdAt : item.createdAt, true, activePanel.kind === "gallery") }); card.append(caption);
     if (activePanel.kind === "library") {
       if (media.sharedHere) { const warning = document.createElement("p"); warning.className = "shared-photo"; ui.text(warning, "Déjà envoyée ici. Renvoyer crée un nouveau message."); card.append(warning); }
       const actions = document.createElement("div"); actions.className = "media-actions";
@@ -1289,9 +1289,13 @@ function renderLightboxControls() {
   const navigable = Boolean(lightboxItem?.messageId && lightboxItem.sequence);
   for (const key of ["previous-photo", "next-photo", "photo-message"]) { el(key).hidden = !navigable; el(key).disabled = lightboxBusy; }
 }
+function updatePhotoTouchPolicy() {
+  el("lightbox-image").classList.toggle("is-zoomed", (globalThis.visualViewport?.scale ?? 1) > 1.01);
+}
 function showLightboxPhoto(item, state) {
   const version = ++lightboxVersion; lightboxItem = item;
-  ui.text(el("lightbox-status"), item.createdAt ? "Photo privée · {date}" : "Photo privée", item.createdAt ? { date: dateParameter(item.createdAt, true) } : {});
+  updatePhotoTouchPolicy();
+  ui.text(el("lightbox-status"), item.createdAt ? "Photo privée · {date}" : "Photo privée", item.createdAt ? { date: dateParameter(item.createdAt, true, true) } : {});
   renderLightboxControls();
   loadPhoto(el("lightbox-image"), item.media, state, { full: true, current: () => lightboxItem === item && lightboxVersion === version
     && belongsTo(currentState(), state.id, state.epoch) && (!item.messageId || ![...state.messages.values()].some(message => message.id === item.messageId && message.deletedAt != null)) });
@@ -1346,8 +1350,8 @@ function changeGalleryMonth() {
   renderMediaPanel(); void loadMediaPage();
 }
 
-function dateParameter(value, long = false) {
-  return ui.dateParam(value, long ? { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" } : { hour: "2-digit", minute: "2-digit" });
+function dateParameter(value, long = false, year = false) {
+  return ui.dateParam(value, long ? { day: "numeric", month: "short", ...(year ? { year: "numeric" } : {}), hour: "2-digit", minute: "2-digit" } : { hour: "2-digit", minute: "2-digit" });
 }
 function renderInbox({ restoreFocus = true } = {}) {
   const container = el("conversations");
@@ -2278,6 +2282,7 @@ if (globalThis.visualViewport) {
   const fitViewport = () => {
     if (visualViewport.scale === 1) document.documentElement.style.setProperty("--chat-viewport-height", `${visualViewport.height}px`);
     else document.documentElement.style.removeProperty("--chat-viewport-height");
+    updatePhotoTouchPolicy();
     resizeComposer();
   };
   visualViewport.addEventListener("resize", fitViewport); visualViewport.addEventListener("scroll", positionComposerTools); fitViewport();

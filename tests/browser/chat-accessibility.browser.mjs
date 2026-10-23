@@ -1467,6 +1467,11 @@ test("Chrome photo viewer crosses unloaded history, preserves scroll and finds a
       await loaded(page, role === "client" ? "/messages" : "/admin/messages"); if (role === "admin") await page.click(".contact"); await loadedPhoto(page);
       assert.equal(await page.execute("return !!document.querySelector('#messages [data-sequence=\"1\"]')"),false);
       const scroll = await page.execute("const h=document.getElementById('message-scroll');h.scrollTop=h.scrollHeight;return h.scrollTop");
+      // Retain only synthetic full-photo source paths, tied to the actual Blob
+      // decoded by the viewer. Object URLs themselves conceal the message id.
+      await page.execute(`window.__photoOriginalSources={};const sources=new WeakMap(),nativeBlob=Response.prototype.blob,nativeCreate=URL.createObjectURL.bind(URL);
+        Response.prototype.blob=async function(){const blob=await nativeBlob.call(this);if(this.url){const path=new URL(this.url).pathname;if(/^\\/api\\/media\\/(?:client|admin)\\/conversations\\/[a-f0-9]{32}\\/messages\\/[a-f0-9]{32}\\/full$/.test(path))sources.set(blob,path);}return blob;};
+        URL.createObjectURL=blob=>{const url=nativeCreate(blob),source=sources.get(blob);if(source)window.__photoOriginalSources[url]=source;return url;};`);
       await page.click("#messages .photo-open");
       await waitUntil(()=>page.execute("return document.getElementById('lightbox').open && !!document.querySelector('#lightbox-image img')"),"photo opens");
       if (role === "client") {
@@ -1488,8 +1493,10 @@ test("Chrome photo viewer crosses unloaded history, preserves scroll and finds a
       try { await waitUntil(()=>page.execute("return document.getElementById('lightbox-status').textContent.includes('2020')"),"older photo outside loaded messages"); }
       catch { const probe=await page.execute("return {touch:window.__photoTouchProbe??null,status:document.getElementById('lightbox-status')?.textContent??null}"); assert.fail(`older photo navigation: ${JSON.stringify({role,...probe,cursors:fixture.galleryRequests??[]})}`); }
       assert.ok(fixture.galleryRequests.some(query=>new URLSearchParams(query).get('before')==='3'),"the native previous-photo gesture requests the original message cursor");
+      await waitUntil(()=>page.execute("const image=document.querySelector('#lightbox-image img');return !!image&&image.complete&&image.naturalWidth>0&&window.__photoOriginalSources[image.src]===arguments[0]",`/api/media/${role}/conversations/${conversationId}/messages/${id(201)}/full`),"the decoded older image comes from its exact authorized message");
       await page.key("\uE014");
       await waitUntil(()=>page.execute("return !document.getElementById('lightbox-status').textContent.includes('2020')"),"keyboard moves to newer photo");
+      await waitUntil(()=>page.execute("const image=document.querySelector('#lightbox-image img');return !!image&&image.complete&&image.naturalWidth>0&&window.__photoOriginalSources[image.src]===arguments[0]",`/api/media/${role}/conversations/${conversationId}/messages/${id(203)}/full`),"the decoded newer image comes from its exact authorized message");
       await page.key("\uE00C");
       assert.equal(await page.execute("return document.getElementById('message-scroll').scrollTop"),scroll);
       await clickOptionsAction(page,"#open-gallery");
@@ -1530,4 +1537,26 @@ test("Chrome multiple photos preview before one send and retry only a failed ite
       await noJavascriptErrors(page);
     } finally {await page.close();}
   }
+});
+
+test("Chrome photo viewer keeps native pinch zoom and unrestricted pan permission while zoomed", { timeout:30000 }, async()=>{
+  resetFixture();fixture.photoSeries=true;const page=await browser(360);
+  try {
+    await loaded(page,'/messages');await loadedPhoto(page);await page.click('#messages .photo-open');
+    await waitUntil(()=>page.execute("const image=document.querySelector('#lightbox-image img');return document.getElementById('lightbox').open&&!!image&&image.complete&&image.naturalWidth>0"),'full photo decoded before native pinch');
+    const bounds=await page.execute("const r=document.getElementById('lightbox-image').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2),spread:Math.round(r.width*.32)}");
+    const before=fixture.galleryRequests?.length??0;
+    await page.pinch(bounds.x,bounds.y,35,bounds.spread);
+    await waitUntil(()=>page.execute("return visualViewport.scale>1.01&&getComputedStyle(document.getElementById('lightbox-image')).touchAction==='auto'"),'native pinch zoom keeps unrestricted image panning');
+    assert.equal(fixture.galleryRequests?.length??0,before,'native pinch never navigates to another photo');
+    await noJavascriptErrors(page);
+  } catch(error) {
+    try {
+      const directory=new URL('../../artifacts/homepage/',import.meta.url);await mkdir(directory,{recursive:true});
+      await writeFile(new URL('debug190-gallery-zoom.png',directory),Buffer.from(await page.screenshot(),'base64'));
+      const viewport=await page.execute("return {scale:visualViewport.scale,touchAction:getComputedStyle(document.getElementById('lightbox-image')).touchAction}");
+      await writeFile(new URL('debug190-gallery-zoom.json',directory),JSON.stringify({...viewport,cursors:fixture.galleryRequests??[]},null,2)+'\n');
+    } catch {}
+    throw error;
+  } finally {await page.close();}
 });

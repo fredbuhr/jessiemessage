@@ -1690,7 +1690,11 @@ test("viewer swipes keep pinch zoom and cancelled or multi-touch gestures from c
   const galleries=()=>f.calls.filter(call=>call.path.includes('/gallery?'));
   start();fire('touchcancel',{});end();await flush();assert.equal(galleries().length,0,'a cancelled native pan never changes the photo');
   fire('touchstart',{touches:[point(100),point(140)]});end();await flush();assert.equal(galleries().length,0,'pinch gestures are reserved for native zoom');
-  f.context.visualViewport.scale=2;start();end();await flush();assert.equal(galleries().length,0,'a zoomed image can be panned without navigating');
-  f.context.visualViewport.scale=1;start();end();await flush();
+  f.context.visualViewport.scale=2;vm.runInContext('updatePhotoTouchPolicy()',f.context);
+  assert.equal(surface.classList.contains('is-zoomed'),true,'zoom enables both native pan axes');
+  start();end();await flush();assert.equal(galleries().length,0,'a zoomed image can be panned without navigating');
+  f.context.visualViewport.scale=1;vm.runInContext('updatePhotoTouchPolicy()',f.context);
+  assert.equal(surface.classList.contains('is-zoomed'),false,'normal scale restores horizontal photo gestures');
+  start();end();await flush();
   assert.equal(galleries().length,1);assert.match(galleries()[0].path,/gallery\?limit=1&before=3$/,'one completed horizontal swipe uses the displayed message cursor');
 });

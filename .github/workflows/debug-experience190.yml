@@ -1,3 +1,4 @@
+# Diagnostic revision2: year, exact decoded original and native pinch.
 name: Diagnose experience190 gallery and video
 on:
   push:
@@ -34,4 +35,4 @@ jobs:
           name: debug190-gallery
           retention-days: 7
           if-no-files-found: warn
-          path: artifacts/homepage/debug190-gallery.*
+          path: artifacts/homepage/debug190-*
