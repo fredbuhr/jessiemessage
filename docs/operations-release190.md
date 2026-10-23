@@ -1,77 +1,32 @@
-# Mise en service de la1.9.0
+# Mise en service de la 1.9.0
 
-**Application190 démarrée et identité conforme, mais l’enregistrement final est refusé : `PRECHECK_NOT_PASSED`.** [Refus utilisateur et analyse](verification-proofs/jm190-hosted-writer-precheck-refusal.json). Ce refus intervient dans verify_evidence avant ouverture du checkpoint ; aucune métadonnée n’a été modifiée et aucun redémarrage n’a eu lieu. L’identité1.9.0/source5dda0dd4/Node24.22.1 reste acquise, relevé23octobre17:31:26 Paris.
+**Application190 démarrée ; correctif de finalisation qualifié13/13, exécution hébergée restante.** L’identité1.9.0/source5dda0dd4/Node24.22.1 est acquise, relevé23octobre17:31:26 Paris. Le checkpoint privé confirmé reste184 jusqu’au reçu final.
 
-## Prochaine action unique — lire les deux journaux de contrôle
+Le refus de l’ancien writer venait uniquement de sa borne arbitraire16 : le journal190 contient21 reçus strictement réussis,3822octets ;185 contient1 reçu conforme,182octets. Leurs empreintes sont reconstituées exactement. [Inspection utilisateur](verification-proofs/jm190-hosted-precheck-log-inspection.json). L’ancien refus et sa qualification restent historiques ; aucun journal n’est effacé ou filtré.
 
-Le writer exige1–16 reçus exacts par journal. Les deux journaux initiaux étaient conformes ; leur état après les essais Manager reste à lire. Un nombre trop élevé de contrôles est une hypothèse, pas un résultat. Aucun effacement de journal ou assouplissement de validation avant les données réelles.
+## Prochaine action unique — enregistrer les métadonnées finales
 
-Dans le [terminal SSH](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), utiliser ce diagnostic en lecture seule :
+Opérateur corrigé `1b54fa79bb4ab8fa92867b9764ed497a30cca23e`, arbre `76dfb2bd5ebbeb0de1940177d3961d9e9b8f97fd`. SHA256 `4bf91668b9ae60b74a1269e35e3c7dc21b176c450e4dae41cb7431fcbbd8bf72`. [Qualification native13/13](verification-proofs/jm190/writer-precheck-count-native.json), [run39982156936](https://github.com/fredbuhr/jessiemessage/actions/runs/39982156936), tentative1, Nodev24.22.1. Seuls writer et tests ciblés sont modifiés ; l’application publiée reste5dda0dd4.
+
+Dans le [terminal SSH](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), coller une fois :
 
 ```bash
-env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_PRECHECK_LOGS190'
-import hashlib, json, re, urllib.request
+env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD190'
+import hashlib, urllib.request
 
-url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/fbbe445bc37c90509d2af30c1ba7dc630927a40e/ops/migrate-release190.py'
+url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/1b54fa79bb4ab8fa92867b9764ed497a30cca23e/ops/record-release190.py"
 code = urllib.request.urlopen(url, timeout=30).read()
-if hashlib.sha256(code).hexdigest() != '3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2':
-    raise SystemExit('OUTIL190_A_VERIFIER : arrêt.')
-ns = {'__name__': 'jm190_inspection'}
-exec(compile(code, '<inspection-prechecks190>', 'exec'), ns)
-ns['identity']()
-expected = dict(version=2, type='local_closure_precheck', status='passed',
-    scope='local_application', pendingClosures=False, started=False,
-    erased=False, externalContinuityVerified=False)
-canonical = lambda value: json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False)
-class DuplicateKey(Exception):
-    pass
-def unique(pairs):
-    result = dict(pairs)
-    if len(result) != len(pairs):
-        raise DuplicateKey()
-    return result
-pattern = rb'^((?:RECURRING_(?:SUPERVISOR|FILES)|CHECKPOINT_ENCRYPTION|MANAGED_RUNTIME|ERASURE|WITNESS_(?:ORIGIN|GENESIS|ENROLLMENT|OBSERVATION|RECOVERY))_[A-Z_]{1,40})(?::|$)'
-for release, name in (
-    ('1.9.0', 'jm190-preflight-node24221-5dda0dd4.log'),
-    ('1.8.5', 'jm185-preflight-node24221-7a40de97.log'),
-):
-    data = ns['file'](ns['PRIVATE'] / name, limit=8*1024*1024)
-    lines, details, counts = data.splitlines(), [], {}
-    for index, line in enumerate(lines, 1):
-        item = dict(line=index)
-        try:
-            value = json.loads(line, object_pairs_hook=unique)
-            exact = canonical(value) == canonical(expected)
-            category = 'expected_passed' if exact else 'json_mismatch'
-            if not exact and type(value) is dict:
-                item['missingExpectedFields'] = [key for key in expected if key not in value]
-                item['extraFieldCount'] = len(set(value) - set(expected))
-                item['differentExpectedFields'] = [key for key in expected if key in value and canonical(value[key]) != canonical(expected[key])]
-                for key, allowed in (('type', ('local_closure_precheck', 'recurring_supervisor', 'recurring_backup_notice', 'account_closures')), ('status', ('passed', 'failed', 'unavailable', 'started', 'stopped', 'completed'))):
-                    item[key] = value.get(key) if type(value.get(key)) is str and value[key] in allowed else 'other'
-        except DuplicateKey:
-            category = 'duplicate_keys'
-        except (ValueError, TypeError, UnicodeError):
-            category = 'non_json_or_invalid_constant'
-            match = re.match(pattern, line)
-            if match:
-                item['operationalCode'] = match[1].decode('ascii')
-        item['classification'] = category
-        counts[category] = counts.get(category, 0) + 1
-        if category != 'expected_passed' and len(details) < 64:
-            details.append(item)
-    matches_writer = len(data) <= 65536 and 1 <= len(lines) <= 16 and counts.get('expected_passed', 0) == len(lines)
-    print(json.dumps(dict(release=release, logSha256=ns['digest'](data), bytes=len(data),
-        lineCount=len(lines), writerSizeLimitExceeded=len(data)>65536,
-        writerLineLimitExceeded=len(lines)>16, matchesWriterPrecheck=matches_writer,
-        classifications=counts, lines=details, omittedLineDetails=max(0, len(lines)-counts.get('expected_passed',0)-64),
-        inspectionReadOnly=True, runtimeStartedByInspection=False), separators=(',', ':')), flush=True)
-PY_PRECHECK_LOGS190
+expected = "4bf91668b9ae60b74a1269e35e3c7dc21b176c450e4dae41cb7431fcbbd8bf72"
+if hashlib.sha256(code).hexdigest() != expected:
+    raise SystemExit("Empreinte incorrecte : arrêt.")
+
+exec(compile(code, "<enregistrement190>", "exec"), {"__name__": "__main__"})
+PY_RECORD190
 ```
 
-Rapporter les deux JSON. Ils indiquent nombre de lignes, volume, catégories, différences sur les champs protocolaires et SHA256, sans lignes brutes ni secret. Les succès exacts sont comptés ; seuls les détails d’anomalies sont projetés, au maximum64. Aucun CHECK ou writer n’est rejoué. L’application reste en marche.
+Rapporter le JSON. Le résultat attendu est `release190_metadata_recorded` avec1.9.0/source5dda0dd4, SQL38, `publicReady:true`, repli1.8.5 précontrôlé et préservation des historiques/autres blocs. Seul le reçu effectif permettra de conclure ; il n’est pas encore acquis.
 
-Après le relevé, corriger uniquement la cause établie et qualifier un writer modifié si nécessaire. Conserver les journaux complets ; ne pas ignorer une erreur ou choisir seulement le dernier reçu pour obtenir un résultat vert. Le writer8690a825 qualifié9/9 conserve sa preuve historique et son refus réel ; il n’est pas à relancer automatiquement.
+Le writer conserve le plafond64KiB et exige chaque reçu exact d’un journal non vide. Il revalide les preuves locales, l’identité du démarrage, les HTTP publics et la publication avant d’ouvrir le checkpoint, puis préserve l’ancien état et les autres blocs par remplacement atomique gardé. Aucun démarrage, migration, CHECK ou modification de configuration. Si le writer refuse, conserver son JSON et inspecter la cause précise avant toute autre exécution.
 
 ## Résultats acquis — ne pas répéter
 

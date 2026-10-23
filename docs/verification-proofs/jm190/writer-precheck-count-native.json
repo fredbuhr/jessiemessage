@@ -1,0 +1,96 @@
+{
+  "type": "jm190-writer-precheck-count-native",
+  "date": "2026-10-23",
+  "status": "qualified_published_not_executed_on_host",
+  "operator": {
+    "source": "1b54fa79bb4ab8fa92867b9764ed497a30cca23e",
+    "tree": "76dfb2bd5ebbeb0de1940177d3961d9e9b8f97fd",
+    "sha256": "4bf91668b9ae60b74a1269e35e3c7dc21b176c450e4dae41cb7431fcbbd8bf72",
+    "run": 39982156936,
+    "job": 120511933395,
+    "nativePassed": 13,
+    "attempt": 1,
+    "proof": "jm190/writer-precheck-count-native.json",
+    "hostExecuted": false,
+    "branch": "ops/release190-tools",
+    "parent": "8690a8255e1297f288f7eae8ab25811bf63d2262"
+  },
+  "scope": {
+    "changedFiles": [
+      "ops/record-release190.py",
+      "ops/test-record-release190.py"
+    ],
+    "codeChange": "Remove only arbitrary16 receipt cap; retain nonempty all-lines strict semantic validation and64KiB file limit",
+    "applicationSource": "5dda0dd4453d34a0be839d2a1402301dea835381",
+    "applicationChanged": false,
+    "SQLChanged": false,
+    "restartRequired": false
+  },
+  "native": {
+    "runURL": "https://github.com/fredbuhr/jessiemessage/actions/runs/39982156936",
+    "head": "1b54fa79bb4ab8fa92867b9764ed497a30cca23e",
+    "tree": "76dfb2bd5ebbeb0de1940177d3961d9e9b8f97fd",
+    "status": "completed",
+    "conclusion": "success",
+    "attempt": 1,
+    "job": 120511933395,
+    "jobConclusion": "success",
+    "node": "v24.22.1",
+    "command": "python3 ops/test-record-release190.py",
+    "passed": 13,
+    "failed": 0,
+    "reportedDurationSeconds": 0.857,
+    "workflow": ".github/workflows/qualify-operators190.yml",
+    "runAndJobLogsRead": true
+  },
+  "coverage": {
+    "acceptedReceiptCounts": [
+      1,
+      16,
+      17,
+      21,
+      360
+    ],
+    "acceptedByteBoundary": 65536,
+    "oversizeCount361Refused": true,
+    "emptyRefused": true,
+    "both190And185Logs": true,
+    "badLinePositions": [
+      "first",
+      "middle",
+      "last"
+    ],
+    "refusedAnomalies": [
+      "failed_status",
+      "pending_closures",
+      "wrong_version",
+      "wrong_scope",
+      "started_true",
+      "extra_field",
+      "blank_line",
+      "non_json",
+      "duplicate_key",
+      "NaN"
+    ],
+    "refusalBeforeHTTP": true,
+    "checkpointAndLogBytesPreserved": true,
+    "atomicMetadataAndIdempotenceCovered": true
+  },
+  "verification": {
+    "remoteRawEqualsLocal": true,
+    "rootReview": true,
+    "independentReadOnlyReview": "writer190_independent_review: only precheck count cap changed; strict parse/file permissions/byte bound/refusal ordering preserved",
+    "bothHostedDiagnosticHashesReconstructed": true,
+    "commandASTValidated": true,
+    "commandSha256": "f1f29866a4d1a87289ee01be2ddb603fdac0d572f348466a3079b7900f775f3b"
+  },
+  "limits": [
+    "No agent private host access",
+    "No corrected writer hosted receipt acquired yet",
+    "Native test fixtures fake Git and public HTTP, production verifies them live",
+    "Physical phone and production feature checks not acquired"
+  ],
+  "priorNativeProof": "writer-final-native.json",
+  "hostedRefusalProof": "../jm190-hosted-writer-precheck-refusal.json",
+  "hostedDiagnosisProof": "../jm190-hosted-precheck-log-inspection.json"
+}

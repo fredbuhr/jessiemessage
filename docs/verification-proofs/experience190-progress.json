@@ -1,7 +1,7 @@
 {
   "type": "experience190-progress",
   "version": 2,
-  "status": "runtime190_active_final_writer_refused_PRECHECK_NOT_PASSED_logs_inspection_required",
+  "status": "runtime190_active_corrected_final_writer_qualified13_published_host_execution_remaining",
   "release": {
     "version": "1.9.0",
     "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
@@ -143,7 +143,9 @@
     "ManagerInversionProof": "jm190-Manager-command-inversion.json",
     "startupIdentityProof": "jm190-hosted-identity.json",
     "writerRefusal": "PRECHECK_NOT_PASSED",
-    "writerRefusalProof": "jm190-hosted-writer-precheck-refusal.json"
+    "writerRefusalProof": "jm190-hosted-writer-precheck-refusal.json",
+    "writerRefusalCause": "21 strictly valid receipts exceed arbitrary count16; 3822bytes under64KiB",
+    "precheckLogInspectionProof": "jm190-hosted-precheck-log-inspection.json"
   },
   "limits": [
     "Synthetic Chrome mobile/desktop and multiple browser sessions; no physical phone or two physical devices",
@@ -151,13 +153,13 @@
     "No production190 verification or new hosted backup trial; previous deferred work remains deferred"
   ],
   "nextAction": {
-    "only": "Read/classify both existing precheck logs without mutation; no writer/CHECK/start replay",
+    "only": "Execute corrected immutable hash-checked metadata-only writer once and acquire final JSON",
     "instructions": "../operations-release190.md",
-    "doNotReplayWriter": true,
+    "doNotReplayOldWriter": true,
     "doNotRerunPreflight": true,
     "doNotRestart": true,
     "doNotEraseLogs": true,
-    "following": "Choose cause-specific bounded correction from actual logs, qualify changed writer if needed, then record final metadata"
+    "following": "Verify reported final receipt and checkpoint alignment"
   },
   "historyProofs": [
     "jm190/pr-native-initial.json",
@@ -215,26 +217,33 @@
   },
   "upgradeProof": "jm190-hosted-upgrade-confirmation.json",
   "finalWriter": {
-    "source": "8690a8255e1297f288f7eae8ab25811bf63d2262",
-    "tree": "23d810fd51ca9a9509962a4bbec87a5e606ac34a",
-    "sha256": "40cc11b177de7199d07b7552d440fcf7990a0f8e5e334c885ef8fca93c7d93b8",
-    "run": 39972263974,
-    "nativePassed": 9,
-    "proof": "jm190/writer-final-native.json",
+    "source": "1b54fa79bb4ab8fa92867b9764ed497a30cca23e",
+    "tree": "76dfb2bd5ebbeb0de1940177d3961d9e9b8f97fd",
+    "sha256": "4bf91668b9ae60b74a1269e35e3c7dc21b176c450e4dae41cb7431fcbbd8bf72",
+    "run": 39982156936,
+    "job": 120511933395,
+    "nativePassed": 13,
+    "attempt": 1,
+    "proof": "jm190/writer-precheck-count-native.json",
     "hostExecuted": false
   },
   "hostedPrechecks": {
     "185": {
       "status": "passed",
       "sha256": "6aac70a7b9626362009117094981574277cdbb8f3bde674096b067f5518b8712",
-      "started": false
+      "started": false,
+      "latestLogReceipts": 1
     },
     "190": {
       "status": "passed",
       "sha256": "6aac70a7b9626362009117094981574277cdbb8f3bde674096b067f5518b8712",
-      "started": false
+      "started": false,
+      "latestLogReceipts": 21,
+      "latestLogBytes": 3822,
+      "latestLogSha256": "7685241ab026ce328cd542ec42da5a646ce78b17aae7a2165a8074ce5ecc08bd"
     },
-    "proof": "jm190-hosted-prechecks.json"
+    "initialProof": "jm190-hosted-prechecks.json",
+    "latestInspection": "jm190-hosted-precheck-log-inspection.json"
   },
   "startupAudit": {
     "proof": "jm190-startup-targeted-audit.json",
@@ -243,5 +252,15 @@
     "fullPreflightHostedExecuted": true,
     "newCaptureShowsManagerState": false,
     "fullPreflightHostedPassed": true
+  },
+  "priorFinalWriter": {
+    "source": "8690a8255e1297f288f7eae8ab25811bf63d2262",
+    "tree": "23d810fd51ca9a9509962a4bbec87a5e606ac34a",
+    "sha256": "40cc11b177de7199d07b7552d440fcf7990a0f8e5e334c885ef8fca93c7d93b8",
+    "run": 39972263974,
+    "nativePassed": 9,
+    "proof": "jm190/writer-final-native.json",
+    "hostExecuted": true,
+    "hostResult": "PRECHECK_NOT_PASSED_before_checkpoint_access"
   }
 }

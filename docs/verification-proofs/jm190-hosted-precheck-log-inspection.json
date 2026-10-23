@@ -1,0 +1,66 @@
+{
+  "type": "jm190-hosted-precheck-log-inspection",
+  "reportedDate": "2026-10-23",
+  "evidenceKind": "USER_REPORTED_JSON",
+  "reportedResults": [
+    {
+      "release": "1.9.0",
+      "logSha256": "7685241ab026ce328cd542ec42da5a646ce78b17aae7a2165a8074ce5ecc08bd",
+      "bytes": 3822,
+      "lineCount": 21,
+      "writerSizeLimitExceeded": false,
+      "writerLineLimitExceeded": true,
+      "matchesWriterPrecheck": false,
+      "classifications": {
+        "expected_passed": 21
+      },
+      "lines": [],
+      "omittedLineDetails": 0,
+      "inspectionReadOnly": true,
+      "runtimeStartedByInspection": false
+    },
+    {
+      "release": "1.8.5",
+      "logSha256": "6aac70a7b9626362009117094981574277cdbb8f3bde674096b067f5518b8712",
+      "bytes": 182,
+      "lineCount": 1,
+      "writerSizeLimitExceeded": false,
+      "writerLineLimitExceeded": false,
+      "matchesWriterPrecheck": true,
+      "classifications": {
+        "expected_passed": 1
+      },
+      "lines": [],
+      "omittedLineDetails": 0,
+      "inspectionReadOnly": true,
+      "runtimeStartedByInspection": false
+    }
+  ],
+  "independentReconstruction": {
+    "syntheticProtocolReceiptBytes": 182,
+    "bothReportedHashesAndSizesMatch": true,
+    "privateHostReadByAgent": false,
+    "rawHostLogStored": false
+  },
+  "cause": {
+    "confirmed": true,
+    "failedWriter": "8690a8255e1297f288f7eae8ab25811bf63d2262",
+    "refusal": "PRECHECK_NOT_PASSED",
+    "arbitraryReceiptCountLimit": 16,
+    "actualValid190Receipts": 21,
+    "semanticErrorFound": false,
+    "byteLimitExceeded": false,
+    "refusalBeforeCheckpointAccess": true
+  },
+  "correctionScope": {
+    "removeReceiptCountCap": true,
+    "preserve65536ByteLimit": true,
+    "validateEveryLineStrictly": true,
+    "preserveNonEmptyRequirement": true,
+    "applicationCodeChanged": false,
+    "SQLChanged": false,
+    "restartRequired": false,
+    "recordsIgnoredOrErased": false
+  },
+  "nextAction": "Qualify and publish corrected metadata-only writer; execute it once on host after giving immutable hash-checked command. No CHECK or activation replay."
+}
