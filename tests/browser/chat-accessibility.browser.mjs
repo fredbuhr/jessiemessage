@@ -378,6 +378,8 @@ async function clickComposerAction(page, selector) {
 }
 async function openMessageDetails(page, sequence) {
   const selector = `#messages [data-sequence="${sequence}"] .message-details-toggle`;
+  // A native inbox click returns before its asynchronous message page renders.
+  await waitUntil(() => page.execute("return !!document.querySelector(arguments[0])", selector), "message details control loaded");
   if (await page.execute("return document.querySelector(arguments[0]).getAttribute('aria-expanded')==='true'", selector)) return;
   await tabUntil(page, selector); await page.key("\uE007");
   await waitUntil(() => page.execute("return document.querySelector(arguments[0]).getAttribute('aria-expanded')==='true'", selector), "message details opened through the native keyboard control");
@@ -1468,11 +1470,24 @@ test("Chrome photo viewer crosses unloaded history, preserves scroll and finds a
       await page.click("#messages .photo-open");
       await waitUntil(()=>page.execute("return document.getElementById('lightbox').open && !!document.querySelector('#lightbox-image img')"),"photo opens");
       if (role === "client") {
+        await page.execute(`const surface=document.getElementById('lightbox-image');
+          window.__photoTouchProbe={events:[],touchAction:getComputedStyle(surface).touchAction,scale:visualViewport.scale};
+          for(const type of ['touchstart','touchend','touchcancel'])surface.addEventListener(type,event=>{
+            const point=event.changedTouches[0];window.__photoTouchProbe.events.push({type,touches:event.touches.length,x:point?.clientX,y:point?.clientY});
+          },{passive:true});`);
         // Start within the image surface, away from Chrome's edge-back gesture.
         const rect = await page.execute("const r=document.getElementById('lightbox-image').getBoundingClientRect();return {x:Math.round(r.x+r.width*.25),y:Math.round(r.y+r.height/2),endX:Math.round(r.x+r.width*.75)}");
+        await page.execute("window.__photoTouchBounds=arguments[0]",rect);
         await page.swipe(rect.x,rect.y,rect.endX,rect.y);
+        const probe=await page.execute("return window.__photoTouchProbe");
+        assert.ok(probe.touchAction.split(' ').includes('pan-y')&&probe.touchAction.split(' ').includes('pinch-zoom'),"the viewer retains vertical scrolling and native pinch zoom");
+        assert.ok(probe.events.some(event=>event.type==='touchstart'),`viewer receives native touch start: ${JSON.stringify(probe)}`);
+        assert.ok(probe.events.some(event=>event.type==='touchend'),`horizontal swipe reaches its native end: ${JSON.stringify(probe)}`);
+        assert.equal(probe.events.some(event=>event.type==='touchcancel'),false,`horizontal gesture belongs to the viewer: ${JSON.stringify(probe)}`);
       } else await page.click("#previous-photo");
-      await waitUntil(()=>page.execute("return document.getElementById('lightbox-status').textContent.includes('2020')"),"older photo outside loaded messages");
+      try { await waitUntil(()=>page.execute("return document.getElementById('lightbox-status').textContent.includes('2020')"),"older photo outside loaded messages"); }
+      catch { const probe=await page.execute("return {touch:window.__photoTouchProbe??null,status:document.getElementById('lightbox-status')?.textContent??null}"); assert.fail(`older photo navigation: ${JSON.stringify({role,...probe,cursors:fixture.galleryRequests??[]})}`); }
+      assert.ok(fixture.galleryRequests.some(query=>new URLSearchParams(query).get('before')==='3'),"the native previous-photo gesture requests the original message cursor");
       await page.key("\uE014");
       await waitUntil(()=>page.execute("return !document.getElementById('lightbox-status').textContent.includes('2020')"),"keyboard moves to newer photo");
       await page.key("\uE00C");
@@ -1484,6 +1499,16 @@ test("Chrome photo viewer crosses unloaded history, preserves scroll and finds a
       await page.click("#media-grid .photo-open");await page.click("#photo-message");
       await waitUntil(()=>page.execute("const row=document.querySelector('#messages [data-sequence=\"1\"]');return !!row&&row.classList.contains('notification-target')&&document.activeElement===row"),"message origin loaded and highlighted");
       await noJavascriptErrors(page);
+    } catch(error) {
+      // This fixture contains only fictional accounts and generated solid JPEGs.
+      // Capture the rendered state and bounded event metadata for native CI.
+      try {
+        const directory=new URL('../../artifacts/homepage/',import.meta.url);await mkdir(directory,{recursive:true});
+        await writeFile(new URL('debug190-gallery.png',directory),Buffer.from(await page.screenshot(),'base64'));
+        const probe=await page.execute("return {touch:window.__photoTouchProbe??null,bounds:window.__photoTouchBounds??null,status:document.getElementById('lightbox-status')?.textContent??null}");
+        await writeFile(new URL('debug190-gallery.json',directory),JSON.stringify({role,...probe,cursors:fixture.galleryRequests??[]},null,2)+'\n');
+      } catch {}
+      throw error;
     } finally { await page.close(); }
   }
 });

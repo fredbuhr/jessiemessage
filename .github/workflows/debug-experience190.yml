@@ -1,0 +1,37 @@
+name: Diagnose experience190 gallery and video
+on:
+  push:
+    branches: ["ops/debug-experience190"]
+    paths: [".github/workflows/debug-experience190.yml"]
+permissions:
+  contents: read
+concurrency:
+  group: debug-experience190
+  cancel-in-progress: false
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - name: Checkout exact diagnostic source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Use Node.js24.22.1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+          package-manager-cache: false
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Exercise actual Chrome gestures and strict admin video fixture
+        run: node --test --test-name-pattern='Chrome photo viewer|administrator video draft|client keeps' tests/browser/chat-accessibility.browser.mjs tests/browser/video-messaging.browser.mjs
+      - name: Preserve synthetic gesture diagnosis on failure
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: debug190-gallery
+          retention-days: 7
+          if-no-files-found: warn
+          path: artifacts/homepage/debug190-gallery.*

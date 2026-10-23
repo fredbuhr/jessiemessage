@@ -2209,6 +2209,7 @@ el("lightbox").addEventListener("keydown", event => {
   if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); void navigatePhoto(event.key === "ArrowLeft" ? "previous" : "next"); }
 });
 el("lightbox-image").addEventListener("touchstart", event => { lightboxTouch = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null; }, { passive: true });
+el("lightbox-image").addEventListener("touchcancel", () => { lightboxTouch = null; }, { passive: true });
 el("lightbox-image").addEventListener("touchend", event => {
   const start = lightboxTouch; lightboxTouch = null;
   if (!start || event.touches.length || event.changedTouches.length !== 1 || (globalThis.visualViewport?.scale ?? 1) > 1.01) return;
