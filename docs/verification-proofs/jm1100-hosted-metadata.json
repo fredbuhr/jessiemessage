@@ -1,0 +1,59 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-release1100-hosted-metadata",
+  "status": "delivery_closed_application_publication_checkpoint_aligned",
+  "evidenceKind": "USER_REPORTED",
+  "receivedAt": "2026-10-23T17:56:45.361368+00:00",
+  "provenance": "User supplied the final JSON printed by the pinned writer after its guarded write and readback; no independent live host inspection by agent.",
+  "reportedResult": {
+    "status": "release1100_metadata_recorded",
+    "version": "1.10.0",
+    "source": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+    "tree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+    "metadataOnly": true,
+    "noRestart": true,
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "release": {
+      "version": "1.10.0",
+      "commit": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+      "nodeVersion": "v24.22.1",
+      "startedAt": 1792777419589
+    },
+    "publicReady": true,
+    "rollbackRelease": "1.8.5",
+    "rollbackAfterMigrationQualified": true,
+    "restart184Allowed": false,
+    "restart172Allowed": false,
+    "historicalRelease184Preserved": true,
+    "priorActivePreserved": true,
+    "otherBlocksPreserved": true,
+    "checkpointSha256": "3d60ceb7da3dc61c9ca198ba40a898f6f9ab054650030c7a1632f019ecc73e53"
+  },
+  "verification": {
+    "identityMatchesPublished": true,
+    "treeMatchesPublished": true,
+    "nodeMatchesQualified": true,
+    "startupParis": "2026-10-23T19:43:39.589+02:00",
+    "startupMatchesEarlierUIDisplay": true,
+    "checkpointVersion": "1.10.0",
+    "checkpointSha256": "3d60ceb7da3dc61c9ca198ba40a898f6f9ab054650030c7a1632f019ecc73e53",
+    "priorCheckpointSha256": "01692bfda8ef4a0cab2d102a183c0ab88fe9e8d99858d6e9b583f8b85ffde674",
+    "writerSource": "8882bc7da3170f2f079d163af8f3506ff8cfd2ff",
+    "writerSha256": "6d6fc8dae9d46b9a5fa0665b620d06ec6208d3a8bacc261df8be434feaf486a8",
+    "writerNativeRun": 39997775658,
+    "releaseId": 422111737,
+    "tag": "v1.10.0",
+    "tagAndLatestRemoteSourceRechecked": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+    "noRestart": true,
+    "noMigration": true
+  },
+  "limitations": [
+    "All hosted facts derive from user-supplied receipt; agent did not inspect host, process or private checkpoint bytes.",
+    "Checkpoint hash is reported by guarded writer; agent cannot independently recompute private checkpoint content.",
+    "applicationTables:37 retained as received; source plan defines36 application tables plus migration ledger, not a fresh physical SQL inventory.",
+    "publicReady proves the writer public HTTP checks, not every business flow, physical device, Push or hosted backup.",
+    "New public snapshot stays outside historical backup manifest and can be republished."
+  ],
+  "nextAction": "no_delivery_operation_remaining_preserve_deferred_checks_and_wait_for_concrete_user_feedback_or_new_request"
+}
