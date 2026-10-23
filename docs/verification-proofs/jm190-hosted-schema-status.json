@@ -1,0 +1,94 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-release190-hosted-schema-status",
+  "status": "sql36_prefix_confirmed_two_pending_no_upgrade",
+  "reportedDate": "2026-10-23",
+  "evidenceKind": "USER_REPORTED",
+  "reviewedLocallyAt": "2026-10-23T14:10:23.782164+00:00",
+  "provenance": "Exact JSON supplied by the user and forwarded verbatim by root. Local validation checks only its structure, pinned release identity and coherent counts against the qualified helper policy. No private SQL connection, host inspection or second status execution by this reviewer.",
+  "operator": {
+    "source": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
+    "path": "ops/migrate-release190.py",
+    "sha256": "3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2",
+    "command": [
+      "status"
+    ],
+    "stagingReceiptSha256": "3a4788b4a31cac3d55f09950e3b98f99a700e0f0dd8af21f83a6135bd01d8cd0"
+  },
+  "reportedStatus": {
+    "status": "release190_schema_status",
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "applied": 36,
+    "pending": 2,
+    "migrated": false,
+    "runtimeStarted": false,
+    "restart184Allowed": true,
+    "restart172Allowed": true,
+    "rollbackAfterMigrationQualified": false,
+    "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
+    "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+    "nodeVersion": "v24.22.1",
+    "metadataOnly": false,
+    "managerChanged": false,
+    "checkpointChanged": false,
+    "hostedPrecheckPassed": false,
+    "noRestart": true
+  },
+  "receiptConsistency": {
+    "exactFields": 18,
+    "sourceAndTreeMatchPublished190": true,
+    "nodeVersionMatchesExpected": true,
+    "appliedPlusPendingEqualsPlan": true,
+    "cleanExpectedPreUpgradeCounts": true,
+    "migratedRuntimeStartedPrecheckAndWriteFlagsRemainFalse": true,
+    "canonicalProjectionSha256": "5262ca723e120978a2ab16c04fd9d9b29b29a8c23e6cb6d1a71a813489ed160f",
+    "canonicalProjectionHashMeaning": "Local digest of the transcribed status object; no private status receipt file or user-supplied receipt hash exists for status.",
+    "canonicalEncoding": "UTF-8 JSON sort_keys=True separators=(comma,colon) plus one LF"
+  },
+  "interpretation": {
+    "acquired": "User-reported status indicates36 migrations applied and2 pending in the reviewed38-migration plan.",
+    "appliedMigrations": 36,
+    "pendingMigrations": 2,
+    "schemaMigrationsFieldIsPlanSize": true,
+    "applicationTablesFieldIsTargetPlanPhysicalTables": true,
+    "actualPhysicalTableInventoryAcquired": false,
+    "schema38UpgradeAcquired": false,
+    "release185PrecheckAcquired": false,
+    "release190PrecheckAcquired": false,
+    "release190RuntimeStartAcquired": false,
+    "release190ActivationAcquired": false,
+    "release190MetadataRecordingAcquired": false,
+    "serviceStoppedAcquired": false,
+    "statusWritesAttemptOrReceipt": false,
+    "lastAcquiredActiveState": "1.8.4/SQL36 from prior user evidence; no new process observation is inferred.",
+    "restartFlagsScope": "restart184Allowed and restart172Allowed are the helper pre-upgrade schema compatibility flags. They do not apply after migration toSQL38 and are not instructions to start an older release.",
+    "metadataOnlyFalseMeaning": "The helper performed a real SQL status operation rather than checkpoint-only recording; this field does not imply a DDL or application-data write."
+  },
+  "upgradeCommandReview": {
+    "sameHelperAndPinsSufficient": true,
+    "requiredArguments": [
+      "upgrade",
+      "--service-stopped"
+    ],
+    "newPinRequired": false,
+    "incompatibleGuardIdentified": false,
+    "conditions": [
+      "The user must first stop the existing Node service in Manager and observe the state Arrêté; the helper flag is an operator attestation, not an automatic stop command.",
+      "Source/tree/tag, staging receipt and launcher hashes, private Node hash and the previous184 checkpoint hash are rechecked by identity().",
+      "No existing upgrade-attempt marker or schema38 success receipt may be present. A previous uncertain attempt refuses automatic retry and requires inspection.",
+      "A durable exclusive upgrade-attempt marker is written before SQL. The helper accepts only clean36applied/2pending or already38applied/0pending; partial/interrupted histories refuse.",
+      "The actual upgrade applies the existing reviewed37/38 migrations, then reads status again and requires38applied/0pending.",
+      "Current-password input remains local on a real controlling TTY with getpass; secret is passed to Node stdin, not argv/environment/log output."
+    ],
+    "expectedSuccess": "release190_schema38_confirmed with applied2/unchanged36, migratedtrue, runtimeStartedfalse; obtain the actual result before any CHECK or start.",
+    "reviewDoesNotExecuteUpgrade": true
+  },
+  "limits": [
+    "38 migrations and37 physical tables are the target plan size, not a new inventory of the hosted schema.",
+    "No engine version, physical table inventory, PID/socket or running application identity is independently read here.",
+    "No migration, CHECK, restart, real feature test, device test, notification or backup result is inferred.",
+    "No suite was rerun and no Git/GitHub mutation was performed by this review."
+  ],
+  "nextAction": "User personally stops Node service in Manager and verifies Arrêté, then runs exactly the same qualified hash-checked helper with upgrade --service-stopped once. No new general authorization request or new pin is needed; no automatic retry after an uncertain result."
+}

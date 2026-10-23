@@ -1,7 +1,7 @@
 {
   "type": "experience190-progress",
   "version": 2,
-  "status": "host_sources_prepared_staged_migrator_qualified_awaiting_SQL_status",
+  "status": "SQL36_status_confirmed_awaiting_personal_service_stop_and_guarded_upgrade",
   "release": {
     "version": "1.9.0",
     "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
@@ -113,7 +113,7 @@
   },
   "hosted": {
     "sourcesPrepared": true,
-    "schemaStatusRead": false,
+    "schemaStatusRead": true,
     "migrated": false,
     "prechecked185": false,
     "prechecked190": false,
@@ -127,13 +127,15 @@
     "No production190 verification or new hosted backup trial; previous deferred work remains deferred"
   ],
   "nextAction": {
-    "only": "Personal hosted SQL status command, while application remains running",
+    "only": "User stops Node239143 in Manager, observes stopped state, then runs pinned upgrade --service-stopped and reports actual JSON receipt",
     "operator": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
     "migratorSha256": "3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2",
     "instructions": "../operations-release190.md",
+    "SQLAccount": "fb4hmr_jm_mig",
     "doNotRerunPreparation": true,
     "noCheckBeforeSQL38": true,
-    "following": "Inspect actual SQL status; personal service stop, guarded upgrade, CHECKs,190 activation and final writer"
+    "keepStoppedAfterUpgrade": true,
+    "following": "After actualSQL38 proof: separate185/190 CHECKs,190 activation and final writer"
   },
   "historyProofs": [
     "jm190/pr-native-initial.json",
@@ -159,5 +161,14 @@
     "nativeNode": "v24.22.1",
     "proof": "jm190/migrator-tty-native.json",
     "realControllingTerminalTested": true
+  },
+  "sqlStatus": {
+    "evidence": "USER_REPORTED",
+    "applied": 36,
+    "pending": 2,
+    "migrated": false,
+    "runtimeStarted": false,
+    "proof": "jm190-hosted-schema-status.json",
+    "target38And37ArePlanMetadata": true
   }
 }
