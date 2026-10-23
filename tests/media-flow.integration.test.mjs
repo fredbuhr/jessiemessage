@@ -395,12 +395,43 @@ test("real HTTP private media uses normalized encrypted files and current delive
       const gallery = await request(mediaPath("admin", `conversations/${convA}/gallery?limit=1`), { headers: headersFor(admin) });
       assert.equal(gallery.status, 200);
       assert.equal(gallery.body.items.length, 1);
-      assert.equal(gallery.body.items[0].messageId, repeatedMessage.id);
-      assert.equal(gallery.body.items[0].sequence, "2");
+      const canonical = [firstMessage,repeatedMessage].sort((left,right) => right.createdAt - left.createdAt || (right.id > left.id ? 1 : right.id < left.id ? -1 : 0));
+      assert.equal(gallery.body.items[0].messageId, canonical[0].id);
+      assert.equal(gallery.body.items[0].sequence, canonical[0].sequence);
       assert.equal(gallery.body.hasMore, true);
       const older = await request(mediaPath("admin", `conversations/${convA}/gallery?before=${gallery.body.nextBefore}&limit=1`), { headers: headersFor(admin) });
-      assert.equal(older.body.items[0].messageId, firstMessage.id);
+      assert.equal(older.body.items[0].messageId, canonical[1].id);
       assert.equal(older.body.hasMore, false);
+      const newer = await request(mediaPath("admin", `conversations/${convA}/gallery?after=${canonical[1].sequence}&limit=1`), { headers: headersFor(admin) });
+      assert.equal(newer.body.items[0].messageId, canonical[0].id);
+      assert.equal(newer.body.hasMore, false, "neighbor reads remain bounded to one authorized delivery");
+      const created = repeatedMessage.createdAt;
+      const monthWindow = await request(mediaPath("client", `conversations/${convA}/gallery?from=${created}&until=${created+1}`), { headers: headersFor(a) });
+      assert.equal(monthWindow.status, 200);
+      assert.ok(monthWindow.body.items.some(item => item.messageId === repeatedMessage.id));
+      assert.ok(monthWindow.body.items.every(item => item.createdAt >= created && item.createdAt < created + 1));
+      const absentWindow = await request(mediaPath("client", `conversations/${convA}/gallery?from=${created+1000}&until=${created+2000}`), { headers: headersFor(a) });
+      assert.equal(absentWindow.status, 200); assert.deepEqual(absentWindow.body.items, []);
+      // Exercise canonical chronology independently of sequence allocation:
+      // tied timestamps use message identity, and a clock reversal must not
+      // make the arrows skip or revisit a delivery.
+      const tied = Math.min(firstMessage.createdAt,repeatedMessage.createdAt);
+      try {
+        await connection.query("UPDATE messages SET created_at = ? WHERE conversation_id = ? AND id IN (?, ?)", [sqlDate(tied),Buffer.from(convA,"hex"),Buffer.from(firstMessage.id,"hex"),Buffer.from(repeatedMessage.id,"hex")]);
+        const tiedRows = await request(mediaPath("client", `conversations/${convA}/gallery`), { headers: headersFor(a) });
+        assert.deepEqual(tiedRows.body.items.map(item=>item.messageId),[firstMessage.id,repeatedMessage.id].sort().reverse());
+        const old = tiedRows.body.items.at(-1);
+        const tieNext = await request(mediaPath("client", `conversations/${convA}/gallery?after=${old.sequence}&limit=1`), { headers: headersFor(a) });
+        assert.equal(tieNext.body.items[0].messageId,tiedRows.body.items[0].messageId);
+        await connection.query("UPDATE messages SET created_at = ? WHERE id = ?", [sqlDate(tied-1000),Buffer.from(firstMessage.id,"hex")]);
+        await connection.query("UPDATE messages SET created_at = ? WHERE id = ?", [sqlDate(tied-2000),Buffer.from(repeatedMessage.id,"hex")]);
+        const reversed = await request(mediaPath("client", `conversations/${convA}/gallery?limit=1`), { headers: headersFor(a) });
+        assert.equal(reversed.body.items[0].messageId,firstMessage.id,"date order takes precedence over a newer sequence");
+        const reverseOlder = await request(mediaPath("client", `conversations/${convA}/gallery?before=${firstMessage.sequence}&limit=1`), { headers: headersFor(a) });
+        assert.equal(reverseOlder.body.items[0].messageId,repeatedMessage.id);
+      } finally {
+        for (const row of [firstMessage,repeatedMessage]) await connection.query("UPDATE messages SET created_at = ? WHERE id = ?", [sqlDate(row.createdAt),Buffer.from(row.id,"hex")]);
+      }
       const library = await request(mediaPath("client", `assets?conversationId=${convA}`), { headers: headersFor(a) });
       assert.equal(library.body.assets.length, 1);
       assert.equal(library.body.assets[0].sharedHere, true);

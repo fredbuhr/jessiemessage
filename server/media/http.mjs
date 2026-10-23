@@ -3,6 +3,7 @@ import { checkMutation, httpError, isToken, readJson, reply, sameText, sessionTo
 import { safeMedia, safeMessage } from "../chat/http.mjs";
 import { validateMessageBody } from "../chat/crypto.mjs";
 
+export const MAX_PHOTO_BATCH = 10;
 const MAX_UPLOAD_BYTES = 10485760;
 const MAX_ACTIVE_BINARY_READS = 8;
 let activeBinaryReads = 0;
@@ -48,10 +49,29 @@ function routeFor(pathname) {
   if (match) return { role: match[1], kind: match[2], methods: match[2] === "assets" ? ["GET", "POST"] : ["GET"] };
   match = /^\/api\/media\/(admin|client)\/assets\/([a-f0-9]{32})\/(delete|full|thumb)$/.exec(pathname);
   if (match) return { role: match[1], kind: match[3] === "delete" ? "delete" : "ownedBytes", assetId: match[2], variant: match[3], methods: match[3] === "delete" ? ["POST"] : ["GET", "HEAD"] };
+  const batch = /^\/api\/media\/(admin|client)\/conversations\/([a-f0-9]{32})\/messages\/batch$/.exec(pathname);
+  if (batch) return { role: batch[1], kind: "batch", conversationId: batch[2], methods: ["POST"] };
   match = /^\/api\/media\/(admin|client)\/conversations\/([a-f0-9]{32})\/(gallery|messages)(?:\/([a-f0-9]{32})\/(full|thumb))?$/.exec(pathname);
   if (!match || match[3] === "gallery" && match[4]) return null;
   if (match[3] === "gallery") return { role: match[1], kind: "gallery", conversationId: match[2], methods: ["GET"] };
   return { role: match[1], kind: match[4] ? "deliveryBytes" : "send", conversationId: match[2], messageId: match[4], variant: match[5], methods: match[4] ? ["GET", "HEAD"] : ["POST"] };
+}
+
+function photoSendInput(body, role) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) throw invalid();
+  const keys = ["clientMessageId", "mediaId", "caption"];
+  if (Object.hasOwn(body, "replyThrough")) {
+    if (role !== "admin" || !sequence(body.replyThrough)) throw invalid();
+    keys.push("replyThrough");
+  }
+  if (Object.hasOwn(body, "replyVersion")) {
+    if (role !== "admin" || typeof body.replyVersion !== "string" || !/^(?:0|[1-9][0-9]{0,9})$/.test(body.replyVersion) || BigInt(body.replyVersion) > 4294967295n) throw invalid();
+    keys.push("replyVersion");
+  }
+  shape(body, keys);
+  if (!id(body.clientMessageId) || !id(body.mediaId) || typeof body.caption !== "string" || body.caption.length > 1000) throw invalid();
+  if (body.caption !== "") validateMessageBody(body.caption);
+  return body;
 }
 
 function checkUploadHeaders(request, origin) {
@@ -245,17 +265,25 @@ export function createMediaHandler(service, { origin }) {
         await service.removeAsset(route.role, token, route.assetId);
         reply(response, method, 200, { deleted: true });
       } else if (route.kind === "gallery") {
-        const options = query(url, ["before", "limit"], 50);
-        const before = options.before ?? null;
-        if (before !== null && !sequence(before)) throw invalid();
-        const result = await service.gallery(route.role, token, route.conversationId, { before, limit: options.limit });
+        const options = query(url, ["before", "after", "from", "until", "limit"], 50);
+        const before = options.before ?? null, after = options.after ?? null;
+        if (before !== null && !sequence(before) || after !== null && (!sequence(after) || before !== null || options.limit !== 1)) throw invalid();
+        const range = {};
+        for (const key of ["from", "until"]) if (options[key] !== undefined) {
+          if (!/^(?:0|[1-9][0-9]{0,14})$/.test(options[key]) || !Number.isSafeInteger(Number(options[key])) || Number(options[key]) > 253402300799999) throw invalid();
+          range[key] = Number(options[key]);
+        }
+        if (range.from !== undefined && range.until !== undefined && range.from >= range.until) throw invalid();
+        const result = await service.gallery(route.role, token, route.conversationId, { before, limit: options.limit, ...(after === null ? {} : { after }), ...range });
         if (!result || !Array.isArray(result.items) || result.items.length > options.limit || typeof result.hasMore !== "boolean"
           || !(result.nextBefore === null || sequence(result.nextBefore))) throw unavailable();
-        let previous = before === null ? MAX_SEQUENCE + 1n : BigInt(before);
+        let previous = null; const seen = new Set(), seenSequences = new Set();
         const items = result.items.map((value) => {
-          if (!value || !id(value.messageId) || !sequence(value.sequence, true) || BigInt(value.sequence) >= previous
-            || !["me", "peer"].includes(value.sender) || !date(value.createdAt)) throw unavailable();
-          previous = BigInt(value.sequence);
+          if (!value || !id(value.messageId) || !sequence(value.sequence, true) || seen.has(value.messageId) || seenSequences.has(value.sequence)
+            || previous !== null && (value.createdAt > previous.createdAt || value.createdAt === previous.createdAt && value.messageId >= previous.messageId)
+            || !["me", "peer"].includes(value.sender) || !date(value.createdAt)
+            || range.from !== undefined && value.createdAt < range.from || range.until !== undefined && value.createdAt >= range.until) throw unavailable();
+          previous = value; seen.add(value.messageId); seenSequences.add(value.sequence);
           return { messageId: value.messageId, sequence: value.sequence, sender: value.sender, createdAt: value.createdAt,
             media: safeMedia(value.media, { role: route.role, conversationId: route.conversationId, messageId: value.messageId }) };
         });
@@ -263,11 +291,32 @@ export function createMediaHandler(service, { origin }) {
           || result.nextBefore !== null && result.nextBefore !== items.at(-1)?.sequence
           || !items.length && result.nextBefore !== null) throw unavailable();
         reply(response, method, 200, { items, nextBefore: result.nextBefore, hasMore: result.hasMore });
+      } else if (route.kind === "batch") {
+        query(url, []);
+        const parsed = await readJson(request, { maxBytes: 65536 });
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw invalid();
+        const body = shape(parsed, ["messages"]);
+        if (!Array.isArray(body.messages) || body.messages.length < 1 || body.messages.length > MAX_PHOTO_BATCH) throw invalid();
+        const messages = body.messages.map(value => photoSendInput(value, route.role));
+        if (new Set(messages.map(value => value.clientMessageId)).size !== messages.length) throw invalid();
+        const results = []; let blocked = false;
+        // Bound work and preserve individual idempotency. A lost response is
+        // retried with the same keys, never with a fresh message identity.
+        for (const input of messages) {
+          if (blocked) { results.push({ clientMessageId: input.clientMessageId, error: "photo_batch_waiting", status: 424 }); continue; }
+          try {
+            const result = await service.send(route.role, token, route.conversationId, input);
+            if (!result || typeof result.duplicate !== "boolean") throw unavailable();
+            results.push({ clientMessageId: input.clientMessageId, message: safeMessage(result.message, { role: route.role, conversationId: route.conversationId }), duplicate: result.duplicate });
+          } catch (error) {
+            const mapped = mappedError(error); blocked = true;
+            results.push({ clientMessageId: input.clientMessageId, error: mapped.code, status: mapped.status });
+          }
+        }
+        reply(response, method, 200, { results });
       } else {
         query(url, []);
-        const body = shape(await readJson(request, { maxBytes: 8192 }), ["clientMessageId", "mediaId", "caption"]);
-        if (!id(body.clientMessageId) || !id(body.mediaId) || typeof body.caption !== "string" || body.caption.length > 1000) throw invalid();
-        if (body.caption !== "") validateMessageBody(body.caption);
+        const body = photoSendInput(await readJson(request, { maxBytes: 8192 }), route.role);
         const result = await service.send(route.role, token, route.conversationId, body);
         if (!result || typeof result.duplicate !== "boolean") throw unavailable();
         reply(response, method, result.duplicate ? 200 : 201, { message: safeMessage(result.message, { role: route.role, conversationId: route.conversationId }), duplicate: result.duplicate });

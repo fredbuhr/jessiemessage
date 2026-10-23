@@ -10,7 +10,7 @@ import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
 const token = "a".repeat(42) + "A";
 const password = "  Été fictif  ";
 const email = "synthetic-recovery@example.invalid";
-const files = ["recover.html", "recover.js", "recover-model.js", "recover.css", "admin-login.css", "i18n.js", "help-link.js", "i18n-access.js", "i18n.css",
+const files = ["recover.html", "recover.js", "recover-model.js", "recover.css", "admin-login.css", "password-fields.js", "password-fields.css", "i18n.js", "help-link.js", "i18n-access.js", "i18n.css",
   "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css", "brand/icon-32.png", "brand/icon-128.png"];
 const types = { js: "text/javascript; charset=utf-8", html: "text/html; charset=utf-8", css: "text/css; charset=utf-8", png: "image/png", ico: "image/x-icon", webmanifest: "application/manifest+json" };
 const copy = {
@@ -180,21 +180,21 @@ test("real Chrome: client recovery is deliberate, private, translated and usable
         assert.equal(fixture.calls.filter(call => call.kind === "request").length, 1);
 
         await page.navigate(`/recover?source=synthetic-mail#reset=${token}`); await readyForm(page, "reset");
-        assert.equal(await page.execute("return document.querySelector('#recovery-reset-form button').textContent"), copy[language].reset);
+        assert.equal(await page.execute("return document.querySelector('#recovery-reset-form button[type=submit]').textContent"), copy[language].reset);
         assert.equal(fixture.calls.filter(call => call.kind === "reset").length, 0, "opening or scanning a link never resets a password");
         await cleanSurfaces(page); await geometry(page);
         await page.type("#recovery-password", "short"); await page.type("#recovery-confirmation", "short");
-        await page.click("#recovery-reset-form button");
+        await page.click("#recovery-reset-form button[type=submit]");
         assert.equal(await page.execute("return document.getElementById('recovery-password').validity.tooShort"), true);
         assert.equal(fixture.calls.filter(call => call.kind === "reset").length, 0, "native password length validation prevents reset");
         await page.type("#recovery-password", password); await page.type("#recovery-confirmation", "different synthetic password");
-        await page.click("#recovery-reset-form button");
+        await page.click("#recovery-reset-form button[type=submit]");
         assert.equal(await page.execute("return document.activeElement.id === 'recovery-confirmation' && document.activeElement.getAttribute('aria-invalid') === 'true'"), true,
           "a mismatch is explained and focused without sending the reset");
         assert.equal(fixture.calls.filter(call => call.kind === "reset").length, 0);
-        await fillReset(page); await page.click("#recovery-reset-form button");
+        await fillReset(page); await page.click("#recovery-reset-form button[type=submit]");
         await waitUntil(() => fixture.calls.some(call => call.kind === "reset"), "one deliberate reset");
-        assert.equal(await page.execute("return document.querySelector('#recovery-reset-form button').disabled && [...document.querySelectorAll('#recovery-reset-form input')].every(input => input.readOnly)"), true);
+        assert.equal(await page.execute("return document.querySelector('#recovery-reset-form button[type=submit]').disabled && [...document.querySelectorAll('#recovery-reset-form input')].every(input => input.readOnly)"), true);
         fixture.release(); await waitUntil(() => page.execute("return document.getElementById('recovery-title').textContent === arguments[0]", copy[language].changed), "successful translated reset");
         await passwordsCleared(page); await geometry(page); await cleanSurfaces(page); cleanCalls(fixture);
         assert.equal(fixture.calls.filter(call => call.kind === "reset").length, 1, "success never silently submits or signs in again");
@@ -213,7 +213,7 @@ test("real Chrome: client recovery is deliberate, private, translated and usable
         await cleanSurfaces(page); await geometry(page); await page.click("#recovery-retry-capability"); await readyForm(page, "reset");
         assert.equal(fixture.calls.filter(call => call.kind === "capabilities").length, 2);
         assert.equal(fixture.calls.filter(call => call.kind === "reset").length, 0);
-        await fillReset(page); await page.click("#recovery-reset-form button");
+        await fillReset(page); await page.click("#recovery-reset-form button[type=submit]");
         await waitUntil(() => page.execute("return document.getElementById('recovery-title').textContent === arguments[0]", copy.en.changed), "reset after successful capability retry");
         await passwordsCleared(page); await cleanSurfaces(page); cleanCalls(fixture);
       } finally { await page.close(); }
@@ -224,11 +224,11 @@ test("real Chrome: client recovery is deliberate, private, translated and usable
       const page = await driver.browser({ origin: fixture.origin, width: 375 });
       try {
         await openRecovery(page, "en", `#reset=${token}`); await readyForm(page, "reset");
-        await fillReset(page); await page.click("#recovery-reset-form button"); await statusStarts(page, copy.en.uncertain);
+        await fillReset(page); await page.click("#recovery-reset-form button[type=submit]"); await statusStarts(page, copy.en.uncertain);
         await passwordsCleared(page); await readyForm(page, "reset"); await geometry(page); await cleanSurfaces(page);
-        assert.equal(await page.execute("return !document.querySelector('#recovery-reset-form button').disabled && !document.getElementById('recovery-new-request').hidden"), true);
+        assert.equal(await page.execute("return !document.querySelector('#recovery-reset-form button[type=submit]').disabled && !document.getElementById('recovery-new-request').hidden"), true);
         assert.equal(fixture.calls.filter(call => call.kind === "reset").length, 1, "network failure never automatically replays a password change");
-        await fillReset(page); await page.click("#recovery-reset-form button");
+        await fillReset(page); await page.click("#recovery-reset-form button[type=submit]");
         if (consumed) { await statusStarts(page, copy.en.invalid); await readyForm(page, "request"); }
         else await waitUntil(() => page.execute("return document.getElementById('recovery-title').textContent === arguments[0]", copy.en.changed), "explicit retry succeeds when the token was not consumed");
         assert.equal(fixture.calls.filter(call => call.kind === "reset").length, 2);
@@ -241,7 +241,7 @@ test("real Chrome: client recovery is deliberate, private, translated and usable
       const page = await driver.browser({ origin: fixture.origin, width: 320 });
       try {
         await openRecovery(page, "fr", `#reset=${token}`); await readyForm(page, "reset");
-        await fillReset(page); await page.click("#recovery-reset-form button"); await statusStarts(page, copy.fr.invalid); await readyForm(page, "request");
+        await fillReset(page); await page.click("#recovery-reset-form button[type=submit]"); await statusStarts(page, copy.fr.invalid); await readyForm(page, "request");
         await passwordsCleared(page); await geometry(page); await cleanSurfaces(page);
         await page.type("#recovery-email", email); await page.click("#recovery-request-form button"); await statusStarts(page, copy.fr.accepted);
         assert.equal(fixture.calls.filter(call => call.kind === "reset").length, 1); cleanCalls(fixture);
@@ -280,7 +280,7 @@ test("real Chrome: client recovery is deliberate, private, translated and usable
       const page = await driver.browser({ origin: fixture.origin, width: 320 });
       try {
         await openRecovery(page, "fr", `#reset=${token}`); await readyForm(page, "reset");
-        await fillReset(page); await page.click("#recovery-reset-form button");
+        await fillReset(page); await page.click("#recovery-reset-form button[type=submit]");
         await waitUntil(() => fixture.calls.some(call => call.kind === "reset"), "pending reset before deliberate abandonment");
         await page.click("#recovery-new-request"); await readyForm(page, "request");
         await passwordsCleared(page); await cleanSurfaces(page);

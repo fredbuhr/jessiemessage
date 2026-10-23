@@ -1,5 +1,6 @@
 import { makeConversationState, belongsTo, orderedMessages, mergeMessages, mergeConversation, mergeEvents, sequence, compareSequence, maxSequence, validBody, validCaption, prepareSend, prepareImageSend, completeImageUpload, prepareVideoSend, completeVideoUpload, rejectPendingVideoSend, mediaStillCurrent, createObjectUrlCache, retrySend, rejectPendingSend, rejectPendingImageSend, nearBottom, shouldScroll, readableSequence, inboxRefreshPlan } from "/chat-model.js";
 import { prepareImageUpload } from "/image-preparation.js";
+import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "/photo-batch.js";
 import { quickReplyOptions } from "/quick-replies.js";
 import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";
 import { createChatDrafts } from "/chat-drafts.js";
@@ -45,10 +46,11 @@ let videoGallery = null, videoGalleryBusy = false, videoGalleryVersion = 0, vide
 const videoPlayers = new Map();
 let panel = null; let panelVersion = 0; let panelBusy = false; let lightboxVersion = 0; let lightboxItem = null;
 let dialogReturnFocus = null; let lightboxReturnFocus = null;
+let lightboxBusy = false, lightboxScrollTop = null, lightboxTouch = null;
 let crm = null;
 let profileUI = null; let profileMount = null; let profileCapability = null;
 let announcementUI = null; let announcementMount = null; let announcementCapability = null; let announcementHost = null;
-let tasksCapability = false;
+let tasksCapability = false, repliesCapability = false, followupUI = null, followupHost = null, followupMount = null;
 const avatarContainers = new Map(); const avatarVersions = new Map(); const avatarPaths = new Map();
 let emojiContext = null;
 let emojiCategory = "all";
@@ -214,7 +216,7 @@ function stopPolling() { clearTimeout(pollTimer); pollTimer = null; clearTimeout
 function revokePreview() { if (previewUrl) URL.revokeObjectURL(previewUrl); previewUrl = null; previewIdentity = null; ui.forget(el("image-preview")); el("image-preview").replaceChildren(); }
 function closeLightbox(restoreFocus = true) {
   lightboxVersion += 1;
-  const returnItem = lightboxItem;
+  const returnItem = lightboxItem, restoreScroll = lightboxScrollTop; lightboxScrollTop = null; lightboxBusy = false;
   if (lightboxItem) { imageUrls.remove(lightboxItem.media.fullUrl); imageRequests.get(lightboxItem.media.fullUrl)?.controller.abort(); imageRequests.delete(lightboxItem.media.fullUrl); }
   lightboxItem = null; ui.forget(el("lightbox-image")); el("lightbox-image").replaceChildren();
   if (el("lightbox").open) el("lightbox").close();
@@ -230,6 +232,7 @@ function closeLightbox(restoreFocus = true) {
     }
   }
   lightboxReturnFocus = null;
+  if (restoreFocus && restoreScroll && belongsTo(currentState(), restoreScroll.id, restoreScroll.epoch)) el("message-scroll").scrollTop = restoreScroll.top;
 }
 function closeMedia(restoreFocus = true) {
   panelVersion += 1; panel = null; panelBusy = false; ui.forget(el("media-grid")); el("media-grid").replaceChildren();
@@ -238,6 +241,7 @@ function closeMedia(restoreFocus = true) {
   dialogReturnFocus = null;
 }
 function clearImages() {
+  for (const value of states.values()) revokeBatchPreviews(value.photoBatch);
   videoVersion += 1; clearVideoPlayers(); revokeVideoPreview(); closeVideoGallery(false);
   mediaVersion += 1;
   for (const record of imageRequests.values()) record.controller.abort(); imageRequests.clear();
@@ -249,6 +253,7 @@ function clearImages() {
   for (const image of el("messages").querySelectorAll("img")) image.removeAttribute("src");
 }
 function clearChat() {
+  followupUI?.clear();
   clearMessageSelection();
   closeChatMenu(); closeComposerTools();
   conversationDownload?.suspend();
@@ -263,6 +268,7 @@ function clearChat() {
   el("open-composer-tools").disabled = true;
   ui.rawText(el("peer-avatar"), "");
   el("photo-tools").hidden = true; el("open-gallery").hidden = true; el("image-draft").hidden = true; el("image-file").value = "";
+  el("photo-batch").hidden = true; ui.forget(el("photo-batch-list")); el("photo-batch-list").replaceChildren();
   el("video-draft").hidden = true; el("video-file").value = ""; el("open-video-gallery").hidden = true;
   for (const id of ["older-messages", "newer-messages", "new-messages", "empty-message", "pending-controls"]) if (el(id)) el(id).hidden = true;
   el("workspace").classList.remove("selected"); document.querySelector(".page").classList.remove("has-conversation"); notice("");
@@ -286,6 +292,26 @@ async function mountConversationDownload(capability) {
     conversationDownload.update();
   } catch (error) { if (fresh(ticket, true) && getContext()) notice("Le téléchargement n’est pas disponible. Réessaie ; aucun fichier incomplet n’est proposé.", true); }
 }
+async function mountFollowup() {
+  if (role !== "admin" || !repliesCapability || followupUI || followupMount || !ready || !visible() || !sessionOwner) return;
+  const owner = sessionOwner, ticket = snapshot(), mounting = {}; followupMount = mounting;
+  try {
+    const { createFollowupUI } = await import("/followup.js");
+    if (followupMount !== mounting || !fresh(ticket, true) || !sameOwner(owner, sessionOwner) || !ready || !visible()) return;
+    followupHost = document.createElement("div"); followupHost.id = "reply-followup-host";
+    document.querySelector(".chat-head").after(followupHost);
+    followupUI = createFollowupUI({ host: followupHost, getConversation: () => currentState()?.conversation ?? null,
+      getReplyThrough: () => { const holder = {}, state = currentState(); if (state) captureReply(state, holder); return holder.replyThrough ?? "0"; }, request,
+      onChanged(id, reply) {
+        const state = states.get(id);
+        if (state?.conversation) { state.conversation = { ...state.conversation, reply }; crm?.updateConversation(state.conversation); }
+        if (inbox.has(id)) inbox.set(id, { ...inbox.get(id), reply });
+        renderInbox(); if (currentState()?.conversation) renderMeta(currentState()); schedulePolling(0);
+      }, onError: error => handleError(error) });
+    followupUI.update();
+  } catch { /* A failed optional control must not remove the conversation. */ }
+  finally { if (followupMount === mounting) followupMount = null; }
+}
 async function mountProfile() {
   if (profileCapability?.enabled !== true || !ready || !visible() || !sessionOwner || profileUI || profileMount) return;
   const owner = sessionOwner, ticket = snapshot(), lifetime = generation;
@@ -295,6 +321,14 @@ async function mountProfile() {
     if (profileMount !== mounting || !fresh(ticket, true) || !ready || !visible() || !sameOwner(owner, sessionOwner) || loggingOut) return;
     profileUI = createProfileUI({ role, button: el("open-profile"), request, fetchBinary: fetchProfileBinary,
       avatarsEnabled: profileCapability.avatars === true,
+      passwordEnabled: profileCapability.passwordEnabled === true,
+      preferencesEnabled: profileCapability.preferencesEnabled === true,
+      onPasswordChanged: async changed => {
+        const current = await refreshSession();
+        await start({ session: current.session });
+        notice(current.session.user.id === changed.user.id && current.session.csrf === changed.csrf
+          ? "Mot de passe modifié. Cet appareil reste connecté." : "Ta connexion a été actualisée.");
+      },
       getReturnFocus: menuReturnFocus,
       isCurrent: () => generation === lifetime && sameOwner(owner, sessionOwner) && ready && visible() && !el("workspace").hidden && !loggingOut,
       onError: error => handleError(error) });
@@ -338,7 +372,8 @@ function clearPrivate({ purgeDrafts = false } = {}) {
   }
   closeChatMenu(); closeComposerTools(); menuOpener = null;
   quickReplyLanguage = null;
-  tasksCapability = false;
+  tasksCapability = false; repliesCapability = false; followupMount = null;
+  followupUI?.destroy(); followupUI = null; followupHost?.remove(); followupHost = null;
   emojiSkinTone = "default";
   profileUI?.destroy(); profileUI = null; profileMount = null; profileCapability = null;
   announcementUI?.destroy(); announcementUI = null; announcementMount = null; announcementCapability = null; announcementHost?.remove(); announcementHost = null;
@@ -352,6 +387,7 @@ function clearPrivate({ purgeDrafts = false } = {}) {
   conversationDownload?.clear(); conversationDownload = null; conversationDownloadCapability = null;
   crm?.clear(); crm = null; document.getElementById("crm-style")?.remove();
   stopPolling(); abortRequests(); expiryTimer?.(); expiryTimer = null;
+  for (const value of states.values()) revokeBatchPreviews(value.photoBatch);
   states.clear(); inbox.clear(); selected = null; ui.forget(el("conversations")); el("conversations").replaceChildren(); clearChat();
   inboxCursor = null; inboxMore = false; inboxRefreshCursor = null; lastInboxRefresh = 0; inboxLoading = false;
   el("workspace").hidden = true; ui.rawText(el("session-status"), ""); ui.rawText(el("inbox-status"), "");
@@ -391,7 +427,7 @@ async function resumeConnection({ reset = false } = {}) {
       if (crm) await crm.resume();
       if (!fresh(ticket, true) || !visible() || loggingOut) return;
       const state = currentState(); if (state) renderMessages(state);
-      el("workspace").hidden = false; conversationDownload?.update(); void mountConversationDownload(conversationDownloadCapability); void mountProfile(); void mountAnnouncements(); notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
+      el("workspace").hidden = false; conversationDownload?.update(); void mountConversationDownload(conversationDownloadCapability); void mountProfile(); void mountFollowup(); void mountAnnouncements(); notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
       reconnectAttempt = 0; stopReconnect(); retryDelay = 3000; schedulePolling(0);
       await openNotification();
     } catch (error) {
@@ -414,6 +450,7 @@ function snapshot(state = null) { return { generation, visibilityGeneration, sel
 function fresh(ticket, account = false) { return ticket.generation === generation && ticket.visibilityGeneration === visibilityGeneration && (account || (ticket.selectionEpoch === selectionEpoch && (!ticket.id || belongsTo(currentState(), ticket.id, ticket.epoch)))); }
 async function request(path, { body, rawBody, contentType, mutation = false, state = null, account = false, signal = null, verifyOwner = true, archive = false } = {}) {
   const owner = sessionOwner; const ticket = snapshot(state); const controller = new AbortController(); controllers.add(controller);
+  const passwordChange = mutation && account && path === `/api/account/${role}/password`;
   controller.accountScope = account;
   const abort = () => controller.abort(); if (signal?.aborted) controller.abort(); else signal?.addEventListener("abort", abort, { once: true });
   const timeout = setTimeout(() => controller.abort(), archive && videoEnabled ? 300000 : rawBody || archive ? 65000 : 15000);
@@ -430,7 +467,13 @@ async function request(path, { body, rawBody, contentType, mutation = false, sta
       } catch (error) { controller.abort(); throw error; }
     } else { try { data = await response.json(); } catch { data = {}; } }
     if (!fresh(ticket, account)) throw staleResponse();
-    if (verifyOwner && owner && path !== `${sessionBase}/session`) await confirmOwner(ticket, owner, account);
+    // This one authenticated operation intentionally rotates the cookie. Prove
+    // its old owner before POST, then let its callback verify the current cookie
+    // by GET before adopting the new session. Ordinary replies keep both proofs.
+    if (passwordChange && response.ok) {
+      if (!owner || data.status !== "password_changed" || !sessionIdentity(data)
+        || data.user.id !== owner.id || data.user.role !== owner.role) throw new Error("invalid_password_response");
+    } else if (verifyOwner && owner && path !== `${sessionBase}/session`) await confirmOwner(ticket, owner, account);
     if (!fresh(ticket, account)) throw staleResponse();
     if (!response.ok) throw Object.assign(new Error("request_failed"), { status: response.status, code: data.error });
     return data;
@@ -719,14 +762,15 @@ function pruneDeletedPhotos(state, deleted = []) {
   if (videoGalleryChanged) renderVideoGallery();
 }
 function renderImageDraft(state) {
-  const draft = state.imageDraft; const pending = state.pending?.kind === "image" ? state.pending : null; const hasImage = Boolean(draft || pending);
-  el("image-draft").hidden = !hasImage;
+  const draft = state.imageDraft; const pending = state.pending?.kind === "image" ? state.pending : null; const hasImage = Boolean(draft || pending || state.photoBatch?.items.length);
+  el("image-draft").hidden = !Boolean(draft || pending);
+  renderPhotoBatch(state);
   el("message-body").maxLength = hasImage ? 1000 : 4096; el("message-body").required = !hasImage;
   ui.attr(el("message-body"), "placeholder", hasImage ? "Ajoute une légende (facultatif)…" : role === "client" ? "Écris-moi…" : "Écris ton message…");
   ui.text(el("composer-help"), hasImage ? "Photo privée · légende facultative de 1 000 caractères maximum" : "Message privé · 4 096 caractères maximum");
   el("composer-help").classList.toggle("sr-only", !hasImage && el("message-body").value.length < 3896);
   el("cancel-image").disabled = Boolean(state.pending) || sendBusy;
-  if (!hasImage) { revokePreview(); return; }
+  if (!draft && !pending) { revokePreview(); return; }
   ui.text(el("image-draft-status"), pending?.stage === "uploading" ? "Préparation de la photo…" : draft?.asset?.sharedHere ? "Déjà envoyée ici · nouvel envoi" : "Une photo à envoyer");
   if (!visible()) return;
   const identity = draft?.file ?? draft?.asset?.id ?? pending?.mediaId;
@@ -739,6 +783,7 @@ function renderImageDraft(state) {
   } else ui.text(el("image-preview"), "Photo prête");
 }
 function videoErrorText(error) {
+  if (error.code === "video_admin_only") return "L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos.";
   if (error.status === 409 && error.code === "video_in_use") return "Cette vidéo ne peut pas être supprimée : elle est utilisée dans un message, ou une diffusion est en cours.";
   if (error.status === 507) return "Le stockage des vidéos a atteint sa limite.";
   if ([400, 411, 413, 415].includes(error.status)) return "Vidéo refusée. Choisis une vidéo MP4 de 100 Mo maximum et une légende de 1 000 caractères maximum.";
@@ -840,13 +885,14 @@ function renderVideoDraft(state) {
   el("video-preview").append(video);
 }
 function chooseVideo() {
+  if (role !== "admin") { el("video-file").value = ""; notice("L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos.", true); return; }
   const state = currentState(), file = el("video-file").files?.[0]; el("video-file").value = "";
-  if (!state || !file || !videoCreationEnabled || state.pending || sendBusy || !state.conversation?.canSend) return;
+  if (!state || !file || !videoCreationEnabled || state.pending || sendBusy || state.photoBatch?.started || !state.conversation?.canSend) return;
   if (file.type !== "video/mp4" || !Number.isSafeInteger(file.size) || file.size < 1 || file.size > 104857600) {
     notice("Choisis une vidéo MP4 de 100 Mo maximum.", true); return;
   }
   if (el("message-body").value.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant d’ajouter une vidéo.", true); return; }
-  state.imageDraft = null; revokePreview();
+  discardPhotoBatch(state); state.imageDraft = null; revokePreview();
   state.videoDraft = { file, ready: false, invalid: false }; renderMeta(state);
   notice("Vidéo choisie. Vérifie l’aperçu, ajoute une légende ou envoie-la."); focusComposer();
 }
@@ -1004,7 +1050,7 @@ async function refreshCrmCapability() {
     crm = module.createCrmUI({
       request, inboxHead: document.querySelector(".inbox-head"), chatHead: el("conversation-actions"), getReturnFocus: menuReturnFocus,
       conversationExport: capability.conversationExport?.enabled === true ? capability.conversationExport : null,
-      tasksEnabled: tasksCapability,
+      tasksEnabled: tasksCapability, repliesEnabled: repliesCapability, preferencesEnabled: profileCapability?.preferencesEnabled === true,
       onError: (error) => handleError(error),
       onUnavailable(id) {
         drafts.forget(id);
@@ -1026,13 +1072,100 @@ async function refreshCrmCapability() {
     if (error.status !== 404) notice("Les fiches privées sont indisponibles pour le moment.", true, "session-status");
   }
 }
-function chooseFile() {
-  const state = currentState(); const file = el("image-file").files?.[0]; el("image-file").value = "";
-  if (!state || !file || state.pending || sendBusy || !state.conversation?.canSend) return;
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size < 1 || file.size > 10485760) { notice("Choisis une photo JPEG, PNG ou WebP de 10 Mo maximum.", true); return; }
-  if (el("message-body").value.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant d’ajouter une photo.", true); return; }
-  state.videoDraft = null; revokeVideoPreview(); state.imageDraft = { file, asset: null }; renderMeta(state); notice("Photo choisie. Ajoute une légende ou envoie-la."); focusComposer();
+function revokeBatchPreviews(batch) {
+  for (const item of batch?.items ?? []) { if (item.previewUrl) URL.revokeObjectURL(item.previewUrl); item.previewUrl = null; }
 }
+function discardPhotoBatch(state) { revokeBatchPreviews(state.photoBatch); state.photoBatch = null; }
+function chooseFile() {
+  const state = currentState(), files = [...el("image-file").files ?? []]; el("image-file").value = "";
+  if (!state || !files.length || state.pending || sendBusy || state.photoBatch?.started || !state.conversation?.canSend) return;
+  const accepted = files.filter(file => ["image/jpeg", "image/png", "image/webp"].includes(file.type) && file.size > 0 && file.size <= 10485760);
+  const videoRefused = role === "client" && files.some(file => file.type.startsWith("video/"));
+  if (el("message-body").value.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant d’ajouter une photo.", true); return; }
+  if (!accepted.length) { notice(videoRefused ? "L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos." : "Choisis une photo JPEG, PNG ou WebP de 10 Mo maximum.", true); return; }
+  const previous = state.imageDraft?.file ? [state.imageDraft.file] : [];
+  const available = MAX_PHOTO_BATCH - (state.photoBatch?.items.length ?? previous.length);
+  const chosen = accepted.slice(0, available);
+  if (!chosen.length) { notice("Choisis au maximum 10 photos par envoi.", true); return; }
+  state.videoDraft = null; revokeVideoPreview();
+  if (!state.photoBatch && !state.imageDraft && chosen.length === 1) state.imageDraft = { file: chosen[0], asset: null };
+  else {
+    state.photoBatch = createPhotoBatch([...previous, ...chosen], newClientId, state.photoBatch);
+    state.imageDraft = null; revokePreview();
+  }
+  renderMeta(state);
+  notice(videoRefused ? "L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos." : chosen.length !== accepted.length ? "Choisis au maximum 10 photos par envoi." : accepted.length !== files.length ? "Certaines photos ont été refusées. Les autres restent dans ta sélection." : "Photos choisies. Vérifie les aperçus avant d’envoyer.", videoRefused || accepted.length !== files.length || chosen.length !== accepted.length);
+  focusComposer();
+}
+function renderPhotoBatch(state) {
+  const batch = state.photoBatch, host = el("photo-batch"); host.hidden = !batch?.items.length;
+  if (!batch) { ui.forget(el("photo-batch-list")); el("photo-batch-list").replaceChildren(); return; }
+  const sent = batch.items.filter(item => item.status === "sent").length;
+  ui.text(el("photo-batch-status"), "{sent} sur {count} photos envoyées", { sent: ui.numberParam(sent), count: ui.numberParam(batch.items.length) });
+  el("photo-batch-clear").disabled = sendBusy || batch.started;
+  const list = el("photo-batch-list"), previous = new Map([...list.children].map(node => [node.dataset.photoId, node]));
+  for (const item of batch.items) {
+    let card = previous.get(item.clientMessageId);
+    if (!card) {
+      card = document.createElement("div"); card.className = "photo-batch-item"; card.dataset.photoId = item.clientMessageId;
+      const image = document.createElement("img"); image.alt = ""; ui.attr(image, "aria-label", "Aperçu de la photo choisie");
+      card.append(image, document.createElement("span"));
+      const remove = document.createElement("button"); remove.type = "button"; remove.className = "text-button"; ui.text(remove, "Retirer la photo");
+      remove.addEventListener("click", () => {
+        const removed = removePhoto(batch, item.clientMessageId); if (!removed) return;
+        if (removed.previewUrl) URL.revokeObjectURL(removed.previewUrl);
+        if (!batch.items.length || batch.items.every(value => value.status === "sent")) {
+          if (batch.captionDelivered) { state.draft = ""; el("message-body").value = ""; }
+          discardPhotoBatch(state);
+        }
+        renderMeta(state); focusVisible(el("pick-image"));
+      }); card.append(remove);
+    }
+    if (!item.previewUrl && item.file && visible()) item.previewUrl = URL.createObjectURL(item.prepared ?? item.file);
+    const image = card.querySelector("img"); if (item.previewUrl && image.getAttribute("src") !== item.previewUrl) image.src = item.previewUrl;
+    const label = item.status === "sent" ? "Photo envoyée" : item.status === "preparing" ? "Préparation de la photo…" : item.status === "uploading" ? "Transfert de la photo…" : item.status === "sending" ? "Envoi de la photo…" : ["failed", "uncertain"].includes(item.status) ? "À réessayer" : "Photo prête";
+    ui.text(card.querySelector("span"), item.status === "failed" && item.error ? mediaErrorText(item.error) : label);
+    card.querySelector("button").disabled = sendBusy || batch.started && !(item.status === "failed" && (!item.mediaId || [400,404,413,415,422].includes(item.error?.status)));
+    list.append(card); previous.delete(item.clientMessageId);
+  }
+  for (const card of previous.values()) { ui.forget(card); card.remove(); }
+}
+function captureReply(state, holder = {}) {
+  if (!state || role !== "admin" || Object.hasOwn(holder, "replyThrough")) return holder;
+  let through = [...state.messages.values()].filter(value => value.sender === "peer" && value.deletedAt == null).reduce((max, value) => maxSequence(max, value.sequence), "0");
+  for (const bound of [state.conversation?.reply?.through, state.conversation?.lastReadSequence]) if (bound !== undefined && compareSequence(through, bound) > 0) through = bound;
+  holder.replyThrough = through;
+  if (state.conversation?.reply?.version) holder.replyVersion = state.conversation.reply.version;
+  return holder;
+}
+function replyFields(holder) { return role === "admin" && holder.replyThrough !== undefined && holder.replyThrough !== null ? { replyThrough: holder.replyThrough, ...(holder.replyVersion === undefined ? {} : { replyVersion: holder.replyVersion }) } : {}; }
+async function sendPhotoSelection() {
+  const state = currentState(), batch = state?.photoBatch;
+  if (!batch || batch.busy || sendBusy || !state.conversation?.canSend || !validCaption(el("message-body").value)) return;
+  const ticket = snapshot(state); if (batch.caption === null) batch.caption = el("message-body").value;
+  if (!batch.started) { delete batch.replyThrough; captureReply(state, batch); if (batch.replyThrough === undefined) batch.replyThrough = null; }
+  state.draft = batch.caption; sendBusy = true; renderMeta(state);
+  try {
+    const complete = await runPhotoBatch(batch, {
+      current: () => fresh(ticket) && visible() && state.photoBatch === batch,
+      prepare: async file => {
+        const controller = new AbortController(); controllers.add(controller);
+        try { return await prepareImageUpload(file, { signal: controller.signal }); } finally { controllers.delete(controller); }
+      },
+      upload: async file => (await request(`${mediaBase}/assets`, { state, mutation: true, rawBody: file, contentType: file.type })).asset,
+      send: messages => request(`${mediaBase}/conversations/${state.id}/messages/batch`, { state, mutation: true, body: { messages } }),
+      changed: () => { if (fresh(ticket)) renderMeta(state); }
+    });
+    if (!fresh(ticket)) return;
+    const messages = batch.items.filter(item => item.status === "sent").map(item => item.message);
+    if (messages.length) { mergeMessages(state, messages); for (const message of messages) state.conversation.latestSequence = maxSequence(state.conversation.latestSequence, message.sequence); renderMessages(state, { ownSend: true }); }
+    if (complete) { discardPhotoBatch(state); state.draft = ""; el("message-body").value = ""; notice("Toutes les photos ont été envoyées."); }
+    else notice("Certaines photos restent à envoyer. Réessaie uniquement celles-ci.", true);
+    schedulePolling(300);
+  } catch (error) { await handleMediaError(error, state); }
+  finally { if (fresh(ticket)) { sendBusy = false; renderMeta(state); } }
+}
+
 function mediaErrorText(error) {
   if (error.code === "media_format") return "Ce format n’est pas pris en charge. Choisis une photo JPEG, PNG ou WebP.";
   if (error.code === "media_dimensions") return "Cette photo est trop grande. Choisis une version plus petite.";
@@ -1053,7 +1186,8 @@ async function handleMediaError(error, state, target = "chat-status") {
 async function openMedia(kind, opener) {
   const state = currentState(); if (!state || !mediaEnabled || !visible() || (kind === "library" && (state.pending || !state.conversation?.canSend))) return;
   closeMedia(false); dialogReturnFocus = opener;
-  panel = { kind, conversationId: state.id, epoch: state.epoch, items: [], cursor: null, hasMore: false };
+  panel = { kind, conversationId: state.id, epoch: state.epoch, items: [], cursor: null, hasMore: false, range: null };
+  el("media-date-filter").hidden = kind !== "gallery"; el("media-month").value = "";
   ui.text(el("media-title"), kind === "library" ? "Mes photos" : "Photos de la conversation");
   ui.text(el("media-help"), kind === "library" ? "Tes photos personnelles peuvent être envoyées dans cette conversation. Une photo reçue ne fait pas partie de ta bibliothèque." : "Les photos partagées ici restent accessibles tant que le message et ton accès le permettent.");
   ui.text(el("media-status"), "Chargement…"); el("more-media").hidden = true; el("media-dialog").showModal();
@@ -1068,7 +1202,7 @@ async function loadMediaPage(more = false) {
   try {
     const cursor = more ? activePanel.cursor : null;
     const path = activePanel.kind === "library" ? `${mediaBase}/assets?conversationId=${state.id}&limit=50${cursor ? `&afterId=${cursor}` : ""}`
-      : `${mediaBase}/conversations/${state.id}/gallery?limit=50${cursor ? `&before=${cursor}` : ""}`;
+      : `${mediaBase}/conversations/${state.id}/gallery?limit=50${cursor ? `&before=${cursor}` : ""}${activePanel.range ? `&from=${activePanel.range.from}&until=${activePanel.range.until}` : ""}`;
     const result = await request(path, { state });
     if (panel !== activePanel || version !== panelVersion) return;
     const items = activePanel.kind === "library" ? result.assets : result.items;
@@ -1095,11 +1229,19 @@ function renderMediaPanel() {
   const focusedCard = [...grid.children].find((card) => card.contains(focused));
   const focusKey = focusedCard?.dataset.mediaKey, focusAction = focused?.dataset.mediaAction;
   const fragment = document.createDocumentFragment();
+  let previousDay = null;
   for (const item of activePanel.items) {
     const media = activePanel.kind === "library" ? item : item.media;
+    if (activePanel.kind === "gallery") {
+      const date = new Date(item.createdAt), key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      if (key !== previousDay) {
+        const heading = document.createElement("h3"); heading.className = "media-date-heading";
+        ui.text(heading, "{date}", { date: ui.dateParam(item.createdAt, { day: "numeric", month: "long", year: "numeric" }) }); fragment.append(heading); previousDay = key;
+      }
+    }
     const card = document.createElement("article"); card.className = "media-card"; card.dataset.mediaKey = activePanel.kind === "library" ? item.id : item.messageId;
     const photo = document.createElement("button"); photo.type = "button"; photo.className = "photo-open"; ui.attr(photo, "aria-label", "Agrandir cette photo privée");
-    photo.addEventListener("click", () => { void openLightbox({ media, messageId: activePanel.kind === "gallery" ? item.messageId : null }, state, photo); });
+    photo.addEventListener("click", () => { void openLightbox({ media, messageId: activePanel.kind === "gallery" ? item.messageId : null, sequence: item.sequence, createdAt: item.createdAt }, state, photo); });
     card.append(photo);
     const caption = document.createElement("p"); ui.text(caption, "{width} × {height} · {date}", { width: ui.numberParam(media.width), height: ui.numberParam(media.height), date: dateParameter(activePanel.kind === "library" ? media.createdAt : item.createdAt, true) }); card.append(caption);
     if (activePanel.kind === "library") {
@@ -1109,7 +1251,7 @@ function renderMediaPanel() {
       choose.addEventListener("click", () => {
         if (!belongsTo(currentState(), state.id, state.epoch) || state.pending || !state.conversation?.canSend) return;
         if (el("message-body").value.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant de choisir une photo.", true, "media-status"); return; }
-        state.videoDraft = null; revokeVideoPreview(); state.imageDraft = { file: null, asset: media }; closeMedia(); renderMeta(state); notice(media.sharedHere ? "Cette photo a déjà été envoyée ici. Envoyer ajoutera un nouveau message." : "Photo choisie. Ajoute une légende ou envoie-la."); focusComposer();
+        discardPhotoBatch(state); state.videoDraft = null; revokeVideoPreview(); state.imageDraft = { file: null, asset: media }; closeMedia(); renderMeta(state); notice(media.sharedHere ? "Cette photo a déjà été envoyée ici. Envoyer ajoutera un nouveau message." : "Photo choisie. Ajoute une légende ou envoie-la."); focusComposer();
       });
       const remove = document.createElement("button"); remove.type = "button"; remove.className = "text-button"; remove.dataset.mediaAction = "remove"; ui.text(remove, "Supprimer la photo");
       remove.addEventListener("click", () => { void removeOwnAsset(media, state, remove); }); actions.append(choose, remove); card.append(actions);
@@ -1140,13 +1282,67 @@ async function removeOwnAsset(media, state, button) {
   } catch (error) { if (panel === activePanel) await handleMediaError(error, state, "media-status"); }
   finally { if (button.isConnected) button.disabled = false; }
 }
+function renderLightboxControls() {
+  const navigable = Boolean(lightboxItem?.messageId && lightboxItem.sequence);
+  for (const key of ["previous-photo", "next-photo", "photo-message"]) { el(key).hidden = !navigable; el(key).disabled = lightboxBusy; }
+}
+function showLightboxPhoto(item, state) {
+  const version = ++lightboxVersion; lightboxItem = item;
+  ui.text(el("lightbox-status"), item.createdAt ? "Photo privée · {date}" : "Photo privée", item.createdAt ? { date: dateParameter(item.createdAt, true) } : {});
+  renderLightboxControls();
+  loadPhoto(el("lightbox-image"), item.media, state, { full: true, current: () => lightboxItem === item && lightboxVersion === version
+    && belongsTo(currentState(), state.id, state.epoch) && (!item.messageId || ![...state.messages.values()].some(message => message.id === item.messageId && message.deletedAt != null)) });
+}
 async function openLightbox(item, state, opener) {
   if (!visible()) return;
-  closeLightbox(false); lightboxItem = item; lightboxReturnFocus = opener; const version = lightboxVersion;
-  ui.text(el("lightbox-status"), "Photo privée"); el("lightbox").showModal();
-  loadPhoto(el("lightbox-image"), item.media, state, { full: true, current: () => lightboxItem === item && lightboxVersion === version
-    && belongsTo(currentState(), state.id, state.epoch) && (!item.messageId || ![...state.messages.values()].some((message) => message.id === item.messageId && message.deletedAt != null)) });
+  closeLightbox(false); lightboxReturnFocus = opener;
+  lightboxScrollTop = { id: state.id, epoch: state.epoch, top: el("message-scroll").scrollTop };
+  el("lightbox").showModal(); showLightboxPhoto(item, state);
 }
+async function navigatePhoto(direction) {
+  const state = currentState(), original = lightboxItem, version = lightboxVersion;
+  if (!state || !original?.messageId || !original.sequence || lightboxBusy || !visible()) return;
+  lightboxBusy = true; renderLightboxControls();
+  try {
+    const cursor = direction === "previous" ? "before" : "after";
+    const result = await request(`${mediaBase}/conversations/${state.id}/gallery?limit=1&${cursor}=${original.sequence}`, { state });
+    if (lightboxItem !== original || lightboxVersion !== version) return;
+    const item = result.items?.[0];
+    if (!item) { ui.text(el("lightbox-status"), direction === "previous" ? "Première photo de la conversation" : "Dernière photo de la conversation"); return; }
+    const compared = item.createdAt - original.createdAt || String(item.messageId).localeCompare(original.messageId);
+    if (!/^[a-f0-9]{32}$/.test(item.messageId ?? "") || !validMediaUrl(item.media?.fullUrl, state)
+      || !item.sequence || !Number.isSafeInteger(item.createdAt) || (direction === "previous" ? compared >= 0 : compared <= 0)) throw new Error("invalid_photo_neighbor");
+    imageUrls.remove(original.media.fullUrl); imageRequests.get(original.media.fullUrl)?.controller.abort(); imageRequests.delete(original.media.fullUrl);
+    showLightboxPhoto(item, state);
+  } catch (error) { if (lightboxItem === original) await handleMediaError(error, state, "lightbox-status"); }
+  finally { lightboxBusy = false; if (lightboxItem) renderLightboxControls(); }
+}
+async function seePhotoMessage() {
+  const state = currentState(), item = lightboxItem;
+  if (!state || !item?.messageId || !item.sequence || lightboxBusy) return;
+  const target = { conversationId: state.id, messageId: item.messageId, sequence: item.sequence };
+  closeLightbox(false); closeMedia(false);
+  await selectConversation(state.id, { focus: true, target });
+  const current = currentState(), message = current?.messages.get(target.sequence);
+  if (current?.id !== target.conversationId || message?.id !== target.messageId || message.deletedAt != null || !message.media) {
+    notice("Ce message n’est plus disponible.", true); return;
+  }
+  if (!focusNotification(target)) { notice("Ce message n’est plus disponible.", true); return; }
+  setTimeout(() => { if (currentState() === current && current.notificationSequence === target.sequence) { current.notificationSequence = null; messageRows.get(target.sequence)?.article.classList.remove("notification-target"); } }, 4000);
+}
+function changeGalleryMonth() {
+  const state = currentState(), active = panel, value = el("media-month").value;
+  if (!state || active?.kind !== "gallery") return;
+  let range = null;
+  if (value) {
+    if (!/^[0-9]{4}-(?:0[1-9]|1[0-2])$/.test(value)) return;
+    const [year, month] = value.split("-").map(Number); if (year < 1970 || year > 9998) return;
+    range = { from: new Date(year, month - 1, 1).getTime(), until: new Date(year, month, 1).getTime() };
+  }
+  panelVersion++; panelBusy = false; active.items = []; active.cursor = null; active.hasMore = false; active.range = range;
+  renderMediaPanel(); void loadMediaPage();
+}
+
 function dateParameter(value, long = false) {
   return ui.dateParam(value, long ? { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" } : { hour: "2-digit", minute: "2-digit" });
 }
@@ -1226,14 +1422,16 @@ async function loadInbox(more = false, refresh = false) {
   } }
 }
 function renderMeta(state) {
+  followupUI?.update(state?.conversation ?? null);
   conversationDownload?.update();
   const conversation = state.conversation; if (!conversation) return;
   ui.rawText(el("peer-name"), crm?.displayName(inbox.get(state.id) ?? conversation) ?? conversation.peerName);
   renderPeerAvatar(el("peer-avatar"), conversation);
   ui.text(el("conversation-status"), conversation.closedAt != null ? "Conversation fermée · historique disponible" : !conversation.canSend ? "Accès à l’envoi suspendu · historique disponible" : "Conversation privée");
-  el("message-body").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
-  const hasImage = Boolean(state.imageDraft || state.pending?.kind === "image");
+  el("message-body").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy || Boolean(state.photoBatch?.started);
+  const hasImage = Boolean(state.imageDraft || state.pending?.kind === "image" || state.photoBatch?.items.length);
   const hasVideo = Boolean(state.videoDraft || state.pending?.kind === "video");
+  ui.text(el("send"), state.photoBatch?.started ? "Réessayer les photos restantes" : "Envoyer");
   el("send").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy || !(hasImage || hasVideo ? validCaption(el("message-body").value) : validBody(el("message-body").value))
     || hasVideo && (!videoCreationEnabled || state.videoDraft?.invalid || !state.videoDraft?.ready && !state.pending?.videoId);
   el("photo-tools").hidden = !mediaEnabled && !videoCreationEnabled && role !== "admin"; el("open-gallery").hidden = !mediaEnabled;
@@ -1242,13 +1440,13 @@ function renderMeta(state) {
   el("open-composer-tools").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
   if (el("open-composer-tools").hidden || el("open-composer-tools").disabled) closeComposerTools();
   for (const id of ["pick-image", "open-library"]) el(id).hidden = !mediaEnabled;
-  el("pick-video").hidden = !videoCreationEnabled; el("pick-video").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
+  el("pick-video").hidden = role !== "admin" || !videoCreationEnabled; el("pick-video").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy || Boolean(state.photoBatch?.started);
   el("open-quick-replies").hidden = role !== "admin";
   el("open-quick-replies").disabled = !canUseQuickReplies();
   if (quickReplyContext && (!canUseQuickReplies() || !fresh(quickReplyContext.ticket))) closeQuickReplies();
   el("open-emojis").disabled = !canUseEmojis();
   if (emojiContext && (!canUseEmojis() || !fresh(emojiContext.ticket))) closeEmojis();
-  for (const id of ["pick-image", "open-library"]) el(id).disabled = !conversation.canSend || Boolean(state.pending) || sendBusy;
+  for (const id of ["pick-image", "open-library"]) el(id).disabled = !conversation.canSend || Boolean(state.pending) || sendBusy || Boolean(state.photoBatch?.started);
   renderImageDraft(state);
   renderVideoDraft(state);
   if (!drafts.write(state) && state.draft.length) {
@@ -1294,7 +1492,7 @@ function createMessageRow(state, message, contentKey) {
     body.classList.add("photo-message"); const photo = document.createElement("button"); photo.type = "button"; photo.className = "photo-open"; photo.style.aspectRatio = `${message.media.thumbnailWidth}/${message.media.thumbnailHeight}`; ui.attr(photo, "aria-label", "Agrandir la photo de ce message");
     row.photoButton = photo;
     if (mediaEnabled) {
-      photo.addEventListener("click", () => { void openLightbox({ media: message.media, messageId: message.id }, state, photo); });
+      photo.addEventListener("click", () => { void openLightbox({ media: message.media, messageId: message.id, sequence: message.sequence, createdAt: message.createdAt }, state, photo); });
       row.photo = photo;
     } else { ui.text(photo, "Photos indisponibles pour le moment"); photo.disabled = true; }
     body.append(photo); if (message.body) { const caption = document.createElement("p"); caption.className = "photo-caption"; ui.rawText(caption, message.body); body.append(caption); }
@@ -1544,19 +1742,23 @@ async function poll() {
 }
 function newClientId() { return [...crypto.getRandomValues(new Uint8Array(16))].map((byte) => byte.toString(16).padStart(2, "0")).join(""); }
 async function sendMessage(retry = false) {
+  if (currentState()?.photoBatch?.items.length) { await sendPhotoSelection(); return; }
   const state = currentState(); if (!state || sendBusy || !state.conversation?.canSend || (retry && !state.pending) || (!retry && state.pending)) return;
+  const reply = {}; captureReply(state, reply);
   if (state.hasMoreAfter && (!await loadNewer({ latest: true }) || state !== currentState() || (retry && !state.pending))) return;
-  if ((retry && state.pending?.kind === "video") || (!retry && state.videoDraft)) { await sendVideo(retry); return; }
-  if ((retry && state.pending?.kind === "image") || (!retry && state.imageDraft)) { await sendImage(retry); return; }
+  if ((retry && state.pending?.kind === "video") || (!retry && state.videoDraft)) { await sendVideo(retry, reply); return; }
+  if ((retry && state.pending?.kind === "image") || (!retry && state.imageDraft)) { await sendImage(retry, reply); return; }
   const ticket = snapshot(state);
   const body = retry ? state.pending?.body : el("message-body").value;
   if (!validBody(body)) { notice("Écris un message de 1 à 4 096 caractères.", true); return; }
   const pending = prepareSend(state, body, state.pending?.clientMessageId ?? newClientId());
+  if (!Object.hasOwn(pending, "replyThrough")) Object.assign(pending, reply);
+  captureReply(state, pending);
   state.draft = body;
   if (!drafts.beforeSend(state).safeToSend) { retrySend(state); renderMeta(state); notice("Cet envoi n’a pas commencé. Réessaie sans recharger la page pour conserver ton brouillon.", true); return; }
   state.draft = body; sendBusy = true; renderMeta(state); notice("Envoi en cours…");
   try {
-    const result = await request(`${conversationPath(state)}/messages`, { state, mutation: true, body: { clientMessageId: pending.clientMessageId, body: pending.body } });
+    const result = await request(`${conversationPath(state)}/messages`, { state, mutation: true, body: { clientMessageId: pending.clientMessageId, body: pending.body, ...replyFields(pending) } });
     mergeMessages(state, [result.message]);
     state.conversation.latestSequence = maxSequence(state.conversation.latestSequence, result.message.sequence);
     state.draft = ""; el("message-body").value = ""; renderMessages(state, { ownSend: true }); notice("Message enregistré."); schedulePolling(300);
@@ -1566,12 +1768,14 @@ async function sendMessage(retry = false) {
     await handleError(error, state);
   } finally { if (fresh(ticket)) { sendBusy = false; renderMeta(state); } }
 }
-async function sendImage(retry = false) {
+async function sendImage(retry = false, reply = null) {
   const state = currentState(); if (!state || sendBusy || !mediaEnabled || !state.conversation?.canSend) return;
   const ticket = snapshot(state); const caption = retry ? state.pending?.caption : el("message-body").value;
   if (!validCaption(caption)) { notice("Ajoute une légende de 1 000 caractères maximum, ou laisse le champ vide.", true); return; }
   const draft = state.imageDraft;
   const pending = prepareImageSend(state, { caption, mediaId: retry ? state.pending?.mediaId : draft?.asset?.id ?? null, file: retry ? state.pending?.file : draft?.file ?? null }, state.pending?.clientMessageId ?? newClientId());
+  if (reply && !Object.hasOwn(pending, "replyThrough")) Object.assign(pending, reply);
+  captureReply(state, pending);
   state.draft = caption;
   if (!drafts.beforeSend(state).safeToSend) { retrySend(state); renderMeta(state); notice("Cet envoi n’a pas commencé. Réessaie sans recharger la page pour conserver ton brouillon.", true); return; }
   state.draft = caption; sendBusy = true; let preparing = false; renderMeta(state); notice(pending.mediaId ? "Envoi de la photo…" : "Préparation de la photo…");
@@ -1588,7 +1792,7 @@ async function sendImage(retry = false) {
       if (!completeImageUpload(state, pending.clientMessageId, result.asset.id)) return;
       state.imageDraft = { file: null, asset: result.asset }; renderMeta(state);
     }
-    const result = await request(`${mediaBase}/conversations/${state.id}/messages`, { state, mutation: true, body: { clientMessageId: pending.clientMessageId, mediaId: pending.mediaId, caption: pending.caption } });
+    const result = await request(`${mediaBase}/conversations/${state.id}/messages`, { state, mutation: true, body: { clientMessageId: pending.clientMessageId, mediaId: pending.mediaId, caption: pending.caption, ...replyFields(pending) } });
     mergeMessages(state, [result.message]); state.conversation.latestSequence = maxSequence(state.conversation.latestSequence, result.message.sequence);
     state.draft = ""; state.imageDraft = null; el("message-body").value = ""; renderMessages(state, { ownSend: true }); notice("Photo enregistrée."); schedulePolling(300);
   } catch (error) {
@@ -1603,13 +1807,15 @@ async function sendImage(retry = false) {
     await handleMediaError(error, state);
   } finally { if (fresh(ticket)) { sendBusy = false; renderMeta(state); } }
 }
-async function sendVideo(retry = false) {
+async function sendVideo(retry = false, reply = null) {
   const state = currentState(); if (!state || sendBusy || !videoCreationEnabled || !state.conversation?.canSend) return;
   const ticket = snapshot(state), caption = retry ? state.pending?.caption : el("message-body").value;
   if (!validCaption(caption)) { notice("Ajoute une légende de 1 000 caractères maximum, ou laisse le champ vide.", true); return; }
   if (!retry && (!state.videoDraft?.ready || state.videoDraft.invalid)) return;
   const pending = prepareVideoSend(state, { caption, videoId: retry ? state.pending?.videoId : null,
     file: retry ? state.pending?.file : state.videoDraft?.file }, state.pending?.clientMessageId ?? newClientId());
+  if (reply && !Object.hasOwn(pending, "replyThrough")) Object.assign(pending, reply);
+  captureReply(state, pending);
   state.draft = caption;
   if (!drafts.beforeSend(state).safeToSend) { retrySend(state); renderMeta(state); notice("Cet envoi n’a pas commencé. Réessaie sans recharger la page pour conserver ton brouillon.", true); return; }
   const transfer = { controller: new AbortController(), state, pending, cancelled: false };
@@ -1625,7 +1831,7 @@ async function sendVideo(retry = false) {
     }
     if (transfer.cancelled || transfer.controller.signal.aborted || !fresh(ticket)) return;
     const result = await request(videoBase + "/conversations/" + state.id + "/messages", { state, mutation: true,
-      body: { clientMessageId: pending.clientMessageId, videoId: pending.videoId, caption: pending.caption } });
+      body: { clientMessageId: pending.clientMessageId, videoId: pending.videoId, caption: pending.caption, ...replyFields(pending) } });
     mergeMessages(state, [result.message]); state.conversation.latestSequence = maxSequence(state.conversation.latestSequence, result.message.sequence);
     state.draft = ""; state.videoDraft = null; el("message-body").value = ""; renderMessages(state, { ownSend: true });
     notice("Vidéo enregistrée."); schedulePolling(300);
@@ -1964,7 +2170,7 @@ el("message-body").addEventListener("input", () => { const state = currentState(
 el("retry-send").addEventListener("click", () => { void sendWithFocus(true, el("retry-send")); });
 el("pick-image").addEventListener("click", () => { if (!el("pick-image").disabled) { closeComposerTools(); el("image-file").click(); focusVisible(el("open-composer-tools")); } });
 el("image-file").addEventListener("change", chooseFile);
-el("pick-video").addEventListener("click", () => { if (videoCreationEnabled && !el("pick-video").disabled) { closeComposerTools(); el("video-file").click(); focusVisible(el("open-composer-tools")); } });
+el("pick-video").addEventListener("click", () => { if (role === "admin" && videoCreationEnabled && !el("pick-video").disabled) { closeComposerTools(); el("video-file").click(); focusVisible(el("open-composer-tools")); } });
 el("video-file").addEventListener("change", chooseVideo);
 el("cancel-video").addEventListener("click", () => {
   const state = currentState(); if (!state) return;
@@ -1990,6 +2196,22 @@ el("cancel-image").addEventListener("click", () => {
 el("open-library").addEventListener("click", () => { closeComposerTools(); void openMedia("library", el("open-composer-tools")); });
 el("open-gallery").addEventListener("click", () => { const opener = menuReturnFocus(); closeChatMenu(); void openMedia("gallery", opener); });
 el("close-media").addEventListener("click", () => closeMedia());
+el("photo-batch-clear").addEventListener("click", () => { const state = currentState(); if (state?.photoBatch && !state.photoBatch.started && !sendBusy) { discardPhotoBatch(state); renderMeta(state); focusComposer(); } });
+el("media-month").addEventListener("change", changeGalleryMonth);
+el("clear-media-date").addEventListener("click", () => { el("media-month").value = ""; changeGalleryMonth(); });
+el("previous-photo").addEventListener("click", () => { void navigatePhoto("previous"); });
+el("next-photo").addEventListener("click", () => { void navigatePhoto("next"); });
+el("photo-message").addEventListener("click", () => { void seePhotoMessage(); });
+el("lightbox").addEventListener("keydown", event => {
+  if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); void navigatePhoto(event.key === "ArrowLeft" ? "previous" : "next"); }
+});
+el("lightbox-image").addEventListener("touchstart", event => { lightboxTouch = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null; }, { passive: true });
+el("lightbox-image").addEventListener("touchend", event => {
+  const start = lightboxTouch; lightboxTouch = null;
+  if (!start || event.touches.length || event.changedTouches.length !== 1 || (globalThis.visualViewport?.scale ?? 1) > 1.01) return;
+  const x = event.changedTouches[0].clientX - start.x, y = event.changedTouches[0].clientY - start.y;
+  if (Math.abs(x) > 60 && Math.abs(x) > Math.abs(y) * 2) void navigatePhoto(x > 0 ? "previous" : "next");
+}, { passive: true });
 el("close-lightbox").addEventListener("click", () => closeLightbox());
 el("media-dialog").addEventListener("close", () => { if (panel) closeMedia(); });
 el("lightbox").addEventListener("close", () => { if (lightboxItem) closeLightbox(); });
@@ -2128,6 +2350,7 @@ async function start({ session = null } = {}) {
       profileCapability = capability.profile?.enabled === true ? capability.profile : null;
       announcementCapability = capability.announcements?.enabled === true ? capability.announcements : null;
       tasksCapability = role === "admin" && capability.tasks?.enabled === true;
+      repliesCapability = role === "admin" && capability.replies?.enabled === true;
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       await refreshMediaCapability();
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
@@ -2148,7 +2371,7 @@ async function start({ session = null } = {}) {
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       ready = true; reconnectAttempt = 0; stopReconnect(); retryConnection(false); el("workspace").hidden = false; notice("", false, "session-status");
       if (currentState()?.conversation) renderMeta(currentState());
-      await mountProfile();
+      await mountProfile(); await mountFollowup();
       conversationDownloadCapability = capability.conversationExport;
       await mountConversationDownload(conversationDownloadCapability);
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();

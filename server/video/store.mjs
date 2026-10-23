@@ -109,9 +109,9 @@ const indexes = {
 
 /** Candidate catalog only. No runtime uses this adapter before the complete
  * lot-7 lifecycle is qualified. Its video quota/root is independent of photos. */
-export function createVideoStore({ pool, chatStore, capacity } = {}) {
+export function createVideoStore({ pool, chatStore, capacity, experience = false } = {}) {
   if (typeof pool?.getConnection !== "function" || typeof chatStore?.withActor !== "function"
-    || !capacity || !Number.isSafeInteger(capacity.ownerBytes) || capacity.ownerBytes < 1
+    || typeof experience !== "boolean" || !capacity || !Number.isSafeInteger(capacity.ownerBytes) || capacity.ownerBytes < 1
     || !Number.isSafeInteger(capacity.totalBytes) || capacity.totalBytes < capacity.ownerBytes || !sized(capacity.rootFingerprint, 32)) input();
   capacity = Object.freeze({ ownerBytes: capacity.ownerBytes, totalBytes: capacity.totalBytes, rootFingerprint: Buffer.from(capacity.rootFingerprint) });
   const publicStatus = (ready, heldBytes = 0, pendingBytes = 0) => ({ ready, heldBytes, pendingBytes,
@@ -180,7 +180,8 @@ export function createVideoStore({ pool, chatStore, capacity } = {}) {
     const database = (await connection.query("SELECT DATABASE() AS name"))[0]?.name;
     const enforcement = (await connection.query("SELECT @@SESSION.foreign_key_checks AS foreignKeys, @@SESSION.check_constraint_checks AS checkConstraints"))[0];
     if (Number(enforcement?.foreignKeys) !== 1 || Number(enforcement?.checkConstraints) !== 1) state();
-    const migrations = await loadVideoMigrations(), history = await migrationStatus(connection, { database, migrations });
+    const migrations = experience ? await (await import("../experience/migrations.mjs")).loadExperienceMigrations() : await loadVideoMigrations();
+    const history = await migrationStatus(connection, { database, migrations });
     if (history.length !== migrations.length || history.some((item) => item.state !== "applied")) state();
     const tables = await connection.query("SELECT TABLE_NAME AS name, ENGINE AS engine, TABLE_COLLATION AS collationName FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [database]);
     const columns = await connection.query(`SELECT TABLE_NAME AS tableName, COLUMN_NAME AS columnName, DATA_TYPE AS dataType,
@@ -263,6 +264,7 @@ export function createVideoStore({ pool, chatStore, capacity } = {}) {
     async reserve(value) {
       request(value); const proposed = asset(value.asset);
       return chatStore.withActor(value, async (connection, context) => {
+        if (context.actor.role !== "admin") fail("VIDEO_ADMIN_ONLY");
         let backup;
         try { backup = await lockBackupMediaAdmission(connection, { video: true }); }
         catch (error) {
@@ -292,6 +294,7 @@ export function createVideoStore({ pool, chatStore, capacity } = {}) {
     async commit(value) {
       request(value); const proposed = asset(value.asset, true);
       return chatStore.withActor(value, async (connection, context) => {
+        if (context.actor.role !== "admin") fail("VIDEO_ADMIN_ONLY");
         await snapshot(connection); const row = await allocation(connection, proposed.id);
         if (!owns(row, context)) fail("VIDEO_NOT_FOUND"); validateRow(row, context.now);
         if (!bound(row, proposed, value.tokenHash) || !["reserved", "committed"].includes(row.state)) input();

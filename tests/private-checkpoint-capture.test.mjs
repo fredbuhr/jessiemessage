@@ -18,7 +18,7 @@ import { readCheckpointReceipt } from "../server/backup/checkpoint-receipt.mjs";
 import { createErasureJournal } from "../server/data/erasure-journal.mjs";
 import { readOperationalCheckpoint } from "../server/backup/operational-checkpoint.mjs";
 import { withErasureDirectory } from "./fixtures/erasure-files.mjs";
-import { APPLICATION_COVERAGE, VIDEO_APPLICATION_COVERAGE } from "../server/backup/application-scope.mjs";
+import { APPLICATION_COVERAGE, VIDEO_APPLICATION_COVERAGE, EXPERIENCE_APPLICATION_COVERAGE } from "../server/backup/application-scope.mjs";
 import { PrivateCheckpointError, archiveCheckpoint, parseArguments, run, main } from "../scripts/private-checkpoint.mjs";
 
 const base = fileURLToPath(new URL("../../audit/", import.meta.url));
@@ -75,7 +75,7 @@ async function syntheticScope(directory) {
   };
 }
 
-async function fixture(t, { video = false, broadcast = video, crm = broadcast, recovery = crm } = {}) {
+async function fixture(t, { experience = false, video = experience, broadcast = video, crm = broadcast, recovery = crm } = {}) {
   await mkdir(base, { recursive: true, mode: 0o700 });
   const root = await mkdtemp(join(base, "private-checkpoint-capture-"));
   await chmod(root, 0o700);
@@ -89,11 +89,11 @@ async function fixture(t, { video = false, broadcast = video, crm = broadcast, r
   await writeFile(join(mediaRoot, mediaName("thumb")), thumb, { mode: 0o600 });
   const snapshot = { schemaDigest: "a".repeat(64), coreDigest: "b".repeat(64), counts: { tables: 33, rows: 1 } };
   const state = { events: [], loaded: [], usedEnvironments: [], keys: [], dumps: 0, prepares: 0, secretReads: 0,
-    manifests: 0, compares: 0, copies: 0, verifications: 0, tools: 0, identities: 0, clocks: 0, snapshot, recovery };
+    manifests: 0, compares: 0, copies: 0, verifications: 0, tools: 0, identities: 0, clocks: 0, snapshot, recovery, experience };
   const inputStream = { isTTY: true };
   const command = (mode = "capture") => [mode, ...(["capture", "capture-application"].includes(mode) ? ["--offline"] : []),
     "--private-directory", privateDirectory, "--private-path-mode", "linux-dirfd", "--destination-private-directory", destination,
-    ...(mode.endsWith("-application") ? [] : ["--inspection-user", "synthetic_inspection"]), ...(recovery ? ["--profile", `photos-notify-recovery${crm ? "-crm" : ""}${broadcast ? "-broadcast" : ""}${video ? "-video" : ""}`] : [])];
+    ...(mode.endsWith("-application") ? [] : ["--inspection-user", "synthetic_inspection"]), ...(recovery ? ["--profile", `photos-notify-recovery${crm ? "-crm" : ""}${broadcast ? "-broadcast" : ""}${video ? "-video" : ""}`] : []), ...(experience ? ["--experience", "1"] : [])];
   const dependencies = {
     inheritedEnv: { JESSIEMESSAGE_PRIVATE_PATH_MODE: "linux-dirfd" }, execArgv: [], inputStream,
     async scopeOperation(directory, operation) { return operation(await syntheticScope(directory)); },
@@ -131,7 +131,7 @@ async function fixture(t, { video = false, broadcast = video, crm = broadcast, r
       assert.equal(args[0], "prepare");
       assert.equal(args[1], "--offline");
       assert.equal(args[2], "--manifest");
-      assert.deepEqual(args.slice(4), ["--profile", `photos-notify${recovery ? "-recovery" : ""}${crm ? "-crm" : ""}${broadcast ? "-broadcast" : ""}${video ? "-video" : ""}${state.application ? "-application" : ""}`]);
+      assert.deepEqual(args.slice(4), ["--profile", `photos-notify${recovery ? "-recovery" : ""}${crm ? "-crm" : ""}${broadcast ? "-broadcast" : ""}${video ? "-video" : ""}${state.application ? "-application" : ""}`, ...(experience ? ["--experience", "1"] : [])]);
       assert.equal(environment.JESSIEMESSAGE_BACKUP_SCHEMA_USER, state.application ? undefined : "synthetic_inspection");
       assert.equal(environment.JESSIEMESSAGE_BACKUP_SCHEMA_PASSWORD, state.application ? undefined : inspectionPassword);
       assert.equal(environment.JESSIEMESSAGE_RUNTIME_DB_PASSWORD, runtimePassword);
@@ -158,9 +158,10 @@ async function fixture(t, { video = false, broadcast = video, crm = broadcast, r
       assert.deepEqual(target, { user: state.application ? "synthetic_runtime" : "synthetic_inspection", database: "synthetic_checkpoint" });
       assert.deepEqual(configuration, { host: "db.example.invalid", port: "3306" });
       assert.equal(password, state.application ? runtimePassword : inspectionPassword);
-      if (state.application) { assert.equal(parameters.tables.length, video ? 36 : 33); assert.equal(new Set(parameters.tables).size, video ? 36 : 33); assert.ok(parameters.tables.includes("schema_migrations")); }
+      if (state.application) { assert.equal(parameters.tables.length, experience ? 37 : video ? 36 : 33); assert.equal(new Set(parameters.tables).size, experience ? 37 : video ? 36 : 33); assert.ok(parameters.tables.includes("schema_migrations")); }
       else assert.equal(parameters.tables, undefined);
       assert.equal(Object.hasOwn(parameters, "video"), video); if (video) assert.equal(parameters.video, true);
+      assert.equal(Object.hasOwn(parameters, "experience"), experience); if (experience) assert.equal(parameters.experience, true);
       state.dumps += 1;
       state.events.push(`dump:${state.dumps}`);
       if (state.dumps === 1) {
@@ -698,4 +699,20 @@ test("candidate video ciphertext drift after native archive creation never publi
   await assert.rejects(run(parseArguments(f.command("capture-application")), f.dependencies), neutral);
   assert.equal(f.state.dumps, 2); assert.ok((await lstat(join(f.destination, "checkpoint.tar.gz"))).size > 0);
   assert.equal((await readdir(f.videoRoot)).length, 1); cleared(f.state);
+});
+
+test("experience capture preserves the existing archive format while separating37 physical tables from38 migrations", async t => {
+  const f = await fixture(t, { experience: true }); f.state.application = true;
+  Object.assign(f.state.snapshot, { version: 3, coverage: EXPERIENCE_APPLICATION_COVERAGE, counts: { tables: 37, rows: 1 },
+    video: { capacity: { rootFingerprint: "d".repeat(64) }, assets: [] } });
+  const check = await run(parseArguments(f.command("check-application")), f.dependencies);
+  assert.equal(check.schema, 38); assert.equal(check.tables, 37); assert.equal(check.migrations, 38);
+  assert.equal(f.state.prepares, 0); assert.equal(f.state.dumps, 0); assert.equal(f.state.identities, 0);
+  const result = await run(parseArguments(f.command("capture-application")), f.dependencies);
+  assert.equal(result.status, "application_checkpoint_saved"); assert.equal(result.tables, 37); assert.equal(result.migrations, 38);
+  const receipt = await readCheckpointReceipt(await syntheticScope(f.destination));
+  assert.equal(receipt.version, 11); assert.deepEqual(receipt.coverage, EXPERIENCE_APPLICATION_COVERAGE);
+  assert.deepEqual(receipt.schema, { tables: 37, migrations: 38 });
+  assert.equal(result.archiveContentsVerified, true); assert.equal(f.state.prepares, 2); assert.equal(f.state.dumps, 2);
+  assert.equal(f.state.secretReads, 0); cleared(f.state);
 });

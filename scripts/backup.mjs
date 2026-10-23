@@ -27,6 +27,11 @@ const manifestProfile = (profile) => PHOTO_PROFILES.includes(profile) ? `messagi
 const manifestVersion = (profile) => photoBackupProfile(profile)?.manifestVersion ?? 1;
 
 export function parseArguments(args) {
+  if (Array.isArray(args) && args.at(-2) === "--experience" && args.at(-1) === "1") {
+    const value = parseArguments(args.slice(0, -2));
+    if (value.experience !== undefined || value.profile !== "photos-notify-recovery-crm-broadcast-video-application") fail("BACKUP_USAGE");
+    return { ...value, experience: true };
+  }
   if (Array.isArray(args) && args.length === 6 && args[4] === "--profile" && PHOTO_PROFILES.includes(args[5])) {
     return { ...parseArguments(args.slice(0, 4)), profile: args[5] };
   }
@@ -67,6 +72,7 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
     checkSignal(dependencies.signal);
     const selected = photoBackupProfile(options.profile), photos = Boolean(selected), notifications = selected?.notifications,
       application = selected?.application, recovery = selected?.recovery, crm = selected?.crm, broadcast = selected?.broadcast, video = selected?.video;
+    let experience = options.experience === true;
     const keyNames = [...["totpKey", "mailKey", "messageKey", "mediaKey"], ...(!photos || crm ? ["crmKey"] : []), ...(notifications ? ["notificationKey"] : []), ...(video ? ["videoKey"] : [])];
     const config = (dependencies.configure ?? configuration)(env, options.profile), { media, keys, video: videoConfig } = config ?? {};
     if (media?.enabled !== true || !media.capacity || typeof config.databaseName !== "string" || !/^[A-Za-z0-9_]{1,64}$/.test(config.databaseName)
@@ -96,6 +102,10 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
         || !photos && manifest?.version !== 1) fail("BACKUP_VERIFY");
       payload = await manifests.verifyBackupManifest({ manifest, keys });
       if (!payload?.snapshot || payload.snapshot.capacity?.rootFingerprint !== payload.identity?.rootFingerprint) fail("BACKUP_VERIFY");
+      const archivedExperience = payload.snapshot.version === 3 && payload.snapshot.coverage?.tables === 37;
+      if (experience && !archivedExperience) fail("BACKUP_VERIFY");
+      // Restore/verify select their schema only after manifest authentication.
+      experience = archivedExperience;
     }
     pool = await (dependencies.createPool ?? (await import("../server/db/runtime.mjs")).createRuntimePool)(env);
     const storage = await (dependencies.makeStorage ?? (await import("../server/media/storage.mjs")).createMediaStorage)({ root: media.root, key: keys.mediaKey });
@@ -107,17 +117,17 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
     if (video && (!Buffer.isBuffer(videoFingerprint) || videoFingerprint.length !== 32)) fail("BACKUP_VERIFY");
     const videoCapacity = video ? { ...videoConfig.capacity, rootFingerprint: videoFingerprint } : null;
     const videoStore = video ? await (dependencies.makeVideoStore ?? (await import("../server/video/store.mjs")).createVideoStore)({ pool, capacity: videoCapacity,
-      chatStore: (await import("../server/chat/store.mjs")).createChatStore(pool) }) : null;
+      chatStore: (await import("../server/chat/store.mjs")).createChatStore(pool), ...(experience ? { experience: true } : {}) }) : null;
     if (video) await videoStore.assertSchema();
     const schemaStore = dependencies.makeSchemaStore ? dependencies.makeSchemaStore({ pool, capacity })
       : (await import("../server/media/store.mjs")).createMediaStore({ pool, capacity, chatStore: (await import("../server/chat/store.mjs")).createChatStore(pool) });
-    if (video) await schemaStore.assertSchema({ video: true });
+    if (video) await schemaStore.assertSchema({ video: true, ...(experience ? { experience: true } : {}) });
     else await schemaStore.assertSchema();
     inspectionPool = await (dependencies.createInspectionPool ?? (application
       ? (await import("../server/backup/application-scope.mjs")).createApplicationInspectionPool
       : (await import("../server/backup/inspection.mjs")).createBackupInspectionPool))(env);
     if (!inspectionPool || inspectionPool === pool) fail("BACKUP_CONFIG");
-    const store = (dependencies.makeSnapshotStore ?? snapshots.createBackupSnapshotStore)({ pool, inspectionPool, ...(application ? { coverage: "application-tables" } : {}), ...(video ? { video: true } : {}) });
+    const store = (dependencies.makeSnapshotStore ?? snapshots.createBackupSnapshotStore)({ pool, inspectionPool, ...(application ? { coverage: "application-tables" } : {}), ...(video ? { video: true } : {}), ...(experience ? { experience: true } : {}) });
     const databaseName = await store.databaseName();
     if (databaseName !== config.databaseName) fail("BACKUP_CONFIG");
     const identity = await manifests.backupIdentity({ databaseName, rootPath: media.root, storage, mediaKey: keys.mediaKey, ...(video ? { videoRootPath: videoConfig.root, videoStorage } : {}) });
@@ -135,7 +145,7 @@ export async function main(args = process.argv.slice(2), env = process.env, depe
       checkSignal(dependencies.signal);
       assertReport(await snapshots.verifyBackupStorage({ snapshot, storage, ...(video ? { videoStorage, expectedVideoRootFingerprint: identity.video.rootFingerprint } : {}), mode, signal: dependencies.signal, limits: dependencies.limits }));
       const cryptoLimits = Object.fromEntries(Object.entries(dependencies.limits ?? {}).filter(([key]) => ["maxRows", "maxIssues"].includes(key)));
-      assertReport(await verifyCrypto({ ...(photos ? { pool } : { store: cryptoStore }), storage, ...(video ? { videoStorage } : {}), keys, signal: dependencies.signal, limits: cryptoLimits }));
+      assertReport(await verifyCrypto({ ...(photos ? { pool } : { store: cryptoStore }), storage, ...(video ? { videoStorage } : {}), keys, signal: dependencies.signal, limits: cryptoLimits, ...(experience ? { experience: true } : {}) }));
     }
     async function sameIdentity() {
       const current = await manifests.backupIdentity({ databaseName: await store.databaseName(), rootPath: media.root, storage, mediaKey: keys.mediaKey, ...(video ? { videoRootPath: videoConfig.root, videoStorage } : {}) });

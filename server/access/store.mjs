@@ -1,5 +1,5 @@
 import { loadStoreMigrations } from "../db/store-migrations.mjs";
-import { createSessionClock, sessionIsValid, adminSessionExpiry, clientSessionExpiry, CLIENT_SESSION_SECONDS, SESSION_TOUCH_MILLISECONDS } from "../auth/session-policy.mjs";
+import { createSessionClock, sessionIsValid, adminSessionExpiry, clientSessionExpiry, CLIENT_SESSION_SECONDS, CLIENT_IDLE_SECONDS, SESSION_TOUCH_MILLISECONDS } from "../auth/session-policy.mjs";
 import { randomBytes } from "node:crypto";
 import { migrationStatus } from "../db/migrations.mjs";
 import { encodeAccessCursor, validateAccessPage } from "./pagination.mjs";
@@ -79,6 +79,42 @@ export function createAccessStore(pool, { clock } = {}) {
     } finally {
       if (connection) { try { connection.release(); } catch {} }
     }
+  }
+
+  async function lockedClientSession(connection, tokenHash, now, idleSeconds = CLIENT_IDLE_SECONDS) {
+    const candidate = (await connection.query("SELECT user_id FROM sessions WHERE token_hash = ? LIMIT 1", [tokenHash]))[0];
+    if (!candidate) return null;
+    const user = (await connection.query(`SELECT id, role, status, pseudonym, email_verified_at,
+      age_assured_at, access_approved_at, access_expires_at, ${invitationConsumptionProjection()} FROM users WHERE id = ? FOR UPDATE`, [candidate.user_id]))[0];
+    if (!user || user.role !== "client" || !["pending", "active"].includes(user.status)) return null;
+    const auth = (await connection.query("SELECT credential_version FROM client_auth_state WHERE user_id = ? FOR UPDATE", [user.id]))[0];
+    if (!auth) return null;
+    const row = (await connection.query(`SELECT s.id, s.created_at, s.expires_at, s.revoked_at, c.last_seen_at,
+      c.credential_version FROM sessions s JOIN client_session_state c ON c.session_id = s.id
+      WHERE s.token_hash = ? AND s.user_id = ? FOR UPDATE`, [tokenHash, user.id]))[0];
+    if (!row || row.revoked_at !== null || storedVersion(row.credential_version) !== storedVersion(auth.credential_version)) return null;
+    const createdAt = fromSqlDate(row.created_at);
+    now = sessionNow(now);
+    const lastSeen = fromSqlDate(row.last_seen_at);
+    let expiresAt = fromSqlDate(row.expires_at);
+    if (!sessionIsValid({ role: "client", createdAt, lastSeenAt: lastSeen, expiresAt, now, idleSeconds })) return null;
+    const emailVerified = user.email_verified_at !== null && fromSqlDate(user.email_verified_at) <= now;
+    const ageAssured = user.age_assured_at !== null && fromSqlDate(user.age_assured_at) <= now;
+    const approved = user.access_approved_at !== null && fromSqlDate(user.access_approved_at) <= now;
+    const invitationConsumed = hasConsumedInvitation(user, now, fromSqlDate);
+    if (!emailVerified || !invitationConsumed || (user.status === "active" && (!approved
+      || fromSqlDate(user.access_approved_at) < fromSqlDate(user.invitation_consumed_at)))) return null;
+    const accessExpiresAt = optionalDate(user.access_expires_at);
+    const accessState = user.status === "pending" ? "pending" : accessExpiresAt !== null && now >= accessExpiresAt ? "expired" : "active";
+    if (now - lastSeen >= SESSION_TOUCH_MILLISECONDS || idleSeconds === 0 && expiresAt - now < CLIENT_SESSION_SECONDS * 1000 - SESSION_TOUCH_MILLISECONDS) {
+      await connection.query("UPDATE client_session_state SET last_seen_at = ? WHERE session_id = ?", [sqlDate(now), row.id]);
+      if (idleSeconds === 0) {
+        expiresAt = Math.max(expiresAt, clientSessionExpiry(now));
+        await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(expiresAt), row.id]);
+      }
+    }
+    return { id: row.id, userId: user.id, role: "client", pseudonym: user.pseudonym, expiresAt, now, credentialVersion: storedVersion(auth.credential_version),
+    access: { state: accessState, admissionPolicy: CLIENT_ADMISSION_POLICY, invitationConsumed, emailVerified, ageAssured, approved, expiresAt: accessExpiresAt } };
   }
 
   // The HTTP principal is deliberately insufficient here. Every administrator
@@ -347,39 +383,42 @@ export function createAccessStore(pool, { clock } = {}) {
       bytes(tokenHash, 32); instant(now);
       if (!Number.isSafeInteger(idleSeconds) || idleSeconds < 0 || idleSeconds > 86400) invalid();
       return withConnection(async (connection) => {
-        const candidate = (await connection.query("SELECT user_id FROM sessions WHERE token_hash = ? LIMIT 1", [tokenHash]))[0];
-        if (!candidate) return null;
-        const user = (await connection.query(`SELECT id, role, status, pseudonym, email_verified_at,
-          age_assured_at, access_approved_at, access_expires_at, ${invitationConsumptionProjection()} FROM users WHERE id = ? FOR UPDATE`, [candidate.user_id]))[0];
-        if (!user || user.role !== "client" || !["pending", "active"].includes(user.status)) return null;
-        const auth = (await connection.query("SELECT credential_version FROM client_auth_state WHERE user_id = ? FOR UPDATE", [user.id]))[0];
-        if (!auth) return null;
-        const row = (await connection.query(`SELECT s.id, s.created_at, s.expires_at, s.revoked_at, c.last_seen_at,
-          c.credential_version FROM sessions s JOIN client_session_state c ON c.session_id = s.id
-          WHERE s.token_hash = ? AND s.user_id = ? FOR UPDATE`, [tokenHash, user.id]))[0];
-        if (!row || row.revoked_at !== null || storedVersion(row.credential_version) !== storedVersion(auth.credential_version)) return null;
-        const createdAt = fromSqlDate(row.created_at);
-        now = sessionNow(now);
-        const lastSeen = fromSqlDate(row.last_seen_at);
-        let expiresAt = fromSqlDate(row.expires_at);
-        if (!sessionIsValid({ role: "client", createdAt, lastSeenAt: lastSeen, expiresAt, now, idleSeconds })) return null;
-        const emailVerified = user.email_verified_at !== null && fromSqlDate(user.email_verified_at) <= now;
-        const ageAssured = user.age_assured_at !== null && fromSqlDate(user.age_assured_at) <= now;
-        const approved = user.access_approved_at !== null && fromSqlDate(user.access_approved_at) <= now;
-        const invitationConsumed = hasConsumedInvitation(user, now, fromSqlDate);
-        if (!emailVerified || !invitationConsumed || (user.status === "active" && (!approved
-          || fromSqlDate(user.access_approved_at) < fromSqlDate(user.invitation_consumed_at)))) return null;
-        const accessExpiresAt = optionalDate(user.access_expires_at);
-        const accessState = user.status === "pending" ? "pending" : accessExpiresAt !== null && now >= accessExpiresAt ? "expired" : "active";
-        if (now - lastSeen >= SESSION_TOUCH_MILLISECONDS || idleSeconds === 0 && expiresAt - now < CLIENT_SESSION_SECONDS * 1000 - SESSION_TOUCH_MILLISECONDS) {
-          await connection.query("UPDATE client_session_state SET last_seen_at = ? WHERE session_id = ?", [sqlDate(now), row.id]);
-          if (idleSeconds === 0) {
-            expiresAt = Math.max(expiresAt, clientSessionExpiry(now));
-            await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(expiresAt), row.id]);
-          }
-        }
-        return { id: row.id, userId: user.id, role: "client", pseudonym: user.pseudonym, expiresAt,
-          access: { state: accessState, admissionPolicy: CLIENT_ADMISSION_POLICY, invitationConsumed, emailVerified, ageAssured, approved, expiresAt: accessExpiresAt } };
+        const result = await lockedClientSession(connection, tokenHash, now, idleSeconds);
+        if (!result) return null;
+        const { credentialVersion, now: checkedAt, ...record } = result;
+        return record;
+      }, true);
+    },
+
+    async getPasswordChangeRecord(tokenHash, { now }) {
+      bytes(tokenHash, 32); instant(now);
+      return withConnection(async (connection) => {
+        const actor = await lockedClientSession(connection, tokenHash, now);
+        if (!actor) return null;
+        const user = (await connection.query("SELECT password_hash FROM users WHERE id = ? FOR UPDATE", [actor.userId]))[0];
+        if (!user || typeof user.password_hash !== "string") return null;
+        return { userId: actor.userId, passwordHash: user.password_hash, generation: actor.credentialVersion };
+      }, true);
+    },
+
+    async changePassword({ tokenHash, expectedPasswordHash, expectedGeneration, passwordHash, session, now }) {
+      bytes(tokenHash, 32); bytes(session?.id, 16); bytes(session?.tokenHash, 32); instant(now);
+      text(expectedPasswordHash, 255); text(passwordHash, 255); versionNumber(expectedGeneration);
+      return withConnection(async (connection) => {
+        const actor = await lockedClientSession(connection, tokenHash, now);
+        if (!actor || actor.credentialVersion !== expectedGeneration || expectedGeneration >= 4294967295) return null;
+        const user = (await connection.query("SELECT password_hash FROM users WHERE id = ? FOR UPDATE", [actor.userId]))[0];
+        now = sessionNow(actor.now);
+        if (!user || user.password_hash !== expectedPasswordHash || now >= actor.expiresAt) return null;
+        const expiresAt = clientSessionExpiry(now), nextGeneration = expectedGeneration + 1;
+        await connection.query("UPDATE users SET password_hash = ?, updated_at = GREATEST(updated_at, ?) WHERE id = ?", [passwordHash, sqlDate(now), actor.userId]);
+        await connection.query("UPDATE client_auth_state SET credential_version = ? WHERE user_id = ?", [nextGeneration, actor.userId]);
+        await connection.query("UPDATE client_password_resets SET revoked_at = GREATEST(created_at, ?) WHERE user_id = ? AND consumed_at IS NULL AND revoked_at IS NULL", [sqlDate(now), actor.userId]);
+        await connection.query("UPDATE password_reset_outbox SET status = 'cancelled', lease_token = NULL, lease_until = NULL, last_error = NULL WHERE recipient_user_id = ? AND status IN ('pending', 'sending', 'failed')", [actor.userId]);
+        await connection.query("UPDATE sessions SET revoked_at = GREATEST(created_at, ?) WHERE user_id = ? AND revoked_at IS NULL", [sqlDate(now), actor.userId]);
+        await connection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [session.id, actor.userId, session.tokenHash, sqlDate(now), sqlDate(expiresAt)]);
+        await connection.query("INSERT INTO client_session_state (session_id, last_seen_at, credential_version) VALUES (?, ?, ?)", [session.id, sqlDate(now), nextGeneration]);
+        return { userId: actor.userId, role: "client", pseudonym: actor.pseudonym, expiresAt, access: actor.access };
       }, true);
     },
 

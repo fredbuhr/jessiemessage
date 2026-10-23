@@ -67,7 +67,8 @@ export async function createChatService({ store, authStore, authService, accessS
       latestSequence: row.latestSequence, latestEventSequence: row.latestEventSequence, lastReadSequence: row.lastReadSequence,
       // Keep the wire shape stable for existing clients, without publishing
       // the administrator's private read position on any client read path.
-      peerReadSequence: role === "admin" ? row.peerReadSequence : "0", unreadCount: row.unreadCount, canSend: row.canSend };
+      peerReadSequence: role === "admin" ? row.peerReadSequence : "0", unreadCount: row.unreadCount, canSend: row.canSend,
+      ...(role === "admin" && row.reply !== undefined ? { reply: row.reply } : {}) };
   }
   function messageDTO(row, session) {
     const mine = row.senderId.equals(idBytes(session.user.id));
@@ -111,6 +112,13 @@ export async function createChatService({ store, authStore, authService, accessS
       ...(media ? { media } : {}),
       ...(video ? { video } : {}),
       createdAt: row.createdAt, deletedAt: row.deletedAt, clientMessageId: mine ? row.clientMessageId.toString("hex") : null };
+  }
+  function replyFields(role, input) {
+    if (input.replyThrough === undefined && input.replyVersion === undefined) return {};
+    if (role !== "admin" || input.replyThrough === undefined) fail("CHAT_INPUT");
+    sequence(input.replyThrough);
+    if (input.replyVersion !== undefined && (typeof input.replyVersion !== "string" || !/^(?:0|[1-9][0-9]{0,9})$/.test(input.replyVersion) || BigInt(input.replyVersion) > 4294967295n)) fail("CHAT_INPUT");
+    return { replyThrough: input.replyThrough, ...(input.replyVersion === undefined ? {} : { replyVersion: input.replyVersion }) };
   }
   async function mutationLimit(userId, kind, now) {
     // A personal refusal must not consume the shared allowance used by other
@@ -171,19 +179,19 @@ export async function createChatService({ store, authStore, authService, accessS
         kind: event.kind, occurredAt: event.occurredAt, message: messageDTO(event.message, session) })), nextCursor: result.nextCursor, hasMore: result.hasMore };
     }),
     send: (role, token, conversationId, input) => guarded(async () => {
-      if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).some((name) => !["clientMessageId", "body"].includes(name))) fail("CHAT_INPUT");
+      if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).some((name) => !["clientMessageId", "body", "replyThrough", "replyVersion"].includes(name))) fail("CHAT_INPUT");
       const { clientMessageId, body } = input;
       validateMessageBody(body); const clientId = idBytes(clientMessageId);
       const { session, request } = await context(role, token, conversationId);
       await mutationLimit(session.user.id, "send", request.now);
       const id = randomBytes(16), senderId = idBytes(session.user.id);
       const binding = { messageId: id, conversationId: request.conversationId, senderId };
-      const result = await store.sendMessage({ ...request, now: nowValue(), message: { id, clientMessageId: clientId,
+      const result = await store.sendMessage({ ...request, now: nowValue(), message: { id, clientMessageId: clientId, ...replyFields(role, input),
         bodyEncrypted: encryptMessageBody(body, key, binding), bodyFingerprint: messageFingerprint(body, key, binding) } });
       return { message: messageDTO(result.message, session), duplicate: result.duplicate };
     }),
     sendImage: (role, token, conversationId, input) => guarded(async () => {
-      if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).some((name) => !["clientMessageId", "mediaId", "caption"].includes(name))) fail("CHAT_INPUT");
+      if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).some((name) => !["clientMessageId", "mediaId", "caption", "replyThrough", "replyVersion"].includes(name))) fail("CHAT_INPUT");
       const { clientMessageId, mediaId, caption } = input;
       const clientId = idBytes(clientMessageId), assetId = idBytes(mediaId);
       if (typeof caption !== "string" || caption.length > 1000) fail("CHAT_INPUT");
@@ -193,29 +201,40 @@ export async function createChatService({ store, authStore, authService, accessS
       const messageId = randomBytes(16), senderId = idBytes(session.user.id);
       const body = JSON.stringify({ mediaId, caption });
       const binding = { messageId, conversationId: request.conversationId, senderId };
-      const result = await store.sendMessage({ ...request, now: nowValue(), message: { id: messageId, clientMessageId: clientId, mediaId: assetId,
+      const result = await store.sendMessage({ ...request, now: nowValue(), message: { id: messageId, clientMessageId: clientId, mediaId: assetId, ...replyFields(role, input),
         bodyEncrypted: encryptMessageBody(body, key, binding), bodyFingerprint: messageFingerprint(body, key, binding) } });
       return { message: messageDTO(result.message, session), duplicate: result.duplicate };
     }),
     ...(videoMessages === undefined ? {} : {
       sendVideo: (role, token, conversationId, input) => guarded(async () => {
         if (!input || typeof input !== "object" || Array.isArray(input)
-          || Object.keys(input).length !== 3 || !["clientMessageId", "videoId", "caption"].every((name) => Object.hasOwn(input, name))) fail("CHAT_INPUT");
+          || Object.keys(input).some(name => !["clientMessageId", "videoId", "caption", "replyThrough", "replyVersion"].includes(name)) || !["clientMessageId", "videoId", "caption"].every((name) => Object.hasOwn(input, name))) fail("CHAT_INPUT");
         const { clientMessageId, videoId, caption } = input;
         const clientId = idBytes(clientMessageId), assetId = idBytes(videoId);
         if (typeof caption !== "string" || caption.length > 1000) fail("CHAT_INPUT");
         if (caption !== "") validateMessageBody(caption);
         const { session, request } = await context(role, token, conversationId);
+        if (role !== "admin") fail("CHAT_FORBIDDEN");
         if (!videoCreationEnabled) fail("CHAT_READ_ONLY");
         await mutationLimit(session.user.id, "send", request.now);
         const messageId = randomBytes(16), senderId = idBytes(session.user.id);
         const body = JSON.stringify({ videoId, caption });
         const binding = { messageId, conversationId: request.conversationId, senderId };
         const result = await videoMessages.sendMessage({ ...request, now: nowValue(), message: {
-          id: messageId, clientMessageId: clientId, videoId: assetId,
+          id: messageId, clientMessageId: clientId, videoId: assetId, ...replyFields(role, input),
           bodyEncrypted: encryptMessageBody(body, key, binding), bodyFingerprint: videoMessageFingerprint(body, key, binding),
         } });
         return { message: messageDTO(result.message, session), duplicate: result.duplicate };
+      }),
+    }),
+    ...(typeof store.markReply !== "function" ? {} : {
+      markReply: (token, conversationId, input) => guarded(async () => {
+        if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).length !== 3 || !["action", "through", "expectedVersion"].every(name => Object.hasOwn(input, name)) || !["needed", "handled"].includes(input.action)) fail("CHAT_INPUT");
+        sequence(input.through);
+        if (typeof input.expectedVersion !== "string" || !/^(?:0|[1-9][0-9]{0,9})$/.test(input.expectedVersion) || BigInt(input.expectedVersion) > 4294967295n) fail("CHAT_INPUT");
+        const { session, request } = await context("admin", token, conversationId);
+        await mutationLimit(session.user.id, "update", request.now);
+        return store.markReply({ ...request, now: nowValue(), input });
       }),
     }),
     markRead: (role, token, conversationId, input) => guarded(async () => {

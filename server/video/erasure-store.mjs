@@ -21,8 +21,8 @@ function date(value) {
 
 /** A transaction-local extension. No hook opens its own transaction or grants
  * session authority; the existing closure lease and producer drain own it. */
-export function createVideoErasureExtension({ videoStore, videoStorage, capacity } = {}) {
-  if (typeof videoStore?.assertSchema !== "function" || typeof videoStorage?.fingerprint !== "function"
+export function createVideoErasureExtension({ videoStore, videoStorage, capacity, experience = false } = {}) {
+  if (typeof experience !== "boolean" || typeof videoStore?.assertSchema !== "function" || typeof videoStorage?.fingerprint !== "function"
     || !capacity || !Number.isSafeInteger(capacity.ownerBytes) || capacity.ownerBytes < 1
     || !Number.isSafeInteger(capacity.totalBytes) || capacity.totalBytes < capacity.ownerBytes
     || !sized(capacity.rootFingerprint, 32)) failErasure("ERASURE_INPUT");
@@ -91,7 +91,8 @@ export function createVideoErasureExtension({ videoStore, videoStorage, capacity
       // Reuse the lease connection, including with a one-connection pool.
       // The validator is read-only and producers are already stopped.
       await videoStore.assertSchema(connection);
-      await assertErasureSchema(connection, database, { candidateMigrations: await loadVideoMigrations() });
+      const candidateMigrations = experience ? await (await import("../experience/migrations.mjs")).loadExperienceMigrations() : await loadVideoMigrations();
+      await assertErasureSchema(connection, database, { candidateMigrations });
     },
     snapshot,
     inspect,

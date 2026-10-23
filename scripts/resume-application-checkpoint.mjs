@@ -5,6 +5,8 @@ import { databaseOptions } from "../server/db/connection.mjs";
 import { loadMigrations, createdMigrationTables } from "../server/db/migrations.mjs";
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
 import { loadRuntimeVideoEnvironment } from "../server/config/runtime-video.mjs";
+import { validateExperienceApplicationCoverage } from "../server/backup/application-scope.mjs";
+import { loadExperienceMigrations } from "../server/experience/migrations.mjs";
 import { loadVideoMigrations } from "../server/video/migrations.mjs";
 import { loadRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
 import { loadRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
@@ -43,11 +45,13 @@ export function parseArguments(args) {
 function selectedRecord(value) {
   if (!value || Object.getPrototypeOf(value) !== Object.prototype || Object.getOwnPropertySymbols(value).length) fail("USAGE", "arguments");
   const fields = Object.getOwnPropertyDescriptors(value);
-  if (Object.keys(fields).length !== FIELDS.length || FIELDS.some(name => !Object.hasOwn(fields[name] ?? {}, "value"))) fail("USAGE", "arguments");
+  const names = [...FIELDS, ...(Object.hasOwn(fields, "experience") ? ["experience"] : [])];
+  if (Object.keys(fields).length !== names.length || names.some(name => !Object.hasOwn(fields[name] ?? {}, "value"))
+    || Object.hasOwn(fields, "experience") && fields.experience.value !== true) fail("USAGE", "arguments");
   const get = name => fields[name].value;
   return parseArguments([get("command"), "--private-directory", get("privateDirectory"), "--private-path-mode", get("privatePathMode"),
     "--checkpoint-directory", get("checkpointDirectory"), "--database", get("database"), "--confirm-database", get("confirmation"),
-    "--user", get("user"), "--profile", get("profile"), "--sql-sha256", get("sqlSha256")]);
+    "--user", get("user"), "--profile", get("profile"), "--sql-sha256", get("sqlSha256"), ...(Object.hasOwn(fields, "experience") && get("experience") === true ? ["--experience", "1"] : [])]);
 }
 
 /** Keep only closed driver categories. Driver messages may contain credentials. */
@@ -72,24 +76,26 @@ export async function connectOperatorDatabase(configuration, { readCa = readFile
   } finally { if (options) options.password = ""; }
 }
 
-export async function inspectResumeClone(connection, database, { video = false } = {}) {
-  if (typeof video !== "boolean") fail("CONFIGURATION", "inspection");
-  const count = video ? 36 : 33;
+export async function inspectResumeClone(connection, database, { video = false, experience = false } = {}) {
+  if (typeof video !== "boolean" || typeof experience !== "boolean" || experience && !video) fail("CONFIGURATION", "inspection");
+  const count = experience ? 37 : video ? 36 : 33;
   const identity = await connection.query("SELECT DATABASE() AS name");
   const tls = await connection.query("SHOW SESSION STATUS LIKE 'Ssl_cipher'");
   if (identity.length !== 1 || identity[0]?.name !== database || tls.length !== 1 || tls[0]?.Variable_name !== "Ssl_cipher" || !tls[0]?.Value) fail("DATABASE", "inspection");
   const rows = await connection.query(`SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT ${count + 1}`, [database]);
   if (!Array.isArray(rows) || rows.length > count + 1) fail("DATABASE", "inspection");
   if (rows.length === 0) return "empty";
-  const migrations = await (video ? loadVideoMigrations : loadMigrations)(), names = [...createdMigrationTables(migrations), "schema_migrations"];
-  return migrations.length === count && names.length === count && rows.length === count && new Set(rows.map(row => row.name)).size === count
+  const migrations = await (experience ? loadExperienceMigrations : video ? loadVideoMigrations : loadMigrations)(), names = [...createdMigrationTables(migrations), "schema_migrations"];
+  return migrations.length === (experience ? 38 : count) && names.length === count && rows.length === count && new Set(rows.map(row => row.name)).size === count
     && rows.every(row => names.includes(row.name) && row.kind === "BASE TABLE" && row.engine === "InnoDB") ? "application-schema" : "partial";
 }
 
 function matches(result, selected, status) {
-  const profile = checkpointBackupProfile(selected.profile, true), count = profile?.video ? 36 : 33;
+  const profile = checkpointBackupProfile(selected.profile, true), experience = selected.experience === true || profile?.video && result?.coverage?.tables === 37;
+  if (experience) { try { validateExperienceApplicationCoverage(result?.coverage); } catch { return false; } }
+  const count = experience ? 37 : profile?.video ? 36 : 33;
   return result?.status === status && matchesCheckpointReceipt(profile, result)
-    && result.tables === count && result.migrations === count && result.sqlSha256 === selected.sqlSha256
+    && result.tables === count && result.migrations === (experience ? 38 : count) && result.sqlSha256 === selected.sqlSha256
     && result.checkpointFilesMatched === true && result.capacityRebound === false
     && result.httpStarted === false && result.smtpStarted === false && result.workersStarted === false;
 }
@@ -110,6 +116,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
     const before = await importOperation({ ...selected, command: "check-application" }, dependencies);
     if (!matches(before, selected, "application_restore_precheck_passed") || before.databaseConnected !== false || before.imported !== false
       || before.nativeImportClientVerified !== true || before.sqlImportFormatVerified !== true || before.trustedSqlSha256Matched !== true) fail("CHECKPOINT", phase);
+    if (before.tables === 37 && before.migrations === 38) selected.experience = true;
     active(signal, phase);
     if (selected.command === "check") return { ...before, resumeSupported: true };
     phase = "configuration"; active(signal, phase);
@@ -123,7 +130,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
       JESSIEMESSAGE_DB_NAME: selected.database, JESSIEMESSAGE_MIGRATION_DATABASE: selected.confirmation,
       JESSIEMESSAGE_DB_USER: selected.user, JESSIEMESSAGE_DB_PASSWORD: password, JESSIEMESSAGE_DB_TLS_CA_PATH: CA };
     phase = "connection"; active(signal, phase); connection = await connect(connectionEnv);
-    phase = "inspection"; active(signal, phase); const state = await inspect(connection, selected.database, ...(video ? [{ video: true }] : []));
+    phase = "inspection"; active(signal, phase); const state = await inspect(connection, selected.database, ...(video ? [{ video: true, ...(selected.experience ? { experience: true } : {}) }] : []));
     await connection.end(); connection = undefined; active(signal, phase);
     if (state === "partial") fail("PARTIAL_CLONE", phase);
     const authenticated = { ...dependencies, readSecret: async () => password };

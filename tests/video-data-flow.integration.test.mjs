@@ -21,6 +21,7 @@ import { createVideoMessageStore } from "../server/video/message-store.mjs";
 import { createVideoDataReader } from "../server/video/data-store.mjs";
 import { loadVideoMigrations } from "../server/video/migrations.mjs";
 import { createVideoStorage, VIDEO_BLOCK_BYTES, videoStoredBytes } from "../server/video/storage.mjs";
+import { seedLegacyClientVideoAsset, seedLegacyClientVideoMessage } from "./helpers/legacy-video-seed.mjs";
 import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import { mp4Source } from "./helpers/video-transport-fixture.mjs";
 
@@ -106,6 +107,10 @@ test("real read-only MariaDB client video exports stream authenticated files wit
       const value = { id: id(), storageKey: key(), bytes: VIDEO_BLOCK_BYTES * 2 + 57, mime: "video/mp4" };
       value.storedBytes = videoStoredBytes(value.bytes);
       const expected = await streamHash(source(value.bytes, fill));
+      if (owner.role === "client") {
+        await seedLegacyClientVideoAsset({ connection, storage, owner, now, asset: value, source: source(value.bytes, fill) });
+        return { ...value, expected };
+      }
       await catalog.reserve({ ...actor(owner), asset: value });
       const saved = await storage.put({ assetId: value.id, storageKey: value.storageKey, bytes: value.bytes, source: source(value.bytes, fill) });
       assert.equal(hex(saved.digest), expected.sha256);
@@ -115,6 +120,7 @@ test("real read-only MariaDB client video exports stream authenticated files wit
     async function send(owner, conversationId, asset, caption) {
       const messageId = id(), binding = { messageId, conversationId, senderId: owner.id };
       const body = JSON.stringify({ videoId: hex(asset.id), caption });
+      if (owner.role === "client") return (await seedLegacyClientVideoMessage({ chatStore: chat, owner, conversationId, asset, caption, key: messageKey, now, messageId })).message;
       const result = await messages.sendMessage({ ...actor(owner), conversationId, message: {
         id: messageId, clientMessageId: id(), videoId: asset.id,
         bodyEncrypted: encryptMessageBody(body, messageKey, binding), bodyFingerprint: videoMessageFingerprint(body, messageKey, binding),

@@ -73,10 +73,10 @@ async function readiness(fetchClient, port, signal, milliseconds, parentGateway)
 }
 
 /** A fixed IPC child, never an arbitrary command or shell. Internal seams are tests only. */
-export function createManagedRuntime({ runtimeDirectory, privateDirectory, operationsDirectory, port = 3000, environment, onUnexpectedExit, accountClosures = false, parentGateway = false, video = false } = {}, internal = {}) {
+export function createManagedRuntime({ runtimeDirectory, privateDirectory, operationsDirectory, port = 3000, environment, onUnexpectedExit, accountClosures = false, parentGateway = false, video = false, experience = false } = {}, internal = {}) {
   const { forkClient = fork, fetchClient = localFetch, startupMilliseconds = 30000, stopMilliseconds = 20000,
     requestMilliseconds = 1000, retryMilliseconds = 100 } = internal;
-  if (typeof video !== "boolean" || video && (!accountClosures || parentGateway) || typeof parentGateway !== "boolean" || typeof accountClosures !== "boolean" || accountClosures && operationsDirectory === undefined || !path(runtimeDirectory) || !path(privateDirectory) || operationsDirectory !== undefined && !path(operationsDirectory) || !Number.isSafeInteger(port) || port < 1 || port > 65535
+  if (typeof experience !== "boolean" || experience && !video || typeof video !== "boolean" || video && (!accountClosures || parentGateway) || typeof parentGateway !== "boolean" || typeof accountClosures !== "boolean" || accountClosures && operationsDirectory === undefined || !path(runtimeDirectory) || !path(privateDirectory) || operationsDirectory !== undefined && !path(operationsDirectory) || !Number.isSafeInteger(port) || port < 1 || port > 65535
     || typeof forkClient !== "function" || typeof fetchClient !== "function" || onUnexpectedExit !== undefined && typeof onUnexpectedExit !== "function"
     || [startupMilliseconds, stopMilliseconds, requestMilliseconds, retryMilliseconds].some(value => !Number.isSafeInteger(value) || value < 1 || value > 60000)) throw neutral("MANAGED_RUNTIME_CONFIGURATION");
   try {
@@ -118,7 +118,7 @@ export function createManagedRuntime({ runtimeDirectory, privateDirectory, opera
     let child;
     try {
       child = forkClient(CHILD, ["--runtime-directory", runtimeDirectory, "--private-directory", privateDirectory, "--port", String(port),
-        ...(operationsDirectory === undefined ? [] : ["--operations-directory", operationsDirectory]), ...(accountClosures ? ["--account-closures", "managed"] : []), ...(parentGateway ? ["--parent-gateway", "managed"] : []), ...(video ? ["--video", "managed"] : [])],
+        ...(operationsDirectory === undefined ? [] : ["--operations-directory", operationsDirectory]), ...(accountClosures ? ["--account-closures", "managed"] : []), ...(parentGateway ? ["--parent-gateway", "managed"] : []), ...(video ? ["--video", "managed"] : []), ...(experience ? ["--experience", "managed"] : [])],
         { env: childEnvironment, execArgv: [], stdio: ["ignore", "inherit", "inherit", "ipc"], serialization: "json" });
     } catch { return Promise.reject(neutral("MANAGED_RUNTIME_START")); }
     const record = { child, status: "starting", cancel: new AbortController(), result: null, stopping: null, starting: null, closed: null };

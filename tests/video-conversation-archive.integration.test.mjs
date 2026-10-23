@@ -26,6 +26,7 @@ import { createVideoMessageStore } from "../server/video/message-store.mjs";
 import { createVideoService } from "../server/video/service.mjs";
 import { createVideoStorage, VIDEO_BLOCK_BYTES } from "../server/video/storage.mjs";
 import { loadVideoMigrations } from "../server/video/migrations.mjs";
+import { seedLegacyClientVideoAsset, seedLegacyClientVideoMessage } from "./helpers/legacy-video-seed.mjs";
 import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import { mp4Source } from "./helpers/video-transport-fixture.mjs";
 
@@ -225,12 +226,17 @@ test("real HTTP conversation ZIP streams isolate video deliveries and authentica
     }
     async function upload(owner, fill) {
       const bytes = VIDEO_BLOCK_BYTES * 2 + 57, expected = await streamHash(source(bytes, fill));
+      if (owner.role === "client") {
+        const legacy = await seedLegacyClientVideoAsset({ connection, storage, owner, now, bytes, source: source(bytes, fill) });
+        return { id: hex(legacy.id), bytes, mime: "video/mp4", storageKey: legacy.storageKey, expected };
+      }
       const ticket = await videoService.admitUpload(owner.role, owner.token, { bytes, mime: "video/mp4" });
       const asset = await videoService.upload(owner.role, owner.token, ticket, source(bytes, fill));
       const row = (await connection.query("SELECT storage_key FROM video_assets WHERE id = ?", [Buffer.from(asset.id, "hex")]))[0];
       return { ...asset, storageKey: row.storage_key, expected };
     }
     async function send(owner, conversationId, asset, caption) {
+      if (owner.role === "client") return (await seedLegacyClientVideoMessage({ chatStore: chat, owner, conversationId, asset: { ...asset, id: Buffer.from(asset.id, "hex") }, caption, key: messageKey, now })).message;
       return (await chatService.sendVideo(owner.role, owner.token, hex(conversationId), { clientMessageId: hex(id()), videoId: asset.id, caption })).message;
     }
     const shared = await upload(admin, 0x51), adminUndelivered = await upload(admin, 0x52), deletedAsset = await upload(admin, 0x53);

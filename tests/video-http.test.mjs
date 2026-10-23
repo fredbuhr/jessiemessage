@@ -88,20 +88,20 @@ test("known video routes reject other methods and malformed routes fall through"
   }
 });
 
-test("both roles upload and read authorized bytes while private metadata never enters the DTO", async (t) => {
+test("only admins upload while both roles retain authorized reads without private metadata", async (t) => {
   const { base, calls, closes, released } = await fixture(t);
   for (const role of ["admin", "client"]) {
     const response = await fetch(`${base}${path(role)}`, { method: "POST", headers: headers(role), body: video });
-    assert.equal(response.status, 201); privateHeaders(response);
-    assert.deepEqual(await response.json(), { id: assetId, bytes: video.length, mime: "video/mp4" });
+    assert.equal(response.status, role === "admin" ? 201 : 403); privateHeaders(response);
+    assert.deepEqual(await response.json(), role === "admin" ? { id: assetId, bytes: video.length, mime: "video/mp4" } : { error: "video_admin_only" });
     const download = await fetch(`${base}${contentPath(role)}`, { headers: { Cookie: cookie(role) } });
     assert.equal(download.status, 200); privateHeaders(download); assert.deepEqual(Buffer.from(await download.arrayBuffer()), video);
     assert.equal(download.headers.get("content-length"), String(video.length));
     assert.equal(download.headers.get("content-disposition"), 'inline; filename="video.mp4"');
     assert.equal(download.headers.get("accept-ranges"), "bytes");
   }
-  assert.equal(calls.filter(([name]) => name === "upload").length, 2);
-  await until(() => closes.length === 2 && released.length === 2);
+  assert.equal(calls.filter(([name]) => name === "upload").length, 1);
+  await until(() => closes.length === 2 && released.length === 1);
 });
 
 test("single ranges clamp ends and serve inclusive, open and suffix byte intervals", async (t) => {

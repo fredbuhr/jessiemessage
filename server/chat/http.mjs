@@ -42,6 +42,13 @@ function safeActor(value, role) {
   return { user: { id: user.id, role, pseudonym: user.pseudonym }, csrf: value.csrf, expiresAt: value.expiresAt };
 }
 
+export function safeReply(value) {
+  if (!value || typeof value.needed !== "boolean" || !sequence(value.through) || !sequence(value.handledThrough)
+    || typeof value.version !== "string" || !/^(?:0|[1-9][0-9]{0,9})$/.test(value.version) || BigInt(value.version) > 4294967295n
+    || !nullableDate(value.oldestAt) || !value.needed && value.oldestAt !== null) throw unavailable();
+  return { needed: value.needed, through: value.through, handledThrough: value.handledThrough, version: value.version, oldestAt: value.oldestAt };
+}
+
 function safeConversation(value, role, expectedId = null) {
   if (!value || !id(value.id) || expectedId !== null && value.id !== expectedId || !text(value.peerName) || !date(value.createdAt)
     || !nullableDate(value.closedAt) || !date(value.lastActivityAt)
@@ -60,6 +67,7 @@ function safeConversation(value, role, expectedId = null) {
   try { avatar = safePeerAvatar(value.peerAvatar, role, value.id); } catch { throw unavailable(); }
   return {
     ...(avatar ? { peerAvatar: avatar } : {}),
+    ...(role === "admin" && value.reply !== undefined ? { reply: safeReply(value.reply) } : {}),
     id: value.id, client, peerName: value.peerName, createdAt: value.createdAt, closedAt: value.closedAt,
     lastActivityAt: value.lastActivityAt, latestSequence: value.latestSequence, latestEventSequence: value.latestEventSequence,
     lastReadSequence: value.lastReadSequence, peerReadSequence: role === "admin" ? value.peerReadSequence : "0", unreadCount: value.unreadCount, canSend: value.canSend,
@@ -145,6 +153,8 @@ function matchedRoute(pathname) {
   if (capability) return { kind: "capabilities", role: capability[1], methods: ["GET"] };
   if (pathname === "/api/chat/admin/conversations") return { kind: "list", role: "admin", methods: ["GET"] };
   if (pathname === "/api/chat/client/conversation") return { kind: "conversation", role: "client", methods: ["GET"] };
+  const replyRoute = /^\/api\/chat\/admin\/conversations\/([a-f0-9]{32})\/reply$/.exec(pathname);
+  if (replyRoute) return { kind: "reply", role: "admin", conversationId: replyRoute[1], methods: ["POST"] };
   const match = /^\/api\/chat\/(admin|client)\/conversations\/([a-f0-9]{32})\/(messages|events|read)(?:\/([a-f0-9]{32})\/delete)?$/.exec(pathname);
   if (!match || match[4] && match[3] !== "messages") return null;
   return { kind: match[4] ? "delete" : match[3], role: match[1], conversationId: match[2], messageId: match[4],
@@ -171,9 +181,9 @@ function mappedError(error) {
 }
 
 /** Routes exist only when the parent has explicitly enabled the chat feature. */
-export function createChatHandler(service, { origin, clientConversationExporter = null, profileEnabled = false, avatarsEnabled = false, announcementsEnabled = false, tasksEnabled = false, videoEnabled = false, videoCreationEnabled = true }) {
+export function createChatHandler(service, { origin, clientConversationExporter = null, profileEnabled = false, avatarsEnabled = false, announcementsEnabled = false, tasksEnabled = false, videoEnabled = false, videoCreationEnabled = true, passwordEnabled = false, preferencesEnabled = false }) {
   if (typeof profileEnabled !== "boolean" || typeof avatarsEnabled !== "boolean" || avatarsEnabled && !profileEnabled
-    || typeof announcementsEnabled !== "boolean" || typeof tasksEnabled !== "boolean" || typeof videoEnabled !== "boolean" || typeof videoCreationEnabled !== "boolean") throw new TypeError("Invalid chat capability");
+    || typeof passwordEnabled !== "boolean" || typeof preferencesEnabled !== "boolean" || typeof announcementsEnabled !== "boolean" || typeof tasksEnabled !== "boolean" || typeof videoEnabled !== "boolean" || typeof videoCreationEnabled !== "boolean") throw new TypeError("Invalid chat capability");
   const configuredOrigin = new URL(origin);
   if (configuredOrigin.protocol !== "https:" || configuredOrigin.origin !== origin) throw new TypeError("A canonical HTTPS site origin is required");
   for (const method of ["actor", "listConversations", "clientConversation", "messages", "events", "send", "markRead", "delete"]) {
@@ -217,7 +227,7 @@ export function createChatHandler(service, { origin, clientConversationExporter 
           ...(videoEnabled ? { "Content-Security-Policy": AUTH_HEADERS["Content-Security-Policy"] + "; media-src 'self' blob:" } : {}) });
       } else if (route.kind === "capabilities") {
         query(url, []);
-        reply(response, method, 200, { enabled: true, ...(videoEnabled ? { video: { enabled: true, maxBytes: 104857600, mime: "video/mp4", ...(!videoCreationEnabled ? { creationEnabled: false } : {}) } } : {}), ...(profileEnabled ? { profile: { enabled: true, avatars: avatarsEnabled } } : {}), ...(announcementsEnabled ? { announcements: { enabled: true } } : {}), ...(tasksEnabled && route.role === "admin" ? { tasks: { enabled: true } } : {}), ...(route.role === "client" && clientConversationExporter ? { conversationExport: { enabled: true, photos: clientConversationExporter.photos, maxBytes: clientConversationExporter.maxBytes, ...(clientConversationExporter.videos === true ? { videos: true } : {}) } } : {}) });
+        reply(response, method, 200, { enabled: true, ...(videoEnabled ? { video: { enabled: true, maxBytes: 104857600, mime: "video/mp4", ...(!videoCreationEnabled || route.role !== "admin" ? { creationEnabled: false } : {}) } } : {}), ...(profileEnabled ? { profile: { enabled: true, avatars: avatarsEnabled, passwordEnabled, preferencesEnabled } } : {}), ...(announcementsEnabled ? { announcements: { enabled: true } } : {}), ...(tasksEnabled && route.role === "admin" ? { tasks: { enabled: true } } : {}), ...(route.role === "admin" && typeof service.markReply === "function" ? { replies: { enabled: true } } : {}), ...(route.role === "client" && clientConversationExporter ? { conversationExport: { enabled: true, photos: clientConversationExporter.photos, maxBytes: clientConversationExporter.maxBytes, ...(clientConversationExporter.videos === true ? { videos: true } : {}) } } : {}) });
       } else if (route.kind === "list") {
         const options = query(url, ["afterId", "limit"], 50);
         const afterId = options.afterId ?? null;
@@ -261,12 +271,19 @@ export function createChatHandler(service, { origin, clientConversationExporter 
         reply(response, method, 200, { conversation: safeConversation(result.conversation, route.role, route.conversationId), events, nextCursor: result.nextCursor, hasMore: result.hasMore });
       } else if (route.kind === "messages") {
         query(url, []);
-        const body = shape(await readJson(request, { maxBytes: 32768 }), ["clientMessageId", "body"]);
+        const raw = await readJson(request, { maxBytes: 32768 });
+        const body = shape(raw, ["clientMessageId", "body", ...(Object.hasOwn(raw, "replyThrough") ? ["replyThrough"] : []), ...(Object.hasOwn(raw, "replyVersion") ? ["replyVersion"] : [])]);
+        if (body.replyThrough !== undefined && (route.role !== "admin" || !sequence(body.replyThrough)) || body.replyVersion !== undefined && (body.replyThrough === undefined || typeof body.replyVersion !== "string" || !/^(?:0|[1-9][0-9]{0,9})$/.test(body.replyVersion) || BigInt(body.replyVersion) > 4294967295n)) throw invalid();
         if (!id(body.clientMessageId)) throw invalid();
         validateMessageBody(body.body);
         const result = await service.send(route.role, token, route.conversationId, body);
         if (!result || typeof result.duplicate !== "boolean") throw unavailable();
         reply(response, method, result.duplicate ? 200 : 201, { message: safeMessage(result.message, { role: route.role, conversationId: route.conversationId }), duplicate: result.duplicate });
+      } else if (route.kind === "reply") {
+        query(url, []);
+        if (typeof service.markReply !== "function") throw unavailable();
+        const input = shape(await readJson(request), ["action", "through", "expectedVersion"]);
+        reply(response, method, 200, { reply: safeReply(await service.markReply(token, route.conversationId, input)) });
       } else if (route.kind === "read") {
         query(url, []);
         const body = shape(await readJson(request), ["throughSequence"]);

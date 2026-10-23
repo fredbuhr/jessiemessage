@@ -23,28 +23,29 @@ const fail = (code) => { throw new PrivateMessagingStartupError(code); };
 export function parseArguments(args) {
   try {
     if (!Array.isArray(args) || !["check", "start"].includes(args[0])) fail("PRIVATE_MESSAGING_USAGE");
-    let offset = 1, deployment;
+    let offset = 1, deployment, experience;
     if (args[offset] === "--deployment") {
       if (args[offset + 1] !== "primary-transition") fail("PRIVATE_MESSAGING_USAGE");
       deployment = args[offset + 1]; offset += 2;
     }
+    if (args[offset] === "--experience") { if (args[offset + 1] !== "1") fail("PRIVATE_MESSAGING_USAGE"); experience = true; offset += 2; }
     if (args[offset] === "--profile") {
       const profile = args[offset + 1];
-      if (!["photos", "photos-notify", "photos-notify-recovery", "photos-notify-recovery-crm", "photos-notify-recovery-crm-broadcast", "photos-notify-recovery-crm-broadcast-video"].includes(profile)
+      if (experience && (profile !== "photos-notify-recovery-crm-broadcast-video" || !deployment) || !["photos", "photos-notify", "photos-notify-recovery", "photos-notify-recovery-crm", "photos-notify-recovery-crm-broadcast", "photos-notify-recovery-crm-broadcast-video"].includes(profile)
         || deployment && !["photos-notify", "photos-notify-recovery", "photos-notify-recovery-crm", "photos-notify-recovery-crm-broadcast", "photos-notify-recovery-crm-broadcast-video"].includes(profile)
         || ["photos-notify-recovery", "photos-notify-recovery-crm", "photos-notify-recovery-crm-broadcast", "photos-notify-recovery-crm-broadcast-video"].includes(profile) && !deployment) fail("PRIVATE_MESSAGING_USAGE");
-      return { command: args[0], ...(deployment ? { deployment } : {}), profile: args[offset + 1], ...authenticationArguments(args.slice(offset + 2)) };
+      return { command: args[0], ...(deployment ? { deployment } : {}), ...(experience ? { experience: true } : {}), profile: args[offset + 1], ...authenticationArguments(args.slice(offset + 2)) };
     }
-    if (deployment) fail("PRIVATE_MESSAGING_USAGE");
+    if (deployment || experience) fail("PRIVATE_MESSAGING_USAGE");
     return { command: args[0], ...authenticationArguments(args.slice(offset)) };
   } catch { fail("PRIVATE_MESSAGING_USAGE"); }
 }
 
 // Match the configured server's physical schema checks, without creating its
 // services, HTTP listener, transport or workers. These adapters issue reads.
-export async function checkMessagingSchema(env, { video = false } = {}) {
-  if (typeof video !== "boolean") fail("PRIVATE_MESSAGING_SCHEMA");
-  const schemaOptions = video ? { video: true } : {};
+export async function checkMessagingSchema(env, { video = false, experience = false } = {}) {
+  if (typeof experience !== "boolean" || experience && !video || typeof video !== "boolean") fail("PRIVATE_MESSAGING_SCHEMA");
+  const schemaOptions = video ? { video: true, ...(experience ? { experience: true } : {}) } : {};
   let pool;
   try {
     const { createRuntimePool } = await import("../server/db/runtime.mjs");
@@ -78,10 +79,18 @@ export async function checkMessagingSchema(env, { video = false } = {}) {
       const { assertBroadcastSchema } = await import("../server/broadcast/store.mjs");
       await assertBroadcastSchema(pool, schemaOptions);
     }
+    if (experience) {
+      const [{ createPreferencesStore }, { createTasksStore }] = await Promise.all([
+        import("../server/preferences/store.mjs"), import("../server/tasks/store.mjs")]);
+      await createPreferencesStore({ pool, chatStore }).assertSchema();
+      const key = Buffer.from(env.JESSIEMESSAGE_CRM_KEY ?? "", "base64url");
+      try { await createTasksStore({ pool, chatStore, key }).assertSchema(schemaOptions); }
+      finally { key.fill(0); }
+    }
     if (video) {
       const [{ assertErasureSchema }, { loadVideoMigrations }] = await Promise.all([import("../server/data/erasure-schema.mjs"), import("../server/video/migrations.mjs")]);
       const connection = await pool.getConnection();
-      try { await assertErasureSchema(connection, env.JESSIEMESSAGE_DB_NAME, { candidateMigrations: await loadVideoMigrations() }); }
+      try { await assertErasureSchema(connection, env.JESSIEMESSAGE_DB_NAME, { candidateMigrations: experience ? await (await import("../server/experience/migrations.mjs")).loadExperienceMigrations() : await loadVideoMigrations() }); }
       finally { connection.release(); }
     }
   } catch { fail("PRIVATE_MESSAGING_SCHEMA"); }
@@ -94,14 +103,17 @@ export async function run(options, { inheritedEnv = process.env, execArgv = proc
   let source, env;
   try {
     const names = ["command", "privateDirectory", "privatePathMode", ...(Object.hasOwn(options ?? {}, "profile") ? ["profile"] : []),
-      ...(Object.hasOwn(options ?? {}, "deployment") ? ["deployment"] : [])];
+      ...(Object.hasOwn(options ?? {}, "deployment") ? ["deployment"] : []), ...(Object.hasOwn(options ?? {}, "experience") ? ["experience"] : [])];
     if (!options || Object.getPrototypeOf(options) !== Object.prototype || Object.getOwnPropertySymbols(options).length
       || Object.getOwnPropertyNames(options).sort().join(",") !== names.sort().join(",")
-      || names.some((name) => !Object.hasOwn(Object.getOwnPropertyDescriptor(options, name) ?? {}, "value"))) fail("PRIVATE_MESSAGING_USAGE");
+      || names.some((name) => !Object.hasOwn(Object.getOwnPropertyDescriptor(options, name) ?? {}, "value"))
+      || Object.hasOwn(options, "experience") && options.experience !== true) fail("PRIVATE_MESSAGING_USAGE");
     const selected = parseArguments([options.command, ...(Object.hasOwn(options, "deployment") ? ["--deployment", options.deployment] : []),
+      ...(options.experience === true ? ["--experience", "1"] : []),
       ...(Object.hasOwn(options, "profile") ? ["--profile", options.profile] : []),
       "--private-directory", options.privateDirectory, "--private-path-mode", options.privatePathMode]);
     const transition = selected.deployment === "primary-transition", originOptions = transition ? { originProfile: "primary" } : {};
+    const experience = selected.experience === true;
     const video = selected.profile === "photos-notify-recovery-crm-broadcast-video";
     // The two-root closure owner and manual backup parent must own every video
     // producer. Only its fixed IPC child supplies this internal startup seam.
@@ -127,17 +139,17 @@ export async function run(options, { inheritedEnv = process.env, execArgv = proc
       if (env.PORT !== processOptions.port || env.JESSIEMESSAGE_PRIVATE_PATH_MODE !== selected.privatePathMode) fail("PRIVATE_MESSAGING_CONFIGURATION");
     } catch { fail("PRIVATE_MESSAGING_CONFIGURATION"); }
     try {
-      const report = makePreflightReport("database", await inspect({ env, databaseName: env.JESSIEMESSAGE_DB_NAME, ...(video ? { video: true } : {}) }));
+      const report = makePreflightReport("database", await inspect({ env, databaseName: env.JESSIEMESSAGE_DB_NAME, ...(video ? { video: true, ...(experience ? { experience: true } : {}) } : {}) }));
       if (report.status !== "checks_passed" || report.checks.some((check) => check.status !== "pass")
         || report.privilegeObservation.profile !== env.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE) fail("PRIVATE_MESSAGING_DATABASE");
     } catch { fail("PRIVATE_MESSAGING_DATABASE"); }
     try {
-      await checkSchema(env, ...(video ? [{ video: true }] : []));
-      if (photos) await checkStorage(env, ...(video ? [{ video: true }] : []));
-      if (video) await checkVideoStorage(env);
+      await checkSchema(env, ...(video ? [{ video: true, ...(experience ? { experience: true } : {}) }] : []));
+      if (photos) await checkStorage(env, ...(video ? [{ video: true, ...(experience ? { experience: true } : {}) }] : []));
+      if (video) await checkVideoStorage(env, ...(experience ? [{ experience: true }] : []));
     } catch { fail("PRIVATE_MESSAGING_SCHEMA"); }
     if (selected.command === "start") {
-      try { await startServer(env, { requestOrigin: env.JESSIEMESSAGE_SITE_ORIGIN, ...(transition ? { deviceTransition: true } : {}), ...(recovery ? { recovery: true } : {}), ...(crm ? { crm: true } : {}), ...(broadcast ? { broadcast: true } : {}), ...(video ? { video: true } : {}) }); }
+      try { await startServer(env, { requestOrigin: env.JESSIEMESSAGE_SITE_ORIGIN, ...(transition ? { deviceTransition: true } : {}), ...(recovery ? { recovery: true } : {}), ...(crm ? { crm: true } : {}), ...(broadcast ? { broadcast: true } : {}), ...(video ? { video: true, ...(experience ? { experience: true } : {}) } : {}) }); }
       catch { fail("PRIVATE_MESSAGING_STARTUP"); }
     }
     return { status: selected.command === "start" ? "started" : "checks_passed", profile: video ? "messaging-photos-notify-recovery-crm-broadcast-video" : broadcast ? "messaging-photos-notify-recovery-crm-broadcast" : crm ? "messaging-photos-notify-recovery-crm" : recovery ? "messaging-photos-notify-recovery" : notifications ? "messaging-photos-notify" : photos ? "messaging-photos" : "messaging-text",

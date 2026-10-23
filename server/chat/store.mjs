@@ -162,7 +162,8 @@ function authoredCheck(sql, name) {
 // New private stores reuse the same restricted migration-CHECK comparison.
 export { checkTree as normalizedCheckTree, authoredCheck as authoredMigrationCheck };
 
-export function createChatStore(pool, { clock, enqueueNotification, decorateMessages } = {}) {
+export function createChatStore(pool, { clock, enqueueNotification, decorateMessages, replyTracking } = {}) {
+  if (replyTracking !== undefined && !["before", "append", "view", "mark"].every(name => typeof replyTracking?.[name] === "function")) input();
   if (enqueueNotification !== undefined && typeof enqueueNotification !== "function") input();
   if (decorateMessages !== undefined && typeof decorateMessages !== "function") input();
   const sessionNow = createSessionClock(clock);
@@ -291,6 +292,7 @@ export function createChatStore(pool, { clock, enqueueNotification, decorateMess
       latestSequence: storedSequence(row.latestSequence), latestEventSequence: storedSequence(row.latestEventSequence),
       lastReadSequence: storedSequence(row.lastReadSequence), peerReadSequence: actor.role === "admin" ? storedSequence(row.peerReadSequence) : "0", unreadCount,
       ...(peerAvatarVersion === undefined ? {} : { peerAvatarVersion }),
+      ...(actor.role === "admin" && replyTracking !== undefined ? { reply: await replyTracking.view(connection, context) } : {}),
       canSend: conversation.closed_at === null && activeClient(client, now) };
   }
   async function nextEvent(connection, conversationId) {
@@ -319,6 +321,7 @@ export function createChatStore(pool, { clock, enqueueNotification, decorateMess
       if (!asset || !asset.owner_id.equals(actor.id) || asset.owner_role !== role || asset.deleted_at !== null) fail("CHAT_NOT_FOUND");
       if (timestamp(asset.created_at) > now) fail("CHAT_FORBIDDEN");
     }
+    if (replyTracking) await replyTracking.before(connection, context);
     const lastSequence = storedSequence((await connection.query("SELECT COALESCE(MAX(sequence_no), 0) AS value FROM messages WHERE conversation_id = ?", [conversationId]))[0].value);
     if (lastSequence === "18446744073709551615") state();
     const nextSequence = String(BigInt(lastSequence) + 1n);
@@ -328,6 +331,7 @@ export function createChatStore(pool, { clock, enqueueNotification, decorateMess
     [message.id, conversationId, nextSequence, actor.id, role, message.clientMessageId, message.bodyEncrypted, message.bodyFingerprint, sqlDate(now)]);
     if (mediaId !== null) await connection.query("INSERT INTO message_media (message_id, conversation_id, media_id, created_at) VALUES (?, ?, ?, ?)", [message.id, conversationId, mediaId, sqlDate(now)]);
     await connection.query("INSERT INTO chat_events (conversation_id, event_sequence, message_id, kind, occurred_at) VALUES (?, ?, ?, 'message', ?)", [conversationId, eventSequence, message.id, sqlDate(now)]);
+    if (replyTracking) await replyTracking.append(connection, context, message);
     if (enqueueNotification) await enqueueNotification(connection, context, message);
     const row = (await connection.query(`SELECT ${messageProjection} FROM messages m ${messageJoins} WHERE m.conversation_id = ? AND m.id = ?`, [conversationId, message.id]))[0];
     return { message: rawMessage(row, actor.id), duplicate: false };
@@ -335,6 +339,7 @@ export function createChatStore(pool, { clock, enqueueNotification, decorateMess
   function validateRequest(request) { roleValue(request.role); bytes(request.tokenHash, 32); bytes(request.conversationId, 16); instant(request.now); }
 
   return Object.freeze({
+    replyEnabled: replyTracking !== undefined,
     // These callbacks are trusted server code. They reuse the complete live
     // SQL authorization and transaction rather than accepting a claimed user.
     async withActor({ role, tokenHash, now }, operation) {
@@ -391,7 +396,7 @@ export function createChatStore(pool, { clock, enqueueNotification, decorateMess
           && timestamp(conversation.created_at) <= now && conversation.closed_at === null && activeClient(client, now));
         const canSend = Boolean(administratorValid && recipientValid);
         const context = Object.freeze({ actor: admin ?? null, admin: admin ?? null, client: client ?? null, conversation, now,
-          canSend, reason: !administratorValid ? "administrator_invalid" : !recipientValid ? "recipient_unavailable" : null });
+          deliveryKind: "broadcast", canSend, reason: !administratorValid ? "administrator_invalid" : !recipientValid ? "recipient_unavailable" : null });
         let open = true, used = false;
         const append = async (message) => {
           if (!open || used || !canSend) fail("CHAT_FORBIDDEN");
@@ -565,6 +570,14 @@ export function createChatStore(pool, { clock, enqueueNotification, decorateMess
         return { ...result, message: (await decorated(connection, context, [result.message]))[0] };
       });
     },
+
+    ...(replyTracking === undefined ? {} : {
+      async markReply({ role, tokenHash, conversationId, now, input: replyInput }) {
+        validateRequest({ role, tokenHash, conversationId, now });
+        if (role !== "admin") fail("CHAT_FORBIDDEN");
+        return run(async connection => replyTracking.mark(connection, await authorize(connection, { role, tokenHash, conversationId, now }), replyInput));
+      },
+    }),
 
     async markRead({ role, tokenHash, conversationId, now, through }) {
       validateRequest({ role, tokenHash, conversationId, now }); sequence(through);

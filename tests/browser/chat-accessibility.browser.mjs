@@ -38,6 +38,11 @@ function media(role) {
     thumbnailBytes: jpeg.length, createdAt: fixture.now + 3000, sharedHere: true,
     fullUrl: `${prefix}/full`, thumbnailUrl: `${prefix}/thumb` };
 }
+function galleryPhoto(role, seq) {
+  const messageId = id(200 + seq), full = `/api/media/${role}/conversations/${conversationId}/messages/${messageId}`;
+  return { messageId, sequence: String(seq), sender: "peer", createdAt: seq === 1 ? Date.UTC(2020,0,15,12) : fixture.now + seq * 1000,
+    media: { ...media(role), fullUrl: `${full}/full`, thumbnailUrl: `${full}/thumb` } };
+}
 function message(sequence, role) {
   const sent = fixture.sent.find(message => message.sequence === String(sequence)); if (sent) return { ...sent };
   const number = Number(sequence);
@@ -45,7 +50,7 @@ function message(sequence, role) {
   return { id: id(200 + number), sequence: String(number), sender: number === 2 || number === 3 && fixture.ownPhoto ? "me" : "peer",
     body: number === 1 ? "Earlier fictional message" : number === 2 ? "Fictional message from me" : number === 3 ? fixture.photoWithoutCaption ? "" : "Fictional photo caption" : `Fictional incoming body ${number}`,
     createdAt: fixture.now + number * 1000, deletedAt: null, clientMessageId: null,
-    ...(number === 3 ? { media: media(role) } : {}) };
+    ...(fixture.photoSeries && number === 1 ? { media: galleryPhoto(role,1).media } : number === 3 ? { media: media(role) } : {}) };
 }
 function conversation(role) {
   const peer = fixture.profiles[role === "client" ? "admin" : "client"];
@@ -69,7 +74,7 @@ window.addEventListener("error", event => { window.__browserErrors.push(String(e
 window.addEventListener("unhandledrejection", event => { window.__browserErrors.push(String(event.reason?.message ?? event.reason).slice(0, 500)); });
 window.addEventListener("securitypolicyviolation", event => { window.__browserErrors.push("CSP: " + event.violatedDirective); });
 `;
-const fileNames = ["conversation-download.js", "quick-replies.js", "crm.js", "crm-model.js", "crm.css", "private-archive.js", "notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "admin-navigation.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "chat-drafts.js", "session-clock.js", "image-preparation.js", "chat.css", "i18n.js", "help-link.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
+const fileNames = ["conversation-download.js", "quick-replies.js", "crm.js", "crm-model.js", "crm.css", "private-archive.js", "notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "admin-navigation.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "chat-drafts.js", "session-clock.js", "image-preparation.js", "photo-batch.js", "chat.css", "i18n.js", "help-link.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
   "emoji-catalog.js", "emoji.css", "profile.js", "profile.css", "i18n-profile.js", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
   "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png", "brand/icon-128.png",
   "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
@@ -190,6 +195,25 @@ async function startFixtureServer() {
         }
         response.writeHead(200, { "Content-Type": "image/jpeg", "Content-Length": String(jpeg.length) }); response.end(jpeg); return;
       }
+      const selectedRole = url.pathname.includes("/client/") ? "client" : "admin";
+      if (fixture.photoBatch && request.method === "POST" && /^\/api\/media\/(admin|client)\/assets$/.test(url.pathname)) {
+        let bytes = 0; for await (const chunk of request) bytes += chunk.length;
+        assert.ok(bytes > 0); fixture.batchUploads = (fixture.batchUploads ?? 0) + 1;
+        sendJson(201, { asset: { id: id(800 + fixture.batchUploads) }, duplicate: false }); return;
+      }
+      if (fixture.photoBatch && request.method === "POST" && url.pathname.endsWith(`/conversations/${conversationId}/messages/batch`)) {
+        let raw = ""; for await (const chunk of request) raw += chunk;
+        const body = JSON.parse(raw); assert.ok(body.messages.length <= 10);
+        fixture.batchRequests ??= []; fixture.batchRequests.push(body.messages);
+        let blocked = false;
+        const results = body.messages.map((input,index) => {
+          if (blocked) return { clientMessageId:input.clientMessageId, status:424, error:"photo_batch_waiting" };
+          if (fixture.failBatchOnce && index === 1) { fixture.failBatchOnce = false; blocked = true; return { clientMessageId: input.clientMessageId, status:503, error:"media_unavailable" }; }
+          let saved = fixture.sent.find(value => value.clientMessageId === input.clientMessageId), duplicate = Boolean(saved);
+          if (!saved) { fixture.latest++; saved = { ...message(3, selectedRole), id: id(200 + fixture.latest), sequence: String(fixture.latest), sender:"me", body:input.caption, clientMessageId:input.clientMessageId }; fixture.sent.push(saved); }
+          return { clientMessageId:input.clientMessageId, message:saved, duplicate };
+        }); sendJson(200,{results}); return;
+      }
       const avatarUpload = /^\/api\/media\/(admin|client)\/assets$/.exec(url.pathname);
       if (fixture.profileEnabled && fixture.profileAvatarsEnabled && avatarUpload && request.method === "POST") {
         let bytes = 0; for await (const chunk of request) { bytes += chunk.length; if (bytes > 262144) throw new Error("oversized_fixture_avatar"); }
@@ -288,10 +312,17 @@ async function startFixtureServer() {
         }
         if (feature === "media" && request.method === "GET") {
           if (suffix === `/conversations/${conversationId}/gallery`) {
-            sendJson(200, { items: [{ messageId: photoMessageId, createdAt: fixture.now + 3000, media: media(role) }], nextBefore: null, hasMore: false }); return;
+            fixture.galleryRequests ??= []; fixture.galleryRequests.push(url.search);
+            let items = fixture.photoSeries ? [galleryPhoto(role,3), galleryPhoto(role,1)] : [galleryPhoto(role,3)];
+            if (url.searchParams.has("before")) items = items.filter(item => BigInt(item.sequence) < BigInt(url.searchParams.get("before")));
+            if (url.searchParams.has("after")) items = items.filter(item => BigInt(item.sequence) > BigInt(url.searchParams.get("after"))).reverse();
+            if (url.searchParams.has("from")) items = items.filter(item => item.createdAt >= Number(url.searchParams.get("from")));
+            if (url.searchParams.has("until")) items = items.filter(item => item.createdAt < Number(url.searchParams.get("until")));
+            const limit = Number(url.searchParams.get("limit") ?? 50); items = items.slice(0,limit);
+            sendJson(200, { items, nextBefore: null, hasMore: false }); return;
           }
           if (suffix === "/assets") { sendJson(200, { assets: fixture.historyAcknowledgement ? [media(role)] : [], nextCursor: null, hasMore: false }); return; }
-          if ([`/conversations/${conversationId}/messages/${photoMessageId}/thumb`, `/conversations/${conversationId}/messages/${photoMessageId}/full`].includes(suffix)) {
+          if ([`/conversations/${conversationId}/messages/${photoMessageId}/thumb`, `/conversations/${conversationId}/messages/${photoMessageId}/full`, ...(fixture.photoSeries ? [`/conversations/${conversationId}/messages/${id(201)}/full`, `/conversations/${conversationId}/messages/${id(201)}/thumb`] : [])].includes(suffix)) {
             response.writeHead(200, { "Content-Type": "image/jpeg" }); response.end(jpeg); return;
           }
         }
@@ -1423,4 +1454,49 @@ test("Chrome: synthetic coarse-pointer focus policy keeps keyboards closed after
     assert.equal(await page.execute("return document.getElementById('message-body').value==='😘' && document.activeElement.id==='open-emojis'"), true);
     assert.equal(fixture.messageRequests.length, 1); await noJavascriptErrors(page);
   } finally { await page.close(); }
+});
+
+
+test("Chrome photo viewer crosses unloaded history, preserves scroll and finds an old month/message", { timeout: 45000 }, async () => {
+  for (const role of ["client","admin"]) {
+    resetFixture(); fixture.photoSeries = true; const page = await browser(role === "client" ? 360 : 1280);
+    try {
+      await loaded(page, role === "client" ? "/messages" : "/admin/messages"); if (role === "admin") await page.click(".contact"); await loadedPhoto(page);
+      assert.equal(await page.execute("return !!document.querySelector('#messages [data-sequence=\"1\"]')"),false);
+      const scroll = await page.execute("const h=document.getElementById('message-scroll');h.scrollTop=1;return h.scrollTop");
+      await page.click("#messages .photo-open");
+      await waitUntil(()=>page.execute("return document.getElementById('lightbox').open && !!document.querySelector('#lightbox-image img')"),"photo opens");
+      await page.click("#previous-photo");
+      await waitUntil(()=>page.execute("return document.getElementById('lightbox-status').textContent.includes('2020')"),"older photo outside loaded messages");
+      await page.key("\uE014");
+      await waitUntil(()=>page.execute("return !document.getElementById('lightbox-status').textContent.includes('2020')"),"keyboard moves to newer photo");
+      await page.key("\uE00C");
+      assert.equal(await page.execute("return document.getElementById('message-scroll').scrollTop"),scroll);
+      await clickOptionsAction(page,"#open-gallery");
+      await page.execute("const input=document.getElementById('media-month');input.value='2020-01';input.dispatchEvent(new Event('change',{bubbles:true}))");
+      await waitUntil(()=>page.execute("return document.querySelectorAll('#media-grid .media-card').length===1 && document.getElementById('media-grid').textContent.includes('2020')"),"old month is queried from full history");
+      assert.ok(fixture.galleryRequests.some(value=>value.includes("from=")&&value.includes("until=")));
+      await page.click("#media-grid .photo-open");await page.click("#photo-message");
+      await waitUntil(()=>page.execute("const row=document.querySelector('#messages [data-sequence=\"1\"]');return !!row&&row.classList.contains('notification-target')&&document.activeElement===row"),"message origin loaded and highlighted");
+      await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+test("Chrome multiple photos preview before one send and retry only a failed item", { timeout: 45000 }, async () => {
+  for (const role of ["client","admin"]) {
+    resetFixture();fixture.photoBatch=true;fixture.failBatchOnce=true;const page=await browser(360);
+    try {
+      await loaded(page,role === "client" ? "/messages" : "/admin/messages");if(role === "admin")await page.click(".contact");
+      await page.execute(`const data=new DataTransfer();const bytes=Uint8Array.from(atob(arguments[0]),c=>c.charCodeAt(0));for(let i=0;i<5;i++)data.items.add(new File([bytes], 'fixture-'+i+'.jpg',{type:'image/jpeg'}));const input=document.getElementById('image-file');input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}));`,jpeg.toString("base64"));
+      await waitUntil(()=>page.execute("return document.querySelectorAll('.photo-batch-item').length===5"),"five previews");
+      assert.equal(fixture.batchUploads??0,0);assert.equal(fixture.sent.length,0);
+      await page.click(".photo-batch-item:nth-child(2) button");
+      assert.equal(await page.execute("return document.querySelectorAll('.photo-batch-item').length"),4);
+      await page.click("#send");await waitUntil(()=>page.execute("return !document.getElementById('send').disabled && document.getElementById('send').textContent.includes('restantes')"),"partial result allows retry");
+      assert.equal(fixture.sent.length,1);assert.equal(fixture.batchUploads,4);
+      await page.click("#send");await waitUntil(()=>page.execute("return document.getElementById('photo-batch').hidden"),"failed item retried");
+      assert.equal(fixture.sent.length,4);assert.equal(fixture.batchUploads,4);assert.deepEqual(fixture.batchRequests.map(items=>items.length),[4,3]);
+      await noJavascriptErrors(page);
+    } finally {await page.close();}
+  }
 });

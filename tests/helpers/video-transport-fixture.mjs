@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { newToken, tokenDigest } from "../../server/auth/crypto.mjs";
 import { CLIENT_ADMISSION_POLICY } from "../../server/access/admission.mjs";
 import { createVideoService, VideoError } from "../../server/video/service.mjs";
-import { createVideoStorage } from "../../server/video/storage.mjs";
+import { createVideoStorage, videoStoredBytes } from "../../server/video/storage.mjs";
 
 // Synthetic catalog only. This is not a production persistence adapter and
 // proves neither SQL transaction isolation nor durable capacity recovery.
@@ -87,6 +87,19 @@ export async function* mp4Source(size, chunkBytes = 16384, progress = {}) {
 export async function uploadFixture(f, account = f.accounts[0], bytes = 786497, source = mp4Source(bytes)) {
   const ticket = await f.service.admitUpload(account.role, account.token, { bytes, mime: "video/mp4" });
   return f.service.upload(account.role, account.token, ticket, source);
+}
+// Explicit historical fixture: seed a client-owned object from a release that
+// allowed those uploads. This bypasses the new creation service only in this
+// isolated synthetic adapter, so old-object read/cleanup tests remain meaningful.
+export async function legacyClientVideoFixture(f, account, bytes = 786497) {
+  if (account.role !== "client") throw new TypeError("Historical client fixture required");
+  const asset = { id: randomBytes(16), storageKey: randomBytes(32), bytes,
+    storedBytes: videoStoredBytes(bytes), mime: "video/mp4" };
+  const request = { role: account.role, tokenHash: tokenDigest(account.token), now: f.state.now };
+  await f.store.reserve({ ...request, asset });
+  const saved = await f.storage.put({ assetId: asset.id, storageKey: asset.storageKey, bytes, source: mp4Source(bytes) });
+  await f.store.commit({ ...request, asset: { ...asset, digest: saved.digest } });
+  return { id: asset.id.toString("hex"), bytes, mime: "video/mp4" };
 }
 export async function collectVideo(stream) {
   const chunks = []; for await (const chunk of stream) chunks.push(Buffer.from(chunk)); return Buffer.concat(chunks);

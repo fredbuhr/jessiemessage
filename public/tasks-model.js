@@ -11,12 +11,12 @@ export function taskVersion(value) {
   return value;
 }
 export function parseTask(value) {
-  if (!value || !taskId(value.id) || !taskId(value.conversationId) || !text(value.clientName, 64) || value.clientName.length === 0
+  if (!value || value.reply !== undefined && value.reply !== true || !taskId(value.id) || !taskId(value.conversationId) || !text(value.clientName, 64) || value.clientName.length === 0
     || !title(value.title)
     || value.dueAt !== null && !instant(value.dueAt) || typeof value.done !== "boolean"
     || taskVersion(value.version) === "0" || !instant(value.createdAt) || !instant(value.updatedAt) || value.updatedAt < value.createdAt) invalid();
   return { id: value.id, conversationId: value.conversationId, clientName: value.clientName, title: value.title,
-    dueAt: value.dueAt, done: value.done, version: value.version, createdAt: value.createdAt, updatedAt: value.updatedAt };
+    dueAt: value.dueAt, done: value.done, version: value.version, createdAt: value.createdAt, updatedAt: value.updatedAt, ...(value.reply === true ? { reply: true } : {}) };
 }
 export function parseTaskPage(value, afterId = null) {
   if (!value || !instant(value.serverTime) || !Array.isArray(value.tasks) || value.tasks.length > 50

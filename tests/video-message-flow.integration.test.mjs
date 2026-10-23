@@ -223,7 +223,7 @@ test("real HTTP/SQL video messages are atomic, idempotent, private and visible o
       for (const [target, owner] of [[ownedPath(asset, f.client), f.client], [route, other.client], [deliveryPath(f, mid, stranger.admin), stranger.admin],
         [deliveryPath(other, mid, f.admin), f.admin]]) assert.equal((await request(target, { owner })).status, 404);
       assert.equal(storageOpens, opens, "unauthorized lookups never open the encrypted object");
-      assert.equal((await send(f, f.client, input(asset, "Recipient cannot reuse the original"))).status, 404);
+      assert.equal((await send(f, f.client, input(asset, "Recipient cannot reuse the original"))).status, 403);
       assert.equal((await request(galleryPath(f), { owner: other.client })).status, 404);
       assert.equal((await request(ownedPath(asset, f.admin), { owner: f.admin, method: "HEAD" })).status, 200);
     });
@@ -238,11 +238,16 @@ test("real HTTP/SQL video messages are atomic, idempotent, private and visible o
       await normal.catalog.release({ ...actor(f.admin), assetId: pending.id, storageKey: pending.storageKey });
       assert.equal((await send(f, f.admin, { ...value, videoId: hex(pending.id) })).status, 404);
       assert.deepEqual(await counts(f), { messages: 0, links: 0, events: 0, jobs: 0 });
-      const own = await upload(f.client), reply = await send(f, f.client, input(own, "Synthetic client video"));
-      assert.equal(reply.status, 201); assert.equal(reply.body.message.sender, "me");
-      const received = await request(historyPath(f, f.admin), { owner: f.admin });
-      assert.equal(received.body.messages[0].sender, "peer"); dto(received.body.messages[0].video, own, f, reply.body.message.id, f.admin);
-      assert.equal((await request(ownedPath(own, f.admin), { owner: f.admin, method: "HEAD" })).status, 404);
+      const beforeFiles = await readdir(root), beforePuts = storagePuts;
+      const refused = await request(videoPath("client", "assets"), { owner: f.client, method: "POST", binary: await collectVideo(mp4Source(65537)) });
+      assert.equal(refused.status, 403); assert.equal(refused.body.error, "video_admin_only");
+      for (const headers of [{ "Content-Type": "video/mp4" }, { "Content-Type": "image/jpeg" }]) {
+        const forged = await request(videoPath("client", "assets"), { owner: f.client, method: "POST", binary: await collectVideo(mp4Source(65537)), headers });
+        assert.ok([403, 415].includes(forged.status));
+      }
+      assert.equal((await send(f, f.client, input(asset, "Recipient cannot resend a saved video"))).status, 403);
+      assert.deepEqual(await counts(f), { messages: 0, links: 0, events: 0, jobs: 0 });
+      assert.deepEqual(await readdir(root), beforeFiles); assert.equal(storagePuts, beforePuts);
     });
 
     await t.test("link, event and real notification failures roll back the complete publication without discarding the original", async () => {
@@ -338,8 +343,8 @@ test("real HTTP/SQL video messages are atomic, idempotent, private and visible o
     });
 
     await t.test("a revocation committed during a native send lock wait prevents every publication row", async () => {
-      const f = await pair(), asset = await upload(f.client), messageId = id(), clientMessageId = id();
-      const binding = { messageId, conversationId: f.conversationId, senderId: f.client.id };
+      const f = await pair(), asset = await upload(f.admin), messageId = id(), clientMessageId = id();
+      const binding = { messageId, conversationId: f.conversationId, senderId: f.admin.id };
       const body = JSON.stringify({ videoId: asset.id, caption: "Synthetic lock-wait caption" });
       let observed;
       const candidateRead = new Promise((resolve) => { observed = resolve; });
@@ -357,12 +362,12 @@ test("real HTTP/SQL video messages are atomic, idempotent, private and visible o
       const waiting = await stack(observedPool); let pending;
       await connection.beginTransaction();
       try {
-        await connection.query("SELECT id FROM users WHERE id=? FOR UPDATE", [f.admin.id]);
-        pending = waiting.messages.sendMessage({ ...actor(f.client), conversationId: f.conversationId, message: {
+        await connection.query("SELECT id FROM users WHERE id=? FOR UPDATE", [f.client.id]);
+        pending = waiting.messages.sendMessage({ ...actor(f.admin), conversationId: f.conversationId, message: {
           id: messageId, clientMessageId, videoId: Buffer.from(asset.id, "hex"),
           bodyEncrypted: encryptMessageBody(body, messageKey, binding), bodyFingerprint: videoMessageFingerprint(body, messageKey, binding),
         } });
-        const rejected = assert.rejects(pending, code("CHAT_UNAUTHORIZED"));
+        const rejected = assert.rejects(pending, code("CHAT_FORBIDDEN"));
         await candidateRead;
         await connection.query("UPDATE users SET status='revoked' WHERE id=?", [f.client.id]);
         await connection.query("UPDATE sessions SET revoked_at=? WHERE id=?", [sql(now), f.client.sessionId]);

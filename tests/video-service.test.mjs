@@ -5,7 +5,7 @@ import { readdir } from "node:fs/promises";
 import { createVideoService } from "../server/video/service.mjs";
 import { tokenDigest } from "../server/auth/crypto.mjs";
 import { VIDEO_BLOCK_BYTES, videoStoredBytes } from "../server/video/storage.mjs";
-import { videoFixture, mp4Source, uploadFixture, collectVideo } from "./helpers/video-transport-fixture.mjs";
+import { videoFixture, mp4Source, uploadFixture, legacyClientVideoFixture, collectVideo } from "./helpers/video-transport-fixture.mjs";
 
 const code = (wanted) => (error) => error.code === wanted;
 
@@ -67,19 +67,19 @@ test("video foundation requires an explicit catalog, live authorization, persist
 
 test("streamed private upload reserves encrypted capacity, commits minimal metadata and serves authenticated ranges", async (t) => {
   const f = await videoFixture(t), bytes = VIDEO_BLOCK_BYTES * 4 + 57, source = mp4Source(bytes, 37);
-  const result = await uploadFixture(f, f.accounts[1], bytes, source);
+  const result = await uploadFixture(f, f.accounts[0], bytes, source);
   assert.deepEqual(Object.keys(result).sort(), ["bytes", "id", "mime"]);
   assert.equal(result.bytes, bytes); assert.equal(result.mime, "video/mp4");
   assert.equal(f.state.held, videoStoredBytes(bytes));
   assert.equal(f.state.rows.get(result.id).state, "registered");
   assert.ok(f.state.calls.indexOf("reserve") < f.state.calls.indexOf("commit"));
-  const handle = await f.service.open("client", f.accounts[1].token, result.id);
+  const handle = await f.service.open("admin", f.accounts[0].token, result.id);
   const range = await collectVideo(handle.stream({ start: VIDEO_BLOCK_BYTES - 3, end: VIDEO_BLOCK_BYTES + 12 }));
   assert.deepEqual(range, Buffer.alloc(16, 0x5a)); await handle.close();
 });
 
 test("another owner, wrong role, deleted object and revoked access fail before file opening", async (t) => {
-  const f = await videoFixture(t), result = await uploadFixture(f, f.accounts[1]);
+  const f = await videoFixture(t), result = await legacyClientVideoFixture(f, f.accounts[1]);
   await assert.rejects(f.service.open("client", f.accounts[2].token, result.id), code("VIDEO_NOT_FOUND"));
   await assert.rejects(f.service.open("admin", f.accounts[1].token, result.id), code("CHAT_UNAUTHORIZED"));
   f.state.rows.get(result.id).deletedAt = f.state.now;
@@ -93,7 +93,7 @@ test("admission binds the account and original token, is single-use and excludes
   const f = await videoFixture(t), account = f.accounts[0], bytes = 100;
   const ticket = await f.service.admitUpload(account.role, account.token, { bytes, mime: "video/mp4" });
   await assert.rejects(f.service.admitUpload(account.role, account.token, { bytes, mime: "video/mp4" }), code("VIDEO_BUSY"));
-  await assert.rejects(f.service.upload("client", f.accounts[1].token, ticket, mp4Source(bytes)), code("VIDEO_INPUT"));
+  await assert.rejects(f.service.upload("client", f.accounts[1].token, ticket, mp4Source(bytes)), code("VIDEO_ADMIN_ONLY"));
   const result = await f.service.upload(account.role, account.token, ticket, mp4Source(bytes)); assert.equal(result.bytes, bytes);
   await assert.rejects(f.service.upload(account.role, account.token, ticket, mp4Source(bytes)), code("VIDEO_INPUT"));
   const next = await f.service.admitUpload(account.role, account.token, { bytes, mime: "video/mp4" }); await f.service.releaseUpload(next);
@@ -311,4 +311,15 @@ test("the owned video library rejects cursor drift and revoked sessions", async 
   await assert.rejects(f.service.listOwned(owner.role, owner.token, { afterId: uploaded.id }), code("VIDEO_UNAVAILABLE"));
   owner.active = false;
   await assert.rejects(f.service.listOwned(owner.role, owner.token), code("CHAT_UNAUTHORIZED"));
+});
+
+
+test("authenticated clients cannot admit, stream or reuse a video before budgets or storage", async t => {
+  const f = await videoFixture(t), client = f.accounts[1], before = [...f.state.calls];
+  const source = { async *[Symbol.asyncIterator]() { assert.fail("Client video bytes must not be read"); } };
+  await assert.rejects(f.service.admitUpload("client", client.token, { bytes: 100, mime: "video/mp4" }), code("VIDEO_ADMIN_ONLY"));
+  await assert.rejects(f.service.upload("client", client.token, {}, source), code("VIDEO_ADMIN_ONLY"));
+  await assert.rejects(f.service.admitUpload("client", "invalid", { bytes: 100, mime: "video/mp4" }), code("CHAT_UNAUTHORIZED"));
+  assert.deepEqual(f.state.calls, before); assert.equal(f.state.held, 0); assert.equal(f.state.rows.size, 0);
+  assert.deepEqual(await readdir(f.root), []);
 });

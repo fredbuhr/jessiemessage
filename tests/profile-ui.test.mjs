@@ -2,9 +2,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
+import { passwordProblem } from "../public/recover-model.js";
 
 const source = await readFile(new URL("../public/profile.js", import.meta.url), "utf8");
 const translations = await readFile(new URL("../public/i18n-profile.js", import.meta.url), "utf8");
+const passwordFields = await readFile(new URL("../public/password-fields.js", import.meta.url), "utf8");
+const passwordChange = await readFile(new URL("../public/password-change.js", import.meta.url), "utf8");
 const i18nRuntime = await readFile(new URL("../public/i18n.js", import.meta.url), "utf8");
 const id = number => number.toString(16).padStart(32, "0");
 const jpeg = value => new Blob([value], { type: "image/jpeg" });
@@ -26,6 +29,7 @@ class Element {
   set value(value) { this._value = value; if (this.type === "file" && value === "") this.files = []; }
   set src(value) { this.setAttribute("src", value); } get src() { return this.getAttribute("src") ?? ""; }
   append(...values) { for (const value of values) { value.remove(); value.parentElement = this; this.children.push(value); } }
+  insertBefore(value, before) { value.remove(); const index = this.children.indexOf(before); value.parentElement = this; this.children.splice(index < 0 ? this.children.length : index, 0, value); }
   remove() { if (this.parentElement) this.parentElement.children = this.parentElement.children.filter(child => child !== this); this.parentElement = null; }
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
   getAttribute(name) { return this.attributes.get(name) ?? null; }
@@ -54,7 +58,8 @@ class Element {
   close() { this.open = false; this.emit("close"); }
 }
 
-function harness({ role = "client", avatarsEnabled = true, avatar = false, intercept, binary, prepareAvatar, language = "fr", bitmap, coarse = false } = {}) {
+function harness({ role = "client", avatarsEnabled = true, avatar = false, intercept, binary, prepareAvatar, language = "fr", bitmap, coarse = false, passwordEnabled = false, passwordResponse } = {}) {
+  const passwordSessions = [];
   const events = new Map(), windowEvents = new Map(), calls = [], binaryCalls = [], created = [], revoked = [], saved = [], errors = [];
   const add = (map, name, handler) => { if (!map.has(name)) map.set(name, new Set()); map.get(name).add(handler); };
   const document = { visibilityState: "visible", createElement(tag) { return new Element(tag, document); },
@@ -65,7 +70,7 @@ function harness({ role = "client", avatarsEnabled = true, avatar = false, inter
   const button = new Element("button", document); document.body.append(button);
   const base = `/api/profile/${role}`;
   const state = { owner: true, profile: { pseudonym: "Envoyer", version: "1", avatarId: avatar ? id(1) : null, avatarUrl: avatar ? `${base}/avatar?v=1` : null } };
-  const context = vm.createContext({ matchMedia: () => ({ matches: coarse }), document, Blob, AbortController, DOMException, console,
+  const context = vm.createContext({ matchMedia: () => ({ matches: coarse }), document, Blob, AbortController, DOMException, console, TextEncoder, __passwordProblem: passwordProblem,
     navigator: { language: language === "en" ? "en-GB" : "fr-FR" },
     __prepareImageUpload: async file => file,
     createImageBitmap: async () => bitmap,
@@ -73,7 +78,9 @@ function harness({ role = "client", avatarsEnabled = true, avatar = false, inter
     URL: { createObjectURL(blob) { const url = `blob:profile-${created.length + 1}`; created.push({ url, blob }); return url; }, revokeObjectURL: url => revoked.push(url) } });
   vm.runInContext(i18nRuntime, context, { filename: "public/i18n.js" });
   vm.runInContext(translations, context);
-  vm.runInContext(`const prepareImageUpload = __prepareImageUpload;\n${source.replace(/^import[^\n]+;\n/gm, "").replace(/export (async )?function /g, "$1function ")}\nglobalThis.__profile = {createProfileUI, prepareProfileAvatar};`, context);
+  vm.runInContext(passwordFields, context);
+  vm.runInContext(`(() => { const passwordProblem = __passwordProblem;\n${passwordChange.replace(/^import[^\n]+;\n/gm, "").replace(/export function /g, "function ")}\nglobalThis.__createPasswordChangeUI = createPasswordChangeUI; })();`, context);
+  vm.runInContext(`const prepareImageUpload = __prepareImageUpload; const createPasswordChangeUI = __createPasswordChangeUI;\n${source.replace(/^import[^\n]+;\n/gm, "").replace(/export (async )?function /g, "$1function ")}\nglobalThis.__profile = {createProfileUI, prepareProfileAvatar};`, context);
   const runtimeListeners = { visibilitychange: events.get("visibilitychange")?.size ?? 0, pagehide: windowEvents.get("pagehide")?.size ?? 0 };
   const ui = context.__profile.createProfileUI({ role, host: document.body, button, avatarsEnabled, isCurrent: () => state.owner,
     prepareAvatar: prepareAvatar ?? (async file => file),
@@ -81,6 +88,7 @@ function harness({ role = "client", avatarsEnabled = true, avatar = false, inter
       calls.push({ path, options });
       const value = await intercept?.(path, options, state);
       if (value !== undefined) return value;
+      if (path === `/api/account/${role}/password`) return passwordResponse ?? { status: "password_changed", user: { id: id(1), role }, csrf: "new-token", expiresAt: 123456 };
       if (path === `/api/media/${role}/assets`) return { asset: { id: id(99) } };
       assert.equal(path, base);
       if (options.mutation) state.profile = { ...state.profile, ...options.body, version: String(Number(state.profile.version) + 1),
@@ -88,10 +96,11 @@ function harness({ role = "client", avatarsEnabled = true, avatar = false, inter
       return structuredClone(state.profile);
     },
     async fetchBinary(path, options) { binaryCalls.push({ path, options }); return binary ? await binary(path, options) : jpeg("saved avatar"); },
+    ...(passwordEnabled ? { passwordEnabled: true, onPasswordChanged: value => { passwordSessions.push(value); } } : {}),
     onSaved: value => saved.push(value), onError: error => errors.push(error)
   });
   const element = selector => document.body.querySelector(`.${selector}`);
-  return { ui, document, button, calls, binaryCalls, state, created, revoked, saved, errors, context, events, windowEvents, element, runtimeListeners,
+  return { ui, document, button, calls, binaryCalls, state, passwordSessions, created, revoked, saved, errors, context, events, windowEvents, element, runtimeListeners,
     language: value => context.JessieI18n.setLanguage(value),
     async choose(blob) { const file = element("profile-file"); file.files = [blob]; file.emit("change"); await flush(); },
     async save() { element("profile-form").emit("submit"); await flush(); },
@@ -341,4 +350,50 @@ test("translated load errors, avatar errors and conflict actions preserve their 
   assert.equal(conflict.element("profile-keep-draft").textContent, "Keep my draft");
   assert.equal(conflict.element("profile-pseudonym").value, "Garder mon brouillon"); assert.equal(conflict.calls.length, calls);
   conflict.language("fr"); assert.equal(conflict.element("profile-keep-draft").textContent, "Garder mon brouillon"); conflict.ui.destroy();
+});
+
+
+test("profile password change validates locally, adopts the rotated session and clears secrets only after success", async () => {
+  for (const role of ["admin", "client"]) {
+    const h = harness({ role, passwordEnabled: true }); await h.ui.open();
+    const field = name => h.element(`profile-password-${name}`);
+    assert.equal(field("current").autocomplete, "current-password");
+    assert.equal(field("new").autocomplete, "new-password"); assert.equal(field("confirmation").autocomplete, "new-password");
+    field("current").value = "old synthetic password"; field("new").value = "short"; field("confirmation").value = "short";
+    h.element("profile-password-form").emit("submit"); await flush(); assert.equal(h.calls.length, 1);
+    field("new").value = "eight888"; field("confirmation").value = "different888";
+    h.element("profile-password-form").emit("submit"); await flush(); assert.equal(h.calls.length, 1);
+    field("confirmation").value = "eight888";
+    h.element("profile-password-form").emit("submit"); h.element("profile-password-form").emit("submit"); await flush();
+    assert.equal(h.calls.length, 2); assert.equal(h.calls[1].path, `/api/account/${role}/password`);
+    assert.deepEqual(JSON.parse(JSON.stringify(h.calls[1].options.body)), { currentPassword: "old synthetic password", newPassword: "eight888", confirmation: "eight888" });
+    assert.equal(h.calls[1].options.account, true); assert.equal(h.passwordSessions.length, 1);
+    for (const name of ["current", "new", "confirmation"]) { assert.equal(field(name).value, ""); assert.equal(field(name).type, "password"); }
+    assert.equal(h.element("profile-password-status").textContent, "Mot de passe modifié. Cet appareil reste connecté.");
+    assert.equal(h.element("profile-dialog").open, true); h.ui.destroy();
+  }
+});
+
+test("incorrect current password preserves the draft without logging out, and closing erases all password fields", async () => {
+  const h = harness({ passwordEnabled: true, intercept(path) {
+    if (path.endsWith("/password")) throw Object.assign(new Error("wrong"), { status: 403, code: "current_password_invalid" });
+  } }); await h.ui.open();
+  for (const key of ["current", "new", "confirmation"]) h.element(`profile-password-${key}`).value = "synthetic password";
+  h.element("profile-password-form").emit("submit"); await flush();
+  assert.equal(h.element("profile-password-status").textContent, "Le mot de passe actuel est incorrect."); assert.equal(h.errors.length, 0);
+  assert.equal(h.element("profile-password-new").value, "synthetic password"); assert.equal(h.passwordSessions.length, 0);
+  h.ui.close();
+  for (const key of ["current", "new", "confirmation"]) assert.equal(h.element(`profile-password-${key}`).value, "");
+  h.ui.destroy();
+});
+
+test("password controls translate in place and hide passwords on page suspension", async () => {
+  const h = harness({ passwordEnabled: true }); await h.ui.open();
+  const input = h.element("profile-password-current"), button = input.parentElement.querySelector("button");
+  input.value = "unchanged synthetic secret"; button.emit("click");
+  assert.equal(input.type, "text"); assert.equal(button.getAttribute("aria-pressed"), "true");
+  h.language("en"); assert.equal(button.getAttribute("aria-label"), "Hide password");
+  assert.equal(h.element("profile-password-save").textContent, "Save new password");
+  assert.equal(input.value, "unchanged synthetic secret"); h.hide();
+  assert.equal(input.type, "password"); assert.equal(input.value, ""); h.ui.destroy();
 });

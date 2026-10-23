@@ -1,5 +1,7 @@
 import { prepareImageUpload } from "./image-preparation.js";
 import "./i18n-profile.js";
+import { createPasswordChangeUI } from "./password-change.js";
+import { createPreferencesUI } from "./preferences.js";
 
 const MAX_AVATAR_BYTES = 262144;
 let instance = 0;
@@ -47,7 +49,7 @@ const validName = value => typeof value === "string" && value.trim().normalize("
 // the same owner checks and return a bounded Blob, never an object URL.
 export function createProfileUI(adapter) {
   const { role, request, fetchBinary, isCurrent, onSaved, onError, avatarsEnabled = true,
-    prepareAvatar = prepareProfileAvatar, host = document.body, button: openerButton, getReturnFocus } = adapter;
+    prepareAvatar = prepareProfileAvatar, host = document.body, button: openerButton, getReturnFocus, onPasswordChanged, passwordEnabled = false, preferencesEnabled = false } = adapter;
   if (!["admin", "client"].includes(role) || typeof request !== "function" || typeof isCurrent !== "function"
     || avatarsEnabled && typeof fetchBinary !== "function" || typeof prepareAvatar !== "function") throw new TypeError("invalid_profile_adapter");
   const base = `/api/profile/${role}`, media = `/api/media/${role}/assets`;
@@ -109,6 +111,9 @@ export function createProfileUI(adapter) {
     return true;
   };
   const stale = () => Object.assign(new Error("stale_profile"), { stale: true });
+  const passwordChange = passwordEnabled && typeof onPasswordChanged === "function" ? createPasswordChangeUI({ role, request, isCurrent: () => opened && ownerCurrent(), onSessionChanged: onPasswordChanged, onError, host: dialog }) : null;
+  const preferences = preferencesEnabled ? createPreferencesUI({ role, request, isCurrent: () => opened && ownerCurrent(), onError, host: dialog }) : null;
+
   function message(text, error = false) { ui.text(status, text); status.classList.toggle("is-error", error); }
   function controls() {
     if (opened && !ownerCurrent()) { close(false); return; }
@@ -274,6 +279,7 @@ export function createProfileUI(adapter) {
   function close(restoreFocus) {
     const wasOpen = opened, previous = returnFocus;
     opened = false; epoch += 1; preparation += 1;
+    passwordChange?.close(); preferences?.close();
     for (const controller of controllers) controller.abort(); controllers.clear();
     preparationAbort = null; preparing = false; clearPreview();
     saved = null; draftAvatarId = null; draftBlob = null; conflict = false; busy = false; returnFocus = null;
@@ -285,7 +291,7 @@ export function createProfileUI(adapter) {
   async function open(opener = openerButton) {
     if (!ownerCurrent()) return false;
     close(false); returnFocus = opener ?? document.activeElement; opened = true;
-    dialog.showModal(); controls(); focus(closeButton); await load(); return opened;
+    dialog.showModal(); controls(); focus(closeButton); await load(); if (opened && ownerCurrent()) void preferences?.load(); return opened;
   }
   const onOpen = () => { void open(); };
   const hidden = () => { if (document.visibilityState === "hidden") close(false); };
@@ -297,8 +303,12 @@ export function createProfileUI(adapter) {
   dialog.addEventListener("keydown", event => {
     if (event.key === "Escape") { event.preventDefault(); close(true); return; }
     if (event.key !== "Tab" || !opened) return;
-    const candidates = [closeButton, name, ...(avatarsEnabled ? [choose, remove] : []), ...(conflict ? [reload, keep] : []), saveButton, ...(!retry.hidden ? [retry] : [])]
-      .filter(value => !value.disabled && !value.hidden);
+    const candidates = [...dialog.querySelectorAll("button,input,summary,select,textarea,a[href]")]
+      .filter(value => {
+        if (value.disabled || value.hidden || value.closest?.("[hidden]")) return false;
+        const closed = value.closest?.("details:not([open])");
+        return !closed || value.tagName.toLowerCase() === "summary" && value.parentElement === closed;
+      });
     const first = candidates[0], last = candidates.at(-1);
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); focus(last); }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); focus(first); }
@@ -310,6 +320,7 @@ export function createProfileUI(adapter) {
     close(false); destroyed = true;
     openerButton?.removeEventListener("click", onOpen); document.removeEventListener("visibilitychange", hidden);
     globalThis.window?.removeEventListener("pagehide", pagehide);
+    passwordChange?.destroy(); preferences?.destroy();
     ui.forget(dialog); ui.forget(feedback); dialog.remove(); feedback.remove();
   } });
 }

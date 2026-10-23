@@ -1,6 +1,6 @@
 {
   "type": "experience190-progress",
-  "status": "implementation_in_progress",
+  "status": "coded_integration_and_targeted_checks_in_progress",
   "branch": "feat/private-experience-190",
   "baselineMain": "904ab4301bbda71e047d5b3b5dad41d45149c1cf",
   "activeVersion": "1.8.4",
@@ -17,33 +17,59 @@
   "lots": [
     {
       "name": "rights-and-account",
-      "coded": false,
-      "tested": false,
+      "coded": true,
+      "tested": true,
       "deployed": false,
-      "productionVerified": false
+      "productionVerified": false,
+      "testScope": "targeted_local_Node24.19_only; native_DB_and_Chrome_pending"
     },
     {
       "name": "preferences",
-      "coded": false,
-      "tested": false,
+      "coded": true,
+      "tested": true,
       "deployed": false,
-      "productionVerified": false
+      "productionVerified": false,
+      "testScope": "targeted_local_Node24.19_only; native_DB_and_Chrome_pending"
     },
     {
       "name": "photos",
-      "coded": false,
-      "tested": false,
+      "coded": true,
+      "tested": true,
       "deployed": false,
-      "productionVerified": false
+      "productionVerified": false,
+      "testScope": "targeted_local_Node24.19_only; native_DB_and_Chrome_pending",
+      "status": "review_fixes_in_progress_date_id_order_and_failed_photo_removal"
     },
     {
       "name": "reply-followup",
-      "coded": false,
-      "tested": false,
+      "coded": true,
+      "tested": true,
       "deployed": false,
-      "productionVerified": false
+      "productionVerified": false,
+      "testScope": "targeted_local_Node24.19_only; native_DB_and_Chrome_pending"
     }
   ],
   "actualHostMutationsPerformed": false,
-  "nextAction": "Complete lot1 implementation and targeted synthetic tests, review integration; other lots build on the same verified base. No replay of184 operators."
+  "nextAction": "Finish gallery tuple ordering and lifecycle38 integration; run full local checks, review, then qualify exact branch SHA through native PR CI. Production184 untouched.",
+  "candidateSchemaMigrations": 38,
+  "candidatePhysicalTables": 37,
+  "localNode": "v24.19.0",
+  "nativeNodeRequired": "v24.22.1",
+  "pr": null,
+  "nativeQualified": false,
+  "published": false,
+  "deployed": false,
+  "targetedResults": {
+    "accountBackend": "39 initial;6HTTPfinal;8store;48sessions;12resetclock passed",
+    "accountFrontend": "133passed",
+    "preferences": "22passed;691choices25categories934aliaseschecked",
+    "photos": "localHTTP/service/modelpassed;reviewfixesstillbeingtested",
+    "followup": "157passed+1DBskip",
+    "rootRuntime": "109passed;3migration+6startup passed",
+    "nativeRemaining": [
+      "Chrome component/lifecycle tests",
+      "HTTPS authentication with SQL38",
+      "MariaDB10.11 and11.4 integration"
+    ]
+  }
 }

@@ -36,6 +36,7 @@ function notice(message, error = false) {
   recoveryI18n.text(status, message); status.classList.toggle("is-error", error);
 }
 function clearPasswords() {
+  globalThis.JessiePasswordFields?.resetAll(resetForm);
   password.value = ""; confirmation.value = "";
   recoveryI18n.text(element("recovery-password-help"), "Entre 8 et 128 caractères. Les espaces et les accents sont conservés.");
   password.removeAttribute("aria-invalid"); confirmation.removeAttribute("aria-invalid");

@@ -48,8 +48,8 @@ export function createChatDrafts({ storage = () => globalThis.sessionStorage, cl
     if (previous?.pending && pending && (previous.pending.clientMessageId !== pending.clientMessageId || previous.text !== state.draft)) return false;
     // A media POST may already have committed. Never turn its uncertain
     // caption into a new text-only send after reloading without the file.
-    const exclude = Boolean(state.pending?.kind);
-    const hadAttachment = !pending && Boolean(state.imageDraft || state.videoDraft);
+    const exclude = Boolean(state.pending?.kind || state.photoBatch?.started);
+    const hadAttachment = !pending && Boolean(state.imageDraft || state.videoDraft || state.photoBatch?.items?.length);
     const entries = record.entries.filter(entry => entry.id !== state.id && (entry.pending !== null || validEntry(entry, now)));
     if (!exclude && (state.draft.length || pending)) {
       const unchanged = previous?.text === state.draft && previous.hadAttachment === hadAttachment && JSON.stringify(previous.pending) === JSON.stringify(pending);

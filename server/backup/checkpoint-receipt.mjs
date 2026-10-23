@@ -1,7 +1,7 @@
 import { constants } from "node:fs";
 import { lstat, open } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import { validateApplicationCoverage, validateVideoApplicationCoverage } from "./application-scope.mjs";
+import { validateApplicationCoverage, validateVideoSnapshotCoverage } from "./application-scope.mjs";
 import { manifestBackupProfile, matchesCheckpointReceipt } from "./profiles.mjs";
 import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_FILES } from "../media/backup-limits.mjs";
 import { MAX_VIDEO_BYTES, videoStoredBytes } from "../video/storage.mjs";
@@ -40,7 +40,7 @@ function canonicalReceipt(value) {
   const root = record(value, ["format", "version", "profile", ...(application ? ["coverage"] : []), "createdAt", "schema", "sql", "manifest", "media", ...(video ? ["video"] : []), ...(operational ? ["operations"] : [])]);
   let coverage;
   if (application) {
-    try { coverage = (video ? validateVideoApplicationCoverage : validateApplicationCoverage)(root.coverage); }
+    try { coverage = (video ? validateVideoSnapshotCoverage : validateApplicationCoverage)(root.coverage); }
     catch { fail("CHECKPOINT_RECEIPT_INVALID"); }
   }
   const schema = record(root.schema, ["tables", "migrations"]);
@@ -49,7 +49,7 @@ function canonicalReceipt(value) {
   if (root.format !== "jessiemessage-private-checkpoint"
     || !matchesCheckpointReceipt(manifestBackupProfile(root.profile), root) || !integer(root.version, 1, 12)
     || video !== (manifestBackupProfile(root.profile)?.video === true)
-    || !integer(root.createdAt, 0, 253402300799999) || !(video ? schema.tables === 36 : [30, 31, 32, 33].includes(schema.tables)) || schema.migrations !== schema.tables
+    || !integer(root.createdAt, 0, 253402300799999) || !(video ? schema.tables === 36 && schema.migrations === 36 || schema.tables === 37 && schema.migrations === 38 : [30, 31, 32, 33].includes(schema.tables) && schema.migrations === schema.tables)
     || application && coverage.tables !== schema.tables
     || sql.file !== "database.sql.gz" || !integer(sql.bytes, 1, 16 * MIB) || !digest(sql.sha256)
     || !integer(sql.uncompressedBytes, 1, MAX_FILE) || !digest(sql.uncompressedSha256)

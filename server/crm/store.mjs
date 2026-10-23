@@ -1,3 +1,4 @@
+import { needsReplySql } from "../tasks/reply.mjs";
 import { loadStoreMigrations } from "../db/store-migrations.mjs";
 import { hasConsumedInvitation, invitationConsumptionProjection } from "../access/admission.mjs";
 import { ChatStoreError } from "../chat/store.mjs";
@@ -123,7 +124,8 @@ const foreignKeys = [
   ["crm_memberships", "crm_memberships_label_fk", "crm_labels", ["admin_id", "label_id"], ["owner_admin_id", "id"]],
 ];
 
-export function createCrmStore({ pool, chatStore }) {
+export function createCrmStore({ pool, chatStore, replyTracking = false }) {
+  if (typeof replyTracking !== "boolean") input();
   if (!pool || typeof pool.getConnection !== "function" || !chatStore || typeof chatStore.withActor !== "function" || typeof chatStore.withConversation !== "function") input();
   const withActor = (request, callback) => { requestValue(request); return chatStore.withActor({ ...request, role: "admin" }, callback); };
   const withConversation = (request, callback) => { requestValue(request); bytes(request.conversationId); return chatStore.withConversation({ ...request, role: "admin" }, callback); };
@@ -151,6 +153,7 @@ export function createCrmStore({ pool, chatStore }) {
       version: row ? storedVersion(row.version) : "0", updatedAt: row ? timestamp(row.updated_at) : null, labels };
   }
   return Object.freeze({
+    replyEnabled: replyTracking,
     async assertSchema(options = {}) {
       await chatStore.assertSchema(options); let connection;
       try {
@@ -297,9 +300,9 @@ export function createCrmStore({ pool, chatStore }) {
       });
     },
 
-    async listContacts({ tokenHash, now, q = "", tagId = null, groupId = null, access = "all", unread = false, reminder = "all", afterId = null, limit = 50 }) {
+    async listContacts({ tokenHash, now, q = "", tagId = null, groupId = null, access = "all", unread = false, reply = false, reminder = "all", afterId = null, limit = 50 }) {
       textValue(q, 80, true); limitValue(limit); for (const value of [tagId, groupId, afterId]) if (value !== null) bytes(value);
-      if (!["all", "active", "pending", "expired", "revoked", "suspended", "deleted"].includes(access) || typeof unread !== "boolean" || !["all", "due", "upcoming", "none"].includes(reminder)) input();
+      if (!["all", "active", "pending", "expired", "revoked", "suspended", "deleted"].includes(access) || typeof unread !== "boolean" || typeof reply !== "boolean" || reply && !replyTracking || !["all", "due", "upcoming", "none"].includes(reminder)) input();
       return withActor({ tokenHash, now }, async (connection, context) => {
         now = context.now;
         const owner = context.actor.id, date = sqlDate(now), where = ["c.admin_id = ?", "c.created_at <= ?"], parameters = [owner, date];
@@ -311,6 +314,7 @@ export function createCrmStore({ pool, chatStore }) {
         if (access !== "all") { where.push(`(${accessStateSql}) = ?`); parameters.push(date, date, date, date, access); }
         if (unread) where.push(`EXISTS (SELECT 1 FROM messages m WHERE m.conversation_id = c.id AND m.sender_id <> c.admin_id AND m.deleted_at IS NULL
           AND m.sequence_no > COALESCE((SELECT last_read_sequence FROM chat_receipts WHERE conversation_id = c.id AND user_id = c.admin_id), 0))`);
+        if (reply) where.push(needsReplySql("c"));
         if (reminder === "none") where.push("p.reminder_at IS NULL");
         if (reminder === "due" || reminder === "upcoming") { where.push(`p.reminder_at ${reminder === "due" ? "<=" : ">"} ?`); parameters.push(date); }
         if (afterId !== null) { where.push("c.id > ?"); parameters.push(afterId); }

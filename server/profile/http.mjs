@@ -1,5 +1,6 @@
 import { checkMutation, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { canonicalProfileName, isProfileId, isProfileVersion, ownAvatarUrl, MAX_AVATAR_THUMBNAIL_BYTES } from "./validation.mjs";
+import { createPreferencesHandler } from "../preferences/http.mjs";
 
 const COOKIES = { admin: "__Host-jessie_session", client: "__Host-jessie_client" };
 const invalid = () => httpError(400, "invalid_request");
@@ -53,7 +54,9 @@ export function createProfileHandler(service, { origin }) {
   const parsed = new URL(origin);
   if (parsed.protocol !== "https:" || parsed.origin !== origin) throw new TypeError("Canonical HTTPS origin required");
   if (!["actor", "profile", "save", "avatar", "peerAvatar"].every(name => typeof service?.[name] === "function")) throw new TypeError("Profile service required");
+  const preferences = service.preferences ? createPreferencesHandler(service.preferences, { origin }) : null;
   return async (request, response) => {
+    if (preferences && await preferences(request, response)) return true;
     let url; try { url = new URL(request.url ?? "/", "http://localhost"); } catch { return false; }
     const current = route(url.pathname); if (!current) return false;
     const method = request.method ?? "GET", methods = current.image ? ["GET", "HEAD"] : ["GET", "POST"];

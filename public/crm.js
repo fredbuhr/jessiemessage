@@ -38,10 +38,11 @@ export function createCrmUI(adapter) {
   const accessFilter = select([["all", "Tous les accès"], ...Object.entries(accessNames)]);
   const reminderFilter = select([["all", "Tous les rappels"], ["due", "Rappels à traiter"], ["upcoming", "À venir"], ["none", "Sans rappel"]]);
   const unreadFilter = input("checkbox", "unread"); const unreadLabel = node("label", null, "crm-check"); unreadLabel.append(unreadFilter, node("span", "Non lus"));
+  const replyFilter = input("checkbox", "reply"); const replyLabel = node("label", null, "crm-check"); replyLabel.hidden = adapter.repliesEnabled !== true; replyLabel.append(replyFilter, node("span", "À répondre"));
   const filterGrid = node("div", null, "crm-filter-grid"); filterGrid.append(field("Tag", tagFilter), field("Groupe", groupFilter), field("Accès", accessFilter), field("Rappel privé", reminderFilter));
   const filterActions = node("div", null, "crm-filter-actions"); const managerButton = button("Tags et groupes", () => { void openManager(managerButton); }, "text-button");
-  const resetButton = button("Effacer les filtres", () => { search.value = ""; tagFilter.value = ""; groupFilter.value = ""; accessFilter.value = "all"; reminderFilter.value = "all"; unreadFilter.checked = false; void applyFilters(); }, "text-button");
-  filterActions.append(unreadLabel, resetButton, managerButton); filters.append(field("Rechercher un client", search), filterGrid, filterActions);
+  const resetButton = button("Effacer les filtres", () => { search.value = ""; tagFilter.value = ""; groupFilter.value = ""; accessFilter.value = "all"; reminderFilter.value = "all"; unreadFilter.checked = false; replyFilter.checked = false; void applyFilters(); }, "text-button");
+  filterActions.append(unreadLabel, replyLabel, resetButton, managerButton); filters.append(field("Rechercher un client", search), filterGrid, filterActions);
   const filterStatus = node("p", null, "crm-filter-status"); filterStatus.setAttribute("role", "status"); filterStatus.setAttribute("aria-live", "polite"); filters.append(filterStatus);
   const selectionStatus = node("p", null, "crm-selection-status"); selectionStatus.hidden = true; selectionStatus.setAttribute("role", "status");
   adapter.inboxHead.after(filters, selectionStatus); owned.push(filters, selectionStatus);
@@ -62,6 +63,25 @@ export function createCrmUI(adapter) {
   profileDialog.append(profileHeader, profileHelp, clientInfo, profileStatus, profileForm, conflict); document.body.append(profileDialog); owned.push(profileDialog);
   const tasksLink = adapter.tasksEnabled === true ? node("a", "Tâches du client", "text-button") : null;
   if (tasksLink) { tasksLink.hidden = true; profileDialog.append(tasksLink); }
+  const preferencesSection = node("details", null, "crm-client-preferences"); preferencesSection.hidden = adapter.preferencesEnabled !== true;
+  preferencesSection.append(node("summary", "Goûts & fantasmes"));
+  const preferencesHost = node("div"); preferencesSection.append(preferencesHost); profileDialog.append(preferencesSection);
+  let preferencesUI = null, preferencesEpoch = 0;
+  function closePreferences() { preferencesEpoch++; preferencesUI?.destroy(); preferencesUI = null; preferencesSection.open = false; replace(preferencesHost); }
+  async function openPreferences() {
+    if (preferencesUI || !preferencesSection.open || adapter.preferencesEnabled !== true || !profileOpen || !state.selected) return;
+    const ticket = ++preferencesEpoch, owner = life, conversationId = state.selected;
+    const current = () => ticket === preferencesEpoch && currentLife(owner) && profileOpen && state.selected === conversationId && preferencesSection.open;
+    try {
+      const { createPreferencesUI } = await import("/preferences.js");
+      if (!current()) return;
+      preferencesUI = createPreferencesUI({ role: "admin", host: preferencesHost, conversationId, readOnly: true, isCurrent: current,
+        request: async (path, options) => { if (!current()) throw stale(); const result = await adapter.request(path, { ...options, account: true }); if (!current()) throw stale(); return result; },
+        onError: async error => { if (current()) await report(error, profileStatus); } });
+      await preferencesUI.load();
+    } catch (error) { if (current()) await report(error, profileStatus); }
+  }
+  preferencesSection.addEventListener("toggle", () => { if (preferencesSection.open) void openPreferences(); else closePreferences(); });
   const exportSection = node("details", null, "crm-export"); exportSection.hidden = adapter.conversationExport?.enabled !== true;
   exportSection.append(node("summary", "Télécharger la conversation"));
   const exportVideoEnabled = adapter.conversationExport?.videos === true;
@@ -116,7 +136,7 @@ export function createCrmUI(adapter) {
     if (error.status === 409 && error.code === "limit_reached") text = "La limite a été atteinte. Retire des étiquettes avant de réessayer.";
     status(target, text, true);
   }
-  function currentFilters() { return { q: search.value, tagId: tagFilter.value, groupId: groupFilter.value, access: accessFilter.value, unread: unreadFilter.checked, reminder: reminderFilter.value }; }
+  function currentFilters() { return { q: search.value, tagId: tagFilter.value, groupId: groupFilter.value, access: accessFilter.value, unread: unreadFilter.checked, reply: adapter.repliesEnabled === true && replyFilter.checked, reminder: reminderFilter.value }; }
   async function applyFilters() {
     clearTimeout(debounce); if (!setFilters(state, currentFilters())) return;
     inboxAbort?.abort();
@@ -125,7 +145,7 @@ export function createCrmUI(adapter) {
   }
   filters.addEventListener("submit", (event) => { event.preventDefault(); void applyFilters(); });
   search.addEventListener("input", () => { clearTimeout(debounce); debounce = setTimeout(() => { void applyFilters(); }, 300); });
-  for (const element of [tagFilter, groupFilter, accessFilter, reminderFilter, unreadFilter]) element.addEventListener("change", () => { void applyFilters(); });
+  for (const element of [tagFilter, groupFilter, accessFilter, reminderFilter, unreadFilter, replyFilter]) element.addEventListener("change", () => { void applyFilters(); });
   async function loadInbox(more = false, refresh = false) {
     if (suspended || loading || (more && (!state.hasMore || !state.cursor))) return;
     const requestId = ++pageRequest; const epoch = state.filterEpoch; loading = true; publish();
@@ -248,6 +268,7 @@ export function createCrmUI(adapter) {
     try { await loadLabels(); if (profileOpen && currentDetail(state, ticket)) await loadProfile(); } catch (error) { if (profileOpen && currentDetail(state, ticket)) await report(error, profileStatus); }
   }
   function closeProfile(restore = true) {
+    closePreferences();
     exportEpoch += 1; exportAbort?.abort(); exportAbort = null; exportBusy = false; exportButton.disabled = false; exportPhotos.disabled = false; exportVideos.disabled = false; exportSection.open = false; exportSection.hidden = true; status(exportStatus, "");
     for (const url of exportUrls) URL.revokeObjectURL(url); exportUrls.clear();
     if (tasksLink) { tasksLink.removeAttribute("href"); tasksLink.hidden = true; }
@@ -397,7 +418,7 @@ export function createCrmUI(adapter) {
     updateConversation(conversation) {
       const previous = state.contacts.get(conversation.id); if (!updateContact(state, conversation)) return;
       publish();
-      if (state.filters.unread && previous.unreadCount !== conversation.unreadCount) { clearTimeout(debounce); debounce = setTimeout(() => { void loadInbox(false, true); }, 500); }
+      if (state.filters.unread && previous.unreadCount !== conversation.unreadCount || state.filters.reply) { clearTimeout(debounce); debounce = setTimeout(() => { void loadInbox(false, true); }, 500); }
     },
     displayName: contactName,
     clear,
