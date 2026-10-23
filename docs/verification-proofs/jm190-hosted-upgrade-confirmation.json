@@ -1,0 +1,76 @@
+{
+  "type": "jm190-hosted-upgrade-confirmation",
+  "reportedDate": "2026-10-23",
+  "evidenceKind": "USER_REPORTED_TRACE_HASHES_AND_SQL_STATUS",
+  "reportedTraceLines": [
+    {
+      "file": "jm190-upgrade-attempt.json",
+      "present": true,
+      "sha256": "db873cb4f9d751ab167bd960bd35a5962b89df23a5f99616d0693d6fa4b4b48e"
+    },
+    {
+      "file": "jm190-schema38.json",
+      "present": true,
+      "sha256": "0d12dfd9ea9c9510729d39f743159a70a2457b2d999b6d334ae09043fa5d6dfb"
+    }
+  ],
+  "schemaReceiptSha256": "0d12dfd9ea9c9510729d39f743159a70a2457b2d999b6d334ae09043fa5d6dfb",
+  "reconstructedExactSchemaReceipt": {
+    "status": "release190_schema38_confirmed",
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "applied": 2,
+    "unchanged": 36,
+    "migrated": true,
+    "runtimeStarted": false,
+    "serviceStopOperatorAttested": true,
+    "restart184Allowed": false,
+    "restart172Allowed": false,
+    "rollbackAfterMigrationQualified": false,
+    "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
+    "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+    "nodeVersion": "v24.22.1",
+    "metadataOnly": false,
+    "managerChanged": false,
+    "checkpointChanged": false,
+    "hostedPrecheckPassed": false,
+    "noRestart": true,
+    "attemptSha256": "db873cb4f9d751ab167bd960bd35a5962b89df23a5f99616d0693d6fa4b4b48e",
+    "stagingReceiptSha256": "3a4788b4a31cac3d55f09950e3b98f99a700e0f0dd8af21f83a6135bd01d8cd0"
+  },
+  "receiptProvenance": "Receipt body reconstructed from the qualified immutable helper deterministic output and confirmed by the user-reported exact SHA256. Raw hosted receipt contents were not separately read by the agent. Both expected hashes were independently derived before the user supplied these lines.",
+  "qualifiedOperator": {
+    "source": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
+    "sha256": "3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2"
+  },
+  "sqlStatusProof": "jm190-hosted-schema38-status.json",
+  "conclusion": {
+    "appliedByUpgrade": 2,
+    "unchanged": 36,
+    "schema38StatusConfirmed": true,
+    "durableReceiptHashConfirmed": true,
+    "attemptAndStagingLinked": true,
+    "upgradeReplayNeeded": false,
+    "runtime190Started": false,
+    "check185Passed": false,
+    "check190Passed": false,
+    "metadata190Recorded": false,
+    "physicalTableInventoryAcquired": false,
+    "agentPrivateHostAccess": false
+  },
+  "nextAction": "Keep Node stopped; independently run and verify prepared185 then190 CHECKs, no migration or runtime start.",
+  "nextCommandReview": {
+    "sha256": "4c52a6794e8ed15acaaae403a3ddc96a46a3fc356ac972cf7e595647e0b124e3",
+    "ASTValid": true,
+    "reviewers": [
+      "root",
+      "followup190"
+    ],
+    "qualifiedHelperReused": true,
+    "newDedicatedTestSuite": false,
+    "prevalidatesBothPlansBeforeCHECK": true,
+    "reusesAlreadyPassedLogs": true,
+    "callsMigrationOrStartsRuntime": false,
+    "purpose": "Envelope around already-qualified preparedCHECK scripts; no new production helper or infrastructure."
+  }
+}

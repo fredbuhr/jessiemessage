@@ -1,0 +1,83 @@
+{
+  "type": "jessiemessage-release190-final-writer-native-qualification",
+  "operator": {
+    "branch": "ops/release190-tools",
+    "source": "8690a8255e1297f288f7eae8ab25811bf63d2262",
+    "tree": "23d810fd51ca9a9509962a4bbec87a5e606ac34a",
+    "path": "ops/record-release190.py",
+    "sha256": "40cc11b177de7199d07b7552d440fcf7990a0f8e5e334c885ef8fca93c7d93b8",
+    "publishedRawExactlyMatchesLocal": true
+  },
+  "pins": {
+    "source190": "5dda0dd4453d34a0be839d2a1402301dea835381",
+    "tree190": "f06a140e738f20994425c714a278b0646f651c1b",
+    "staging190Sha256": "3a4788b4a31cac3d55f09950e3b98f99a700e0f0dd8af21f83a6135bd01d8cd0",
+    "schema38Sha256": "0d12dfd9ea9c9510729d39f743159a70a2457b2d999b6d334ae09043fa5d6dfb",
+    "rollback185Source": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
+    "rollback185Tree": "7ec449cb3a63a091c5233993923ceb69f8314366",
+    "rollback185StagingSha256": "8b3cb7d8b40d26ce16fa3b453a2f1fda265021a5b9f4584ec5533905f87ca11e",
+    "releaseId": 421892314
+  },
+  "native": {
+    "runId": 39972263974,
+    "runAttempt": 1,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39972263974",
+    "status": "completed",
+    "conclusion": "success",
+    "jobId": 120477736949,
+    "jobsPassed": 1,
+    "jobsTotal": 1,
+    "nodeVersion": "v24.22.1",
+    "targetedCommand": "python3 ops/test-record-release190.py",
+    "testsPassed": 9,
+    "testsFailed": 0,
+    "createdAt": "2026-10-23T14:44:50Z",
+    "updatedAt": "2026-10-23T14:45:07Z"
+  },
+  "changesAgainstParent": {
+    "parent": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
+    "writerChangedConstantsOnly": [
+      "STAGING_SHA",
+      "SCHEMA_SHA",
+      "ROLLBACK185_STAGING_SHA",
+      "RELEASE_ID"
+    ],
+    "workflow": "Qualify writer tests only; no preparer/migrator/publisher suite replay.",
+    "functionalCodeChanged": false
+  },
+  "local": {
+    "testsPassed": 9,
+    "log": "writer190-final-local-tests.log"
+  },
+  "limits": {
+    "executedOnHost": false,
+    "hostedCheck185Acquired": false,
+    "hostedCheck190Acquired": false,
+    "applicationStarted190": false,
+    "checkpointRecorded190": false,
+    "mainChanged": false,
+    "syntheticQualificationOnly": true
+  },
+  "logExcerpt": [
+    "2026-10-23T14:45:03.3548645Z node: v24.22.1",
+    "2026-10-23T14:45:03.5257208Z test_pending_pins_refuse_before_private_or_network_access (__main__.Pending.test_pending_pins_refuse_before_private_or_network_access) ... ok",
+    "2026-10-23T14:45:03.5441159Z test_185_is_never_inferred_from_historical172_and_requires_its_own_current_evidence (__main__.Recording.test_185_is_never_inferred_from_historical172_and_requires_its_own_current_evidence) ... ok",
+    "2026-10-23T14:45:03.5478437Z test_duplicate_json_keys_are_rejected (__main__.Recording.test_duplicate_json_keys_are_rejected) ... ok",
+    "2026-10-23T14:45:03.5597435Z test_metadata_refuses_symlink_hardlink_and_wrong_mode (__main__.Recording.test_metadata_refuses_symlink_hardlink_and_wrong_mode) ... ok",
+    "2026-10-23T14:45:03.5650913Z test_partial_rollback_pins_fail_without_checkpoint_write (__main__.Recording.test_partial_rollback_pins_fail_without_checkpoint_write) ... ok",
+    "2026-10-23T14:45:03.5762368Z test_records_only_current_metadata_preserves_every_historical_block_and_is_idempotent (__main__.Recording.test_records_only_current_metadata_preserves_every_historical_block_and_is_idempotent) ... ok",
+    "2026-10-23T14:45:03.5829098Z test_started_or_unchecked_185_refuses_checkpoint_write (__main__.Recording.test_started_or_unchecked_185_refuses_checkpoint_write) ... ok",
+    "2026-10-23T14:45:03.5935092Z test_wrong_runtime_log_public_identity_or_publication_refuses_write (__main__.Recording.test_wrong_runtime_log_public_identity_or_publication_refuses_write) ... ok",
+    "2026-10-23T14:45:03.6027965Z test_wrong_schema_tables_or_staging_scope_fail_before_http (__main__.Recording.test_wrong_schema_tables_or_staging_scope_fail_before_http) ... ok",
+    "2026-10-23T14:45:03.6029887Z Ran 9 tests in 0.096s",
+    "2026-10-23T14:45:03.6030190Z OK"
+  ],
+  "rootVerification": {
+    "workflowRunReadIndependently": true,
+    "run": 39972263974,
+    "headSha": "8690a8255e1297f288f7eae8ab25811bf63d2262",
+    "status": "completed",
+    "conclusion": "success",
+    "attempt": 1
+  }
+}

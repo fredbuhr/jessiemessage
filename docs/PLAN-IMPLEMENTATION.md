@@ -6,12 +6,12 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 Les quatre lots et les six fonctions du [cahier](specs/cahier-20261023.md) sont codés, fusionnés, qualifiésPR/main5/5 et publiés. Source190 `5dda0dd4453d34a0be839d2a1402301dea835381`, release/latest421892314 ; repliSQL38 compatible185 publié non latest. [État et preuves](verification-proofs/experience190-progress.json), [procédure exacte](operations-release190.md).
 
-1. SQL38appliquées/0pending désormais rapporté ; Node reste arrêté. Récupérer uniquement les deux présences/hashes manquants du marqueur et du reçu. Aucun SQL ni mot de passe requis pour cette lecture.
-2. Vérifier le reçu durable et sa liaison au marqueur/staging ; s’il manque, préparer une récupération bornée sans rejouer la migration déjà appliquée. Préparation et upgrade ne sont pas à répéter.
-3. Après concordance des preuvesSQL38, CHECK185/190 séparés, puis activation190 et identité exacte. Aucun Run/Build184 ou172 sur38.
-4. Épingler et qualifier le writer avec les reçus réels et la release421892314 ; enregistrer l’identité et vérifier le checkpoint final, sans redémarrage.
+1. **Acquis :** préparation190/185, statut38 appliquées/0 en attente et reçu durable de migration confirmé par les deux empreintes. Ne pas les rejouer.
+2. **À obtenir :** CHECK185 puis190, en gardant Node arrêté ; réutiliser tout journal déjà valide sans nouveau contrôle. Aucun démarrage ou SQL upgrade dans cette étape.
+3. Après les deux CHECK réussis, configurer et démarrer190 dans Manager puis relever l’identité exacte. Aucun Run/Build184 ou172 sur SQL38.
+4. Après activation, utiliser le writer déjà épinglé et qualifié9/9 (run39972263974) pour enregistrer l’identité et vérifier le checkpoint final sans redémarrage.
 
-Dernière identité active confirmée1.8.4 ; SQL38/0 selon la nouvelle lecture utilisateur ; reçu durable encore à récupérer. Node actuellement arrêté selon capture/utilisateur. Aucune nouvelle infrastructure, reprise automatique des sauvegardes reportées ou action sur les comptes réels. Téléphone physique et production190 restent non vérifiés.
+Dernière identité démarrée confirmée1.8.4 ; SQL38/0 et migration terminée selon les preuves utilisateur. Node reste arrêté. Aucune nouvelle infrastructure, reprise des sauvegardes reportées ou action sur les comptes réels. Téléphone physique et production190 restent non vérifiés.
 
 ## Correctif interface 1.8.4 — terminé
 

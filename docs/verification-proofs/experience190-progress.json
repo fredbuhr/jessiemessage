@@ -1,7 +1,7 @@
 {
   "type": "experience190-progress",
   "version": 2,
-  "status": "schema38_status_confirmed_durable_receipt_hash_not_yet_reported",
+  "status": "schema38_upgrade_confirmed_awaiting185_190_hosted_CHECKs",
   "release": {
     "version": "1.9.0",
     "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
@@ -114,7 +114,7 @@
   "hosted": {
     "sourcesPrepared": true,
     "schemaStatusRead": true,
-    "migrated": null,
+    "migrated": true,
     "prechecked185": false,
     "prechecked190": false,
     "started190": false,
@@ -122,7 +122,7 @@
     "hostMutations": false,
     "serviceStoppedReported": true,
     "schema38StatusRead": true,
-    "schema38ReceiptAcquired": false
+    "schema38ReceiptAcquired": true
   },
   "limits": [
     "Synthetic Chrome mobile/desktop and multiple browser sessions; no physical phone or two physical devices",
@@ -130,7 +130,7 @@
     "No production190 verification or new hosted backup trial; previous deferred work remains deferred"
   ],
   "nextAction": {
-    "only": "Read durable attempt/success-file presence and SHA256 only; no SQL or credentials",
+    "only": "Verify and run prepared185 then190 CHECKs, never start or migrate; reuse already-passed logs",
     "operator": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
     "migratorSha256": "3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2",
     "instructions": "../operations-release190.md",
@@ -138,7 +138,7 @@
     "keepServiceStopped": true,
     "doNotReplayUpgrade": true,
     "doNotRerunPreparation": true,
-    "following": "After coherent durable schema38 receipt: separate185/190 CHECKs, activation190 identity and final writer"
+    "following": "After both CHECKs: exact Manager190 Build/Run activation and startup identity, then final metadata writer"
   },
   "historyProofs": [
     "jm190/pr-native-initial.json",
@@ -168,9 +168,9 @@
   "interruption": {
     "evidence": "USER_REPORTED_AND_CAPTURE",
     "proof": "jm190-hosted-interruption.json",
-    "upgradeExecution": "unknown",
+    "upgradeExecution": "completed_confirmed_by_exact_receipt_hash",
     "shellCleared": true,
-    "schema38ReceiptSeen": false,
+    "schema38ReceiptSeen": true,
     "currentSQLKnown": true
   },
   "sqlStatusBeforeInterruption": {
@@ -191,6 +191,17 @@
     "proof": "jm190-hosted-schema38-status.json",
     "currentState": "SQL38_ledger_confirmed_by_user_report",
     "target38And37ArePlanMetadata": true,
-    "durableReceiptSeen": false
+    "durableReceiptSeen": true,
+    "schemaReceiptSha256": "0d12dfd9ea9c9510729d39f743159a70a2457b2d999b6d334ae09043fa5d6dfb"
+  },
+  "upgradeProof": "jm190-hosted-upgrade-confirmation.json",
+  "finalWriter": {
+    "source": "8690a8255e1297f288f7eae8ab25811bf63d2262",
+    "tree": "23d810fd51ca9a9509962a4bbec87a5e606ac34a",
+    "sha256": "40cc11b177de7199d07b7552d440fcf7990a0f8e5e334c885ef8fca93c7d93b8",
+    "run": 39972263974,
+    "nativePassed": 9,
+    "proof": "jm190/writer-final-native.json",
+    "hostExecuted": false
   }
 }
