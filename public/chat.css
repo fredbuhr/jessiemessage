@@ -56,4 +56,8 @@
 
 .media-date-heading{grid-column:1/-1;font-size:13px;color:var(--muted);font-weight:500;margin:12px 0 0}
 
+/* Keep horizontal swipes in the viewer while retaining native scroll/zoom. */
+.lightbox-image{touch-action:pan-y pinch-zoom}
+.lightbox-image.is-zoomed{touch-action:auto}
+
 .reply-followup{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;padding:.35rem 1rem;border-bottom:1px solid #4b3445}.reply-followup[hidden]{display:none}.reply-followup p{font-size:.8rem;margin:.2rem 0}.reply-followup p:first-child{margin-right:auto}.reply-followup button{font-size:.8rem}

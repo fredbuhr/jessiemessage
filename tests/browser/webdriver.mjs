@@ -243,6 +243,15 @@ export async function startWebDriver() {
             { type: "pointerMove", duration: 250, x: endX, y: endY }, { type: "pointerUp", button: 0 }
           ] }] });
         },
+        pinch: (centerX, centerY, startSpread, endSpread) => {
+          const coordinates=[centerY,centerX-startSpread,centerX+startSpread,centerX-endSpread,centerX+endSpread];
+          if (![centerX,centerY,startSpread,endSpread].every(Number.isInteger) || startSpread<1 || endSpread<1
+            || !coordinates.every(value=>value>=0&&value<=10000)) throw new TypeError("Bounded viewport coordinates required");
+          return request("POST", `${endpoint}/actions`, { actions: [-1,1].map((direction,index)=>({type:"pointer",id:`pinch-${index}`,parameters:{pointerType:"touch"},actions:[
+            {type:"pointerMove",duration:0,x:centerX+direction*startSpread,y:centerY},{type:"pointerDown",button:0},
+            {type:"pointerMove",duration:500,x:centerX+direction*endSpread,y:centerY},{type:"pointerUp",button:0}
+          ]})) });
+        },
         close: closeSession
       };
     }

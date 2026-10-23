@@ -11,7 +11,14 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 3. Photos : navigation paginée/date/message d’origine, puis file limitée de dix photos avec aperçu et reprise idempotente des seuls échecs.
 4. Suivi : tâche réservée « À répondre », watermark conditionnel protégeant les entrants simultanés, reprise historique déterminable ; qualification transversale, publication et déploiement selon le mécanisme existant.
 
-Les quatre lots et corrections de revue sont codés. Suite complète locale : 3806 réussis, 243 omissions explicites, aucun échec ; construction réussie. Premier passage natifPR133 : général4004réussis/51omissions, autres jobs en échec dont causes corrigées. Restent la qualification de la révision corrigée avec lifecycleSQL38, la qualification/fusion préalable du repli185(PR134), le raccord190, la revue des captures, puis la fusion de la source exacte, la publication et les opérations de livraison gardées. Production1.8.4/SQL36 inchangée. Aucune nouvelle infrastructure, reprise automatique des sauvegardes reportées ou action sur les comptes réels.
+Les quatre lots et corrections de revue sont codés. Restent :
+
+1. Terminer laCI main185 (PR5/5 acquise), repliSQL38 fusionné 7a40de9… ; aucune activation185.
+2. Qualifier le raccord final190 surPR133, avec les deux parcoursHTTPS batch/ACK et suivi entre appareils ; les deux MariaDB598/598 et le Chrome ciblé8/8 sont acquis sur leurs sources identifiées.
+3. Fusionner puis qualifier le vraiSHA main190, inspecter les rendus et publier les deux références immuables (185 non latest,190 latest).
+4. Qualifier les opérateurs épinglés ; préparation, statutSQL, arrêt personnelManager, migration36→38, CHECK185/190, activation190 et reçu final seront des opérations distinctes avec preuves. Aucune opération hébergée n’est acquise.
+
+Production1.8.4/SQL36 inchangée. Aucune nouvelle infrastructure, reprise automatique des sauvegardes reportées ou action sur les comptes réels.
 
 ## Correctif interface 1.8.4 — terminé
 

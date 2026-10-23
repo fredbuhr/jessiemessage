@@ -1246,7 +1246,7 @@ function renderMediaPanel() {
     const photo = document.createElement("button"); photo.type = "button"; photo.className = "photo-open"; ui.attr(photo, "aria-label", "Agrandir cette photo privée");
     photo.addEventListener("click", () => { void openLightbox({ media, messageId: activePanel.kind === "gallery" ? item.messageId : null, sequence: item.sequence, createdAt: item.createdAt }, state, photo); });
     card.append(photo);
-    const caption = document.createElement("p"); ui.text(caption, "{width} × {height} · {date}", { width: ui.numberParam(media.width), height: ui.numberParam(media.height), date: dateParameter(activePanel.kind === "library" ? media.createdAt : item.createdAt, true) }); card.append(caption);
+    const caption = document.createElement("p"); ui.text(caption, "{width} × {height} · {date}", { width: ui.numberParam(media.width), height: ui.numberParam(media.height), date: dateParameter(activePanel.kind === "library" ? media.createdAt : item.createdAt, true, activePanel.kind === "gallery") }); card.append(caption);
     if (activePanel.kind === "library") {
       if (media.sharedHere) { const warning = document.createElement("p"); warning.className = "shared-photo"; ui.text(warning, "Déjà envoyée ici. Renvoyer crée un nouveau message."); card.append(warning); }
       const actions = document.createElement("div"); actions.className = "media-actions";
@@ -1289,9 +1289,13 @@ function renderLightboxControls() {
   const navigable = Boolean(lightboxItem?.messageId && lightboxItem.sequence);
   for (const key of ["previous-photo", "next-photo", "photo-message"]) { el(key).hidden = !navigable; el(key).disabled = lightboxBusy; }
 }
+function updatePhotoTouchPolicy() {
+  el("lightbox-image").classList.toggle("is-zoomed", (globalThis.visualViewport?.scale ?? 1) > 1.01);
+}
 function showLightboxPhoto(item, state) {
   const version = ++lightboxVersion; lightboxItem = item;
-  ui.text(el("lightbox-status"), item.createdAt ? "Photo privée · {date}" : "Photo privée", item.createdAt ? { date: dateParameter(item.createdAt, true) } : {});
+  updatePhotoTouchPolicy();
+  ui.text(el("lightbox-status"), item.createdAt ? "Photo privée · {date}" : "Photo privée", item.createdAt ? { date: dateParameter(item.createdAt, true, true) } : {});
   renderLightboxControls();
   loadPhoto(el("lightbox-image"), item.media, state, { full: true, current: () => lightboxItem === item && lightboxVersion === version
     && belongsTo(currentState(), state.id, state.epoch) && (!item.messageId || ![...state.messages.values()].some(message => message.id === item.messageId && message.deletedAt != null)) });
@@ -1305,6 +1309,8 @@ async function openLightbox(item, state, opener) {
 async function navigatePhoto(direction) {
   const state = currentState(), original = lightboxItem, version = lightboxVersion;
   if (!state || !original?.messageId || !original.sequence || lightboxBusy || !visible()) return;
+  const ticket = snapshot(state), focused = el("lightbox").contains(document.activeElement) ? document.activeElement : null;
+  let currentVersion = version;
   lightboxBusy = true; renderLightboxControls();
   try {
     const cursor = direction === "previous" ? "before" : "after";
@@ -1317,8 +1323,16 @@ async function navigatePhoto(direction) {
       || !item.sequence || !Number.isSafeInteger(item.createdAt) || (direction === "previous" ? compared >= 0 : compared <= 0)) throw new Error("invalid_photo_neighbor");
     imageUrls.remove(original.media.fullUrl); imageRequests.get(original.media.fullUrl)?.controller.abort(); imageRequests.delete(original.media.fullUrl);
     showLightboxPhoto(item, state);
+    currentVersion = lightboxVersion;
   } catch (error) { if (lightboxItem === original) await handleMediaError(error, state, "lightbox-status"); }
-  finally { lightboxBusy = false; if (lightboxItem) renderLightboxControls(); }
+  finally {
+    if (fresh(ticket) && lightboxItem && lightboxVersion === currentVersion) {
+      lightboxBusy = false; renderLightboxControls();
+      // Chrome blurs a focused navigation button while it is disabled. Restore
+      // that control only if the user has not focused another control meanwhile.
+      if (el("lightbox").open && focused && focusWasLost(focused)) focusVisible(focused);
+    }
+  }
 }
 async function seePhotoMessage() {
   const state = currentState(), item = lightboxItem;
@@ -1346,8 +1360,8 @@ function changeGalleryMonth() {
   renderMediaPanel(); void loadMediaPage();
 }
 
-function dateParameter(value, long = false) {
-  return ui.dateParam(value, long ? { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" } : { hour: "2-digit", minute: "2-digit" });
+function dateParameter(value, long = false, year = false) {
+  return ui.dateParam(value, long ? { day: "numeric", month: "short", ...(year ? { year: "numeric" } : {}), hour: "2-digit", minute: "2-digit" } : { hour: "2-digit", minute: "2-digit" });
 }
 function renderInbox({ restoreFocus = true } = {}) {
   const container = el("conversations");
@@ -2209,6 +2223,7 @@ el("lightbox").addEventListener("keydown", event => {
   if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); void navigatePhoto(event.key === "ArrowLeft" ? "previous" : "next"); }
 });
 el("lightbox-image").addEventListener("touchstart", event => { lightboxTouch = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null; }, { passive: true });
+el("lightbox-image").addEventListener("touchcancel", () => { lightboxTouch = null; }, { passive: true });
 el("lightbox-image").addEventListener("touchend", event => {
   const start = lightboxTouch; lightboxTouch = null;
   if (!start || event.touches.length || event.changedTouches.length !== 1 || (globalThis.visualViewport?.scale ?? 1) > 1.01) return;
@@ -2277,6 +2292,7 @@ if (globalThis.visualViewport) {
   const fitViewport = () => {
     if (visualViewport.scale === 1) document.documentElement.style.setProperty("--chat-viewport-height", `${visualViewport.height}px`);
     else document.documentElement.style.removeProperty("--chat-viewport-height");
+    updatePhotoTouchPolicy();
     resizeComposer();
   };
   visualViewport.addEventListener("resize", fitViewport); visualViewport.addEventListener("scroll", positionComposerTools); fitViewport();

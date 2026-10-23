@@ -132,6 +132,27 @@ async function createPhoto(page, conversationId) {
 async function imageReadable(page, path) {
   return page.executeAsync(`const path=arguments[0],done=arguments[arguments.length-1];(async()=>{const response=await fetch(path,{cache:'no-store',credentials:'same-origin'});if(response.status!==200)return{status:response.status};const image=await createImageBitmap(await response.blob());const result={status:200,width:image.width,height:image.height};image.close();return result;})().then(done,()=>done({status:0}));`, path);
 }
+async function selectPhotos(page, bytes, count, offset = 0) {
+  // Replace only the OS picker; decoding, normalization, uploads and sends use
+  // the production controller and actual SQL-backed HTTPS endpoints.
+  const added = await page.executeAsync(`const bytes=Uint8Array.from(atob(arguments[0]),c=>c.charCodeAt(0)),count=arguments[1],offset=arguments[2],done=arguments[arguments.length-1];
+    (async()=>{const files=new DataTransfer(),bitmap=await createImageBitmap(new Blob([bytes],{type:'image/jpeg'}));
+      try{for(let i=0;i<count;i++){const canvas=document.createElement('canvas');canvas.width=96;canvas.height=64;const context=canvas.getContext('2d');context.drawImage(bitmap,0,0);
+        context.fillStyle='rgb('+(20+(offset+i)*30)+',80,160)';context.fillRect(0,0,24,24);
+        const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg'));if(!blob)return false;
+        files.items.add(new File([blob],'synthetic-photo-'+(offset+i)+'.jpg',{type:'image/jpeg'}));}
+        const input=document.getElementById('image-file');input.files=files.files;input.dispatchEvent(new Event('change',{bubbles:true}));return files.files.length;
+      }finally{bitmap.close();}})().then(done,()=>done(false));`, bytes, count, offset);
+  assert.equal(added, count, "each synthetic photo has distinct pixels so existing content deduplication remains meaningful");
+}
+async function waitReplyUI(page, needed) {
+  await waitUntil(() => page.execute(`const section=document.querySelector('.reply-followup'),text=section?.querySelector('p')?.textContent;
+    return !!section&&!section.hidden&&[...section.querySelectorAll('button')].every(button=>!button.disabled)
+      &&(arguments[0]?text==='À répondre'||text?.startsWith('Attente depuis le '):text==='Traité');`, needed), "actual administrator follow-up state synchronized", 20000);
+}
+async function restoreFetch(page) {
+  await page.execute("if(window.__experienceTransport){window.fetch=window.__experienceTransport.original;delete window.__experienceTransport;}");
+}
 
 test("real HTTPS SQL38: private profiles across devices and own-password rotation preserve history and media", { timeout: 240000 }, async t => {
   const driver = await startWebDriver(); let fixture; const pages = [];
@@ -173,6 +194,86 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
       await admin.click(".crm-dialog .dialog-head button");
       const state = await fixture.privatePreferencesState([firstChoice, secondChoice]); assert.equal(state.rows, 2); assert.equal(state.encrypted, true);
       assert.deepEqual((await json(other, "client", "/api/profile/client/preferences")).data.selectedIds, []);
+    });
+    await t.test("five real photo drafts survive one lost committed batch acknowledgement without new uploads or duplicate SQL messages", async () => {
+      const before = await json(client, "client", `/api/chat/client/conversations/${conversation}/messages`); assert.equal(before.status, 200);
+      const bytes = await client.execute(`const canvas=document.createElement('canvas');canvas.width=96;canvas.height=64;const context=canvas.getContext('2d');
+        context.fillStyle='#b52f68';context.fillRect(0,0,96,64);context.fillStyle='#153f68';context.fillRect(48,0,48,64);return canvas.toDataURL('image/jpeg').split(',')[1];`);
+      await selectPhotos(client, bytes, 5);
+      await waitUntil(() => client.execute("return document.querySelectorAll('.photo-batch-item').length===5&&[...document.querySelectorAll('.photo-batch-item img')].every(image=>image.complete&&image.naturalWidth===96)"), "five real JPEG previews before sending");
+      const initial = await client.execute("return [...document.querySelectorAll('.photo-batch-item')].map(node=>node.dataset.photoId)");
+      await client.click(".photo-batch-item:nth-child(2) button"); assert.equal(await client.execute("return document.querySelectorAll('.photo-batch-item').length"), 4);
+      await selectPhotos(client, bytes, 1, 5);
+      await waitUntil(() => client.execute("return document.querySelectorAll('.photo-batch-item').length===5&&[...document.querySelectorAll('.photo-batch-item img')].every(image=>image.complete&&image.naturalWidth===96)"), "one replacement photo joins the existing preview selection");
+      const selected = await client.execute("return [...document.querySelectorAll('.photo-batch-item')].map(node=>node.dataset.photoId)");
+      assert.deepEqual(selected.slice(0, 4), [initial[0], ...initial.slice(2)]); assert.equal(selected.includes(initial[1]), false); assert.equal(new Set(selected).size, 5);
+      const batchCaption = "Synthetic one-caption five-photo selection"; await client.type("#message-body", batchCaption);
+      await client.execute(`const original=window.fetch.bind(window),batchPath=arguments[0];
+        const state=window.__experienceTransport={original,uploads:[],batches:[],lost:false};
+        window.fetch=async(input,options={})=>{const path=new URL(typeof input==='string'?input:input.url,location.origin).pathname;
+          const mutation=options.method==='POST',response=await original(input,options);
+          if(mutation&&path==='/api/media/client/assets'){const data=await response.clone().json();state.uploads.push({status:response.status,id:data.asset?.id});}
+          if(mutation&&path===batchPath){const data=await response.clone().json();state.batches.push({body:JSON.parse(options.body),status:response.status,results:data.results});
+            if(!state.lost&&response.ok&&data.results?.length===5&&data.results.every(row=>row.message)){state.lost=true;throw new TypeError('Synthetic lost committed photo ACK');}}
+          return response;};`, `/api/media/client/conversations/${conversation}/messages/batch`);
+      try {
+        assert.deepEqual(await client.execute("return {uploads:__experienceTransport.uploads.length,batches:__experienceTransport.batches.length}"), { uploads: 0, batches: 0 });
+        await client.click("#send");
+        await waitUntil(() => client.execute("return __experienceTransport.lost&&!document.getElementById('send').disabled&&document.getElementById('send').textContent==='Réessayer les photos restantes'&&[...document.querySelectorAll('.photo-batch-item span')].every(node=>node.textContent==='À réessayer')"), "committed batch with lost ACK requires one explicit retry", 30000);
+        const uncertain = await client.execute("return {uploads:__experienceTransport.uploads,batches:__experienceTransport.batches}");
+        assert.equal(uncertain.uploads.length, 5); assert.ok(uncertain.uploads.every(upload => upload.status === 201)); assert.equal(new Set(uncertain.uploads.map(upload => upload.id)).size, 5);
+        assert.equal(uncertain.batches.length, 1); assert.equal(uncertain.batches[0].status, 200); assert.deepEqual(uncertain.batches[0].body.messages.map(message => message.clientMessageId), selected);
+        assert.ok(uncertain.batches[0].results.every(row => row.message && row.duplicate === false));
+        const committed = await json(clientDevice, "client", `/api/chat/client/conversations/${conversation}/messages`); assert.equal(committed.status, 200);
+        assert.equal(committed.data.messages.length, before.data.messages.length + 5, "the first real batch committed exactly five SQL-backed messages");
+        await client.click("#send");
+        await waitUntil(() => client.execute("return document.getElementById('photo-batch').hidden&&document.getElementById('message-body').value===''"), "same selection acknowledged after explicit retry", 30000);
+        const confirmed = await client.execute("return {uploads:__experienceTransport.uploads,batches:__experienceTransport.batches}");
+        assert.equal(confirmed.uploads.length, 5, "the retry does not upload any original twice"); assert.equal(confirmed.batches.length, 2);
+        assert.deepEqual(confirmed.batches[1].body, confirmed.batches[0].body, "all five original idempotency keys, media IDs and captions are reused");
+        assert.ok(confirmed.batches[1].results.every(row => row.duplicate === true));
+        const history = await json(clientDevice, "client", `/api/chat/client/conversations/${conversation}/messages`); assert.equal(history.status, 200);
+        const photos = history.data.messages.filter(message => selected.includes(message.clientMessageId));
+        assert.equal(history.data.messages.length, before.data.messages.length + 5); assert.equal(photos.length, 5); assert.equal(new Set(photos.map(message => message.id)).size, 5);
+        assert.ok(photos.every(message => message.media)); assert.equal(new Set(photos.map(message => message.media.id)).size, 5);
+        assert.equal(photos.filter(message => message.body === batchCaption).length, 1); assert.equal(photos.filter(message => message.body === "").length, 4);
+        assert.equal(history.data.messages.some(message => message.clientMessageId === initial[1]), false, "the removed draft never became a message");
+        assert.equal((await imageReadable(clientDevice, photos[0].media.fullUrl)).status, 200);
+      } finally { await restoreFetch(client); }
+    });
+    await t.test("real reply controls keep reads pending and synchronize manual handling, reopening and one observed individual reply", async () => {
+      const question = "Synthetic client request requiring an individual answer";
+      await client.type("#message-body", question); await client.click("#send");
+      await waitUntil(() => admin.execute("return [...document.querySelectorAll('#messages article')].some(node=>node.textContent.includes(arguments[0]))", question), "real incoming client text reaches the administrator", 20000);
+      for (const page of [admin, adminDevice]) await waitReplyUI(page, true);
+      const incoming = await json(admin, "admin", `/api/chat/admin/conversations/${conversation}/messages`); assert.equal(incoming.status, 200);
+      const questionMessage = incoming.data.messages.find(message => message.body === question); assert.ok(questionMessage); assert.equal(incoming.data.conversation.reply.needed, true);
+      await admin.execute("const history=document.getElementById('message-scroll');history.scrollTop=history.scrollHeight;history.dispatchEvent(new Event('scroll'));");
+      await waitUntil(async () => {
+        const current = await json(admin, "admin", `/api/chat/admin/conversations/${conversation}/messages`);
+        return current.status === 200 && BigInt(current.data.conversation.lastReadSequence) >= BigInt(questionMessage.sequence);
+      }, "the actual administrator scroll posts a persisted read receipt", 20000);
+      const read = await json(admin, "admin", `/api/chat/admin/conversations/${conversation}/messages`); assert.equal(read.data.conversation.reply.needed, true, "reading the client message never handles it");
+      await admin.click(".reply-followup > button:nth-of-type(2)");
+      for (const page of [admin, adminDevice]) await waitReplyUI(page, false);
+      const handled = await json(adminDevice, "admin", `/api/chat/admin/conversations/${conversation}/messages`); assert.equal(handled.data.conversation.reply.handledThrough, questionMessage.sequence);
+      await adminDevice.click(".reply-followup > button:nth-of-type(1)");
+      for (const page of [adminDevice, admin]) await waitReplyUI(page, true);
+      const reopened = await json(admin, "admin", `/api/chat/admin/conversations/${conversation}/messages`); assert.equal(reopened.data.conversation.reply.needed, true);
+      assert.equal(await client.execute("return document.querySelector('.reply-followup')===null"), true, "the client sees none of the private administrator follow-up");
+      const answer = "Synthetic individual response handles the viewed request";
+      await admin.execute(`const original=window.fetch.bind(window),target=arguments[0],state=window.__experienceTransport={original,answers:[]};
+        window.fetch=async(input,options={})=>{if(options.method==='POST'&&new URL(typeof input==='string'?input:input.url,location.origin).pathname===target)state.answers.push(JSON.parse(options.body));return original(input,options);};`, `/api/chat/admin/conversations/${conversation}/messages`);
+      try {
+        await admin.type("#message-body", answer); await admin.click("#send");
+        await waitUntil(() => client.execute("return [...document.querySelectorAll('#messages article')].filter(node=>node.textContent.includes(arguments[0])).length===1", answer), "individual response delivered through real controller and SQL", 20000);
+        for (const page of [admin, adminDevice]) await waitReplyUI(page, false);
+        const commands = await admin.execute("return __experienceTransport.answers"); assert.equal(commands.length, 1);
+        assert.equal(commands[0].replyThrough, questionMessage.sequence, "the UI binds the response to the observed client sequence"); assert.equal(commands[0].replyVersion, reopened.data.conversation.reply.version);
+        const complete = await json(adminDevice, "admin", `/api/chat/admin/conversations/${conversation}/messages`); assert.equal(complete.status, 200);
+        assert.equal(complete.data.conversation.reply.needed, false); assert.equal(complete.data.conversation.reply.handledThrough, questionMessage.sequence);
+        assert.equal(complete.data.messages.filter(message => message.body === answer).length, 1);
+      } finally { await restoreFetch(admin); }
     });
     const resetToken = await fixture.seedClientResetToken();
     const encryptedBefore = await fixture.privatePreferencesState([firstChoice, secondChoice]);

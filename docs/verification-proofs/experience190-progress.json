@@ -1,6 +1,6 @@
 {
   "type": "experience190-progress",
-  "status": "first_native_failures_corrected_revision2_ready",
+  "status": "final_code_reconciled_with185_awaiting_full_native_qualification",
   "branch": "feat/private-experience-190",
   "baselineMain": "904ab4301bbda71e047d5b3b5dad41d45149c1cf",
   "activeVersion": "1.8.4",
@@ -53,7 +53,7 @@
     }
   ],
   "actualHostMutationsPerformed": false,
-  "nextAction": "Qualify corrected PR133 head including native SQL38 lifecycle; qualify PR134/main185 rollback first, then reconcile190 with185 and qualify exact merged main. No hosted action yet.",
+  "nextAction": "Run full native PR190 qualification on the merged185 ancestry, including realHTTPS batch lostACK and shared reply followup; finish main185 CI then merge190 and qualify exact main. Production184 SQL36 untouched.",
   "candidateSchemaMigrations": 38,
   "candidatePhysicalTables": 37,
   "localNode": "v24.19.0",
@@ -78,9 +78,10 @@
     "checkpointCompatibility": "210passed;6skipped;SQL38_existing_pipeline_only",
     "backupCoreCompatibility": "7new+91legacy+28CLI passed; nativeSQL38capture_pending",
     "photosFinalDelta": "106lifecycle_and_photo_batch_passed;2new_old_segment_retry_and_load_failure_regressions",
-    "preferencesFinalDelta": "25passed; new real transaction mock conflict/replay/foreign-error/session-revocation regressions"
+    "preferencesFinalDelta": "25passed; new real transaction mock conflict/replay/foreign-error/session-revocation regressions",
+    "galleryFinalDelta": "137local accessibility/lifecycle/i18n passed;8targeted actualChrome gallery+video passed"
   },
-  "lastPublishedDevelopmentCommit": "0e76d1576b7d4e5cc68af9cb0dd7c60fcd48d08d",
+  "lastPublishedDevelopmentCommit": "bb2f1b896bb5703454ec292de890ac51d5a0d657",
   "localFullSuite": {
     "tests": 4049,
     "passed": 3806,
@@ -103,7 +104,10 @@
     "Photo batch returns to latest segment before uploading while preserving original immutable reply watermark",
     "Preferences transaction preserves typed CAS conflict after rollback; no forged driver error accepted",
     "Browser and SQL fixtures use existing admin-only video paths or explicitly seed historical client media",
-    "Primary-only recovery endpoints remain distinct from public shared password validation module"
+    "Primary-only recovery endpoints remain distinct from public shared password validation module",
+    "Photo gallery dates include year for older histories",
+    "Native swipe and native pinch/pan preserve the viewer navigation policy",
+    "Asynchronous photo navigation restores the controller focus without overriding a deliberate different focus"
   ],
   "nativeAttempts": [
     {
@@ -111,15 +115,32 @@
       "run": 39954872379,
       "status": "failure",
       "proof": "jm190/pr-native-initial.json"
+    },
+    {
+      "source": "bb2f1b896bb5703454ec292de890ac51d5a0d657",
+      "run": 39956453367,
+      "status": "four_success_one_browser_failure",
+      "proof": "jm190/pr-native-revision2.json"
     }
   ],
   "rollbackCandidate": {
     "version": "1.8.5",
     "pr": 134,
-    "source": "1f6c2c4d5bb0c286d8a6f1f8066f008a965eea08",
-    "tree": "a28a96c09eb7e8dc24a32e4eea86503391007a31",
+    "source": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
+    "tree": "7ec449cb3a63a091c5233993923ceb69f8314366",
     "nativeQualified": false,
-    "deployed": false
+    "deployed": false,
+    "prNativeQualified": true,
+    "prRun": 39957721078,
+    "mainRun": 39958956620
   },
-  "nativeLifecycleCoverage": "Added explicit SQL38 capture/import/crypto/closure with 3private owners and reply state; local skipped, native pending."
+  "nativeLifecycleCoverage": "MariaDB10.11 and11.4 each598passed/0skip including real SQL38 capture/import/crypto/closure",
+  "targetedBrowser": {
+    "source": "39e2a6742d753f6340761d90cb454b691239d726",
+    "run": 39959023152,
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0
+  },
+  "finalExtraHTTPSCoverage": "Added real5-photo batch with lost server ACK, exact retry keys/no new uploads and one caption; real reply state and seen boundary across2admin sessions. Pending native final."
 }

@@ -1677,3 +1677,24 @@ test("a failed current-page load leaves a photo selection untouched and never up
   assert.deepEqual(batch.items.map(item => item.clientMessageId), keys); assert.equal(batch.started, false); assert.equal(batch.busy, false);
   assert.equal(f.inspect().sendBusy, false); assert.equal(f.element("message-body").value, "Keep the caption");
 });
+
+test("viewer swipes keep pinch zoom and cancelled or multi-touch gestures from changing the photo", async () => {
+  const f = harness({ intercept: path => path.includes('/gallery?') ? response(200, { items: [], hasMore: false, nextBefore: null }) : undefined }); await flush();
+  f.context.__gesturePhoto = { messageId: id(7001), sequence: "3", createdAt: now };
+  vm.runInContext("lightboxItem=__gesturePhoto",f.context);
+  f.context.visualViewport = { scale: 1 };
+  const surface=f.element('lightbox-image'), point=(x,y=50)=>({clientX:x,clientY:y});
+  const fire=(type,event)=>{for(const handler of surface.events.get(type)??[])handler(event);};
+  const start=()=>fire('touchstart',{touches:[point(100)]});
+  const end=()=>fire('touchend',{touches:[],changedTouches:[point(220)]});
+  const galleries=()=>f.calls.filter(call=>call.path.includes('/gallery?'));
+  start();fire('touchcancel',{});end();await flush();assert.equal(galleries().length,0,'a cancelled native pan never changes the photo');
+  fire('touchstart',{touches:[point(100),point(140)]});end();await flush();assert.equal(galleries().length,0,'pinch gestures are reserved for native zoom');
+  f.context.visualViewport.scale=2;vm.runInContext('updatePhotoTouchPolicy()',f.context);
+  assert.equal(surface.classList.contains('is-zoomed'),true,'zoom enables both native pan axes');
+  start();end();await flush();assert.equal(galleries().length,0,'a zoomed image can be panned without navigating');
+  f.context.visualViewport.scale=1;vm.runInContext('updatePhotoTouchPolicy()',f.context);
+  assert.equal(surface.classList.contains('is-zoomed'),false,'normal scale restores horizontal photo gestures');
+  start();end();await flush();
+  assert.equal(galleries().length,1);assert.match(galleries()[0].path,/gallery\?limit=1&before=3$/,'one completed horizontal swipe uses the displayed message cursor');
+});

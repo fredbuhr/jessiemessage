@@ -1,0 +1,72 @@
+{
+  "status": "four_jobs_passed_browser_failure_being_corrected",
+  "source": "bb2f1b896bb5703454ec292de890ac51d5a0d657",
+  "tree": "b3d66ff3b491653ab9cad4537845177d85cec6df",
+  "pr": 133,
+  "run": 39956453367,
+  "attempt": 1,
+  "node": "v24.22.1",
+  "nativeQualified": false,
+  "jobs": {
+    "verify": {
+      "passed": 4007,
+      "skipped": 52,
+      "failed": 0
+    },
+    "Chrome": {
+      "passed": 242,
+      "failed": 7,
+      "skipped": 0
+    },
+    "HTTPS": {
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    "MariaDB10.11": {
+      "passed": 598,
+      "failed": 0,
+      "skipped": 0
+    },
+    "MariaDB11.4": {
+      "passed": 598,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "verifiedNative": [
+    "SQL38 capture/import/crypto/erasure with private selections and reserved reply tasks",
+    "Owner-only preferences, cross-device persistence and clearing",
+    "Both own-password rotations retain current cookie, revoke old devices/reset token, retain encrypted media",
+    "Existing HTTPS login/text/photo/admin video and old client playback"
+  ],
+  "remaining": [
+    "Actual horizontal touch navigation needs controlled Chrome event diagnosis",
+    "Strict synthetic video server expected old3keys but190 adds replyThrough; fixed to exact4keys and verified read boundary",
+    "Additional realHTTPS 5photos lostACK and2admin followup tests prepared for final revision"
+  ],
+  "deployed": false,
+  "productionVerified": false,
+  "logs": {
+    "general": {
+      "sha256": "d8b697c33f5806bc645ab7c1328a21eea1b4aefe7024f3892a41d7d4300b3484",
+      "jobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39956453367"
+    },
+    "browser": {
+      "sha256": "7c4e5110a80e96b86508fcf8edfcbd6974b98953715c7135864a5390775e1a9f",
+      "jobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39956453367"
+    },
+    "auth": {
+      "sha256": "74d25aa9e61fa58f17be0b747793b97336e09e3bdc437027648e5aed92c54544",
+      "jobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39956453367"
+    },
+    "db1011": {
+      "sha256": "b97ad41cd190c3a6b49da50a79e6a078ebf3f375218dba2b52a70f16206ae50a",
+      "jobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39956453367"
+    },
+    "db114": {
+      "sha256": "edf2b938a413d91cf7994a4e6e4c25bb01100664f792aba70cff19ff7450b78f",
+      "jobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39956453367"
+    }
+  }
+}
