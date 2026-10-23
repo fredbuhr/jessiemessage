@@ -1,0 +1,33 @@
+name: Qualify bounded JessieMessage 1.10.1 staging recovery
+
+on:
+  push:
+    branches: ["ops/recover-v1.10.1"]
+    paths: ["ops/recover-staging1101.py", "ops/test-recover-staging1101.py", ".github/workflows/recover-staging1101.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: recover-jessiemessage-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  recovery-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact operator commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Use qualified Node.js 24.22.1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+          package-manager-cache: false
+      - name: Confirm native Node identity
+        run: node -e "if (process.version !== 'v24.22.1') process.exit(1); console.log(process.version)"
+      - name: Test isolated bounded recovery
+        run: python3 ops/test-recover-staging1101.py
