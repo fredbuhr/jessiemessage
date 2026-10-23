@@ -1,0 +1,38 @@
+# Qualify only synthetic writer behavior; no hosting or release mutation.
+# Pending release/staging pins still refuse recording after these tests pass.
+name: Qualify 1.8.4 metadata operator
+
+on:
+  push:
+    branches: ["ops/record-v1.8.4"]
+    paths:
+      - ".github/workflows/record-release184.yml"
+      - "ops/record-release184.py"
+      - "ops/test_record_release184.py"
+
+permissions: {}
+
+concurrency:
+  group: record-release184
+  cancel-in-progress: false
+
+jobs:
+  operator-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact operator commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Use qualified Node.js 24.22.1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: "24.22.1"
+          package-manager-cache: false
+      - name: Test metadata recording with isolated synthetic files
+        run: python3 ops/test_record_release184.py
