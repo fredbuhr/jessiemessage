@@ -14,6 +14,7 @@ import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging
 import { privateAuthenticationProcessOptions } from "../server/config/private-auth-environment.mjs";
 import { connectDatabase } from "../server/db/connection.mjs";
 import { createdMigrationTables, loadMigrations, inspectHistory } from "../server/db/migrations.mjs";
+import { loadExperienceMigrations } from "../server/experience/migrations.mjs";
 import { loadVideoMigrations } from "../server/video/migrations.mjs";
 import { verifyTextBackupData } from "../server/backup/verify.mjs";
 import { readPassword } from "./migration-input.mjs";
@@ -108,7 +109,10 @@ async function visibleConfig(scope, canonical, name, expected) {
 async function applicationDumpTables(options) {
   const capability = Object.getOwnPropertyDescriptor(options, "video");
   if (capability ? !Object.hasOwn(capability, "value") || typeof capability.value !== "boolean" : "video" in options) fail("TEXT_CLONE_DUMP");
-  const video = capability?.value === true, count = video ? 36 : 33;
+  const experienceCapability = Object.getOwnPropertyDescriptor(options, "experience");
+  if (experienceCapability ? !Object.hasOwn(experienceCapability, "value") || typeof experienceCapability.value !== "boolean" : "experience" in options) fail("TEXT_CLONE_DUMP");
+  const video = capability?.value === true, experience = experienceCapability?.value === true, count = experience ? 37 : video ? 36 : 33;
+  if (experience && !video) fail("TEXT_CLONE_DUMP");
   const descriptor = Object.getOwnPropertyDescriptor(options, "tables");
   if (!descriptor) {
     if (video || "tables" in options) fail("TEXT_CLONE_DUMP");
@@ -127,8 +131,8 @@ async function applicationDumpTables(options) {
     if (!item || !Object.hasOwn(item, "value") || typeof item.value !== "string") fail("TEXT_CLONE_DUMP");
     supplied.push(item.value);
   }
-  const migrations = await (video ? loadVideoMigrations : loadMigrations)(), expected = [...createdMigrationTables(migrations), "schema_migrations"].sort();
-  if (migrations.length !== count || expected.length !== count || new Set(expected).size !== count
+  const migrations = await (experience ? loadExperienceMigrations : video ? loadVideoMigrations : loadMigrations)(), expected = [...createdMigrationTables(migrations), "schema_migrations"].sort();
+  if (migrations.length !== (experience ? 38 : count) || expected.length !== count || new Set(expected).size !== count
     || expected.some((name, index) => !/^[a-z][a-z0-9_]*$/.test(name) || supplied[index] !== name)) fail("TEXT_CLONE_DUMP");
   // Use the trusted migration inventory after validation, never the caller's
   // mutable array, across the asynchronous private-file and native-client work.

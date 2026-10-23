@@ -6,19 +6,19 @@ import { normalizeImage } from "../media/image.mjs";
 
 /** Exercise the existing native decoder and private storage without storing an
  * image, sending mail or creating listeners. SQL checks only read capacity. */
-export async function checkRuntimeMediaStorage(env, { requireInitialized = true, video = false, createPool = createRuntimePool,
+export async function checkRuntimeMediaStorage(env, { requireInitialized = true, video = false, experience = false, createPool = createRuntimePool,
   makeStorage = createMediaStorage, makeCapacity = createMediaCapacityStore, normalize = normalizeImage } = {}) {
   let config, pool, input, normalized;
   try {
     config = mediaConfiguration(env);
-    if (config.enabled !== true || typeof requireInitialized !== "boolean" || typeof video !== "boolean") throw new Error();
+    if (config.enabled !== true || typeof requireInitialized !== "boolean" || typeof video !== "boolean" || typeof experience !== "boolean" || experience && !video) throw new Error();
     const storage = await makeStorage({ root: config.root, key: config.key });
     const rootFingerprint = await storage.fingerprint(), space = await storage.availableSpace();
     if (!Buffer.isBuffer(rootFingerprint) || rootFingerprint.length !== 32 || typeof space?.availableBytes !== "bigint"
       || space.availableBytes < BigInt(config.minimumFreeBytes) + 82n) throw new Error();
     pool = await createPool(env);
     const capacity = makeCapacity({ pool, capacity: { ...config.capacity, rootFingerprint } });
-    await capacity.assertSchema(...(video ? [{ video: true }] : []));
+    await capacity.assertSchema(...(video ? [{ video: true, ...(experience ? { experience: true } : {}) }] : []));
     const state = await capacity.status();
     if (state.ready !== requireInitialized) throw new Error();
     const { default: sharp } = await import("sharp");

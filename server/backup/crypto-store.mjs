@@ -25,6 +25,7 @@ function announcementRevision(value) {
 }
 
 const statements = {
+  preferences: { id: "p.user_id", from: "profile_preferences p JOIN users u ON u.id = p.user_id", columns: "p.user_id AS id, p.version, p.selection_encrypted AS encrypted, u.role AS owner_role" },
   mfa: { id: "m.user_id", from: "admin_mfa m", columns: "m.user_id AS id, m.secret_encrypted AS encrypted" },
   mail: { id: "o.id", from: `mail_outbox o
     LEFT JOIN email_verifications v ON v.id = o.verification_id
@@ -100,6 +101,10 @@ function normalize(purpose, row, video = false) {
       encrypted: row.encrypted === null ? null : text(row.encrypted, 44000), notesRevision: String(notesRevision), version: String(version) };
   }
   const result = { id: bytes(row.id, 16) };
+  if (purpose === "preferences") {
+    if (!["admin", "client"].includes(row.owner_role)) fail();
+    return { ...result, version: String(integer(row.version, 4294967295)), encrypted: text(row.encrypted, 90000) };
+  }
   if (purpose === "mfa") return { ...result, encrypted: text(row.encrypted, 190) };
   if (purpose === "mail" || purpose === "reset") return { ...result, encrypted: text(row.encrypted, 1024),
     recipientUserId: bytes(row.recipient_user_id, 16), challengeUserId: bytes(row.challenge_user_id, 16),
@@ -159,8 +164,8 @@ function normalize(purpose, row, video = false) {
 }
 
 /** Bounded SELECT-only crypto reader. It never starts services or claims jobs. */
-export function createBackupCryptoStore({ pool, video = false } = {}) {
-  if (typeof video !== "boolean" || typeof pool?.getConnection !== "function") throw new TypeError("A private backup reader is required.");
+export function createBackupCryptoStore({ pool, video = false, experience = false } = {}) {
+  if (typeof video !== "boolean" || typeof experience !== "boolean" || experience && !video || typeof pool?.getConnection !== "function") throw new TypeError("A private backup reader is required.");
   async function* recipientPages(campaignId) {
     let afterId = null;
     while (true) {
@@ -192,7 +197,7 @@ export function createBackupCryptoStore({ pool, video = false } = {}) {
       if (!options || typeof options !== "object" || Array.isArray(options)
         || Object.keys(options).some((name) => !["purpose", "afterId", "limit"].includes(name))) fail();
       const { purpose, afterId = null, limit = 50 } = options;
-      if (!(PURPOSES.includes(purpose) || video && purpose === "videos") || !Number.isSafeInteger(limit) || limit < 1 || limit > 100) fail();
+      if (!(PURPOSES.includes(purpose) || video && purpose === "videos" || experience && purpose === "preferences") || !Number.isSafeInteger(limit) || limit < 1 || limit > 100) fail();
       const cursor = afterId === null ? null : bytes(afterId, purpose === "crm" ? 32 : 16);
       const statement = video && purpose === "messages" ? videoMessages : purpose === "videos" ? videoAssets : statements[purpose],
         predicates = statement.where ? [statement.where] : [], parameters = [];

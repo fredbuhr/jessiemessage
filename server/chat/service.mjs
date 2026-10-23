@@ -206,6 +206,7 @@ export async function createChatService({ store, authStore, authService, accessS
         if (typeof caption !== "string" || caption.length > 1000) fail("CHAT_INPUT");
         if (caption !== "") validateMessageBody(caption);
         const { session, request } = await context(role, token, conversationId);
+        if (role !== "admin") fail("CHAT_FORBIDDEN");
         if (!videoCreationEnabled) fail("CHAT_READ_ONLY");
         await mutationLimit(session.user.id, "send", request.now);
         const messageId = randomBytes(16), senderId = idBytes(session.user.id);

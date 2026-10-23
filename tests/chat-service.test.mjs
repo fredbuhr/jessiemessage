@@ -278,7 +278,7 @@ test("send quotas use scoped secret HMAC buckets without tokens or bodies and re
   assert.equal(serialized.includes(body), false); assert.equal(serialized.includes(f.token), false); assert.equal(serialized.includes(adminHex), false);
 });
 
-for (const kind of ["text", "photo", "video"]) test(`${kind} personal refusals cannot exhaust shared send capacity for another account`, async () => {
+for (const kind of ["text", "photo"]) test(`${kind} personal refusals cannot exhaust shared send capacity for another account`, async () => {
   const f = await fixture(), ledger = new Map();
   let absentConversation = true, persistenceCalls = 0;
   const authStore = { async consumeRateLimit(bucket, options) {
@@ -645,4 +645,12 @@ test("six to eight administrator devices retain polling and history headroom in 
     assert.equal(f.calls.length, 480, "new device tokens cannot bypass the account ceiling");
     assert.equal(ledger.size, 2, "only one personal and one global bucket are used");
   }
+});
+
+
+test("client video sends refuse before persistence and never consume shared send budgets", async () => {
+  const f = await fixture(); let writes = 0;
+  const service = await createChatService({ ...f.options, videoMessages: { async sendMessage() { writes++; } } });
+  await assert.rejects(service.sendVideo("client", f.token, conversationHex, { clientMessageId: "5".repeat(32), videoId: "6".repeat(32), caption: "" }), hasCode("CHAT_FORBIDDEN"));
+  assert.equal(writes, 0); assert.equal(f.rateCalls.length, 0);
 });

@@ -6,6 +6,7 @@ import { createVideoStorage } from "../video/storage.mjs";
 import { createVideoStore } from "../video/store.mjs";
 import { createVideoErasureExtension } from "../video/erasure-store.mjs";
 import { composeVideoErasureStorage } from "../video/erasure-storage.mjs";
+import { loadExperienceMigrations } from "../experience/migrations.mjs";
 import { loadVideoMigrations } from "../video/migrations.mjs";
 import { createChatStore } from "../chat/store.mjs";
 import { createMediaStorage } from "../media/storage.mjs";
@@ -17,7 +18,7 @@ import { snapshotErasureRegistry, authenticateRegistrySnapshot } from "./registr
 import { createReconciliationProgress } from "./reconciliation-progress.mjs";
 import { createBackupSnapshotStore, captureBackupSnapshot, assertBackupSnapshot, verifyBackupStorage } from "./snapshot.mjs";
 import { verifyPhotoNotificationRecoveryCrmBroadcastBackupData, verifyPhotoNotificationRecoveryCrmBroadcastVideoBackupData } from "./verify.mjs";
-import { assertApplicationTableInspection, assertVideoApplicationTableInspection } from "./application-scope.mjs";
+import { assertApplicationTableInspection, assertVideoApplicationTableInspection, assertExperienceApplicationTableInspection } from "./application-scope.mjs";
 import { createBackupRecoveryStore, createVideoBackupRecoveryStore } from "./recovery-store.mjs";
 import { createErasureStore } from "../data/erasure-store.mjs";
 import { createErasureJournal, readErasureJournalBatch } from "../data/erasure-journal.mjs";
@@ -92,6 +93,7 @@ async function runManualRestore(input, publication = null) {
     const manifest = await readManifest(`${checkpointDirectory}/manifest.json`, { pathMode: "linux-dirfd" }), payload = verifyBackupManifest({ manifest, keys });
     if (receipt.version !== (video ? 12 : 10) || manifest.profile !== `messaging-photos-notify-recovery-crm-broadcast${video ? "-video" : ""}-application`
       || manifestHash(manifest) !== receipt.manifest.sha256) fail("CHECKPOINT");
+    const experience = video && payload.snapshot.coverage.tables === 37;
     const backup = await withPrivateDirectory(checkpointDirectory, scope => readOperationalCheckpoint(scope, receipt, keys.crmKey, { signal }));
     const sourceBinding = backup.binding;
     const rootStorage = await createMediaStorage({ root: target.rootPath, key: keys.mediaKey, pathMode: "linux-dirfd" });
@@ -157,8 +159,8 @@ async function runManualRestore(input, publication = null) {
         const guard = async () => { if (publication && publication.runtime.state()?.status !== "stopped") fail("MAINTENANCE"); await assertQuiescent(); await resources(); await assertQuiescent(); };
         await guard();
         const withConnection = async (pool, work) => { const connection = await pool.getConnection(); try { return await work(connection); } finally { await connection.release(); } };
-        await withConnection(target.inspectionPool, connection => (video ? assertVideoApplicationTableInspection : assertApplicationTableInspection)(connection, target.database));
-        await withConnection(target.pool, async connection => assertErasureSchema(connection, target.database, ...(video ? [{ candidateMigrations: await loadVideoMigrations() }] : [])));
+        await withConnection(target.inspectionPool, connection => (experience ? assertExperienceApplicationTableInspection : video ? assertVideoApplicationTableInspection : assertApplicationTableInspection)(connection, target.database));
+        await withConnection(target.pool, async connection => assertErasureSchema(connection, target.database, ...(video ? [{ candidateMigrations: await (experience ? loadExperienceMigrations : loadVideoMigrations)() }] : [])));
         progress = createReconciliationProgress({ directory: progressDirectory, key: keys.crmKey, planSha256, manifestSha256: receipt.manifest.sha256, targetBinding });
         let run = await progress.read();
         const jobs = [...authenticateRegistrySnapshot(snapshotErasureRegistry(selected.state, { key: keys.crmKey, binding: sourceBinding }), { key: keys.crmKey, binding: sourceBinding }).jobs.values()];
@@ -172,8 +174,8 @@ async function runManualRestore(input, publication = null) {
         await withPrivateDirectory(journalDirectory, async scope => { for (const [name, content] of settings) await held(scope, content, true, name); });
         settingsReady = true; await guard();
         const savePhase = async phase => { await guard(); run = await progress.save({ version: video ? 2 : 1, planSha256, manifestSha256: receipt.manifest.sha256, targetBinding, phase }, run.revision, guard); };
-        const snapshot = () => captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: target.pool, inspectionPool: target.inspectionPool, coverage: "application-tables", ...(video ? { video: true } : {}) }), signal });
-        const verify = async value => { healthy(await verifyBackupStorage({ snapshot: value, storage: target.storage, ...(video ? { videoStorage: target.videoStorage } : {}), signal })); healthy(await (video ? verifyPhotoNotificationRecoveryCrmBroadcastVideoBackupData : verifyPhotoNotificationRecoveryCrmBroadcastBackupData)({ pool: target.pool, storage: target.storage, ...(video ? { videoStorage: target.videoStorage } : {}), keys, signal })); };
+        const snapshot = () => captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: target.pool, inspectionPool: target.inspectionPool, coverage: "application-tables", ...(video ? { video: true } : {}), ...(experience ? { experience: true } : {}) }), signal });
+        const verify = async value => { healthy(await verifyBackupStorage({ snapshot: value, storage: target.storage, ...(video ? { videoStorage: target.videoStorage } : {}), signal })); healthy(await (video ? verifyPhotoNotificationRecoveryCrmBroadcastVideoBackupData : verifyPhotoNotificationRecoveryCrmBroadcastBackupData)({ pool: target.pool, storage: target.storage, ...(video ? { videoStorage: target.videoStorage } : {}), keys, signal, ...(experience ? { experience: true } : {}) })); };
         if (run.record === null || run.record.phase === "prepared") {
           await guard(); const before = await snapshot(), comparison = assertBackupSnapshot({ expected: payload.snapshot, actual: before, mode: "recovery", targetFingerprint: targetBinding.rootFingerprint, ...(video ? { targetVideoFingerprint: targetBinding.videoRootFingerprint } : {}) });
           if (before.objects.some(object => ["reserved", "cleanup_pending"].includes(object.state))
@@ -188,9 +190,9 @@ async function runManualRestore(input, publication = null) {
           await savePhase("running");
         }
         const videoCapacity = video ? { ownerBytes: payload.snapshot.video.capacity.ownerBytes, totalBytes: payload.snapshot.video.capacity.totalBytes, rootFingerprint: Buffer.from(targetBinding.videoRootFingerprint, "hex") } : null;
-        const videoExtension = video ? createVideoErasureExtension({ videoStore: createVideoStore({ pool: target.pool, chatStore: createChatStore(target.pool), capacity: videoCapacity }), videoStorage: target.videoStorage, capacity: videoCapacity }) : null;
+        const videoExtension = video ? createVideoErasureExtension({ videoStore: createVideoStore({ pool: target.pool, chatStore: createChatStore(target.pool), capacity: videoCapacity, ...(experience ? { experience: true } : {}) }), videoStorage: target.videoStorage, capacity: videoCapacity, ...(experience ? { experience: true } : {}) }) : null;
         const selectedStorage = video ? composeVideoErasureStorage({ storage: target.storage, videoStorage: target.videoStorage }) : target.storage;
-        const store = createErasureStore({ pool: target.pool, database: target.database, capacity: { ownerBytes: payload.snapshot.capacity.ownerBytes, totalBytes: payload.snapshot.capacity.totalBytes, rootFingerprint: Buffer.from(targetBinding.rootFingerprint, "hex") }, broadcastKey: keys.messageKey, ...(video ? { video: videoExtension } : {}) });
+        const store = createErasureStore({ pool: target.pool, database: target.database, capacity: { ownerBytes: payload.snapshot.capacity.ownerBytes, totalBytes: payload.snapshot.capacity.totalBytes, rootFingerprint: Buffer.from(targetBinding.rootFingerprint, "hex") }, broadcastKey: keys.messageKey, ...(video ? { video: videoExtension } : {}), ...(experience ? { experience: true } : {}) });
         const journalFor = clientId => createErasureJournal({ directory: journalDirectory, key: keys.crmKey, binding: targetBinding, clientId });
         const engine = createAccountErasure({ store, storage: selectedStorage, journalFor, clock, maintenance: { async withQuiescedProducers(work) { await guard(); return work(guard, guard); } } });
         const absentFiles = async clientId => {
@@ -227,7 +229,7 @@ async function runManualRestore(input, publication = null) {
         if (publication) {
           openingDirectory = journalDirectory; openingHold = hold; opening = true;
           await withPrivateDirectory(journalDirectory, scope => releaseHold(scope, hold)); holdReady = false; holdReleased = true;
-          const inspectApplicationSchema = async () => { await guard(); await withConnection(target.pool, async connection => assertErasureSchema(connection, target.database, ...(video ? [{ candidateMigrations: await loadVideoMigrations() }] : []))); await guard(); return { verified: true }; };
+          const inspectApplicationSchema = async () => { await guard(); await withConnection(target.pool, async connection => assertErasureSchema(connection, target.database, ...(video ? [{ candidateMigrations: await (experience ? loadExperienceMigrations : loadVideoMigrations)() }] : []))); await guard(); return { verified: true }; };
           owner = publication.makeOperations ? await publication.makeOperations() : createLocalClosureOperations({ store, storage: selectedStorage, journalFor, batch, inspectApplicationSchema, clock });
           const operations = owner?.operations ?? owner;
           if (typeof operations?.verifyStartup !== "function" || owner?.operations && owner.close !== undefined && typeof owner.close !== "function") fail("PUBLICATION");

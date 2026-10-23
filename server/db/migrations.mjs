@@ -76,6 +76,9 @@ function migrationStatement(source) {
 export function validateSql(source) {
   const { statement, literals } = migrationStatement(source);
   if (/^ALTER\b/i.test(statement)) {
+    // Only the exact reviewed additive reply-task migration is admitted here.
+    // This does not turn the migration reader into a generic ALTER executor.
+    if (checksumSql(source) === "e75f63ecc5e33271343e873aa3e8554c0c9cb22d7f1810768aa2c1488fec0b54") return source;
     // Both operations belong to one atomic MariaDB 10.11+ ALTER. No standalone
     // DROP, other table/constraint, data mutation or generic ALTER is accepted.
     const admissionCheck = /^ALTER\s+TABLE\s+users\s+DROP\s+CONSTRAINT\s+users_active_client_gates\s*,\s*ADD\s+CONSTRAINT\s+users_active_client_gates\s+CHECK\s*\(\s*role\s*<>\s*\?\s+OR\s+status\s*<>\s*\?\s+OR\s*\(\s*email_verified_at\s+IS\s+NOT\s+NULL\s+AND\s+access_approved_at\s+IS\s+NOT\s+NULL\s*\)\s*\)$/i;

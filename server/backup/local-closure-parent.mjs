@@ -30,7 +30,8 @@ const fingerprint = (env, key) => createHmac("sha256", key)
  * The supervisor supplies the actual child drain and capture exclusion. */
 export async function createConfiguredLocalClosures(options, { environment = process.env, signal } = {}, internal = {}) {
   if (options?.video !== undefined && options.video !== true) failErasure("ERASURE_INPUT");
-  const candidate = options?.video === true;
+  const candidate = options?.video === true, experience = options?.experience === true;
+  if (options?.experience !== undefined && options.experience !== true || experience && !candidate) failErasure("ERASURE_INPUT");
   const load = internal.loadEnvironment ?? (candidate ? loadRuntimeVideoEnvironment : loadRuntimeBroadcastEnvironment);
   const withDirectory = internal.withDirectory ?? withPrivateDirectory;
   let env, key, media, rootFingerprint, videoKey, videoRootFingerprint, videoStorage, pool, closed = false, closing;
@@ -69,10 +70,10 @@ export async function createConfiguredLocalClosures(options, { environment = pro
     let store, video;
     if (candidate) {
       const videoCapacity = { ownerBytes: Number(env.JESSIEMESSAGE_VIDEO_OWNER_BYTES), totalBytes: Number(env.JESSIEMESSAGE_VIDEO_TOTAL_BYTES), rootFingerprint: videoRootFingerprint };
-      const videoStore = (internal.makeVideoStore ?? createVideoStore)({ pool, chatStore: createChatStore(pool), capacity: videoCapacity });
-      video = (internal.makeVideoErasure ?? createVideoErasureExtension)({ videoStore, videoStorage, capacity: videoCapacity });
+      const videoStore = (internal.makeVideoStore ?? createVideoStore)({ pool, chatStore: createChatStore(pool), capacity: videoCapacity, ...(experience ? { experience: true } : {}) });
+      video = (internal.makeVideoErasure ?? createVideoErasureExtension)({ videoStore, videoStorage, capacity: videoCapacity, ...(experience ? { experience: true } : {}) });
     }
-    try { store = (internal.makeStore ?? createErasureStore)({ pool, database: env.JESSIEMESSAGE_DB_NAME, capacity, broadcastKey, ...(candidate ? { video } : {}) }); }
+    try { store = (internal.makeStore ?? createErasureStore)({ pool, database: env.JESSIEMESSAGE_DB_NAME, capacity, broadcastKey, ...(candidate ? { video } : {}), ...(experience ? { experience: true } : {}) }); }
     finally { broadcastKey.fill(0); }
     const capacityStore = (internal.makeCapacity ?? createMediaCapacityStore)({ pool, capacity });
     async function guard() {
@@ -89,7 +90,7 @@ export async function createConfiguredLocalClosures(options, { environment = pro
       await guard(); let connection;
       try {
         connection = await pool.getConnection();
-        await (internal.assertSchema ?? assertErasureSchema)(connection, store.binding.database, ...(candidate ? [{ candidateMigrations: await loadVideoMigrations() }] : []));
+        await (internal.assertSchema ?? assertErasureSchema)(connection, store.binding.database, ...(candidate ? [{ candidateMigrations: experience ? await (await import("../experience/migrations.mjs")).loadExperienceMigrations() : await loadVideoMigrations() }] : []));
         if (candidate) await video.snapshot(connection);
       } finally { await connection?.release(); }
       const value = await capacityStore.status();

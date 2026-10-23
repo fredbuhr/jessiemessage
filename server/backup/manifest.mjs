@@ -3,7 +3,7 @@ import { lstat, open, realpath } from "node:fs/promises";
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import path from "node:path";
 import { openPrivateDirectory, privatePathMode } from "../files/private-directory.mjs";
-import { validateApplicationCoverage, validateVideoApplicationCoverage } from "./application-scope.mjs";
+import { validateApplicationCoverage, validateVideoSnapshotCoverage } from "./application-scope.mjs";
 import { manifestBackupProfile } from "./profiles.mjs";
 
 const MAX_BYTES = 64 * 1024 * 1024;
@@ -143,7 +143,7 @@ function snapshotScope(snapshot, profile) {
   plain(snapshot);
   const selected = manifestBackupProfile(profile);
   if (selected?.video) {
-    if (snapshot.version !== 3 || validateVideoApplicationCoverage(snapshot.coverage).tables !== snapshot.counts?.tables
+    if (snapshot.version !== 3 || validateVideoSnapshotCoverage(snapshot.coverage).tables !== snapshot.counts?.tables
       || !snapshot.video || typeof snapshot.video !== "object" || Array.isArray(snapshot.video)) fail();
   } else if (selected?.application) {
     if (snapshot.version !== 2 || validateApplicationCoverage(snapshot.coverage).tables !== snapshot.counts?.tables || Object.hasOwn(snapshot, "video")) fail();

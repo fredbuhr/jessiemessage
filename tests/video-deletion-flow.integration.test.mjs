@@ -33,6 +33,7 @@ import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import { erasureDirectory } from "./fixtures/erasure-files.mjs";
 import { managedClosureFixture } from "./fixtures/managed-closure-runtime.mjs";
 import { collectVideo, mp4Source } from "./helpers/video-transport-fixture.mjs";
+import { seedLegacyClientVideoAsset, seedLegacyClientVideoMessage } from "./helpers/legacy-video-seed.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const id = () => randomBytes(16), secret = () => randomBytes(32), hex = value => value.toString("hex");
@@ -113,6 +114,16 @@ test("candidate video deletion and account closure remain durable and preserve o
     }
     async function video(owner, { assetId = id(), bytes = VIDEO_BLOCK_BYTES + 57, reserved = false } = {}) {
       const asset = { id: assetId, storageKey: secret(), bytes, storedBytes: videoStoredBytes(bytes), mime: "video/mp4" };
+      if (owner.role === "client") {
+        if (!reserved) return seedLegacyClientVideoAsset({ connection, storage: videos, owner, now, asset, source: mp4Source(bytes) });
+        // Historical interrupted transfer, seeded directly in this disposable
+        // schema. Current client admission stays forbidden in production.
+        await connection.query(`INSERT INTO video_assets (id, owner_id, owner_role, storage_key, reserve_token_hash,
+          bytes, stored_bytes, mime, state, created_at, updated_at) VALUES (?, ?, 'client', ?, ?, ?, ?, 'video/mp4', 'reserved', ?, ?)`,
+          [asset.id, owner.id, asset.storageKey, owner.tokenHash, bytes, asset.storedBytes, sql(now), sql(now)]);
+        await connection.query("UPDATE video_storage_state SET held_bytes = held_bytes + ? WHERE id = 1", [asset.storedBytes]);
+        return asset;
+      }
       await normal.catalog.reserve({ ...actor(owner), asset });
       if (reserved) return asset;
       const saved = await videos.put({ assetId: asset.id, storageKey: asset.storageKey, bytes, source: mp4Source(bytes) });
@@ -130,8 +141,9 @@ test("candidate video deletion and account closure remain durable and preserve o
       await connection.query("UPDATE media_storage_state SET held_bytes = held_bytes + 580 WHERE id = 1");
       return asset;
     }
-    const send = async (f, owner, asset, caption = "Private video") => normal.service.send(owner.role, owner.token, f.cid,
-      { clientMessageId: hex(id()), videoId: hex(asset.id), caption });
+    const send = async (f, owner, asset, caption = "Private video") => owner.role === "client"
+      ? seedLegacyClientVideoMessage({ chatStore: normal.chat, owner, conversationId: f.conversationId, asset, caption, key: messageKey, now })
+      : normal.service.send(owner.role, owner.token, f.cid, { clientMessageId: hex(id()), videoId: hex(asset.id), caption });
     const row = async asset => (await connection.query("SELECT state,stored_bytes,content_digest FROM video_assets WHERE id = ?", [asset.id]))[0];
     const videoHeld = async () => Number((await connection.query("SELECT held_bytes FROM video_storage_state WHERE id = 1"))[0].held_bytes);
     const photoHeld = async () => Number((await connection.query("SELECT held_bytes FROM media_storage_state WHERE id = 1"))[0].held_bytes);

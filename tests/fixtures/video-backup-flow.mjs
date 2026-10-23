@@ -43,6 +43,7 @@ import { dumpCloneSql } from "../../scripts/verify-text-clone.mjs";
 import { loadRuntimeVideoEnvironment } from "../../server/config/runtime-video.mjs";
 import { writeRuntimeDatabaseConfiguration, writeRuntimeAuthenticationConfiguration, writeRuntimeMessagingConfiguration,
   writeRuntimeMediaConfiguration, writeRuntimeNotificationsConfiguration, writeRuntimeCrmConfiguration, writeRuntimeVideoConfiguration } from "../../server/config/runtime-database-file.mjs";
+import { seedLegacyClientVideoAsset, seedLegacyClientVideoMessage } from "../helpers/legacy-video-seed.mjs";
 import { consumeSyntheticInvitation } from "./manual-admission.mjs";
 import { videoBundle } from "./video-private.mjs";
 import { PRIMARY } from "./crm-private.mjs";
@@ -151,6 +152,11 @@ export async function videoBackupFixture(t) {
   await media.registerAsset({ ...actor(clients[0]), asset: clientPhoto });
   async function addVideo(owner, state = "committed", file = true) {
     const asset = { id: id(), storageKey: secret(), bytes: VIDEO_BLOCK_BYTES * 2 + 113, mime: "video/mp4" }; asset.storedBytes = videoStoredBytes(asset.bytes);
+    if (owner.role === "client") {
+      if (state !== "committed" || !file) throw new TypeError("Historical client fixture must be committed");
+      const legacy = await seedLegacyClientVideoAsset({ connection: sourceConnection, storage: videoStorage, owner, now, asset, source: mp4Source(asset.bytes) });
+      return { ...legacy, owner, state, file };
+    }
     await videos.reserve({ ...actor(owner), asset });
     if (file) { const written = await videoStorage.put({ assetId: asset.id, storageKey: asset.storageKey, bytes: asset.bytes, source: mp4Source(asset.bytes) }); asset.digest = written.digest; }
     if (state !== "reserved") await videos.commit({ ...actor(owner), now: now + 1000, asset });
@@ -165,7 +171,9 @@ export async function videoBackupFixture(t) {
     const request = { ...actor(owner), now: now + 3000, conversationId, message: { id: messageId, clientMessageId: id(),
       [kind === "video" ? "videoId" : "mediaId"]: asset.id, bodyEncrypted: encryptMessageBody(body, keys.messageKey, binding),
       bodyFingerprint: (kind === "video" ? videoMessageFingerprint : messageFingerprint)(body, keys.messageKey, binding) } };
-    await (kind === "video" ? videoMessages : chat).sendMessage(request); messages.push({ id: messageId, conversationId, owner, asset, kind });
+    if (kind === "video" && owner.role === "client") await seedLegacyClientVideoMessage({ chatStore: chat, owner, conversationId, asset, caption: "Synthetic restored attachment", key: keys.messageKey, now: now + 3000, messageId, clientMessageId: request.message.clientMessageId });
+    else await (kind === "video" ? videoMessages : chat).sendMessage(request);
+    messages.push({ id: messageId, conversationId, owner, asset, kind });
   }
   for (const conversation of conversations) { await send(admin, conversation, photo, "photo"); await send(admin, conversation, sharedVideo, "video"); }
   for (let index = 0; index < clients.length; index++) await send(clients[index], conversations[index], clientVideos[index], "video");

@@ -7,7 +7,6 @@ import { openTask, sealTask, taskFingerprint } from "./crypto.mjs";
 import { TasksError, fail, id, instant, MAX_VERSION, validateList, validateSave, version } from "./validation.mjs";
 
 const COLUMNS = "id, admin_id, admin_role, conversation_id, title_encrypted, due_at, done, version, request_fingerprint, created_at, updated_at";
-const projection = COLUMNS.split(", ").map(name => `t.${name}`).join(", ") + ", u.pseudonym AS client_name, c.admin_id AS conversation_admin_id";
 const source = "FROM crm_tasks t JOIN conversations c ON c.id = t.conversation_id JOIN users u ON u.id = c.client_id AND u.role = 'client'";
 const sqlDate = value => new Date(instant(value)).toISOString().replace("T", " ").replace("Z", "000");
 function bytes(value, length = 16) { if (!Buffer.isBuffer(value) || value.length !== length) fail(); return value; }
@@ -26,10 +25,13 @@ const schema = {
   created_at: ["datetime", false], updated_at: ["datetime", false],
 };
 
-export function createTasksStore({ pool, chatStore, key, clock } = {}) {
+export function createTasksStore({ pool, chatStore, key, clock, experience = false } = {}) {
   if (typeof pool?.getConnection !== "function" || ["withActor", "withConversation"].some(name => typeof chatStore?.[name] !== "function")
-    || !Buffer.isBuffer(key) || key.length !== 32) fail("TASKS_CONFIG");
+    || !Buffer.isBuffer(key) || key.length !== 32 || typeof experience !== "boolean") fail("TASKS_CONFIG");
   key = Buffer.from(key);
+  // Schema compatibility only: the reserved 1.9 reply tasks stay untouched.
+  const columns = COLUMNS + (experience ? ", reply_kind" : "");
+  const projection = columns.split(", ").map(name => `t.${name}`).join(", ") + ", u.pseudonym AS client_name, c.admin_id AS conversation_admin_id";
   const readTime = createSessionClock(clock), nowAt = previous => Math.max(instant(previous), readTime(previous));
   async function authorized(request, operation) {
     bytes(request.tokenHash, 32); instant(request.now); if (request.conversationId !== undefined) bytes(request.conversationId);
@@ -48,6 +50,7 @@ export function createTasksStore({ pool, chatStore, key, clock } = {}) {
   }
   function decoded(row, adminId, now) {
     try {
+      if (experience && row?.reply_kind !== null) fail();
       if (!row || !bytes(row.admin_id).equals(bytes(adminId)) || row.admin_role !== "admin"
         || row.conversation_admin_id !== undefined && !bytes(row.conversation_admin_id).equals(adminId)) fail();
       const taskId = bytes(row.id), conversationId = bytes(row.conversation_id), currentVersion = storedVersion(row.version);
@@ -61,27 +64,29 @@ export function createTasksStore({ pool, chatStore, key, clock } = {}) {
     } catch { fail(); }
   }
   async function ownedTask(connection, adminId, taskId, now) {
-    const row = (await connection.query(`SELECT ${projection} ${source} WHERE t.admin_id = ? AND c.admin_id = ? AND t.id = ? FOR UPDATE`, [adminId, adminId, taskId]))[0];
-    if (!row) fail("TASKS_NOT_FOUND"); return decoded(row, adminId, now);
+    const row = (await connection.query(`SELECT ${projection} ${source} WHERE t.admin_id = ? AND c.admin_id = ? AND t.id = ?${experience ? " AND t.reply_kind IS NULL" : ""} FOR UPDATE`, [adminId, adminId, taskId]))[0];
+    if (!row || experience && row.reply_kind !== null) fail("TASKS_NOT_FOUND"); return decoded(row, adminId, now);
   }
   return Object.freeze({
     async assertSchema(options = {}) {
       let connection;
       try {
+        if ((options.experience === true) !== experience) fail();
         connection = await pool.getConnection();
         const database = (await connection.query("SELECT DATABASE() AS name"))[0]?.name;
         const migrations = await loadStoreMigrations(options), history = await migrationStatus(connection, { database, migrations });
-        if (migrations.length !== (options.video === true ? 36 : 33) || history.length !== migrations.length || history.some(row => row.state !== "applied")) fail();
+        const expectedSchema = { ...schema, ...(options.experience === true ? { reply_kind: ["varchar", true, 8], reply_through: ["bigint", true], reply_reopened: ["tinyint", false] } : {}) };
+        if (migrations.length !== (options.experience === true ? 38 : options.video === true ? 36 : 33) || history.length !== migrations.length || history.some(row => row.state !== "applied")) fail();
         const table = (await connection.query("SELECT ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'crm_tasks'", [database]))[0];
         if (table?.engine !== "InnoDB") fail();
         const columns = await connection.query(`SELECT COLUMN_NAME AS name, DATA_TYPE AS type, IS_NULLABLE AS nullable,
           CHARACTER_MAXIMUM_LENGTH AS length_value, DATETIME_PRECISION AS precision_value, COLUMN_TYPE AS definition,
           COLLATION_NAME AS collation_name FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'crm_tasks'`, [database]);
-        if (columns.length !== Object.keys(schema).length) fail();
-        for (const [name, [type, nullable, length]] of Object.entries(schema)) {
+        if (columns.length !== Object.keys(expectedSchema).length) fail();
+        for (const [name, [type, nullable, length]] of Object.entries(expectedSchema)) {
           const actual = columns.find(row => row.name === name);
           if (!actual || actual.type !== type || (actual.nullable === "YES") !== nullable || length !== undefined && Number(actual.length_value) !== length
-            || type === "datetime" && Number(actual.precision_value) !== 6 || ["int", "tinyint"].includes(type) && !actual.definition.includes("unsigned")
+            || type === "datetime" && Number(actual.precision_value) !== 6 || ["int", "tinyint", "bigint"].includes(type) && !actual.definition.includes("unsigned")
             || type === "varchar" && actual.collation_name !== "ascii_bin") fail();
         }
         const indexes = await connection.query("SELECT INDEX_NAME AS name, COLUMN_NAME AS column_name, NON_UNIQUE AS non_unique, SEQ_IN_INDEX AS position, SUB_PART AS prefix_length FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'crm_tasks'", [database]);
@@ -94,7 +99,14 @@ export function createTasksStore({ pool, chatStore, key, clock } = {}) {
         if (!migration) fail();
         const checks = await connection.query("SELECT CONSTRAINT_NAME AS name, CHECK_CLAUSE AS clause FROM information_schema.CHECK_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = ? AND TABLE_NAME = 'crm_tasks'", [database]);
         const authored = [...migration.sql.matchAll(/CONSTRAINT\s+([a-z_]+)\s+CHECK\s*\(/gi)];
-        if (checks.length !== authored.length) fail();
+        if (checks.length !== authored.length + Number(options.experience === true)) fail();
+        if (options.experience === true) {
+          const extra = migrations.find(item => item.name === "0038_reply_tracking.sql");
+          const check = checks.find(item => item.name === "crm_tasks_reply_state");
+          if (!extra || !check || normalizedCheckTree(check.clause) !== normalizedCheckTree(authoredMigrationCheck(extra.sql, "crm_tasks_reply_state"))) fail();
+          const unique = indexes.filter(item => item.name === "crm_tasks_reply").sort((a,b) => Number(a.position)-Number(b.position));
+          if (unique.length !== 3 || unique.some((item,index) => item.column_name !== ["admin_id","conversation_id","reply_kind"][index] || Number(item.position) !== index + 1 || item.prefix_length !== null || Number(item.non_unique) !== 0)) fail();
+        }
         for (const match of authored) {
           const actual = checks.find(row => row.name === match[1]);
           if (!actual || normalizedCheckTree(actual.clause) !== normalizedCheckTree(authoredMigrationCheck(migration.sql, match[1]))) fail();
@@ -119,7 +131,7 @@ export function createTasksStore({ pool, chatStore, key, clock } = {}) {
         afterId: afterId === null ? null : bytes(afterId).toString("hex"), limit });
       return authorized({ tokenHash, now, ...(conversationId === null ? {} : { conversationId }) }, async (connection, context) => {
         now = nowAt(context.now);
-        const where = ["t.admin_id = ?", "c.admin_id = ?", "t.done = ?"], parameters = [context.actor.id, context.actor.id, Number(options.filter === "done")];
+        const where = ["t.admin_id = ?", "c.admin_id = ?", "t.done = ?", ...(experience ? ["t.reply_kind IS NULL"] : [])], parameters = [context.actor.id, context.actor.id, Number(options.filter === "done")];
         if (filter === "due") { where.push("t.due_at <= ?"); parameters.push(sqlDate(now)); }
         if (conversationId !== null) { where.push("t.conversation_id = ?"); parameters.push(conversationId); }
         if (afterId !== null) { where.push("t.id > ?"); parameters.push(afterId); }
@@ -138,7 +150,7 @@ export function createTasksStore({ pool, chatStore, key, clock } = {}) {
     summary({ tokenHash, now }) {
       return authorized({ tokenHash, now }, async (connection, context) => {
         now = nowAt(context.now);
-        const rows = await connection.query(`SELECT COUNT(*) AS due_count ${source} WHERE t.admin_id = ? AND c.admin_id = ? AND t.done = 0 AND t.due_at <= ?`,
+        const rows = await connection.query(`SELECT COUNT(*) AS due_count ${source} WHERE t.admin_id = ? AND c.admin_id = ? AND t.done = 0 AND t.due_at <= ?${experience ? " AND t.reply_kind IS NULL" : ""}`,
           [context.actor.id, context.actor.id, sqlDate(now)]);
         const dueCount = Number(rows?.[0]?.due_count);
         if (!Array.isArray(rows) || rows.length !== 1 || !Number.isSafeInteger(dueCount) || dueCount < 0) fail();
@@ -156,8 +168,10 @@ export function createTasksStore({ pool, chatStore, key, clock } = {}) {
       const conversationId = Buffer.from(id(input.conversationId), "hex");
       return authorized({ tokenHash, now, conversationId }, async (connection, context) => {
         now = nowAt(context.now);
-        const row = (await connection.query(`SELECT ${COLUMNS} FROM crm_tasks WHERE id = ? FOR UPDATE`, [taskId]))[0] ?? null;
+        const row = (await connection.query(`SELECT ${columns} FROM crm_tasks WHERE id = ? FOR UPDATE`, [taskId]))[0] ?? null;
         if (row && (!bytes(row.admin_id).equals(context.actor.id) || !bytes(row.conversation_id).equals(conversationId))) fail("TASKS_NOT_FOUND");
+        // Refuse the reserved state before decryption or generic retry matching.
+        if (row && experience && row.reply_kind !== null) fail("TASKS_CONFLICT");
         if (row) decoded({ ...row, client_name: context.client.pseudonym }, context.actor.id, now);
         const fingerprint = taskFingerprint(input, key, { adminId: context.actor.id, taskId });
         const previousVersion = row === null ? "0" : storedVersion(row.version);

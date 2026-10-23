@@ -121,3 +121,22 @@ test("video gallery keeps decimal cursors and current viewer URLs without exposi
   f.messageState.gallery = { items: [{ messageId: Buffer.from(messageId, "hex"), sequence: "1", senderId: viewer.id, createdAt: f.state.now, asset: f.row }], nextBefore: null, hasMore: false };
   await assert.rejects(f.extended.gallery(viewer.role, viewer.token, conversationId), code("VIDEO_UNAVAILABLE"));
 });
+
+
+test("client video reuse is forbidden before a chat append, including historical owned IDs", async t => {
+  const f = await fixture(t), input = { clientMessageId: requestId, videoId: f.saved.id, caption: "" };
+  const before = f.calls.length;
+  await assert.rejects(f.extended.send("client", f.recipient.token, conversationId, input), code("VIDEO_ADMIN_ONLY"));
+  await assert.rejects(f.extended.send("client", f.recipient.token, conversationId, null), code("VIDEO_ADMIN_ONLY"));
+  assert.equal(f.calls.length, before);
+  const withWatermark = { ...input, replyThrough: "18446744073709551615" };
+  await f.extended.send("admin", f.owner.token, conversationId, withWatermark);
+  assert.deepEqual(f.calls.at(-1).at(-1), withWatermark);
+  const versioned = { ...withWatermark, replyVersion: "4294967295" };
+  await f.extended.send("admin", f.owner.token, conversationId, versioned);
+  assert.deepEqual(f.calls.at(-1).at(-1), versioned);
+  for (const extra of [{ replyVersion: "0" }, { replyThrough: "0", replyVersion: "4294967296" }, { replyThrough: "0", replyVersion: "01" }])
+    await assert.rejects(f.extended.send("admin", f.owner.token, conversationId, { ...input, ...extra }), code("VIDEO_INPUT"));
+  for (const replyThrough of [0, "01", "-1", "18446744073709551616", null])
+    await assert.rejects(f.extended.send("admin", f.owner.token, conversationId, { ...input, replyThrough }), code("VIDEO_INPUT"));
+});

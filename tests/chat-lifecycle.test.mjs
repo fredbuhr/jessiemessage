@@ -191,9 +191,13 @@ function videoTransport(f) {
   };
   return uploads;
 }
-const videoCapability = path => path === "/api/chat/client/capabilities"
+const videoCapability = path => /^\/api\/chat\/(?:client|admin)\/capabilities$/.test(path)
   ? response(200, { enabled: true, video: { enabled: true, maxBytes: 104857600, mime: "video/mp4" } }) : undefined;
 async function selectVideo(f) {
+  if (f.state.currentSession?.user.role === "admin" && !f.inspect().selected) {
+    for (const handler of f.element("conversations").children[0].events.get("click")) handler({});
+    await flush();
+  }
   const file = new Blob(["synthetic video payload"], { type: "video/mp4" });
   f.element("video-file").files = [file];
   for (const handler of f.element("video-file").events.get("change")) handler({});
@@ -203,7 +207,7 @@ async function selectVideo(f) {
 }
 
 test("video selection is a local draft and cancelling upload never submits a message", async () => {
-  const f = harness({ intercept: videoCapability }); await flush(); const uploads = videoTransport(f);
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: videoCapability }); await flush(); const uploads = videoTransport(f);
   const { file, preview } = await selectVideo(f);
   assert.equal(f.element("pick-video").hidden, false); assert.equal(f.element("send").disabled, false);
   assert.match(preview.src, /^blob:/); assert.equal(uploads.length, 0); assert.equal(posts(f).length, 0);
@@ -219,14 +223,14 @@ test("video selection is a local draft and cancelling upload never submits a mes
 
 test("an uncertain video message response retries the same asset and identity without uploading again", async () => {
   let f, attempts = 0; const commands = [];
-  f = harness({ intercept: (path, options) => {
+  f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: (path, options) => {
     const capability = videoCapability(path); if (capability) return capability;
-    if (path.startsWith("/api/video/client/") && path.endsWith("/messages")) {
+    if (path.startsWith("/api/video/admin/") && path.endsWith("/messages")) {
       const command = JSON.parse(options.body); commands.push(command); attempts++;
       if (attempts === 1) throw new Error("synthetic lost response");
       return response(200, { duplicate: true, message: { id: id(903), sequence: "2", sender: "me", body: command.caption,
         createdAt: now, deletedAt: null, clientMessageId: command.clientMessageId,
-        video: { id: command.videoId, bytes: 23, mime: "video/mp4", contentUrl: "/api/video/client/conversations/" + f.conversation().id + "/messages/" + id(903) + "/content" } } });
+        video: { id: command.videoId, bytes: 23, mime: "video/mp4", contentUrl: "/api/video/admin/conversations/" + f.conversation().id + "/messages/" + id(903) + "/content" } } });
     }
     return undefined;
   } });
@@ -240,9 +244,9 @@ test("an uncertain video message response retries the same asset and identity wi
   assert.match(contents(f.element("messages")), /Caption remains exact/);
   const player = f.element("messages").querySelector("video");
   assert.equal(player.controls, true); assert.equal(player.preload, "none"); assert.equal(player.autoplay, undefined);
-  assert.match(player.src, /^\/api\/video\/client\/conversations\//);
+  assert.match(player.src, /^\/api\/video\/admin\/conversations\//);
   await f.hide(); assert.equal(player.src, "");
-  await f.show(); assert.match(player.src, /^\/api\/video\/client\/conversations\//);
+  await f.show(); assert.match(player.src, /^\/api\/video\/admin\/conversations\//);
 });
 
 test("video players never adopt foreign origin, role, conversation or message URLs", async () => {
@@ -259,12 +263,12 @@ test("video players never adopt foreign origin, role, conversation or message UR
 });
 
 test("hidden video uploads abort and old acknowledgements cannot submit for another session", async () => {
-  const f = harness({ intercept: videoCapability }); await flush(); const uploads = videoTransport(f);
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: videoCapability }); await flush(); const uploads = videoTransport(f);
   const { preview } = await selectVideo(f); const oldUrl = preview.src; await f.send("Private pending caption");
   await f.hide(); assert.equal(uploads[0].aborted, true); assert.ok(f.revoked.includes(oldUrl));
   assert.equal(preview.src, ""); assert.equal(f.element("video-preview").children.length, 0);
   const pending = f.inspect().states.get(f.inspect().selected).pending; assert.equal(pending.status, "retry");
-  f.state.currentSession = session(2, "B".repeat(43)); await f.show(); uploads[0].complete(); await flush();
+  f.state.currentSession = session(2, "B".repeat(43), "admin"); await f.show(); uploads[0].complete(); await flush();
   assert.equal(posts(f).length, 0); assert.equal(f.inspect().sessionOwner.id, id(2));
   assert.equal(f.element("video-draft").hidden, true); assert.equal(f.element("message-body").value, "");
 });
@@ -1373,10 +1377,12 @@ test("a read-only capability change preserves an unsaved reply draft for copying
 });
 
 const ownedVideo = (value, cleanupPending = false) => ({ id: id(value), bytes: 100, mime: "video/mp4", createdAt: now,
-  cleanupPending, contentUrl: cleanupPending ? null : `/api/video/client/assets/${id(value)}/content` });
+  cleanupPending, contentUrl: cleanupPending ? null : `/api/video/admin/assets/${id(value)}/content` });
 async function videoLibraryFixture(intercept) {
-  const f = harness({ intercept: (path, options, state, calls) => videoCapability(path)
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: (path, options, state, calls) => videoCapability(path)
     ?? (path.includes("/gallery?") ? response(200, { items: [], nextBefore: null, hasMore: false }) : intercept(path, options, state, calls)) });
+  await flush();
+  for (const handler of f.element("conversations").children[0].events.get("click")) handler({});
   await flush(); await f.click("open-video-gallery"); await f.click("video-gallery-library"); return f;
 }
 async function confirmVideoRemoval(f, button) {
@@ -1386,15 +1392,15 @@ async function confirmVideoRemoval(f, button) {
 
 test("owned videos use strict owner URLs, paginate and expose interrupted cleanup for retry", async () => {
   const f = await videoLibraryFixture(path => {
-    if (path === "/api/video/client/assets?limit=20") return response(200, { assets: [ownedVideo(910)], nextCursor: id(910), hasMore: true });
-    if (path === `/api/video/client/assets?limit=20&afterId=${id(910)}`) return response(200, { assets: [ownedVideo(911, true)], nextCursor: null, hasMore: false });
+    if (path === "/api/video/admin/assets?limit=20") return response(200, { assets: [ownedVideo(910)], nextCursor: id(910), hasMore: true });
+    if (path === `/api/video/admin/assets?limit=20&afterId=${id(910)}`) return response(200, { assets: [ownedVideo(911, true)], nextCursor: null, hasMore: false });
   });
   assert.equal(f.element("video-gallery-title").textContent, "Mes vidéos");
   assert.equal(f.element("video-grid").querySelector("video").src, ownedVideo(910).contentUrl);
   await f.click("more-videos"); assert.equal(f.element("video-grid").children.length, 2);
   assert.equal(f.element("video-grid").querySelectorAll("video").length, 1);
   assert.match(contents(f.element("video-grid")), /Terminer la suppression/);
-  for (const path of ["https://other.invalid" + ownedVideo(910).contentUrl, ownedVideo(910).contentUrl.replace("client", "admin"), ownedVideo(910).contentUrl + "?x=1"]) {
+  for (const path of ["https://other.invalid" + ownedVideo(910).contentUrl, ownedVideo(910).contentUrl.replace("admin", "client"), ownedVideo(910).contentUrl + "?x=1"]) {
     f.context.__candidate = path;
     assert.equal(vm.runInContext(`validVideoUrl(__candidate,currentState(),null,'${id(910)}')`, f.context), false);
   }
@@ -1403,8 +1409,8 @@ test("owned videos use strict owner URLs, paginate and expose interrupted cleanu
 test("owned video deletion requires confirmation, preserves conflicts and retries the same uncertain asset", async () => {
   let outcome = 409; const calls = [];
   const f = await videoLibraryFixture((path, options) => {
-    if (path === "/api/video/client/assets?limit=20") return response(200, { assets: [ownedVideo(912)], nextCursor: null, hasMore: false });
-    if (path === `/api/video/client/assets/${id(912)}/delete`) { calls.push({ path, body: options.body }); return response(outcome,
+    if (path === "/api/video/admin/assets?limit=20") return response(200, { assets: [ownedVideo(912)], nextCursor: null, hasMore: false });
+    if (path === `/api/video/admin/assets/${id(912)}/delete`) { calls.push({ path, body: options.body }); return response(outcome,
       outcome === 200 ? { deleted: true } : { error: outcome === 409 ? "video_in_use" : "video_unavailable" }); }
   });
   let button = f.element("video-grid").querySelector("button");
@@ -1419,7 +1425,7 @@ test("owned video deletion requires confirmation, preserves conflicts and retrie
 test("owned videos protect uncertain sends and discard late pages after an account change", async () => {
   const delayed = pause(); let reads = 0;
   const f = await videoLibraryFixture(path => {
-    if (path === "/api/video/client/assets?limit=20") return ++reads === 1 ? response(200, { assets: [ownedVideo(913)], nextCursor: null, hasMore: false }) : delayed.promise;
+    if (path === "/api/video/admin/assets?limit=20") return ++reads === 1 ? response(200, { assets: [ownedVideo(913)], nextCursor: null, hasMore: false }) : delayed.promise;
   });
   const state = f.inspect().states.get(f.inspect().selected); state.pending = { kind: "video", videoId: id(913), status: "retry" };
   vm.runInContext("renderVideoGallery()", f.context);
@@ -1432,8 +1438,8 @@ test("owned videos protect uncertain sends and discard late pages after an accou
 test("owned video deletion rechecks uncertain sends after an asynchronous confirmation", async () => {
   let deletes = 0;
   const f = await videoLibraryFixture(path => {
-    if (path === "/api/video/client/assets?limit=20") return response(200, { assets: [ownedVideo(914)], nextCursor: null, hasMore: false });
-    if (path === `/api/video/client/assets/${id(914)}/delete`) { deletes++; return response(200, { deleted: true }); }
+    if (path === "/api/video/admin/assets?limit=20") return response(200, { assets: [ownedVideo(914)], nextCursor: null, hasMore: false });
+    if (path === `/api/video/admin/assets/${id(914)}/delete`) { deletes++; return response(200, { deleted: true }); }
   });
   const button = f.element("video-grid").querySelector("button"); assert.equal(button.disabled, false);
   for (const handler of button.events.get("click")) handler({}); await flush();
@@ -1591,7 +1597,7 @@ test("touch photo/video drafts and quick replies return to a composer control in
   assert.equal(photo.document.activeElement.id, "open-composer-tools");
   photo.element("cancel-image").focus(); await photo.click("cancel-image");
   assert.equal(photo.document.activeElement.id, "open-composer-tools"); assert.equal(posts(photo).length, 0);
-  const video = harness({ coarse: true, intercept: videoCapability }); await flush(); await selectVideo(video);
+  const video = harness({ coarse: true, currentSession: session(1, "A".repeat(43), "admin"), intercept: videoCapability }); await flush(); await selectVideo(video);
   assert.equal(video.document.activeElement.id, "open-composer-tools"); await video.click("cancel-video");
   assert.equal(video.document.activeElement.id, "open-composer-tools"); assert.equal(posts(video).length, 0);
   const admin = harness({ coarse: true, currentSession: session(1, "A".repeat(43), "admin") }); await flush();
@@ -1599,4 +1605,14 @@ test("touch photo/video drafts and quick replies return to a composer control in
   await admin.click("open-quick-replies"); const reply = admin.element("quick-replies-list").children[0];
   for (const handler of reply.events.get("click")) handler({}); await flush();
   assert.equal(admin.document.activeElement.id, "open-composer-tools"); assert.ok(admin.element("message-body").value.length > 0); assert.equal(posts(admin).length, 0);
+});
+
+test("clients cannot create a video draft even through a direct file-change event", async () => {
+  const f = harness({ intercept: videoCapability }); await flush(); const uploads = videoTransport(f);
+  assert.equal(f.element("pick-video").hidden, true);
+  f.element("video-file").files = [new Blob(["synthetic forbidden video"], { type: "video/mp4" })];
+  for (const handler of f.element("video-file").events.get("change")) handler({}); await flush();
+  assert.equal(f.inspect().states.get(f.inspect().selected).videoDraft, null);
+  assert.equal(f.element("video-preview").children.length, 0); assert.match(f.element("chat-status").textContent, /réservé à Jessie/);
+  assert.equal(uploads.length, 0); assert.equal(posts(f).length, 0);
 });

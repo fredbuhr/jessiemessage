@@ -39,10 +39,11 @@ export async function assertDistinctVideoRoots(photoRoot, videoRoot, { inspect =
 }
 
 /** Read capacity and private-root readiness; never initialize storage here. */
-export async function checkRuntimeVideoStorage(env, { createPool = createRuntimePool,
+export async function checkRuntimeVideoStorage(env, { experience = false, createPool = createRuntimePool,
   makeStorage = createVideoStorage, makeStore = createVideoStore, inspectRoots = assertDistinctVideoRoots } = {}) {
   let configuration, pool;
   try {
+    if (typeof experience !== "boolean") failure();
     configuration = runtimeVideoConfiguration(env);
     await inspectRoots(env.JESSIEMESSAGE_MEDIA_ROOT, configuration.root);
     const storage = await makeStorage({ root: configuration.root, key: configuration.key, pathMode: "linux-dirfd" });
@@ -50,7 +51,7 @@ export async function checkRuntimeVideoStorage(env, { createPool = createRuntime
     if (!Buffer.isBuffer(rootFingerprint) || rootFingerprint.length !== 32 || typeof space?.availableBytes !== "bigint"
       || space.availableBytes < BigInt(configuration.minimumFreeBytes) + 65n) failure();
     pool = await createPool(env);
-    const store = makeStore({ pool, chatStore: createChatStore(pool), capacity: { ...configuration.capacity, rootFingerprint } });
+    const store = makeStore({ pool, chatStore: createChatStore(pool), capacity: { ...configuration.capacity, rootFingerprint }, ...(experience ? { experience: true } : {}) });
     await store.assertSchema();
     if ((await store.status()).ready !== true) failure();
     return { ready: true, availableBytes: space.availableBytes.toString() };

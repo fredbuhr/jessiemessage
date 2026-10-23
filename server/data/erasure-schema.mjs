@@ -4,19 +4,21 @@ import { failErasure } from "./erasure-state.mjs";
 /** Fail closed on an unknown table/dependency graph. Never disable constraints. */
 export async function assertErasureSchema(connection, database, { candidateMigrations } = {}) {
   const base = await loadMigrations(), candidate = candidateMigrations !== undefined;
+  const experience = candidate && candidateMigrations?.length === 38;
   const migrations = candidate ? validateMigrationPlan(candidateMigrations) : base, tables = createdMigrationTables(migrations);
   if (candidate) {
     // Only this explicit dormant mode reads video sources. A caller-supplied
     // plan with the same filenames/graph cannot replace the authored bytes.
-    const authored = await (await import("../video/migrations.mjs")).loadVideoMigrations();
+    const authored = experience ? await (await import("../experience/migrations.mjs")).loadExperienceMigrations()
+      : await (await import("../video/migrations.mjs")).loadVideoMigrations();
     if (migrations.length !== authored.length || migrations.some((row, index) => row.version !== authored[index].version
       || row.name !== authored[index].name || row.checksum !== authored[index].checksum || row.sql !== authored[index].sql))
       failErasure("ERASURE_SCHEMA");
   }
-  if (base.length !== 33 || migrations.length !== (candidate ? 36 : 33) || tables.length !== (candidate ? 35 : 32)
+  if (base.length !== 33 || migrations.length !== (experience ? 38 : candidate ? 36 : 33) || tables.length !== (experience ? 36 : candidate ? 35 : 32)
     || candidate && (migrations.slice(0, 33).some((row, index) => row.version !== base[index].version
       || row.name !== base[index].name || row.checksum !== base[index].checksum || row.sql !== base[index].sql)
-      || migrations.slice(33).some((row, index) => row.name !== ["0034_video_storage_state.sql", "0035_video_assets.sql", "0036_message_video.sql"][index])))
+      || migrations.slice(33).some((row, index) => row.name !== ["0034_video_storage_state.sql", "0035_video_assets.sql", "0036_message_video.sql", ...(experience ? ["0037_profile_preferences.sql", "0038_reply_tracking.sql"] : [])][index])))
     failErasure("ERASURE_SCHEMA");
   const history = await migrationStatus(connection, { database, migrations });
   if (history.length !== migrations.length || history.some(row => row.state !== "applied")) failErasure("ERASURE_SCHEMA");
@@ -35,7 +37,7 @@ export async function assertErasureSchema(connection, database, { candidateMigra
       children.forEach((column, index) => expected.push([table, match[1], index + 1, column, database, match[3], parents[index]]));
     }
   }
-  const foreignCount = candidate ? 49 : 46;
+  const foreignCount = experience ? 50 : candidate ? 49 : 46;
   if (new Set(expected.map(row => row[1])).size !== foreignCount) failErasure("ERASURE_SCHEMA");
   const keys = await connection.query(`SELECT TABLE_NAME AS child, CONSTRAINT_NAME AS name, ORDINAL_POSITION AS positionValue,
     COLUMN_NAME AS columnName, REFERENCED_TABLE_SCHEMA AS parentSchema, REFERENCED_TABLE_NAME AS parent, REFERENCED_COLUMN_NAME AS parentColumn

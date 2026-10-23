@@ -44,13 +44,13 @@ export function parseRecurringArguments(args) {
   const witness = ["plan-witness", "check-witness", "prepare-witness"].includes(args[0]);
   const observer = ["prepare-witness-enrollment", "check-witness-observer", "start-witness-observer"].includes(args[0]);
   const recovery = ["check-witness-recovery", "start-witness-recovery"].includes(args[0]);
-  const video = args.includes("--profile");
-  if (args.length !== (witness || observer || recovery ? 17 : video ? 15 : 13) || !["check", "start", "check-local-closures", "start-local-closures", "plan-witness", "check-witness", "prepare-witness",
+  const video = args.includes("--profile"), experience = args.includes("--experience");
+  if (args.length !== (witness || observer || recovery ? 17 : video ? 15 : 13) + (experience ? 2 : 0) || !["check", "start", "check-local-closures", "start-local-closures", "plan-witness", "check-witness", "prepare-witness",
     "prepare-witness-enrollment", "check-witness-observer", "start-witness-observer", "check-witness-recovery", "start-witness-recovery"].includes(args[0])) fail("USAGE");
   const names = new Map([["--runtime-directory", "runtimeDirectory"], ["--runtime-head", "runtimeHead"], ["--runtime-tree", "runtimeTree"],
     ["--private-directory", "privateDirectory"], ["--operations-directory", "operationsDirectory"], ["--private-path-mode", "privatePathMode"],
     ["--witness-operator-directory", "witnessOperatorDirectory"], ["--witness-destination", "witnessDestination"], ["--witness-plan-sha256", "witnessPlanSha256"],
-    ["--witness-contract-sha256", "witnessContractSha256"], ["--profile", "profile"]]);
+    ["--witness-contract-sha256", "witnessContractSha256"], ["--profile", "profile"], ["--experience", "experience"]]);
   const result = { command: args[0] };
   for (let index = 1; index < args.length; index += 2) {
     const name = names.get(args[index]);
@@ -67,6 +67,7 @@ export function parseRecurringArguments(args) {
     if (!["check-local-closures", "start-local-closures"].includes(result.command) || result.profile !== VIDEO_PROFILE) fail("USAGE");
     result.video = true;
   }
+  if (experience) { if (!video || result.experience !== "1") fail("USAGE"); result.experience = true; }
   const extras = ["witnessOperatorDirectory", "witnessDestination", "witnessPlanSha256", "witnessContractSha256"].filter(name => Object.hasOwn(result, name));
   if (witness || observer || recovery) {
     if (extras.length !== 2 || !path(result.witnessOperatorDirectory)
@@ -127,7 +128,7 @@ export async function checkpointProcess(command, options, destination, { signal,
       const args = [fileURLToPath(new URL("../../scripts/private-checkpoint-child.mjs", import.meta.url)), command,
         ...(command === "capture-application" ? ["--offline"] : []), "--private-directory", options.privateDirectory,
         "--private-path-mode", "linux-dirfd", "--destination-private-directory", destination, "--profile", options.video === true ? VIDEO_PROFILE : PROFILE,
-        "--operations-directory", options.operationsDirectory];
+        "--operations-directory", options.operationsDirectory, ...(options.experience === true ? ["--experience", "1"] : [])];
       child = spawnClient(process.execPath, args, { cwd: REPOSITORY, env: environment, stdio: ["ignore", "pipe", "pipe", "ipc"] });
       timer = setTimeout(() => stop("TIMEOUT"), timeoutMilliseconds);
       signal?.addEventListener("abort", abort, { once: true }); if (signal?.aborted) abort();
@@ -147,9 +148,9 @@ export async function checkpointProcess(command, options, destination, { signal,
           try { result = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)); } finally { bytes.fill(0); }
           const expected = command === "capture-application" ? "application_checkpoint_saved" : "application_precheck_passed";
           if (result?.status !== expected || result.profile !== `messaging-${options.video === true ? VIDEO_PROFILE : PROFILE}-application` || result.started !== false
-            || result.migrationPerformed !== false || options.video === true && command === "check-application" && (result.schema !== 36
+            || result.migrationPerformed !== false || options.video === true && command === "check-application" && (result.schema !== (options.experience === true ? 38 : 36)
               || result.coverage?.encryptedVideo !== true || result.databaseConnected !== false || result.passwordInputRequired !== false)
-            || command === "capture-application" && (result.tables !== (options.video === true ? 36 : 33) || result.migrations !== (options.video === true ? 36 : 33)
+            || command === "capture-application" && (result.tables !== (options.experience === true ? 37 : options.video === true ? 36 : 33) || result.migrations !== (options.experience === true ? 38 : options.video === true ? 36 : 33)
               || options.video === true && (result.videoCovered !== true || result.coverage?.encryptedVideo !== true)
               || result.operationsCovered !== true || result.archiveListed !== true || result.archiveContentsVerified !== true || !/^[a-f0-9]{64}$/.test(result.archive?.sha256 ?? ""))) fail("CHECKPOINT");
           yes({ saved: command === "capture-application", precheckPassed: command === "check-application" });
@@ -218,7 +219,7 @@ export function createRecurringSupervisor(options, { environment = process.env, 
   if (childPort > 65535) fail("CONFIGURATION");
   const gateway = witnessControl === null ? null : makeGateway({ port: publicPort, childPort, control: witnessControl, onFailure: unexpected });
   const runtime = makeRuntime({ runtimeDirectory: options.runtimeDirectory, privateDirectory: options.privateDirectory, operationsDirectory: options.operationsDirectory,
-    port: childPort, environment: witnessControl === null ? environment : { ...environment, PORT: String(childPort) }, onUnexpectedExit: unexpected, accountClosures: closureOperations !== null, ...(options.video === true ? { video: true } : {}),
+    port: childPort, environment: witnessControl === null ? environment : { ...environment, PORT: String(childPort) }, onUnexpectedExit: unexpected, accountClosures: closureOperations !== null, ...(options.video === true ? { video: true } : {}), ...(options.experience === true ? { experience: true } : {}),
     ...(witnessControl === null ? {} : { parentGateway: true }) });
   function tick() {
     if (closed || !started || observing) return Promise.resolve(null);

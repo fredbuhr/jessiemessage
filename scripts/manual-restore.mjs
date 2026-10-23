@@ -115,7 +115,7 @@ export function createRestoredService(context, { environment = process.env, sign
   const { job, paths } = context;
   const options = ["start-local-closures", "--runtime-directory", job.runtimeDirectory, "--runtime-head", job.runtimeHead, "--runtime-tree", job.runtimeTree,
     "--private-directory", job.targetPrivateDirectory, "--operations-directory", paths.journalDirectory, "--private-path-mode", "linux-dirfd",
-    ...(job.version === 2 ? ["--profile", "photos-notify-recovery-crm-broadcast-video"] : [])];
+    ...(job.version === 2 ? ["--profile", "photos-notify-recovery-crm-broadcast-video"] : []), ...(context.experience === true ? ["--experience", "1"] : [])];
   return Object.freeze({
     state: () => stopped ? { status: "stopped" } : runtime?.state() ?? { status: "stopped" },
     async start() {
@@ -230,7 +230,7 @@ export async function run(selected, { environment = process.env, signal, inputSt
         emit(result); return result;
       }
       await copyBackupSettings(context, signal);
-      service = (internal.makeService ?? createRestoredService)(context, { environment, signal, outputStream });
+      service = (internal.makeService ?? createRestoredService)(receipt.coverage?.tables === 37 && receipt.schema?.migrations === 38 ? { ...context, experience: true } : context, { environment, signal, outputStream });
       await save("opening");
       let published = false;
       try {

@@ -4,7 +4,7 @@
  * loopback test schema is required; only this exercise's tables are removed.
  */
 import { execFile } from "node:child_process";
-import { createECDH, createHash, randomBytes } from "node:crypto";
+import { createECDH, createHash, createHmac, randomBytes } from "node:crypto";
 import { request as httpRequest } from "node:http";
 import { createServer as createHttpsServer } from "node:https";
 import { chmod, lstat, mkdtemp, readFile, readdir, realpath, rmdir, unlink } from "node:fs/promises";
@@ -22,6 +22,10 @@ import { createMediaStorage } from "../../server/media/storage.mjs";
 import { createMediaCapacityStore } from "../../server/media/capacity-store.mjs";
 import { consumeSyntheticInvitation } from "../fixtures/manual-admission.mjs";
 import { generateNotificationVapidKeys } from "../../scripts/prepare-runtime-notifications.mjs";
+import { loadExperienceMigrations } from "../../server/experience/migrations.mjs";
+import { createResetStore } from "../../server/reset/store.mjs";
+import { sealPreferences } from "../../server/preferences/crypto.mjs";
+import { sealTask } from "../../server/tasks/crypto.mjs";
 import { loadVideoMigrations } from "../../server/video/migrations.mjs";
 import { createVideoStorage } from "../../server/video/storage.mjs";
 import { createVideoStore } from "../../server/video/store.mjs";
@@ -30,6 +34,7 @@ import { createAuthService } from "../../server/auth/service.mjs";
 import { createAccessStore } from "../../server/access/store.mjs";
 import { createAccessService } from "../../server/access/service.mjs";
 import { createChatService } from "../../server/chat/service.mjs";
+import { seedLegacyClientVideoAsset, seedLegacyClientVideoMessage } from "../helpers/legacy-video-seed.mjs";
 import { createVideoMessageStore } from "../../server/video/message-store.mjs";
 import { createVideoService } from "../../server/video/service.mjs";
 import { createBroadcastStore } from "../../server/broadcast/store.mjs";
@@ -134,8 +139,9 @@ export async function cleanupAuthenticationSchema(connection, { database, lockNa
   }
 }
 
-/** Seed a former writable release through the real direct services before the
- * compatibility application exists. These sessions are revoked before boot;
+/** Seed a former writable release before the compatibility application exists.
+ * Historical client videos use explicit synthetic rows; new admin videos use the
+ * real direct services. These sessions are revoked before boot;
  * no production option or feature gate is overridden. */
 async function seedVideoCompatibility({ pool, connection, adminId, clientId, key, keys, origin, root, operationsRoot }) {
   const now = Date.now(), created = sqlDate(now), conversation = await connection.query("SELECT id FROM conversations WHERE admin_id=? AND client_id=?", [adminId, clientId]);
@@ -162,10 +168,17 @@ async function seedVideoCompatibility({ pool, connection, adminId, clientId, key
     const seeded = [];
     try {
       for (const owner of owners) {
-        const caption = `Synthetic retained ${owner.role} video`, ticket = await videos.admitUpload(owner.role, owner.token, { bytes: media.length, mime: "video/mp4" });
-        const asset = await videos.upload(owner.role, owner.token, ticket, (async function* () { yield Buffer.from(media); })());
-        const result = await videos.send(owner.role, owner.token, conversationId, { clientMessageId: randomBytes(16).toString("hex"), videoId: asset.id, caption });
-        seeded.push({ role: owner.role, asset, message: result.message, caption });
+        const caption = `Synthetic retained ${owner.role} video`;
+        if (owner.role === "client") {
+          const legacy = await seedLegacyClientVideoAsset({ connection, storage, owner, now, bytes: media.length, source: (async function* () { yield Buffer.from(media); })() });
+          const result = await seedLegacyClientVideoMessage({ chatStore, owner, conversationId: Buffer.from(conversationId, "hex"), asset: legacy, caption, key: keys.MESSAGE, now });
+          seeded.push({ role: owner.role, asset: { id: legacy.id.toString("hex"), bytes: legacy.bytes, mime: "video/mp4" }, message: { ...result.message, id: result.message.id.toString("hex") }, caption });
+        } else {
+          const ticket = await videos.admitUpload(owner.role, owner.token, { bytes: media.length, mime: "video/mp4" });
+          const asset = await videos.upload(owner.role, owner.token, ticket, (async function* () { yield Buffer.from(media); })());
+          const result = await videos.send(owner.role, owner.token, conversationId, { clientMessageId: randomBytes(16).toString("hex"), videoId: asset.id, caption });
+          seeded.push({ role: owner.role, asset, message: result.message, caption });
+        }
       }
     } finally { media.fill(0); }
     const replies = createQuickRepliesFiles(operationsRoot, keys.CRM, adminId.toString("hex")); let catalogue;
@@ -195,8 +208,9 @@ async function seedVideoCompatibility({ pool, connection, adminId, clientId, key
  * session. This fixture never changes NODE_TLS_REJECT_UNAUTHORIZED or any
  * production listener, feature configuration, mail transport, or credential.
  */
-export async function createAuthenticationFixture({ messaging = false, video = false } = {}) {
-  if (typeof messaging !== "boolean" || typeof video !== "boolean" || video && !messaging) fail("AUTH_REHEARSAL_CONFIG");
+export async function createAuthenticationFixture({ messaging = false, video = false, experience = false, rollback185 = false } = {}) {
+  if (typeof messaging !== "boolean" || typeof video !== "boolean" || typeof experience !== "boolean" || typeof rollback185 !== "boolean"
+    || video && !messaging || experience && !video || rollback185 && !experience) fail("AUTH_REHEARSAL_CONFIG");
   const confirmed = validateFixtureEnvironment();
   const env = Object.fromEntries(DATABASE_KEYS.map((key) => [key, process.env[key]]));
   env.JESSIEMESSAGE_DB_HOST = confirmed.host;
@@ -212,6 +226,9 @@ export async function createAuthenticationFixture({ messaging = false, video = f
   const videoAttestation = video ? randomBytes(32).toString("hex") : null;
   const client = messaging ? Object.freeze({ id: clientId.toString("hex"), email: `messaging-rehearsal-${randomBytes(6).toString("hex")}@example.invalid`,
     password: `Synthetic client ${randomBytes(24).toString("base64url")}!` }) : null;
+  const otherClientId = experience ? randomBytes(16) : null;
+  const otherClient = experience ? Object.freeze({ id: otherClientId.toString("hex"), email: `experience-other-${randomBytes(6).toString("hex")}@example.invalid`,
+    password: `Synthetic other client ${randomBytes(24).toString("base64url")}!` }) : null;
   const email = `auth-rehearsal-${randomBytes(6).toString("hex")}@example.invalid`;
   const password = `Synthetic rehearsal ${randomBytes(24).toString("base64url")}!`;
   let secret = makeTotpSecret();
@@ -260,16 +277,16 @@ export async function createAuthenticationFixture({ messaging = false, video = f
           new RegExp(`^quick-replies-${adminId.toString("hex")}\\.json$`)); } catch { failed = true; }
       }
       try { await removeCertificateDirectory(certificateDirectory); } catch { failed = true; }
-      key.fill(0); for (const value of Object.values(domainKeys)) value.fill(0); secret = ""; adminId.fill(0); clientId?.fill(0);
+      key.fill(0); for (const value of Object.values(domainKeys)) value.fill(0); secret = ""; adminId.fill(0); clientId?.fill(0); otherClientId?.fill(0);
       if (failed) fail("AUTH_REHEARSAL_CLEANUP");
     })();
     return stopping;
   }
 
   try {
-    const migrations = await (video ? loadVideoMigrations() : loadMigrations());
+    const migrations = await (experience ? loadExperienceMigrations() : video ? loadVideoMigrations() : loadMigrations());
     validateMigrationPlan(migrations);
-    if (migrations.length !== (video ? 36 : 33)) fail();
+    if (migrations.length !== (experience ? 38 : video ? 36 : 33)) fail();
     const tables = createdMigrationTables(migrations);
     if (new Set(tables).size !== tables.length) fail();
     allowedTables = [...tables.reverse(), "schema_migrations"];
@@ -301,7 +318,7 @@ export async function createAuthenticationFixture({ messaging = false, video = f
         operationsRoot = await mkdtemp(join(tmpdir(), "jessiemessage-video-operations-"));
         await chmod(operationsRoot, 0o700); operationsIdentity = await lstat(operationsRoot, { bigint: true });
         const videos = await createVideoStorage({ root: videoRoot, key: domainKeys.VIDEO });
-        await createVideoStore({ pool: bootstrapPool, chatStore: createChatStore(bootstrapPool), capacity: {
+        await createVideoStore({ pool: bootstrapPool, chatStore: createChatStore(bootstrapPool), experience, capacity: {
           ownerBytes: 16 * 1024 * 1024, totalBytes: 64 * 1024 * 1024, rootFingerprint: await videos.fingerprint(),
         } }).initialize({ now: Date.now(), offline: true });
       }
@@ -418,20 +435,44 @@ export async function createAuthenticationFixture({ messaging = false, video = f
       if (Number(enabled.affectedRows) !== 1) fail();
       await connection.beginTransaction();
       try {
-        await connection.query(`INSERT INTO users (id, role, status, pseudonym, email, password_hash, email_verified_at, access_approved_at, created_at, updated_at)
-          VALUES (?, 'client', 'active', 'Synthetic browser client', ?, ?, ?, ?, ?, ?)`, [clientId, client.email, await hashPassword(client.password), at, at, at, at]);
-        await connection.query("INSERT INTO client_auth_state (user_id, credential_version, age_declared_at) VALUES (?, 1, ?)", [clientId, at]);
-        await consumeSyntheticInvitation(connection, clientId, now);
-        // Manual approval also creates the sole client/admin conversation.
-        await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)", [randomBytes(16), clientId, adminId, at]);
+        for (const person of [{ id: clientId, credentials: client, pseudonym: "Synthetic browser client" },
+          ...(experience ? [{ id: otherClientId, credentials: otherClient, pseudonym: "Synthetic second browser client" }] : [])]) {
+          await connection.query(`INSERT INTO users (id, role, status, pseudonym, email, password_hash, email_verified_at, access_approved_at, created_at, updated_at)
+            VALUES (?, 'client', 'active', ?, ?, ?, ?, ?, ?, ?)`, [person.id, person.pseudonym, person.credentials.email, await hashPassword(person.credentials.password), at, at, at, at]);
+          await connection.query("INSERT INTO client_auth_state (user_id, credential_version, age_declared_at) VALUES (?, 1, ?)", [person.id, at]);
+          await consumeSyntheticInvitation(connection, person.id, now);
+          // Manual approval creates one isolated client/admin conversation.
+          await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)", [randomBytes(16), person.id, adminId, at]);
+        }
         await connection.commit();
       } catch (error) { await connection.rollback(); throw error; }
     }
     if (video && !VIDEO_CREATION_ENABLED) compatibilityData = await seedVideoCompatibility({ pool: bootstrapPool, connection, adminId, clientId,
       key, keys: domainKeys, origin, root: videoRoot, operationsRoot });
+    if (rollback185) {
+      // Test data only, created before the 185 application starts. Use the
+      // retained envelope format and the 190 reserved-row ID/proof contract;
+      // the 190 reply engine is deliberately absent from this rollback.
+      const row = (await connection.query("SELECT id FROM conversations WHERE admin_id = ? AND client_id = ?", [adminId, clientId]))[0];
+      if (!Buffer.isBuffer(row?.id) || row.id.length !== 16) fail();
+      const now = sqlDate(Date.now()), version = "1", owner = clientId.toString("hex");
+      const encrypted = sealPreferences({ catalogueVersion: "2026-10-23-recherche-1", selectedIds: ["pref_c01_hetero-heterosexuel"] }, domainKeys.CRM, owner, version);
+      const digest = (...parts) => createHmac("sha256", domainKeys.CRM).update("jessiemessage:reply-task:v1\0").update(JSON.stringify(parts)).digest();
+      const taskId = digest("id", adminId.toString("hex"), row.id.toString("hex")).subarray(0, 16);
+      const proof = digest("state", adminId.toString("hex"), row.id.toString("hex"), "0", true, version);
+      const title = sealTask("À répondre", domainKeys.CRM, { adminId, conversationId: row.id, taskId, version, dueAt: null, done: false });
+      await connection.beginTransaction();
+      try {
+        await connection.query("INSERT INTO profile_preferences (user_id, version, selection_encrypted, created_at, updated_at) VALUES (?, ?, ?, ?, ?)", [clientId, version, encrypted, now, now]);
+        await connection.query(`INSERT INTO crm_tasks (id, admin_id, conversation_id, title_encrypted, due_at, done, version,
+          request_fingerprint, created_at, updated_at, reply_kind, reply_through, reply_reopened)
+          VALUES (?, ?, ?, ?, NULL, 0, ?, ?, ?, ?, 'reply', 0, 1)`, [taskId, adminId, row.id, title, version, proof, now, now]);
+        await connection.commit();
+      } catch (error) { await connection.rollback(); throw error; }
+    }
     await bootstrapPool.end(); bootstrapPool = null;
     configured = await createConfiguredServer(runtimeEnvironment, video ? { requestOrigin: origin, deviceTransition: true,
-      recovery: true, crm: true, broadcast: true, accountClosures: true, backupDirectory: operationsRoot, video: true } : {});
+      recovery: true, crm: true, broadcast: true, accountClosures: true, backupDirectory: operationsRoot, video: true, ...(experience ? { experience: true, tasks: true } : {}) } : {});
     shutdown = createShutdown(configured);
     if (!configured.pool || !messaging && configured.mailWorker !== null) fail();
     // Stop the configured owner before listen: no SMTP, push, broadcast or
@@ -506,6 +547,29 @@ export async function createAuthenticationFixture({ messaging = false, video = f
         const rows = await connection.query("SELECT (SELECT COUNT(*) FROM video_assets) AS videos,(SELECT COUNT(*) FROM message_video) AS links,(SELECT COUNT(*) FROM broadcast_campaigns) AS campaigns");
         return { videos: Number(rows[0].videos), links: Number(rows[0].links), campaigns: Number(rows[0].campaigns),
           repliesSha256: createHash("sha256").update(await readFile(join(operationsRoot, `quick-replies-${adminId.toString("hex")}.json`))).digest("hex") };
+      } } : {}),
+      ...(rollback185 ? { async rollback185State() {
+        if (stopping) fail();
+        const preferences = await connection.query("SELECT * FROM profile_preferences WHERE user_id = ?", [clientId]);
+        const replies = await connection.query("SELECT * FROM crm_tasks WHERE admin_id = ? AND reply_kind = 'reply' ORDER BY id", [adminId]);
+        const migrations = await connection.query("SELECT COUNT(*) AS amount FROM schema_migrations");
+        const hash = rows => createHash("sha256").update(JSON.stringify(rows, (_, value) => typeof value === "bigint" ? value.toString() : value)).digest("hex");
+        return { migrations: Number(migrations[0].amount), preferences: preferences.length, replies: replies.length,
+          preferencesSha256: hash(preferences), replySha256: hash(replies) };
+      } } : {}),
+      ...(experience ? { otherClient, async seedClientResetToken() {
+        if (stopping) fail();
+        const token = randomBytes(32).toString("base64url"), now = Date.now();
+        await createResetStore(configured.pool).requestReset({ email: client.email, now,
+          reset: { id: randomBytes(16), tokenHash: tokenDigest(token), expiresAt: now + 1800000 },
+          mail: { id: randomBytes(16), payloadEncrypted: "synthetic-encrypted-reset-fixture" } });
+        return token;
+      }, async privatePreferencesState(forbiddenIds = []) {
+        if (stopping || !Array.isArray(forbiddenIds) || forbiddenIds.some(id => typeof id !== "string")) fail();
+        const rows = await connection.query("SELECT selection_encrypted FROM profile_preferences ORDER BY user_id");
+        return { rows: rows.length, encrypted: rows.every(row => typeof row.selection_encrypted === "string" && row.selection_encrypted.length > 32
+          && forbiddenIds.every(id => !row.selection_encrypted.includes(id))),
+          digest: createHash("sha256").update(JSON.stringify(rows.map(row => row.selection_encrypted))).digest("hex") };
       } } : {}),
       ...(messaging ? { client, notificationSubscription, notificationReference, sessionRemainsActive, outsideOrigin: outside,
         externalApiNavigation: (role, kind) => { if (!Object.hasOwn(navigationPaths, role) || !Object.hasOwn(navigationPaths[role], kind)) fail(); return `${outside}/c01-navigation?role=${role}&kind=${kind}`; },

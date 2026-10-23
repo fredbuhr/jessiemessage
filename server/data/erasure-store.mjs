@@ -17,8 +17,8 @@ const states = ["pending", "sending", "delivered", "skipped", "cancelled", "fail
 
 /** SQL phase adapter for an externally quiesced runtime. The advisory lock only
  * serializes erasers; it is deliberately NOT represented as stopping workers. */
-export function createErasureStore({ pool, database, capacity, broadcastKey, video }) {
-  if (typeof pool?.getConnection !== "function" || typeof database !== "string" || !/^[a-zA-Z0-9_]{1,64}$/.test(database)
+export function createErasureStore({ pool, database, capacity, broadcastKey, video, experience = false }) {
+  if (typeof experience !== "boolean" || experience && video === undefined || typeof pool?.getConnection !== "function" || typeof database !== "string" || !/^[a-zA-Z0-9_]{1,64}$/.test(database)
     || !Buffer.isBuffer(broadcastKey) || broadcastKey.length !== 32) failErasure("ERASURE_INPUT");
   capacity = validateMediaCapacity(capacity); broadcastKey = Buffer.from(broadcastKey);
   if (video !== undefined && (!video || typeof video.rootFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(video.rootFingerprint)
@@ -151,7 +151,7 @@ export function createErasureStore({ pool, database, capacity, broadcastKey, vid
           await facts(context, nowSql);
           const checks = [["invitations", "consumed_by_id"], ["sessions", "user_id"], ["email_verifications", "user_id"], ["mail_outbox", "recipient_user_id"],
             ["client_password_resets", "user_id"], ["password_reset_outbox", "recipient_user_id"], ["broadcast_preferences", "user_id"],
-            ["push_subscriptions", "user_id"], ["broadcast_recipients", "client_id"], ["conversations", "client_id"], ["messages", "sender_id"], ["chat_receipts", "user_id"], ["user_profiles", "user_id"]];
+            ["push_subscriptions", "user_id"], ["broadcast_recipients", "client_id"], ["conversations", "client_id"], ["messages", "sender_id"], ["chat_receipts", "user_id"], ["user_profiles", "user_id"], ...(experience ? [["profile_preferences", "user_id"]] : [])];
           for (const [table, column] of checks) if ((await connection.query(`SELECT 1 AS present FROM ${table} WHERE ${column} = ? LIMIT 1`, [target])).length) failErasure("ERASURE_RESIDUAL");
         }
         function transaction(operation) {
@@ -219,6 +219,7 @@ export function createErasureStore({ pool, database, capacity, broadcastKey, vid
             // Remove the consumed invitation as one row: never split its coupled fields or reopen its token.
             await connection.query("DELETE FROM invitations WHERE consumed_by_id = ?", [target]);
             // Drop the selected user's avatar reference before media tombstones/files are removed.
+            if (experience) await connection.query("DELETE FROM profile_preferences WHERE user_id = ?", [target]);
             await connection.query("DELETE FROM user_profiles WHERE user_id = ?", [target]);
             await connection.query(`UPDATE users SET status = 'deleted', password_hash = NULL, pseudonym = 'Compte fermé', email = ?,
               email_verified_at = NULL, age_assured_at = NULL, access_approved_at = NULL, access_expires_at = NULL, updated_at = ? WHERE id = ? AND role = 'client'`,

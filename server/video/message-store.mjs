@@ -109,6 +109,7 @@ export function createVideoMessageStore({ pool, chatStore, videoStore } = {}) {
     return appendVideo(connection, context, append, message);
   }
   async function appendVideo(connection, context, append, message) {
+    if (context?.actor?.role !== "admin") fail("VIDEO_ADMIN_ONLY");
     bytes(message?.videoId, 16);
     if (message.mediaId !== undefined && message.mediaId !== null) input();
     const { videoId, ...ordinary } = message;

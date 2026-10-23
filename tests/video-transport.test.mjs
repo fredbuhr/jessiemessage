@@ -5,7 +5,7 @@ import { once } from "node:events";
 import { readdir } from "node:fs/promises";
 import { createVideoHandler } from "../server/video/http.mjs";
 import { VIDEO_BLOCK_BYTES } from "../server/video/storage.mjs";
-import { videoFixture, mp4Source, collectVideo } from "./helpers/video-transport-fixture.mjs";
+import { videoFixture, mp4Source, legacyClientVideoFixture, collectVideo } from "./helpers/video-transport-fixture.mjs";
 
 const origin = "https://jessiemessage.example";
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -39,7 +39,7 @@ function upload(f, account, bytes, source = mp4Source(bytes)) {
 }
 
 test("real video transport uploads encrypted blocks and reads owner ranges across block boundaries", async (t) => {
-  const f = await httpFixture(t), bytes = VIDEO_BLOCK_BYTES * 3 + 65, account = f.accounts[1];
+  const f = await httpFixture(t), bytes = VIDEO_BLOCK_BYTES * 3 + 65, account = f.accounts[0];
   const expected = await collectVideo(mp4Source(bytes)), result = await upload(f, account, bytes);
   assert.equal(result.status, 201); assert.equal(result.body.bytes, bytes); assert.equal(result.body.mime, "video/mp4");
   assert.match(result.body.id, /^[a-f0-9]{32}$/); assert.deepEqual(Object.keys(result.body).sort(), ["bytes", "id", "mime"]);
@@ -60,7 +60,9 @@ test("real video transport uploads encrypted blocks and reads owner ranges acros
 
 test("real video transport refuses another client and administrator owner routes and revoked sessions", async (t) => {
   const f = await httpFixture(t), owner = f.accounts[1], bytes = VIDEO_BLOCK_BYTES + 32;
-  const uploaded = await upload(f, owner, bytes); assert.equal(uploaded.status, 201);
+  const saved = await legacyClientVideoFixture(f, owner, bytes), uploaded = { body: saved };
+  const historical = await fetch(`${f.base}${contentPath(owner, saved.id)}`, { headers: { Cookie: cookie(owner) } });
+  assert.equal(historical.status, 200); assert.equal((await historical.arrayBuffer()).byteLength, bytes);
   for (const other of [f.accounts[0], f.accounts[2]]) {
     const response = await fetch(`${f.base}${contentPath(other, uploaded.body.id)}`, { headers: { Cookie: cookie(other), Range: "bytes=notvalid" } });
     assert.equal(response.status, 404); assert.equal(response.headers.get("content-range"), null); assert.deepEqual(await response.json(), { error: "not_found" });
@@ -99,7 +101,7 @@ test("real source timeout is reported as 408 across the service boundary and ref
 });
 
 test("invalid real MP4 prefix creates no persistent file and releases the reserved capacity", async (t) => {
-  const f = await httpFixture(t), account = f.accounts[2], bytes = 65536;
+  const f = await httpFixture(t), account = f.accounts[0], bytes = 65536;
   const result = await upload(f, account, bytes, (async function* () { yield Buffer.alloc(bytes, 1); })());
   assert.equal(result.status, 415); assert.deepEqual(result.body, { error: "video_format" });
   await until(() => f.state.held === 0); assert.equal((await readdir(f.root)).length, 0);
@@ -121,4 +123,20 @@ test("timeout during real encrypted staging removes its partial file before the 
   const response = await result; assert.equal(response.status, 408); assert.deepEqual(response.body, { error: "request_timeout" });
   await until(async () => f.state.held === 0 && (await readdir(f.root)).length === 0);
   assert.equal(f.state.calls.includes("commit"), false); assert.equal([...f.state.rows.values()][0].state, "released");
+});
+
+
+test("client binary video upload returns before receiving its body and leaves no durable reservation or file", async t => {
+  const f = await httpFixture(t), account = f.accounts[1], before = [...f.state.calls];
+  const response = await new Promise((resolve, reject) => {
+    const req = httpRequest({ hostname: "127.0.0.1", port: f.port, path: path(account), method: "POST", headers: uploadHeaders(account, 65536) }, res => {
+      const chunks = []; res.on("data", chunk => chunks.push(chunk));
+      res.on("end", () => { resolve({ status: res.statusCode, body: JSON.parse(Buffer.concat(chunks)) }); req.destroy(); });
+      res.on("error", reject);
+    });
+    req.on("error", error => { if (error.code !== "ECONNRESET") reject(error); }); req.flushHeaders();
+  });
+  assert.deepEqual(response, { status: 403, body: { error: "video_admin_only" } });
+  assert.deepEqual(f.state.calls, before); assert.equal(f.state.held, 0); assert.equal(f.state.rows.size, 0);
+  assert.deepEqual(await readdir(f.root), []);
 });

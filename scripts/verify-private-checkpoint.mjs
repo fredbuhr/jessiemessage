@@ -8,6 +8,7 @@ import { loadRuntimeCrmEnvironment, copyRuntimeCrmEnvironment } from "../server/
 import { loadRuntimeBroadcastEnvironment, copyRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
 import { loadRuntimeVideoEnvironment, copyRuntimeVideoEnvironment } from "../server/config/runtime-video.mjs";
 import { createVideoStorage } from "../server/video/storage.mjs";
+import { loadExperienceMigrations } from "../server/experience/migrations.mjs";
 import { loadVideoMigrations } from "../server/video/migrations.mjs";
 import { inspectHistory } from "../server/db/migrations.mjs";
 import { verifyCheckpointVideo } from "../server/backup/video-checkpoint-files.mjs";
@@ -17,7 +18,7 @@ import { clearRuntimeMessagingSecrets } from "../server/config/runtime-messaging
 import { createMediaStorage } from "../server/media/storage.mjs";
 import { readManifest, verifyBackupManifest, backupIdentity, assertCloneIdentity } from "../server/backup/manifest.mjs";
 import { assertBackupInspection } from "../server/backup/inspection.mjs";
-import { validateApplicationCoverage, validateVideoApplicationCoverage, assertApplicationTableInspection, assertVideoApplicationTableInspection } from "../server/backup/application-scope.mjs";
+import { validateApplicationCoverage, validateVideoSnapshotCoverage, assertApplicationTableInspection, assertVideoApplicationTableInspection, assertExperienceApplicationTableInspection } from "../server/backup/application-scope.mjs";
 import { verifyPhotoNotificationBackupData, verifyPhotoNotificationRecoveryBackupData, verifyPhotoNotificationRecoveryCrmBackupData, verifyPhotoNotificationRecoveryCrmBroadcastBackupData, verifyPhotoNotificationRecoveryCrmBroadcastVideoBackupData } from "../server/backup/verify.mjs";
 import { connectDatabase } from "../server/db/connection.mjs";
 import { createdMigrationTables, loadMigrations } from "../server/db/migrations.mjs";
@@ -45,9 +46,9 @@ const readReceipt = async (scope, options) => (await import("../server/backup/ch
 const verifyMedia = async (scope, media, options) => (await import("../server/backup/checkpoint-files.mjs")).verifyCheckpointMedia(scope, media, options);
 
 export function parseArguments(args) {
-  if (!Array.isArray(args) || ![13, 15].includes(args.length) || !["check", "verify", "check-application", "verify-application"].includes(args[0])) fail("USAGE");
+  if (!Array.isArray(args) || ![13, 15, 17].includes(args.length) || !["check", "verify", "check-application", "verify-application"].includes(args[0])) fail("USAGE");
   const selected = { command: args[0] }, names = new Map([["--private-directory", "privateDirectory"], ["--private-path-mode", "privatePathMode"],
-    ["--checkpoint-directory", "checkpointDirectory"], ["--database", "database"], ["--confirm-database", "confirmation"], ["--user", "user"], ["--profile", "profile"]]);
+    ["--checkpoint-directory", "checkpointDirectory"], ["--database", "database"], ["--confirm-database", "confirmation"], ["--user", "user"], ["--profile", "profile"], ["--experience", "experience"]]);
   for (let index = 1; index < args.length; index += 2) {
     const name = names.get(args[index]), value = args[index + 1];
     if (!name || Object.hasOwn(selected, name) || typeof value !== "string" || !value || value.startsWith("--")) fail("USAGE");
@@ -55,23 +56,26 @@ export function parseArguments(args) {
   }
   if (selected.privatePathMode !== "linux-dirfd" || !/^[A-Za-z0-9_]{1,64}$/.test(selected.database)
     || selected.database !== selected.confirmation || !/^[A-Za-z0-9_]{1,80}$/.test(selected.user)
+    || Object.hasOwn(selected, "experience") && (selected.experience !== "1" || !selected.command.endsWith("-application") || selected.profile !== "photos-notify-recovery-crm-broadcast-video")
     || Object.hasOwn(selected, "profile") && (!CHECKPOINT_RUNTIME_PROFILES.includes(selected.profile) || !checkpointBackupProfile(selected.profile, selected.command.endsWith("-application")))) fail("USAGE");
   for (const directory of [selected.privateDirectory, selected.checkpointDirectory]) {
     if (typeof directory !== "string" || !directory.startsWith("/") || directory === "/" || directory.length > 4096
       || directory !== resolve(directory) || /[\\\x00-\x1f\x7f]/.test(directory) || inside(directory, REPOSITORY) || inside(REPOSITORY, directory)) fail("USAGE");
   }
   if (selected.privateDirectory === selected.checkpointDirectory) fail("USAGE");
-  return Object.fromEntries([...FIELDS, ...(Object.hasOwn(selected, "profile") ? ["profile"] : [])].map(name => [name, selected[name]]));
+  if (Object.hasOwn(selected, "experience")) selected.experience = true;
+  return Object.fromEntries([...FIELDS, ...["profile", "experience"].filter(name => Object.hasOwn(selected, name))].map(name => [name, selected[name]]));
 }
 
 function optionsFromRecord(value) {
-  const fields = [...FIELDS, ...(value && Object.hasOwn(value, "profile") ? ["profile"] : [])];
+  const fields = [...FIELDS, ...["profile", "experience"].filter(name => value && Object.hasOwn(value, name))];
   if (!value || Object.getPrototypeOf(value) !== Object.prototype || Object.getOwnPropertySymbols(value).length
     || !same(Object.getOwnPropertyNames(value).sort(), fields.sort())
-    || fields.some(name => !Object.hasOwn(Object.getOwnPropertyDescriptor(value, name) ?? {}, "value"))) fail("USAGE");
+    || fields.some(name => !Object.hasOwn(Object.getOwnPropertyDescriptor(value, name) ?? {}, "value"))
+    || Object.hasOwn(value, "experience") && value.experience !== true) fail("USAGE");
   return parseArguments([value.command, "--private-directory", value.privateDirectory, "--private-path-mode", value.privatePathMode,
     "--checkpoint-directory", value.checkpointDirectory, "--database", value.database, "--confirm-database", value.confirmation, "--user", value.user,
-    ...(Object.hasOwn(value, "profile") ? ["--profile", value.profile] : [])]);
+    ...(Object.hasOwn(value, "profile") ? ["--profile", value.profile] : []), ...(value.experience ? ["--experience", "1"] : [])]);
 }
 function frozenMatches(receipt, backup) {
   if (backup?.backupBytes !== receipt.sql.bytes || backup.backupSha256 !== receipt.sql.sha256
@@ -110,7 +114,7 @@ export async function verifyApplicationCloneSnapshot(source, selection, password
     delete cloneEnv.JESSIEMESSAGE_DB_USER;
     delete cloneEnv.JESSIEMESSAGE_DB_PASSWORD;
     const report = await backup(["verify", "--offline", "--manifest", join(selected.checkpointDirectory, "manifest.json"),
-      "--profile", profile.name], cloneEnv, { signal, outputStream: { write() {} } });
+      "--profile", profile.name, ...(selected.experience ? ["--experience", "1"] : [])], cloneEnv, { signal, outputStream: { write() {} } });
     assertApplicationSnapshotReport(report);
     return report;
   } catch (error) {
@@ -120,12 +124,13 @@ export async function verifyApplicationCloneSnapshot(source, selection, password
 }
 
 /** Exact candidate history; the normal clone reader remains schema33-only. */
-export async function inspectVideoApplicationClone(connection, database) {
-  const migrations = await loadVideoMigrations();
-  await assertVideoApplicationTableInspection(connection, database);
-  const ledger = await connection.query("SELECT version, name, checksum, state, attempts FROM schema_migrations ORDER BY version LIMIT 37");
-  if (migrations.length !== 36 || ledger.length !== 36 || inspectHistory(migrations, ledger).some(row => row.state !== "applied")) fail("SCHEMA");
-  return { tables: 36, migrations: 36 };
+export async function inspectVideoApplicationClone(connection, database, { experience = false } = {}) {
+  if (typeof experience !== "boolean") fail("SCHEMA");
+  const migrations = await (experience ? loadExperienceMigrations : loadVideoMigrations)(), count = experience ? 38 : 36;
+  await (experience ? assertExperienceApplicationTableInspection : assertVideoApplicationTableInspection)(connection, database);
+  const ledger = await connection.query(`SELECT version, name, checksum, state, attempts FROM schema_migrations ORDER BY version LIMIT ${count + 1}`);
+  if (migrations.length !== count || ledger.length !== count || inspectHistory(migrations, ledger).some(row => row.state !== "applied")) fail("SCHEMA");
+  return { tables: experience ? 37 : 36, migrations: count };
 }
 
 /** Verify an imported checkpoint with one read-only connection. No restoration,
@@ -148,13 +153,14 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
     const application = selected.command.endsWith("-application");
     const selectedProfile = checkpointBackupProfile(selected.profile, application);
     const { recovery, crm, broadcast, video, manifestProfile: profile, manifestVersion } = selectedProfile;
-    const tableCount = video ? 36 : 33, countNames = [...COUNT_NAMES, ...(video ? ["videos", "videoFiles", "videoBytes"] : [])];
+    let experience = selected.experience === true, tableCount = experience ? 37 : video ? 36 : 33, migrationCount = experience ? 38 : tableCount;
+    const countNames = [...COUNT_NAMES, ...(video ? ["videos", "videoFiles", "videoBytes"] : []), ...(experience ? ["preferences"] : [])];
     loadEnvironment ??= video ? loadRuntimeVideoEnvironment : broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
     let dumpTables;
     if (application) {
-      const migrations = await (video ? loadVideoMigrations : loadMigrations)();
+      const migrations = await (experience ? loadExperienceMigrations : video ? loadVideoMigrations : loadMigrations)();
       dumpTables = [...createdMigrationTables(migrations), "schema_migrations"].sort();
-      if (migrations.length !== tableCount || dumpTables.length !== tableCount || new Set(dumpTables).size !== tableCount) fail("SCHEMA");
+      if (migrations.length !== migrationCount || dumpTables.length !== tableCount || new Set(dumpTables).size !== tableCount) fail("SCHEMA");
     }
     let processOptions;
     try { processOptions = privateAuthenticationProcessOptions(inheritedEnv, execArgv); } catch { fail("ENVIRONMENT"); }
@@ -183,14 +189,23 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
           ...(video ? { videoRootPath: videoDirectory, videoStorage } : {}) });
         await assertIdentity(sourceIdentity, targetIdentity);
         const checkpoint = await readCheckpoint(checkpointScope, { signal });
-        if (!matchesCheckpointReceipt(selectedProfile, checkpoint)) fail("CHECKPOINT");
+        if (!experience && application && video && checkpoint?.coverage?.tables === 37 && checkpoint?.schema?.tables === 37 && checkpoint.schema.migrations === 38) {
+          // This only selects an exact schema family. The receipt coverage is
+          // validated below and must match the authenticated manifest before
+          // any clone connection or SQL import can be attempted.
+          experience = true; tableCount = 37; migrationCount = 38; countNames.push("preferences");
+          const migrations = await loadExperienceMigrations();
+          dumpTables = [...createdMigrationTables(migrations), "schema_migrations"].sort();
+          if (migrations.length !== 38 || dumpTables.length !== 37 || new Set(dumpTables).size !== 37) fail("SCHEMA");
+        }
+        if (!matchesCheckpointReceipt(selectedProfile, checkpoint) || video && (checkpoint.schema.tables !== tableCount || checkpoint.schema.migrations !== migrationCount)) fail("CHECKPOINT");
         const receiptVersion = checkpoint.version, operational = Object.hasOwn(checkpoint, "operations");
         if (!operational) {
           try { await lstat(checkpointScope.file(OPERATIONAL_CHECKPOINT)); fail("CHECKPOINT"); }
           catch (error) { if (error.code !== "ENOENT") throw error; }
         }
         if (application) {
-          try { (video ? validateVideoApplicationCoverage : validateApplicationCoverage)(checkpoint.coverage); } catch { fail("CHECKPOINT"); }
+          try { (video ? validateVideoSnapshotCoverage : validateApplicationCoverage)(checkpoint.coverage); } catch { fail("CHECKPOINT"); }
         }
         const backupSelection = { backup: "database.sql.gz", backupSha256: checkpoint.sql.sha256 };
         const backup = await readBackup(checkpointScope, backupSelection); frozenMatches(checkpoint, backup);
@@ -202,7 +217,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
             || payload?.snapshot?.capacity?.rootFingerprint !== sourceIdentity.rootFingerprint
             || video && payload?.snapshot?.video?.capacity?.rootFingerprint !== sourceIdentity.video.rootFingerprint) fail("CHECKPOINT");
           if (application) {
-            try { (video ? validateVideoApplicationCoverage : validateApplicationCoverage)(payload.snapshot.coverage); } catch { fail("CHECKPOINT"); }
+            try { (video ? validateVideoSnapshotCoverage : validateApplicationCoverage)(payload.snapshot.coverage); } catch { fail("CHECKPOINT"); }
             if (payload.snapshot.version !== (video ? 3 : 2) || !same(payload.snapshot.coverage, checkpoint.coverage)) fail("CHECKPOINT");
           } else if (payload.snapshot.version === 2 || Object.hasOwn(payload.snapshot, "coverage")) fail("CHECKPOINT");
           return payload;
@@ -243,14 +258,14 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
           operations: { ...checkpoint.operations }, externalRegistryContinuityVerified: false, operationalRestorationPending: true });
         if (["check", "check-application"].includes(selected.command)) { await unchanged(); result = { status: "ready_for_input", ...common, databaseConnected: false }; return; }
         // Historical schemas30/31/32 remain readable above; current clone verification requires schema33.
-        if (checkpoint.schema.tables !== tableCount || checkpoint.schema.migrations !== tableCount) fail("SCHEMA");
+        if (checkpoint.schema.tables !== tableCount || checkpoint.schema.migrations !== migrationCount) fail("SCHEMA");
         try {
           password = await readSecret(inputStream);
           if (typeof password !== "string" || !password || !password.isWellFormed() || /[\x00-\x1f\x7f]/.test(password) || Buffer.byteLength(password, "utf8") > 4096) fail("PASSWORD");
         } catch { fail("PASSWORD"); }
         active();
         const dumped = await dump(checkpointScope, { database: selected.database, user: selected.user },
-          { host: env.JESSIEMESSAGE_DB_HOST, port: env.JESSIEMESSAGE_DB_PORT }, password, { signal, ...(application ? { tables: [...dumpTables] } : {}), ...(video ? { video: true } : {}) });
+          { host: env.JESSIEMESSAGE_DB_HOST, port: env.JESSIEMESSAGE_DB_PORT }, password, { signal, ...(application ? { tables: [...dumpTables] } : {}), ...(video ? { video: true } : {}), ...(experience ? { experience: true } : {}) });
         if (dumped?.sqlBytes !== backup.sqlBytes || dumped.sqlSha256 !== backup.sqlSha256) fail("DUMP_MISMATCH");
         active();
         connectionEnv = { JESSIEMESSAGE_DB_HOST: env.JESSIEMESSAGE_DB_HOST, JESSIEMESSAGE_DB_PORT: env.JESSIEMESSAGE_DB_PORT,
@@ -259,20 +274,20 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         connection = await connect(connectionEnv); active();
         await connection.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ"); transaction = true;
         await connection.query("START TRANSACTION READ ONLY, WITH CONSISTENT SNAPSHOT"); active();
-        await (video ? inspectVideoApplicationPrivileges : application ? inspectApplicationPrivileges : inspectPrivileges)(connection, selected.database);
-        const schema = await (video ? inspectVideo : inspect)(connection, selected.database);
-        if (schema?.tables !== tableCount || schema.migrations !== tableCount) fail("SCHEMA");
+        await (experience ? assertExperienceApplicationTableInspection : video ? inspectVideoApplicationPrivileges : application ? inspectApplicationPrivileges : inspectPrivileges)(connection, selected.database);
+        const schema = await (video ? inspectVideo : inspect)(connection, selected.database, ...(experience ? [{ experience: true }] : []));
+        if (schema?.tables !== tableCount || schema.migrations !== migrationCount) fail("SCHEMA");
         const pool = { getConnection: async () => ({ query(sql, parameters) {
           if (typeof sql !== "string" || !/^SELECT\s/.test(sql) || /\b(?:INTO|OUTFILE|DUMPFILE|FOR\s+UPDATE|LOCK\s+IN\s+SHARE)\b/i.test(sql)) fail("DATABASE");
           return connection.query(sql, parameters);
         }, release: async () => {} }) };
-        const report = await (video ? verifyVideo : broadcast ? verifyBroadcast : crm ? verifyCrm : recovery ? verifyRecovery : verify)({ pool, storage, ...(video ? { videoStorage } : {}), keys, signal }); active();
+        const report = await (video ? verifyVideo : broadcast ? verifyBroadcast : crm ? verifyCrm : recovery ? verifyRecovery : verify)({ pool, storage, ...(video ? { videoStorage } : {}), ...(experience ? { experience: true } : {}), keys, signal }); active();
         if (report?.complete !== true || report.healthy !== true || !Array.isArray(report.issues) || report.issues.length
           || !same(Object.keys(report.counts ?? {}).sort(), [...countNames].sort())
           || countNames.some(name => !Number.isSafeInteger(report.counts[name]) || report.counts[name] < 0)) fail("CRYPTO");
         if (application) {
           const after = await dump(checkpointScope, { database: selected.database, user: selected.user },
-            { host: env.JESSIEMESSAGE_DB_HOST, port: env.JESSIEMESSAGE_DB_PORT }, password, { signal, tables: [...dumpTables], ...(video ? { video: true } : {}) });
+            { host: env.JESSIEMESSAGE_DB_HOST, port: env.JESSIEMESSAGE_DB_PORT }, password, { signal, tables: [...dumpTables], ...(video ? { video: true } : {}), ...(experience ? { experience: true } : {}) });
           if (after?.sqlBytes !== backup.sqlBytes || after.sqlSha256 !== backup.sqlSha256) fail("DUMP_MISMATCH");
           active();
         }
@@ -281,7 +296,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
           try { await connection.rollback(); transaction = false; } catch { fail("CLEANUP"); }
           try { await connection.end(); connection = undefined; } catch { fail("CLEANUP"); }
           active();
-          const snapshotReport = await verifyApplicationSnapshot(env, selected, password, { signal });
+          const snapshotReport = await verifyApplicationSnapshot(env, { ...selected, ...(experience ? { experience: true } : {}) }, password, { signal });
           assertApplicationSnapshotReport(snapshotReport); active();
           await unchanged();
         }

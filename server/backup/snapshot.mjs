@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { createdMigrationTables, loadMigrations } from "../db/migrations.mjs";
 import { assertBackupInspection } from "./inspection.mjs";
-import { assertApplicationTableInspection, assertVideoApplicationTableInspection, validateApplicationCoverage, validateVideoApplicationCoverage, APPLICATION_COVERAGE, VIDEO_APPLICATION_COVERAGE } from "./application-scope.mjs";
+import { assertApplicationTableInspection, assertVideoApplicationTableInspection, assertExperienceApplicationTableInspection, validateApplicationCoverage, validateVideoApplicationCoverage, validateExperienceApplicationCoverage, validateVideoSnapshotCoverage, APPLICATION_COVERAGE, VIDEO_APPLICATION_COVERAGE, EXPERIENCE_APPLICATION_COVERAGE } from "./application-scope.mjs";
+import { loadExperienceMigrations } from "../experience/migrations.mjs";
 import { loadVideoMigrations } from "../video/migrations.mjs";
 import { videoStoredBytes, MAX_VIDEO_BYTES } from "../video/storage.mjs";
 import { inspectVideoBackupInventory } from "./video-inventory.mjs";
@@ -102,8 +103,8 @@ function assertVideoRecovery(before, after, fingerprint) {
 }
 
 /** A bounded consistent read of every application row, including tombstones and outboxes. */
-export function createBackupSnapshotStore({ pool, inspectionPool, coverage = "complete-schema", video = false }) {
-  if (typeof pool?.getConnection !== "function" || typeof video !== "boolean" || video && coverage !== "application-tables"
+export function createBackupSnapshotStore({ pool, inspectionPool, coverage = "complete-schema", video = false, experience = false }) {
+  if (typeof pool?.getConnection !== "function" || typeof video !== "boolean" || typeof experience !== "boolean" || experience && !video || video && coverage !== "application-tables"
     || !["complete-schema", "application-tables"].includes(coverage)) fail("BACKUP_SNAPSHOT_INPUT");
   async function read(operation, transaction = false) {
     let connection, inspection, begun = false;
@@ -133,9 +134,9 @@ export function createBackupSnapshotStore({ pool, inspectionPool, coverage = "co
       const { maxRows } = budget(limits); checkSignal(signal);
       const database = (await connection.query("SELECT DATABASE() AS name"))[0]?.name;
       if (typeof database !== "string" || !/^[a-zA-Z0-9_]{1,64}$/.test(database)) fail();
-      if (coverage === "application-tables") await (video ? assertVideoApplicationTableInspection : assertApplicationTableInspection)(inspection, database);
+      if (coverage === "application-tables") await (experience ? assertExperienceApplicationTableInspection : video ? assertVideoApplicationTableInspection : assertApplicationTableInspection)(inspection, database);
       else await assertBackupInspection(inspection, database);
-      const migrations = await (video ? loadVideoMigrations : loadMigrations)();
+      const migrations = await (experience ? loadExperienceMigrations : video ? loadVideoMigrations : loadMigrations)();
       // A reviewed ALTER adds a migration-ledger row, not another table. The
       // shared inventory validates every statement before selecting CREATEs.
       // Physical CHECK clauses are still included in schemaDigest below, and
@@ -223,7 +224,7 @@ export function createBackupSnapshotStore({ pool, inspectionPool, coverage = "co
         }
       }
       const snapshot = { version: video ? 3 : coverage === "application-tables" ? 2 : 1,
-        ...(coverage === "application-tables" ? { coverage: video ? validateVideoApplicationCoverage(VIDEO_APPLICATION_COVERAGE) : validateApplicationCoverage(APPLICATION_COVERAGE) } : {}),
+        ...(coverage === "application-tables" ? { coverage: experience ? validateExperienceApplicationCoverage(EXPERIENCE_APPLICATION_COVERAGE) : video ? validateVideoApplicationCoverage(VIDEO_APPLICATION_COVERAGE) : validateApplicationCoverage(APPLICATION_COVERAGE) } : {}),
         schemaDigest, coreDigest: core.digest("hex"), counts: { tables: definitions.length, rows: rowsRead }, capacity, objects, assets,
         ...(video ? { video: { capacity: videoCapacity, assets: videoAssets } } : {}) };
       validateSnapshot(snapshot); return snapshot;
@@ -245,7 +246,7 @@ function validateSnapshot(snapshot) {
   } else {
     const coverage = Object.getOwnPropertyDescriptor(snapshot, "coverage");
     if (!coverage?.enumerable || !Object.hasOwn(coverage, "value")) fail();
-    try { if ((snapshot.version === 3 ? validateVideoApplicationCoverage : validateApplicationCoverage)(coverage.value).tables !== snapshot.counts.tables) fail(); } catch { fail(); }
+    try { if ((snapshot.version === 3 ? validateVideoSnapshotCoverage : validateApplicationCoverage)(coverage.value).tables !== snapshot.counts.tables) fail(); } catch { fail(); }
   }
   if (snapshot.version === 3) {
     validateVideoSnapshot(snapshot.video);

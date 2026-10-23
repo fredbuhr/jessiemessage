@@ -115,11 +115,11 @@ function matchingHistory(plan, rows, selectedTables = tables) {
 
 // No Promise.race deadline: all actual driver work is drained before releasing
 // the single connection and awaiting pool.end(), including on failure.
-export async function inspectDatabase({ env = process.env, databaseName, video = false } = {}, {
+export async function inspectDatabase({ env = process.env, databaseName, video = false, experience = false } = {}, {
   createPool = createRuntimePool, loadPlan, signal,
 } = {}) {
-  const selectedProjections = video ? { ...projections, ...videoProjections } : projections;
-  const selectedTables = Object.keys(selectedProjections), readPlan = loadPlan ?? (video ? loadVideoMigrations : loadMigrations);
+  const selectedProjections = video ? { ...projections, ...videoProjections, ...(experience ? { profile_preferences: "user_id, version, selection_encrypted, created_at, updated_at", crm_tasks: projections.crm_tasks + ", reply_kind, reply_through, reply_reopened" } : {}) } : projections;
+  const selectedTables = Object.keys(selectedProjections), readPlan = loadPlan ?? (experience ? async () => (await import("../experience/migrations.mjs")).loadExperienceMigrations() : video ? loadVideoMigrations : loadMigrations);
   const states = new Map(DATABASE_CHECK_NAMES.map((name) => [name, "not_checked"]));
   let profile = null, privilegesObserved = false;
   const result = () => ({
@@ -140,7 +140,7 @@ export async function inspectDatabase({ env = process.env, databaseName, video =
   });
   let options;
   try {
-    if (typeof video !== "boolean") throw new Error();
+    if (typeof experience !== "boolean" || experience && !video || typeof video !== "boolean") throw new Error();
     const requested = env.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE === undefined ? "strict" : env.JESSIEMESSAGE_RUNTIME_PRIVILEGE_PROFILE;
     if (!["strict", "infomaniak-shared", "infomaniak-shared-pattern"].includes(requested)) throw new Error();
     profile = requested;
