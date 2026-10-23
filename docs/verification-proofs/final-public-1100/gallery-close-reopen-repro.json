@@ -1,0 +1,77 @@
+{
+  "type": "synthetic_queued_close_event_order_reproduction_with_actual_application_functions",
+  "realNativeBrowser": false,
+  "source": "public/chat.js",
+  "beforeSource": "b23b694f4effaf802e043b8e70154c2db188af94",
+  "beforeSha256": "8b8dde14b90161b190e6660bb2b62249c7570aefaa792855950eedb3070b80aa",
+  "correctedWorkingTreeSha256": "4ef804f3286637c468f7e641b998d56844c46665054acdfa00f064362f89fd27",
+  "primarySource": {
+    "url": "https://html.spec.whatwg.org/multipage/interactive-elements.html#close-the-dialog",
+    "retrieved": "2026-10-23",
+    "steps": "5 removes open;13 queues close event on user interaction task source",
+    "toolRef": "turn26view0"
+  },
+  "rapidReopen": {
+    "before": {
+      "before": {
+        "open": true,
+        "item": "B",
+        "children": 1,
+        "queuedCloseEvents": 1
+      },
+      "after": {
+        "open": false,
+        "item": null,
+        "children": 0,
+        "queuedCloseEvents": 1
+      }
+    },
+    "afterActualWorkingTree": {
+      "before": {
+        "open": true,
+        "item": "B",
+        "children": 1,
+        "queuedCloseEvents": 1
+      },
+      "after": {
+        "open": true,
+        "item": "B",
+        "children": 1,
+        "queuedCloseEvents": 0
+      }
+    }
+  },
+  "currentNativeClose": {
+    "before": {
+      "before": {
+        "open": false,
+        "item": "A",
+        "children": 1,
+        "queuedCloseEvents": 1
+      },
+      "after": {
+        "open": false,
+        "item": null,
+        "children": 0,
+        "queuedCloseEvents": 0
+      }
+    },
+    "afterActualWorkingTree": {
+      "before": {
+        "open": false,
+        "item": "A",
+        "children": 1,
+        "queuedCloseEvents": 1
+      },
+      "after": {
+        "open": false,
+        "item": null,
+        "children": 0,
+        "queuedCloseEvents": 0
+      }
+    }
+  },
+  "nativeCIPositionProven": false,
+  "nativeFailure": "Run40004246747 timed out original full photo ready; no failure DOM was captured, so the exact triggering iteration is not independently established.",
+  "pending": "New deterministic Chrome regression and existing gallery loop must pass final native qualification."
+}

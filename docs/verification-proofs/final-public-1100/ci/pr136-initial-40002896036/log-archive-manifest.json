@@ -1,0 +1,78 @@
+{
+  "format": 1,
+  "run": 40002896036,
+  "source": "0ca0dd2efa3151d5b5f8004d5c67d4ea9e24f584",
+  "tree": "42bf8ed6e9f91b6c289a6b10fe61b2abb93c8da7",
+  "logs": [
+    {
+      "name": "verify",
+      "jobId": 120583311714,
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40002896036/job/120583311714",
+      "file": "verify.log.gz",
+      "localLogArchive": "verify.log.gz",
+      "format": "gzip",
+      "gzipMtime": 0,
+      "decompressedBytes": 577374,
+      "decompressedSha256": "c0834b5a0d075616ba925d336799042f92dfe04a99dd73c25ae32f50b11ea228",
+      "compressedBytes": 167536,
+      "compressedSha256": "7ccc03f288021546dc8fcff42702af90763556c0a5efd0e359f721edc246c660",
+      "decompressionVerified": true
+    },
+    {
+      "name": "mariadb1011",
+      "jobId": 120583312044,
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40002896036/job/120583312044",
+      "file": "mariadb1011.log.gz",
+      "localLogArchive": "mariadb1011.log.gz",
+      "format": "gzip",
+      "gzipMtime": 0,
+      "decompressedBytes": 358499,
+      "decompressedSha256": "9d93a61fcab52eb274b1e588893fe839b13625c0bb047ebe77be78d30ab963f9",
+      "compressedBytes": 66935,
+      "compressedSha256": "abc74b0ff665d4e4a9c2d79655a1ccc1e32010f625baa53bfd257a11db50020c",
+      "decompressionVerified": true
+    },
+    {
+      "name": "mariadb114",
+      "jobId": 120583312073,
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40002896036/job/120583312073",
+      "file": "mariadb114.log.gz",
+      "localLogArchive": "mariadb114.log.gz",
+      "format": "gzip",
+      "gzipMtime": 0,
+      "decompressedBytes": 359113,
+      "decompressedSha256": "4e5f174c3f2fc51f45794533db2d32f631c0537570162d9156ef7c99104a66c9",
+      "compressedBytes": 67888,
+      "compressedSha256": "9af7e1e427730deda6ae0418a7825273138b096d03c22b71809a9b3c474ba897",
+      "decompressionVerified": true
+    },
+    {
+      "name": "https",
+      "jobId": 120583312118,
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40002896036/job/120583312118",
+      "file": "https.log.gz",
+      "localLogArchive": "https.log.gz",
+      "format": "gzip",
+      "gzipMtime": 0,
+      "decompressedBytes": 44862,
+      "decompressedSha256": "0e647cc15f2383d2dc1eb9f52d009792f81c3e3a3590cb01fe3b9a1373790d8a",
+      "compressedBytes": 11061,
+      "compressedSha256": "a015d48d31c93d3be54631b3eff262ef08863664ebe5aaaf5edc2d15c0b103c0",
+      "decompressionVerified": true
+    },
+    {
+      "name": "browser",
+      "jobId": 120583312327,
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40002896036/job/120583312327",
+      "file": "browser.log.gz",
+      "localLogArchive": "browser.log.gz",
+      "format": "gzip",
+      "gzipMtime": 0,
+      "decompressedBytes": 56451,
+      "decompressedSha256": "1be660b7672c08616dd5870dddec5b34a90830db76fe7a7bab3230063f44e3c2",
+      "compressedBytes": 15294,
+      "compressedSha256": "3b975363b899022f7428d7aab9256915d1a08b9a8a9945d653df971bd67d72f8",
+      "decompressionVerified": true
+    }
+  ]
+}

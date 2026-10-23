@@ -1,0 +1,37 @@
+{
+  "status": "five_document_links_corrected_child_report_archived",
+  "pathCorrections": [
+    {
+      "item": "REL-10",
+      "old": "../../../SECURITY.md",
+      "new": "../../SECURITY.md"
+    },
+    {
+      "item": "REL-10",
+      "old": "../../../REPRISE.md",
+      "new": "../../REPRISE.md"
+    },
+    {
+      "item": "REL-10",
+      "old": "../../../PLAN-IMPLEMENTATION.md",
+      "new": "../../PLAN-IMPLEMENTATION.md"
+    },
+    {
+      "item": "GATE-03",
+      "old": "../../../AUDIT-FINAL-20261022.md",
+      "new": "../../AUDIT-FINAL-20261022.md"
+    },
+    {
+      "item": "GATE-03",
+      "old": "../../../AUDIT-2-20261022.md",
+      "new": "../../AUDIT-2-20261022.md"
+    }
+  ],
+  "childReport": "business-crm.json",
+  "runtimeChanges": false,
+  "rootFollowup": {
+    "topLevelChecklistEvidenceFileReferences": 151,
+    "allResolved": true,
+    "runtimeChanges": false
+  }
+}

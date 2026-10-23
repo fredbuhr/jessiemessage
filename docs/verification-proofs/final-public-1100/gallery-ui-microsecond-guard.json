@@ -1,0 +1,36 @@
+{
+  "status": "reproduced_pure_guard",
+  "file": "public/chat.js",
+  "line": 1324,
+  "sqlDifferentDatesCollapseToSameMilliseconds": true,
+  "outcomes": [
+    {
+      "direction": "next",
+      "original": {
+        "messageId": "ffffffffffffffffffffffffffffffff",
+        "createdAt": 1792065601123
+      },
+      "item": {
+        "messageId": "00000000000000000000000000000001",
+        "createdAt": 1792065601123
+      },
+      "compared": -1,
+      "uiRejectsCorrectSqlNeighbor": true
+    },
+    {
+      "direction": "previous",
+      "original": {
+        "messageId": "00000000000000000000000000000001",
+        "createdAt": 1792065601123
+      },
+      "item": {
+        "messageId": "ffffffffffffffffffffffffffffffff",
+        "createdAt": 1792065601123
+      },
+      "compared": 1,
+      "uiRejectsCorrectSqlNeighbor": true
+    }
+  ],
+  "networkCalls": 0,
+  "repoMutations": 0
+}

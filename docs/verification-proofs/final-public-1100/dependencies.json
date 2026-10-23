@@ -1,0 +1,622 @@
+{
+  "format": 1,
+  "reviewDate": "2026-10-23",
+  "deployedSource": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+  "candidateVersion": "1.10.1",
+  "candidatePin": "nodemailer@10.1.4",
+  "changedPackageEntries": [
+    "",
+    "node_modules/nodemailer"
+  ],
+  "npmCiIgnoreScripts": "success;38 packagesinstalled; lockintegritycheckedbynpm",
+  "npmAuditAfter": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "dependencies": {
+      "prod": 32,
+      "dev": 0,
+      "optional": 28,
+      "peer": 0,
+      "peerOptional": 0,
+      "total": 59
+    }
+  },
+  "npmAuditBeforeFile": "npm-audit.json",
+  "npmAuditAfterFile": "npm-audit-10.1.4.json",
+  "important": "0 registryadvisories does not mean absenceofvulnerabilities: maintainerNodemaileradvisories were not reported by npm audit before correction. No Jessiemail recipientexploit wasdemonstrated: canonicalEmail rejects all3rawPoCs and explicitSMTPenvelope is validated.",
+  "lockedPackages": [
+    {
+      "path": "",
+      "version": "1.10.1",
+      "resolved": null,
+      "integrity": null,
+      "optional": false
+    },
+    {
+      "path": "node_modules/@emnapi/runtime",
+      "version": "1.11.3",
+      "resolved": "https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.11.3.tgz",
+      "integrity": "sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/colour",
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/@img/colour/-/colour-1.1.0.tgz",
+      "integrity": "sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/@img/sharp-darwin-arm64",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/@img/sharp-darwin-arm64/-/sharp-darwin-arm64-0.35.5.tgz",
+      "integrity": "sha512-QRUlFQ0WxvdWyqqG/WtI3iupfD5rBzmCHXSdPsY91sAtVtTo7Q4cb6zOccZ3gqEqkr0f1As1ehLqmEpDsRf+lg==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-darwin-x64",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/@img/sharp-darwin-x64/-/sharp-darwin-x64-0.35.5.tgz",
+      "integrity": "sha512-+BR255RhDlpygUpOc/Jdt1nT6DQ3XG/ERo5wbcdOf5Q320dKtPCKPLR1LJs9VGXRaMa8l1uUa0tkCNOXiAxZUw==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-freebsd-wasm32",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/@img/sharp-freebsd-wasm32/-/sharp-freebsd-wasm32-0.35.5.tgz",
+      "integrity": "sha512-Y/z91nEZ4uIBX5X3nfTovjU9lHNKFYbL2lpHCLVNmXQK03VIZvXBBt0KxbPGp2SdGSF+2mQU4e+hQaWOt86iAw==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-darwin-arm64",
+      "version": "1.3.4",
+      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-darwin-arm64/-/sharp-libvips-darwin-arm64-1.3.4.tgz",
+      "integrity": "sha512-5R89nBYiRdUlSWJxPhO+GVtaXzXSxKnRu/xqMn3KTA3L9EB9Oy/P+Nn2f2vlhPuUdy/Zusb2DarbyTpGCfEDuw==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-darwin-x64",
+      "version": "1.3.4",
+      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-darwin-x64/-/sharp-libvips-darwin-x64-1.3.4.tgz",
+      "integrity": "sha512-iR2OKH80yi0U+dUplyh3/xdpFvps6YkCwsXenIJxqxR1v9o+xtKTGbS9H7cps+2Vxjc8B1j96p75NmTGjIhtpQ==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linux-arm",
+      "version": "1.3.4",
+      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-arm/-/sharp-libvips-linux-arm-1.3.4.tgz",
+      "integrity": "sha512-LmRtTsOHuvM2+wlO2Db37dx5MiZhB0FvSunciw48YjdOkZz9KAiRbm8ujeMOA1INqmei5NapFxYEK1D1ZSidmw==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linux-arm64",
+      "version": "1.3.4",
+      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-arm64/-/sharp-libvips-linux-arm64-1.3.4.tgz",
+      "integrity": "sha512-Y3dgX/6lE2QhQb+Gxy0WZxfg9MEm/JBjamZpS2IklP7xIQoKN4hzAm7KcMVGtaVDt3neE9OKBC7vAfonA/Lr1A==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linux-ppc64",
+      "version": "1.3.4",
+      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-ppc64/-/sharp-libvips-linux-ppc64-1.3.4.tgz",
+      "integrity": "sha512-Le6boB8Tai0Nis+gIxIpKx68UDVVIqdR8Tin5Yf1z2LJJQLDJvCDRqRu+jC2qCoD+eIomonmOwB4smBRxfVpYQ==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linux-riscv64",
+      "version": "1.3.4",
+      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-riscv64/-/sharp-libvips-linux-riscv64-1.3.4.tgz",
+      "integrity": "sha512-aHkkIEHPRdQEegJN20MLmGtxYD9R2wQr3Cwpddnu5+YKMt6Uzax7S9h5gpZTo8wyrGuZSlfQ63OevL5mTyOC7Q==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linux-s390x",
+      "version": "1.3.4",
+      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-s390x/-/sharp-libvips-linux-s390x-1.3.4.tgz",
+      "integrity": "sha512-ra/mB6MikESDUO7Yg+Mi95bFBb9GsObURuhnOv3OqknjGe9sZrG8tCe9q0xSIGrtLgvgw0gKnFWcK4blSgQOuQ==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linux-x64",
+      "version": "1.3.4",
+      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-x64/-/sharp-libvips-linux-x64-1.3.4.tgz",
+      "integrity": "sha512-GJ//SSXbnwSDes02umB3nDJLFcQzw8a18V8fyhqr6tV515tOEMdImjjxj1AoafMRz56F3PHgftnj1QEKSU1zkw==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linuxmusl-arm64",
+      "version": "1.3.4",
+      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linuxmusl-arm64/-/sharp-libvips-linuxmusl-arm64-1.3.4.tgz",
+      "integrity": "sha512-hvulFwtjUcagsis6BBxHwGFwWoNZjgYmULGVrZcyfNbjA8hKILbRxGg15/7w5HDyXHXUos/j6baAWqnCyQ2DWA==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linuxmusl-x64",
+      "version": "1.3.4",
+      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linuxmusl-x64/-/sharp-libvips-linuxmusl-x64-1.3.4.tgz",
+      "integrity": "sha512-6zXKeE/p39I1AmA3cJG35eyBGNqNddLnUXjhwBnsGjFPWqf5VKkDBEqaEkPDoTEtkxwi2vv8Tcr2mDyP4So7Fg==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-linux-arm",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/@img/sharp-linux-arm/-/sharp-linux-arm-0.35.5.tgz",
+      "integrity": "sha512-LEaXK2WdXVK5ykcw0buWyPMsmLLL2vpHLD6yrNSW+JGEL3BZPA4tpKN6iaMc4AxTTAoaX/sU1rOL51lcIz48ZQ==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-linux-arm64",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/@img/sharp-linux-arm64/-/sharp-linux-arm64-0.35.5.tgz",
+      "integrity": "sha512-LYVx5JTsOM2CBzmxreh+nl64/3H6Xb09iSLknqH47z2T2DFFxDeFLP5y4dJwe6H7uGQlHPyEEtIqyo3DYsRwdQ==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-linux-ppc64",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/@img/sharp-linux-ppc64/-/sharp-linux-ppc64-0.35.5.tgz",
+      "integrity": "sha512-QVxAAq8evVRI9ia2vqgwrmWucn5Dfv+JdWzj75pD8omHLPSP7f8p20O8jxzjCcuCEQEOtYOZUmX1hkiZ0kdevA==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-linux-riscv64",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/@img/sharp-linux-riscv64/-/sharp-linux-riscv64-0.35.5.tgz",
+      "integrity": "sha512-LtdreXguaavKODPIfzJ4kffx7UNt1omwtK0rch4EBbbSTXPnxWmYSayXdLJw0fJzQ97kHt1gL/yh4tvU+nCyRQ==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-linux-s390x",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/@img/sharp-linux-s390x/-/sharp-linux-s390x-0.35.5.tgz",
+      "integrity": "sha512-UZasTOFiYzotTsGOCu42BfUzP6Tu6Do/947iRm1RsLKvlllxwGcn4RN27LibGWceix4Y+Pmw3jsnTcCQIgWjqA==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-linux-x64",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/@img/sharp-linux-x64/-/sharp-linux-x64-0.35.5.tgz",
+      "integrity": "sha512-SxFtLTeJInhAA9Q836kux2vZNeOBQEx658qvbboZScr0wIARym3IcGmW7KpVD5sbVg0Ojy+udFQdayYIZyoNog==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-linuxmusl-arm64",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/@img/sharp-linuxmusl-arm64/-/sharp-linuxmusl-arm64-0.35.5.tgz",
+      "integrity": "sha512-9HbMclmI1zlNkFRs3z9/eBtDjfD0sGlrX1z6b1qwmiFY5ElDLh4BC0LPBdVp7z1DXFiKlIcznf+ZlsuZzLxQqg==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-linuxmusl-x64",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/@img/sharp-linuxmusl-x64/-/sharp-linuxmusl-x64-0.35.5.tgz",
+      "integrity": "sha512-4KOphqB035HrVdqLZfCgMzzERrQkkzOwRhl4OAkRO1YCldbaFjySXMaK534Mo0V+LndnlJk+sbUyLeU0ULyD1A==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-wasm32",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/@img/sharp-wasm32/-/sharp-wasm32-0.35.5.tgz",
+      "integrity": "sha512-Ptsga1su4tQx+LLF1ECS9U6nz5kmrXKo6XVbtR48Ke3ZRxxgaWBu7IDtEe1quo8hiupwm6WFqxVlXaSf7IINGQ==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-webcontainers-wasm32",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/@img/sharp-webcontainers-wasm32/-/sharp-webcontainers-wasm32-0.35.5.tgz",
+      "integrity": "sha512-hfhF/FmoQyTUkA0bIKFOtw536BQSeBMe6BF6QyWlrPxT754+TFLaZ7sKKTfvvM0yJgKgaYTwnFCIZ/GuDw5SUA==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-win32-arm64",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/@img/sharp-win32-arm64/-/sharp-win32-arm64-0.35.5.tgz",
+      "integrity": "sha512-X4t7g+7ZA5DKblCBEXGjUqqemj4vczING/5viFwAL8h4N3qYeyjwdCvRLHi4EdOUI+2Z7UFlp1VM+p/AuEtm6Q==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-win32-ia32",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/@img/sharp-win32-ia32/-/sharp-win32-ia32-0.35.5.tgz",
+      "integrity": "sha512-5Zm82LoBc43nhwNybZlG7Y1KO//Zhsn306fQl29ZOuStHLGTo3BWL83q3cznX0poxSAMuYL1On/BHBxkBeKr6A==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@img/sharp-win32-x64",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.35.5.tgz",
+      "integrity": "sha512-x76eH0vEiHlcMQu8Y8IenntaACtddpT6W0wmXtWrnKcnKI7ME5DdgqhAD6SEWOEl1v2zDvkZDhFA9KnURwpfqg==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/@noble/hashes",
+      "version": "2.4.0",
+      "resolved": "https://registry.npmjs.org/@noble/hashes/-/hashes-2.4.0.tgz",
+      "integrity": "sha512-X5XaVWZIBCT7HHZGm5I7ZQXDwLG+bGXuSrMQAW+7Zvl87h1kmc1ZB1VSRJcpUfoUrGQp4Fkoxm5kZ+Ms+aW+eA==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/geojson",
+      "version": "7946.0.16",
+      "resolved": "https://registry.npmjs.org/@types/geojson/-/geojson-7946.0.16.tgz",
+      "integrity": "sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/@types/node",
+      "version": "26.6.5",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-26.6.5.tgz",
+      "integrity": "sha512-uMzsv9stDdofIZBx4UGh4Z9ZgXnGC9seRDscilBcTHAeOFk67MZg/k9bWVfO+bk4qZmG+l52hRnLwUiH2LnJTg==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/agent-base",
+      "version": "7.1.4",
+      "resolved": "https://registry.npmjs.org/agent-base/-/agent-base-7.1.4.tgz",
+      "integrity": "sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/asn1.js",
+      "version": "5.4.1",
+      "resolved": "https://registry.npmjs.org/asn1.js/-/asn1.js-5.4.1.tgz",
+      "integrity": "sha512-+I//4cYPccV8LdmBLiX8CYvf9Sp3vQsrqu2QNXRcrbiWvcx/UdlFiqUJJzxRQxgsZmvhXhn4cSKeSmoFjVdupA==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/bn.js",
+      "version": "4.12.5",
+      "resolved": "https://registry.npmjs.org/bn.js/-/bn.js-4.12.5.tgz",
+      "integrity": "sha512-3aRg6/JxfffFD+OlOjOFR3Vo79l39ooBTFucxx+MT3dhCtzn3EmiUPQo+6/OZuI2jbXi3YKgmiTFBgChQMwIRQ==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/buffer-equal-constant-time",
+      "version": "1.0.1",
+      "resolved": "https://registry.npmjs.org/buffer-equal-constant-time/-/buffer-equal-constant-time-1.0.1.tgz",
+      "integrity": "sha512-zRpUiDwd/xk6ADqPMATG8vc9VPrkck7T07OIx0gnjmJAnHnTVXNQG3vfvWNuiZIkwu9KrKdA1iJKfsfTVxE6NA==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/debug",
+      "version": "4.4.3",
+      "resolved": "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz",
+      "integrity": "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/denque",
+      "version": "2.1.0",
+      "resolved": "https://registry.npmjs.org/denque/-/denque-2.1.0.tgz",
+      "integrity": "sha512-HVQE3AAb/pxF8fQAoiqpvg9i3evqug3hoiwakOyZAwJm+6vZehbkYXZ0l4JxS+I3QxM97v5aaRNhj8v5oBhekw==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/detect-libc",
+      "version": "2.1.2",
+      "resolved": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz",
+      "integrity": "sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/ecdsa-sig-formatter",
+      "version": "1.0.11",
+      "resolved": "https://registry.npmjs.org/ecdsa-sig-formatter/-/ecdsa-sig-formatter-1.0.11.tgz",
+      "integrity": "sha512-nagl3RYrbNv6kQkeJIpt6NJZy8twLB/2vtz6yN9Z4vRKHN4/QZJIEbqohALSgwKdnksuY3k5Addp5lg8sVoVcQ==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/http_ece",
+      "version": "1.2.0",
+      "resolved": "https://registry.npmjs.org/http_ece/-/http_ece-1.2.0.tgz",
+      "integrity": "sha512-JrF8SSLVmcvc5NducxgyOrKXe3EsyHMgBFgSaIUGmArKe+rwr0uphRkRXvwiom3I+fpIfoItveHrfudL8/rxuA==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/https-proxy-agent",
+      "version": "7.0.6",
+      "resolved": "https://registry.npmjs.org/https-proxy-agent/-/https-proxy-agent-7.0.6.tgz",
+      "integrity": "sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/iconv-lite",
+      "version": "0.7.3",
+      "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.7.3.tgz",
+      "integrity": "sha512-IKXpvIzjnC9XTAUbVBcMfGS0EPaIXtW6v+zr+RRp+hqULEpo0owZax6wyRwPOJbWbzjYspQwusTsfVr0ifh4uQ==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/inherits",
+      "version": "2.0.4",
+      "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz",
+      "integrity": "sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/jwa",
+      "version": "2.0.1",
+      "resolved": "https://registry.npmjs.org/jwa/-/jwa-2.0.1.tgz",
+      "integrity": "sha512-hRF04fqJIP8Abbkq5NKGN0Bbr3JxlQ+qhZufXVr0DvujKy93ZCbXZMHDL4EOtodSbCWxOqR8MS1tXA5hwqCXDg==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/jws",
+      "version": "4.0.1",
+      "resolved": "https://registry.npmjs.org/jws/-/jws-4.0.1.tgz",
+      "integrity": "sha512-EKI/M/yqPncGUUh44xz0PxSidXFr/+r0pA70+gIYhjv+et7yxM+s29Y+VGDkovRofQem0fs7Uvf4+YmAdyRduA==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/lru-cache",
+      "version": "11.5.3",
+      "resolved": "https://registry.npmjs.org/lru-cache/-/lru-cache-11.5.3.tgz",
+      "integrity": "sha512-U4N8FgzmWxc8k1VH8Kr6lQg18U7Fjvby6wXHVRX/ZZ7IwWbRMgrRbP0Wrb5q5NVinryp4SQampHKdvtecItxUg==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/mariadb",
+      "version": "3.5.4",
+      "resolved": "https://registry.npmjs.org/mariadb/-/mariadb-3.5.4.tgz",
+      "integrity": "sha512-3m0vdfgRkjle5/9hHl4R7rlVvnDA7QfuFSNkdIAQNROWKOS0J3b9IQK9HaZSCGEVKiDUbFXFiINfC+cmR5P/aA==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/minimalistic-assert",
+      "version": "1.0.1",
+      "resolved": "https://registry.npmjs.org/minimalistic-assert/-/minimalistic-assert-1.0.1.tgz",
+      "integrity": "sha512-UtJcAD4yEaGtjPezWuO9wC4nwUnVH/8/Im3yEHQP4b67cXlD/Qr9hdITCU1xDbSEXg2XKNaP8jsReV7vQd00/A==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/minimist",
+      "version": "1.2.8",
+      "resolved": "https://registry.npmjs.org/minimist/-/minimist-1.2.8.tgz",
+      "integrity": "sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/ms",
+      "version": "2.1.3",
+      "resolved": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+      "integrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/nodemailer",
+      "version": "10.1.4",
+      "resolved": "https://registry.npmjs.org/nodemailer/-/nodemailer-10.1.4.tgz",
+      "integrity": "sha512-EsMnOR2oRv4LGnWvHgcVYkkQ4O2j8KO4WTw6l+PHR4sOXo8SAgIraxtEnGDmotjbhv0hDsu3IuDIFZm8iXwO4A==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/otpauth",
+      "version": "9.5.2",
+      "resolved": "https://registry.npmjs.org/otpauth/-/otpauth-9.5.2.tgz",
+      "integrity": "sha512-GQ5emWR/x1tcExT62IBT0UfO95wZzJZyxYOJOGVeQF47SYEN9vmh0vISvDZaNMuFJRG+IaWCKtfm+t9Bfoal6w==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/safe-buffer",
+      "version": "5.2.1",
+      "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.2.1.tgz",
+      "integrity": "sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/safer-buffer",
+      "version": "2.1.2",
+      "resolved": "https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz",
+      "integrity": "sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/semver",
+      "version": "7.8.5",
+      "resolved": "https://registry.npmjs.org/semver/-/semver-7.8.5.tgz",
+      "integrity": "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/sharp",
+      "version": "0.35.5",
+      "resolved": "https://registry.npmjs.org/sharp/-/sharp-0.35.5.tgz",
+      "integrity": "sha512-Ywn4OnzGukp7CDMrp08RQ50YKmuwG47brZgIVPTvBaaAfQlRlygrRqSrxdCiL9M+LlzLBiJ68IR1QqvzHyjC7g==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/tslib",
+      "version": "2.8.1",
+      "resolved": "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz",
+      "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==",
+      "optional": true
+    },
+    {
+      "path": "node_modules/undici-types",
+      "version": "8.9.0",
+      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-8.9.0.tgz",
+      "integrity": "sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==",
+      "optional": false
+    },
+    {
+      "path": "node_modules/web-push",
+      "version": "3.6.7",
+      "resolved": "https://registry.npmjs.org/web-push/-/web-push-3.6.7.tgz",
+      "integrity": "sha512-OpiIUe8cuGjrj3mMBFWY+e4MMIkW3SVT+7vEIjvD9kejGUypv8GPDf84JdPWskK8zMRIJ6xYGm+Kxr8YkPyA0A==",
+      "optional": false
+    }
+  ],
+  "allNonRootPackagesRegistryHttps": true,
+  "allNonRootPackagesIntegrity": true,
+  "localRuntime": {
+    "node": "v24.19.0",
+    "nodemailer": "10.1.4",
+    "sharp": {
+      "aom": "3.15.1",
+      "archive": "3.8.9",
+      "cairo": "1.18.6",
+      "cgif": "0.5.4",
+      "exif": "0.6.26",
+      "expat": "2.8.5",
+      "ffi": "3.8.0",
+      "fontconfig": "2.18.3",
+      "freetype": "2.14.3",
+      "fribidi": "1.0.17",
+      "glib": "2.90.0",
+      "harfbuzz": "14.5.0",
+      "heif": "1.23.5",
+      "highway": "1.4.0",
+      "imagequant": "2.4.1",
+      "lcms": "2.19.1",
+      "mozjpeg": "0826579",
+      "pango": "1.58.2",
+      "pixman": "0.46.4",
+      "png": "1.6.58",
+      "proxy-libintl": "0.5",
+      "rsvg": "2.63.2",
+      "tiff": "4.7.2",
+      "uhdr": "2.0.2",
+      "vips": "8.18.7",
+      "webp": "1.6.0",
+      "xml2": "2.15.4",
+      "zlib-ng": "2.3.3",
+      "sharp": "0.35.5"
+    }
+  },
+  "targetedTests": {
+    "files": [
+      "tests/mail.test.mjs",
+      "tests/reset-mail.test.mjs",
+      "tests/smtp-socket.test.mjs"
+    ],
+    "tests": 42,
+    "pass": 42,
+    "fail": 0,
+    "skip": 0,
+    "log": "nodemailer-10.1.4-targeted.tap",
+    "network": "syntheticSMTPonly; noexternalmailsent"
+  },
+  "primarySources": [
+    {
+      "component": "node",
+      "url": "https://nodejs.org/en/blog/release/v24.22.1",
+      "assessment": "23 Oct 2026: deployed pin24.22.1 is the21Oct security release and current latestLTS. Local targeted tests use24.19.0, never represented as deployed/native."
+    },
+    {
+      "component": "node",
+      "url": "https://nodejs.org/en/blog/vulnerability/october-2026-security-releases",
+      "assessment": "Official October2026 security release reviewed; deployedpin includes its fixes."
+    },
+    {
+      "component": "nodemailer",
+      "url": "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-8c8m-p3m8-cjg8",
+      "assessment": "Nested comment parsing, affected>=3.0.0<10.1.4; candidate10.1.4 patched."
+    },
+    {
+      "component": "nodemailer",
+      "url": "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-m943-m63m-w62w",
+      "assessment": "Quoted/comment semicolon parsing, affected>=3.0.0<10.1.4; candidate10.1.4 patched."
+    },
+    {
+      "component": "nodemailer",
+      "url": "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-85x2-q946-cp5h",
+      "assessment": "Quoted angle-address parsing, affected>=3.0.0<10.1.4; candidate10.1.4 patched."
+    },
+    {
+      "component": "nodemailer",
+      "url": "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-39m8-27wv-hr27",
+      "assessment": "DKIM header DoS<=10.0.9 patched10.0.10; deployed10.1.1 already outside range; Jessie does not enable DKIM."
+    },
+    {
+      "component": "sharp",
+      "url": "https://github.com/lovell/sharp/security/advisories/GHSA-wq5f-xc86-pv6w",
+      "assessment": "Inherited librsvg CVE-2026-96889 affectedsharp<0.35.5; deployed0.35.5 outside range. SVG loader additionally blocked."
+    },
+    {
+      "component": "sharp",
+      "url": "https://github.com/lovell/sharp/security/advisories/GHSA-f88m-g3jw-g9cj",
+      "assessment": "libvips inherited issues affectedsharp<0.35.0; deployed0.35.5 outside range. Maintainer workaround blocksGIF/TIFF/VIPS; Jessie blocks all foreign loaders except JPEG/PNG/WebPbuffer."
+    },
+    {
+      "component": "libvips",
+      "url": "https://github.com/lovell/sharp-libvips/releases/tag/v1.3.4",
+      "assessment": "Official bundledversions agree with lockedlocal runtime:libvips8.18.7,rsvg2.63.2,png1.6.58,webp1.6.0; not a separatehost introspection."
+    },
+    {
+      "component": "libvips",
+      "url": "https://github.com/libvips/libvips/security/advisories",
+      "assessment": "Maintainer current advisory listing read, August2026+July2026 issues covered by later bundled8.18.7; no new applicable issue established."
+    },
+    {
+      "component": "sharp",
+      "url": "https://github.com/lovell/sharp/security/policy",
+      "assessment": "Onlylatest supported; processresource limits recommended and present. PIE binary hardening is residual beyond dependency version correctness."
+    },
+    {
+      "component": "mariadb",
+      "url": "https://github.com/mariadb-corporation/mariadb-connector-nodejs/security/advisories/GHSA-42r5-vhpq-m858",
+      "assessment": "PAM cleartext path affected<3.5.3, pin3.5.4 corrected."
+    },
+    {
+      "component": "mariadb",
+      "url": "https://github.com/mariadb-corporation/mariadb-connector-nodejs/security/advisories/GHSA-g5xc-5w98-jfvm",
+      "assessment": "Multibyte Buffer escaping affected<3.5.3, pin3.5.4 corrected."
+    },
+    {
+      "component": "mariadb",
+      "url": "https://github.com/mariadb-corporation/mariadb-connector-nodejs/security/advisories/GHSA-r3rv-jm3r-62q2",
+      "assessment": "NO_BACKSLASH_ESCAPES textquery injection patched3.5.4, deployed pin corrected."
+    },
+    {
+      "component": "mariadb",
+      "url": "https://github.com/mariadb-corporation/mariadb-connector-nodejs/security/advisories/GHSA-v6pj-gxxw-phfw",
+      "assessment": "SET objectkeys injection patched3.5.4; no untrusted objectexpansion identified in application."
+    },
+    {
+      "component": "mariadb",
+      "url": "https://github.com/mariadb-corporation/mariadb-connector-nodejs/security/advisories/GHSA-cx2f-j9fh-8g68",
+      "assessment": "ed25519 zero-config TLS crash fixed3.5.4."
+    },
+    {
+      "component": "mariadb",
+      "url": "https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/CHANGELOG.md",
+      "assessment": "3.5.5 notes Pool.escape fixCONJS378. No application/server/scripts escape/escapeId/changeUser call; runtimewrapper exposes noescapeAPI. Unreachablepath, not asserted fixedin3.5.4."
+    },
+    {
+      "component": "web-push",
+      "url": "https://github.com/web-push-libs/web-push/security",
+      "assessment": "Maintainer page says no publishedadvisories; not proofabsence. Installed3.6.7 retained."
+    },
+    {
+      "component": "jws",
+      "url": "https://github.com/auth0/node-jws/security/advisories/GHSA-869p-cjfg-cm3x",
+      "assessment": "Transitivejws4.0.1 is a listed patchedversion; app uses opaque sessions, not JWTauth."
+    },
+    {
+      "component": "@noble/hashes",
+      "url": "https://github.com/paulmillr/noble-hashes/security",
+      "assessment": "Transitive2.4.0 is currentlysupported by policy; maintainer page has no publishedadvisories."
+    },
+    {
+      "component": "otpauth",
+      "url": "https://github.com/hectorm/otpauth",
+      "assessment": "Maintainer recommendations reviewed:smallTOTPwindow/serverthrottle/replaytracking; application follows those with32Bsecret andwindow1. Specificsecuritypage unavailable after retries."
+    }
+  ],
+  "limits": [
+    "Individual maintainer advisories not available for every transitive package; exact59-package non-root lock inventory and whole-lock registryaudit cover those at registrydatabaselevel only.",
+    "OTPAuth, bn.js securitypages could not be fetched; publicmaintainer source/docs checkedwhereavailable; no claimzero-vulnerabilities.",
+    "SharedhostOS/baseimages/CA/provider TLS termination not included in npm registryaudit.",
+    "Upgrade is local candidate pending nativeCI/deployment; deployed1.10.0 still has Nodemailer10.1.1 untilparent completes release."
+  ],
+  "packageCounts": {
+    "lockEntriesIncludingRoot": 60,
+    "nonRootPackages": 59
+  }
+}

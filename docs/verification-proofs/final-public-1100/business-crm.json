@@ -1,0 +1,1620 @@
+{
+  "schemaVersion": 1,
+  "audit": "JessieMessage1.10.0 final backend/business CRM-broadcast-announcements-tasks-replies review",
+  "completedAtUtc": "2026-10-23T18:09:12.867038+00:00",
+  "mode": "read_only_local_review_no_production_or_remote_calls",
+  "source": {
+    "reportedActiveSource": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+    "qualifiedAppTree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+    "localEquivalentAppCommit": "ab70dba",
+    "localEquivalentAppTree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+    "checkoutHead": "6dfd1cca8c31fd83181c8754b664912a295eaaef",
+    "postAppTreeChangesAreDocumentationOnly": true,
+    "localSourceObject51bAvailable": false,
+    "identityLimit": "Active source identity is from preserved release/host receipts; no host execution/files were inspected in this audit. Locally reviewed ab70dba has the recorded exact qualified app tree.",
+    "runtimeSourcesMatchAppTree": true,
+    "workingTreeChangedOutsideThisAuditLotAtFinalCheck": [
+      "package-lock.json",
+      "package.json",
+      "public/i18n-public-profile.js",
+      "public/public-profile.html",
+      "server/access/http.mjs",
+      "server/auth/http.mjs",
+      "tests/access-http.test.mjs",
+      "tests/auth-http.test.mjs",
+      "tests/auth-store.integration.test.mjs",
+      "tests/browser/public-profile.browser.mjs"
+    ],
+    "reviewScopeRuntimeFilesStillMatchAppTree": true,
+    "workingTreeLimit": "Concurrent parent work introduced tracked changes outside the29 principal modules during audit finalization; those changes are outside this review. docs-only assertion concerns committed HEAD6dfd1cc versus app commitab70dba, not uncommitted changes."
+  },
+  "outcome": {
+    "blockers": 0,
+    "newFindings": 0,
+    "concreteUnresolvedSuspects": 0,
+    "suiteReruns": 0,
+    "isolatedReproductions": 0,
+    "remoteChanges": false,
+    "productionAccountActions": false,
+    "repositoryChangesByThisAgent": false
+  },
+  "checklist": [
+    {
+      "id": "BUS-CRM-01",
+      "requirement": "Sessions admin/MFA, propriété et isolation des données CRM",
+      "status": "reviewed_no_defect_observed",
+      "reasoning": "Sessions et droits revalidés en transaction READ COMMITTED ; verrou admin puis client/proofs/session/conversation ; aucun identifiant propriétaire fourni par le client ne fait autorité.",
+      "sourceFiles": [
+        "server/crm/http.mjs",
+        "server/crm/service.mjs",
+        "server/crm/store.mjs",
+        "server/chat/store.mjs"
+      ],
+      "testFiles": [
+        "tests/crm-store.integration.test.mjs",
+        "tests/crm-flow.integration.test.mjs"
+      ],
+      "evidence": [
+        {
+          "title": "labels and profiles require the current administrator session, MFA and assignment",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 2058,
+              "successLine": "2026-10-23T17:04:49.5205404Z     ok 2 - labels and profiles require the current administrator session, MFA and assignment"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 2060,
+              "successLine": "2026-10-23T17:06:12.9980340Z     ok 2 - labels and profiles require the current administrator session, MFA and assignment"
+            }
+          ]
+        },
+        {
+          "title": "shared chat and client responses contain no administrator-only CRM data",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 2003,
+              "successLine": "2026-10-23T17:04:48.7854942Z     ok 8 - shared chat and client responses contain no administrator-only CRM data"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 2005,
+              "successLine": "2026-10-23T17:06:11.8611997Z     ok 8 - shared chat and client responses contain no administrator-only CRM data"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BUS-CRM-02",
+      "requirement": "Étiquettes/groupes : déduplication, limites, renommage CAS, suppression cohérente",
+      "status": "reviewed_no_defect_observed",
+      "reasoning": "Normalisation NFKC/casse, unicité par propriétaire et type ; plafond100/type et32/contact ; suppression incrémente les versions des fiches sans changer notes_revision ni ciphertext.",
+      "sourceFiles": [
+        "server/crm/validation.mjs",
+        "server/crm/store.mjs",
+        "server/crm/crypto.mjs"
+      ],
+      "testFiles": [
+        "tests/crm-store.integration.test.mjs"
+      ],
+      "evidence": [
+        {
+          "title": "concurrent normalized-name creation deduplicates privately and tag/group names remain distinct",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 2064,
+              "successLine": "2026-10-23T17:04:49.5398021Z     ok 3 - concurrent normalized-name creation deduplicates privately and tag/group names remain distinct"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 2066,
+              "successLine": "2026-10-23T17:06:13.0281398Z     ok 3 - concurrent normalized-name creation deduplicates privately and tag/group names remain distinct"
+            }
+          ]
+        },
+        {
+          "title": "label deletion waiting for a profile save uses the current SQL authorization time and preserves encrypted notes",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 2112,
+              "successLine": "2026-10-23T17:04:49.8397237Z     ok 11 - label deletion waiting for a profile save uses the current SQL authorization time and preserves encrypted notes"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 2114,
+              "successLine": "2026-10-23T17:06:13.6187943Z     ok 11 - label deletion waiting for a profile save uses the current SQL authorization time and preserves encrypted notes"
+            }
+          ]
+        },
+        {
+          "title": "profile or affected-profile overflow aborts the whole mutation",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 2124,
+              "successLine": "2026-10-23T17:04:49.8649367Z     ok 13 - profile or affected-profile overflow aborts the whole mutation"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 2126,
+              "successLine": "2026-10-23T17:06:13.6685211Z     ok 13 - profile or affected-profile overflow aborts the whole mutation"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BUS-CRM-03",
+      "requirement": "Fiche : notes chiffrées, sauvegarde complète atomique et conflits",
+      "status": "reviewed_no_defect_observed",
+      "reasoning": "Chiffrement lié admin/conversation/révision ; memberships résolus sous même propriétaire avant écriture ; une erreur annule champs+liaisons ; deux brouillons ne peuvent écraser une même version.",
+      "sourceFiles": [
+        "server/crm/service.mjs",
+        "server/crm/store.mjs",
+        "server/crm/crypto.mjs"
+      ],
+      "testFiles": [
+        "tests/crm-store.integration.test.mjs"
+      ],
+      "evidence": [
+        {
+          "title": "two concurrent tabs cannot silently overwrite a profile or its encrypted notes",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 2100,
+              "successLine": "2026-10-23T17:04:49.7836666Z     ok 9 - two concurrent tabs cannot silently overwrite a profile or its encrypted notes"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 2102,
+              "successLine": "2026-10-23T17:06:13.5269026Z     ok 9 - two concurrent tabs cannot silently overwrite a profile or its encrypted notes"
+            }
+          ]
+        },
+        {
+          "title": "a failed membership insert rolls back profile, revision and previous bindings",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 2130,
+              "successLine": "2026-10-23T17:04:49.8804006Z     ok 14 - a failed membership insert rolls back profile, revision and previous bindings"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 2132,
+              "successLine": "2026-10-23T17:06:13.6954318Z     ok 14 - a failed membership insert rolls back profile, revision and previous bindings"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BUS-CRM-04",
+      "requirement": "Recherche et filtres composés sans élargissement des droits",
+      "status": "reviewed_no_defect_observed",
+      "reasoning": "Recherche littérale via LOCATE et paramètres SQL ; tag+group en AND ; non lus sans messages supprimés ; rappels et état d’accès relus ; accès expiré conserve fiche admin sans autoriser envoi.",
+      "sourceFiles": [
+        "server/crm/store.mjs",
+        "server/crm/validation.mjs"
+      ],
+      "testFiles": [
+        "tests/crm-store.integration.test.mjs"
+      ],
+      "evidence": [
+        {
+          "title": "inbox searches pseudonym, private alias and email literally without exposing notes or email",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 2136,
+              "successLine": "2026-10-23T17:04:49.9057333Z     ok 15 - inbox searches pseudonym, private alias and email literally without exposing notes or email"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 2138,
+              "successLine": "2026-10-23T17:06:13.7396891Z     ok 15 - inbox searches pseudonym, private alias and email literally without exposing notes or email"
+            }
+          ]
+        },
+        {
+          "title": "tag/group filters combine with AND and reject wrong-kind or foreign filter IDs",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 2142,
+              "successLine": "2026-10-23T17:04:49.9345406Z     ok 16 - tag/group filters combine with AND and reject wrong-kind or foreign filter IDs"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 2144,
+              "successLine": "2026-10-23T17:06:13.7918790Z     ok 16 - tag/group filters combine with AND and reject wrong-kind or foreign filter IDs"
+            }
+          ]
+        },
+        {
+          "title": "live expiry/revocation filters preserve administrative history editing without granting message send",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 2154,
+              "successLine": "2026-10-23T17:04:50.0254613Z     ok 18 - live expiry/revocation filters preserve administrative history editing without granting message send"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 2156,
+              "successLine": "2026-10-23T17:06:13.9659460Z     ok 18 - live expiry/revocation filters preserve administrative history editing without granting message send"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BUS-CRM-05",
+      "requirement": "Pagination CRM bornée et propriétaire courant",
+      "status": "reviewed_no_defect_observed",
+      "reasoning": "Keysets id strictement croissants, limit+1, labels en lot ; revalidation après verrous et refus fermé si découverte incohérente ; changement d’affectation ne donne pas accès à l’ancienne fiche privée.",
+      "sourceFiles": [
+        "server/crm/store.mjs",
+        "server/crm/service.mjs",
+        "server/crm/http.mjs"
+      ],
+      "testFiles": [
+        "tests/crm-store.integration.test.mjs",
+        "tests/browser/crm-collaboration.browser.mjs"
+      ],
+      "evidence": [
+        {
+          "title": "contact keyset pages are stable, assigned-only and carry batched labels without sensitive projections",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 2160,
+              "successLine": "2026-10-23T17:04:50.0604649Z     ok 19 - contact keyset pages are stable, assigned-only and carry batched labels without sensitive projections"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 2162,
+              "successLine": "2026-10-23T17:06:14.0286387Z     ok 19 - contact keyset pages are stable, assigned-only and carry batched labels without sensitive projections"
+            }
+          ]
+        },
+        {
+          "title": "real Chrome: shared administrator CRM drafts, conflicts and paused label requests",
+          "expectedJobs": [
+            "browser"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "browser",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log",
+              "line": 288,
+              "successLine": "2026-10-23T17:07:41.5515607Z ✔ real Chrome: shared administrator CRM drafts, conflicts and paused label requests (21091.851259ms)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BUS-DIFF-01",
+      "requirement": "Audience confirmée immutable et capture atomique",
+      "status": "reviewed_no_defect_observed",
+      "reasoning": "Prévisualisation signée liée admin/sélecteur/média ; digest ordonné clients+conversations ; fraîcheur vérifiée avant et après capture ; nouveau périmètre exige re-prévisualisation ; un retry exact retrouve la campagne après expiration du token.",
+      "sourceFiles": [
+        "server/broadcast/audience.mjs",
+        "server/broadcast/crypto.mjs",
+        "server/broadcast/service.mjs",
+        "server/broadcast/store.mjs"
+      ],
+      "testFiles": [
+        "tests/broadcast-scale.integration.test.mjs"
+      ],
+      "evidence": [
+        {
+          "title": "a changed audience after preview cannot silently create a narrower or broader campaign",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 1500,
+              "successLine": "2026-10-23T17:03:47.5003064Z     ok 2 - a changed audience after preview cannot silently create a narrower or broader campaign"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 1502,
+              "successLine": "2026-10-23T17:04:13.0570931Z     ok 2 - a changed audience after preview cannot silently create a narrower or broader campaign"
+            }
+          ]
+        },
+        {
+          "title": "capture page two failure rolls back all rows and the same request can then commit",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 1506,
+              "successLine": "2026-10-23T17:03:47.7428492Z     ok 3 - capture page two failure rolls back all rows and the same request can then commit"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 1508,
+              "successLine": "2026-10-23T17:04:13.4781114Z     ok 3 - capture page two failure rolls back all rows and the same request can then commit"
+            }
+          ]
+        },
+        {
+          "title": "a lost confirmation retry after token expiry returns the frozen campaign and compatibility can inspect it",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 1513,
+              "successLine": "2026-10-23T17:03:47.9341819Z     ok 4 - a lost confirmation retry after token expiry returns the frozen campaign and compatibility can inspect it"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 1515,
+              "successLine": "2026-10-23T17:04:13.8723879Z     ok 4 - a lost confirmation retry after token expiry returns the frozen campaign and compatibility can inspect it"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BUS-DIFF-02",
+      "requirement": "File durable, leases/CAS, reprise et absence de doublons",
+      "status": "reviewed_no_defect_observed",
+      "reasoning": "Identifiants messages stables, preuve HMAC destinataire pour compact ; verrou propriétaire avant file ; lease token comparé à chaque finalisation ; message/event/notification/destinataire dans une transaction ; attente tardive annule la livraison.",
+      "sourceFiles": [
+        "server/broadcast/store.mjs",
+        "server/broadcast/worker.mjs",
+        "server/broadcast/crypto.mjs"
+      ],
+      "testFiles": [
+        "tests/broadcast-store.integration.test.mjs",
+        "tests/broadcast-worker.test.mjs",
+        "tests/broadcast-scale.integration.test.mjs"
+      ],
+      "evidence": [
+        {
+          "title": "concurrent workers claim once and atomic delivery creates one ordinary message and event",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 1573,
+              "successLine": "2026-10-23T17:04:07.1536709Z     ok 7 - concurrent workers claim once and atomic delivery creates one ordinary message and event"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 1575,
+              "successLine": "2026-10-23T17:04:54.2395697Z     ok 7 - concurrent workers claim once and atomic delivery creates one ordinary message and event"
+            }
+          ]
+        },
+        {
+          "title": "an expiry reached inside the ordinary append rolls back message, event and recipient together",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 1639,
+              "successLine": "2026-10-23T17:04:07.2894523Z     ok 18 - an expiry reached inside the ordinary append rolls back message, event and recipient together"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 1641,
+              "successLine": "2026-10-23T17:04:54.5103954Z     ok 18 - an expiry reached inside the ordinary append rolls back message, event and recipient together"
+            }
+          ]
+        },
+        {
+          "title": "real MariaDB: 2,500-client audience is bounded, atomic, retryable and resumes without duplicate messages",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 1530,
+              "successLine": "2026-10-23T17:04:06.6546781Z ok 12 - real MariaDB: 2,500-client audience is bounded, atomic, retryable and resumes without duplicate messages"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 1532,
+              "successLine": "2026-10-23T17:04:53.4323331Z ok 12 - real MariaDB: 2,500-client audience is bounded, atomic, retryable and resumes without duplicate messages"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BUS-DIFF-03",
+      "requirement": "Droits, annulation, échéances et médias recontrôlés avant livraison",
+      "status": "reviewed_no_defect_observed",
+      "reasoning": "Révocation/expiration/fermeture/réaffectation bloquent ; changement MFA/suspension admin met en pause ; annulation invalide leases ; propriété/suppression média et répétition contrôlées ; huit échecs traitement maximum, quotas déférés sans tentative.",
+      "sourceFiles": [
+        "server/broadcast/store.mjs",
+        "server/broadcast/worker.mjs",
+        "server/broadcast/service.mjs",
+        "server/broadcast/http.mjs"
+      ],
+      "testFiles": [
+        "tests/broadcast-store.integration.test.mjs",
+        "tests/broadcast-worker.test.mjs"
+      ],
+      "evidence": [
+        {
+          "title": "current client gates, assignment, closed conversation and seven-day expiry are rechecked",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 1651,
+              "successLine": "2026-10-23T17:04:07.3619740Z     ok 20 - current client gates, assignment, closed conversation and seven-day expiry are rechecked"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 1653,
+              "successLine": "2026-10-23T17:04:54.6536366Z     ok 20 - current client gates, assignment, closed conversation and seven-day expiry are rechecked"
+            }
+          ]
+        },
+        {
+          "title": "cancellation invalidates outstanding leases and preserves already delivered messages",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 1657,
+              "successLine": "2026-10-23T17:04:07.3811328Z     ok 21 - cancellation invalidates outstanding leases and preserves already delivered messages"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 1659,
+              "successLine": "2026-10-23T17:04:54.6951329Z     ok 21 - cancellation invalidates outstanding leases and preserves already delivered messages"
+            }
+          ]
+        },
+        {
+          "title": "media ownership, deletion, repeat acknowledgement and disabled media are enforced again at delivery",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 1669,
+              "successLine": "2026-10-23T17:04:07.4559905Z     ok 23 - media ownership, deletion, repeat acknowledgement and disabled media are enforced again at delivery"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 1671,
+              "successLine": "2026-10-23T17:04:54.8443349Z     ok 23 - media ownership, deletion, repeat acknowledgement and disabled media are enforced again at delivery"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BUS-DIFF-04",
+      "requirement": "Confidentialité des diffusions et limites de parcours",
+      "status": "reviewed_no_defect_observed",
+      "reasoning": "Routes et ressources admin protégées ; destinataire reçoit un message ordinaire sans audience/autres clients/CRM ; pages contacts100, échantillon50, destinataires50, activité30 ; budget compact120/min laisse capacité envoi manuel.",
+      "sourceFiles": [
+        "server/broadcast/http.mjs",
+        "server/broadcast/service.mjs",
+        "server/broadcast/store.mjs",
+        "server/broadcast/worker.mjs"
+      ],
+      "testFiles": [
+        "tests/broadcast-flow.integration.test.mjs",
+        "tests/broadcast-scale.integration.test.mjs"
+      ],
+      "evidence": [
+        {
+          "title": "the worker creates separate ordinary chat messages without exposing the audience or campaign metadata",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 1439,
+              "successLine": "2026-10-23T17:03:46.1637399Z     ok 6 - the worker creates separate ordinary chat messages without exposing the audience or campaign metadata"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 1441,
+              "successLine": "2026-10-23T17:04:10.8348620Z     ok 6 - the worker creates separate ordinary chat messages without exposing the audience or campaign metadata"
+            }
+          ]
+        },
+        {
+          "title": "preview counts 2,500 while returning at most 50, filters select 175, and compatibility mode rejects new creation",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 1494,
+              "successLine": "2026-10-23T17:03:47.3033988Z     ok 1 - preview counts 2,500 while returning at most 50, filters select 175, and compatibility mode rejects new creation"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 1496,
+              "successLine": "2026-10-23T17:04:12.7643071Z     ok 1 - preview counts 2,500 while returning at most 50, filters select 175, and compatibility mode rejects new creation"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BUS-ANN-01",
+      "requirement": "Bandeau privé programmé/expiré et isolation",
+      "status": "reviewed_no_defect_observed",
+      "reasoning": "Une annonce par admin, body chiffré et lié révision/fenêtre ; client courant assigné ne voit que fenêtre active, jamais métadonnées campagne ; conversation fermée retourne annonce null.",
+      "sourceFiles": [
+        "server/announcements/service.mjs",
+        "server/announcements/store.mjs",
+        "server/announcements/validation.mjs",
+        "server/announcements/http.mjs",
+        "server/announcements/crypto.mjs"
+      ],
+      "testFiles": [
+        "tests/announcements-flow.integration.test.mjs"
+      ],
+      "evidence": [
+        {
+          "title": "the persisted banner appears only in its time window and never crosses the owner",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 944,
+              "successLine": "2026-10-23T17:03:29.7785170Z     ok 2 - the persisted banner appears only in its time window and never crosses the owner"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 946,
+              "successLine": "2026-10-23T17:03:44.3145547Z     ok 2 - the persisted banner appears only in its time window and never crosses the owner"
+            }
+          ]
+        },
+        {
+          "title": "access is revalidated and altered encrypted announcements are refused",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 986,
+              "successLine": "2026-10-23T17:03:30.0171691Z     ok 9 - access is revalidated and altered encrypted announcements are refused"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 988,
+              "successLine": "2026-10-23T17:03:44.7840499Z     ok 9 - access is revalidated and altered encrypted announcements are refused"
+            }
+          ]
+        },
+        {
+          "title": "Chrome mobile FR/EN: schedule, review the complete audience and publish one announcement without overflow",
+          "expectedJobs": [
+            "browser"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "browser",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log",
+              "line": 199,
+              "successLine": "2026-10-23T17:03:27.7097078Z ✔ Chrome mobile FR/EN: schedule, review the complete audience and publish one announcement without overflow (26062.392765ms)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BUS-ANN-02",
+      "requirement": "Annonce et campagne optionnelle atomiques, remplacement/retrait sans doublons",
+      "status": "reviewed_no_defect_observed",
+      "reasoning": "Révision CAS+mutationId/fingerprint ; capture audience/cancel précédente et annonce dans même transaction ; rollback restaure tout ; retrait arrête file/alertes non transférées, conserve messages envoyés et reçus push acceptés.",
+      "sourceFiles": [
+        "server/announcements/store.mjs",
+        "server/broadcast/store.mjs"
+      ],
+      "testFiles": [
+        "tests/announcements-flow.integration.test.mjs"
+      ],
+      "evidence": [
+        {
+          "title": "simultaneous devices serialize one revision and stale requests cannot replace it",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 950,
+              "successLine": "2026-10-23T17:03:29.7908926Z     ok 3 - simultaneous devices serialize one revision and stale requests cannot replace it"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 952,
+              "successLine": "2026-10-23T17:03:44.3372327Z     ok 3 - simultaneous devices serialize one revision and stale requests cannot replace it"
+            }
+          ]
+        },
+        {
+          "title": "a failed recipient insertion rolls back both announcement and optional campaign",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 956,
+              "successLine": "2026-10-23T17:03:29.8159026Z     ok 4 - a failed recipient insertion rolls back both announcement and optional campaign"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 958,
+              "successLine": "2026-10-23T17:03:44.3855804Z     ok 4 - a failed recipient insertion rolls back both announcement and optional campaign"
+            }
+          ]
+        },
+        {
+          "title": "replacement rolls back alert cancellation on failure and removal skips untransferred alerts only",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 968,
+              "successLine": "2026-10-23T17:03:29.9140678Z     ok 6 - replacement rolls back alert cancellation on failure and removal skips untransferred alerts only"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 970,
+              "successLine": "2026-10-23T17:03:44.5837876Z     ok 6 - replacement rolls back alert cancellation on failure and removal skips untransferred alerts only"
+            }
+          ]
+        },
+        {
+          "title": "a restart after expiry sends no obsolete message or alert",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 974,
+              "successLine": "2026-10-23T17:03:29.9373269Z     ok 7 - a restart after expiry sends no obsolete message or alert"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 976,
+              "successLine": "2026-10-23T17:03:44.6315084Z     ok 7 - a restart after expiry sends no obsolete message or alert"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BUS-TASK-01",
+      "requirement": "Tâches : isolation/chiffrement, CAS, reprise exacte",
+      "status": "reviewed_no_defect_observed",
+      "reasoning": "Owner+conversation vérifiés sous transaction, fingerprint de sauvegarde et version stable, exact retry sans nouvelle version ; titre chiffré lié admin/conversation/task/version/dueAt/done ; générique ne peut modifier tâche réservée À répondre.",
+      "sourceFiles": [
+        "server/tasks/service.mjs",
+        "server/tasks/store.mjs",
+        "server/tasks/crypto.mjs",
+        "server/tasks/validation.mjs",
+        "server/tasks/http.mjs"
+      ],
+      "testFiles": [
+        "tests/tasks-flow.integration.test.mjs"
+      ],
+      "evidence": [
+        {
+          "title": "multiple encrypted tasks survive a runtime restart and an acknowledged retry is not duplicated",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 3758,
+              "successLine": "2026-10-23T17:06:00.9741622Z     ok 2 - multiple encrypted tasks survive a runtime restart and an acknowledged retry is not duplicated"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 3760,
+              "successLine": "2026-10-23T17:08:15.7353769Z     ok 2 - multiple encrypted tasks survive a runtime restart and an acknowledged retry is not duplicated"
+            }
+          ]
+        },
+        {
+          "title": "two devices cannot overwrite one revision, and a failed write rolls back completely",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 3782,
+              "successLine": "2026-10-23T17:06:01.0589448Z     ok 6 - two devices cannot overwrite one revision, and a failed write rolls back completely"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 3784,
+              "successLine": "2026-10-23T17:08:15.8982163Z     ok 6 - two devices cannot overwrite one revision, and a failed write rolls back completely"
+            }
+          ]
+        },
+        {
+          "title": "changed ciphertext or scheduling metadata is rejected, including sub-millisecond SQL aliases",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 3788,
+              "successLine": "2026-10-23T17:06:01.0696326Z     ok 7 - changed ciphertext or scheduling metadata is rejected, including sub-millisecond SQL aliases"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 3790,
+              "successLine": "2026-10-23T17:08:15.9193131Z     ok 7 - changed ciphertext or scheduling metadata is rejected, including sub-millisecond SQL aliases"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BUS-TASK-02",
+      "requirement": "Tâches : échéances, terminer/réouvrir/reporter, pagination et résumé",
+      "status": "reviewed_no_defect_observed",
+      "reasoning": "Filtres open/due/done et conversation, pagination id bornée100 ; serverTime revalidé ; échéance exacte, aucune émission client/mail/push par création de tâche.",
+      "sourceFiles": [
+        "server/tasks/store.mjs",
+        "server/tasks/service.mjs",
+        "server/tasks/http.mjs"
+      ],
+      "testFiles": [
+        "tests/tasks-flow.integration.test.mjs"
+      ],
+      "evidence": [
+        {
+          "title": "deadline boundary, completion, reopening and postponement update only the selected task",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 3770,
+              "successLine": "2026-10-23T17:06:01.0271187Z     ok 4 - deadline boundary, completion, reopening and postponement update only the selected task"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 3772,
+              "successLine": "2026-10-23T17:08:15.8324463Z     ok 4 - deadline boundary, completion, reopening and postponement update only the selected task"
+            }
+          ]
+        },
+        {
+          "title": "pagination is bounded and monotonic across clients without leaking another owner",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 3776,
+              "successLine": "2026-10-23T17:06:01.0359438Z     ok 5 - pagination is bounded and monotonic across clients without leaking another owner"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 3778,
+              "successLine": "2026-10-23T17:08:15.8550508Z     ok 5 - pagination is bounded and monotonic across clients without leaking another owner"
+            }
+          ]
+        },
+        {
+          "title": "Chrome: the common task view spans clients and paginates without truncating the private work list",
+          "expectedJobs": [
+            "browser"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "browser",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log",
+              "line": 449,
+              "successLine": "2026-10-23T17:07:41.5662253Z ✔ Chrome: the common task view spans clients and paginates without truncating the private work list (1749.055874ms)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BUS-REPLY-01",
+      "requirement": "À répondre : lecture indépendante du traitement, bornes et versions",
+      "status": "reviewed_no_defect_observed",
+      "reasoning": "Seule tâche réservée authentifiée durable ; réponse individuelle couvre seulement borne capturée, nouvelle arrivée reste due ; broadcast ne traite jamais ; réouverture manuelle/version CAS ; reprise historique exclut les messages de diffusion ; invisible aux clients.",
+      "sourceFiles": [
+        "server/tasks/reply.mjs",
+        "server/tasks/store.mjs",
+        "server/crm/store.mjs",
+        "server/chat/store.mjs"
+      ],
+      "testFiles": [
+        "tests/reply-tracking.test.mjs",
+        "tests/reply-flow.integration.test.mjs"
+      ],
+      "evidence": [
+        {
+          "title": "real SQL reply task tracks incoming, concurrent replies, broadcasts, historical requests and two sessions",
+          "expectedJobs": [
+            "mariadb1011",
+            "mariadb114"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "mariadb1011",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+              "line": 3509,
+              "successLine": "2026-10-23T17:05:55.8652476Z ok 39 - real SQL reply task tracks incoming, concurrent replies, broadcasts, historical requests and two sessions"
+            },
+            {
+              "job": "mariadb114",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+              "line": 3511,
+              "successLine": "2026-10-23T17:08:06.9662012Z ok 39 - real SQL reply task tracks incoming, concurrent replies, broadcasts, historical requests and two sessions"
+            }
+          ]
+        },
+        {
+          "title": "manual reopen is shared; a response drafted before it cannot silently dismiss it",
+          "expectedJobs": [
+            "verify"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "verify",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/verify.log",
+              "line": 3395,
+              "successLine": "2026-10-23T17:03:43.4691209Z ✔ manual reopen is shared; a response drafted before it cannot silently dismiss it (2.920689ms)"
+            }
+          ]
+        },
+        {
+          "title": "native Chrome follow-up actions preserve read state, prevent double clicks, show conflicts and clear on owner handoff",
+          "expectedJobs": [
+            "browser"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "browser",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log",
+              "line": 348,
+              "successLine": "2026-10-23T17:07:41.5569840Z ✔ native Chrome follow-up actions preserve read state, prevent double clicks, show conflicts and clear on owner handoff (2965.402256ms)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BUS-QR-01",
+      "requirement": "Réponses personnelles : propriétaire, fichiers privés, CAS et reprise",
+      "status": "reviewed_no_defect_observed",
+      "reasoning": "Catalogue par admin, clé dérivée par owner/AAD révision ; limite50/32KiB ; lecture sous verrou SQL et autorisation avant rename ; fichier atomique0600 avec CAS+lock court, exact replay et aucune remise version0 ; liens/données corrompues refusés.",
+      "sourceFiles": [
+        "server/quick-replies/validation.mjs",
+        "server/quick-replies/files.mjs",
+        "server/quick-replies/service.mjs",
+        "server/quick-replies/http.mjs",
+        "server/files/private-json.mjs"
+      ],
+      "testFiles": [
+        "tests/personal-quick-replies-files.test.mjs",
+        "tests/personal-quick-replies-service.test.mjs"
+      ],
+      "evidence": [
+        {
+          "title": "exact ACK retries do not increment revision; empty catalogues retain their version without ABA",
+          "expectedJobs": [
+            "verify"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "verify",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/verify.log",
+              "line": 2687,
+              "successLine": "2026-10-23T17:03:26.8661445Z ✔ exact ACK retries do not increment revision; empty catalogues retain their version without ABA (22.860646ms)"
+            }
+          ]
+        },
+        {
+          "title": "competing writers cannot replace an acknowledged catalogue and existing locks are preserved",
+          "expectedJobs": [
+            "verify"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "verify",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/verify.log",
+              "line": 2688,
+              "successLine": "2026-10-23T17:03:26.8663408Z ✔ competing writers cannot replace an acknowledged catalogue and existing locks are preserved (22.719157ms)"
+            }
+          ]
+        },
+        {
+          "title": "expiry during file work prevents publication and the final write authorization",
+          "expectedJobs": [
+            "verify"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "verify",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/verify.log",
+              "line": 2703,
+              "successLine": "2026-10-23T17:03:26.9774002Z ✔ expiry during file work prevents publication and the final write authorization (2.105213ms)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BUS-QR-02",
+      "requirement": "Liste commune et insertion sans envoi",
+      "status": "reviewed_no_defect_observed",
+      "reasoning": "Six phrases et catalogue personnel filtrés par langue ; insertion conserve préfixe et valide plafond texte/légende ; modification/suppression explicites ; conflit/confirmation manquante exige reload, aucun POST répété automatiquement.",
+      "sourceFiles": [
+        "public/quick-replies.js",
+        "public/chat.js"
+      ],
+      "testFiles": [
+        "tests/chat-lifecycle.test.mjs",
+        "tests/browser/chat-accessibility.browser.mjs"
+      ],
+      "evidence": [
+        {
+          "title": "personal quick replies join the preset list, edit, insert without sending and delete across independent administrator sessions",
+          "expectedJobs": [
+            "verify"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "verify",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/verify.log",
+              "line": 1318,
+              "successLine": "2026-10-23T17:03:07.4781760Z ✔ personal quick replies join the preset list, edit, insert without sending and delete across independent administrator sessions (35.587617ms)"
+            }
+          ]
+        },
+        {
+          "title": "an uncertain personal reply save requires explicit reload and never automatically repeats a POST",
+          "expectedJobs": [
+            "verify"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "verify",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/verify.log",
+              "line": 1321,
+              "successLine": "2026-10-23T17:03:07.5615633Z ✔ an uncertain personal reply save requires explicit reload and never automatically repeats a POST (51.724669ms)"
+            }
+          ]
+        },
+        {
+          "title": "Chrome 320px fr: quick replies preserve the draft and send only after editing and explicit submission",
+          "expectedJobs": [
+            "browser"
+          ],
+          "allExpectedJobsObserved": true,
+          "matches": [
+            {
+              "job": "browser",
+              "path": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log",
+              "line": 264,
+              "successLine": "2026-10-23T17:06:56.9633402Z ✔ Chrome 320px fr: quick replies preserve the draft and send only after editing and explicit submission (1528.733667ms)"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "readDepth": {
+    "principalProductionModules": [
+      {
+        "path": "server/crm/config.mjs",
+        "readDepth": "full",
+        "lines": 27,
+        "sha256": "016fe028c614a21c9592c97195b37257acf323d1b3adc9c24adf9db7bb6fce01",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/crm/crypto.mjs",
+        "readDepth": "full",
+        "lines": 94,
+        "sha256": "e2d644e29d223fd96ef5fdde7bed477f4e74497a89f24ea0b66409a39578fb5a",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/crm/http.mjs",
+        "readDepth": "full",
+        "lines": 287,
+        "sha256": "2760991ee9a10b33f571c00be46241b76e67b8784756431f62bae500d2287fed",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/crm/service.mjs",
+        "readDepth": "full",
+        "lines": 174,
+        "sha256": "e478cee5590c9867ba1f2912d0a17cc45e25886df3e5ed22875493184bbc69af",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/crm/store.mjs",
+        "readDepth": "full",
+        "lines": 354,
+        "sha256": "27416221f07b330a4b190cf4f1326ac0128df6a4ca58fbff96a2e3eab3fa81c0",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/crm/validation.mjs",
+        "readDepth": "full",
+        "lines": 82,
+        "sha256": "25209c78de6d1255dbfbbc0e436ad41227dbd5a48b27c560c7c9475215eb68b9",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/broadcast/audience.mjs",
+        "readDepth": "full",
+        "lines": 53,
+        "sha256": "ebdbe2c9cc5c5eb9d08a293cb7ad3c4b117992f387958be168b617ccfd32dbae",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/broadcast/config.mjs",
+        "readDepth": "full",
+        "lines": 14,
+        "sha256": "430d074e00659cf0d79f815422e92f28313f248b20214d32799db02249b88e6c",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/broadcast/crypto.mjs",
+        "readDepth": "full",
+        "lines": 151,
+        "sha256": "00345da4da15ba8092f16cf8eca75ef7a1abc94c84c5f066e0a435a20f506ebf",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/broadcast/http.mjs",
+        "readDepth": "full",
+        "lines": 309,
+        "sha256": "7b7ab056196252be45b5eaba1e944ad1b89380a295908320372eda3d3e343d3f",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/broadcast/service.mjs",
+        "readDepth": "full",
+        "lines": 270,
+        "sha256": "521bb7eadd9dc9f6a9ab1c618c0df0fa5d8a0ee5a206afee449358b362b352e7",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/broadcast/store.mjs",
+        "readDepth": "full",
+        "lines": 706,
+        "sha256": "b153e1ea0bde7567ace659af375390427fd618c9126f46513c01cb3fc1ef4863",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/broadcast/validation.mjs",
+        "readDepth": "full",
+        "lines": 158,
+        "sha256": "0641b534ca64c7789d29ae422852eb9a7e4eb06ba38385ebd9f5c871f443e869",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/broadcast/worker.mjs",
+        "readDepth": "full",
+        "lines": 130,
+        "sha256": "b28e368ee9ea2dd64342758ded90f420f0b767467165db6c27a8b137335dc3a6",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/announcements/crypto.mjs",
+        "readDepth": "full",
+        "lines": 42,
+        "sha256": "cf9efc4a7c459b1976409dabb69fdd88473067154e8e6c0c2aee617d0135017c",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/announcements/http.mjs",
+        "readDepth": "full",
+        "lines": 95,
+        "sha256": "c1ab341c3a0a374e503b0ea5b45f07a03d51c2aeb3c438a4a1fcf0894aef7d47",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/announcements/service.mjs",
+        "readDepth": "full",
+        "lines": 86,
+        "sha256": "2283464d80b4edcdc2dc52a8a35069976a936911999efd7d6fac2f3f82ac3db6",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/announcements/store.mjs",
+        "readDepth": "full",
+        "lines": 215,
+        "sha256": "9ce3e893a60043c02ed06b3e3e28631b23d488655d385506b9f312a94c007fc5",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/announcements/validation.mjs",
+        "readDepth": "full",
+        "lines": 49,
+        "sha256": "5070ea97a50fcb104a9317ad217f185295d26707eb34fca08c4424a66c2f6554",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/tasks/crypto.mjs",
+        "readDepth": "full",
+        "lines": 39,
+        "sha256": "8e4caf88079130443b7d34fdc2b06217c8c028fd7fe6b939d41ef7f36d8c1a80",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/tasks/http.mjs",
+        "readDepth": "full",
+        "lines": 97,
+        "sha256": "32199423b0ab0d4d9ff332bf4256f2d885aa4e734eec13a3213a7e90c6e65bdf",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/tasks/reply.mjs",
+        "readDepth": "full",
+        "lines": 101,
+        "sha256": "549a32f55f8355feacb4d496a15e2d691a304094b192c6890493a665ddb96f29",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/tasks/service.mjs",
+        "readDepth": "full",
+        "lines": 117,
+        "sha256": "1832793c2dec39c80c7b31a6c6c2ff3649b9b9ec4204665c58838fdd7d3ecc9e",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/tasks/store.mjs",
+        "readDepth": "full",
+        "lines": 192,
+        "sha256": "f646a0ad5801fd650c9dd09bf54931b1837fa48150ccfb0792a51c8af54d790b",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/tasks/validation.mjs",
+        "readDepth": "full",
+        "lines": 44,
+        "sha256": "54073b1e9a6e9953ecd4a9ef2ac4051c2b7b2f31307af9eda981c7e77dacb456",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/quick-replies/files.mjs",
+        "readDepth": "full",
+        "lines": 102,
+        "sha256": "ede192036c7dec9fe42db68e3a09b099e98c29fb157f4812cd2141c2335a003e",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/quick-replies/http.mjs",
+        "readDepth": "full",
+        "lines": 48,
+        "sha256": "b4c74a8063bf0f380d3bf64428805e76aa224ee307c2497cf1744981fa3bc792",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/quick-replies/service.mjs",
+        "readDepth": "full",
+        "lines": 80,
+        "sha256": "b4e107c53b9121aae8c1a3277ac0af257724f3ed2e3b8b4b16a9a60167b3df02",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/quick-replies/validation.mjs",
+        "readDepth": "full",
+        "lines": 56,
+        "sha256": "cdfb988fa6df1b2ab992d4aa8b79190c13ae6fa00a5a35ff50748936021f0dd5",
+        "matchesQualifiedAppTreeBytes": true
+      }
+    ],
+    "principalFileCount": 29,
+    "principalLines": 4172,
+    "supportingProduction": [
+      {
+        "path": "server/files/private-json.mjs",
+        "readDepth": "full"
+      },
+      {
+        "path": "server/chat/store.mjs",
+        "readDepth": "excerpts",
+        "ranges": [
+          "160-430",
+          "510-655"
+        ],
+        "purpose": "Transaction, lock ordering, actor/session authorization, append/reply hooks, scoped callbacks"
+      },
+      {
+        "path": "public/quick-replies.js",
+        "readDepth": "full"
+      },
+      {
+        "path": "public/chat.js",
+        "readDepth": "excerpts",
+        "ranges": [
+          "1980-2190"
+        ],
+        "purpose": "Shared quick replies list, private catalogue loading/editing/insertion and uncertain saves"
+      }
+    ],
+    "sqlMigrationsFull": [
+      "db/migrations/0018_crm_profiles.sql",
+      "db/migrations/0019_crm_labels.sql",
+      "db/migrations/0020_crm_memberships.sql",
+      "db/migrations/0024_broadcast_campaigns.sql",
+      "db/migrations/0025_broadcast_recipients.sql",
+      "db/migrations/0032_announcements.sql",
+      "db/migrations/0033_crm_tasks.sql",
+      "server/experience/migrations/0038_reply_tracking.sql"
+    ],
+    "testsFull": [
+      "tests/personal-quick-replies-files.test.mjs",
+      "tests/personal-quick-replies-service.test.mjs",
+      "tests/reply-tracking.test.mjs",
+      "tests/reply-flow.integration.test.mjs",
+      "tests/tasks-flow.integration.test.mjs",
+      "tests/announcements-flow.integration.test.mjs",
+      "tests/broadcast-scale.integration.test.mjs"
+    ],
+    "testsExcerpts": [
+      {
+        "path": "tests/crm-store.integration.test.mjs",
+        "ranges": [
+          "92-354"
+        ]
+      },
+      {
+        "path": "tests/broadcast-store.integration.test.mjs",
+        "ranges": [
+          "150-365"
+        ]
+      }
+    ],
+    "testsTitlesAndLogsOnly": [
+      "tests/crm-flow.integration.test.mjs",
+      "tests/crm-service.test.mjs",
+      "tests/broadcast-flow.integration.test.mjs",
+      "tests/broadcast-worker.test.mjs",
+      "tests/broadcast-lifecycle.test.mjs",
+      "tests/broadcast-chat.integration.test.mjs",
+      "tests/tasks-service.test.mjs",
+      "tests/tasks-http.test.mjs",
+      "tests/announcements-service.test.mjs",
+      "tests/announcements-http.test.mjs",
+      "tests/personal-quick-replies-http.test.mjs",
+      "tests/browser/crm-collaboration.browser.mjs",
+      "tests/browser/followup.browser.mjs",
+      "tests/browser/tasks.browser.mjs",
+      "tests/browser/announcements.browser.mjs",
+      "tests/browser/broadcast-scale.browser.mjs",
+      "tests/chat-lifecycle.test.mjs",
+      "tests/browser/chat-accessibility.browser.mjs"
+    ]
+  },
+  "nativeEvidence": {
+    "run": 39991790308,
+    "source": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+    "tree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+    "node": "v24.22.1",
+    "conclusion": "success",
+    "logs": [
+      {
+        "name": "verify",
+        "path": "/workspace/scratch/bb431be72395/qualify1100/main/verify.log",
+        "sha256": "fc82d12474329dc54e3958a869746536c8f8c42e092ca3be19096ca430942136",
+        "expectedSha256": "fc82d12474329dc54e3958a869746536c8f8c42e092ca3be19096ca430942136",
+        "hashMatches": true,
+        "totals": {
+          "tests": 4078,
+          "pass": 4026,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 52
+        },
+        "summaryTotalsMatch": true
+      },
+      {
+        "name": "browser",
+        "path": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log",
+        "sha256": "b1878199736cd51176936ddb7d4b6874a55d87ee4824df16af355377d5346521",
+        "expectedSha256": "b1878199736cd51176936ddb7d4b6874a55d87ee4824df16af355377d5346521",
+        "hashMatches": true,
+        "totals": {
+          "tests": 256,
+          "pass": 256,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "summaryTotalsMatch": true
+      },
+      {
+        "name": "https",
+        "path": "/workspace/scratch/bb431be72395/qualify1100/main/https.log",
+        "sha256": "0524bdaac3162e28bded29ef807f298f69991251776cdf9c7098939e88412b0e",
+        "expectedSha256": "0524bdaac3162e28bded29ef807f298f69991251776cdf9c7098939e88412b0e",
+        "hashMatches": true,
+        "totals": {
+          "tests": 12,
+          "pass": 12,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "summaryTotalsMatch": true
+      },
+      {
+        "name": "mariadb1011",
+        "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+        "sha256": "d8daec3989acaa142eaad92d5404e6d35e68a77082f688c3bad802bf10cfe40e",
+        "expectedSha256": "d8daec3989acaa142eaad92d5404e6d35e68a77082f688c3bad802bf10cfe40e",
+        "hashMatches": true,
+        "totals": {
+          "tests": 598,
+          "pass": 598,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "summaryTotalsMatch": true
+      },
+      {
+        "name": "mariadb114",
+        "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+        "sha256": "6ebbf9a72eb33a6522373489f6f8e085d68191625a1d42f67500b7362c9d84c7",
+        "expectedSha256": "6ebbf9a72eb33a6522373489f6f8e085d68191625a1d42f67500b7362c9d84c7",
+        "hashMatches": true,
+        "totals": {
+          "tests": 598,
+          "pass": 598,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "summaryTotalsMatch": true
+      }
+    ],
+    "allHashesAndTotalsMatch": true,
+    "allChecklistExpectedLogSuccessesObserved": true
+  },
+  "intentionalBehavior": {
+    "historicalBroadcastOptOut": "Since documented0.50 ordinary individual deliveries intentionally ignore historical broadcast_preferences. Legacy opted_out terminal outcomes stay historical and are not requeued. This is not a new regression.",
+    "taskOrdering": "Task keyset pages are by stable ID, without global chronological ordering promise; reminders appear inside the app and emit no push while closed.",
+    "replyTracking": "Reading/unread receipts do not mark handled. Only explicit treatment or captured individual-reply watermark does. Broadcast deliveries intentionally do not handle requests.",
+    "logoutAndQueuedCampaigns": "Logout revokes interactive session but does not revoke already confirmed durable campaign approval; admin invalidation/MFA epoch change does pause it."
+  },
+  "limitations": [
+    "This scoped audit is not a claim of no bugs in all application code.",
+    "No new production transaction, real client account action, hosting command, remote mutation, browser, or full green-suite rerun was executed.",
+    "Existing native tests are synthetic local Chrome/SQL fixtures and do not attest physical phone background/foreground, real-device push reception or hosted throughput.",
+    "The2500-recipient test establishes bounded synthetic capture/delivery and exact-once local messages under its conditions, not load/concurrency capacity of shared hosting.",
+    "The52 general omissions remain omissions; SQL/Chrome/HTTPS native jobs independently show0 omissions.",
+    "Read depth is explicit: all principal backend modules were read fully; some supporting UI and test files only in excerpts or through named assertions/log successes.",
+    "No concrete residual question justified an isolated reproduction, so no new runtime test was executed."
+  ],
+  "findings": []
+}

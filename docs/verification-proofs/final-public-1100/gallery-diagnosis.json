@@ -1,0 +1,51 @@
+{
+  "id": "F-06",
+  "severity": "P3",
+  "status": "concrete_application_race_reproduced_fixed_native_qualification_pending",
+  "recordedAt": "2026-10-23T18:45:18.250849+00:00",
+  "nativeObservation": {
+    "run": 40004246747,
+    "browserTests": 257,
+    "passed": 256,
+    "failed": 1,
+    "error": "Timed out: original full photo ready",
+    "lineBeforePatch": 1636,
+    "exactFailingIterationNotProven": true,
+    "noFailureDomWasCaptured": true
+  },
+  "cause": "HTMLDialogElement.close() queues its close event. If the same dialog reopens before that event is delivered, the old unguarded handler tears down the new photo or media panel.",
+  "evidence": "gallery-close-reopen-repro.json",
+  "reproducer": "gallery-close-reopen-repro.mjs",
+  "proofMode": "Actual baseline application functions at pinned local commit and actual corrected working-tree functions, synthetic legal native event order; not a native Chrome reproduction.",
+  "localNode": "v24.19.0",
+  "beforeSource": "b23b694f4effaf802e043b8e70154c2db188af94",
+  "beforeSourceSha256": "8b8dde14b90161b190e6660bb2b62249c7570aefaa792855950eedb3070b80aa",
+  "afterWorkingTreeSha256": "4ef804f3286637c468f7e641b998d56844c46665054acdfa00f064362f89fd27",
+  "primarySource": {
+    "url": "https://html.spec.whatwg.org/multipage/interactive-elements.html#close-the-dialog",
+    "retrieved": "2026-10-23",
+    "steps": "5 removes open;13 queues close event on user interaction task source",
+    "toolRef": "turn26view0"
+  },
+  "actualFixedPaths": [
+    "public/chat.js",
+    "tests/browser/chat-accessibility.browser.mjs"
+  ],
+  "productionChange": "Only clean up lightbox/media-dialog close events when their current dialog is closed. Existing emoji, quick-reply and video handlers already use the same guard.",
+  "nativeRegression": "For client320/admin1280, close button and reopen photo run in one task. A once-only listener witnesses the genuine queued close event; modal+decoded photo must survive after that event. Escape and native close must still empty image and revoke current blob.",
+  "diagnosticImprovement": "Existing neighbor test preserves all12 role/direction/outcome cases and timeout. On failure logs role/direction/outcome/stage, open/modal, image metadata, status, disabled controls, browser errors, fixture request paths and saves synthetic screenshot.",
+  "checks": {
+    "syntaxPublicChat": "pass",
+    "syntaxBrowserTest": "pass",
+    "gitDiffCheck": "pass",
+    "nativeChromeExecutedLocally": false,
+    "nativeCiRerunByThisAgent": false,
+    "commitOrPushByThisAgent": false
+  },
+  "boundaries": [
+    "Exact causal iteration in failed CI is not independently established.",
+    "Real Chrome and full final PR/main qualifications still required.",
+    "No existing timeout increased or failing assertion removed.",
+    "CRM close listener handed to separate reviewer; this patch touches only two authorized photo/media listeners."
+  ]
+}
