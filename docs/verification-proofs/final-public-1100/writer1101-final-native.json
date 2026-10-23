@@ -1,0 +1,30 @@
+{
+  "status": "release1101_final_writer_native_qualified",
+  "operator": "ac101b4bfbfa3a7f765752cb2adc74287846145e",
+  "tree": "7a09dc8d72c6393c3f69adf0154cdb1df7e1658a",
+  "branch": "ops/record-v1.10.1",
+  "writerSha256": "638a3b7019654e840f403acc14f8384ec15ce255aea423cbc33b621240efda75",
+  "helperSha256": "293f06004d79d9b32a891473c7514b74eda58e5798f083561540a0108c58806b",
+  "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+  "sourceTree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+  "stagingSha256": "aa2d9240ded66106ee919ad1baa8949559be816edc93bc6998954359bccc2b1a",
+  "releaseId": 422216628,
+  "run": 40018506473,
+  "runAttempt": 1,
+  "conclusion": "success",
+  "completedAtUtc": "2026-10-23T20:21:08Z",
+  "job": 120636678476,
+  "nodeVersion": "v24.22.1",
+  "tests": 16,
+  "passes": 16,
+  "omissions": 0,
+  "diffFromDraft": "Only STAGING_SHA and RELEASE_ID finalized",
+  "hostedExecutionConfirmed": false,
+  "activationConfirmed": false,
+  "log": {
+    "file": "writer1101-job120636678476.log.gz",
+    "sha256": "74a3b52924024ca201db8e9b80d59ccfdfa17d5f998c4706729470e1500a2f0f",
+    "uncompressedSha256": "07ac7097a1094edae371dcba12e94e6946353d6f91243e3642a41f0f932a1270",
+    "roundTripVerified": true
+  }
+}
