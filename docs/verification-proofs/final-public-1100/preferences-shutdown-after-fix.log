@@ -1,0 +1,21 @@
+✔ real chat rollback preserves a typed preferences conflict and exact replay commits without a write (11.846569ms)
+✔ driver code lookalikes remain sanitized after rollback rather than impersonating a preferences conflict (1.350613ms)
+✔ chat authentication failure remains unauthorized and never reaches private preferences (1.440028ms)
+✔ shutdown before preferences encryption rolls back the real chat transaction without writing a zero-key envelope (2.098434ms)
+✔ shutdown during an acknowledged preferences commit preserves the original encryption key and successful result (2.229082ms)
+✔ shutdown while a preferences read waits never decrypts or returns the late private selection (1.03787ms)
+✔ the complete supplied preferences catalogue is byte exact, has stable IDs and all 934 aliases are searchable (33.806885ms)
+✔ unknown IDs, extra claimed identity and stale catalogue versions are rejected; duplicates canonicalize (2.64117ms)
+✔ private selections encrypt with an owner/version binding; edits and empty clearing remain encrypted (5.571287ms)
+✔ a choice removed in a future catalogue is retained on reads rather than silently dropped (0.731316ms)
+✔ own admin/client selections survive service reads across sessions, clear independently and never trust claimed IDs (9.013944ms)
+✔ only authorised administrators can read a client's selection through its conversation (2.646423ms)
+✔ stale concurrent selections conflict without overwrite, and revoked/limited requests cannot write (2.388953ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 286.10449

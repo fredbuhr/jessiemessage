@@ -1,0 +1,47 @@
+{
+  "type": "f06-other-dialogs-correction",
+  "scope": "Two close-event guards and two native Chrome regressions only. No commit, push, remote or real account action.",
+  "repoFiles": [
+    {
+      "path": "public/crm.js",
+      "sha256": "5f348a01b1b3f3cd873960a42c8b11c437729632f242cb5173ecc379a7df06af"
+    },
+    {
+      "path": "public/closures.js",
+      "sha256": "f54895ed746c4344d7f6150ce61217b68d351055c26405035f4de9392b549fb5"
+    },
+    {
+      "path": "tests/browser/crm-collaboration.browser.mjs",
+      "sha256": "e032f5dbf098afff61d4da4d3ba8a9bb146ae2e0f19e19bb4f3f7d6f9066e5c9"
+    },
+    {
+      "path": "tests/browser/account-closures.browser.mjs",
+      "sha256": "e830a51fc8706d483c6ff40478cae89618ef635909b2dc0791646a21bce3d612"
+    }
+  ],
+  "cause": "A prior queued native close can run after a fresh same-task showModal. Ignore that prior event while the corresponding dialog is open.",
+  "beforeEvidence": "before.json",
+  "afterEvidence": "after.json",
+  "vmAuthenticity": "Actual full CRM openProfile/closeProfile functions and close callback plus actual closure reset/prepare/cancel/close callbacks extracted from source. DOM fields and queued event dispatch are minimal stubs; not a real browser result.",
+  "localRuntime": "Node v24.19.0",
+  "localChecks": {
+    "syntaxFiles": 4,
+    "syntaxPassed": true,
+    "scopedGitDiffCheckPassed": true,
+    "vmBeforeExpectedFailuresReproduced": 2,
+    "vmAfterPreservationPassed": 2
+  },
+  "nativeBrowserRegressions": {
+    "added": 2,
+    "runLocally": false,
+    "reason": "Chrome and ChromeDriver are absent. Existing harness refuses to skip unavailable prerequisites.",
+    "details": "Real button.click close/reopen in the same browser JavaScript task, queued close event actually observed as trusted, reopened draft/confirmation still intact, zero implicit POST, then Escape still clears/closes normally.",
+    "timeoutsRaised": false
+  },
+  "knownNonIssues": [
+    "CRM closeProfile does not erase state.drafts; no permanent stored-draft loss claimed.",
+    "Notification close only restores focus through modal-safe guard.",
+    "confirm-delete close already ignores a queued event while reopened."
+  ],
+  "requiredNext": "Run existing native Chrome qualification on final exact candidate. No opening approval inferred from VM or syntax."
+}

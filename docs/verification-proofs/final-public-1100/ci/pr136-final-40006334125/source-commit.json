@@ -1,0 +1,36 @@
+{
+  "sha": "cd81f915a36e5fd39cba2fd9819d760588d47041",
+  "node_id": "C_kwDOVJw7f9oAKGNkODFmOTE1YTM2ZTVmZDM5Y2JhMmZkOTgxOWQ3NjA1ODhkNDcwNDE",
+  "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/commits/cd81f915a36e5fd39cba2fd9819d760588d47041",
+  "html_url": "https://github.com/fredbuhr/jessiemessage/commit/cd81f915a36e5fd39cba2fd9819d760588d47041",
+  "author": {
+    "name": "ZTIKIX",
+    "email": "49747120+fredbuhr@users.noreply.github.com",
+    "date": "2026-10-23T18:48:23Z"
+  },
+  "committer": {
+    "name": "ZTIKIX",
+    "email": "49747120+fredbuhr@users.noreply.github.com",
+    "date": "2026-10-23T18:48:23Z"
+  },
+  "tree": {
+    "sha": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+    "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/trees/2a09d9d5d6698a04605e9a4b4faa551536cfca13"
+  },
+  "message": "fix: ignore stale native close events after dialogs reopen",
+  "parents": [
+    {
+      "sha": "d6ff12668ed87ac952c06bfee240c58e58afeae9",
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/commits/d6ff12668ed87ac952c06bfee240c58e58afeae9",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/commit/d6ff12668ed87ac952c06bfee240c58e58afeae9"
+    }
+  ],
+  "verification": {
+    "verified": false,
+    "reason": "unsigned",
+    "signature": null,
+    "payload": null,
+    "verified_at": null
+  }
+}
+

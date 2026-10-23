@@ -1,0 +1,36 @@
+{
+  "sha": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+  "node_id": "C_kwDOVJw7f9oAKDllYjk5ZjFmNjhhYjRiZWI1NDg0ODk0MjQ5YWZhOGY0MTNjYzVkZDY",
+  "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/commits/9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+  "html_url": "https://github.com/fredbuhr/jessiemessage/commit/9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+  "author": {
+    "name": "ZTIKIX",
+    "email": "49747120+fredbuhr@users.noreply.github.com",
+    "date": "2026-10-23T18:57:54Z"
+  },
+  "committer": {
+    "name": "GitHub",
+    "email": "noreply@github.com",
+    "date": "2026-10-23T18:57:54Z"
+  },
+  "tree": {
+    "sha": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+    "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/trees/2a09d9d5d6698a04605e9a4b4faa551536cfca13"
+  },
+  "message": "fix: qualify JessieMessage 1.10.1 before public opening (#136)\n\n* fix: stabilize sessions and preferences before public launch in 1.10.1\n\n* test: align native session assertions and await preference form readiness\n\n* fix: ignore stale native close events after dialogs reopen",
+  "parents": [
+    {
+      "sha": "6781a46ae8ee08334695c44e5c47dca960d64c42",
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/commits/6781a46ae8ee08334695c44e5c47dca960d64c42",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/commit/6781a46ae8ee08334695c44e5c47dca960d64c42"
+    }
+  ],
+  "verification": {
+    "verified": true,
+    "reason": "valid",
+    "signature": "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJq264yCRC1aQ7uu5UhlAAABIgQAIuJWaFCWQcEOM7hHdlTLkgR\nQcv+CSf0FJJJ7QuPKz35kfNgmweBAtWcDXrZKukQQgGVzOLEcopXiX7M/rtyYPYN\n4ZRW04NemV2wRWqNyY6QFDdZnfGMKOkhDpNK5J3xaDETaR6kKmygjzNIP/n0arH2\nwh47jcsB83UwFELNLOAQ4d6ux9jTmBHB2cePXWcf5L0tpB9aYXZ/nBEhQJXmIhb8\nQw+pHK1l3LnOmU6N3cirEOwEK2jn6MQSXrv0w8nFH4ftgSU2BCP/9kRuCsrFGqPK\nOXzCT/EncZzlzsDYWU0Rx+A5/jU3lCBA1MU7XJNRUXx0dWVmp02wXCQVJUNcN1aB\ncS1D7bAbY1O+b+V/Drudv1rdoPfgV+s+0uMXMHy0/PzSCZ2WNaYnjHb8RNl7CJ8S\nILOffe9nBmhDpj+6LEjxeZgXvlqYnSEv542araGT3PkyXWjqffT9oByTJF+YXtMU\nPMYZCJIHRtvwNCrIgv4bbOVuythj57k7BK1YaRPOk9RZPiCpIFQtOpPSTr+LiExt\npBqcG4tLw+K2NkKVujq9TxAFsEhNeEYz1yOOQ+GrItnbtEuAn1FssF6cfFb/CeZA\nh8M+XcIspOai4uNrXWLSfPCeblDPZ34hQDZ4ScWWPZqyIDbMb33JXE0Y0KzvmdFG\n4FZkCybxywGgfMvFtP4B\n=oypD\n-----END PGP SIGNATURE-----\n",
+    "payload": "tree 2a09d9d5d6698a04605e9a4b4faa551536cfca13\nparent 6781a46ae8ee08334695c44e5c47dca960d64c42\nauthor ZTIKIX <49747120+fredbuhr@users.noreply.github.com> 1792781874 +0200\ncommitter GitHub <noreply@github.com> 1792781874 +0200\n\nfix: qualify JessieMessage 1.10.1 before public opening (#136)\n\n* fix: stabilize sessions and preferences before public launch in 1.10.1\n\n* test: align native session assertions and await preference form readiness\n\n* fix: ignore stale native close events after dialogs reopen",
+    "verified_at": "2026-10-23T18:57:55Z"
+  }
+}
+

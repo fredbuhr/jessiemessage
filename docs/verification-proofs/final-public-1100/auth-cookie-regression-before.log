@@ -1,0 +1,157 @@
+✖ admin/session: an old successful response preserves a newer login cookie (77.341537ms)
+✖ admin/logout: an old successful response preserves a newer login cookie (23.869406ms)
+✖ admin/logout-all: an old successful response preserves a newer login cookie (9.504607ms)
+✖ admin/revoke-current: an old successful response preserves a newer login cookie (8.398347ms)
+✖ client/session: an old successful response preserves a newer login cookie (11.670577ms)
+✖ client/logout: an old successful response preserves a newer login cookie (6.907156ms)
+✖ client/logout-all: an old successful response preserves a newer login cookie (5.213831ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 0
+ℹ fail 7
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 368.186802
+
+✖ failing tests:
+
+test at tests/session-late-success.test.mjs:22:5
+✖ admin/session: an old successful response preserves a newer login cookie (77.341537ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '__Host-jessie_session=AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE; Path=/; Max-Age=15552000; Secure; HttpOnly; SameSite=Strict'
+  - null
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/bb431be72395/jessiemessage/tests/session-late-success.test.mjs:89:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '__Host-jessie_session=AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE; Path=/; Max-Age=15552000; Secure; HttpOnly; SameSite=Strict',
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/session-late-success.test.mjs:22:5
+✖ admin/logout: an old successful response preserves a newer login cookie (23.869406ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict'
+  - null
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/bb431be72395/jessiemessage/tests/session-late-success.test.mjs:89:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict',
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/session-late-success.test.mjs:22:5
+✖ admin/logout-all: an old successful response preserves a newer login cookie (9.504607ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict'
+  - null
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/bb431be72395/jessiemessage/tests/session-late-success.test.mjs:89:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict',
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/session-late-success.test.mjs:22:5
+✖ admin/revoke-current: an old successful response preserves a newer login cookie (8.398347ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict'
+  - null
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/bb431be72395/jessiemessage/tests/session-late-success.test.mjs:89:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '__Host-jessie_session=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict',
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/session-late-success.test.mjs:22:5
+✖ client/session: an old successful response preserves a newer login cookie (11.670577ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '__Host-jessie_client=AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE; Path=/; Max-Age=15552000; Secure; HttpOnly; SameSite=Strict'
+  - null
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/bb431be72395/jessiemessage/tests/session-late-success.test.mjs:89:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '__Host-jessie_client=AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE; Path=/; Max-Age=15552000; Secure; HttpOnly; SameSite=Strict',
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/session-late-success.test.mjs:22:5
+✖ client/logout: an old successful response preserves a newer login cookie (6.907156ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '__Host-jessie_client=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict'
+  - null
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/bb431be72395/jessiemessage/tests/session-late-success.test.mjs:89:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '__Host-jessie_client=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict',
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/session-late-success.test.mjs:22:5
+✖ client/logout-all: an old successful response preserves a newer login cookie (5.213831ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '__Host-jessie_client=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict'
+  - null
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/bb431be72395/jessiemessage/tests/session-late-success.test.mjs:89:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '__Host-jessie_client=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Strict',
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

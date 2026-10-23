@@ -1,0 +1,1405 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage1100-final-operations-and-data-audit",
+  "scope": "OPS-01..OPS-17 mapped to master134-point checklist",
+  "status": "complete_read_only_preferences_shutdown_blocker_owned_by_business",
+  "source": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+  "qualifiedTree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+  "localHeadAtStart": "6dfd1cca8c31fd83181c8754b664912a295eaaef",
+  "localEquivalentSourceObject": "ab70dba",
+  "qualifiedNativeEvidence": {
+    "path": "docs/verification-proofs/jm1100/main-native.json",
+    "run": 39991790308,
+    "node": "v24.22.1",
+    "mariadb1011": 598,
+    "mariadb114": 598,
+    "chrome": 256,
+    "https": 12,
+    "generalPassed": 4026,
+    "generalSkipped": 52,
+    "newTestsExecutedByThisAudit": false
+  },
+  "productionEvidence": "USER_REPORTED startup/readiness/metadata1100; not a fresh host inspection",
+  "createdAt": "2026-10-23T18:11:05.132135+00:00",
+  "openingDecisionForThisLot": "BUS-PREF-01 is a confirmed P1 on deployed source1.10.0: diagnostics close can erase the preferences key before an admitted SQL callback encrypts. Business owns the local1.10.1 fix; native qualification and delivery remain required before public opening. Expanded closure/key-lifetime review found no second concrete persistence-corruption path. Other known operational limits remain explicit; no real-host load/restore attestation.",
+  "constraintsPreserved": [
+    "No hosted mutation or inspection",
+    "No real send/erasure/backup/restore/PC test",
+    "No cloud browser",
+    "No repository or remote mutation by this audit",
+    "No rerun of previously green native suites"
+  ],
+  "checks": [
+    {
+      "id": "OPS-01",
+      "check": "Configuration privée stricte, permissions et secrets séparés",
+      "status": "reviewed_pass",
+      "read_depth": "Code ciblé des chargeurs et lecture complète des stores JSON/transport; preuves natives antérieures.",
+      "evidence": [
+        {
+          "path": "server/config/runtime-database-file.mjs"
+        },
+        {
+          "path": "server/config/runtime-media-storage.mjs"
+        },
+        {
+          "path": "server/config/runtime-video-storage.mjs"
+        },
+        {
+          "path": "server/files/private-json.mjs"
+        },
+        {
+          "path": "server/public-profile/store.mjs"
+        },
+        {
+          "path": "docs/verification-proofs/jm1100/main-native.json"
+        }
+      ],
+      "assessment": "Configuration fermée, origines/profils explicites, répertoires700/fichiers600 et contrôles identité/liens; clés distinctes selon domaine. Le nouveau snapshot public est une copie explicitement publiable, séparée des préférences chiffrées.",
+      "limits": [
+        "Secrets réels, modes et contenu du bundle hébergé non inspectés; le writer hébergé USER_REPORTED a contrôlé son empreinte."
+      ],
+      "findings": [],
+      "recommendation": "Aucune correction d’exploitation nouvelle avant ouverture.",
+      "timing": "before_public_checked"
+    },
+    {
+      "id": "OPS-02",
+      "check": "Identités SQL runtime/migration et privilèges minimum applicables",
+      "status": "reviewed_with_known_hosting_limit",
+      "read_depth": "Runtime et inspecteur de privilèges lus intégralement; sections préflight.",
+      "evidence": [
+        {
+          "path": "server/db/runtime.mjs"
+        },
+        {
+          "path": "server/db/shared-runtime-privileges.mjs"
+        },
+        {
+          "path": "server/preflight/database.mjs"
+        },
+        {
+          "path": "docs/verification-proofs/jm190-hosted-full-preflight.json"
+        }
+      ],
+      "assessment": "Compte runtime distinct du compte de migration. Profil strict refuse DDL et écritures au ledger. Le profil mutualisé accepté autorise six droits bornés (SELECT/INSERT/UPDATE/DELETE/CREATE TEMPORARY TABLES/LOCK TABLES), y compris ledgerWritable, et recontrôle chaque acquisition; variante pattern vérifie le namespace actuellement visible.",
+      "limits": [
+        "Le grant mutualisé est plus large que le profil strict; les futurs schémas correspondant au pattern ne sont pas certifiés. Le relevé SSH190 a passé privileges, sans inspection privée directe agent."
+      ],
+      "findings": [],
+      "recommendation": "Conserver le profil réellement accepté et son garde; ne pas ajouter de droits ou faire tourner le serveur avec le compte DDL.",
+      "timing": "before_public_checked"
+    },
+    {
+      "id": "OPS-03",
+      "check": "TLS base, transactions, index et migrations/checksums",
+      "status": "reviewed_pass_with_capacity_limit",
+      "read_depth": "Chargeurs SQL/profils et préflight lus par sections; inventaires et qualification exacte réutilisés.",
+      "evidence": [
+        {
+          "path": "server/db/migrations.mjs"
+        },
+        {
+          "path": "server/db/store-migrations.mjs"
+        },
+        {
+          "path": "server/experience/migrations.mjs"
+        },
+        {
+          "path": "server/preflight/database.mjs"
+        },
+        {
+          "path": "server/data/erasure-schema.mjs"
+        },
+        {
+          "path": "docs/capacity-182.md"
+        },
+        {
+          "path": "docs/verification-proofs/jm1100/main-native.json"
+        }
+      ],
+      "assessment": "Plan33+3+2=38 migrations,37 tables physiques avec ledger. SQL38 est explicitement sélectionné; checksums, history et graphe des contraintes vérifiés sans auto-migration. TLS rejette les certificats non valides/minTLS1.2; préflight exige Ssl_cipher non vide. Transactions/UTC/lectures cohérentes et rollback gardés.",
+      "limits": [
+        "Index de dernière activité dépend de l’historique (A12); aucun nouveau benchmark hébergé. La réussite190 TLS/SQL précède1100 mais le profil/DDL n’ont pas changé."
+      ],
+      "findings": [],
+      "recommendation": "Aucune correction d’exploitation nouvelle avant ouverture.",
+      "timing": "before_public_checked"
+    },
+    {
+      "id": "OPS-04",
+      "check": "Arrêt gracieux, drainage et délais workers/HTTP/SQL",
+      "status": "confirmed_P1_preferences_fix_pending_native",
+      "read_depth": "Lifecycle et diagnostic close index complets; revue ciblée de tous les destinataires close et recherche de tous les fill(0) sous server. Services/files quick replies, privacy, closure/journal et public profile lus intégralement; CRM/chat/export/media/video clés et fermetures relues par sections.",
+      "evidence": [
+        {
+          "path": "server/lifecycle.mjs"
+        },
+        {
+          "path": "server/index.mjs"
+        },
+        {
+          "path": "server/db/runtime.mjs"
+        },
+        {
+          "path": "server/mail/worker.mjs"
+        },
+        {
+          "path": "server/notifications/worker.mjs"
+        },
+        {
+          "path": "tests/worker-lifecycle.test.mjs"
+        },
+        {
+          "path": "tests/runtime-pool-release.test.mjs"
+        },
+        {
+          "path": "docs/verification-proofs/jm1100/main-native.json"
+        },
+        {
+          "path": "server/preferences/service.mjs"
+        },
+        {
+          "path": "server/preferences/crypto.mjs"
+        },
+        {
+          "path": "server/preferences/store.mjs"
+        },
+        {
+          "path": "server/quick-replies/files.mjs"
+        },
+        {
+          "path": "server/privacy/files.mjs"
+        },
+        {
+          "path": "server/data/closure-service.mjs"
+        },
+        {
+          "path": "server/data/erasure-journal.mjs"
+        },
+        {
+          "path": "server/chat/archive-transfer.mjs"
+        },
+        {
+          "path": "server/media/storage.mjs"
+        },
+        {
+          "path": "server/video/storage.mjs"
+        }
+      ],
+      "assessment": "Le drainage HTTP/SQL est conservé, mais diagnostics.close() est déclenché avant la fin des requêtes en vol. En1.10.0 preferencesService.close() efface la clé détenue par une callback encrypt appelée après attente SQL : BUS-PREF-01/P1 confirmé par reproduction métier. La correction locale1.10.1 retient la clé tant que des opérations admises existent, refuse la callback avant chiffrement si fermé et garde le déchiffrement du résultat positivement commis. Les autres fermetures relues ne présentent pas ce motif de persistance avec clé zéro.",
+      "limits": [
+        "Arrêt réel Infomaniak non déclenché pendant cet audit. Une échéance peut laisser une opération incertaine: reprise gardée, pas retry aveugle."
+      ],
+      "findings": [
+        "BUS-PREF-01"
+      ],
+      "recommendation": "Qualifier et livrer la correction1.10.1 avant ouverture au public. Pas de refactor global de lifecycle ni nouveaux essais réels.",
+      "timing": "before_public_blocker_business_owned"
+    },
+    {
+      "id": "OPS-05",
+      "check": "SMTP file: retries, TTL, erreurs et pas de fuite",
+      "status": "reviewed_pass_dependency_patch_separate",
+      "read_depth": "Transport, config et worker complets; store/index par sections; métadonnées CI.",
+      "evidence": [
+        {
+          "path": "server/mail/config.mjs"
+        },
+        {
+          "path": "server/mail/transport.mjs"
+        },
+        {
+          "path": "server/mail/worker.mjs"
+        },
+        {
+          "path": "server/mail/store.mjs"
+        },
+        {
+          "path": "server/reset/store.mjs"
+        },
+        {
+          "path": "docs/verification-proofs/jm1100/main-native.json"
+        }
+      ],
+      "assessment": "SMTP465 implicite TLS ou587 STARTTLS obligatoire, vérification certs, pas logger/debug, fichiers/URLs désactivés. Payload chiffré, leases/TTL recontrôlés immédiatement avant envoi; tentative externe et acknowledgement séparés. Worker5 par lot/15s, pas chevauchement, codes neutres.",
+      "limits": [
+        "Livraison au moins une fois: une acceptation SMTP suivie d’un crash peut produire un doublon; aucun envoi réel ici. Nodemailer10.1.1 actif, mise à jour10.1.4 traitée par le patch racine1.10.1, sans conclusion de correction déjà déployée."
+      ],
+      "findings": [],
+      "recommendation": "Conserver ces contrats; qualifier la dépendance corrigée avec la source1.10.1 avant de lui attribuer le résultat.",
+      "timing": "before_public_patch_tracked_by_root"
+    },
+    {
+      "id": "OPS-06",
+      "check": "Push file: quotas/retries/révocation et suppression",
+      "status": "reviewed_pass",
+      "read_depth": "Worker/transport intégralement ou segments complémentaires; store par points d’entrée.",
+      "evidence": [
+        {
+          "path": "server/notifications/worker.mjs"
+        },
+        {
+          "path": "server/notifications/transport.mjs"
+        },
+        {
+          "path": "server/notifications/store.mjs"
+        },
+        {
+          "path": "server/notifications/validation.mjs"
+        },
+        {
+          "path": "tests/notifications-transport.test.mjs"
+        },
+        {
+          "path": "tests/notifications-worker.test.mjs"
+        },
+        {
+          "path": "docs/verification-proofs/jm1100/main-native.json"
+        }
+      ],
+      "assessment": "Payload générique sans message privé, lot<=5, bail90s/6tentatives, TTL<=24h et backoff/jitter plafonné. HTTP410/404 invalident abonnement. EndpointHTTPS et DNS validés, toutes adresses doivent être publiques, adresse épinglée sans secondlookup, TLS/SNI conservés, délai10s/réponse8Kio.",
+      "limits": [
+        "Acceptation fournisseur ne prouve pas la réception système sur téléphone; les essais physiques restent non acquis. Aucun Push réel envoyé."
+      ],
+      "findings": [],
+      "recommendation": "Aucune correction d’exploitation nouvelle avant ouverture.",
+      "timing": "before_public_checked"
+    },
+    {
+      "id": "OPS-07",
+      "check": "Backpressure/pools/polling et capacité mesurée sur fixtures",
+      "status": "reviewed_with_known_capacity_limit",
+      "read_depth": "Pool complet, admission et polling/service par sections; diagnosticA12 complet.",
+      "evidence": [
+        {
+          "path": "server/db/runtime.mjs"
+        },
+        {
+          "path": "server/http/admission.mjs"
+        },
+        {
+          "path": "server/http/peer-address.mjs"
+        },
+        {
+          "path": "server/chat/service.mjs"
+        },
+        {
+          "path": "public/chat.js"
+        },
+        {
+          "path": "docs/capacity-182.md"
+        },
+        {
+          "path": "docs/verification-proofs/jm182-hosted-peer-observation.json"
+        }
+      ],
+      "assessment": "Pool4 connexions, attente/acquisition et connexion5s, socket30s, maximum8 acquisitions wrapper. Admission32global/16pair/8token simultanées et budgets2400global/1200pair/300token parminute. Quotas persistés chat120client/480admin/2400global lectures; envois utilisateur30 avant global300. Polling suspendu onglet masqué.",
+      "limits": [
+        "A11: pair réellement vu par le process derrière le proxy non établi par relevé antérieur vide. Les128identités tokens/peer/min et budgets réseau peuvent être partagés si proxy commun; ne pas en déduire une panne actuelle. Capacité simultanée du mutualisé non mesurée."
+      ],
+      "findings": [
+        "OPS-F01"
+      ],
+      "recommendation": "Démarrage progressif cohérent avec limites; si429 réels, établir le contrat proxy avant de toucherXFF ou quotas.",
+      "timing": "after_public_if_observed"
+    },
+    {
+      "id": "OPS-08",
+      "check": "Seuils de croissance A12: pagination/fermeture/campagnes",
+      "status": "known_growth_limit_nonblocking_current_evidence",
+      "read_depth": "DiagnosticA12 intégral; requêtes store/limites effacement par sections.",
+      "evidence": [
+        {
+          "path": "docs/capacity-182.md"
+        },
+        {
+          "path": "server/chat/store.mjs"
+        },
+        {
+          "path": "server/crm/store.mjs"
+        },
+        {
+          "path": "server/data/erasure-store.mjs"
+        },
+        {
+          "path": "tests/crm-store.integration.test.mjs"
+        }
+      ],
+      "assessment": "Pagination bornée et propriétaires conservés. Diagnostic natif1k/10kévénements et51conversations existe. MAX(occurred_at) peut scanner l’historique faute d’index composé adapté. Fermeture refuse au-delà de10kcampagnes globales au lieu de tronquer silencieusement.",
+      "limits": [
+        "Aucun volume hébergé lu; aucun seuil proche ni panne démontrée. Mesures runner non transposables en nombre d’utilisateurs."
+      ],
+      "findings": [
+        "OPS-F02"
+      ],
+      "recommendation": "Traiter index/pagination supplémentaire si mesures ou volumes réels le justifient; ne pas purger ni relever des plafonds à l’aveugle.",
+      "timing": "after_public_if_threshold"
+    },
+    {
+      "id": "OPS-09",
+      "check": "Stockage/disque/chiffrement/médias et limites admission",
+      "status": "reviewed_pass_with_documented_limits",
+      "read_depth": "Admission commune complète; storage/HTTP/services/capacité par sections sensibles.",
+      "evidence": [
+        {
+          "path": "server/media/backup-limits.mjs"
+        },
+        {
+          "path": "server/media/backup-admission.mjs"
+        },
+        {
+          "path": "server/media/capacity-store.mjs"
+        },
+        {
+          "path": "server/media/store.mjs"
+        },
+        {
+          "path": "server/media/storage.mjs"
+        },
+        {
+          "path": "server/media/service.mjs"
+        },
+        {
+          "path": "server/video/store.mjs"
+        },
+        {
+          "path": "server/video/storage.mjs"
+        },
+        {
+          "path": "server/video/http.mjs"
+        },
+        {
+          "path": "tests/backup-media-admission.integration.test.mjs"
+        },
+        {
+          "path": "docs/verification-proofs/jm1100/main-native.json"
+        }
+      ],
+      "assessment": "Admission commune photos+vidéos<=1Gio et100krecords retenus même si quotas persistés sont plus hauts; verrous capacité dans ordre commun. Photos<=10Mio, vidéos<=100Mio, uploadsvidéo2/lectures4, photoslecture8. Disque libre recontrôlé et réservations persistées avant publication. AES256GCM, nonces aléatoires; vidéos clés par fichier dérivées/HMAC et blocs256Kio authentifiés avant clair.",
+      "limits": [
+        "Disque/quota hébergés actuels non lus. Les tombstones/historiques comptent vers100krecords même après libération; plafond sauvegarde peut provoquer507 avant quota10Gio configuré. Aucun exercice réel de saturation."
+      ],
+      "findings": [
+        "OPS-F03"
+      ],
+      "recommendation": "Après ouverture, rendre capacité utile/limite1Gio lisibles à l’admin; conserver les gardes de sauvegardabilité.",
+      "timing": "after_public_improvement"
+    },
+    {
+      "id": "OPS-10",
+      "check": "Sauvegarde manuelle: code/contrats/qualifications, test hébergé reporté",
+      "status": "reviewed_native_qualified_hosted_deferred",
+      "read_depth": "Service et fichiers de requêtes complets; handler/superviseur/capture par sections; tests indexés et preuve native.",
+      "evidence": [
+        {
+          "path": "server/backup/manual-backup-service.mjs"
+        },
+        {
+          "path": "server/backup/manual-backup-files.mjs"
+        },
+        {
+          "path": "server/backup/manual-backup-http.mjs"
+        },
+        {
+          "path": "server/backup/recurring-supervisor.mjs"
+        },
+        {
+          "path": "server/backup/snapshot.mjs"
+        },
+        {
+          "path": "server/backup/checkpoint-encryption.mjs"
+        },
+        {
+          "path": "tests/manual-backup-parent.test.mjs"
+        },
+        {
+          "path": "tests/experience-checkpoint-compat.test.mjs"
+        },
+        {
+          "path": "docs/verification-proofs/jm1100/main-native.json"
+        }
+      ],
+      "assessment": "Actionadmin/CSRF enregistre une intention durable, parent seul réalise capture après arrêt/drain et redémarre seulement sous preuves valides. Pas de scheduler/archivage automatique ajouté. Requête interrompue non rejouée; chiffrementGPG et archives/reçus conservés. Format expérience37tables/38migrations qualifié.",
+      "limits": [
+        "Création/fin/téléchargement hébergés toujours non essayés à la demande explicite utilisateur. Aucun nouveau test PC, Avast, backup réel ou diagnostic fournisseur. Maximum2000identités demandes/historiques: dette de longévité, pas saturation démontrée."
+      ],
+      "findings": [
+        "OPS-F04"
+      ],
+      "recommendation": "Conserver le report et la portée exacte; ne promettre ni sauvegarde horshôte courante ni récupération complète de l’hôte.",
+      "timing": "explicitly_deferred_not_reopened"
+    },
+    {
+      "id": "OPS-11",
+      "check": "Restauration isolée, clés nécessaires et portée des garanties",
+      "status": "reviewed_native_qualified_not_hosted_exercised",
+      "read_depth": "Sections isolation/quiescence/binding/import/reconciliation/publication; tests existants indexés, aucune exécution.",
+      "evidence": [
+        {
+          "path": "server/backup/manual-restore.mjs"
+        },
+        {
+          "path": "server/backup/manual-operator-context.mjs"
+        },
+        {
+          "path": "server/backup/application-scope.mjs"
+        },
+        {
+          "path": "server/backup/verify.mjs"
+        },
+        {
+          "path": "server/backup/manifest.mjs"
+        },
+        {
+          "path": "server/backup/operational-checkpoint.mjs"
+        },
+        {
+          "path": "tests/manual-restore-operator.integration.test.mjs"
+        },
+        {
+          "path": "tests/experience-lifecycle.integration.test.mjs"
+        },
+        {
+          "path": "docs/verification-proofs/jm1100/main-native.json"
+        }
+      ],
+      "assessment": "CibleDB/racinesdistinctes, runtime arrêté, clés canaries/empreintes/bindings, quarantaine et registre de fermetures plusrécent exigés. SQL38 et préférences chiffrées vérifiées; aucune importation SQL générique ni suppression de garde. La couverture applicationtables exclut routines/triggers/events et ne vaut pas baseentière.",
+      "limits": [
+        "Restauration d’un hôte totalement perdu et fraîcheur externe autonome horsgarantie. Cléscryptographiques actuellement requises, rotation générale/MFA nonimplémentée. Aucune restauration hébergée ou SQL réel pendant audit."
+      ],
+      "findings": [
+        "OPS-F05"
+      ],
+      "recommendation": "Préserver les clés/coffres existants; ne jamais remplacer une clé configurée pour tenter une rotation ou récupération improvisée.",
+      "timing": "before_public_documented_no_new_execution"
+    },
+    {
+      "id": "OPS-12",
+      "check": "Nouveau snapshot public hors sauvegarde: limite republiable",
+      "status": "reviewed_expected_exclusion",
+      "read_depth": "Storepublic et sélectionnames opérationnels lus; modèle de couverturebackup.",
+      "evidence": [
+        {
+          "path": "server/public-profile/store.mjs"
+        },
+        {
+          "path": "server/backup/operational-checkpoint.mjs"
+        },
+        {
+          "path": "server/backup/application-scope.mjs"
+        },
+        {
+          "path": "docs/public-profile-1100.md"
+        }
+      ],
+      "assessment": "jessie-public-profile.json dans dossier privé ne correspond pas au namespace capturé privacy/erasure/quickreplies. Il est donc exclu sans bloquer la capture. Préférences privées SQL restent incluses; copiepublique peut être republiée après récupération.",
+      "limits": [
+        "Snapshot public nonrestauré automatiquement; choix produit explicitement documenté, pas perte des préférences privées."
+      ],
+      "findings": [],
+      "recommendation": "Aucune correction d’exploitation nouvelle avant ouverture.",
+      "timing": "before_public_checked"
+    },
+    {
+      "id": "OPS-13",
+      "check": "Suppression de compte, export et conservation jusqu’à fermeture",
+      "status": "reviewed_native_qualified",
+      "read_depth": "Closure service complet, erasure/store/journal/SQL38 par sections et preuveintégration.",
+      "evidence": [
+        {
+          "path": "server/data/closure-service.mjs"
+        },
+        {
+          "path": "server/data/erasure.mjs"
+        },
+        {
+          "path": "server/data/erasure-store.mjs"
+        },
+        {
+          "path": "server/data/erasure-schema.mjs"
+        },
+        {
+          "path": "server/data/erasure-journal.mjs"
+        },
+        {
+          "path": "server/video/erasure-store.mjs"
+        },
+        {
+          "path": "server/video/erasure-storage.mjs"
+        },
+        {
+          "path": "tests/account-erasure-flow.integration.test.mjs"
+        },
+        {
+          "path": "tests/experience-lifecycle.integration.test.mjs"
+        },
+        {
+          "path": "docs/verification-proofs/jm1100/main-native.json"
+        }
+      ],
+      "assessment": "Demandeexpliciteadmin FERME/R vérificationpseudonyme, intention chiffrée durable, parentquiescent seulexécuteur. Révocation/purgegraphe SQL incluant profile_preferences et tâchesreply, fichiers clients puis capacité libérée avec preuves. Conversations conservées avant fermeture. Exportsclients séparés notes/tâchesadmin; sources vidéo historiquesrestentlisibles.",
+      "limits": [
+        "Aucun compte réel supprimé/exporté. Copiesbackups et copies externes ne sont pas effacées par fermetureactive; UI et DTO l’indiquent. Conservationlégale noncertifiée, chantierA10 nonrouvert."
+      ],
+      "findings": [],
+      "recommendation": "Aucune correction d’exploitation nouvelle avant ouverture.",
+      "timing": "before_public_checked"
+    },
+    {
+      "id": "OPS-14",
+      "check": "Historiques/autorités/quarantaines/anciens formats protégés",
+      "status": "reviewed_pass",
+      "read_depth": "Sélectionformats/registre et preuvewriter/opérateur existante; pas relecture privée.",
+      "evidence": [
+        {
+          "path": "server/backup/registry-snapshot.mjs"
+        },
+        {
+          "path": "server/backup/operational-checkpoint.mjs"
+        },
+        {
+          "path": "server/backup/manual-restore.mjs"
+        },
+        {
+          "path": "server/data/closure-service.mjs"
+        },
+        {
+          "path": "docs/verification-proofs/jm1100-hosted-metadata.json"
+        },
+        {
+          "path": "docs/verification-proofs/jm1100/writer-final-native.json"
+        }
+      ],
+      "assessment": "Formats historiques et colonnes SQL33/36 nonréétiquetés; SQL38 explicite. Journaux de fermeturelegacy lus dans leurbindingoriginal, nonréutilisés pour nouvelle destruction. Checkpoint1100préserve190/historiques/autresblocs selon reçu final. Aucune réinitialisationautorité/quarantaine/PC.",
+      "limits": [
+        "Les garanties externes/succession/récupérationtotale restent limitées; aucun contenu privé observé."
+      ],
+      "findings": [],
+      "recommendation": "Aucune correction d’exploitation nouvelle avant ouverture.",
+      "timing": "before_public_checked"
+    },
+    {
+      "id": "OPS-15",
+      "check": "Sonde disponibilité et alerte: cadence/échecs/limites connues",
+      "status": "reviewed_pass_with_observation_limit",
+      "read_depth": "Moniteur/store/DTO principaux lus, intégration et endpointstatus.",
+      "evidence": [
+        {
+          "path": "server/operations/monitor.mjs"
+        },
+        {
+          "path": "server/operations/store.mjs"
+        },
+        {
+          "path": "server/operations/dto.mjs"
+        },
+        {
+          "path": "server/operations/external-probe.mjs"
+        },
+        {
+          "path": "server/index.mjs"
+        },
+        {
+          "path": "tests/operations-monitor.test.mjs"
+        },
+        {
+          "path": "MONITORING.md"
+        }
+      ],
+      "assessment": "Étatpublic cacheuniquement; sample15s, observateur2s, staleDB45s/workers180s. Pas de requêtes SQL additionnelles parGETready; unseulsamplecoalescé, timeoutn’autorise paschevauchement. Vueadminagrégée queuesbornées1000; étatready exigeDB+workersréussis. Logs transitionsneutres.",
+      "limits": [
+        "ready ne certifie ni envoisréels, téléphone, disque disponible ou restauration. Aucune surveillance externe récurrente créée par cet audit; réception alertes réellement déployée nonréattestée."
+      ],
+      "findings": [],
+      "recommendation": "Aucune correction d’exploitation nouvelle avant ouverture.",
+      "timing": "before_public_checked"
+    },
+    {
+      "id": "OPS-16",
+      "check": "Logs bornés/diagnostic neutre et absence de données privées",
+      "status": "reviewed_neutral_diagnostics_unbounded_file_retention",
+      "read_depth": "Référencesconsole/transports/monitorinspectées; fichiersjournauxopérateur bornés à lecture, pas rotationcourante.",
+      "evidence": [
+        {
+          "path": "server/index.mjs"
+        },
+        {
+          "path": "server/operations/monitor.mjs"
+        },
+        {
+          "path": "server/mail/transport.mjs"
+        },
+        {
+          "path": "server/notifications/transport.mjs"
+        },
+        {
+          "path": "server/backup/recurring-supervisor.mjs"
+        },
+        {
+          "path": "MONITORING.md"
+        }
+      ],
+      "assessment": "Pas de loggerSMTP/SQLparam activé; erreurs sanitaires fixes, observerbound, payloads/credentials/endpointclients nonjournalisés par chemins relus. Identitédémarrage version/commit/Node/date est technique. Journauxcheck/start préservés, nontronqués.",
+      "limits": [
+        "Le fichierstdout runtime appendsans politiqueappde rotation détectée; limites lecturewriter/logs ne constituent pas limite taille au disque. Aucun volume hébergé nouveau lu. Observationsprovider ne donnent pasrétentionserveur garantie."
+      ],
+      "findings": [
+        "OPS-F06"
+      ],
+      "recommendation": "Prévoir entretienjournalisation conservant lespreuves si la tailleaugmente; pasd’effacement/rotationarbitraire avant ouverture.",
+      "timing": "after_public_maintenance"
+    },
+    {
+      "id": "OPS-17",
+      "check": "Plan de repli sans migration inverse ou relance incompatible",
+      "status": "reviewed_pass_user_reported_not_executed",
+      "read_depth": "Opérateurs préparation/writer sourceexact connus et reçusdurables; no CIreplay.",
+      "evidence": [
+        {
+          "path": "docs/operations-release1100.md"
+        },
+        {
+          "path": "docs/verification-proofs/jm1100-hosted-metadata.json"
+        },
+        {
+          "path": "docs/verification-proofs/jm190-hosted-schema38-status.json"
+        },
+        {
+          "path": "docs/verification-proofs/jm190-hosted-prechecks.json"
+        },
+        {
+          "path": "docs/verification-proofs/jm1100/writer-final-native.json"
+        }
+      ],
+      "assessment": "1.10.0 estfinalisée/source51b/SQL38. Repli185compatible38 précontrôléetjamaisdémarré, pas de migrationinverse.184/172interdits;190et1100sources/lanceurshistoriquespréservés. Writerqualifié13 puis reçu final acquissansredémarrage.",
+      "limits": [
+        "Aucunrepliréel exercé; la correction1.10.1 enpréparation auraunlockdifférent et devra avoir sespropresdépendances/qualification/lanceurs avant activation."
+      ],
+      "findings": [
+        "OPS-F07"
+      ],
+      "recommendation": "Nejamaislierle futur1101auxdépendances1100sansétapeprécise de préparationdu nouveaulock.",
+      "timing": "before_next_patch_delivery"
+    }
+  ],
+  "findings": [
+    {
+      "id": "OPS-F01",
+      "severity": "P2_conditional_known",
+      "title": "A11 pairproxy nonétabli; budgetspourraientêtrepartagés",
+      "newBlockingDefect": false,
+      "checks": [
+        "OPS-07"
+      ],
+      "actionBeforePublic": "Aucune sonde/réglageXFFautomatique; garderla réserve explicite.",
+      "actionAfterPublic": "Établir lecontratproxy sur symptôme ou preuve nouvelle."
+    },
+    {
+      "id": "OPS-F02",
+      "severity": "P2_growth_known",
+      "title": "A12 coûtMAXoccurred_at etplafond10kcampagnes",
+      "newBlockingDefect": false,
+      "checks": [
+        "OPS-08"
+      ],
+      "actionBeforePublic": "Pasde mesurehébergéeou seuilproche établi.",
+      "actionAfterPublic": "Index/paginationqualifiésàpartirvolumes/réels."
+    },
+    {
+      "id": "OPS-F03",
+      "severity": "P3_operational_limit",
+      "title": "Plafondutilemédias1Gio/100krecords distinctdesquotasconfigurés",
+      "newBlockingDefect": false,
+      "checks": [
+        "OPS-09"
+      ],
+      "actionBeforePublic": "Conserverlegardesauvegardablealigné.",
+      "actionAfterPublic": "Indicateurcapacitésadmin utile."
+    },
+    {
+      "id": "OPS-F04",
+      "severity": "accepted_deferred_verification",
+      "title": "Sauvegardemanuelledéployéemaisparcourshébergétoujoursreporté",
+      "newBlockingDefect": false,
+      "checks": [
+        "OPS-10"
+      ],
+      "actionBeforePublic": "Ne pasréouvrirlesessaisreportéssansdemande.",
+      "actionAfterPublic": "Essaiuniquementsurrepriseexplicitementdemandée."
+    },
+    {
+      "id": "OPS-F05",
+      "severity": "P2_operational_limit_known",
+      "title": "RotationdesclésMFA/données nongénériquementimplémentée; récupérationtotalehorsgarantie",
+      "newBlockingDefect": false,
+      "checks": [
+        "OPS-11"
+      ],
+      "actionBeforePublic": "Préserverclésetcoffres, aucunechangementsauvage.",
+      "actionAfterPublic": "Rotaionnécessiteraitmigration/rechiffrementqualifiésséparés."
+    },
+    {
+      "id": "OPS-F06",
+      "severity": "P3_maintenance",
+      "title": "Rétention/rotationfichierstdout nonbornéeparapp",
+      "newBlockingDefect": false,
+      "checks": [
+        "OPS-16"
+      ],
+      "actionBeforePublic": "Aucune tailleactuelle excessiveétablie; ne pastronquerpreuves.",
+      "actionAfterPublic": "Entretienjournalisationàpartirsuiviréel."
+    },
+    {
+      "id": "OPS-F07",
+      "severity": "P1_for_1101_deployment_only",
+      "title": "NouveauverrouNodemailer imposeunvrai1101dependencytree distinct",
+      "newBlockingDefect": false,
+      "checks": [
+        "OPS-17"
+      ],
+      "actionBeforePublic": "Préparer/qualifierlesdépendances1101 avantcetteactivation, pasrécupérationaveugle du symlink1100.",
+      "actionAfterPublic": "Sansobjetaprèslivraisonqualifiée."
+    },
+    {
+      "id": "BUS-PREF-01",
+      "severity": "P1_confirmed_business_owned",
+      "title": "Préférences : chiffrement avec clé effacée pendant fermeture avant fin HTTP",
+      "newBlockingDefect": true,
+      "checks": [
+        "OPS-04"
+      ],
+      "owner": "/root/business_preservation",
+      "state": "local_fix_reviewed_native_and_delivery_pending",
+      "actionBeforePublic": "Qualifier et déployer1.10.1 avec régressions métier; aucun rejeu des contrôles1100 inchangés.",
+      "actionAfterPublic": "Sans objet après qualification/livraison; aucun second défaut de ce motif établi."
+    }
+  ],
+  "codeFingerprints": [
+    {
+      "path": "public/chat.js",
+      "bytes": 176949,
+      "sha256": "9afc430d89d3db648bdd8044f18c5f26d51b44f4f1be259242e210953bbbe9df",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/backup/application-scope.mjs",
+      "bytes": 9076,
+      "sha256": "f0e021ce10152c3daf323bd484929a83bccf133f4219bc50b17b3f9bfb88d689",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/backup/checkpoint-encryption.mjs",
+      "bytes": 22472,
+      "sha256": "f135d187567acc248012d01ecaaf2974c6b31c6eff16632a50d78e7abc42460a",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/backup/manifest.mjs",
+      "bytes": 21526,
+      "sha256": "495d571388e06331089286237f93b719e31a4f609bf7b7e49a6d2694563b96b9",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/backup/manual-backup-files.mjs",
+      "bytes": 7367,
+      "sha256": "4710394a9b86afb36082d13eec9acfb164c14e644ac490d78aa53d94ebdc8f13",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/backup/manual-backup-http.mjs",
+      "bytes": 6812,
+      "sha256": "fa92c04d9b066029e5c397a51d1a7ef96d6db9d78e01fa491a6629e34b782382",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/backup/manual-backup-service.mjs",
+      "bytes": 1335,
+      "sha256": "66c7c67c123dff4eaa010cc3ea750d2b2f1f044edb6a8e02ef4901afe20a5006",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/backup/manual-operator-context.mjs",
+      "bytes": 11984,
+      "sha256": "8b4793de7676c817ab7c6232387e170a6e0cb45d37b3290f771a0e0d7afa8648",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/backup/manual-restore.mjs",
+      "bytes": 30089,
+      "sha256": "0253d080e48ded61861ace69f6c890551a80f9cd2d6e72cb36259f7bfd8a4389",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/backup/operational-checkpoint.mjs",
+      "bytes": 21539,
+      "sha256": "1a5c10e413c43d0c15d8cd1173dffa9835d864043e9bc6c6f5d85e57c2fbbce5",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/backup/recurring-supervisor.mjs",
+      "bytes": 30425,
+      "sha256": "cd777cf9196904d53744fec7ee93277c47fe3cba1134392ea7ceadf0c6263dda",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/backup/registry-snapshot.mjs",
+      "bytes": 8933,
+      "sha256": "12f466ac744c0b536feca437b31c27d99c389eb554ba947f60bbb93fa346b140",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/backup/snapshot.mjs",
+      "bytes": 28936,
+      "sha256": "04c5cca43194d27faf905923eb1da42f6d3569b08d690a4f5b20f31e419cf917",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/backup/verify.mjs",
+      "bytes": 26117,
+      "sha256": "6858d9961fbe8b1da28fab5d202beda85ca910fee62f05b400481de3a6b0fdaa",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/chat/service.mjs",
+      "bytes": 18859,
+      "sha256": "e80677b2c95dc23e9bebd0ff11f809297c75ef9f339b268033f30bd359543e1f",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/chat/store.mjs",
+      "bytes": 46526,
+      "sha256": "bc5e02197ab8f119a05a784241ae165ea5c78600151e6a3dd2b579ee3473097a",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/config/runtime-database-file.mjs",
+      "bytes": 43763,
+      "sha256": "52878d6e29d8c8106e62eb61ac55222406435ec600d8fec21a1777dd35e17d2f",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/config/runtime-media-storage.mjs",
+      "bytes": 2702,
+      "sha256": "b445d7ef5b617e14e44d71107ca7a47e5f4612e44c9044ccf28f428e7b71210e",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/config/runtime-video-storage.mjs",
+      "bytes": 4192,
+      "sha256": "4923c021e31696958acdca519092c45a411d7a961965efb6ed3b2385b15c5c1b",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/crm/store.mjs",
+      "bytes": 32774,
+      "sha256": "27416221f07b330a4b190cf4f1326ac0128df6a4ca58fbff96a2e3eab3fa81c0",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/data/closure-service.mjs",
+      "bytes": 5411,
+      "sha256": "97291da70f9e374cf52d6eca008e02f8e8c51af1a0bf494a5ec0d979a1276ea3",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/data/erasure-journal.mjs",
+      "bytes": 12681,
+      "sha256": "b53437898f5cf9933117b00af77e647bc8757a5e1d62cb3617b492dc9692becb",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/data/erasure-schema.mjs",
+      "bytes": 4825,
+      "sha256": "1638dfd5b2ed8ecce8ac84b05bc148f031a15acc5c93805ab7854bb11213d4c3",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/data/erasure-store.mjs",
+      "bytes": 25054,
+      "sha256": "5a432786e107b4028d884373e25e41153e2ece4d768fbed28547b5699e1bb457",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/data/erasure.mjs",
+      "bytes": 7488,
+      "sha256": "fd65842450cf8a73307c33da1ae948b1bbbae11c7a2a323ab5e63dabf1df5559",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/db/migrations.mjs",
+      "bytes": 19369,
+      "sha256": "926f70ec5eae1ebb5564ed96d18eb097d002973d534c6292908c2a7d9e468af0",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/db/runtime.mjs",
+      "bytes": 5582,
+      "sha256": "58b91ed6bfe5f8a6003d922f786b86a283eb3bb094611cd0b4de2219ca89c258",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/db/shared-runtime-privileges.mjs",
+      "bytes": 4843,
+      "sha256": "65264f306c1fdc6bff9302a56e04f0042e948b47964d4654e04558333cebd1ca",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/db/store-migrations.mjs",
+      "bytes": 1323,
+      "sha256": "a018b6aada2669fc8c99d9aab36c06fb1d4e069eb1d92a817c47309911d983b8",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/experience/migrations.mjs",
+      "bytes": 811,
+      "sha256": "985ec9bfe6fdd40fa4fc84a3ab083599b5d9e8c6df0ec62e1202b67e16749db2",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/files/private-json.mjs",
+      "bytes": 7767,
+      "sha256": "dc43f3f29677b89c4298ae7508e13fa7827169a4ac7f85eef639152f0d675a5b",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/http/admission.mjs",
+      "bytes": 6391,
+      "sha256": "dbd4efd3c3a8aa7a66ac1a336d15ee8f9370f3a7e8c60f7554c50291f615d8b9",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/http/peer-address.mjs",
+      "bytes": 744,
+      "sha256": "bdaedaa7eda2c5df654b4087701d02c64b3a1a8c9bf937b07b06d7181b0e4cb4",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/index.mjs",
+      "bytes": 56757,
+      "sha256": "6f9fc1319a36abc156dc53ce5f359f9fe342956f80db7e1feb83b798eeddb0bc",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/lifecycle.mjs",
+      "bytes": 3030,
+      "sha256": "739165655c6a2e0f0d556bec06b599ffe823ad22bb57371f5b16951785342b9d",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/mail/config.mjs",
+      "bytes": 2407,
+      "sha256": "ddc6c64f2aac9e1e0a3a1cde2063ed61c0772e882be3ac60df35c183959c4dcc",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/mail/store.mjs",
+      "bytes": 11975,
+      "sha256": "19f8d1d9ea47bbe45347a95b30d8b52a3cf38361c215b5ea86a638fa650e303a",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/mail/transport.mjs",
+      "bytes": 10322,
+      "sha256": "e36749e10b9fdd4d9ef13b1c49cd7155f32cfba1228d37be1ddb2b8eb9a679a9",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/mail/worker.mjs",
+      "bytes": 6008,
+      "sha256": "5ebbeda42e0a9fdda0c181a43521a7b7813f61bfb57f1ecaad472cb69ea3e60e",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/media/backup-admission.mjs",
+      "bytes": 2910,
+      "sha256": "d6131d17afd9a8178caffe32e818b47a9c08d916aa31bdf188641458ab8d1d32",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/media/backup-limits.mjs",
+      "bytes": 450,
+      "sha256": "ddb8825e3f9ffea62e7a043225af2c0fc35c6a4742799516c04073615e0ee1e7",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/media/capacity-store.mjs",
+      "bytes": 10781,
+      "sha256": "5b8e7441e0e17bf51f317ca6a089d1ad1111d027d81dc912c2e757a429199c58",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/media/service.mjs",
+      "bytes": 17243,
+      "sha256": "f362eb912671e4e1d463ce27ce352fc27e03f7bf08cbbc768f09a350ec80b653",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/media/storage.mjs",
+      "bytes": 19952,
+      "sha256": "51d7a90d82a86e56a39272cb8f50d1e8d7f2b52ef3a242e1cc7b76ae29c4f6b2",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/media/store.mjs",
+      "bytes": 30078,
+      "sha256": "cdbbd441790fc606729e3b7a169bc2037fbc67580e2dd00a2d383cd46bcee074",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/notifications/store.mjs",
+      "bytes": 33779,
+      "sha256": "a33429f9b3173a5c808f88a82797529c3ed0d99b700bfad9c4f527fa540c122c",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/notifications/transport.mjs",
+      "bytes": 8834,
+      "sha256": "e9a1f36fd404cbfbdd9409980a7c1494205ffeca7e51dedfc723098d05beeecb",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/notifications/validation.mjs",
+      "bytes": 2588,
+      "sha256": "a38002d6dd8f5aea916f68d35224a779bd5ad7bbbcfdd67ded39890dad373160",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/notifications/worker.mjs",
+      "bytes": 8077,
+      "sha256": "646eab7e5f03f3cb6cda4c68c15e45c43c253715447dfbd148900c01b0ca5ccb",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/operations/dto.mjs",
+      "bytes": 2727,
+      "sha256": "26708fc960e0ad6c3fa4b1fdf4c497ec387e1d504743cbb2ca4a196597025209",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/operations/external-probe.mjs",
+      "bytes": 7943,
+      "sha256": "1f7468f18784b1577153addf5ca619e139f4de337dd89894a1edc82b7da6ca67",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/operations/monitor.mjs",
+      "bytes": 10648,
+      "sha256": "1fe748189255ca9abe765cae56dd6266de10d3c47ed8bb703d375ec2ff810cd5",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/operations/store.mjs",
+      "bytes": 4323,
+      "sha256": "e12308d69bb36549ef15354e8bf5ccf2eb5d16d4844711ff9975549f2307fcb5",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/preflight/database.mjs",
+      "bytes": 15240,
+      "sha256": "2abdde67578493ade8e09cf27dfe6d9db50f06511868ef0e4a802af3b3d3c1e0",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/public-profile/store.mjs",
+      "bytes": 1097,
+      "sha256": "d6ee26339c2ee8580c39fcdd97bfc7a4f53035de819bdf9d6880aca603176ef5",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/reset/store.mjs",
+      "bytes": 19182,
+      "sha256": "4df15595ced959890e1b77e89205d4613106b10460c6e3c168ad5d17412e1209",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/video/erasure-storage.mjs",
+      "bytes": 1052,
+      "sha256": "bf28a2ab2a64e57a3770543c88a9464cc047b226510f5e8be0be7961c5c712c3",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/video/erasure-store.mjs",
+      "bytes": 10571,
+      "sha256": "1694df55f140b17d0f5f24ceee71f5b38fffd62a90e75ed96cd59e516cf0aedd",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/video/http.mjs",
+      "bytes": 23895,
+      "sha256": "dee606d908cc05f9ceea3458846aa7878a8260f89043e8cdf71bcd26c84633db",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/video/storage.mjs",
+      "bytes": 26356,
+      "sha256": "4bfbf95c51e01b079abce4dc304d5537249c0486fd33390a25fbbe026ff01e16",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    },
+    {
+      "path": "server/video/store.mjs",
+      "bytes": 29940,
+      "sha256": "18e5b0d05ca2a07b24efd000f101aa5bdd2a34e0ca4bc5cab0557d593dc35f1d",
+      "sameAsQualifiedLocalTree": true,
+      "readDepth": "see check entries; selected ranges where stated"
+    }
+  ],
+  "primaryDocumentationReviewed": [
+    {
+      "url": "https://mariadb.com/docs/connectors/mariadb-connector-nodejs/node-js-connection-options",
+      "ref": "turn4search0",
+      "use": "TLS/socketTimeout parameter semantics and multipleStatements control, not a fresh hosting measurement."
+    },
+    {
+      "url": "https://mariadb.com/docs/connectors/mariadb-connector-nodejs/connector-nodejs-callback-api",
+      "ref": "turn4search1",
+      "use": "Pool connectionLimit/idleTimeout units and asynchronous release/reset semantics."
+    },
+    {
+      "url": "https://nodejs.org/docs/latest-v24.x/api/http.html",
+      "ref": "turn7view0",
+      "use": "Version24.22.1 HTTP timeout and close lifecycle API reference."
+    }
+  ],
+  "readDepthLimit": "Focused review of live operational entry points, security-critical sections and prior qualifications, not line-by-line review of every historical backup/witness module or every test. Oversized outputs were completed through selected follow-up ranges where needed; no truncated output is used as proof of exhaustive coverage.",
+  "updatedAt": "2026-10-23T18:15:31.603839+00:00",
+  "shutdownKeyLifetimeReview": {
+    "mode": "static_extension_no_new_suite_run_no_real_actions",
+    "baseline": "qualified1.10.0 exact tree190024a2; business preference fix reviewed separately as working-tree candidate, not deployed code",
+    "diagnosticCloseMembers": [
+      {
+        "service": "readinessService",
+        "behavior": "Annule/ferme transport de diagnostic; pas de clé de contenu applicative effacée."
+      },
+      {
+        "service": "operations",
+        "behavior": "Arrête minuteur puis attend la vraie query active; pas de clé de chiffrement."
+      },
+      {
+        "service": "closureHandler",
+        "behavior": "Ferme service et efface ownedKey; chaque journal déjà créé possède sa propre clé HKDF. Création de journal tardive peut être refusée par available avant publication. Journal chiffre synchroniquement avant await; beforeCommit vérifie service/journal encore ouverts avant et après autorisation."
+      },
+      {
+        "service": "privacyHandler",
+        "behavior": "Ferme files et efface sa clé dérivée. save chiffre après available avant son premier await; beforeCommit vérifie available, ancienne enveloppe et autorisation puis available. Publication après effacement ne peut porter qu’un ciphertext déjà formé sous bonne clé."
+      },
+      {
+        "service": "backupHandler",
+        "behavior": "Ferme demandes/transferts d’archives; pas de wipe de clé de chiffrement métier admise."
+      },
+      {
+        "service": "quickRepliesHandler",
+        "behavior": "Ferme chaque file et efface clés source/dérivées. Un await exactReplay précède le chiffrement; si fermeture durant cet intervalle, le vrai private-json appelle beforeCommit disponible avant rename : l’enveloppe calculée ne peut être publiée. Une enveloppe calculée avant fermeture reste correctement chiffrée même si réponse ultérieure refusée."
+      },
+      {
+        "service": "preferencesService",
+        "behavior": "Seul motif P1 reproduit : callback SQL retardée utilise clé service effacée. Fix métier local conserve durée de vie et refuse nouvelle encryption fermée; natif/livraison à acquérir."
+      },
+      {
+        "service": "publicationService",
+        "behavior": "Efface clé HMAC de quota; snapshot explicitement public non chiffré, revalidation acteur avant commit, aucune clé de contenu."
+      },
+      {
+        "service": "crmHandler and legacy crmHandler",
+        "behavior": "Ferme archive transfer : drapeau closing + AbortController. Ne ferme/efface pas les clés CRM; ces services détiennent leurs copies Buffer."
+      },
+      {
+        "service": "chatHandler and legacy chatHandler",
+        "behavior": "Ferme client conversation exports : annule transferts. Ne ferme/efface pas la clé messages; export copie messageKey et l’efface dans finally de sa propre opération."
+      }
+    ],
+    "additionalPaths": [
+      {
+        "path": "server/profile/service.mjs",
+        "assessment": "Clé copiée utilisée seulement pour HMAC quotas; pas de close de service dans diagnostics ni ciphertext de préférences géré ici."
+      },
+      {
+        "path": "server/media/storage.mjs",
+        "assessment": "secret=Buffer.from(key), pas de close global dans diagnostics; enveloppes locales effacées après usage."
+      },
+      {
+        "path": "server/video/storage.mjs",
+        "assessment": "identifier(key,32) copie la clé maître; wipe videoConfig à construction ne l’affecte pas. Clé de fichier dérivée par handle, fermée en fin de lecture/annulation; ce chemin ne persiste pas de nouvelle enveloppe et refuse/authentifie toute lecture invalide."
+      },
+      {
+        "path": "server/crm/service.mjs, server/chat/service.mjs, broadcast, announcements, tasks",
+        "assessment": "Pas de close/wipe de clé globale dans le graphe diagnostics. Effacements crypto des buffers/clé de but concernent les opérations synchrones qui viennent de se terminer, pas des callbacks SQL encore admises."
+      }
+    ],
+    "concreteAdditionalBlockers": 0,
+    "unresolvedConcreteSuspects": 0,
+    "limit": "Revue de source et raisonnement de barrières de commit; pas simulation exhaustive de tout entrelacement ni nouvelle mesure de l’hôte.",
+    "fingerprints": [
+      {
+        "path": "server/lifecycle.mjs",
+        "sha256AtExtension": "739165655c6a2e0f0d556bec06b599ffe823ad22bb57371f5b16951785342b9d",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/index.mjs",
+        "sha256AtExtension": "6f9fc1319a36abc156dc53ce5f359f9fe342956f80db7e1feb83b798eeddb0bc",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/preferences/service.mjs",
+        "sha256AtExtension": "a7971d2043cef3139fabd406d42dcaf9fcbb5df9d3d920ef80a51da361f19216",
+        "sameAsQualified1100": false
+      },
+      {
+        "path": "server/preferences/store.mjs",
+        "sha256AtExtension": "92bb813440c8261b106817fd0ee412960f0763dbfa8fadaf12af9eb149c99029",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/preferences/crypto.mjs",
+        "sha256AtExtension": "f26c0565dddd220877087d9c02051d1e866af5f7a912091b9b5d38b35291748c",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/quick-replies/service.mjs",
+        "sha256AtExtension": "b4e107c53b9121aae8c1a3277ac0af257724f3ed2e3b8b4b16a9a60167b3df02",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/quick-replies/files.mjs",
+        "sha256AtExtension": "ede192036c7dec9fe42db68e3a09b099e98c29fb157f4812cd2141c2335a003e",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/privacy/files.mjs",
+        "sha256AtExtension": "5ff71ee36bd2459d870bcadd2779be2a8cd2a7ea6031288840bbd35f57259f57",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/privacy/service.mjs",
+        "sha256AtExtension": "47a066093dca51beaa8ff01a9406044534b694b9eb747fd0bc1bf878d20c865d",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/data/closure-service.mjs",
+        "sha256AtExtension": "97291da70f9e374cf52d6eca008e02f8e8c51af1a0bf494a5ec0d979a1276ea3",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/data/erasure-journal.mjs",
+        "sha256AtExtension": "b53437898f5cf9933117b00af77e647bc8757a5e1d62cb3617b492dc9692becb",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/files/private-json.mjs",
+        "sha256AtExtension": "dc43f3f29677b89c4298ae7508e13fa7827169a4ac7f85eef639152f0d675a5b",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/public-profile/service.mjs",
+        "sha256AtExtension": "de103eb142ea50a503d081745e262f8da6a4777ba7637f946548b1d42a9e396b",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/chat/archive-transfer.mjs",
+        "sha256AtExtension": "e85432692592cd13c328b742aa0a97a23505bd14da4628d934da7d1eb0c1234c",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/chat/client-export-http.mjs",
+        "sha256AtExtension": "3d3a3d7e6777882d8036f15cddca990ed867b0f485b71d2e6a843af548155d04",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/chat/http.mjs",
+        "sha256AtExtension": "c5c3a1bdf3a13691b4bee1c452057b704bd82085f5f9c694482543a3d30868dc",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/crm/http.mjs",
+        "sha256AtExtension": "2760991ee9a10b33f571c00be46241b76e67b8784756431f62bae500d2287fed",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/crm/service.mjs",
+        "sha256AtExtension": "e478cee5590c9867ba1f2912d0a17cc45e25886df3e5ed22875493184bbc69af",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/profile/service.mjs",
+        "sha256AtExtension": "b3115c6004b8da674d8d396ebf0226ae5ec9f34def5cadde2fc295445958c7b8",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/media/storage.mjs",
+        "sha256AtExtension": "51d7a90d82a86e56a39272cb8f50d1e8d7f2b52ef3a242e1cc7b76ae29c4f6b2",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/video/storage.mjs",
+        "sha256AtExtension": "4bfbf95c51e01b079abce4dc304d5537249c0486fd33390a25fbbe026ff01e16",
+        "sameAsQualified1100": true
+      },
+      {
+        "path": "server/data/export.mjs",
+        "sha256AtExtension": "b57e944f0acea475339ac747d32aee20ab76a4109361e9aaf1fce25342138608",
+        "sameAsQualified1100": true
+      }
+    ]
+  }
+}

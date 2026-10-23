@@ -1,0 +1,40 @@
+✖ shutdown before preferences encryption rolls back the real chat transaction without writing a zero-key envelope (9.822785ms)
+✖ shutdown during an acknowledged preferences commit preserves the original encryption key and successful result (1.588744ms)
+✔ shutdown while a preferences read waits never decrypts or returns the late private selection (1.415192ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 1
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 138.664747
+
+✖ failing tests:
+
+test at tests/preferences-store.test.mjs:85:1
+✖ shutdown before preferences encryption rolls back the real chat transaction without writing a zero-key envelope (9.822785ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///workspace/scratch/bb431be72395/jessiemessage/tests/preferences-store.test.mjs:89:3)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at tests/preferences-store.test.mjs:94:1
+✖ shutdown during an acknowledged preferences commit preserves the original encryption key and successful result (1.588744ms)
+  Error [PreferencesError]: Private preferences could not be processed.
+      at failPreferences (file:///workspace/scratch/bb431be72395/jessiemessage/server/preferences/validation.mjs:10:48)
+      at openPreferences (file:///workspace/scratch/bb431be72395/jessiemessage/server/preferences/crypto.mjs:45:13)
+      at dto (file:///workspace/scratch/bb431be72395/jessiemessage/server/preferences/service.mjs:38:138)
+      at file:///workspace/scratch/bb431be72395/jessiemessage/server/preferences/service.mjs:46:14
+      at async guarded (file:///workspace/scratch/bb431be72395/jessiemessage/server/preferences/service.mjs:10:29)
+      at async TestContext.<anonymous> (file:///workspace/scratch/bb431be72395/jessiemessage/tests/preferences-store.test.mjs:98:20)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    code: 'PREFERENCES_UNAVAILABLE'
+  }

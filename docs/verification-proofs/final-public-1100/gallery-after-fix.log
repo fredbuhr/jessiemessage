@@ -1,0 +1,9 @@
+✔ gallery cursor SQL parameters preserve synthetic microseconds before and after the pivot without a database (5.551699ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 261.701928

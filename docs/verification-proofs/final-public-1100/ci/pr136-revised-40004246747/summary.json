@@ -1,0 +1,280 @@
+{
+  "run": 40004246747,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747",
+  "workflow": ".github/workflows/ci.yml",
+  "event": "pull_request",
+  "branch": "fix/pre-public-1101",
+  "attempt": 1,
+  "source": "d6ff12668ed87ac952c06bfee240c58e58afeae9",
+  "tree": "13783822bc0870686e6fd48dfcc62a1e6a51ea2c",
+  "mergeCommit": "e59501ccba5553e33cbb742e71cb7e0233af8dab",
+  "mergeTree": "13783822bc0870686e6fd48dfcc62a1e6a51ea2c",
+  "sourceTreeMatchesMergeTree": true,
+  "status": "completed",
+  "conclusion": "failure",
+  "collectedAtUtc": "2026-10-23T18:42:24.479095+00:00",
+  "jobs": [
+    {
+      "id": 120587976742,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/job/120587976742"
+    },
+    {
+      "id": 120587977053,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/job/120587977053"
+    },
+    {
+      "id": 120587977239,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/job/120587977239"
+    },
+    {
+      "id": 120587977353,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "failure",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/job/120587977353"
+    },
+    {
+      "id": 120587977368,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/job/120587977368"
+    }
+  ],
+  "logs": [
+    {
+      "name": "https",
+      "jobId": 120587976742,
+      "bytes": 42577,
+      "sha256": "3061419f82b23b7f6303626f97a7c0ac74f3cebf76031990888ff24f3233fdc6",
+      "node": "v24.22.1",
+      "checkedOutMergeCommitPresent": true,
+      "totals": {
+        "tests": 12,
+        "pass": 12,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "localLogArchive": "https.log.gz",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/job/120587976742",
+      "logStorage": "gzip archive; sha256/bytes describe original complete decoded UTF-8 log",
+      "compressedSha256": "5c73557fbd6537ee7b2f499c3c9b1d73c3d81e0cc34c8845de6b3e75e74c5ceb",
+      "compressedBytes": 10720,
+      "gzipMtime": 0
+    },
+    {
+      "name": "verify",
+      "jobId": 120587977053,
+      "bytes": 579663,
+      "sha256": "d0acd97fd190498238c6cefdd6d0ef1158c08e97e6774e5e363823d0428acada",
+      "node": "v24.22.1",
+      "checkedOutMergeCommitPresent": true,
+      "totals": {
+        "tests": 4089,
+        "pass": 4037,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 52,
+        "todo": 0
+      },
+      "localLogArchive": "verify.log.gz",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/job/120587977053",
+      "logStorage": "gzip archive; sha256/bytes describe original complete decoded UTF-8 log",
+      "compressedSha256": "4123927d569d669cafa64b30fc3ed313e94e16e2ff68a757d868bc56046a4a32",
+      "compressedBytes": 170057,
+      "gzipMtime": 0
+    },
+    {
+      "name": "mariadb1011",
+      "jobId": 120587977239,
+      "bytes": 356801,
+      "sha256": "0cb8dcc49d7cbd909eb6c07614a2ee28185258152e39b42ceb6d4a109086cd57",
+      "node": "v24.22.1",
+      "checkedOutMergeCommitPresent": true,
+      "totals": {
+        "tests": 600,
+        "pass": 600,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "localLogArchive": "mariadb1011.log.gz",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/job/120587977239",
+      "logStorage": "gzip archive; sha256/bytes describe original complete decoded UTF-8 log",
+      "compressedSha256": "55dec60cc62d6c7cf70994b9baac779240ba04b638680797b549473ef5c0ad7d",
+      "compressedBytes": 66449,
+      "gzipMtime": 0
+    },
+    {
+      "name": "browser",
+      "jobId": 120587977353,
+      "bytes": 56196,
+      "sha256": "3e88501f938121a18b5649f7d39ac4f4cff1f75722e2e09ad81a082e87f9cca1",
+      "node": "v24.22.1",
+      "checkedOutMergeCommitPresent": true,
+      "totals": {
+        "tests": 257,
+        "pass": 256,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "localLogArchive": "browser.log.gz",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/job/120587977353",
+      "logStorage": "gzip archive; sha256/bytes describe original complete decoded UTF-8 log",
+      "compressedSha256": "407e946021b808b10dd3edef2146a151e63ac8a16884c45e0b77a6c677ebf5b5",
+      "compressedBytes": 15350,
+      "gzipMtime": 0
+    },
+    {
+      "name": "mariadb114",
+      "jobId": 120587977368,
+      "bytes": 357172,
+      "sha256": "22616a9607eb0b9fbb7b1d96b3532b406875c64487058d9f2379cfc46fdbf50a",
+      "node": "v24.22.1",
+      "checkedOutMergeCommitPresent": true,
+      "totals": {
+        "tests": 600,
+        "pass": 600,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "localLogArchive": "mariadb114.log.gz",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/job/120587977368",
+      "logStorage": "gzip archive; sha256/bytes describe original complete decoded UTF-8 log",
+      "compressedSha256": "aa7126b0f0d2b4b1f9f562c7f02ed83427fdc85c012f35dfba20e62ecd514f01",
+      "compressedBytes": 66938,
+      "gzipMtime": 0
+    }
+  ],
+  "node": "v24.22.1",
+  "qualificationComplete": false,
+  "allFiveDurablyFinished": true,
+  "successfulJobs": 4,
+  "initialFailureEvidence": "../pr136-initial-40002896036/summary.json",
+  "previousFailuresFixed": true,
+  "newFailure": {
+    "job": "browser",
+    "file": "tests/browser/chat-accessibility.browser.mjs",
+    "line": 1636,
+    "test": "Chrome photo neighbors use authorized server order within a millisecond while rejecting a reversed date or the same message",
+    "error": "Timed out: original full photo ready",
+    "durationMs": 14914.040622,
+    "status": "F06 application dialog close/reopen race established by real-source VM and allowed WHATWG queued-close order; exact triggering native iteration remains unobserved",
+    "knownFacts": [
+      "Same newtest passedinitialrun40002896036 in5354ms.",
+      "No newtest role/direction/outcome/DOM/capture emitted atfailure.",
+      "LocalnativeChrome/ChromeDriver unavailable, no localbrowser reproduction.",
+      "Queued old close event can clear a new lightbox item; demonstrated with actual application functions and event task order. Minimal open-state listener guard and deterministic native regression prepared by gallery_diagnosis; new exact-head qualification pending."
+    ],
+    "findingId": "F06",
+    "primarySource": "https://html.spec.whatwg.org/multipage/interactive-elements.html#close-the-dialog",
+    "sourceModelEvidence": {
+      "type": "synthetic_queued_close_event_order_reproduction_with_actual_application_functions",
+      "realNativeBrowser": false,
+      "source": "public/chat.js",
+      "beforeSource": "b23b694f4effaf802e043b8e70154c2db188af94",
+      "beforeSha256": "8b8dde14b90161b190e6660bb2b62249c7570aefaa792855950eedb3070b80aa",
+      "correctedWorkingTreeSha256": "4ef804f3286637c468f7e641b998d56844c46665054acdfa00f064362f89fd27",
+      "primarySource": {
+        "url": "https://html.spec.whatwg.org/multipage/interactive-elements.html#close-the-dialog",
+        "retrieved": "2026-10-23",
+        "steps": "5 removes open;13 queues close event on user interaction task source",
+        "toolRef": "turn26view0"
+      },
+      "rapidReopen": {
+        "before": {
+          "before": {
+            "open": true,
+            "item": "B",
+            "children": 1,
+            "queuedCloseEvents": 1
+          },
+          "after": {
+            "open": false,
+            "item": null,
+            "children": 0,
+            "queuedCloseEvents": 1
+          }
+        },
+        "afterActualWorkingTree": {
+          "before": {
+            "open": true,
+            "item": "B",
+            "children": 1,
+            "queuedCloseEvents": 1
+          },
+          "after": {
+            "open": true,
+            "item": "B",
+            "children": 1,
+            "queuedCloseEvents": 0
+          }
+        }
+      },
+      "currentNativeClose": {
+        "before": {
+          "before": {
+            "open": false,
+            "item": "A",
+            "children": 1,
+            "queuedCloseEvents": 1
+          },
+          "after": {
+            "open": false,
+            "item": null,
+            "children": 0,
+            "queuedCloseEvents": 0
+          }
+        },
+        "afterActualWorkingTree": {
+          "before": {
+            "open": false,
+            "item": "A",
+            "children": 1,
+            "queuedCloseEvents": 1
+          },
+          "after": {
+            "open": false,
+            "item": null,
+            "children": 0,
+            "queuedCloseEvents": 0
+          }
+        }
+      },
+      "nativeCIPositionProven": false,
+      "nativeFailure": "Run40004246747 timed out original full photo ready; no failure DOM was captured, so the exact triggering iteration is not independently established.",
+      "pending": "New deterministic Chrome regression and existing gallery loop must pass final native qualification."
+    }
+  },
+  "visualReview": "visual-review.json",
+  "limitations": [
+    "No rerun, push, merge, remote mutation or application source edit by thisagent.",
+    "General52skips remain explicit; successful nativeHTTPS/SQL jobs0skips.",
+    "Opening qualification blocked by failedChrome until diagnosis/correction and exactfreshnativeproof.",
+    "F06 is a confirmed source-level UI race; existing native failure lacks exact DOM/case instrumentation and is not falsely presented as a native causal trace."
+  ],
+  "durableArchive": {
+    "relativeDirectory": "ci/pr136-revised-40004246747",
+    "manifest": "log-archive-manifest.json",
+    "originalLogsPreservedUnchanged": true,
+    "nativeJobs": "jobs-native-links.json",
+    "screenshotsArchivedLocally": false,
+    "artifactMetadata": "artifacts.json"
+  }
+}

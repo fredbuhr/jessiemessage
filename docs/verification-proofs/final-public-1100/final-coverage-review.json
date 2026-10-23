@@ -1,0 +1,1015 @@
+{
+  "formatVersion": 1,
+  "type": "independent-final-coverage-business-review-1101",
+  "atUtc": "2026-10-23T19:19:15.645395+00:00",
+  "decision": {
+    "structuralCoverageSignedOff": true,
+    "applicationCorrectionQualified": true,
+    "releasePublished": true,
+    "newBlockingRuntimeFinding": false,
+    "businessRegressionFound": false,
+    "hosted1101ActivationAttested": false,
+    "publicOpeningApproved": false,
+    "reason": "Application1101 source qualified and release published; existing active1100 remains distinct. Actual1101 preparation/CHECK, hostedstartup and finalwriter receipt are pending. Finalrootreport crosscheck follows."
+  },
+  "scope": {
+    "task": "Read-only134coverage/22historical/6new findings,4F06guards,12production paths,exactPR/main/nativepublication evidence and preparationbootstrap pins.",
+    "priorBroadAudit": [
+      "business.json",
+      "business-crm.json",
+      "../version-audit1100/function-preservation.json"
+    ],
+    "independentHelper": "final-coverage-helper.json",
+    "actions": {
+      "repositoryEdits": false,
+      "suiteReruns": false,
+      "remoteOrHostCalls": false,
+      "realAccountSendsDeletes": false,
+      "scratchReportOnly": true
+    }
+  },
+  "sourceIdentity": {
+    "active1100Source": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+    "active1100Tree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+    "activeCheckpointSha256": "3d60ceb7da3dc61c9ca198ba40a898f6f9ab054650030c7a1632f019ecc73e53",
+    "candidatePrHead": "cd81f915a36e5fd39cba2fd9819d760588d47041",
+    "mainSource": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+    "candidateTree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+    "localCandidateEquivalent": "0738e53ae429ddfb6042b938d93e033beec70581",
+    "localHead": "835cf5d508a1a1115f4b192696793f8a67bd118c",
+    "workingRuntimeBytesMatchQualifiedTree": true,
+    "identityMethod": "ExactlocalGittree comparison plus preserved native sourcecommit/run metadata. PRCI checked out syntheticmerge32ba57a9e1e07725b4e374a32d0c01f674b600f3 with exact2a09tree; main checked out9eb99f1. Remote appobjects absent inlocalGit."
+  },
+  "coverage": {
+    "items": 134,
+    "uniqueIds": 134,
+    "duplicateIds": [],
+    "missingExpectedIds": [],
+    "unexpectedIds": [],
+    "expectedPrefixCounts": {
+      "REL": 10,
+      "AUTH": 12,
+      "CHAT": 12,
+      "MED": 14,
+      "BUS": 15,
+      "PWA": 6,
+      "UI": 14,
+      "SEC": 14,
+      "OPS": 17,
+      "LIVE": 12,
+      "GATE": 8
+    },
+    "allAddressed": true,
+    "domainReports": {
+      "security.json": {
+        "count": 26,
+        "unique": 26
+      },
+      "business.json": {
+        "count": 41,
+        "unique": 41
+      },
+      "frontend.json": {
+        "count": 20,
+        "unique": 20
+      },
+      "operations.json": {
+        "count": 17,
+        "unique": 17
+      }
+    },
+    "domainUnion": 104,
+    "domainOverlap": [],
+    "rootItems": 30,
+    "rootDomainOverlap": [],
+    "unmappedItems": [],
+    "authSubsetInSecurity": true
+  },
+  "historicalFindings": {
+    "expected": 22,
+    "recorded": 22,
+    "missing": [],
+    "unexpected": [],
+    "acceptedResidualsKeptDistinct": [
+      "A10",
+      "A11",
+      "A12"
+    ],
+    "notReclassifiedAsAllFixed": true
+  },
+  "newFindings": {
+    "count": 6,
+    "ids": [
+      "F-01",
+      "F-02",
+      "F-03",
+      "F-04",
+      "F-05",
+      "F-06"
+    ],
+    "expectedSixIdsMatch": true,
+    "severities": {
+      "F-01": "P2",
+      "F-02": "P3",
+      "F-03": "P3_conditional",
+      "F-04": "P3",
+      "F-05": "P1",
+      "F-06": "P3"
+    },
+    "deploymentPendingInCurrentSnapshot": true,
+    "allSixQualifiedButNotAttestedHostedActive": true
+  },
+  "preservation": {
+    "productionChangedPaths": [
+      "package-lock.json",
+      "package.json",
+      "public/chat.js",
+      "public/closures.js",
+      "public/crm.js",
+      "public/i18n-public-profile.js",
+      "public/public-profile.html",
+      "server/access/http.mjs",
+      "server/auth/http.mjs",
+      "server/media/http.mjs",
+      "server/media/store.mjs",
+      "server/preferences/service.mjs"
+    ],
+    "allChangedPaths": 61,
+    "deletedPaths": 0,
+    "all12ProductionDiffsAndAffectedSurroundingFunctionsRead": true,
+    "sqlFiles": 38,
+    "sqlByteIdentical": true,
+    "migrations": {
+      "normal": 33,
+      "video": 3,
+      "experience": 2,
+      "total": 38
+    },
+    "tables": {
+      "business": 36,
+      "ledger": 1,
+      "physical": 37
+    },
+    "countNote": "Legacy publicationreceipt keyapplicationTables37 includesledger; normalized36business+1ledger. Migration37ALTER does not create a table.",
+    "catalogueSha256": "5ce26f14f15fb9c3447b07777aa5c8d17a6e823e8099dbb37959fc48f00f93cb",
+    "catalogueByteIdentical": true,
+    "catalogueCounts": {
+      "preferences": 691,
+      "categories": 25,
+      "aliases": 934
+    },
+    "lockedEntries": 60,
+    "changedLockedEntries": [
+      "",
+      "node_modules/nodemailer"
+    ],
+    "otherLockedEntriesUnchanged": 58,
+    "version": "1.10.1",
+    "nodemailer": "10.1.4",
+    "schemaChanges": false,
+    "businessConclusion": "No removedbusinessroute/workflow/schema found. Chat/idempotency/drafts, media/export, CRM/groups/notes, broadcasts/announcements/tasks/replies andprivate/publicpreferences separation preserved withinreviewedscope.",
+    "intentionalBehaviorChanges": [
+      "F01browsercookie180days fromlogin/rotationissuance; GETno longer reinstalls/slidesbrowsercookie. SQLslidingexpiry remains; revokedcookie canremaininert. Documentedin authreview.",
+      "F03SQLpivot preserves6decimals; projected-msHTTP/UIguards preserveorder whendatesdiffer, uniqueness/seq/URLs/auth stillenforced. NoUUIDtieinference whenms equal.",
+      "F05keylifecycle retains originalkey throughadmittedreads/writes, rejectsnewoperations afterclose, rollsback preencryptabort; acknowledgedcommit stillreturnswithoriginalkey.",
+      "F06staleclose events do nottear down reopenedmodal; actualnativeclose/Escape cleanup preserved."
+    ]
+  },
+  "f06": {
+    "guards": [
+      {
+        "file": "public/chat.js",
+        "listener": "media-dialog close",
+        "guard": "panel && !dialog.open"
+      },
+      {
+        "file": "public/chat.js",
+        "listener": "lightbox close",
+        "guard": "lightboxItem && !dialog.open"
+      },
+      {
+        "file": "public/crm.js",
+        "listener": "profileDialog close",
+        "guard": "profileOpen && !profileDialog.open"
+      },
+      {
+        "file": "public/closures.js",
+        "listener": "confirm-dialog close",
+        "guard": "!dialog.open"
+      }
+    ],
+    "mechanism": "Nativeclose removesopen synchronously but queuesclose event. Same-task reopen must surviveolderclose; genuineclose/Escape stillcleans whenopenfalse. Openfunctions showmodal synchronously beforeawaitedloads.",
+    "threeNativeTestsRead": [
+      {
+        "file": "tests/browser/chat-accessibility.browser.mjs",
+        "case": "photo viewer queuedclose/reopen",
+        "covers": [
+          "realbutton same-taskclose/reopen",
+          "actualpriorcloseobserved",
+          "client320/admin1280",
+          "Escape plusdirectnativeclose cleanup",
+          "blobrevoke"
+        ]
+      },
+      {
+        "file": "tests/browser/crm-collaboration.browser.mjs",
+        "case": "CRM queuedclose/reopen",
+        "covers": [
+          "trustedcloseevent",
+          "draftretained",
+          "zeroPOST",
+          "Escape/focus"
+        ]
+      },
+      {
+        "file": "tests/browser/account-closures.browser.mjs",
+        "case": "closureconfirmation queuedclose/reopen",
+        "covers": [
+          "trustedcloseevent",
+          "newFERMER/ackretained",
+          "zeroPOST",
+          "Escapeclearsfields"
+        ]
+      }
+    ],
+    "exactLogLineProof": {
+      "pr40006334125": {
+        "closures": 206,
+        "lightbox": 294,
+        "crm": 296
+      },
+      "main40007620555": {
+        "closures": 194,
+        "lightbox": 282,
+        "crm": 284
+      }
+    },
+    "limit": "Fourguards/three dedicatedrealChrome cases. Media-dialog guard reviewed withsurroundingcode/existingmediaflows; no dedicatedsame-taskclose/reopen nativesubtest claimed.",
+    "historicalRepro": "InitialVMrepro isnotrealnativeChrome; exactearlierintermittentCIfailureattribution remainsinference."
+  },
+  "nativeApplicationQualification": [
+    {
+      "run": 40006334125,
+      "source": "cd81f915a36e5fd39cba2fd9819d760588d47041",
+      "tree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+      "event": "pull_request",
+      "node": "v24.22.1",
+      "conclusion": "success",
+      "jobs": 5,
+      "logs": [
+        {
+          "name": "mariadb114",
+          "jobId": 120595074359,
+          "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/job/120595074359",
+          "file": "mariadb114.log",
+          "bytes": 357525,
+          "sha256": "f0f76e827fe252d65677bfdee8d83fae8b46c2b8b07d667e1ab84e416daac9a4",
+          "node": "v24.22.1",
+          "checkedOutCommit": "32ba57a9e1e07725b4e374a32d0c01f674b600f3",
+          "checkedOutCommitPresent": true,
+          "totals": {
+            "tests": 600,
+            "pass": 600,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "totalsIndependentlyExtracted": {
+            "tests": 600,
+            "pass": 600,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "rawHashBytesAndGzipRoundtripVerified": true,
+          "compressedSha256": "f58856348dd2beef158d99da8cc0f5c0fb65edd24d5d54974a91b012f8a1bb7e"
+        },
+        {
+          "name": "https",
+          "jobId": 120595074841,
+          "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/job/120595074841",
+          "file": "https.log",
+          "bytes": 42225,
+          "sha256": "d80230efd634cc3d137dc0313290b782e29b14727ba7437b44fe8bab97944831",
+          "node": "v24.22.1",
+          "checkedOutCommit": "32ba57a9e1e07725b4e374a32d0c01f674b600f3",
+          "checkedOutCommitPresent": true,
+          "totals": {
+            "tests": 12,
+            "pass": 12,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "totalsIndependentlyExtracted": {
+            "tests": 12,
+            "pass": 12,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "rawHashBytesAndGzipRoundtripVerified": true,
+          "compressedSha256": "a5c16e482b158fe6c2b370398c93b8cc102b99f1585bbc838dced847833396ac"
+        },
+        {
+          "name": "mariadb1011",
+          "jobId": 120595075005,
+          "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/job/120595075005",
+          "file": "mariadb1011.log",
+          "bytes": 357229,
+          "sha256": "7f34a25fa0bb24f2aec653ee4478fbe7304f2fe72537380aa0b7522afd1deec2",
+          "node": "v24.22.1",
+          "checkedOutCommit": "32ba57a9e1e07725b4e374a32d0c01f674b600f3",
+          "checkedOutCommitPresent": true,
+          "totals": {
+            "tests": 600,
+            "pass": 600,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "totalsIndependentlyExtracted": {
+            "tests": 600,
+            "pass": 600,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "rawHashBytesAndGzipRoundtripVerified": true,
+          "compressedSha256": "a76fef81138defb8f754cb47da6b8d7d38cfe0d7759b1534b8481db5ae9373f8"
+        },
+        {
+          "name": "verify",
+          "jobId": 120595075102,
+          "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/job/120595075102",
+          "file": "verify.log",
+          "bytes": 579753,
+          "sha256": "5ca8dc84d7b02241f432a85f73cd7a633489f1a3cda067987cefe862ed549853",
+          "node": "v24.22.1",
+          "checkedOutCommit": "32ba57a9e1e07725b4e374a32d0c01f674b600f3",
+          "checkedOutCommitPresent": true,
+          "totals": {
+            "tests": 4089,
+            "pass": 4037,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 52,
+            "todo": 0
+          },
+          "totalsIndependentlyExtracted": {
+            "tests": 4089,
+            "pass": 4037,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 52
+          },
+          "rawHashBytesAndGzipRoundtripVerified": true,
+          "compressedSha256": "24ca4fd6cdaf69c2b9f2656bc0dcd0880da64b730357da535fe490f6c0dd02f8"
+        },
+        {
+          "name": "browser",
+          "jobId": 120595075205,
+          "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/job/120595075205",
+          "file": "browser.log",
+          "bytes": 55626,
+          "sha256": "2e355c1adc58f8b0f02e09451b7b251644f5ecb1703b8c3ff9c4adf8e0e22e79",
+          "node": "v24.22.1",
+          "checkedOutCommit": "32ba57a9e1e07725b4e374a32d0c01f674b600f3",
+          "checkedOutCommitPresent": true,
+          "totals": {
+            "tests": 260,
+            "pass": 260,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "totalsIndependentlyExtracted": {
+            "tests": 260,
+            "pass": 260,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "rawHashBytesAndGzipRoundtripVerified": true,
+          "compressedSha256": "5a762be6dba0ff015baa0fec8d5f2d22f0fde75fc01ff7550a414c54be7d02d7"
+        }
+      ],
+      "mergeCommit": "32ba57a9e1e07725b4e374a32d0c01f674b600f3",
+      "mergeTree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+      "sixNewNativeRegressions": [
+        {
+          "case": "Chrome photo viewer ignores a previous close event after reopening and still cleans up native closes",
+          "presentAndPassing": true
+        },
+        {
+          "case": "Chrome photo neighbors use authorized server order within a millisecond while rejecting a reversed date or the same message",
+          "presentAndPassing": true
+        },
+        {
+          "case": "real Chrome: a queued CRM close cannot dismiss the reopened profile or clear its draft",
+          "presentAndPassing": true
+        },
+        {
+          "case": "real Chrome: a queued close cannot erase a reopened account closure confirmation",
+          "presentAndPassing": true
+        },
+        {
+          "case": "real Chrome: late refused and successful responses preserve newer native admin/client cookies",
+          "presentAndPassing": true
+        },
+        {
+          "case": "real Chrome public Jessie profile: public snapshot only, safe text, FR/EN and mobile width; unpublish is unavailable",
+          "presentAndPassing": true
+        }
+      ],
+      "rerunByReviewer": false
+    },
+    {
+      "run": 40007620555,
+      "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+      "tree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+      "event": "push",
+      "node": "v24.22.1",
+      "conclusion": "success",
+      "jobs": 5,
+      "logs": [
+        {
+          "name": "browser",
+          "jobId": 120599462225,
+          "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40007620555/job/120599462225",
+          "file": "browser.log",
+          "bytes": 54838,
+          "sha256": "ecf5afb6b6977e77c153ca555a9e9cb93f9eb3beec5f8899f44231af27e1976b",
+          "node": "v24.22.1",
+          "checkedOutCommit": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+          "checkedOutCommitPresent": true,
+          "totals": {
+            "tests": 260,
+            "pass": 260,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "totalsIndependentlyExtracted": {
+            "tests": 260,
+            "pass": 260,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "rawHashBytesAndGzipRoundtripVerified": true,
+          "compressedSha256": "0d6e14c36fa2f7d0feac8fc15563d9ad65ad63a94c032d92916bac640b1ce6ca"
+        },
+        {
+          "name": "mariadb114",
+          "jobId": 120599462614,
+          "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40007620555/job/120599462614",
+          "file": "mariadb114.log",
+          "bytes": 357095,
+          "sha256": "bb14513fb8667d878e2d501fca394c1da8adfe595fd60f4922da7dc26b788345",
+          "node": "v24.22.1",
+          "checkedOutCommit": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+          "checkedOutCommitPresent": true,
+          "totals": {
+            "tests": 600,
+            "pass": 600,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "totalsIndependentlyExtracted": {
+            "tests": 600,
+            "pass": 600,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "rawHashBytesAndGzipRoundtripVerified": true,
+          "compressedSha256": "107bfce7a9569a169a89a2a604634952b394dfda5abfd72c2204a8b9d2d96244"
+        },
+        {
+          "name": "https",
+          "jobId": 120599462708,
+          "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40007620555/job/120599462708",
+          "file": "https.log",
+          "bytes": 41554,
+          "sha256": "d407f9cd42f727b012d062da326e51cac0e290c48cdd136587e3750dad5f1d10",
+          "node": "v24.22.1",
+          "checkedOutCommit": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+          "checkedOutCommitPresent": true,
+          "totals": {
+            "tests": 12,
+            "pass": 12,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "totalsIndependentlyExtracted": {
+            "tests": 12,
+            "pass": 12,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "rawHashBytesAndGzipRoundtripVerified": true,
+          "compressedSha256": "51225e7fd4d63463d10a1690f9d73d52ae250caf8932977a5bc3d8917c5d25f4"
+        },
+        {
+          "name": "verify",
+          "jobId": 120599462726,
+          "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40007620555/job/120599462726",
+          "file": "verify.log",
+          "bytes": 578924,
+          "sha256": "0f458709c45f5034f8e3cf3143765c154f397e68906f2d4957331e581166e1b9",
+          "node": "v24.22.1",
+          "checkedOutCommit": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+          "checkedOutCommitPresent": true,
+          "totals": {
+            "tests": 4089,
+            "pass": 4037,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 52,
+            "todo": 0
+          },
+          "totalsIndependentlyExtracted": {
+            "tests": 4089,
+            "pass": 4037,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 52
+          },
+          "rawHashBytesAndGzipRoundtripVerified": true,
+          "compressedSha256": "d77d666dcf3d7498d3debf3f1d08c82694b1a3c6585785ac82cad222f0e50580"
+        },
+        {
+          "name": "mariadb1011",
+          "jobId": 120599462738,
+          "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40007620555/job/120599462738",
+          "file": "mariadb1011.log",
+          "bytes": 356245,
+          "sha256": "a68b25e93ef02e7abeb94a49113443408f9f27f8a30730e617906c6503389559",
+          "node": "v24.22.1",
+          "checkedOutCommit": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+          "checkedOutCommitPresent": true,
+          "totals": {
+            "tests": 600,
+            "pass": 600,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "totalsIndependentlyExtracted": {
+            "tests": 600,
+            "pass": 600,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "rawHashBytesAndGzipRoundtripVerified": true,
+          "compressedSha256": "9629c0fb0b03bd18438bc4081708eff509e0c92bac646b9d4ebb55c27e96cff1"
+        }
+      ],
+      "mergeCommit": null,
+      "mergeTree": null,
+      "sixNewNativeRegressions": [
+        {
+          "case": "Chrome photo viewer ignores a previous close event after reopening and still cleans up native closes",
+          "presentAndPassing": true
+        },
+        {
+          "case": "Chrome photo neighbors use authorized server order within a millisecond while rejecting a reversed date or the same message",
+          "presentAndPassing": true
+        },
+        {
+          "case": "real Chrome: a queued CRM close cannot dismiss the reopened profile or clear its draft",
+          "presentAndPassing": true
+        },
+        {
+          "case": "real Chrome: a queued close cannot erase a reopened account closure confirmation",
+          "presentAndPassing": true
+        },
+        {
+          "case": "real Chrome: late refused and successful responses preserve newer native admin/client cookies",
+          "presentAndPassing": true
+        },
+        {
+          "case": "real Chrome public Jessie profile: public snapshot only, safe text, FR/EN and mobile width; unpublish is unavailable",
+          "presentAndPassing": true
+        }
+      ],
+      "rerunByReviewer": false
+    }
+  ],
+  "publication": {
+    "format": "jessiemessage1101-native-publication-proof",
+    "at": "2026-10-23T19:10:35.465599+00:00",
+    "status": "native46_and_publication2of2_success",
+    "runId": 40008910211,
+    "attempt": 1,
+    "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40008910211",
+    "operatorSource": "e5dbfc124a8169a551285d4feb15b827edf07e58",
+    "operatorTree": "5610839fe70cf7e367c3cc1765f46b2c0529f0cf",
+    "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+    "tree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+    "sourceMainCiRun": 40007620555,
+    "node": "v24.22.1",
+    "tests": {
+      "prepare": 22,
+      "dependencies": 17,
+      "publisher": 7,
+      "total": 46,
+      "writerNotQualifiedInThisRun": true
+    },
+    "jobs": [
+      {
+        "id": 120603872664,
+        "name": "operator-tests",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-23T19:07:35Z",
+        "completedAt": "2026-10-23T19:07:57Z",
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40008910211/job/120603872664"
+      },
+      {
+        "id": 120604050950,
+        "name": "publish",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-23T19:07:59Z",
+        "completedAt": "2026-10-23T19:08:20Z",
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40008910211/job/120604050950"
+      }
+    ],
+    "logs": [
+      {
+        "jobId": 120603872664,
+        "path": "operator-tests-120603872664.log",
+        "bytes": 56324,
+        "sha256": "bd7c53944d6ff17a268c302e16ebba0b8871a675d6d8a48f6ea00568cd17bc92",
+        "gzipPath": "operator-tests-120603872664.log.gz",
+        "gzipBytes": 11597,
+        "gzipSha256": "9e3c3b7d8235e34db33eafb4b595776a3196f468e434652e5d0924df04ed049a",
+        "fullDecodedToolLog": true
+      },
+      {
+        "jobId": 120604050950,
+        "path": "publish-120604050950.log",
+        "bytes": 18223,
+        "sha256": "8f847949810e9218b4f15d061fdcfc1babdcdee9bf289ea0ffe0198d1a7ff3fd",
+        "gzipPath": "publish-120604050950.log.gz",
+        "gzipBytes": 4378,
+        "gzipSha256": "7a6c2212b5bfa43e339ae6623b2beeee5ea12b913663c6f7f58f83389a6674cd",
+        "fullDecodedToolLog": true
+      }
+    ],
+    "publicTLS": {
+      "check": "LIVE-05",
+      "status": "standard_tls_validation_passed",
+      "host": "jessiemessage.com",
+      "port": 443,
+      "transport": "direct_socket_sni_without_http_proxy",
+      "hostnameVerified": true,
+      "chainVerified": true,
+      "protocol": "TLSv1.3",
+      "subject": [
+        [
+          {
+            "attribute": "commonName",
+            "value": "jessiemessage.com"
+          }
+        ]
+      ],
+      "issuer": [
+        [
+          {
+            "attribute": "countryName",
+            "value": "US"
+          }
+        ],
+        [
+          {
+            "attribute": "organizationName",
+            "value": "Let's Encrypt"
+          }
+        ],
+        [
+          {
+            "attribute": "commonName",
+            "value": "YR2"
+          }
+        ]
+      ],
+      "notBefore": "Oct 15 19:03:08 2026 GMT",
+      "notAfter": "Jan 13 19:03:07 2027 GMT"
+    },
+    "lockedArchive": {
+      "status": "locked_official_nodemailer_verified",
+      "version": "10.1.4",
+      "integrity": "sha512-EsMnOR2oRv4LGnWvHgcVYkkQ4O2j8KO4WTw6l+PHR4sOXo8SAgIraxtEnGDmotjbhv0hDsu3IuDIFZm8iXwO4A==",
+      "bytes": 383417,
+      "archiveSha256": "05e89be54d52e646ef93f1842c5fa9c45345485e786d3b32db6afcaac61ecc04",
+      "members": 161,
+      "scriptsExecuted": false
+    },
+    "publicationReceipt": {
+      "status": "published_verified",
+      "nodeVersion": "24.22.1",
+      "schemaMigrations": 38,
+      "applicationTables": 37,
+      "normalMigrations": 33,
+      "videoMigrations": 3,
+      "experienceMigrations": 2,
+      "releases": [
+        {
+          "tag": "v1.10.1",
+          "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+          "tree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+          "ciRun": "40007620555",
+          "releaseId": 422216628
+        }
+      ],
+      "latest": {
+        "tag": "v1.10.1",
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "id": 422216628
+      },
+      "publicationMode": "created",
+      "created": [
+        "v1.10.1"
+      ],
+      "deploymentPerformed": false
+    },
+    "release": {
+      "id": 422216628,
+      "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.10.1",
+      "tag": "v1.10.1",
+      "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+      "draft": false,
+      "prerelease": false,
+      "publishedAt": "2026-10-23T19:08:16Z"
+    },
+    "tag": {
+      "name": "v1.10.1",
+      "objectType": "commit",
+      "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6"
+    },
+    "latest": {
+      "id": 422216628,
+      "tag": "v1.10.1",
+      "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6"
+    },
+    "historicTagsAndReleasesUnmodifiedByHelper": true,
+    "noHostingOrWriterAction": true,
+    "nextAction": "User preparation+CHECK using exact pinned bootstrap after root records this proof; then genuine staging receipt required before final writer pins.",
+    "limits": [
+      "Native synthetic tests, official tarball and public TLS verified; target1.10.1 hosted startup not yet attested.",
+      "LIVE-05 is a public TLS observation from GitHub runner, not a private origin or provider account inspection.",
+      "Final writer16 awaits genuine preparation receipt and pins; no writer execution or real send/delete/backup/restore."
+    ],
+    "exactLogReadbackComparedWithConnectorStrings": true,
+    "rawAndGzipHashesIndependentlyRecomputed": true,
+    "rawGzipRoundtripByteExact": true,
+    "writer16NotQualifiedByThisRun": true
+  },
+  "bootstrap": {
+    "path": "/workspace/scratch/bb431be72395/operator1101/PREPARATION1101-CHAT.txt",
+    "sha256": "5b1400954b9edc68ad923befd9cffcd67c8ef4a8ef18bb66d5f8f07cdbad170c",
+    "operatorCommit": "e5dbfc124a8169a551285d4feb15b827edf07e58",
+    "applicationSource": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+    "applicationTree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+    "tools": [
+      {
+        "file": "prepare-release1101.py",
+        "sha256": "6682282bb938aa91578410d4dd317c631172b6ee71c6cadf31063995e1169608",
+        "bytes": 18457,
+        "bootstrapPinMatches": true
+      },
+      {
+        "file": "release1101-dependencies.py",
+        "sha256": "293f06004d79d9b32a891473c7514b74eda58e5798f083561540a0108c58806b",
+        "bytes": 14654,
+        "bootstrapPinMatches": true
+      }
+    ],
+    "staticReview": "Bothhashes verified beforematerialization; immutableURL, no redirect/proxy, bounded262144bytes; dir700/files600exclusive nofollow; materialized__file__ locatessiblinghelper. stage thenflushedreceipt andCHECKlauncher only; noSTART/Manager/SQLmigration/checkpointwriter.",
+    "preservation": "Old1100checkpoint/source/tree/stage/dependencyinventory validated; privateisolateddependencycopy. Existing185fallback, keys/config,SQLandcheckpoint notoverwritten. Partialstage preserved/refusesunsafereuse.",
+    "executedOrDownloadedByReviewer": false,
+    "actualHostPreparationReceiptPresent": false,
+    "finalWriter16Pending": true
+  },
+  "referenceReview": {
+    "directCurrentSnapshotCount": 189,
+    "allDirectCurrentLinksResolve": true,
+    "missingDirectLinks": [],
+    "helperHistoricalDirectCount": 156,
+    "reportItemReferences": {
+      "count": 106,
+      "allResolve": true,
+      "missing": []
+    },
+    "MONITORINGCorrectedByRoot": true,
+    "standaloneArtifacts": [
+      {
+        "name": "auth-cookie-regression-before.log",
+        "repoExists": true,
+        "scratchExists": true,
+        "byteIdentical": true,
+        "sha256": "32c2ac36a40dad31ee767a5328d4b2f2c754c8f35343e16f4249e0ea6edd43d0"
+      },
+      {
+        "name": "auth-cookie-regression-after.log",
+        "repoExists": true,
+        "scratchExists": true,
+        "byteIdentical": true,
+        "sha256": "4b42b5a1db71a0610acaa8f2ddb21f4a91bbeaa5477f9902be4d1c1cb645f5d7"
+      },
+      {
+        "name": "npm-audit.json",
+        "repoExists": true,
+        "scratchExists": true,
+        "byteIdentical": true,
+        "sha256": "f8779310006e6719267fc5950a101e2e75d68084f9ee1d4794426080dae51bac"
+      },
+      {
+        "name": "npm-audit-10.1.4.json",
+        "repoExists": true,
+        "scratchExists": true,
+        "byteIdentical": true,
+        "sha256": "f8779310006e6719267fc5950a101e2e75d68084f9ee1d4794426080dae51bac"
+      },
+      {
+        "name": "nodemailer-poc-validation.json",
+        "repoExists": true,
+        "scratchExists": true,
+        "byteIdentical": true,
+        "sha256": "964a3cb87856ce30dbda72f474a017935deaaeb626ee7f82ac7656b0f9a6a962"
+      },
+      {
+        "name": "nodemailer-10.1.4-targeted.tap",
+        "repoExists": true,
+        "scratchExists": true,
+        "byteIdentical": true,
+        "sha256": "41f7c668fefce8a559aac8c6aa1dc9282dba72c964daad94826e767a5d3794a2"
+      },
+      {
+        "name": "gallery-microsecond-repro.json",
+        "repoExists": true,
+        "scratchExists": true,
+        "byteIdentical": true,
+        "sha256": "68987ee2038a3f797179ef47879ab5d4b71f1e8e076385a39ca7efd8d5e67236"
+      },
+      {
+        "name": "gallery-before-fix.log",
+        "repoExists": true,
+        "scratchExists": true,
+        "byteIdentical": true,
+        "sha256": "29ef3a8d0c15f2f6c127255dd10d064f32cb1e276c25b69c51732ee2086be03d"
+      },
+      {
+        "name": "gallery-after-fix.log",
+        "repoExists": true,
+        "scratchExists": true,
+        "byteIdentical": true,
+        "sha256": "35ebc1c9ea8d98de5baf86cebac1b99676752f759542c96e53f197425d2e1319"
+      },
+      {
+        "name": "gallery-http-before-fix.log",
+        "repoExists": true,
+        "scratchExists": true,
+        "byteIdentical": true,
+        "sha256": "6aea5807429e2cd19051f9a9688e2b243be0a049e29f740db90216f4b6ca1a0b"
+      },
+      {
+        "name": "gallery-http-after-fix.log",
+        "repoExists": true,
+        "scratchExists": true,
+        "byteIdentical": true,
+        "sha256": "f1a3298ab3fe4087b44727a3216b06b77fc6f56da0eedbf8447e492ec204fdc0"
+      },
+      {
+        "name": "preferences-shutdown-before-fix.log",
+        "repoExists": true,
+        "scratchExists": true,
+        "byteIdentical": true,
+        "sha256": "a7bbacf7ff904e2ce51c28ef7f6e0369a7cac2ff07f9bddd82cd5b1b02fccf84"
+      },
+      {
+        "name": "preferences-shutdown-after-fix.log",
+        "repoExists": true,
+        "scratchExists": true,
+        "byteIdentical": true,
+        "sha256": "eefd53630f0cd8e8d1e222e582ac419da55496038aa6352941f245d25d1e86e4"
+      }
+    ],
+    "all13ArchivedExactBytes": true,
+    "fourBaselineLogBasenames": "Contextual native1100identifiers tied torun39991790308 andqualify1100/main/summary manifest; notbrokenlinks.",
+    "nestedPointerDetail": "final-coverage-helper.json#/embeddedReferenceSurvey",
+    "rootFinalReportCrosscheckPending": true
+  },
+  "statusHonesty": {
+    "activeVersusQualifiedPublishedDistinct": true,
+    "general52SkippedExplicit": true,
+    "nativeChromeHttpsSqlZeroSkipped": true,
+    "pastFailuresPreserved": [
+      {
+        "run": 40002896036,
+        "conclusion": "failure",
+        "qualificationComplete": false,
+        "failedHistoryPreservedHonestly": true,
+        "logs": [
+          {
+            "name": "verify",
+            "compressedHashMatches": true,
+            "originalHashAndBytesMatch": true,
+            "totalsMatch": true
+          },
+          {
+            "name": "mariadb1011",
+            "compressedHashMatches": true,
+            "originalHashAndBytesMatch": true,
+            "totalsMatch": true
+          },
+          {
+            "name": "mariadb114",
+            "compressedHashMatches": true,
+            "originalHashAndBytesMatch": true,
+            "totalsMatch": true
+          },
+          {
+            "name": "https",
+            "compressedHashMatches": true,
+            "originalHashAndBytesMatch": true,
+            "totalsMatch": true
+          },
+          {
+            "name": "browser",
+            "compressedHashMatches": true,
+            "originalHashAndBytesMatch": true,
+            "totalsMatch": true
+          }
+        ]
+      },
+      {
+        "run": 40004246747,
+        "conclusion": "failure",
+        "qualificationComplete": false,
+        "failedHistoryPreservedHonestly": true,
+        "logs": [
+          {
+            "name": "https",
+            "compressedHashMatches": true,
+            "originalHashAndBytesMatch": true,
+            "totalsMatch": true
+          },
+          {
+            "name": "verify",
+            "compressedHashMatches": true,
+            "originalHashAndBytesMatch": true,
+            "totalsMatch": true
+          },
+          {
+            "name": "mariadb1011",
+            "compressedHashMatches": true,
+            "originalHashAndBytesMatch": true,
+            "totalsMatch": true
+          },
+          {
+            "name": "browser",
+            "compressedHashMatches": true,
+            "originalHashAndBytesMatch": true,
+            "totalsMatch": true
+          },
+          {
+            "name": "mariadb114",
+            "compressedHashMatches": true,
+            "originalHashAndBytesMatch": true,
+            "totalsMatch": true
+          }
+        ]
+      }
+    ],
+    "oldGreenNotAttachedToChangedSource": true,
+    "currentChecklistStatus": "audit_all134_addressed_code_qualified_published_hosted_activation_pending",
+    "currentDecision": "NO_GO_on_current1100_until_corrective1101_verified_active_and_recorded",
+    "secondPassComplete": false,
+    "technicalClosureStillPendingForHost": true
+  },
+  "limits": [
+    "134addressed meanschecklistcoverage, not134independentphysicalE2E tests orbugabsenceguarantee.",
+    "No physicaliOS/Safari/Firefox/Androidnotification/installedPWA certification; CIChrome/Linux iswithinitsrecordedscope.",
+    "No privateprovider/PID/originpanel inspection, newhostedstage/startup orrealuserflow bythisreviewer.",
+    "A10scope acceptedseparately; A11earliernonconclusiveobservation distinct; A12fixturecapacity isnotproductiongrowthattestation.",
+    "Backup/restoreexercise deferredbyuser; no newcopy/restore/autorecovery/offsiteE2E claim. Existingmanualbackup paths preserved.",
+    "PublicTLSnow chain+hostnamevalidated fromGitHubrunner; distinctfromearlierproxycertificate andprivatehostinspection.",
+    "Publicsnapshot remainsmanuallypublished anddoesnotexposeprivateclientpreferences."
+  ]
+}

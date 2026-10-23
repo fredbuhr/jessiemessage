@@ -1,0 +1,54 @@
+✖ gallery cursor SQL parameters preserve synthetic microseconds before and after the pivot without a database (4.024191ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 130.052366
+
+✖ failing tests:
+
+test at tests/media-store.integration.test.mjs:754:1
+✖ gallery cursor SQL parameters preserve synthetic microseconds before and after the pivot without a database (4.024191ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      [
+  +     '2026-10-15 12:00:01.123000',
+  +     '2026-10-15 12:00:01.123000'
+  -     '2026-10-15 12:00:01.123456',
+  -     '2026-10-15 12:00:01.123456'
+      ],
+      [
+  +     '2026-10-15 12:00:01.123000',
+  +     '2026-10-15 12:00:01.123000'
+  -     '2026-10-15 12:00:01.123456',
+  -     '2026-10-15 12:00:01.123456'
+      ],
+      [
+  +     '2026-10-15 12:00:01.123000',
+  +     '2026-10-15 12:00:01.123000'
+  -     '2026-10-15 12:00:01.123456',
+  -     '2026-10-15 12:00:01.123456'
+      ],
+      [
+  +     '2026-10-15 12:00:01.123000',
+  +     '2026-10-15 12:00:01.123000'
+  -     '2026-10-15 12:00:01.123456',
+  -     '2026-10-15 12:00:01.123456'
+      ]
+    ]
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/bb431be72395/jessiemessage/tests/media-store.integration.test.mjs:765:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ [ '2026-10-15 12:00:01.123000', '2026-10-15 12:00:01.123000' ], [ '2026-10-15 12:00:01.123000', '2026-10-15 12:00:01.123000' ], [ '2026-10-15 12:00:01.123000', '2026-10-15 12:00:01.123000' ], [ '2026-10-15 12:00:01.123000', '2026-10-15 12:00:01.123000' ] ],
+    expected: [ [ '2026-10-15 12:00:01.123456', '2026-10-15 12:00:01.123456' ], [ '2026-10-15 12:00:01.123456', '2026-10-15 12:00:01.123456' ], [ '2026-10-15 12:00:01.123456', '2026-10-15 12:00:01.123456' ], [ '2026-10-15 12:00:01.123456', '2026-10-15 12:00:01.123456' ] ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

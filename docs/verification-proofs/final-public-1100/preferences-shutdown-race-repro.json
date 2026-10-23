@@ -1,0 +1,19 @@
+{
+  "type": "isolated-real-service-shutdown-race",
+  "node": "v24.19.0",
+  "module": "server/preferences/service.mjs",
+  "noDatabaseAccess": true,
+  "noRemoteAccess": true,
+  "steps": [
+    "Start service.save using synthetic account and valid selection.",
+    "Hold the store just before invoking its trusted encrypt callback.",
+    "Call service.close while operation is waiting.",
+    "Release the store and invoke real callback; observe returned DTO and decrypt captured envelope."
+  ],
+  "saveReturnedSuccess": true,
+  "error": null,
+  "originalConfiguredKeyCanDecrypt": false,
+  "allZeroKeyCanDecrypt": true,
+  "shutdownOrdering": "server/lifecycle.mjs lines46 and58 closes diagnostics before request drain; index diagnostics closes preferences service.",
+  "impact": "An already admitted write resuming encryption after shutdown can persist an envelope encrypted under an all-zero key. After restart the configured key cannot decrypt it."
+}

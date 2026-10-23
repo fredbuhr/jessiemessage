@@ -1,0 +1,40 @@
+{
+  "phase": "after",
+  "node": "v24.19.0",
+  "actualCrmFunctionsAndHandlerSha256": "0333609c1cb20d506630d57cb833a511384e98389013a65c9440bbb264a0e8b2",
+  "actualClosureResetAndHandlersSha256": "a98c2f010b45afe4c34f6c74b1e3dec9bf632cc5112f99ca65e9496ca2ef13c5",
+  "crm": {
+    "reopened": {
+      "open": true,
+      "notes": "unsaved synthetic draft",
+      "queuedOldClose": 1
+    },
+    "afterOldClose": {
+      "open": true,
+      "notes": "unsaved synthetic draft",
+      "profileOpen": true,
+      "closes": 1,
+      "invalidations": 2
+    },
+    "draftStillRetained": "unsaved synthetic draft"
+  },
+  "closures": {
+    "reopened": {
+      "open": true,
+      "value": "FERMER",
+      "checked": true,
+      "queuedOldClose": 1
+    },
+    "afterOldClose": {
+      "open": true,
+      "value": "FERMER",
+      "checked": true,
+      "enabled": true,
+      "name": "Compte à fermer : Synthetic client"
+    }
+  },
+  "limitation": "Actual source functions and event callbacks evaluated in a VM with minimal DOM stubs. Native close queue ordering is explicitly simulated, not browser-qualified. Added Chrome regressions use real buttons and observe the queued trusted close event.",
+  "network": false,
+  "post": false,
+  "realAccounts": false
+}

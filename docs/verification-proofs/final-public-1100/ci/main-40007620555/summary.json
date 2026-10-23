@@ -1,0 +1,221 @@
+{
+  "run": 40007620555,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40007620555",
+  "workflow": ".github/workflows/ci.yml",
+  "event": "push",
+  "branch": "main",
+  "attempt": 1,
+  "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+  "tree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+  "status": "completed",
+  "conclusion": "success",
+  "collectedAtUtc": "2026-10-23T19:14:24.665062+00:00",
+  "jobs": [
+    {
+      "id": 120599462225,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40007620555/job/120599462225"
+    },
+    {
+      "id": 120599462614,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40007620555/job/120599462614"
+    },
+    {
+      "id": 120599462708,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40007620555/job/120599462708"
+    },
+    {
+      "id": 120599462726,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40007620555/job/120599462726"
+    },
+    {
+      "id": 120599462738,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40007620555/job/120599462738"
+    }
+  ],
+  "node": "v24.22.1",
+  "logs": [
+    {
+      "name": "browser",
+      "jobId": 120599462225,
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40007620555/job/120599462225",
+      "bytes": 54838,
+      "sha256": "ecf5afb6b6977e77c153ca555a9e9cb93f9eb3beec5f8899f44231af27e1976b",
+      "node": "v24.22.1",
+      "checkedOutCommit": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+      "checkedOutCommitPresent": true,
+      "totals": {
+        "tests": 260,
+        "pass": 260,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "localLogArchive": "browser.log.gz",
+      "compressedBytes": 14833,
+      "compressedSha256": "0d6e14c36fa2f7d0feac8fc15563d9ad65ad63a94c032d92916bac640b1ce6ca",
+      "gzipMtime": 0,
+      "logStorage": "gzip archive; bytes/sha256 describe original complete decoded UTF-8 log"
+    },
+    {
+      "name": "mariadb114",
+      "jobId": 120599462614,
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40007620555/job/120599462614",
+      "bytes": 357095,
+      "sha256": "bb14513fb8667d878e2d501fca394c1da8adfe595fd60f4922da7dc26b788345",
+      "node": "v24.22.1",
+      "checkedOutCommit": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+      "checkedOutCommitPresent": true,
+      "totals": {
+        "tests": 600,
+        "pass": 600,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "localLogArchive": "mariadb114.log.gz",
+      "compressedBytes": 67184,
+      "compressedSha256": "107bfce7a9569a169a89a2a604634952b394dfda5abfd72c2204a8b9d2d96244",
+      "gzipMtime": 0,
+      "logStorage": "gzip archive; bytes/sha256 describe original complete decoded UTF-8 log"
+    },
+    {
+      "name": "https",
+      "jobId": 120599462708,
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40007620555/job/120599462708",
+      "bytes": 41554,
+      "sha256": "d407f9cd42f727b012d062da326e51cac0e290c48cdd136587e3750dad5f1d10",
+      "node": "v24.22.1",
+      "checkedOutCommit": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+      "checkedOutCommitPresent": true,
+      "totals": {
+        "tests": 12,
+        "pass": 12,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "localLogArchive": "https.log.gz",
+      "compressedBytes": 10395,
+      "compressedSha256": "51225e7fd4d63463d10a1690f9d73d52ae250caf8932977a5bc3d8917c5d25f4",
+      "gzipMtime": 0,
+      "logStorage": "gzip archive; bytes/sha256 describe original complete decoded UTF-8 log"
+    },
+    {
+      "name": "verify",
+      "jobId": 120599462726,
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40007620555/job/120599462726",
+      "bytes": 578924,
+      "sha256": "0f458709c45f5034f8e3cf3143765c154f397e68906f2d4957331e581166e1b9",
+      "node": "v24.22.1",
+      "checkedOutCommit": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+      "checkedOutCommitPresent": true,
+      "totals": {
+        "tests": 4089,
+        "pass": 4037,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 52,
+        "todo": 0
+      },
+      "localLogArchive": "verify.log.gz",
+      "compressedBytes": 169535,
+      "compressedSha256": "d77d666dcf3d7498d3debf3f1d08c82694b1a3c6585785ac82cad222f0e50580",
+      "gzipMtime": 0,
+      "logStorage": "gzip archive; bytes/sha256 describe original complete decoded UTF-8 log"
+    },
+    {
+      "name": "mariadb1011",
+      "jobId": 120599462738,
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40007620555/job/120599462738",
+      "bytes": 356245,
+      "sha256": "a68b25e93ef02e7abeb94a49113443408f9f27f8a30730e617906c6503389559",
+      "node": "v24.22.1",
+      "checkedOutCommit": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+      "checkedOutCommitPresent": true,
+      "totals": {
+        "tests": 600,
+        "pass": 600,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "localLogArchive": "mariadb1011.log.gz",
+      "compressedBytes": 67002,
+      "compressedSha256": "9629c0fb0b03bd18438bc4081708eff509e0c92bac646b9d4ebb55c27e96cff1",
+      "gzipMtime": 0,
+      "logStorage": "gzip archive; bytes/sha256 describe original complete decoded UTF-8 log"
+    }
+  ],
+  "qualificationComplete": true,
+  "visualReview": "visual-review.json",
+  "priorRuns": [
+    {
+      "run": 40002896036,
+      "status": "historical failed run preserved separately"
+    },
+    {
+      "run": 40004246747,
+      "status": "historical four-success run with F06 source race preserved separately"
+    }
+  ],
+  "limitations": [
+    "General52 omissions remain explicit; native Chrome, HTTPS and SQL jobs have zero omissions.",
+    "Synthetic native browser/SQL qualification does not attest a physical phone or the hosted deployment.",
+    "No tests, rerun, push, merge or remote mutation by the collecting agent."
+  ],
+  "qualifiedPrSource": "cd81f915a36e5fd39cba2fd9819d760588d47041",
+  "qualifiedPrTree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+  "sourceTreeMatchesQualifiedPrTree": true,
+  "newNativeRegressions": [
+    {
+      "case": "Chrome photo viewer ignores a previous close event after reopening and still cleans up native closes",
+      "presentAndPassing": true
+    },
+    {
+      "case": "Chrome photo neighbors use authorized server order within a millisecond while rejecting a reversed date or the same message",
+      "presentAndPassing": true
+    },
+    {
+      "case": "real Chrome: a queued CRM close cannot dismiss the reopened profile or clear its draft",
+      "presentAndPassing": true
+    },
+    {
+      "case": "real Chrome: a queued close cannot erase a reopened account closure confirmation",
+      "presentAndPassing": true
+    },
+    {
+      "case": "real Chrome: late refused and successful responses preserve newer native admin/client cookies",
+      "presentAndPassing": true
+    },
+    {
+      "case": "real Chrome public Jessie profile: public snapshot only, safe text, FR/EN and mobile width; unpublish is unavailable",
+      "presentAndPassing": true
+    }
+  ],
+  "durableArchive": {
+    "relativeDirectory": "ci/main-40007620555",
+    "manifest": "log-archive-manifest.json",
+    "originalLogsPreservedUnchanged": true,
+    "screenshotsArchivedLocally": false,
+    "artifactMetadata": "artifacts.json"
+  }
+}

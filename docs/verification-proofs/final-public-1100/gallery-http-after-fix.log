@@ -1,0 +1,38 @@
+✔ media handler requires a complete service and a canonical HTTPS origin (2.333803ms)
+✔ capabilities, own library and upload DTOs authenticate both roles and hide private metadata (82.106844ms)
+✔ media cookies never accept the other role, duplicate values, or noncanonical token entropy (40.105251ms)
+✔ unauthenticated media POST refuses admission without changing cookies (11.978799ms)
+✔ binary uploads require Origin, safe fetch metadata, exact image MIME and fresh role CSRF (60.853369ms)
+✔ declared photo type must match supported binary magic before native decoding (15.477796ms)
+✔ upload rejection authenticates before attaching any body listener (1.387184ms)
+✔ raw upload reader preserves arbitrary binary and rejects malformed length, empty and truncated bodies (1.758565ms)
+✔ declared and chunked uploads are bounded to 10 MiB without calling the normalizer (216.195594ms)
+✔ one slow account cannot occupy the three global upload places and abort/completion restore capacity (23.615607ms)
+✔ upload quota refusal returns before an unfinished body and attaches no body reader (4.224248ms)
+✔ upload abort discards partial data and absorbs a later transport error (0.652185ms)
+✔ slow binary uploads get a bounded thirty-second body budget and remove the body listeners (1.301529ms)
+✔ queries reject unknown, duplicate and noncanonical IDs, limits and uint64 cursors (33.966327ms)
+✔ gallery validates descending sequences, delivery URLs and the next page without precision loss (8.584029ms)
+✔ GET and HEAD private bytes reauthorize each request, ignore Range and use fixed JPEG headers (22.123278ms)
+✔ eight global private file operations bound both roles and retain aborted-operation slots until settled (33.142764ms)
+✔ private byte slots last through response finish or close and use only a fifteen-second binary timeout (8.764897ms)
+✔ image sends allow empty or exact plain caption and preserve duplicate/conflict behavior (15.461372ms)
+✔ image sends reject spoofed fields, invalid IDs, malformed captions and oversized JSON (49.454745ms)
+✔ asset removal uses authenticated JSON/CSRF, accepts only an empty object and hides returned storage (26.702276ms)
+✔ invalid or cross-role service metadata, URLs and byte buffers fail closed (37.214918ms)
+✔ media service errors are bounded without changing cookies (64.041111ms)
+✔ upload capacity refusals distinguish exhausted storage from an unavailable capacity check without leaking details (15.448812ms)
+✔ media routing is exact, unexpected methods do not touch service and HEAD never emits JSON (21.934569ms)
+✔ photo selection is bounded to ten and fully validated before any message write (16.191364ms)
+✔ photo batch returns per-file failure and retry reuses existing per-message idempotency (6.115773ms)
+✔ gallery month spans are passed to authorized history and nearest newer photo is bounded (15.236447ms)
+✔ clients cannot inject administrative reply tracking into ordinary or batched photo sends (4.486057ms)
+✔ gallery validates date order and unique identities without inferring SQL microseconds from equal public milliseconds (26.433355ms)
+ℹ tests 30
+ℹ suites 0
+ℹ pass 30
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1076.611842

@@ -1,0 +1,36 @@
+{
+  "format": "jessiemessage1101-final-preparation-bootstrap-pins",
+  "at": "2026-10-23T19:05:10.157163+00:00",
+  "status": "pins_exact_native46_publication_verified_ready_for_root_user_handoff",
+  "operator": "e5dbfc124a8169a551285d4feb15b827edf07e58",
+  "operatorTree": "5610839fe70cf7e367c3cc1765f46b2c0529f0cf",
+  "localEquivalentOperatorCommit": "7e9d7a3",
+  "applicationSource": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+  "applicationTree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+  "mainCI": 40007620555,
+  "tools": [
+    {
+      "file": "prepare-release1101.py",
+      "sha256": "6682282bb938aa91578410d4dd317c631172b6ee71c6cadf31063995e1169608",
+      "immutableUrl": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/e5dbfc124a8169a551285d4feb15b827edf07e58/ops/prepare-release1101.py"
+    },
+    {
+      "file": "release1101-dependencies.py",
+      "sha256": "293f06004d79d9b32a891473c7514b74eda58e5798f083561540a0108c58806b",
+      "immutableUrl": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/e5dbfc124a8169a551285d4feb15b827edf07e58/ops/release1101-dependencies.py"
+    }
+  ],
+  "bootstrapFile": "PREPARATION1101-CHAT.txt",
+  "bootstrapSha256": "5b1400954b9edc68ad923befd9cffcd67c8ef4a8ef18bb66d5f8f07cdbad170c",
+  "syntaxChecked": true,
+  "matchesLocalExactOperatorTree": true,
+  "priorInertGuardVerification": "bootstrap-review.json;6 checks preserved, not rerun",
+  "remoteUrlFetched": false,
+  "noHostAccessOrMutation": true,
+  "writerCommandAvailable": false,
+  "nativeRun": 40008910211,
+  "publicationReleaseId": 422216628,
+  "native46Acquired": true,
+  "publicationVerified": true,
+  "userPreparationAcquired": false
+}

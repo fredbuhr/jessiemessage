@@ -1,0 +1,730 @@
+TAP version 13
+# Subtest: access handler requires exact HTTPS origin and a complete service
+ok 1 - access handler requires exact HTTPS origin and a complete service
+  ---
+  duration_ms: 3.605263
+  type: 'test'
+  ...
+# Subtest: client login and admission renewal use the shared clock while session reads preserve cookies
+ok 2 - client login and admission renewal use the shared clock while session reads preserve cookies
+  ---
+  duration_ms: 91.662479
+  type: 'test'
+  ...
+# Subtest: invalid injected access clock values cannot produce cookies or approve renewal DTOs
+ok 3 - invalid injected access clock values cannot produce cookies or approve renewal DTOs
+  ---
+  duration_ms: 72.84728
+  type: 'test'
+  ...
+# Subtest: invitation inspection requires a body token and exposes only expiry and access duration
+ok 4 - invitation inspection requires a body token and exposes only expiry and access duration
+  ---
+  duration_ms: 14.205798
+  type: 'test'
+  ...
+# Subtest: all pre-auth mutations require same-origin JSON and a custom header before service work
+ok 5 - all pre-auth mutations require same-origin JSON and a custom header before service work
+  ---
+  duration_ms: 105.662711
+  type: 'test'
+  ...
+# Subtest: registration sends only declaration and credentials, never exposes a verification token
+ok 6 - registration sends only declaration and credentials, never exposes a verification token
+  ---
+  duration_ms: 16.945611
+  type: 'test'
+  ...
+# Subtest: registration accepts eight-character passwords and rejects seven before account creation
+ok 7 - registration accepts eight-character passwords and rejects seven before account creation
+  ---
+  duration_ms: 21.618449
+  type: 'test'
+  ...
+# Subtest: registration rejects forged roles, approval, verified majority and an unchecked declaration
+ok 8 - registration rejects forged roles, approval, verified majority and an unchecked declaration
+  ---
+  duration_ms: 41.51967
+  type: 'test'
+  ...
+# Subtest: verification and resend responses strip service internals and prevent enumeration
+ok 9 - verification and resend responses strip service internals and prevent enumeration
+  ---
+  duration_ms: 8.677565
+  type: 'test'
+  ...
+# Subtest: client login uses a separate secure cookie and returns a minimal restricted access state
+ok 10 - client login uses a separate secure cookie and returns a minimal restricted access state
+  ---
+  duration_ms: 6.86253
+  type: 'test'
+  ...
+# Subtest: admin cookie cannot authenticate a client and client cookie cannot authenticate administration
+ok 11 - admin cookie cannot authenticate a client and client cookie cannot authenticate administration
+  ---
+  duration_ms: 10.425229
+  type: 'test'
+  ...
+# Subtest: client sessions reject duplicate or noncanonical cookies without looking up a session
+ok 12 - client sessions reject duplicate or noncanonical cookies without looking up a session
+  ---
+  duration_ms: 18.643735
+  type: 'test'
+  ...
+# Subtest: unauthenticated client reads without their cookie deny access without changing cookies
+ok 13 - unauthenticated client reads without their cookie deny access without changing cookies
+  ---
+  duration_ms: 10.608446
+  type: 'test'
+  ...
+# Subtest: client reads reject an absent SQL session without changing cookies
+ok 14 - client reads reject an absent SQL session without changing cookies
+  ---
+  duration_ms: 10.128545
+  type: 'test'
+  ...
+# Subtest: client logout without a session rejects without changing cookies
+ok 15 - client logout without a session rejects without changing cookies
+  ---
+  duration_ms: 5.230962
+  type: 'test'
+  ...
+# Subtest: client logout requires CSRF, an empty object and its client session before revocation
+ok 16 - client logout requires CSRF, an empty object and its client session before revocation
+  ---
+  duration_ms: 22.807708
+  type: 'test'
+  ...
+# Subtest: administration requires a current admin session and CSRF on every mutation
+ok 17 - administration requires a current admin session and CSRF on every mutation
+  ---
+  duration_ms: 30.765575
+  type: 'test'
+  ...
+# Subtest: invitation creation bounds validity and access duration, exposes its fragment link once
+ok 18 - invitation creation bounds validity and access duration, exposes its fragment link once
+  ---
+  duration_ms: 14.222552
+  type: 'test'
+  ...
+# Subtest: admin lists whitelist fields and never return invitation tokens or credential internals
+ok 19 - admin lists whitelist fields and never return invitation tokens or credential internals
+  ---
+  duration_ms: 5.603716
+  type: 'test'
+  ...
+# Subtest: admin pagination validates canonical scoped cursors and bounded query options before private work
+ok 20 - admin pagination validates canonical scoped cursors and bounded query options before private work
+  ---
+  duration_ms: 55.523533
+  type: 'test'
+  ...
+# Subtest: admin pagination forwards defaults and cursor options without imposing ID order on submillisecond ties
+ok 21 - admin pagination forwards defaults and cursor options without imposing ID order on submillisecond ties
+  ---
+  duration_ms: 13.924231
+  type: 'test'
+  ...
+# Subtest: forged access pages fail closed for bounds, duplicate IDs, dates and cursor coherence
+ok 22 - forged access pages fail closed for bounds, duplicate IDs, dates and cursor coherence
+  ---
+  duration_ms: 100.083
+  type: 'test'
+  ...
+# Subtest: admin pages enforce the incoming cursor boundary while allowing genuine submillisecond progress
+ok 23 - admin pages enforce the incoming cursor boundary while allowing genuine submillisecond progress
+  ---
+  duration_ms: 31.108042
+  type: 'test'
+  ...
+# Subtest: client renewal forwards a bounded duration and expected deadline, and strips service internals
+ok 24 - client renewal forwards a bounded duration and expected deadline, and strips service internals
+  ---
+  duration_ms: 3.414765
+  type: 'test'
+  ...
+# Subtest: client renewal rejects missing deadlines, unlimited duration and forged approval fields
+ok 25 - client renewal rejects missing deadlines, unlimited duration and forged approval fields
+  ---
+  duration_ms: 37.488488
+  type: 'test'
+  ...
+# Subtest: renewal preserves admin origin, JSON and CSRF gates and does not accept client authentication
+ok 26 - renewal preserves admin origin, JSON and CSRF gates and does not accept client authentication
+  ---
+  duration_ms: 14.333244
+  type: 'test'
+  ...
+# Subtest: renewal exposes only neutral conflict, prerequisite, input and missing results
+ok 27 - renewal exposes only neutral conflict, prerequisite, input and missing results
+  ---
+  duration_ms: 18.56752
+  type: 'test'
+  ...
+# Subtest: renewal does not report success for a forged target, nonfuture or shortened deadline
+ok 28 - renewal does not report success for a forged target, nonfuture or shortened deadline
+  ---
+  duration_ms: 23.942485
+  type: 'test'
+  ...
+# Subtest: admin actions pass only target IDs and expose prerequisite failures safely
+ok 29 - admin actions pass only target IDs and expose prerequisite failures safely
+  ---
+  duration_ms: 20.671597
+  type: 'test'
+  ...
+# Subtest: capabilities report email configuration and pending age assurance
+ok 30 - capabilities report email configuration and pending age assurance
+  ---
+  duration_ms: 2.209993
+  type: 'test'
+  ...
+# Subtest: admin action paths use exact action names and do not reinterpret mixed-case approval as revocation
+ok 31 - admin action paths use exact action names and do not reinterpret mixed-case approval as revocation
+  ---
+  duration_ms: 6.618
+  type: 'test'
+  ...
+# Subtest: malformed service sessions and unsafe links fail closed before setting cookies or returning links
+ok 32 - malformed service sessions and unsafe links fail closed before setting cookies or returning links
+  ---
+  duration_ms: 14.468955
+  type: 'test'
+  ...
+# Subtest: account creation and verification do not report success for an invalid service result
+ok 33 - account creation and verification do not report success for an invalid service result
+  ---
+  duration_ms: 6.113933
+  type: 'test'
+  ...
+# Subtest: service errors are sanitized and rate-limit retry durations are bounded
+ok 34 - service errors are sanitized and rate-limit retry durations are bounded
+  ---
+  duration_ms: 14.127579
+  type: 'test'
+  ...
+# Subtest: access JSON bodies are bounded independently of content-length and invalid UTF-8 is rejected
+ok 35 - access JSON bodies are bounded independently of content-length and invalid UTF-8 is rejected
+  ---
+  duration_ms: 14.827927
+  type: 'test'
+  ...
+# Subtest: public access page preserves the approved identity and distinguishes declaration from verification
+ok 36 - public access page preserves the approved identity and distinguishes declaration from verification
+  ---
+  duration_ms: 11.587878
+  type: 'test'
+  ...
+# Subtest: access routes enforce methods and HEAD never includes JSON or file contents
+ok 37 - access routes enforce methods and HEAD never includes JSON or file contents
+  ---
+  duration_ms: 19.427164
+  type: 'test'
+  ...
+# Subtest: admin: changes only the authenticated account, rotates HttpOnly cookie, excludes secrets
+ok 38 - admin: changes only the authenticated account, rotates HttpOnly cookie, excludes secrets
+  ---
+  duration_ms: 64.270462
+  type: 'test'
+  ...
+# Subtest: admin: missing/wrong cookies, CSRF and cross-origin are rejected before mutation
+ok 39 - admin: missing/wrong cookies, CSRF and cross-origin are rejected before mutation
+  ---
+  duration_ms: 43.635961
+  type: 'test'
+  ...
+# Subtest: client: changes only the authenticated account, rotates HttpOnly cookie, excludes secrets
+ok 40 - client: changes only the authenticated account, rotates HttpOnly cookie, excludes secrets
+  ---
+  duration_ms: 12.624039
+  type: 'test'
+  ...
+# Subtest: client: missing/wrong cookies, CSRF and cross-origin are rejected before mutation
+ok 41 - client: missing/wrong cookies, CSRF and cross-origin are rejected before mutation
+  ---
+  duration_ms: 14.38032
+  type: 'test'
+  ...
+# Subtest: method, query and bounded payload checks reject unintended paths and requests
+ok 42 - method, query and bounded payload checks reject unintended paths and requests
+  ---
+  duration_ms: 28.386746
+  type: 'test'
+  ...
+# Subtest: password errors have bounded public codes, leave cookies intact, and hide private failures
+ok 43 - password errors have bounded public codes, leave cookies intact, and hide private failures
+  ---
+  duration_ms: 31.881844
+  type: 'test'
+  ...
+# Subtest: admin: correct current password permits eight-character replacement and rotated session
+ok 44 - admin: correct current password permits eight-character replacement and rotated session
+  ---
+  duration_ms: 2648.841577
+  type: 'test'
+  ...
+# Subtest: admin: failed old password, confirmation mismatch and unknown owner never write
+ok 45 - admin: failed old password, confirmation mismatch and unknown owner never write
+  ---
+  duration_ms: 510.225943
+  type: 'test'
+  ...
+# Subtest: admin: stale session or concurrent credential replacement cannot overwrite new credentials
+ok 46 - admin: stale session or concurrent credential replacement cannot overwrite new credentials
+  ---
+  duration_ms: 852.590551
+  type: 'test'
+  ...
+# Subtest: admin: revocation during queued quota/password work refuses mutation
+ok 47 - admin: revocation during queued quota/password work refuses mutation
+  ---
+  duration_ms: 1.488221
+  type: 'test'
+  ...
+# Subtest: client: correct current password permits eight-character replacement and rotated session
+ok 48 - client: correct current password permits eight-character replacement and rotated session
+  ---
+  duration_ms: 1688.716104
+  type: 'test'
+  ...
+# Subtest: client: failed old password, confirmation mismatch and unknown owner never write
+ok 49 - client: failed old password, confirmation mismatch and unknown owner never write
+  ---
+  duration_ms: 521.090776
+  type: 'test'
+  ...
+# Subtest: client: stale session or concurrent credential replacement cannot overwrite new credentials
+ok 50 - client: stale session or concurrent credential replacement cannot overwrite new credentials
+  ---
+  duration_ms: 1100.407627
+  type: 'test'
+  ...
+# Subtest: client: revocation during queued quota/password work refuses mutation
+ok 51 - client: revocation during queued quota/password work refuses mutation
+  ---
+  duration_ms: 1.78501
+  type: 'test'
+  ...
+# Subtest: policy rejects short/long/malformed passwords and leaves the current value unchanged
+ok 52 - policy rejects short/long/malformed passwords and leaves the current value unchanged
+  ---
+  duration_ms: 0.80026
+  type: 'test'
+  ...
+# Subtest: persistent quotas run before password hashing, hide their bucket identities and sanitize failures
+ok 53 - persistent quotas run before password hashing, hide their bucket identities and sanitize failures
+  ---
+  duration_ms: 1.305414
+  type: 'test'
+  ...
+# Subtest: admin: password record is authenticated and no credential write precedes the CAS
+ok 54 - admin: password record is authenticated and no credential write precedes the CAS
+  ---
+  duration_ms: 7.165709
+  type: 'test'
+  ...
+# Subtest: admin: stale credentials, revoked session and wrong-role tokens cannot rotate any credential
+ok 55 - admin: stale credentials, revoked session and wrong-role tokens cannot rotate any credential
+  ---
+  duration_ms: 1.405546
+  type: 'test'
+  ...
+# Subtest: admin: expiry crossed during connection wait or final credential read refuses writes
+ok 56 - admin: expiry crossed during connection wait or final credential read refuses writes
+  ---
+  duration_ms: 1.174046
+  type: 'test'
+  ...
+# Subtest: admin: a failed replacement session rolls back the encompassing credential transaction
+ok 57 - admin: a failed replacement session rolls back the encompassing credential transaction
+  ---
+  duration_ms: 4.980508
+  type: 'test'
+  ...
+# Subtest: client: password record is authenticated and no credential write precedes the CAS
+ok 58 - client: password record is authenticated and no credential write precedes the CAS
+  ---
+  duration_ms: 11.181462
+  type: 'test'
+  ...
+# Subtest: client: stale credentials, revoked session and wrong-role tokens cannot rotate any credential
+ok 59 - client: stale credentials, revoked session and wrong-role tokens cannot rotate any credential
+  ---
+  duration_ms: 0.407857
+  type: 'test'
+  ...
+# Subtest: client: expiry crossed during connection wait or final credential read refuses writes
+ok 60 - client: expiry crossed during connection wait or final credential read refuses writes
+  ---
+  duration_ms: 0.718797
+  type: 'test'
+  ...
+# Subtest: client: a failed replacement session rolls back the encompassing credential transaction
+ok 61 - client: a failed replacement session rolls back the encompassing credential transaction
+  ---
+  duration_ms: 0.670874
+  type: 'test'
+  ...
+# Subtest: auth handler requires an exact HTTPS origin and all service methods
+ok 62 - auth handler requires an exact HTTPS origin and all service methods
+  ---
+  duration_ms: 2.686754
+  type: 'test'
+  ...
+# Subtest: login issues only an HttpOnly secure session cookie and a minimal public response
+ok 63 - login issues only an HttpOnly secure session cookie and a minimal public response
+  ---
+  duration_ms: 91.875296
+  type: 'test'
+  ...
+# Subtest: mutation rejects absent, cross-site and noncanonical origins before password verification
+ok 64 - mutation rejects absent, cross-site and noncanonical origins before password verification
+  ---
+  duration_ms: 42.126899
+  type: 'test'
+  ...
+# Subtest: login requires a bounded JSON object and validates payload shape
+ok 65 - login requires a bounded JSON object and validates payload shape
+  ---
+  duration_ms: 51.998671
+  type: 'test'
+  ...
+# Subtest: chunked bodies are bounded independently of content-length
+ok 66 - chunked bodies are bounded independently of content-length
+  ---
+  duration_ms: 7.722821
+  type: 'test'
+  ...
+# Subtest: an aborted body is handled without crashing subsequent requests
+ok 67 - an aborted body is handled without crashing subsequent requests
+  ---
+  duration_ms: 30.045536
+  type: 'test'
+  ...
+# Subtest: invalid UTF-8 JSON is rejected rather than silently repaired
+ok 68 - invalid UTF-8 JSON is rejected rather than silently repaired
+  ---
+  duration_ms: 4.682923
+  type: 'test'
+  ...
+# Subtest: JSON UTF-8 charset and grouped recovery codes are accepted
+ok 69 - JSON UTF-8 charset and grouped recovery codes are accepted
+  ---
+  duration_ms: 2.509716
+  type: 'test'
+  ...
+# Subtest: recovery code separators are limited to ASCII spaces and hyphens
+ok 70 - recovery code separators are limited to ASCII spaces and hyphens
+  ---
+  duration_ms: 21.287719
+  type: 'test'
+  ...
+# Subtest: session endpoint returns the CSRF token only for a canonical authenticated cookie
+ok 71 - session endpoint returns the CSRF token only for a canonical authenticated cookie
+  ---
+  duration_ms: 42.397939
+  type: 'test'
+  ...
+# Subtest: unauthenticated admin reads without their cookie deny access without changing cookies
+ok 72 - unauthenticated admin reads without their cookie deny access without changing cookies
+  ---
+  duration_ms: 60.6928
+  type: 'test'
+  ...
+# Subtest: admin reads reject an absent SQL session without changing cookies
+ok 73 - admin reads reject an absent SQL session without changing cookies
+  ---
+  duration_ms: 6.637099
+  type: 'test'
+  ...
+# Subtest: logout checks origin, session and CSRF before revoking or accepting a body
+ok 74 - logout checks origin, session and CSRF before revoking or accepting a body
+  ---
+  duration_ms: 22.490738
+  type: 'test'
+  ...
+# Subtest: logout without a session returns 401 without changing cookies
+ok 75 - logout without a session returns 401 without changing cookies
+  ---
+  duration_ms: 3.617021
+  type: 'test'
+  ...
+# Subtest: rate limiting and backend errors expose no credentials or exception detail
+ok 76 - rate limiting and backend errors expose no credentials or exception detail
+  ---
+  duration_ms: 11.667387
+  type: 'test'
+  ...
+# Subtest: admin page is protected, public login preserves the approved brand, assets are explicitly mapped
+ok 77 - admin page is protected, public login preserves the approved brand, assets are explicitly mapped
+  ---
+  duration_ms: 48.623806
+  type: 'test'
+  ...
+# Subtest: only the exact login slash alias redirects locally without reading or changing a session
+ok 78 - only the exact login slash alias redirects locally without reading or changing a session
+  ---
+  duration_ms: 61.513122
+  type: 'test'
+  ...
+# Subtest: auth routes enforce methods and HEAD never contains a page or JSON body
+ok 79 - auth routes enforce methods and HEAD never contains a page or JSON body
+  ---
+  duration_ms: 19.900846
+  type: 'test'
+  ...
+# Subtest: bad service session output fails closed instead of setting a malformed cookie
+ok 80 - bad service session output fails closed instead of setting a malformed cookie
+  ---
+  duration_ms: 4.327956
+  type: 'test'
+  ...
+# Subtest: administrator session reads return renewed server expiry without changing cookies
+ok 81 - administrator session reads return renewed server expiry without changing cookies
+  ---
+  duration_ms: 6.987839
+  type: 'test'
+  ...
+# Subtest: device routes require authentication, exact origin, an empty JSON body and the current CSRF proof
+ok 82 - device routes require authentication, exact origin, an empty JSON body and the current CSRF proof
+  ---
+  duration_ms: 16.026541
+  type: 'test'
+  ...
+# Subtest: messaging devices survive inactivity while persisted session expiry is still enforced
+ok 83 - messaging devices survive inactivity while persisted session expiry is still enforced
+  ---
+  duration_ms: 2.007837
+  type: 'test'
+  ...
+# Subtest: injected session clocks are monotone and reject corrupt clock values
+ok 84 - injected session clocks are monotone and reject corrupt clock values
+  ---
+  duration_ms: 0.351872
+  type: 'test'
+  ...
+# Subtest: administrator and client cookies persist for at most 180 days with HttpOnly, Secure and host-only scope
+ok 85 - administrator and client cookies persist for at most 180 days with HttpOnly, Secure and host-only scope
+  ---
+  duration_ms: 0.719388
+  type: 'test'
+  ...
+# Subtest: administrator SQL reads survive idle and refresh only their own opaque session
+ok 86 - administrator SQL reads survive idle and refresh only their own opaque session
+  ---
+  duration_ms: 8.068244
+  type: 'test'
+  ...
+# Subtest: session authority is read after SQL lock waits, without accepting actually future rows
+ok 87 - session authority is read after SQL lock waits, without accepting actually future rows
+  ---
+  duration_ms: 9.86414
+  type: 'test'
+  ...
+# Subtest: client idle expiry and stale MFA generations still fail after authority moves
+ok 88 - client idle expiry and stale MFA generations still fail after authority moves
+  ---
+  duration_ms: 2.792284
+  type: 'test'
+  ...
+# Subtest: a valid client session renews its own device after inactivity, while an expired session cannot be revived
+ok 89 - a valid client session renews its own device after inactivity, while an expired session cannot be revived
+  ---
+  duration_ms: 2.626287
+  type: 'test'
+  ...
+# Subtest: device listing filters invalid proofs and leaks no session hashes, revocation scopes the same account
+ok 90 - device listing filters invalid proofs and leaks no session hashes, revocation scopes the same account
+  ---
+  duration_ms: 7.018536
+  type: 'test'
+  ...
+# Subtest: revoking all sessions waits for the account owner before touching any device
+ok 91 - revoking all sessions waits for the account owner before touching any device
+  ---
+  duration_ms: 50.775746
+  type: 'test'
+  ...
+# Subtest: chat/admin: an old refused request never changes a newer cookie
+ok 92 - chat/admin: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 81.382315
+  type: 'test'
+  ...
+# Subtest: chat/client: an old refused request never changes a newer cookie
+ok 93 - chat/client: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 27.73422
+  type: 'test'
+  ...
+# Subtest: media/admin: an old refused request never changes a newer cookie
+ok 94 - media/admin: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 7.921792
+  type: 'test'
+  ...
+# Subtest: media/client: an old refused request never changes a newer cookie
+ok 95 - media/client: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 5.142619
+  type: 'test'
+  ...
+# Subtest: video/admin: an old refused request never changes a newer cookie
+ok 96 - video/admin: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 7.218098
+  type: 'test'
+  ...
+# Subtest: video/client: an old refused request never changes a newer cookie
+ok 97 - video/client: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 7.882182
+  type: 'test'
+  ...
+# Subtest: profile/admin: an old refused request never changes a newer cookie
+ok 98 - profile/admin: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 5.626791
+  type: 'test'
+  ...
+# Subtest: profile/client: an old refused request never changes a newer cookie
+ok 99 - profile/client: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 4.92527
+  type: 'test'
+  ...
+# Subtest: auth/admin: an old refused request never changes a newer cookie
+ok 100 - auth/admin: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 7.653727
+  type: 'test'
+  ...
+# Subtest: access-admin/admin: an old refused request never changes a newer cookie
+ok 101 - access-admin/admin: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 10.091503
+  type: 'test'
+  ...
+# Subtest: readiness/admin: an old refused request never changes a newer cookie
+ok 102 - readiness/admin: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 11.635269
+  type: 'test'
+  ...
+# Subtest: crm/admin: an old refused request never changes a newer cookie
+ok 103 - crm/admin: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 4.355688
+  type: 'test'
+  ...
+# Subtest: broadcast/admin: an old refused request never changes a newer cookie
+ok 104 - broadcast/admin: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 5.207552
+  type: 'test'
+  ...
+# Subtest: announcements/admin: an old refused request never changes a newer cookie
+ok 105 - announcements/admin: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 3.316687
+  type: 'test'
+  ...
+# Subtest: tasks/admin: an old refused request never changes a newer cookie
+ok 106 - tasks/admin: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 3.509839
+  type: 'test'
+  ...
+# Subtest: quick-replies/admin: an old refused request never changes a newer cookie
+ok 107 - quick-replies/admin: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 3.330778
+  type: 'test'
+  ...
+# Subtest: copy/admin: an old refused request never changes a newer cookie
+ok 108 - copy/admin: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 3.655309
+  type: 'test'
+  ...
+# Subtest: manual/admin: an old refused request never changes a newer cookie
+ok 109 - manual/admin: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 3.077915
+  type: 'test'
+  ...
+# Subtest: access/client: an old refused request never changes a newer cookie
+ok 110 - access/client: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 2.943422
+  type: 'test'
+  ...
+# Subtest: announcements/client: an old refused request never changes a newer cookie
+ok 111 - announcements/client: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 2.766845
+  type: 'test'
+  ...
+# Subtest: notifications/admin: an old refused request never changes a newer cookie
+ok 112 - notifications/admin: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 3.684183
+  type: 'test'
+  ...
+# Subtest: notifications/client: an old refused request never changes a newer cookie
+ok 113 - notifications/client: an old refused request never changes a newer cookie
+  ---
+  duration_ms: 9.436057
+  type: 'test'
+  ...
+# Subtest: admin/session: an old successful response preserves a newer login cookie
+ok 114 - admin/session: an old successful response preserves a newer login cookie
+  ---
+  duration_ms: 80.343228
+  type: 'test'
+  ...
+# Subtest: admin/logout: an old successful response preserves a newer login cookie
+ok 115 - admin/logout: an old successful response preserves a newer login cookie
+  ---
+  duration_ms: 27.828411
+  type: 'test'
+  ...
+# Subtest: admin/logout-all: an old successful response preserves a newer login cookie
+ok 116 - admin/logout-all: an old successful response preserves a newer login cookie
+  ---
+  duration_ms: 28.595728
+  type: 'test'
+  ...
+# Subtest: admin/revoke-current: an old successful response preserves a newer login cookie
+ok 117 - admin/revoke-current: an old successful response preserves a newer login cookie
+  ---
+  duration_ms: 14.027347
+  type: 'test'
+  ...
+# Subtest: client/session: an old successful response preserves a newer login cookie
+ok 118 - client/session: an old successful response preserves a newer login cookie
+  ---
+  duration_ms: 33.335457
+  type: 'test'
+  ...
+# Subtest: client/logout: an old successful response preserves a newer login cookie
+ok 119 - client/logout: an old successful response preserves a newer login cookie
+  ---
+  duration_ms: 22.403702
+  type: 'test'
+  ...
+# Subtest: client/logout-all: an old successful response preserves a newer login cookie
+ok 120 - client/logout-all: an old successful response preserves a newer login cookie
+  ---
+  duration_ms: 9.716827
+  type: 'test'
+  ...
+1..120
+# tests 120
+# suites 0
+# pass 120
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7506.241802

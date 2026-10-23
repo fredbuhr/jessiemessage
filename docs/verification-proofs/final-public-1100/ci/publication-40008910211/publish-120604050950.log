@@ -1,0 +1,204 @@
+﻿2026-10-23T19:08:00.2479731Z Current runner version: '2.338.0'
+2026-10-23T19:08:00.2504618Z ##[group]Runner Image Provisioner
+2026-10-23T19:08:00.2505573Z Hosted Compute Agent
+2026-10-23T19:08:00.2506161Z Version: 20261012.601
+2026-10-23T19:08:00.2506834Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+2026-10-23T19:08:00.2507643Z Build Date: 2026-10-12T17:48:21Z
+2026-10-23T19:08:00.2508401Z Worker ID: {50f83513-e0ae-42de-a7c0-7c483cd044ce}
+2026-10-23T19:08:00.2509164Z Region: centralus
+2026-10-23T19:08:00.2509721Z Cloud: Azure
+2026-10-23T19:08:00.2510241Z ##[endgroup]
+2026-10-23T19:08:00.2512012Z ##[group]Operating System
+2026-10-23T19:08:00.2512686Z Ubuntu
+2026-10-23T19:08:00.2513492Z 24.04.5
+2026-10-23T19:08:00.2514047Z LTS
+2026-10-23T19:08:00.2514564Z ##[endgroup]
+2026-10-23T19:08:00.2515174Z ##[group]Runner Image
+2026-10-23T19:08:00.2515847Z Image: ubuntu-24.04
+2026-10-23T19:08:00.2516447Z Version: 20261012.334.1
+2026-10-23T19:08:00.2517718Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-23T19:08:00.2519685Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+2026-10-23T19:08:00.2520726Z ##[endgroup]
+2026-10-23T19:08:00.2521929Z ##[group]GITHUB_TOKEN Permissions
+2026-10-23T19:08:00.2524355Z Actions: read
+2026-10-23T19:08:00.2525025Z Contents: write
+2026-10-23T19:08:00.2525642Z Metadata: read
+2026-10-23T19:08:00.2526193Z ##[endgroup]
+2026-10-23T19:08:00.2528376Z Secret source: Actions
+2026-10-23T19:08:00.2529338Z Cache mode: write
+2026-10-23T19:08:00.2530130Z Prepare workflow directory
+2026-10-23T19:08:00.2933494Z Prepare all required actions
+2026-10-23T19:08:00.2981173Z Getting action download info
+2026-10-23T19:08:00.5900158Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-23T19:08:00.7272320Z Download action repository 'actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+2026-10-23T19:08:01.3080234Z Complete job name: publish
+2026-10-23T19:08:01.3973839Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-23T19:08:01.3975058Z with:
+2026-10-23T19:08:01.3975606Z   ref: e5dbfc124a8169a551285d4feb15b827edf07e58
+2026-10-23T19:08:01.3976287Z   persist-credentials: false
+2026-10-23T19:08:01.3976875Z   repository: fredbuhr/jessiemessage
+2026-10-23T19:08:01.3980876Z   token: ***
+2026-10-23T19:08:01.3981360Z   ssh-strict: true
+2026-10-23T19:08:01.3981844Z   ssh-user: git
+2026-10-23T19:08:01.3982320Z   clean: true
+2026-10-23T19:08:01.3982816Z   sparse-checkout-cone-mode: true
+2026-10-23T19:08:01.3983608Z   fetch-depth: 1
+2026-10-23T19:08:01.3984156Z   fetch-tags: false
+2026-10-23T19:08:01.3984664Z   show-progress: true
+2026-10-23T19:08:01.3985587Z   lfs: false
+2026-10-23T19:08:01.3986363Z   submodules: false
+2026-10-23T19:08:01.3986872Z   set-safe-directory: true
+2026-10-23T19:08:01.3987432Z   allow-unsafe-pr-checkout: false
+2026-10-23T19:08:01.3988381Z ##[endgroup]
+2026-10-23T19:08:01.5059222Z Syncing repository: fredbuhr/jessiemessage
+2026-10-23T19:08:01.5062388Z ##[group]Getting Git version info
+2026-10-23T19:08:01.5064334Z Working directory is '/home/runner/work/jessiemessage/jessiemessage'
+2026-10-23T19:08:01.5066770Z [command]/usr/bin/git version
+2026-10-23T19:08:01.5155580Z git version 2.55.0
+2026-10-23T19:08:01.5181642Z ##[endgroup]
+2026-10-23T19:08:01.5193622Z Temporarily overriding HOME='/home/runner/work/_temp/1887c98c-d6f1-41ce-b057-d7e490b4fff3' before making global git config changes
+2026-10-23T19:08:01.5196963Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-23T19:08:01.5200408Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/jessiemessage/jessiemessage
+2026-10-23T19:08:01.5257991Z Deleting the contents of '/home/runner/work/jessiemessage/jessiemessage'
+2026-10-23T19:08:01.5262171Z ##[group]Determining repository object format
+2026-10-23T19:08:01.5264742Z ##[endgroup]
+2026-10-23T19:08:01.5266878Z ##[group]Initializing the repository
+2026-10-23T19:08:01.5270858Z [command]/usr/bin/git init /home/runner/work/jessiemessage/jessiemessage
+2026-10-23T19:08:01.5402785Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-23T19:08:01.5405383Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-23T19:08:01.5407347Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-23T19:08:01.5408996Z hint: call:
+2026-10-23T19:08:01.5409989Z hint:
+2026-10-23T19:08:01.5411135Z hint: 	git config --global init.defaultBranch <name>
+2026-10-23T19:08:01.5412444Z hint:
+2026-10-23T19:08:01.5413974Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-23T19:08:01.5416056Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-23T19:08:01.5417574Z hint:
+2026-10-23T19:08:01.5418407Z hint: 	git branch -m <name>
+2026-10-23T19:08:01.5419334Z hint:
+2026-10-23T19:08:01.5420682Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-23T19:08:01.5423022Z Initialized empty Git repository in /home/runner/work/jessiemessage/jessiemessage/.git/
+2026-10-23T19:08:01.5427229Z [command]/usr/bin/git remote add origin https://github.com/fredbuhr/jessiemessage
+2026-10-23T19:08:01.5490729Z ##[endgroup]
+2026-10-23T19:08:01.5492569Z ##[group]Disabling automatic garbage collection
+2026-10-23T19:08:01.5494324Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-23T19:08:01.5528947Z ##[endgroup]
+2026-10-23T19:08:01.5530789Z ##[group]Setting up auth
+2026-10-23T19:08:01.5531825Z Removing SSH command configuration
+2026-10-23T19:08:01.5534562Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-23T19:08:01.5587305Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-23T19:08:01.6041533Z Removing HTTP extra header
+2026-10-23T19:08:01.6047455Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-23T19:08:01.6084169Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-23T19:08:01.6309793Z Removing includeIf entries pointing to credentials config files
+2026-10-23T19:08:01.6315180Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-23T19:08:01.6354385Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-23T19:08:01.6583898Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-d54b5e70-1c06-4f5a-beb5-993ae0ffcda0.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-23T19:08:01.6627024Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path /home/runner/work/_temp/git-credentials-d54b5e70-1c06-4f5a-beb5-993ae0ffcda0.config
+2026-10-23T19:08:01.6664232Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-d54b5e70-1c06-4f5a-beb5-993ae0ffcda0.config
+2026-10-23T19:08:01.6702402Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-d54b5e70-1c06-4f5a-beb5-993ae0ffcda0.config
+2026-10-23T19:08:01.6738966Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-d54b5e70-1c06-4f5a-beb5-993ae0ffcda0.config
+2026-10-23T19:08:01.6773077Z ##[endgroup]
+2026-10-23T19:08:01.6774771Z ##[group]Fetching the repository
+2026-10-23T19:08:01.6779198Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin e5dbfc124a8169a551285d4feb15b827edf07e58
+2026-10-23T19:08:02.9716989Z From https://github.com/fredbuhr/jessiemessage
+2026-10-23T19:08:02.9720074Z  * branch            e5dbfc124a8169a551285d4feb15b827edf07e58 -> FETCH_HEAD
+2026-10-23T19:08:02.9730991Z [command]/usr/bin/git rev-parse --verify --quiet e5dbfc124a8169a551285d4feb15b827edf07e58^{object}
+2026-10-23T19:08:02.9763715Z e5dbfc124a8169a551285d4feb15b827edf07e58
+2026-10-23T19:08:02.9770037Z ##[endgroup]
+2026-10-23T19:08:02.9771741Z ##[group]Determining the checkout info
+2026-10-23T19:08:02.9774238Z ##[endgroup]
+2026-10-23T19:08:02.9775438Z [command]/usr/bin/git sparse-checkout disable
+2026-10-23T19:08:02.9832412Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-23T19:08:02.9869568Z ##[group]Checking out the ref
+2026-10-23T19:08:02.9873694Z [command]/usr/bin/git checkout --progress --force e5dbfc124a8169a551285d4feb15b827edf07e58
+2026-10-23T19:08:03.1582627Z Note: switching to 'e5dbfc124a8169a551285d4feb15b827edf07e58'.
+2026-10-23T19:08:03.1585595Z 
+2026-10-23T19:08:03.1589024Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-23T19:08:03.1593745Z changes and commit them, and you can discard any commits you make in this
+2026-10-23T19:08:03.1597995Z state without impacting any branches by switching back to a branch.
+2026-10-23T19:08:03.1600286Z 
+2026-10-23T19:08:03.1601812Z If you want to create a new branch to retain commits you create, you may
+2026-10-23T19:08:03.1605715Z do so (now or later) by using -c with the switch command. Example:
+2026-10-23T19:08:03.1607813Z 
+2026-10-23T19:08:03.1608659Z   git switch -c <new-branch-name>
+2026-10-23T19:08:03.1610066Z 
+2026-10-23T19:08:03.1610829Z Or undo this operation with:
+2026-10-23T19:08:03.1612029Z 
+2026-10-23T19:08:03.1612768Z   git switch -
+2026-10-23T19:08:03.1614249Z 
+2026-10-23T19:08:03.1615812Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-23T19:08:03.1618129Z 
+2026-10-23T19:08:03.1620420Z HEAD is now at e5dbfc1 ops: prepare qualified 1.10.1 publication and isolated dependencies
+2026-10-23T19:08:03.1628407Z ##[endgroup]
+2026-10-23T19:08:03.1654215Z [command]/usr/bin/git log -1 --format=%H
+2026-10-23T19:08:03.1685708Z e5dbfc124a8169a551285d4feb15b827edf07e58
+2026-10-23T19:08:03.1700863Z ##[group]Removing auth
+2026-10-23T19:08:03.1702088Z Removing SSH command configuration
+2026-10-23T19:08:03.1704653Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-23T19:08:03.1745134Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-23T19:08:03.1973787Z Removing HTTP extra header
+2026-10-23T19:08:03.1977956Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-23T19:08:03.2018287Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-23T19:08:03.2242834Z Removing includeIf entries pointing to credentials config files
+2026-10-23T19:08:03.2246364Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-23T19:08:03.2277571Z includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path
+2026-10-23T19:08:03.2281646Z includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path
+2026-10-23T19:08:03.2285379Z includeif.gitdir:/github/workspace/.git.path
+2026-10-23T19:08:03.2288327Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-23T19:08:03.2293705Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path
+2026-10-23T19:08:03.2325247Z /home/runner/work/_temp/git-credentials-d54b5e70-1c06-4f5a-beb5-993ae0ffcda0.config
+2026-10-23T19:08:03.2337007Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-d54b5e70\-1c06\-4f5a\-beb5\-993ae0ffcda0\.config
+2026-10-23T19:08:03.2374723Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path
+2026-10-23T19:08:03.2402000Z /home/runner/work/_temp/git-credentials-d54b5e70-1c06-4f5a-beb5-993ae0ffcda0.config
+2026-10-23T19:08:03.2411932Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-d54b5e70\-1c06\-4f5a\-beb5\-993ae0ffcda0\.config
+2026-10-23T19:08:03.2448997Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-23T19:08:03.2478918Z /github/runner_temp/git-credentials-d54b5e70-1c06-4f5a-beb5-993ae0ffcda0.config
+2026-10-23T19:08:03.2489548Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-d54b5e70\-1c06\-4f5a\-beb5\-993ae0ffcda0\.config
+2026-10-23T19:08:03.2529665Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-23T19:08:03.2556352Z /github/runner_temp/git-credentials-d54b5e70-1c06-4f5a-beb5-993ae0ffcda0.config
+2026-10-23T19:08:03.2564735Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-d54b5e70\-1c06\-4f5a\-beb5\-993ae0ffcda0\.config
+2026-10-23T19:08:03.2603719Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-23T19:08:03.2828909Z Removing credentials config '/home/runner/work/_temp/git-credentials-d54b5e70-1c06-4f5a-beb5-993ae0ffcda0.config'
+2026-10-23T19:08:03.2837244Z ##[endgroup]
+2026-10-23T19:08:03.3187613Z ##[group]Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+2026-10-23T19:08:03.3189229Z with:
+2026-10-23T19:08:03.3190067Z   node-version: 24.22.1
+2026-10-23T19:08:03.3191072Z   package-manager-cache: false
+2026-10-23T19:08:03.3192140Z   check-latest: false
+2026-10-23T19:08:03.3201322Z   token: ***
+2026-10-23T19:08:03.3202209Z ##[endgroup]
+2026-10-23T19:08:04.3182798Z Attempting to download 24.22.1...
+2026-10-23T19:08:04.3221474Z Acquiring 24.22.1 - x64 from https://github.com/actions/node-versions/releases/download/24.22.1-39619001896/node-24.22.1-linux-x64.tar.gz
+2026-10-23T19:08:04.9192769Z Extracting ...
+2026-10-23T19:08:04.9329751Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/0b38ad03-b35f-44ac-94d3-98ef89d93d76 -f /home/runner/work/_temp/ac0126f0-fc9d-4273-9ec5-71204fe7c50b
+2026-10-23T19:08:06.2031843Z Adding to the cache ...
+2026-10-23T19:08:08.3977512Z ##[group]Environment details
+2026-10-23T19:08:08.6425631Z node: v24.22.1
+2026-10-23T19:08:08.6426302Z npm: 11.19.1
+2026-10-23T19:08:08.6426803Z yarn: 1.22.22
+2026-10-23T19:08:08.6427829Z ##[endgroup]
+2026-10-23T19:08:08.6630444Z ##[group]Run python3 ops/publish-qualified1101.py
+2026-10-23T19:08:08.6630920Z [36;1mpython3 ops/publish-qualified1101.py[0m
+2026-10-23T19:08:08.6897953Z shell: /usr/bin/bash -e {0}
+2026-10-23T19:08:08.6898338Z env:
+2026-10-23T19:08:08.6901954Z   GH_TOKEN: ***
+2026-10-23T19:08:08.6902252Z ##[endgroup]
+2026-10-23T19:08:17.8948877Z {"status":"published_verified","nodeVersion":"24.22.1","schemaMigrations":38,"applicationTables":37,"normalMigrations":33,"videoMigrations":3,"experienceMigrations":2,"releases":[{"tag":"v1.10.1","source":"9eb99f1f68ab4beb5484894249afa8f413cc5dd6","tree":"2a09d9d5d6698a04605e9a4b4faa551536cfca13","ciRun":"40007620555","releaseId":422216628}],"latest":{"tag":"v1.10.1","source":"9eb99f1f68ab4beb5484894249afa8f413cc5dd6","id":422216628},"publicationMode":"created","created":["v1.10.1"],"deploymentPerformed":false}
+2026-10-23T19:08:17.9203979Z Post job cleanup.
+2026-10-23T19:08:18.0552340Z Post job cleanup.
+2026-10-23T19:08:18.1453588Z [command]/usr/bin/git version
+2026-10-23T19:08:18.1508729Z git version 2.55.0
+2026-10-23T19:08:18.1551726Z Temporarily overriding HOME='/home/runner/work/_temp/d16c3741-49c5-46a5-952c-8004fcddf31d' before making global git config changes
+2026-10-23T19:08:18.1553638Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-23T19:08:18.1557954Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/jessiemessage/jessiemessage
+2026-10-23T19:08:18.1598097Z Removing SSH command configuration
+2026-10-23T19:08:18.1606042Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-23T19:08:18.1654693Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-23T19:08:18.1920116Z Removing HTTP extra header
+2026-10-23T19:08:18.1922560Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-23T19:08:18.1964008Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-23T19:08:18.2217728Z Removing includeIf entries pointing to credentials config files
+2026-10-23T19:08:18.2225219Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-23T19:08:18.2266397Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-23T19:08:18.2669586Z Cleaning up orphan processes

@@ -2,20 +2,21 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Audit prépublic et correctif1.10.1 — en cours
+## Audit prépublic terminé ; livraison1.10.1 à activer
 
-1. Traiter les134points de la [checklist](AUDIT-PUBLIC-1100-20261023.md), preuves de source/native/HTTP et limites réelles distinctes.
-2. Corriger les défauts reproduits : session200 ancienne, clé de préférences en vol à l’arrêt ; durcir Nodemailer10.1.4, précision galerie et titreEN. Régressions ciblées avant qualification.
-3. Qualifier source corrective PR/main5/5, puis publier/déployer le commit exact selon reçus successifs.
-4. Recroiser checklist, inventaire et rapports pour une décision explicite avant22h. Aucun succès implicite pour un test non exercé.
+Les134 points, la seconde revue de couverture, les six correctifs, les qualifications PR/main5/5 et la publication1.10.1 sont acquis. [Rapport et preuves](AUDIT-PUBLIC-1100-20261023.md), [état actuel](REPRISE.md). Aucun nouveau correctif ni CI du code inchangé n’est à relancer.
 
-Application1.10.0 actuellement active et checkpoint aligné restent la référence jusqu’au reçu de la nouvelle source. L’audit n’autorise aucun envoi ni effacement réel ; sauvegarde hébergée/PC reportés restent des limites visibles.
+1. Recevoir le JSON de préparation et `PREPARATION_1101_CHECK_OK` depuis la [commandeSSH qualifiée](operations-release1101.md).
+2. Valider ces preuves, puis activer les champs Manager1101 et recevoir l’identité réelle1.10.1/source9eb99f1f…/Node24.22.1.
+3. Épingler le writer sur le vrai reçu et la release422216628 ; qualifier ses16 natifs, puis recevoir son enregistrement final avant le GO d’ouverture.
+
+La1.10.0 reste active jusqu’à ces reçus. F-05 empêche son ouverture au public en l’état. Les points physiques non exercés et la sauvegarde hébergée reportée restent des limites déclarées ; aucun envoi ni effacement de compte réel n’est ajouté.
 
 ## Évolution 1.10.0 — livraison terminée
 
 Code fusionné, PR et main qualifiés5/5 sousNode24.22.1. [Source et preuves](REPRISE.md).
 
-Publication immuable acquise : release/latest422111737 sur la source exacte `51b0cf22e3adbad7ed26653e96706ba707aaf839`, opérateurs42/42 et workflow2/2.
+Publication immuable de1100 acquise : release422111737, latest à sa livraison sur la source exacte `51b0cf22e3adbad7ed26653e96706ba707aaf839`, opérateurs42/42 et workflow2/2.
 
 **Audit terminé avant de poursuivre :** les25 tags/releases et leurs versions package/lock sont cohérents ; comparaison des sources1.9.0/1.10.0 et des fonctions métier réalisée, états documentaires périmés corrigés. [Résultats et preuves](version-audit-1100.md). Aucun déploiement ni nouvelle publication pendant cet audit.
 

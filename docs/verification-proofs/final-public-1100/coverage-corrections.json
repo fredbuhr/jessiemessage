@@ -1,0 +1,125 @@
+{
+  "status": "five_document_links_corrected_child_report_archived",
+  "pathCorrections": [
+    {
+      "item": "REL-10",
+      "old": "../../../SECURITY.md",
+      "new": "../../SECURITY.md"
+    },
+    {
+      "item": "REL-10",
+      "old": "../../../REPRISE.md",
+      "new": "../../REPRISE.md"
+    },
+    {
+      "item": "REL-10",
+      "old": "../../../PLAN-IMPLEMENTATION.md",
+      "new": "../../PLAN-IMPLEMENTATION.md"
+    },
+    {
+      "item": "GATE-03",
+      "old": "../../../AUDIT-FINAL-20261022.md",
+      "new": "../../AUDIT-FINAL-20261022.md"
+    },
+    {
+      "item": "GATE-03",
+      "old": "../../../AUDIT-2-20261022.md",
+      "new": "../../AUDIT-2-20261022.md"
+    }
+  ],
+  "childReport": "business-crm.json",
+  "runtimeChanges": false,
+  "rootFollowup": {
+    "topLevelChecklistEvidenceFileReferences": 151,
+    "allResolved": true,
+    "runtimeChanges": false
+  },
+  "nestedMonitoringReferenceCorrection": {
+    "correctSourcePath": "MONITORING.md",
+    "incorrectSourcePath": "docs/MONITORING.md",
+    "files": [
+      {
+        "path": "checklist.json",
+        "occurrences": 2,
+        "oldSha256": "1c5788dbae6473a0f463b4cd9c7c7cc33a7c4c372473d47d90e6325201892d07"
+      },
+      {
+        "path": "operations.json",
+        "occurrences": 2,
+        "oldSha256": "9a627f3af6c5618944b3111a045e28893080fc0c97ea61dab00ea67b8a67103f"
+      }
+    ],
+    "runtimeChanges": false
+  },
+  "standaloneEvidenceArchived": {
+    "count": 13,
+    "files": [
+      {
+        "filename": "auth-cookie-regression-after.log",
+        "bytes": 27824,
+        "sha256": "4b42b5a1db71a0610acaa8f2ddb21f4a91bbeaa5477f9902be4d1c1cb645f5d7"
+      },
+      {
+        "filename": "auth-cookie-regression-before.log",
+        "bytes": 7393,
+        "sha256": "32c2ac36a40dad31ee767a5328d4b2f2c754c8f35343e16f4249e0ea6edd43d0"
+      },
+      {
+        "filename": "gallery-after-fix.log",
+        "bytes": 240,
+        "sha256": "35ebc1c9ea8d98de5baf86cebac1b99676752f759542c96e53f197425d2e1319"
+      },
+      {
+        "filename": "gallery-before-fix.log",
+        "bytes": 2164,
+        "sha256": "29ef3a8d0c15f2f6c127255dd10d064f32cb1e276c25b69c51732ee2086be03d"
+      },
+      {
+        "filename": "gallery-http-after-fix.log",
+        "bytes": 3278,
+        "sha256": "f1a3298ab3fe4087b44727a3216b06b77fc6f56da0eedbf8447e492ec204fdc0"
+      },
+      {
+        "filename": "gallery-http-before-fix.log",
+        "bytes": 1037,
+        "sha256": "6aea5807429e2cd19051f9a9688e2b243be0a049e29f740db90216f4b6ca1a0b"
+      },
+      {
+        "filename": "gallery-microsecond-repro.json",
+        "bytes": 2820,
+        "sha256": "68987ee2038a3f797179ef47879ab5d4b71f1e8e076385a39ca7efd8d5e67236"
+      },
+      {
+        "filename": "nodemailer-10.1.4-targeted.tap",
+        "bytes": 10584,
+        "sha256": "41f7c668fefce8a559aac8c6aa1dc9282dba72c964daad94826e767a5d3794a2"
+      },
+      {
+        "filename": "nodemailer-poc-validation.json",
+        "bytes": 868,
+        "sha256": "964a3cb87856ce30dbda72f474a017935deaaeb626ee7f82ac7656b0f9a6a962"
+      },
+      {
+        "filename": "npm-audit-10.1.4.json",
+        "bytes": 361,
+        "sha256": "f8779310006e6719267fc5950a101e2e75d68084f9ee1d4794426080dae51bac"
+      },
+      {
+        "filename": "npm-audit.json",
+        "bytes": 361,
+        "sha256": "f8779310006e6719267fc5950a101e2e75d68084f9ee1d4794426080dae51bac"
+      },
+      {
+        "filename": "preferences-shutdown-after-fix.log",
+        "bytes": 1643,
+        "sha256": "eefd53630f0cd8e8d1e222e582ac419da55496038aa6352941f245d25d1e86e4"
+      },
+      {
+        "filename": "preferences-shutdown-before-fix.log",
+        "bytes": 2273,
+        "sha256": "a7bbacf7ff904e2ce51c28ef7f6e0369a7cac2ff07f9bddd82cd5b1b02fccf84"
+      }
+    ],
+    "nativeBaselineLogNamesRemainContextualToRun39991790308": true
+  }
+}

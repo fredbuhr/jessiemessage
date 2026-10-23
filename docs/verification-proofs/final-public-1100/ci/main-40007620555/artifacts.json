@@ -1,0 +1,81 @@
+{
+  "artifacts": [
+    {
+      "id": 12524578391,
+      "name": "public-profile-render",
+      "size_in_bytes": 887671,
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12524578391",
+      "archive_download_url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12524578391/zip",
+      "expired": false,
+      "created_at": "2026-10-23T19:03:35Z",
+      "expires_at": "2026-10-30T19:03:33Z",
+      "updated_at": "2026-10-23T19:03:35Z",
+      "digest": "sha256:e5fa1b4beed078cbda930ac7a1cf27d8cac5088ad9e1e3fcd4caaca6c517140c",
+      "workflow_run": {
+        "id": 40007620555,
+        "repository_id": 1419524991,
+        "head_repository_id": 1419524991,
+        "head_branch": "main",
+        "head_sha": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6"
+      }
+    },
+    {
+      "id": 12524542942,
+      "name": "JessieMessage-apercu-757",
+      "size_in_bytes": 202651,
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12524542942",
+      "archive_download_url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12524542942/zip",
+      "expired": false,
+      "created_at": "2026-10-23T19:00:23Z",
+      "expires_at": "2026-10-30T19:00:23Z",
+      "updated_at": "2026-10-23T19:00:23Z",
+      "digest": "sha256:83cdfd0f639f5a64f348ad7f2d523e169d78a84b634ed94bc4317fcd2c3159da",
+      "workflow_run": {
+        "id": 40007620555,
+        "repository_id": 1419524991,
+        "head_repository_id": 1419524991,
+        "head_branch": "main",
+        "head_sha": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6"
+      }
+    },
+    {
+      "id": 12524428446,
+      "name": "experience-https-render",
+      "size_in_bytes": 527174,
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12524428446",
+      "archive_download_url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12524428446/zip",
+      "expired": false,
+      "created_at": "2026-10-23T19:00:16Z",
+      "expires_at": "2026-10-30T19:00:14Z",
+      "updated_at": "2026-10-23T19:00:16Z",
+      "digest": "sha256:93544e6ee0fe516ebf7500dba6002a99c1f124445693fde7e533ad75e1ca5bcc",
+      "workflow_run": {
+        "id": 40007620555,
+        "repository_id": 1419524991,
+        "head_repository_id": 1419524991,
+        "head_branch": "main",
+        "head_sha": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6"
+      }
+    },
+    {
+      "id": 12523989456,
+      "name": "homepage-render",
+      "size_in_bytes": 3722224,
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12523989456",
+      "archive_download_url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12523989456/zip",
+      "expired": false,
+      "created_at": "2026-10-23T19:03:33Z",
+      "expires_at": "2026-10-30T19:03:31Z",
+      "updated_at": "2026-10-23T19:03:33Z",
+      "digest": "sha256:fa01f81c5c2adb86cbd2f7cc0d3e1b2d34b0cddf659ef8d3d813420a40e34530",
+      "workflow_run": {
+        "id": 40007620555,
+        "repository_id": 1419524991,
+        "head_repository_id": 1419524991,
+        "head_branch": "main",
+        "head_sha": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6"
+      }
+    }
+  ]
+}
+

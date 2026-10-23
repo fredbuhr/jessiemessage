@@ -1,0 +1,46 @@
+{
+  "node": "v24.19.0",
+  "installedNodemailer": "10.1.1",
+  "outcomes": [
+    {
+      "case": 1,
+      "appCanonicalEmailAccepted": false,
+      "nodemailerParsed": [
+        {
+          "address": "evil@evil.com",
+          "name": "Victim) v@victim.com"
+        }
+      ]
+    },
+    {
+      "case": 2,
+      "appCanonicalEmailAccepted": false,
+      "nodemailerParsed": [
+        {
+          "name": "G",
+          "group": [
+            {
+              "address": "",
+              "name": "a"
+            }
+          ]
+        },
+        {
+          "address": "evil@evil.com",
+          "name": ") v@victim.com"
+        }
+      ]
+    },
+    {
+      "case": 3,
+      "appCanonicalEmailAccepted": false,
+      "nodemailerParsed": [
+        {
+          "address": "\"a@evil.com",
+          "name": "@good.com>"
+        }
+      ]
+    }
+  ],
+  "networkUsed": false
+}

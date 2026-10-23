@@ -1,0 +1,219 @@
+{
+  "run": 40006334125,
+  "source": "cd81f915a36e5fd39cba2fd9819d760588d47041",
+  "tree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+  "reviewedAtUtc": "2026-10-23T18:56:13.145492+00:00",
+  "images": [
+    {
+      "width": 1280,
+      "height": 757,
+      "sha256": "e0a7585449ca4ca54f2c238c66c8a83988b3bd93c40e9b96d5e8d5278935f6f7",
+      "identicalToRevisedPrBytes": true,
+      "differenceBounds": null,
+      "artifactEntry": "public-1280-en.png",
+      "nativeArtifactId": 12525016079,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/artifacts/12525016079",
+      "localImageArchived": false
+    },
+    {
+      "width": 1280,
+      "height": 757,
+      "sha256": "5538d0bd6058c8686b29025e7b680b16455646af2159144a985ff554de47ce61",
+      "identicalToRevisedPrBytes": true,
+      "differenceBounds": null,
+      "artifactEntry": "public-1280-fr.png",
+      "nativeArtifactId": 12525016079,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/artifacts/12525016079",
+      "localImageArchived": false
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "sha256": "f53b017894f8719e7893c2aab1cf8abcd6ecec76293d45112d6cca30ccf7199a",
+      "identicalToRevisedPrBytes": true,
+      "differenceBounds": null,
+      "artifactEntry": "public-320-en.png",
+      "nativeArtifactId": 12525016079,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/artifacts/12525016079",
+      "localImageArchived": false
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "sha256": "305400117ebbf8119657da8a35981bf0b1247c0398e96fe77aebec4191c49d64",
+      "identicalToRevisedPrBytes": true,
+      "differenceBounds": null,
+      "artifactEntry": "public-320-fr.png",
+      "nativeArtifactId": 12525016079,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/artifacts/12525016079",
+      "localImageArchived": false
+    },
+    {
+      "width": 1280,
+      "height": 757,
+      "sha256": "838c961bb367a1c70d59a5d07933fc19e2b5f64d43415c0a81c9f2262af1b132",
+      "identicalToRevisedPrBytes": true,
+      "differenceBounds": null,
+      "artifactEntry": "publication-1280-fr.png",
+      "nativeArtifactId": 12525016079,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/artifacts/12525016079",
+      "localImageArchived": false
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "sha256": "34e833b5a4837a93255346b26b358c1012e22dbdc287b370b9400eca53b5c37d",
+      "identicalToRevisedPrBytes": false,
+      "differenceBounds": [
+        316,
+        0,
+        320,
+        822
+      ],
+      "artifactEntry": "publication-320-fr.png",
+      "nativeArtifactId": 12525016079,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/artifacts/12525016079",
+      "localImageArchived": false
+    },
+    {
+      "width": 1280,
+      "height": 757,
+      "sha256": "3db4287f75a0eac8cf51b06b07556b8ea2840876b93a769f9ca78246b27f8b69",
+      "identicalToRevisedPrBytes": false,
+      "differenceBounds": [
+        27,
+        566,
+        283,
+        729
+      ],
+      "artifactEntry": "experience-admin-1280-client-preferences.png",
+      "nativeArtifactId": 12523518874,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/artifacts/12523518874",
+      "localImageArchived": false
+    },
+    {
+      "width": 1280,
+      "height": 757,
+      "sha256": "b3bca6394b540cab141feab1299c4a932cf6828fe897e4bcaeb6682ea72b0666",
+      "identicalToRevisedPrBytes": false,
+      "differenceBounds": [
+        158,
+        603,
+        191,
+        720
+      ],
+      "artifactEntry": "experience-admin-1280-profile.png",
+      "nativeArtifactId": 12523518874,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/artifacts/12523518874",
+      "localImageArchived": false
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "sha256": "60f94f39f6bcd0a8480c42a0011224486d704b58f7dc90681ecdd8b04ea827f0",
+      "identicalToRevisedPrBytes": true,
+      "differenceBounds": null,
+      "artifactEntry": "experience-admin-320-profile.png",
+      "nativeArtifactId": 12523518874,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/artifacts/12523518874",
+      "localImageArchived": false
+    },
+    {
+      "width": 1280,
+      "height": 757,
+      "sha256": "18e6e5029857820327ed82910c145b5c09254e91725160a91d3a3fd8ec08e987",
+      "identicalToRevisedPrBytes": false,
+      "differenceBounds": [
+        16,
+        77,
+        31,
+        100
+      ],
+      "artifactEntry": "experience-client-1280-profile.png",
+      "nativeArtifactId": 12523518874,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/artifacts/12523518874",
+      "localImageArchived": false
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "sha256": "d392e0453ad8a84ece4cfc00d1e3646caae93ff62f5c76f805c19515d3c1bafc",
+      "identicalToRevisedPrBytes": false,
+      "differenceBounds": [
+        301,
+        179,
+        306,
+        383
+      ],
+      "artifactEntry": "experience-client-320-profile.png",
+      "nativeArtifactId": 12523518874,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/artifacts/12523518874",
+      "localImageArchived": false
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "sha256": "b9a54ad354ab7b7f5aaac6fe292bce6d1264fc45970e870b79d985636f909759",
+      "identicalToRevisedPrBytes": true,
+      "differenceBounds": null,
+      "artifactEntry": "experience-public-320-profile.png",
+      "nativeArtifactId": 12523518874,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/artifacts/12523518874",
+      "localImageArchived": false
+    }
+  ],
+  "allTwelveAccountedFor": true,
+  "method": "Final artifacts downloaded and ZIPdigests checked against GitHub metadata. All12 PNGs compared bytewise/pixelwise with reviewed revised images;7identical. Public320publication differs only in4px rightscrollbar, other changed images in blurred background or native scrollbars. SixfinalHTTPS PNGs independently opened at originalresolution; prior public foreground byte-equivalent.",
+  "blockingVisualDefects": [],
+  "publicTitleEvidence": "Native browser log passes explicit document.titleFR/EN assertions; title is outside screenshot viewport.",
+  "nativeBehavioralEvidence": {
+    "tests": 260,
+    "pass": 260,
+    "fail": 0,
+    "skip": 0,
+    "cases": [
+      "Chrome photo viewer ignores a previous close event after reopening and still cleans up native closes",
+      "Chrome photo neighbors use authorized server order within a millisecond while rejecting a reversed date or the same message",
+      "real Chrome: a queued CRM close cannot dismiss the reopened profile or clear its draft",
+      "real Chrome: a queued close cannot erase a reopened account closure confirmation"
+    ],
+    "localLogArchive": "browser.log.gz"
+  },
+  "limitations": [
+    "Fixed synthetic Chrome320/1280 screenshots do not prove physicalphone behavior or offscreen content.",
+    "F06 interactions are native behavioral assertions, not inferred from these profile/publication screenshots.",
+    "No live account, externalmail or destructive hosted operation."
+  ],
+  "independentExperienceReview": {
+    "reviewer": "/root/review1100/auth_flows",
+    "run": 40006334125,
+    "source": "cd81f915a36e5fd39cba2fd9819d760588d47041",
+    "tree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+    "method": "All six final-head HTTPS PNGs opened individually in original resolution by independent reviewer.",
+    "blockingVisualDefects": [],
+    "result": "No concrete overlap, horizontal overflow or functional clipping at320/1280. Layout consistent with prior revised run. Lower viewport edges belong to scrollable areas.",
+    "limits": [
+      "Static PNGs do not exercise F06 closing, interactions, offscreen content or browser-tab title.",
+      "No native browser action, retest or repository edit by independent reviewer."
+    ]
+  },
+  "nativeArtifacts": [
+    {
+      "id": 12525016079,
+      "name": "public-profile-render",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/artifacts/12525016079",
+      "zipSha256": "sha256:3fe4a327a2bf61cc259fa15cf9065e8981d8e9e4c8737e4015b58f452d4ffba0",
+      "bytes": 887915,
+      "expiresAt": "2026-10-30T18:53:52Z"
+    },
+    {
+      "id": 12523518874,
+      "name": "experience-https-render",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/artifacts/12523518874",
+      "zipSha256": "sha256:80e56458aa51e4443d05d830a2eff41a097e9ce3880ee707262b2d7e40a6441a",
+      "bytes": 527271,
+      "expiresAt": "2026-10-30T18:50:37Z"
+    }
+  ],
+  "storageLimit": "PNG/ZIP files are not committed in this compact archive. Hashes, native artifact links and visual review remain. GitHub artifacts expire after7days; scratch originals preserved."
+}

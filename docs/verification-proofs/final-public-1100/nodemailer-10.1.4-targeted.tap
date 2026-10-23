@@ -1,0 +1,262 @@
+TAP version 13
+# Subtest: verification delivery is explicitly opt-in and configuration errors contain no supplied values
+ok 1 - verification delivery is explicitly opt-in and configuration errors contain no supplied values
+  ---
+  duration_ms: 8.090198
+  type: 'test'
+  ...
+# Subtest: mail configuration requires a canonical HTTPS origin, key, sender and encrypted SMTP port
+ok 2 - mail configuration requires a canonical HTTPS origin, key, sender and encrypted SMTP port
+  ---
+  duration_ms: 1.614754
+  type: 'test'
+  ...
+# Subtest: the official contact identity defaults the sender without enabling mail or inventing credentials
+ok 3 - the official contact identity defaults the sender without enabling mail or inventing credentials
+  ---
+  duration_ms: 0.625707
+  type: 'test'
+  ...
+# Subtest: official site origins cannot select another sender while isolated synthetic origins keep theirs
+ok 4 - official site origins cannot select another sender while isolated synthetic origins keep theirs
+  ---
+  duration_ms: 0.814773
+  type: 'test'
+  ...
+# Subtest: mail payload encryption is randomized, authenticated and bound to the exact job id and key
+ok 5 - mail payload encryption is randomized, authenticated and bound to the exact job id and key
+  ---
+  duration_ms: 3.426202
+  type: 'test'
+  ...
+# Subtest: encrypted payload validation rejects canonical aliases, extra fields, invalid tokens and context sizes
+ok 6 - encrypted payload validation rejects canonical aliases, extra fields, invalid tokens and context sizes
+  ---
+  duration_ms: 0.955917
+  type: 'test'
+  ...
+# Subtest: SMTP transport enforces TLS verification, bounded timeouts and disabled external content/debug access
+ok 7 - SMTP transport enforces TLS verification, bounded timeouts and disabled external content/debug access
+  ---
+  duration_ms: 1.356654
+  type: 'test'
+  ...
+# Subtest: verification message is neutral, addresses only its intended recipient and puts the token in a URL fragment
+ok 8 - verification message is neutral, addresses only its intended recipient and puts the token in a URL fragment
+  ---
+  duration_ms: 1.916476
+  type: 'test'
+  ...
+# Subtest: both mail purposes use one official sender, reply address and SMTP envelope
+ok 9 - both mail purposes use one official sender, reply address and SMTP envelope
+  ---
+  duration_ms: 2.555779
+  type: 'test'
+  ...
+# Subtest: manual transport configuration cannot bypass the official sender or split its reply address
+ok 10 - manual transport configuration cannot bypass the official sender or split its reply address
+  ---
+  duration_ms: 1.662817
+  type: 'test'
+  ...
+# Subtest: SMTP verification calls authentication checking without sending a message and requires exact true
+ok 11 - SMTP verification calls authentication checking without sending a message and requires exact true
+  ---
+  duration_ms: 2.368396
+  type: 'test'
+  ...
+# Subtest: SMTP verification sanitizes transport errors and rejects concurrent checks on one instance
+ok 12 - SMTP verification sanitizes transport errors and rejects concurrent checks on one instance
+  ---
+  duration_ms: 0.491485
+  type: 'test'
+  ...
+# Subtest: a stalled SMTP check has a wall deadline, closes once and absorbs a late verification rejection
+ok 13 - a stalled SMTP check has a wall deadline, closes once and absorbs a late verification rejection
+  ---
+  duration_ms: 11.86972
+  type: 'test'
+  ...
+# Subtest: SMTP verification deadline inputs are bounded before creating the transport
+ok 14 - SMTP verification deadline inputs are bounded before creating the transport
+  ---
+  duration_ms: 1.108889
+  type: 'test'
+  ...
+# Subtest: SMTP success requires acceptance of the exact recipient and failure details never escape
+ok 15 - SMTP success requires acceptance of the exact recipient and failure details never escape
+  ---
+  duration_ms: 1.465759
+  type: 'test'
+  ...
+# Subtest: SMTP setup and close failures are sanitized and close is idempotent
+ok 16 - SMTP setup and close failures are sanitized and close is idempotent
+  ---
+  duration_ms: 1.890231
+  type: 'test'
+  ...
+# Subtest: mail worker records accepted delivery only through the active lease and performs bounded pruning
+ok 17 - mail worker records accepted delivery only through the active lease and performs bounded pruning
+  ---
+  duration_ms: 0.948556
+  type: 'test'
+  ...
+# Subtest: mail worker permanently rejects tampered or stale-recipient payloads without sending
+ok 18 - mail worker permanently rejects tampered or stale-recipient payloads without sending
+  ---
+  duration_ms: 0.735974
+  type: 'test'
+  ...
+# Subtest: mail worker schedules retry on SMTP failure and does not count a stale completion as sent
+ok 19 - mail worker schedules retry on SMTP failure and does not count a stale completion as sent
+  ---
+  duration_ms: 0.704547
+  type: 'test'
+  ...
+# Subtest: worker exceptions are sanitized and invalid batch bounds cannot touch persistence
+ok 20 - worker exceptions are sanitized and invalid batch bounds cannot touch persistence
+  ---
+  duration_ms: 0.29056
+  type: 'test'
+  ...
+# Subtest: verification: expired or replaced lease after claim never starts a transport
+ok 21 - verification: expired or replaced lease after claim never starts a transport
+  ---
+  duration_ms: 2.160962
+  type: 'test'
+  ...
+# Subtest: password-reset: expired or replaced lease after claim never starts a transport
+ok 22 - password-reset: expired or replaced lease after claim never starts a transport
+  ---
+  duration_ms: 3.872658
+  type: 'test'
+  ...
+# Subtest: worker shutdown waits for an active batch and closes its transport once
+ok 23 - worker shutdown waits for an active batch and closes its transport once
+  ---
+  duration_ms: 3.295199
+  type: 'test'
+  ...
+# Subtest: mail store validates bounded inputs before any database access
+ok 24 - mail store validates bounded inputs before any database access
+  ---
+  duration_ms: 1.345116
+  type: 'test'
+  ...
+# Subtest: mail pruning uses two indexed bounds and reserves a five-minute interval before concurrent calls
+ok 25 - mail pruning uses two indexed bounds and reserves a five-minute interval before concurrent calls
+  ---
+  duration_ms: 12.775897
+  type: 'test'
+  ...
+# Subtest: reset mail encryption hides its payload, binds the job and key, and rejects verification-purpose interchange
+ok 26 - reset mail encryption hides its payload, binds the job and key, and rejects verification-purpose interchange
+  ---
+  duration_ms: 7.290417
+  type: 'test'
+  ...
+# Subtest: reset mail payloads reject extra fields, aliases, malformed tokens and invalid context sizes
+ok 27 - reset mail payloads reject extra fields, aliases, malformed tokens and invalid context sizes
+  ---
+  duration_ms: 0.888545
+  type: 'test'
+  ...
+# Subtest: reset SMTP message keeps its token in a fragment and uses a distinct stable message id and exact recipient
+ok 28 - reset SMTP message keeps its token in a fragment and uses a distinct stable message id and exact recipient
+  ---
+  duration_ms: 6.064312
+  type: 'test'
+  ...
+# Subtest: reset SMTP requires exact acceptance and sanitizes delivery, payload and closed-transport errors
+ok 29 - reset SMTP requires exact acceptance and sanitizes delivery, payload and closed-transport errors
+  ---
+  duration_ms: 3.423053
+  type: 'test'
+  ...
+# Subtest: reset worker purpose sends only reset mail and persists delivery through its active lease
+ok 30 - reset worker purpose sends only reset mail and persists delivery through its active lease
+  ---
+  duration_ms: 1.15561
+  type: 'test'
+  ...
+# Subtest: workers permanently reject cross-purpose, corrupt and changed-recipient reset payloads before SMTP
+ok 31 - workers permanently reject cross-purpose, corrupt and changed-recipient reset payloads before SMTP
+  ---
+  duration_ms: 1.318486
+  type: 'test'
+  ...
+# Subtest: reset workers retry sanitized SMTP failures and cannot mark a stale lease as delivered
+ok 32 - reset workers retry sanitized SMTP failures and cannot mark a stale lease as delivered
+  ---
+  duration_ms: 0.946332
+  type: 'test'
+  ...
+# Subtest: unknown worker purpose and invalid transport ownership cannot start persistence or SMTP
+ok 33 - unknown worker purpose and invalid transport ownership cannot start persistence or SMTP
+  ---
+  duration_ms: 0.860913
+  type: 'test'
+  ...
+# Subtest: shared-transport worker shutdown waits for its active batch and leaves SMTP ownership to its caller
+ok 34 - shared-transport worker shutdown waits for its active batch and leaves SMTP ownership to its caller
+  ---
+  duration_ms: 23.933585
+  type: 'test'
+  ...
+# Subtest: real Nodemailer verify deadline tears down an unfinished STARTTLS socket
+ok 35 - real Nodemailer verify deadline tears down an unfinished STARTTLS socket
+  ---
+  duration_ms: 291.397528
+  type: 'test'
+  ...
+# Subtest: explicit transport close immediately cancels a real verify during implicit TLS negotiation
+ok 36 - explicit transport close immediately cancels a real verify during implicit TLS negotiation
+  ---
+  duration_ms: 20.319703
+  type: 'test'
+  ...
+# Subtest: transport shutdown closes concurrent real SMTP sends waiting for final acceptance
+ok 37 - transport shutdown closes concurrent real SMTP sends waiting for final acceptance
+  ---
+  duration_ms: 48.900264
+  type: 'test'
+  ...
+# Subtest: real SMTP retains verified localhost SNI, supplied CA and encrypted authentication on both ports
+ok 38 - real SMTP retains verified localhost SNI, supplied CA and encrypted authentication on both ports
+  ---
+  duration_ms: 50.243403
+  type: 'test'
+  ...
+# Subtest: owning a socket cannot bypass certificate validation when the synthetic CA is absent
+ok 39 - owning a socket cannot bypass certificate validation when the synthetic CA is absent
+  ---
+  duration_ms: 15.607939
+  type: 'test'
+  ...
+# Subtest: a supplied trusted CA does not bypass verification of the original SMTP hostname
+ok 40 - a supplied trusted CA does not bypass verification of the original SMTP hostname
+  ---
+  duration_ms: 14.272919
+  type: 'test'
+  ...
+# Subtest: close during a pending DNS lookup cannot connect after the lookup returns late
+ok 41 - close during a pending DNS lookup cannot connect after the lookup returns late
+  ---
+  duration_ms: 29.705648
+  type: 'test'
+  ...
+# Subtest: readiness service shutdown closes its real isolated SMTP diagnostic before its wall deadline
+ok 42 - readiness service shutdown closes its real isolated SMTP diagnostic before its wall deadline
+  ---
+  duration_ms: 31.339692
+  type: 'test'
+  ...
+1..42
+# tests 42
+# suites 0
+# pass 42
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 648.491994

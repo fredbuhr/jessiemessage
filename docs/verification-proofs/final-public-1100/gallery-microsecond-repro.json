@@ -1,0 +1,44 @@
+{
+  "type": "isolated-exact-query-parameter-reproduction",
+  "node": "v24.19.0",
+  "productionModule": "server/media/store.mjs",
+  "noDatabaseAccess": true,
+  "noRemoteAccess": true,
+  "syntheticPivot": "2026-10-15 12:00:01.123456",
+  "actualSerializedBoundary": "2026-10-15 12:00:01.123000",
+  "before": {
+    "eligibleOlderRow": "2026-10-15 12:00:01.123300",
+    "shouldSatisfyOriginal": true,
+    "satisfiesActualSqlBoundary": false
+  },
+  "after": {
+    "currentPivotQualifiesAsNewerThanActualBoundary": true
+  },
+  "queries": [
+    {
+      "sql": "SELECT a.id, a.owner_id, a.storage_key, a.content_digest, a.width, a.height,\n  a.thumbnail_width, a.thumbnail_height, a.full_bytes, a.thumbnail_bytes, a.created_at, a.deleted_at, m.id AS delivered_message_id, m.sequence_no, m.sender_id,\n          m.created_at AS delivered_at FROM messages m JOIN message_media mm ON mm.conversation_id = m.conversation_id AND mm.message_id = m.id\n          JOIN media_assets a ON a.id = mm.media_id AND a.owner_id = m.sender_id WHERE m.conversation_id = ?\n          AND m.deleted_at IS NULL AND a.deleted_at IS NULL AND m.created_at <= ? AND a.created_at <= ?\n          AND (m.created_at < ? OR (m.created_at = ? AND m.id < ?))\n           \n          ORDER BY m.created_at DESC, m.id DESC LIMIT ?",
+      "args": [
+        "02020202020202020202020202020202",
+        "2026-10-23 18:00:00.000000",
+        "2026-10-23 18:00:00.000000",
+        "2026-10-15 12:00:01.123000",
+        "2026-10-15 12:00:01.123000",
+        "55555555555555555555555555555555",
+        2
+      ]
+    },
+    {
+      "sql": "SELECT a.id, a.owner_id, a.storage_key, a.content_digest, a.width, a.height,\n  a.thumbnail_width, a.thumbnail_height, a.full_bytes, a.thumbnail_bytes, a.created_at, a.deleted_at, m.id AS delivered_message_id, m.sequence_no, m.sender_id,\n          m.created_at AS delivered_at FROM messages m JOIN message_media mm ON mm.conversation_id = m.conversation_id AND mm.message_id = m.id\n          JOIN media_assets a ON a.id = mm.media_id AND a.owner_id = m.sender_id WHERE m.conversation_id = ?\n          AND m.deleted_at IS NULL AND a.deleted_at IS NULL AND m.created_at <= ? AND a.created_at <= ?\n          AND (m.created_at > ? OR (m.created_at = ? AND m.id > ?))\n           \n          ORDER BY m.created_at ASC, m.id ASC LIMIT ?",
+      "args": [
+        "02020202020202020202020202020202",
+        "2026-10-23 18:00:00.000000",
+        "2026-10-23 18:00:00.000000",
+        "2026-10-15 12:00:01.123000",
+        "2026-10-15 12:00:01.123000",
+        "55555555555555555555555555555555",
+        1
+      ]
+    }
+  ],
+  "limit": "Demonstrates query truncation under DATETIME(6) synthetic legacy timestamps; does not establish such timestamps in active hosted messages. Current app writers supply millisecond timestamps."
+}

@@ -1,0 +1,56 @@
+{
+  "run": 40006334125,
+  "jobs": [
+    {
+      "id": 120595074359,
+      "name": "MariaDB 11.4",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/job/120595074359",
+      "head_sha": "cd81f915a36e5fd39cba2fd9819d760588d47041",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-23T18:48:34Z",
+      "completed_at": "2026-10-23T18:56:24Z"
+    },
+    {
+      "id": 120595074841,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/job/120595074841",
+      "head_sha": "cd81f915a36e5fd39cba2fd9819d760588d47041",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-23T18:48:34Z",
+      "completed_at": "2026-10-23T18:50:40Z"
+    },
+    {
+      "id": 120595075005,
+      "name": "MariaDB 10.11",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/job/120595075005",
+      "head_sha": "cd81f915a36e5fd39cba2fd9819d760588d47041",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-23T18:48:34Z",
+      "completed_at": "2026-10-23T18:56:26Z"
+    },
+    {
+      "id": 120595075102,
+      "name": "verify",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/job/120595075102",
+      "head_sha": "cd81f915a36e5fd39cba2fd9819d760588d47041",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-23T18:48:34Z",
+      "completed_at": "2026-10-23T18:51:08Z"
+    },
+    {
+      "id": 120595075205,
+      "name": "Chrome keyboard and chat lifecycle",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40006334125/job/120595075205",
+      "head_sha": "cd81f915a36e5fd39cba2fd9819d760588d47041",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-23T18:48:34Z",
+      "completed_at": "2026-10-23T18:53:56Z"
+    }
+  ]
+}
+

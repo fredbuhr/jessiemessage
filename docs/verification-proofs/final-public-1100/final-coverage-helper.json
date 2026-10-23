@@ -1,0 +1,2762 @@
+{
+  "formatVersion": 1,
+  "type": "final-coverage-mechanical-business-helper",
+  "completedAtUtc": "2026-10-23T19:14:40.213971+00:00",
+  "scope": "Mechanical134-point identity/domain/evidence/history/preservation/status honesty review. No additional application audit, tests, remote or host actions.",
+  "inputFingerprints": [
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/checklist.json",
+      "sha256": "1c5788dbae6473a0f463b4cd9c7c7cc33a7c4c372473d47d90e6325201892d07"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/historical-findings-map.json",
+      "sha256": "4fd0e0d4f6ce60a34dd2ab710bb04c138ac38cf3da7135f6e94946cd067cef4a"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/coverage-second-pass.json",
+      "sha256": "52290cf2ea3714058c32db5b5cd8ff32be1494e22d80dc196991a2115c41379b"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/coverage-corrections.json",
+      "sha256": "409e0dfa58a2a141cedafacf4d28a75a1c1222fd308c889acd289f58f81a5d9e"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/candidate-preservation.json",
+      "sha256": "9b714e472b0e4952e1fdbccbe43bc1db9534acce820546c3402670ff406c1c67"
+    }
+  ],
+  "coverage": {
+    "items": 134,
+    "uniqueIds": 134,
+    "duplicateIds": [],
+    "missingExpectedIds": [],
+    "unexpectedIds": [],
+    "expectedPrefixCounts": {
+      "REL": 10,
+      "AUTH": 12,
+      "CHAT": 12,
+      "MED": 14,
+      "BUS": 15,
+      "PWA": 6,
+      "UI": 14,
+      "SEC": 14,
+      "OPS": 17,
+      "LIVE": 12,
+      "GATE": 8
+    },
+    "allAddressed": true,
+    "domainReports": {
+      "security.json": {
+        "count": 26,
+        "unique": 26
+      },
+      "business.json": {
+        "count": 41,
+        "unique": 41
+      },
+      "frontend.json": {
+        "count": 20,
+        "unique": 20
+      },
+      "operations.json": {
+        "count": 17,
+        "unique": 17
+      }
+    },
+    "domainUnion": 104,
+    "domainOverlap": [],
+    "rootItems": 30,
+    "rootDomainOverlap": [],
+    "unmappedItems": [],
+    "authSubsetInSecurity": true
+  },
+  "historicalFindings": {
+    "expected": 22,
+    "recorded": 22,
+    "missing": [],
+    "unexpected": [],
+    "acceptedResidualsKeptDistinct": [
+      "A10",
+      "A11",
+      "A12"
+    ],
+    "notReclassifiedAsAllFixed": true
+  },
+  "newFindings": {
+    "count": 6,
+    "ids": [
+      "F-01",
+      "F-02",
+      "F-03",
+      "F-04",
+      "F-05",
+      "F-06"
+    ],
+    "expectedSixIdsMatch": true,
+    "severities": {
+      "F-01": "P2",
+      "F-02": "P3",
+      "F-03": "P3_conditional",
+      "F-04": "P3",
+      "F-05": "P1",
+      "F-06": "P3"
+    },
+    "deploymentPendingInCurrentSnapshot": true
+  },
+  "currentDirectRelativeFileReferences": {
+    "count": 156,
+    "allResolve": true,
+    "missing": [],
+    "references": [
+      {
+        "item": "REL-01",
+        "pointer": "/items/0/evidence/0/path",
+        "reference": "../jm1100/version-audit.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/jm1100/version-audit.json",
+        "exists": true
+      },
+      {
+        "item": "REL-02",
+        "pointer": "/items/1/evidence/0/path",
+        "reference": "../jm1100/version-audit.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/jm1100/version-audit.json",
+        "exists": true
+      },
+      {
+        "item": "REL-03",
+        "pointer": "/items/2/evidence/0/path",
+        "reference": "../jm1100/publication-native.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/jm1100/publication-native.json",
+        "exists": true
+      },
+      {
+        "item": "REL-04",
+        "pointer": "/items/3/evidence/0/path",
+        "reference": "../jm1100/main-native.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/jm1100/main-native.json",
+        "exists": true
+      },
+      {
+        "item": "REL-05",
+        "pointer": "/items/4/evidence/0/path",
+        "reference": "../jm1100/version-audit.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/jm1100/version-audit.json",
+        "exists": true
+      },
+      {
+        "item": "REL-05",
+        "pointer": "/items/4/evidence/1/report",
+        "reference": "dependencies.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/dependencies.json",
+        "exists": true
+      },
+      {
+        "item": "REL-06",
+        "pointer": "/items/5/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "REL-07",
+        "pointer": "/items/6/evidence/0/path",
+        "reference": "../jm1100-hosted-metadata.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/jm1100-hosted-metadata.json",
+        "exists": true
+      },
+      {
+        "item": "REL-08",
+        "pointer": "/items/7/evidence/0/path",
+        "reference": "../jm1100-hosted-metadata.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/jm1100-hosted-metadata.json",
+        "exists": true
+      },
+      {
+        "item": "REL-08",
+        "pointer": "/items/7/evidence/1/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "REL-09",
+        "pointer": "/items/8/evidence/0/report",
+        "reference": "public-http.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/public-http.json",
+        "exists": true
+      },
+      {
+        "item": "REL-10",
+        "pointer": "/items/9/evidence/0/path",
+        "reference": "../../SECURITY.md",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/SECURITY.md",
+        "exists": true
+      },
+      {
+        "item": "REL-10",
+        "pointer": "/items/9/evidence/1/path",
+        "reference": "../../REPRISE.md",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/REPRISE.md",
+        "exists": true
+      },
+      {
+        "item": "REL-10",
+        "pointer": "/items/9/evidence/2/path",
+        "reference": "../../PLAN-IMPLEMENTATION.md",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/PLAN-IMPLEMENTATION.md",
+        "exists": true
+      },
+      {
+        "item": "AUTH-01",
+        "pointer": "/items/10/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "AUTH-02",
+        "pointer": "/items/11/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "AUTH-03",
+        "pointer": "/items/12/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "AUTH-04",
+        "pointer": "/items/13/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "AUTH-05",
+        "pointer": "/items/14/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "AUTH-06",
+        "pointer": "/items/15/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "AUTH-07",
+        "pointer": "/items/16/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "AUTH-08",
+        "pointer": "/items/17/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "AUTH-09",
+        "pointer": "/items/18/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "AUTH-10",
+        "pointer": "/items/19/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "AUTH-11",
+        "pointer": "/items/20/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "AUTH-12",
+        "pointer": "/items/21/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "SEC-01",
+        "pointer": "/items/22/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "SEC-02",
+        "pointer": "/items/23/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "SEC-03",
+        "pointer": "/items/24/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "SEC-04",
+        "pointer": "/items/25/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "SEC-05",
+        "pointer": "/items/26/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "SEC-06",
+        "pointer": "/items/27/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "SEC-07",
+        "pointer": "/items/28/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "SEC-08",
+        "pointer": "/items/29/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "SEC-09",
+        "pointer": "/items/30/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "SEC-10",
+        "pointer": "/items/31/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "SEC-11",
+        "pointer": "/items/32/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "SEC-12",
+        "pointer": "/items/33/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "SEC-13",
+        "pointer": "/items/34/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "SEC-14",
+        "pointer": "/items/35/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "CHAT-01",
+        "pointer": "/items/36/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "CHAT-02",
+        "pointer": "/items/37/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "CHAT-03",
+        "pointer": "/items/38/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "CHAT-04",
+        "pointer": "/items/39/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "CHAT-05",
+        "pointer": "/items/40/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "CHAT-06",
+        "pointer": "/items/41/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "CHAT-07",
+        "pointer": "/items/42/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "CHAT-08",
+        "pointer": "/items/43/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "CHAT-09",
+        "pointer": "/items/44/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "CHAT-10",
+        "pointer": "/items/45/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "CHAT-11",
+        "pointer": "/items/46/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "CHAT-12",
+        "pointer": "/items/47/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "MED-01",
+        "pointer": "/items/48/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "MED-02",
+        "pointer": "/items/49/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "MED-03",
+        "pointer": "/items/50/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "MED-04",
+        "pointer": "/items/51/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "MED-05",
+        "pointer": "/items/52/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "MED-06",
+        "pointer": "/items/53/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "MED-07",
+        "pointer": "/items/54/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "MED-08",
+        "pointer": "/items/55/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "MED-09",
+        "pointer": "/items/56/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "MED-09",
+        "pointer": "/items/56/evidence/1/report",
+        "reference": "gallery-diagnosis.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/gallery-diagnosis.json",
+        "exists": true
+      },
+      {
+        "item": "MED-10",
+        "pointer": "/items/57/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "MED-11",
+        "pointer": "/items/58/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "MED-12",
+        "pointer": "/items/59/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "MED-13",
+        "pointer": "/items/60/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "MED-14",
+        "pointer": "/items/61/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "BUS-01",
+        "pointer": "/items/62/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "BUS-01",
+        "pointer": "/items/62/evidence/1/report",
+        "reference": "gallery-diagnosis.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/gallery-diagnosis.json",
+        "exists": true
+      },
+      {
+        "item": "BUS-02",
+        "pointer": "/items/63/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "BUS-03",
+        "pointer": "/items/64/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "BUS-04",
+        "pointer": "/items/65/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "BUS-05",
+        "pointer": "/items/66/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "BUS-06",
+        "pointer": "/items/67/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "BUS-07",
+        "pointer": "/items/68/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "BUS-08",
+        "pointer": "/items/69/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "BUS-09",
+        "pointer": "/items/70/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "BUS-10",
+        "pointer": "/items/71/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "BUS-11",
+        "pointer": "/items/72/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "BUS-12",
+        "pointer": "/items/73/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "BUS-13",
+        "pointer": "/items/74/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "BUS-14",
+        "pointer": "/items/75/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "BUS-15",
+        "pointer": "/items/76/evidence/0/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "UI-01",
+        "pointer": "/items/77/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "UI-02",
+        "pointer": "/items/78/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "UI-03",
+        "pointer": "/items/79/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "UI-04",
+        "pointer": "/items/80/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "UI-05",
+        "pointer": "/items/81/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "UI-06",
+        "pointer": "/items/82/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "UI-07",
+        "pointer": "/items/83/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "UI-08",
+        "pointer": "/items/84/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "UI-09",
+        "pointer": "/items/85/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "UI-09",
+        "pointer": "/items/85/evidence/1/report",
+        "reference": "gallery-diagnosis.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/gallery-diagnosis.json",
+        "exists": true
+      },
+      {
+        "item": "UI-10",
+        "pointer": "/items/86/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "UI-10",
+        "pointer": "/items/86/evidence/1/report",
+        "reference": "gallery-diagnosis.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/gallery-diagnosis.json",
+        "exists": true
+      },
+      {
+        "item": "UI-11",
+        "pointer": "/items/87/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "UI-12",
+        "pointer": "/items/88/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "UI-13",
+        "pointer": "/items/89/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "UI-14",
+        "pointer": "/items/90/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "PWA-01",
+        "pointer": "/items/91/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "PWA-02",
+        "pointer": "/items/92/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "PWA-03",
+        "pointer": "/items/93/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "PWA-04",
+        "pointer": "/items/94/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "PWA-05",
+        "pointer": "/items/95/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "PWA-06",
+        "pointer": "/items/96/evidence/0/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-01",
+        "pointer": "/items/97/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-02",
+        "pointer": "/items/98/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-03",
+        "pointer": "/items/99/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-04",
+        "pointer": "/items/100/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-05",
+        "pointer": "/items/101/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-06",
+        "pointer": "/items/102/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-07",
+        "pointer": "/items/103/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-08",
+        "pointer": "/items/104/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-09",
+        "pointer": "/items/105/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-10",
+        "pointer": "/items/106/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-11",
+        "pointer": "/items/107/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-12",
+        "pointer": "/items/108/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-13",
+        "pointer": "/items/109/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-13",
+        "pointer": "/items/109/evidence/1/report",
+        "reference": "gallery-diagnosis.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/gallery-diagnosis.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-14",
+        "pointer": "/items/110/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-15",
+        "pointer": "/items/111/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-16",
+        "pointer": "/items/112/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "OPS-17",
+        "pointer": "/items/113/evidence/0/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "LIVE-01",
+        "pointer": "/items/114/evidence/0/report",
+        "reference": "public-http.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/public-http.json",
+        "exists": true
+      },
+      {
+        "item": "LIVE-02",
+        "pointer": "/items/115/evidence/0/report",
+        "reference": "public-http.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/public-http.json",
+        "exists": true
+      },
+      {
+        "item": "LIVE-03",
+        "pointer": "/items/116/evidence/0/report",
+        "reference": "public-http.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/public-http.json",
+        "exists": true
+      },
+      {
+        "item": "LIVE-04",
+        "pointer": "/items/117/evidence/0/report",
+        "reference": "public-http.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/public-http.json",
+        "exists": true
+      },
+      {
+        "item": "LIVE-05",
+        "pointer": "/items/118/evidence/0/report",
+        "reference": "public-http.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/public-http.json",
+        "exists": true
+      },
+      {
+        "item": "LIVE-06",
+        "pointer": "/items/119/evidence/0/report",
+        "reference": "public-http.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/public-http.json",
+        "exists": true
+      },
+      {
+        "item": "LIVE-07",
+        "pointer": "/items/120/evidence/0/report",
+        "reference": "public-http.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/public-http.json",
+        "exists": true
+      },
+      {
+        "item": "LIVE-07",
+        "pointer": "/items/120/evidence/1/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "LIVE-08",
+        "pointer": "/items/121/evidence/0/report",
+        "reference": "public-http.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/public-http.json",
+        "exists": true
+      },
+      {
+        "item": "LIVE-08",
+        "pointer": "/items/121/evidence/1/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "LIVE-09",
+        "pointer": "/items/122/evidence/0/report",
+        "reference": "public-http.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/public-http.json",
+        "exists": true
+      },
+      {
+        "item": "LIVE-09",
+        "pointer": "/items/122/evidence/1/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "LIVE-10",
+        "pointer": "/items/123/evidence/0/report",
+        "reference": "public-http.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/public-http.json",
+        "exists": true
+      },
+      {
+        "item": "LIVE-11",
+        "pointer": "/items/124/evidence/0/report",
+        "reference": "public-http.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/public-http.json",
+        "exists": true
+      },
+      {
+        "item": "LIVE-12",
+        "pointer": "/items/125/evidence/0/report",
+        "reference": "public-http.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/public-http.json",
+        "exists": true
+      },
+      {
+        "item": "GATE-01",
+        "pointer": "/items/126/evidence/0/path",
+        "reference": "source-inventory.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/source-inventory.json",
+        "exists": true
+      },
+      {
+        "item": "GATE-02",
+        "pointer": "/items/127/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "GATE-02",
+        "pointer": "/items/127/evidence/1/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "GATE-02",
+        "pointer": "/items/127/evidence/2/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "GATE-02",
+        "pointer": "/items/127/evidence/3/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "GATE-03",
+        "pointer": "/items/128/evidence/0/path",
+        "reference": "historical-findings-map.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/historical-findings-map.json",
+        "exists": true
+      },
+      {
+        "item": "GATE-03",
+        "pointer": "/items/128/evidence/1/path",
+        "reference": "../../AUDIT-FINAL-20261022.md",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/AUDIT-FINAL-20261022.md",
+        "exists": true
+      },
+      {
+        "item": "GATE-03",
+        "pointer": "/items/128/evidence/2/path",
+        "reference": "../../AUDIT-2-20261022.md",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/AUDIT-2-20261022.md",
+        "exists": true
+      },
+      {
+        "item": "GATE-04",
+        "pointer": "/items/129/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "GATE-04",
+        "pointer": "/items/129/evidence/1/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "GATE-04",
+        "pointer": "/items/129/evidence/2/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "GATE-06",
+        "pointer": "/items/131/evidence/0/report",
+        "reference": "security.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+        "exists": true
+      },
+      {
+        "item": "GATE-06",
+        "pointer": "/items/131/evidence/1/report",
+        "reference": "business.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+        "exists": true
+      },
+      {
+        "item": "GATE-06",
+        "pointer": "/items/131/evidence/2/report",
+        "reference": "frontend.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+        "exists": true
+      },
+      {
+        "item": "GATE-06",
+        "pointer": "/items/131/evidence/3/report",
+        "reference": "operations.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+        "exists": true
+      },
+      {
+        "item": "GATE-06",
+        "pointer": "/items/131/evidence/4/report",
+        "reference": "public-http.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/public-http.json",
+        "exists": true
+      },
+      {
+        "item": "GATE-07",
+        "pointer": "/items/132/evidence/0/path",
+        "reference": "coverage-second-pass.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/coverage-second-pass.json",
+        "exists": true
+      },
+      {
+        "item": "GATE-07",
+        "pointer": "/items/132/evidence/1/path",
+        "reference": "coverage-corrections.json",
+        "resolvedPath": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/coverage-corrections.json",
+        "exists": true
+      }
+    ]
+  },
+  "reportItemReferences": {
+    "count": 106,
+    "allResolve": true,
+    "missing": []
+  },
+  "embeddedReferenceSurvey": {
+    "pathlikeInstances": 780,
+    "uniqueNames": 296,
+    "resolvedInReportOrRepositoryBases": 657,
+    "resolvedOnlyViaExplicitExistingLocalContexts": 121,
+    "trulyUnresolvedAtSnapshot": [
+      {
+        "item": "OPS-15",
+        "jsonPointer": "/items/111/domainReview/evidence/6/path",
+        "reference": "docs/MONITORING.md",
+        "currentBaseResolution": null,
+        "localContextResolution": null
+      },
+      {
+        "item": "OPS-16",
+        "jsonPointer": "/items/112/domainReview/evidence/5/path",
+        "reference": "docs/MONITORING.md",
+        "currentBaseResolution": null,
+        "localContextResolution": null
+      }
+    ],
+    "localOnlyFilenameCount": 17,
+    "localOnlyReferences": [
+      {
+        "filename": "auth-cookie-regression-after.log",
+        "classification": "relative_artifact_present_only_in_audit_scratch",
+        "count": 1,
+        "items": [
+          "SEC-04"
+        ],
+        "references": [
+          {
+            "item": "SEC-04",
+            "jsonPointer": "/items/25/domainReview/evidence/5",
+            "reference": "auth-cookie-regression-after.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/final-public-audit1100/auth-cookie-regression-after.log"
+          }
+        ],
+        "sourceContext": {
+          "root": "/workspace/scratch/bb431be72395/final-public-audit1100",
+          "localFileExists": true,
+          "repositoryRelativeFileExists": false,
+          "durableResolution": "No repository archive for this exact standalone relative filename was found at snapshot. Archive it or declare the audit-scratch/log-root base explicitly before claiming a self-contained repository evidence bundle."
+        }
+      },
+      {
+        "filename": "auth-cookie-regression-before.log",
+        "classification": "relative_artifact_present_only_in_audit_scratch",
+        "count": 1,
+        "items": [
+          "SEC-04"
+        ],
+        "references": [
+          {
+            "item": "SEC-04",
+            "jsonPointer": "/items/25/domainReview/evidence/4",
+            "reference": "auth-cookie-regression-before.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/final-public-audit1100/auth-cookie-regression-before.log"
+          }
+        ],
+        "sourceContext": {
+          "root": "/workspace/scratch/bb431be72395/final-public-audit1100",
+          "localFileExists": true,
+          "repositoryRelativeFileExists": false,
+          "durableResolution": "No repository archive for this exact standalone relative filename was found at snapshot. Archive it or declare the audit-scratch/log-root base explicitly before claiming a self-contained repository evidence bundle."
+        }
+      },
+      {
+        "filename": "browser.log",
+        "classification": "baseline_native_log_identifier_with_explicit_report_context",
+        "count": 55,
+        "items": [
+          "BUS-11",
+          "BUS-12",
+          "BUS-13",
+          "BUS-14",
+          "BUS-15",
+          "CHAT-01",
+          "CHAT-03",
+          "CHAT-04",
+          "CHAT-05",
+          "CHAT-06",
+          "CHAT-07",
+          "CHAT-08",
+          "CHAT-09",
+          "CHAT-10",
+          "CHAT-11",
+          "CHAT-12",
+          "MED-01",
+          "MED-02",
+          "MED-03",
+          "MED-04",
+          "MED-05",
+          "MED-06",
+          "MED-07",
+          "MED-08",
+          "MED-09",
+          "MED-11",
+          "MED-12",
+          "MED-13",
+          "MED-14"
+        ],
+        "references": [
+          {
+            "item": "CHAT-01",
+            "jsonPointer": "/items/36/domainReview/evidence/1/nativeSuccesses/0/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-03",
+            "jsonPointer": "/items/38/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-03",
+            "jsonPointer": "/items/38/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-03",
+            "jsonPointer": "/items/38/domainReview/evidence/1/nativeSuccesses/0/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-04",
+            "jsonPointer": "/items/39/domainReview/evidence/1/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-04",
+            "jsonPointer": "/items/39/domainReview/evidence/2/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-05",
+            "jsonPointer": "/items/40/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-06",
+            "jsonPointer": "/items/41/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-06",
+            "jsonPointer": "/items/41/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-07",
+            "jsonPointer": "/items/42/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-07",
+            "jsonPointer": "/items/42/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-07",
+            "jsonPointer": "/items/42/domainReview/evidence/1/nativeSuccesses/0/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-08",
+            "jsonPointer": "/items/43/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-08",
+            "jsonPointer": "/items/43/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-08",
+            "jsonPointer": "/items/43/domainReview/evidence/1/nativeSuccesses/0/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-08",
+            "jsonPointer": "/items/43/domainReview/evidence/1/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-08",
+            "jsonPointer": "/items/43/domainReview/evidence/1/nativeSuccesses/2/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-08",
+            "jsonPointer": "/items/43/domainReview/evidence/1/nativeSuccesses/3/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-09",
+            "jsonPointer": "/items/44/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-09",
+            "jsonPointer": "/items/44/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-09",
+            "jsonPointer": "/items/44/domainReview/evidence/0/nativeSuccesses/2/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-09",
+            "jsonPointer": "/items/44/domainReview/evidence/0/nativeSuccesses/3/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-09",
+            "jsonPointer": "/items/44/domainReview/evidence/1/nativeSuccesses/0/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-09",
+            "jsonPointer": "/items/44/domainReview/evidence/1/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-10",
+            "jsonPointer": "/items/45/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-11",
+            "jsonPointer": "/items/46/domainReview/evidence/1/nativeSuccesses/2/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "CHAT-12",
+            "jsonPointer": "/items/47/domainReview/evidence/0/nativeSuccesses/2/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-01",
+            "jsonPointer": "/items/48/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-02",
+            "jsonPointer": "/items/49/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-03",
+            "jsonPointer": "/items/50/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-03",
+            "jsonPointer": "/items/50/domainReview/evidence/1/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-04",
+            "jsonPointer": "/items/51/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-05",
+            "jsonPointer": "/items/52/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-06",
+            "jsonPointer": "/items/53/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-07",
+            "jsonPointer": "/items/54/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-07",
+            "jsonPointer": "/items/54/domainReview/evidence/1/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-08",
+            "jsonPointer": "/items/55/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-09",
+            "jsonPointer": "/items/56/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-09",
+            "jsonPointer": "/items/56/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-11",
+            "jsonPointer": "/items/58/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-11",
+            "jsonPointer": "/items/58/domainReview/evidence/1/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-11",
+            "jsonPointer": "/items/58/domainReview/evidence/2/nativeSuccesses/2/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-12",
+            "jsonPointer": "/items/59/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-12",
+            "jsonPointer": "/items/59/domainReview/evidence/1/nativeSuccesses/2/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-13",
+            "jsonPointer": "/items/60/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-13",
+            "jsonPointer": "/items/60/domainReview/evidence/1/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "MED-14",
+            "jsonPointer": "/items/61/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "BUS-11",
+            "jsonPointer": "/items/72/domainReview/evidence/0/nativeSuccesses/2/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "BUS-12",
+            "jsonPointer": "/items/73/domainReview/evidence/0/nativeSuccesses/2/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "BUS-13",
+            "jsonPointer": "/items/74/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "BUS-14",
+            "jsonPointer": "/items/75/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "BUS-15",
+            "jsonPointer": "/items/76/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "BUS-15",
+            "jsonPointer": "/items/76/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "BUS-15",
+            "jsonPointer": "/items/76/domainReview/evidence/0/nativeSuccesses/2/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          },
+          {
+            "item": "BUS-15",
+            "jsonPointer": "/items/76/domainReview/evidence/0/nativeSuccesses/3/log",
+            "reference": "browser.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log"
+          }
+        ],
+        "sourceContext": {
+          "report": "business.json",
+          "keys": [
+            "nativeEvidence.run",
+            "nativeEvidence.logs[].file/sha256/bytes/totals"
+          ],
+          "run": 39991790308,
+          "localManifest": "/workspace/scratch/bb431be72395/qualify1100/main/summary.json",
+          "root": "/workspace/scratch/bb431be72395/qualify1100/main",
+          "limit": "Filenames are identifiers relative to preserved baseline native log root; they are not evidence qualifying corrected1.10.1."
+        }
+      },
+      {
+        "filename": "gallery-after-fix.log",
+        "classification": "relative_artifact_present_only_in_audit_scratch",
+        "count": 1,
+        "items": [
+          "MED-09"
+        ],
+        "references": [
+          {
+            "item": "MED-09",
+            "jsonPointer": "/items/56/domainReview/newEvidence/2",
+            "reference": "gallery-after-fix.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/final-public-audit1100/gallery-after-fix.log"
+          }
+        ],
+        "sourceContext": {
+          "root": "/workspace/scratch/bb431be72395/final-public-audit1100",
+          "localFileExists": true,
+          "repositoryRelativeFileExists": false,
+          "durableResolution": "No repository archive for this exact standalone relative filename was found at snapshot. Archive it or declare the audit-scratch/log-root base explicitly before claiming a self-contained repository evidence bundle."
+        }
+      },
+      {
+        "filename": "gallery-before-fix.log",
+        "classification": "relative_artifact_present_only_in_audit_scratch",
+        "count": 1,
+        "items": [
+          "MED-09"
+        ],
+        "references": [
+          {
+            "item": "MED-09",
+            "jsonPointer": "/items/56/domainReview/newEvidence/1",
+            "reference": "gallery-before-fix.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/final-public-audit1100/gallery-before-fix.log"
+          }
+        ],
+        "sourceContext": {
+          "root": "/workspace/scratch/bb431be72395/final-public-audit1100",
+          "localFileExists": true,
+          "repositoryRelativeFileExists": false,
+          "durableResolution": "No repository archive for this exact standalone relative filename was found at snapshot. Archive it or declare the audit-scratch/log-root base explicitly before claiming a self-contained repository evidence bundle."
+        }
+      },
+      {
+        "filename": "gallery-http-after-fix.log",
+        "classification": "relative_artifact_present_only_in_audit_scratch",
+        "count": 1,
+        "items": [
+          "MED-09"
+        ],
+        "references": [
+          {
+            "item": "MED-09",
+            "jsonPointer": "/items/56/domainReview/newEvidence/4",
+            "reference": "gallery-http-after-fix.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/final-public-audit1100/gallery-http-after-fix.log"
+          }
+        ],
+        "sourceContext": {
+          "root": "/workspace/scratch/bb431be72395/final-public-audit1100",
+          "localFileExists": true,
+          "repositoryRelativeFileExists": false,
+          "durableResolution": "No repository archive for this exact standalone relative filename was found at snapshot. Archive it or declare the audit-scratch/log-root base explicitly before claiming a self-contained repository evidence bundle."
+        }
+      },
+      {
+        "filename": "gallery-http-before-fix.log",
+        "classification": "relative_artifact_present_only_in_audit_scratch",
+        "count": 1,
+        "items": [
+          "MED-09"
+        ],
+        "references": [
+          {
+            "item": "MED-09",
+            "jsonPointer": "/items/56/domainReview/newEvidence/3",
+            "reference": "gallery-http-before-fix.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/final-public-audit1100/gallery-http-before-fix.log"
+          }
+        ],
+        "sourceContext": {
+          "root": "/workspace/scratch/bb431be72395/final-public-audit1100",
+          "localFileExists": true,
+          "repositoryRelativeFileExists": false,
+          "durableResolution": "No repository archive for this exact standalone relative filename was found at snapshot. Archive it or declare the audit-scratch/log-root base explicitly before claiming a self-contained repository evidence bundle."
+        }
+      },
+      {
+        "filename": "gallery-microsecond-repro.json",
+        "classification": "relative_artifact_present_only_in_audit_scratch",
+        "count": 1,
+        "items": [
+          "MED-09"
+        ],
+        "references": [
+          {
+            "item": "MED-09",
+            "jsonPointer": "/items/56/domainReview/newEvidence/0",
+            "reference": "gallery-microsecond-repro.json",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/final-public-audit1100/gallery-microsecond-repro.json"
+          }
+        ],
+        "sourceContext": {
+          "root": "/workspace/scratch/bb431be72395/final-public-audit1100",
+          "localFileExists": true,
+          "repositoryRelativeFileExists": false,
+          "durableResolution": "No repository archive for this exact standalone relative filename was found at snapshot. Archive it or declare the audit-scratch/log-root base explicitly before claiming a self-contained repository evidence bundle."
+        }
+      },
+      {
+        "filename": "https.log",
+        "classification": "baseline_native_log_identifier_with_explicit_report_context",
+        "count": 27,
+        "items": [
+          "BUS-10",
+          "BUS-11",
+          "BUS-12",
+          "BUS-13",
+          "BUS-14",
+          "CHAT-01",
+          "CHAT-02",
+          "CHAT-03",
+          "CHAT-04",
+          "CHAT-05",
+          "CHAT-07",
+          "CHAT-10",
+          "CHAT-11",
+          "CHAT-12",
+          "MED-03",
+          "MED-04",
+          "MED-05",
+          "MED-06",
+          "MED-07",
+          "MED-08",
+          "MED-11",
+          "MED-13",
+          "MED-14"
+        ],
+        "references": [
+          {
+            "item": "CHAT-01",
+            "jsonPointer": "/items/36/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "CHAT-02",
+            "jsonPointer": "/items/37/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "CHAT-03",
+            "jsonPointer": "/items/38/domainReview/evidence/1/nativeSuccesses/1/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "CHAT-04",
+            "jsonPointer": "/items/39/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "CHAT-04",
+            "jsonPointer": "/items/39/domainReview/evidence/2/nativeSuccesses/0/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "CHAT-05",
+            "jsonPointer": "/items/40/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "CHAT-07",
+            "jsonPointer": "/items/42/domainReview/evidence/1/nativeSuccesses/1/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "CHAT-10",
+            "jsonPointer": "/items/45/domainReview/evidence/0/nativeSuccesses/2/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "CHAT-11",
+            "jsonPointer": "/items/46/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "CHAT-12",
+            "jsonPointer": "/items/47/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "CHAT-12",
+            "jsonPointer": "/items/47/domainReview/evidence/1/nativeSuccesses/0/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "MED-03",
+            "jsonPointer": "/items/50/domainReview/evidence/1/nativeSuccesses/0/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "MED-04",
+            "jsonPointer": "/items/51/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "MED-05",
+            "jsonPointer": "/items/52/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "MED-06",
+            "jsonPointer": "/items/53/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "MED-07",
+            "jsonPointer": "/items/54/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "MED-07",
+            "jsonPointer": "/items/54/domainReview/evidence/1/nativeSuccesses/0/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "MED-08",
+            "jsonPointer": "/items/55/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "MED-11",
+            "jsonPointer": "/items/58/domainReview/evidence/1/nativeSuccesses/0/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "MED-13",
+            "jsonPointer": "/items/60/domainReview/evidence/1/nativeSuccesses/0/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "MED-13",
+            "jsonPointer": "/items/60/domainReview/evidence/2/nativeSuccesses/0/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "MED-14",
+            "jsonPointer": "/items/61/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "BUS-10",
+            "jsonPointer": "/items/71/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "BUS-11",
+            "jsonPointer": "/items/72/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "BUS-12",
+            "jsonPointer": "/items/73/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "BUS-13",
+            "jsonPointer": "/items/74/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          },
+          {
+            "item": "BUS-14",
+            "jsonPointer": "/items/75/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "https.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/https.log"
+          }
+        ],
+        "sourceContext": {
+          "report": "business.json",
+          "keys": [
+            "nativeEvidence.run",
+            "nativeEvidence.logs[].file/sha256/bytes/totals"
+          ],
+          "run": 39991790308,
+          "localManifest": "/workspace/scratch/bb431be72395/qualify1100/main/summary.json",
+          "root": "/workspace/scratch/bb431be72395/qualify1100/main",
+          "limit": "Filenames are identifiers relative to preserved baseline native log root; they are not evidence qualifying corrected1.10.1."
+        }
+      },
+      {
+        "filename": "mariadb1011.log",
+        "classification": "baseline_native_log_identifier_with_explicit_report_context",
+        "count": 22,
+        "items": [
+          "BUS-10",
+          "BUS-11",
+          "BUS-12",
+          "CHAT-01",
+          "CHAT-02",
+          "CHAT-04",
+          "CHAT-10",
+          "CHAT-11",
+          "CHAT-12",
+          "MED-01",
+          "MED-02",
+          "MED-03",
+          "MED-10",
+          "MED-11",
+          "MED-12",
+          "MED-13"
+        ],
+        "references": [
+          {
+            "item": "CHAT-01",
+            "jsonPointer": "/items/36/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "CHAT-02",
+            "jsonPointer": "/items/37/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "CHAT-04",
+            "jsonPointer": "/items/39/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "CHAT-04",
+            "jsonPointer": "/items/39/domainReview/evidence/1/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "CHAT-10",
+            "jsonPointer": "/items/45/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "CHAT-11",
+            "jsonPointer": "/items/46/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "CHAT-11",
+            "jsonPointer": "/items/46/domainReview/evidence/1/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "CHAT-12",
+            "jsonPointer": "/items/47/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "CHAT-12",
+            "jsonPointer": "/items/47/domainReview/evidence/1/nativeSuccesses/1/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "MED-01",
+            "jsonPointer": "/items/48/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "MED-02",
+            "jsonPointer": "/items/49/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "MED-03",
+            "jsonPointer": "/items/50/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "MED-10",
+            "jsonPointer": "/items/57/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "MED-11",
+            "jsonPointer": "/items/58/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "MED-11",
+            "jsonPointer": "/items/58/domainReview/evidence/2/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "MED-12",
+            "jsonPointer": "/items/59/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "MED-12",
+            "jsonPointer": "/items/59/domainReview/evidence/1/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "MED-13",
+            "jsonPointer": "/items/60/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "MED-13",
+            "jsonPointer": "/items/60/domainReview/evidence/2/nativeSuccesses/1/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "BUS-10",
+            "jsonPointer": "/items/71/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "BUS-11",
+            "jsonPointer": "/items/72/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          },
+          {
+            "item": "BUS-12",
+            "jsonPointer": "/items/73/domainReview/evidence/0/nativeSuccesses/0/log",
+            "reference": "mariadb1011.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log"
+          }
+        ],
+        "sourceContext": {
+          "report": "business.json",
+          "keys": [
+            "nativeEvidence.run",
+            "nativeEvidence.logs[].file/sha256/bytes/totals"
+          ],
+          "run": 39991790308,
+          "localManifest": "/workspace/scratch/bb431be72395/qualify1100/main/summary.json",
+          "root": "/workspace/scratch/bb431be72395/qualify1100/main",
+          "limit": "Filenames are identifiers relative to preserved baseline native log root; they are not evidence qualifying corrected1.10.1."
+        }
+      },
+      {
+        "filename": "mariadb114.log",
+        "classification": "baseline_native_log_identifier_with_explicit_report_context",
+        "count": 4,
+        "items": [
+          "CHAT-11",
+          "MED-10",
+          "MED-11",
+          "MED-12"
+        ],
+        "references": [
+          {
+            "item": "CHAT-11",
+            "jsonPointer": "/items/46/domainReview/evidence/1/nativeSuccesses/1/log",
+            "reference": "mariadb114.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log"
+          },
+          {
+            "item": "MED-10",
+            "jsonPointer": "/items/57/domainReview/evidence/0/nativeSuccesses/1/log",
+            "reference": "mariadb114.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log"
+          },
+          {
+            "item": "MED-11",
+            "jsonPointer": "/items/58/domainReview/evidence/2/nativeSuccesses/1/log",
+            "reference": "mariadb114.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log"
+          },
+          {
+            "item": "MED-12",
+            "jsonPointer": "/items/59/domainReview/evidence/1/nativeSuccesses/1/log",
+            "reference": "mariadb114.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log"
+          }
+        ],
+        "sourceContext": {
+          "report": "business.json",
+          "keys": [
+            "nativeEvidence.run",
+            "nativeEvidence.logs[].file/sha256/bytes/totals"
+          ],
+          "run": 39991790308,
+          "localManifest": "/workspace/scratch/bb431be72395/qualify1100/main/summary.json",
+          "root": "/workspace/scratch/bb431be72395/qualify1100/main",
+          "limit": "Filenames are identifiers relative to preserved baseline native log root; they are not evidence qualifying corrected1.10.1."
+        }
+      },
+      {
+        "filename": "nodemailer-10.1.4-targeted.tap",
+        "classification": "relative_artifact_present_only_in_audit_scratch",
+        "count": 1,
+        "items": [
+          "SEC-11"
+        ],
+        "references": [
+          {
+            "item": "SEC-11",
+            "jsonPointer": "/items/32/domainReview/evidence/5",
+            "reference": "nodemailer-10.1.4-targeted.tap",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/final-public-audit1100/nodemailer-10.1.4-targeted.tap"
+          }
+        ],
+        "sourceContext": {
+          "root": "/workspace/scratch/bb431be72395/final-public-audit1100",
+          "localFileExists": true,
+          "repositoryRelativeFileExists": false,
+          "durableResolution": "No repository archive for this exact standalone relative filename was found at snapshot. Archive it or declare the audit-scratch/log-root base explicitly before claiming a self-contained repository evidence bundle."
+        }
+      },
+      {
+        "filename": "nodemailer-poc-validation.json",
+        "classification": "relative_artifact_present_only_in_audit_scratch",
+        "count": 1,
+        "items": [
+          "SEC-11"
+        ],
+        "references": [
+          {
+            "item": "SEC-11",
+            "jsonPointer": "/items/32/domainReview/evidence/3",
+            "reference": "nodemailer-poc-validation.json",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/final-public-audit1100/nodemailer-poc-validation.json"
+          }
+        ],
+        "sourceContext": {
+          "root": "/workspace/scratch/bb431be72395/final-public-audit1100",
+          "localFileExists": true,
+          "repositoryRelativeFileExists": false,
+          "durableResolution": "No repository archive for this exact standalone relative filename was found at snapshot. Archive it or declare the audit-scratch/log-root base explicitly before claiming a self-contained repository evidence bundle."
+        }
+      },
+      {
+        "filename": "npm-audit-10.1.4.json",
+        "classification": "relative_artifact_present_only_in_audit_scratch",
+        "count": 1,
+        "items": [
+          "SEC-11"
+        ],
+        "references": [
+          {
+            "item": "SEC-11",
+            "jsonPointer": "/items/32/domainReview/evidence/2",
+            "reference": "npm-audit-10.1.4.json",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/final-public-audit1100/npm-audit-10.1.4.json"
+          }
+        ],
+        "sourceContext": {
+          "root": "/workspace/scratch/bb431be72395/final-public-audit1100",
+          "localFileExists": true,
+          "repositoryRelativeFileExists": false,
+          "durableResolution": "No repository archive for this exact standalone relative filename was found at snapshot. Archive it or declare the audit-scratch/log-root base explicitly before claiming a self-contained repository evidence bundle."
+        }
+      },
+      {
+        "filename": "npm-audit.json",
+        "classification": "relative_artifact_present_only_in_audit_scratch",
+        "count": 1,
+        "items": [
+          "SEC-11"
+        ],
+        "references": [
+          {
+            "item": "SEC-11",
+            "jsonPointer": "/items/32/domainReview/evidence/1",
+            "reference": "npm-audit.json",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/final-public-audit1100/npm-audit.json"
+          }
+        ],
+        "sourceContext": {
+          "root": "/workspace/scratch/bb431be72395/final-public-audit1100",
+          "localFileExists": true,
+          "repositoryRelativeFileExists": false,
+          "durableResolution": "No repository archive for this exact standalone relative filename was found at snapshot. Archive it or declare the audit-scratch/log-root base explicitly before claiming a self-contained repository evidence bundle."
+        }
+      },
+      {
+        "filename": "preferences-shutdown-after-fix.log",
+        "classification": "relative_artifact_present_only_in_audit_scratch",
+        "count": 1,
+        "items": [
+          "BUS-11"
+        ],
+        "references": [
+          {
+            "item": "BUS-11",
+            "jsonPointer": "/items/72/domainReview/newEvidence/2",
+            "reference": "preferences-shutdown-after-fix.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/final-public-audit1100/preferences-shutdown-after-fix.log"
+          }
+        ],
+        "sourceContext": {
+          "root": "/workspace/scratch/bb431be72395/final-public-audit1100",
+          "localFileExists": true,
+          "repositoryRelativeFileExists": false,
+          "durableResolution": "No repository archive for this exact standalone relative filename was found at snapshot. Archive it or declare the audit-scratch/log-root base explicitly before claiming a self-contained repository evidence bundle."
+        }
+      },
+      {
+        "filename": "preferences-shutdown-before-fix.log",
+        "classification": "relative_artifact_present_only_in_audit_scratch",
+        "count": 1,
+        "items": [
+          "BUS-11"
+        ],
+        "references": [
+          {
+            "item": "BUS-11",
+            "jsonPointer": "/items/72/domainReview/newEvidence/1",
+            "reference": "preferences-shutdown-before-fix.log",
+            "currentBaseResolution": null,
+            "localContextResolution": "/workspace/scratch/bb431be72395/final-public-audit1100/preferences-shutdown-before-fix.log"
+          }
+        ],
+        "sourceContext": {
+          "root": "/workspace/scratch/bb431be72395/final-public-audit1100",
+          "localFileExists": true,
+          "repositoryRelativeFileExists": false,
+          "durableResolution": "No repository archive for this exact standalone relative filename was found at snapshot. Archive it or declare the audit-scratch/log-root base explicitly before claiming a self-contained repository evidence bundle."
+        }
+      }
+    ],
+    "interpretation": "The156 direct evidence/path/report links all resolve. Embedded source/log labels have their own bases and must not be counted as156 additional direct repository links. Four baseline native log names resolve through recorded run/manifest;13 standalone audit artifacts are present in scratch but not in the repository evidence directory."
+  },
+  "candidatePreservationRecomputed": {
+    "localBaselineCommit": "ab70dba",
+    "localCandidateCommit": "0738e53ae429ddfb6042b938d93e033beec70581",
+    "baselineTreeMatches": true,
+    "candidateTreeMatches": true,
+    "changedPathsCount": 61,
+    "allChangedPathsExactlyMatch": true,
+    "productionPathsExactlyMatch": true,
+    "sqlFiles": 38,
+    "sqlFilesByteIdentical": 38,
+    "lockedEntries": 60,
+    "changedEntries": [
+      "",
+      "node_modules/nodemailer"
+    ],
+    "otherEntriesEqual": 58,
+    "catalogueSha256": "5ce26f14f15fb9c3447b07777aa5c8d17a6e823e8099dbb37959fc48f00f93cb",
+    "catalogueBothTreesAndRecordMatch": true
+  },
+  "nativeRunsObservedFromPreservedLocalFiles": [
+    {
+      "run": 40006334125,
+      "source": "cd81f915a36e5fd39cba2fd9819d760588d47041",
+      "status": "completed",
+      "conclusion": "success",
+      "event": "pull_request",
+      "attempt": 1,
+      "jobsCount": 5,
+      "allJobsCompletedSuccess": true,
+      "logs": [
+        {
+          "name": "verify",
+          "path": "/workspace/scratch/bb431be72395/final-public-audit1100/qualify1101-pr-final/verify.log",
+          "bytes": 579753,
+          "sha256": "5ca8dc84d7b02241f432a85f73cd7a633489f1a3cda067987cefe862ed549853",
+          "totalsExtracted": {
+            "tests": 4089,
+            "pass": 4037,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 52
+          },
+          "zeroFailures": true
+        },
+        {
+          "name": "browser",
+          "path": "/workspace/scratch/bb431be72395/final-public-audit1100/qualify1101-pr-final/browser.log",
+          "bytes": 55626,
+          "sha256": "2e355c1adc58f8b0f02e09451b7b251644f5ecb1703b8c3ff9c4adf8e0e22e79",
+          "totalsExtracted": {
+            "tests": 260,
+            "pass": 260,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "zeroFailures": true
+        },
+        {
+          "name": "https",
+          "path": "/workspace/scratch/bb431be72395/final-public-audit1100/qualify1101-pr-final/https.log",
+          "bytes": 42225,
+          "sha256": "d80230efd634cc3d137dc0313290b782e29b14727ba7437b44fe8bab97944831",
+          "totalsExtracted": {
+            "tests": 12,
+            "pass": 12,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "zeroFailures": true
+        },
+        {
+          "name": "mariadb1011",
+          "path": "/workspace/scratch/bb431be72395/final-public-audit1100/qualify1101-pr-final/mariadb1011.log",
+          "bytes": 357229,
+          "sha256": "7f34a25fa0bb24f2aec653ee4478fbe7304f2fe72537380aa0b7522afd1deec2",
+          "totalsExtracted": {
+            "tests": 600,
+            "pass": 600,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "zeroFailures": true
+        },
+        {
+          "name": "mariadb114",
+          "path": "/workspace/scratch/bb431be72395/final-public-audit1100/qualify1101-pr-final/mariadb114.log",
+          "bytes": 357525,
+          "sha256": "f0f76e827fe252d65677bfdee8d83fae8b46c2b8b07d667e1ab84e416daac9a4",
+          "totalsExtracted": {
+            "tests": 600,
+            "pass": 600,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "zeroFailures": true
+        }
+      ],
+      "freshlyExecutedByThisReview": false
+    },
+    {
+      "run": 40007620555,
+      "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+      "status": "completed",
+      "conclusion": "success",
+      "event": "push",
+      "attempt": 1,
+      "jobsCount": 5,
+      "allJobsCompletedSuccess": true,
+      "logs": [
+        {
+          "name": "verify",
+          "path": "/workspace/scratch/bb431be72395/final-public-audit1100/qualify1101-main/verify.log",
+          "bytes": 578924,
+          "sha256": "0f458709c45f5034f8e3cf3143765c154f397e68906f2d4957331e581166e1b9",
+          "totalsExtracted": {
+            "tests": 4089,
+            "pass": 4037,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 52
+          },
+          "zeroFailures": true
+        },
+        {
+          "name": "browser",
+          "path": "/workspace/scratch/bb431be72395/final-public-audit1100/qualify1101-main/browser.log",
+          "bytes": 54838,
+          "sha256": "ecf5afb6b6977e77c153ca555a9e9cb93f9eb3beec5f8899f44231af27e1976b",
+          "totalsExtracted": {
+            "tests": 260,
+            "pass": 260,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "zeroFailures": true
+        },
+        {
+          "name": "https",
+          "path": "/workspace/scratch/bb431be72395/final-public-audit1100/qualify1101-main/https.log",
+          "bytes": 41554,
+          "sha256": "d407f9cd42f727b012d062da326e51cac0e290c48cdd136587e3750dad5f1d10",
+          "totalsExtracted": {
+            "tests": 12,
+            "pass": 12,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "zeroFailures": true
+        },
+        {
+          "name": "mariadb1011",
+          "path": "/workspace/scratch/bb431be72395/final-public-audit1100/qualify1101-main/mariadb1011.log",
+          "bytes": 356245,
+          "sha256": "a68b25e93ef02e7abeb94a49113443408f9f27f8a30730e617906c6503389559",
+          "totalsExtracted": {
+            "tests": 600,
+            "pass": 600,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "zeroFailures": true
+        },
+        {
+          "name": "mariadb114",
+          "path": "/workspace/scratch/bb431be72395/final-public-audit1100/qualify1101-main/mariadb114.log",
+          "bytes": 357095,
+          "sha256": "bb14513fb8667d878e2d501fca394c1da8adfe595fd60f4922da7dc26b788345",
+          "totalsExtracted": {
+            "tests": 600,
+            "pass": 600,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "zeroFailures": true
+        }
+      ],
+      "freshlyExecutedByThisReview": false
+    }
+  ],
+  "priorFailedNativeArchivesRechecked": [
+    {
+      "run": 40002896036,
+      "conclusion": "failure",
+      "qualificationComplete": false,
+      "failedHistoryPreservedHonestly": true,
+      "logs": [
+        {
+          "name": "verify",
+          "compressedHashMatches": true,
+          "originalHashAndBytesMatch": true,
+          "totalsMatch": true
+        },
+        {
+          "name": "mariadb1011",
+          "compressedHashMatches": true,
+          "originalHashAndBytesMatch": true,
+          "totalsMatch": true
+        },
+        {
+          "name": "mariadb114",
+          "compressedHashMatches": true,
+          "originalHashAndBytesMatch": true,
+          "totalsMatch": true
+        },
+        {
+          "name": "https",
+          "compressedHashMatches": true,
+          "originalHashAndBytesMatch": true,
+          "totalsMatch": true
+        },
+        {
+          "name": "browser",
+          "compressedHashMatches": true,
+          "originalHashAndBytesMatch": true,
+          "totalsMatch": true
+        }
+      ]
+    },
+    {
+      "run": 40004246747,
+      "conclusion": "failure",
+      "qualificationComplete": false,
+      "failedHistoryPreservedHonestly": true,
+      "logs": [
+        {
+          "name": "https",
+          "compressedHashMatches": true,
+          "originalHashAndBytesMatch": true,
+          "totalsMatch": true
+        },
+        {
+          "name": "verify",
+          "compressedHashMatches": true,
+          "originalHashAndBytesMatch": true,
+          "totalsMatch": true
+        },
+        {
+          "name": "mariadb1011",
+          "compressedHashMatches": true,
+          "originalHashAndBytesMatch": true,
+          "totalsMatch": true
+        },
+        {
+          "name": "browser",
+          "compressedHashMatches": true,
+          "originalHashAndBytesMatch": true,
+          "totalsMatch": true
+        },
+        {
+          "name": "mariadb114",
+          "compressedHashMatches": true,
+          "originalHashAndBytesMatch": true,
+          "totalsMatch": true
+        }
+      ]
+    }
+  ],
+  "statusHonesty": {
+    "noOldGreenLogPromotedToCorrectedSourceQualificationFound": true,
+    "general52OmissionsRemainExplicit": true,
+    "nativeFourJobsZeroOmissionsObserved": true,
+    "currentChecklistStatus": "all134_addressed_supplemental_dialog_race_fix_native_pending",
+    "currentDecision": "not_yet_validated_blocking_fix_native_and_deployment_pending",
+    "secondPassComplete": false,
+    "staleConservativeFields": "Checklist/findings/domain reports still say final native pending although preserved PR/main files now show5/5. Parent explicitly reports root will update these snapshots; no missing future archive/summary is treated as a new defect.",
+    "activeVersusCorrectiveKeptDistinct": "Current baseline1.10.0/51b0cf22 remains active; corrected main1.10.1/9eb99f1 is qualified but not asserted deployed. Publication in progress and writer receipt pending remain separate."
+  },
+  "observations": [
+    {
+      "id": "COV-HELPER-01",
+      "severity": "documentation_reference",
+      "runtimeDefect": false,
+      "detail": "Embedded OPS-15/OPS-16 source references use docs/MONITORING.md while actual repository file is MONITORING.md. Parent/root informed; no repository edit by this reviewer.",
+      "unresolvedReferencesAtSnapshot": [
+        {
+          "item": "OPS-15",
+          "jsonPointer": "/items/111/domainReview/evidence/6/path",
+          "reference": "docs/MONITORING.md",
+          "currentBaseResolution": null,
+          "localContextResolution": null
+        },
+        {
+          "item": "OPS-16",
+          "jsonPointer": "/items/112/domainReview/evidence/5/path",
+          "reference": "docs/MONITORING.md",
+          "currentBaseResolution": null,
+          "localContextResolution": null
+        }
+      ]
+    },
+    {
+      "id": "COV-HELPER-02",
+      "severity": "evidence_base_clarity",
+      "runtimeDefect": false,
+      "detail": "17 embedded filenames resolve outside repository report directory. Four are baseline native log identifiers with recorded manifest context;13 standalone local audit artifacts require archival or an explicit base for a self-contained durable repository bundle. All exact JSON pointers are listed above."
+    }
+  ],
+  "decision": {
+    "structuralCoverageVerified": true,
+    "blockingRuntimeFindingsFromThisReview": 0,
+    "falseGreenClaimFound": false,
+    "publicOpeningApprovedByThisReview": false,
+    "remainingScope": "Root final metadata update and publication/deployment/writer receipts; preserve physical/hosting/backup/legal limits. Link-base observations do not establish application failure."
+  },
+  "actionsPerformed": {
+    "repositoryEdits": false,
+    "testsOrSuiteReruns": false,
+    "remoteCalls": false,
+    "hostActions": false,
+    "scratchReportOnly": true
+  }
+}
