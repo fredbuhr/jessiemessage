@@ -1,0 +1,45 @@
+{
+  "type": "jm190-Manager-command-inversion-confirmed",
+  "reportedDate": "2026-10-23",
+  "evidenceKind": "ATTACHED_SCREENSHOTS_OBSERVED_BY_ROOT",
+  "images": [
+    {
+      "name": "image(20261023-152641).png",
+      "sha256": "7928473c6d7e89df9378c4be96abbaa46ac4664b16a3353801cc8e0a128682d7"
+    },
+    {
+      "name": "image(20261023-152655).png",
+      "sha256": "7dfb4273832766778809c0e777f3288ee73c4430f9ea6679b6120a7d8b8575ce"
+    }
+  ],
+  "observed": {
+    "service": 239143,
+    "name": "recette.jessiemessage.com",
+    "NodeMajor": 24,
+    "port": 3000,
+    "buildEnabled": true,
+    "executionFieldTop": "bash /srv/customer/jessiemessage-private/check-primary-release190-5… (field horizontally clipped)",
+    "buildFieldBottom": "bash /srv/customer/jessiemessage-private/start-primary-release190-5… (field horizontally clipped)",
+    "dashboardBuildFull": "bash /srv/customer/jessiemessage-private/start-primary-release190-5dda0dd4.sh",
+    "NodeState": "Arrêté",
+    "executionWarning": true,
+    "console": "Connected to stream, no detailed error visible",
+    "executionDirectory": "not visible in supplied Node settings screen"
+  },
+  "cause": "Execution and Build commands are reversed: CHECK exits without HTTP listener; long-running START is assigned to Build.",
+  "independentReviewers": [
+    "root",
+    "followup190"
+  ],
+  "correctTarget": {
+    "Commande d’exécution (haut)": "bash /srv/customer/jessiemessage-private/start-primary-release190-5dda0dd4.sh",
+    "Commande de build (bas)": "bash /srv/customer/jessiemessage-private/check-primary-release190-5dda0dd4.sh"
+  },
+  "limits": {
+    "correctionSaved": false,
+    "runtime190IdentityAcquired": false,
+    "agentPrivateHostAccess": false,
+    "productCodeChanged": false
+  },
+  "nextAction": "Replace both fields by exact correct values, save, open dashboard and Run once only if still stopped; then report actual readiness identity. No more diagnostics or SQL needed before this targeted correction."
+}

@@ -26,8 +26,8 @@ Une [maintenance Node.js officielle](https://infomaniakstatus.com/fr/Jnqlo5Qrxr/
 
 Le [résultat utilisateur](verification-proofs/jm190-hosted-full-preflight.json) confirme les quatre phases et les neuf contrôles SQL en succès, sans démarrage, migration ni écriture. Le précontrôle complet n’est plus une étape à exécuter. Aucun manque de droit sur profile_preferences ou problème de schéma/stockage n’est détecté dans l’environnement SSH de ce contrôle.
 
-1. Recueillir les captures Manager des champs réellement enregistrés : dossier, port, Build et Run, puis état et console Exécution, sans cliquer Run/Build. Aucune autre commande SSH n’est nécessaire avant ce relevé.
-2. Examiner le lancement Manager/lanceur et son environnement ; un échec de création des services serveur, d’écoute HTTP ou de proxy reste possible après le précontrôle. Corriger le seul défaut démontré, sans toucher SQL ou dépendances par hypothèse.
-3. Après correction, un démarrage190 borné, l’identité réelle puis le writer déjà qualifié restent la suite.
+1. **Captures acquises : inversion confirmée.** Le champ du haut « Commande d’exécution » contient check190, celui du bas « Commande de build » contient start190. Node est arrêté ; port3000/Node24 corrects. [Preuve](verification-proofs/jm190-Manager-command-inversion.json).
+2. Corriger ces deux valeurs avec les libellés exacts de l’écran, enregistrer et démarrer une seule fois si encore arrêté. Aucun autre diagnostic n’est nécessaire avant cette correction.
+3. Relever l’identité réelle190 puis exécuter le writer déjà qualifié après concordance. Ces résultats restent non acquis.
 
 Aucun nouveau service, audit général, réinstallation, changement de droits, migration ou patch produit n’est justifié par la seule capture de maintenance. Les paramètres Manager restent inaccessibles à l’agent sans action personnelle du propriétaire ; aucun navigateur cloud ou secret n’est demandé.

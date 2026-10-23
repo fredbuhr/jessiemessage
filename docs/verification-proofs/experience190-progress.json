@@ -1,7 +1,7 @@
 {
   "type": "experience190-progress",
   "version": 2,
-  "status": "full_messaging_preflight_passed_awaiting_actual_Manager_fields_and_execution_error",
+  "status": "Manager_execution_build_inverted_cause_confirmed_targeted_correction_pending",
   "release": {
     "version": "1.9.0",
     "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
@@ -63,8 +63,8 @@
     "checkpointSha256": "3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212",
     "evidence": "USER_REPORTED184 historical identity; currentSQL38 and stopped Manager state have separate proofs, no private host access",
     "schemaAtLastConfirmedRuntime": 36,
-    "runtimeCurrentlyActive": null,
-    "state": "current_Manager_state_unobserved_after_latest_attempt_last184_identity_only"
+    "runtimeCurrentlyActive": false,
+    "state": "stopped_in_latest_Manager_capture"
   },
   "qualification": {
     "pr": 133,
@@ -131,10 +131,12 @@
     "startupLogEmptyReported": true,
     "recordedStartup190": false,
     "emptyLogProof": "jm190-hosted-empty-runtime-log.json",
-    "currentManagerState": "unobserved_after_latest_attempt",
+    "currentManagerState": "stopped_in_latest_capture",
     "startupLogEmptyEvidenceTiming": "before_latest_attempt",
     "fullMessagingPreflightPassed": true,
-    "fullMessagingPreflightProof": "jm190-hosted-full-preflight.json"
+    "fullMessagingPreflightProof": "jm190-hosted-full-preflight.json",
+    "ManagerConfigurationCorrect": false,
+    "ManagerInversionProof": "jm190-Manager-command-inversion.json"
   },
   "limits": [
     "Synthetic Chrome mobile/desktop and multiple browser sessions; no physical phone or two physical devices",
@@ -142,13 +144,12 @@
     "No production190 verification or new hosted backup trial; previous deferred work remains deferred"
   ],
   "nextAction": {
-    "only": "User supplies actual saved Manager execution directory/port/Build/Run and current state/execution console screenshots, no restart or SSH",
+    "only": "Correct top Commande d’exécution=start190 and bottom Commande de build=check190, save, Run once only if still stopped, report actual readiness identity",
     "instructions": "../operations-release190.md",
     "doNotReplayUpgrade": true,
     "doNotRerunPreparation": true,
     "doNotRerunPreflight": true,
-    "doNotStartAgainBeforeEvidence": true,
-    "following": "Correct only observed cause, bounded190 startup identity then final metadata writer"
+    "following": "After actual190 identity: final qualified metadata writer"
   },
   "historyProofs": [
     "jm190/pr-native-initial.json",
