@@ -1,0 +1,156 @@
+{
+  "status": "local_chat_patch_frozen_native_browser_qualification_pending",
+  "updatedAt": "2026-10-22T23:56:08.488876+00:00",
+  "branch": "fix/interface-184",
+  "baseCommit": "c786ea592e331780aaac16beea6ea546897c8ca4",
+  "baseTree": "e40e7ba402b3a917805d4897be83bd67f4adb505",
+  "activeProduction": {
+    "version": "1.8.3",
+    "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+    "unchangedByThisWork": true
+  },
+  "cause": {
+    "duplicateOptions": "chat.html has topbar opener and conversation-head opener bound to the same openChatMenu handler. Existing mobile CSS hid the topbar only <=780px; desktop displayed both.",
+    "duplicateAccess": "client-aside repeated /access already available as Mon accès in Options"
+  },
+  "implementation": [
+    "Two CSS selectors use existing page.has-conversation state: selected conversation hides topbar opener; unselected inbox hides conversation opener. Existing mobile topbar hiding and 44px targets unchanged.",
+    "Remove only client-aside access anchor; existing Options Mon accès remains for client, Accueil admin /admin for admin with no duplicate admin link in header.",
+    "chat.js unchanged: existing class selection and menuReturnFocus remain coherent, no new controller/dedup framework."
+  ],
+  "files": [
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/public/chat.html",
+      "sha256": "d9712767733a50d6ddb3b074fa84878d2265ef99e6f34f84d923119ad0e4f193",
+      "bytes": 17516,
+      "relativePath": "public/chat.html",
+      "changed": true,
+      "baseSha256": "7fbf63133107cd9fdb7a2038196398c7e817cf292107d56c1654999bf92af16f"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/public/chat.css",
+      "sha256": "c3b5d78a0eb1ae7a135bf6b40d590330906e11bd292a49a28171c9e4639db50e",
+      "bytes": 21479,
+      "relativePath": "public/chat.css",
+      "changed": true,
+      "baseSha256": "8e9867360a6dd4ae6602686a3ee9180974a2231aacc14773a9b13b46091d2a11"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/tests/chat-accessibility-markup.test.mjs",
+      "sha256": "516324744c532a9e85e134993829d95614bf3496e7183c53f71e9e00af7ff1ea",
+      "bytes": 6159,
+      "relativePath": "tests/chat-accessibility-markup.test.mjs",
+      "changed": true,
+      "baseSha256": "554c146be7465ebdbfb95e149af078fb365d7e20b1772117e36174ded578d400"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/tests/browser/chat-accessibility.browser.mjs",
+      "sha256": "c87c46cea3a2959e6ee3463ad711ed6f3c60ae5528e49bc99e5e3f4e7b820733",
+      "bytes": 134784,
+      "relativePath": "tests/browser/chat-accessibility.browser.mjs",
+      "changed": true,
+      "baseSha256": "0e6d45f9fc06bd041688d64214d7431290eb3e1ebe9baafe3fd8d68c04d34b9a"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/public/chat.js",
+      "sha256": "ef88172452810c43960d3ab55ec4bd6c0493589ea3b92ef1fcaa2b4014ed6134",
+      "bytes": 157279,
+      "relativePath": "public/chat.js",
+      "changed": false,
+      "baseSha256": "ef88172452810c43960d3ab55ec4bd6c0493589ea3b92ef1fcaa2b4014ed6134"
+    }
+  ],
+  "localQualification": {
+    "runtime": "Node v24.19.0",
+    "kind": "synthetic DOM/markup fixtures only",
+    "firstRun": {
+      "command": "node --test tests/chat-accessibility-markup.test.mjs tests/chat-accessibility.test.mjs tests/chat-lifecycle.test.mjs tests/chat-i18n.test.mjs",
+      "tests": 133,
+      "pass": 132,
+      "fail": 1,
+      "skipped": 0,
+      "durationMs": 4888.83445,
+      "evidence": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/chat-targeted.log",
+        "sha256": "79f29e629d92c6cdc5b8fcd86b3b7abb85e934697fb07763eeaae3e9e734ac08",
+        "bytes": 16052
+      },
+      "failure": "New structural test exposed its CSS reader treating a preceding comment as part of selector; not a product failure. Comment removal added in test parser."
+    },
+    "finalAffectedRun": {
+      "command": "node --test tests/chat-accessibility-markup.test.mjs",
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 160.84033,
+      "evidence": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/chat-markup-final.log",
+        "sha256": "89bc9e29da1d462ac3f385148f72944262db43fbf687d99d5345a6829cd08791",
+        "bytes": 577
+      }
+    },
+    "compositeResult": {
+      "unchangedBehaviorTestsPassed": 129,
+      "finalMarkupTestsPassed": 4,
+      "totalQualifiedCases": 133,
+      "omissions": 0,
+      "note": "Composite result, not a second complete133-test run. Only the changed markup suite was rerun after its parser fix."
+    },
+    "staticChecks": [
+      "node --check tests/browser/chat-accessibility.browser.mjs passed",
+      "git diff --check on the four owned changed files passed"
+    ]
+  },
+  "browserChanges": {
+    "executedLocally": false,
+    "reason": "Chrome and ChromeDriver binaries absent; no cloud browser used",
+    "addedTests": [
+      {
+        "name": "Chrome desktop and mobile: one Options button before selection, in conversation and after returning to the inbox",
+        "cases": "client/admin at1280px and320px",
+        "checks": [
+          "Exactly one visible enabled native Options button before/after admin selection and after return",
+          "Real Tab/Enter/Escape and visible focus restoration, 44px target",
+          "Single admin home link in Options, no header duplicate; client access only in Options",
+          "Decorative language flag data/accessible action and no language letters",
+          "No message send/export triggered by menu use"
+        ]
+      }
+    ],
+    "existingTestsStrengthened": [
+      "Mobile compact conversation layout320/360/390 client/admin FR/EN: one visible Options count, flag SVG24x16 and language target/accessible labels",
+      "Existing320px profile client/admin flow: translated avatar picker button, hidden native input and unchanged accept, FR/EN button+aria labels; reopen and FR→EN→FR preserves pseudonym and keeps1save/0upload/0message"
+    ],
+    "plannedNativeCaptures": [
+      "artifacts/homepage/chat-options-client-1280-open.png",
+      "artifacts/homepage/chat-options-client-1280-conversation.png",
+      "artifacts/homepage/chat-options-admin-1280-inbox.png",
+      "artifacts/homepage/chat-options-admin-1280-open.png",
+      "artifacts/homepage/chat-options-admin-1280-conversation.png",
+      "artifacts/homepage/chat-options-client-320-open.png",
+      "artifacts/homepage/chat-options-client-320-conversation.png",
+      "artifacts/homepage/chat-options-admin-320-inbox.png",
+      "artifacts/homepage/chat-options-admin-320-open.png",
+      "artifacts/homepage/chat-options-admin-320-conversation.png"
+    ],
+    "captureCount": 10,
+    "capturesGeneratedLocally": false,
+    "captureArtifact": "Existing homepage-render upload artifacts/homepage/*.png; no workflow change"
+  },
+  "coordination": [
+    "peer_a11 admin navigation contract: chat retains exactly one Accueil admin link in Options; no admin-login/header files edited",
+    "Profile agent supplied browser assertions; integrated here without editing profile.*",
+    "writer183 child independently reviewed proposed CSS/focus approach read-only; parent reported chat CSS/code review"
+  ],
+  "notPerformed": [
+    "No production/cloud browser, host/account/real message/Push/SQL/backup/PC action",
+    "No Git commit/push/ref or CI dispatch",
+    "No i18n/profile/admin-login/version/workflow source edited by this agent"
+  ],
+  "limits": [
+    "Native Chrome results and PNG captures are pending; local synthetic tests do not prove real mobile keyboard behavior",
+    "Production183 stays active until parent qualification/publication/activation sequence",
+    "The six initial capture plan expanded to10 to include open Options/flags for both roles and widths"
+  ]
+}

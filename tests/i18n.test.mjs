@@ -138,18 +138,24 @@ test("forget recursively clears bindings and rawText handles a username equal to
 test("the delegated language button toggles once and notifications never perform network work", () => {
   const f = harness(), button = f.node(null, f.body, "button"); button.setAttribute("data-jm-language", ""); f.load();
   f.run('globalThis.changes=[];globalThis.unsub=JessieI18n.onChange(value=>changes.push(value))');
-  f.click(button); assert.equal(f.api.getLanguage(), "en"); assert.equal(button.textContent, "FR"); assert.deepEqual(Array.from(f.context.changes), ["en"]);
+  assert.equal(button.textContent, ""); assert.equal(button.getAttribute("data-jm-language-target"), "en");
+  assert.equal(button.getAttribute("aria-label"), "Passer en anglais"); assert.equal(button.getAttribute("title"), "Passer en anglais");
+  f.click(button); assert.equal(f.api.getLanguage(), "en"); assert.equal(button.textContent, "");
+  assert.equal(button.getAttribute("data-jm-language-target"), "fr"); assert.equal(button.getAttribute("aria-label"), "Switch to French"); assert.equal(button.getAttribute("title"), "Switch to French"); assert.deepEqual(Array.from(f.context.changes), ["en"]);
   f.run("unsub()"); f.click(button); assert.equal(f.api.getLanguage(), "fr"); assert.deepEqual(Array.from(f.context.changes), ["en"]); assert.equal(f.requests.length, 0);
 });
 
 test("homepage and entry share the language choice without double toggles or new access checks", async () => {
   const shared = new Map(), home = harness({ storageMap: shared }), switcher = home.node(null, home.body, "button"); switcher.setAttribute("id", "language-switch"); switcher.setAttribute("data-jm-language", "");
-  home.load(); home.run(homepage); home.click(switcher); assert.equal(home.api.getLanguage(), "en"); assert.equal(home.document.documentElement.lang, "en"); assert.equal(shared.get("jessiemessage.language"), "en");
+  home.load(); home.run(homepage);
+  assert.equal(switcher.textContent, ""); assert.equal(switcher.getAttribute("data-jm-language-target"), "en"); assert.equal(switcher.getAttribute("aria-label"), "Passer en anglais");
+  home.click(switcher); assert.equal(switcher.textContent, ""); assert.equal(switcher.getAttribute("data-jm-language-target"), "fr"); assert.equal(switcher.getAttribute("aria-label"), "Switch to French"); assert.equal(home.api.getLanguage(), "en"); assert.equal(home.document.documentElement.lang, "en"); assert.equal(shared.get("jessiemessage.language"), "en");
   const entry = harness({ storageMap: shared });
   for (const match of entryHTML.matchAll(/\bid="([^"]+)"/g)) { const node = entry.node(); node.setAttribute("id", match[1]); if (match[1] === "language-switch") node.setAttribute("data-jm-language", ""); }
   entry.load(); const modelExports = [...entryModel.matchAll(/export function (\w+)\(/g)].map((match) => match[1]);
   entry.run(`globalThis.__entry = (()=>{${entryModel.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}}})()`);
   entry.run(entryController.replace(/^import \{([^\n]+)\} from "\/entry-model\.js";/, "const {$1}=__entry;")); await flush();
+  assert.equal(entry.document.getElementById("language-switch").textContent, ""); assert.equal(entry.document.getElementById("language-switch").getAttribute("data-jm-language-target"), "fr"); assert.equal(entry.document.getElementById("language-switch").getAttribute("aria-label"), "Switch to French");
   assert.equal(entry.document.getElementById("client-link").textContent, "Return to my conversation"); assert.equal(entry.requests.length, 1); assert.deepEqual(entry.navigation, ["/messages"]);
   entry.click(entry.document.getElementById("language-switch")); assert.equal(entry.api.getLanguage(), "fr"); assert.equal(entry.document.getElementById("client-link").textContent, "Reprendre ma conversation"); assert.equal(entry.requests.length, 1);
 });

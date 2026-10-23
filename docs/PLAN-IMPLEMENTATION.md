@@ -2,6 +2,10 @@
 
 Révisé le 22 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
+## Correctif interface1.8.4 — travail actuel
+
+[Périmètre](UX-184-20261023.md). Terminer les cinq corrections de traduction/navigation et leurs contrôles ciblés, contre-relire, qualifier le headPR stabilisé puis le main fusionné avant publication immuable. Préparation, CHECK, activation et métadonnées184 restent des phases séparées. Production183/Node24.22.1/SQL36 et checkpoint17f575… acquis et préservés. [État de travail](verification-proofs/jm184-progress.json). Aucun nouveau chantier de backup, PC, juridique, mail/Push réel ou SQL.
+
 ## Correctif messagerie1.8.3 — terminé
 
 [Périmètre détaillé et critères](UX-183-20261022.md). Nouvelle demande explicite après l’audit : dix signalements UX et revue des parcours client/admin, avec correction des constatsB01–B05/I01.

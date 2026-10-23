@@ -1,0 +1,348 @@
+TAP version 13
+# Subtest: plain 404 optional features preserve an authentication-only administrator session without an error banner
+    # Subtest: restored session
+    ok 1 - restored session
+      ---
+      duration_ms: 53.882655
+      type: 'test'
+      ...
+    # Subtest: successful login
+    ok 2 - successful login
+      ---
+      duration_ms: 5.964354
+      type: 'test'
+      ...
+    1..2
+ok 1 - plain 404 optional features preserve an authentication-only administrator session without an error banner
+  ---
+  duration_ms: 63.566423
+  type: 'test'
+  ...
+# Subtest: plain 401 from an optional authenticated request clears the revoked session
+ok 2 - plain 401 from an optional authenticated request clears the revoked session
+  ---
+  duration_ms: 6.551184
+  type: 'test'
+  ...
+# Subtest: plain 503 remains a visible service error rather than a disabled optional feature
+ok 3 - plain 503 remains a visible service error rather than a disabled optional feature
+  ---
+  duration_ms: 3.466465
+  type: 'test'
+  ...
+# Subtest: a successful HTTP session response containing malformed JSON is still refused
+ok 4 - a successful HTTP session response containing malformed JSON is still refused
+  ---
+  duration_ms: 6.530713
+  type: 'test'
+  ...
+# Subtest: a late plain 404 body cannot clear a newer administrator's access after hide
+ok 5 - a late plain 404 body cannot clear a newer administrator's access after hide
+  ---
+  duration_ms: 32.377656
+  type: 'test'
+  ...
+# Subtest: initially hidden administrator page clears anonymous credentials and does no request until visible
+ok 6 - initially hidden administrator page clears anonymous credentials and does no request until visible
+  ---
+  duration_ms: 5.673782
+  type: 'test'
+  ...
+# Subtest: initial visibility and pageshow notifications share one administrator bootstrap
+ok 7 - initial visibility and pageshow notifications share one administrator bootstrap
+  ---
+  duration_ms: 7.796774
+  type: 'test'
+  ...
+# Subtest: an anonymous login keeps its in-memory fields across the authenticator app switch and proves the session before return
+ok 8 - an anonymous login keeps its in-memory fields across the authenticator app switch and proves the session before return
+  ---
+  duration_ms: 7.022759
+  type: 'test'
+  ...
+# Subtest: a page navigation clears an anonymous login even after a temporary background suspension
+ok 9 - a page navigation clears an anonymous login even after a temporary background suspension
+  ---
+  duration_ms: 7.102923
+  type: 'test'
+  ...
+# Subtest: session replacement and failed return proofs discard the temporarily retained login fields
+ok 10 - session replacement and failed return proofs discard the temporarily retained login fields
+  ---
+  duration_ms: 11.275281
+  type: 'test'
+  ...
+# Subtest: a rejected login after an authenticator return still clears its password and security code
+ok 11 - a rejected login after an authenticator return still clears its password and security code
+  ---
+  duration_ms: 2.956816
+  type: 'test'
+  ...
+# Subtest: visibility hide and pagehide erase administrator identity, clients, invitation secret and credentials
+ok 12 - visibility hide and pagehide erase administrator identity, clients, invitation secret and credentials
+  ---
+  duration_ms: 13.827205
+  type: 'test'
+  ...
+# Subtest: late client-list and capability responses cannot repopulate an administrator page after hide
+ok 13 - late client-list and capability responses cannot repopulate an administrator page after hide
+  ---
+  duration_ms: 3.359204
+  type: 'test'
+  ...
+# Subtest: return validates a fresh administrator session before loading any new private data and ignores the old list
+ok 14 - return validates a fresh administrator session before loading any new private data and ignores the old list
+  ---
+  duration_ms: 12.44281
+  type: 'test'
+  ...
+# Subtest: an old login response and its finally cannot replace a fresh view or unlock a newer login
+ok 15 - an old login response and its finally cannot replace a fresh view or unlock a newer login
+  ---
+  duration_ms: 9.06858
+  type: 'test'
+  ...
+# Subtest: a hidden pending logout is not replayed and its old finally cannot unlock a new invitation action
+ok 16 - a hidden pending logout is not replayed and its old finally cannot unlock a new invitation action
+  ---
+  duration_ms: 7.2964
+  type: 'test'
+  ...
+# Subtest: a late clipboard result and finally cannot affect the new visible administrator action
+ok 17 - a late clipboard result and finally cannot affect the new visible administrator action
+  ---
+  duration_ms: 6.691126
+  type: 'test'
+  ...
+# Subtest: late invitation creation stays hidden and resuming performs GET validation without replaying its POST
+ok 18 - late invitation creation stays hidden and resuming performs GET validation without replaying its POST
+  ---
+  duration_ms: 4.80103
+  type: 'test'
+  ...
+# Subtest: hidden sessions stop their timers and expired server proof reveals no identity on return
+ok 19 - hidden sessions stop their timers and expired server proof reveals no identity on return
+  ---
+  duration_ms: 6.691822
+  type: 'test'
+  ...
+# Subtest: pagehide and duplicate return events trigger exactly one fresh session and no protected actions while hidden
+ok 20 - pagehide and duplicate return events trigger exactly one fresh session and no protected actions while hidden
+  ---
+  duration_ms: 25.146114
+  type: 'test'
+  ...
+# Subtest: administrator request security options remain intact for login and authenticated actions
+ok 21 - administrator request security options remain intact for login and authenticated actions
+  ---
+  duration_ms: 8.994339
+  type: 'test'
+  ...
+# Subtest: cookie actor changes during private reads discard the old audience before rebuilding from GET proof
+ok 22 - cookie actor changes during private reads discard the old audience before rebuilding from GET proof
+  ---
+  duration_ms: 10.581632
+  type: 'test'
+  ...
+# Subtest: a failed final GET proof after committed invitation creation remains an unconfirmed operation and is never retried
+ok 23 - a failed final GET proof after committed invitation creation remains an unconfirmed operation and is never retried
+  ---
+  duration_ms: 19.123208
+  type: 'test'
+  ...
+# Subtest: an old proof rejected after hide and return cannot clear the newly validated administrator view
+ok 24 - an old proof rejected after hide and return cannot clear the newly validated administrator view
+  ---
+  duration_ms: 13.114488
+  type: 'test'
+  ...
+# Subtest: clipboard copying requires a current matching session and never copies a previous actor's invitation
+ok 25 - clipboard copying requires a current matching session and never copies a previous actor's invitation
+  ---
+  duration_ms: 7.189673
+  type: 'test'
+  ...
+# Subtest: repeated final proof failures permit only one GET recovery per visible intent
+ok 26 - repeated final proof failures permit only one GET recovery per visible intent
+  ---
+  duration_ms: 6.69357
+  type: 'test'
+  ...
+# Subtest: administrator lists traverse 650 entries independently with only one page retained
+ok 27 - administrator lists traverse 650 entries independently with only one page retained
+  ---
+  duration_ms: 206.128228
+  type: 'test'
+  ...
+# Subtest: an older page is painted only after its final current-session proof
+ok 28 - an older page is painted only after its final current-session proof
+  ---
+  duration_ms: 15.411263
+  type: 'test'
+  ...
+# Subtest: late older-page data and errors after hide cannot replace a new account or its cursor
+ok 29 - late older-page data and errors after hide cannot replace a new account or its cursor
+  ---
+  duration_ms: 29.934279
+  type: 'test'
+  ...
+# Subtest: a changed actor during pagination discards the returned page and rebuilds both first pages
+ok 30 - a changed actor during pagination discards the returned page and rebuilds both first pages
+  ---
+  duration_ms: 17.900391
+  type: 'test'
+  ...
+# Subtest: invalid pagination metadata never advances or replaces an already verified page
+ok 31 - invalid pagination metadata never advances or replaces an already verified page
+  ---
+  duration_ms: 70.064306
+  type: 'test'
+  ...
+# Subtest: only invited email-verified approved finite active access offers renewal and expired access is identified
+ok 32 - only invited email-verified approved finite active access offers renewal and expired access is identified
+  ---
+  duration_ms: 6.353995
+  type: 'test'
+  ...
+# Subtest: manual admission allows approval without age assurance only after invitation consumption and email verification
+ok 33 - manual admission allows approval without age assurance only after invitation consumption and email verification
+  ---
+  duration_ms: 6.128285
+  type: 'test'
+  ...
+# Subtest: a client list with missing or unknown admission fields is rejected before private rows are rendered
+ok 34 - a client list with missing or unknown admission fields is rejected before private rows are rendered
+  ---
+  duration_ms: 8.209307
+  type: 'test'
+  ...
+# Subtest: renewal snapshots the chosen duration and expiry, preserves the busy draft and refreshes only the current client page
+ok 35 - renewal snapshots the chosen duration and expiry, preserves the busy draft and refreshes only the current client page
+  ---
+  duration_ms: 22.238472
+  type: 'test'
+  ...
+# Subtest: renewal validates whole-day input locally and gives a duration-specific server rejection
+ok 36 - renewal validates whole-day input locally and gives a duration-specific server rejection
+  ---
+  duration_ms: 4.513529
+  type: 'test'
+  ...
+# Subtest: a concurrent renewal conflict refreshes the current date and never replays the mutation
+ok 37 - a concurrent renewal conflict refreshes the current date and never replays the mutation
+  ---
+  duration_ms: 5.897624
+  type: 'test'
+  ...
+# Subtest: unknown renewal outcomes perform GET reconciliation without claiming success or replaying POST
+ok 38 - unknown renewal outcomes perform GET reconciliation without claiming success or replaying POST
+  ---
+  duration_ms: 11.073396
+  type: 'test'
+  ...
+# Subtest: a failed list read after successful renewal keeps the mutation unconfirmed and preserves the draft
+ok 39 - a failed list read after successful renewal keeps the mutation unconfirmed and preserves the draft
+  ---
+  duration_ms: 3.708398
+  type: 'test'
+  ...
+# Subtest: renewal preflight detects a changed session before sending any mutation
+ok 40 - renewal preflight detects a changed session before sending any mutation
+  ---
+  duration_ms: 4.362829
+  type: 'test'
+  ...
+# Subtest: an old renewal response and finally cannot reveal data or unlock a new account's pending renewal
+ok 41 - an old renewal response and finally cannot reveal data or unlock a new account's pending renewal
+  ---
+  duration_ms: 8.477333
+  type: 'test'
+  ...
+# Subtest: a cookie change during renewal reconciliation clears the previous client and retains no secret cursor
+ok 42 - a cookie change during renewal reconciliation clears the previous client and retains no secret cursor
+  ---
+  duration_ms: 30.636881
+  type: 'test'
+  ...
+# Subtest: an unconfirmed renewal preserves an edited duration when GET finds the exact same expiry
+ok 43 - an unconfirmed renewal preserves an edited duration when GET finds the exact same expiry
+  ---
+  duration_ms: 11.053437
+  type: 'test'
+  ...
+# Subtest: long administrator sessions use bounded server checks and survive a network interruption without a new login
+ok 44 - long administrator sessions use bounded server checks and survive a network interruption without a new login
+  ---
+  duration_ms: 3.940687
+  type: 'test'
+  ...
+# Subtest: device reads are lazy, validated and private; targeted revocation uses CSRF and leaves the current device connected
+ok 45 - device reads are lazy, validated and private; targeted revocation uses CSRF and leaves the current device connected
+  ---
+  duration_ms: 6.511545
+  type: 'test'
+  ...
+# Subtest: device revocation and global logout require confirmation; current-device revocation clears the view
+ok 46 - device revocation and global logout require confirmation; current-device revocation clears the view
+  ---
+  duration_ms: 13.464702
+  type: 'test'
+  ...
+# Subtest: late device data after hide cannot repopulate a new account and malformed pages remain hidden
+ok 47 - late device data after hide cannot repopulate a new account and malformed pages remain hidden
+  ---
+  duration_ms: 6.746304
+  type: 'test'
+  ...
+# Subtest: an isolated conversation capability failure offers retry without losing the administrator session
+    # Subtest: 403
+    ok 1 - 403
+      ---
+      duration_ms: 10.054387
+      type: 'test'
+      ...
+    # Subtest: 503
+    ok 2 - 503
+      ---
+      duration_ms: 3.563516
+      type: 'test'
+      ...
+    1..2
+ok 48 - an isolated conversation capability failure offers retry without losing the administrator session
+  ---
+  duration_ms: 14.473997
+  type: 'test'
+  ...
+# Subtest: administrator home is separate from client management and reads no private audience lists
+ok 49 - administrator home is separate from client management and reads no private audience lists
+  ---
+  duration_ms: 2.528504
+  type: 'test'
+  ...
+# Subtest: home and clients keep one home destination policy through logout to the canonical login page
+ok 50 - home and clients keep one home destination policy through logout to the canonical login page
+  ---
+  duration_ms: 4.166529
+  type: 'test'
+  ...
+# Subtest: administrator sign-in opens the home or exact notified message only after the final session proof
+ok 51 - administrator sign-in opens the home or exact notified message only after the final session proof
+  ---
+  duration_ms: 5.926709
+  type: 'test'
+  ...
+# Subtest: administrator login keeps a closed continue target including client management
+ok 52 - administrator login keeps a closed continue target including client management
+  ---
+  duration_ms: 10.47892
+  type: 'test'
+  ...
+1..52
+# tests 56
+# suites 0
+# pass 56
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1134.825803

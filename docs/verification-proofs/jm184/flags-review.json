@@ -1,0 +1,175 @@
+{
+  "status": "bounded_read_only_flags_review_complete_no_open_finding_legacy_label_resolved",
+  "at": "2026-10-22T23:59:54.255957+00:00",
+  "branch": "fix/interface-184",
+  "scope": "Language button runtime and CSS delta, self-contained flag SVG assets, actual image CSP source headers, three affected browser fixture CSP deltas, and targeted Help/browser plus i18n test assertions. Not a native execution or an exhaustive accessibility audit. Follow-up: five legacy language source/HTML/CSS files and two targeted test deltas re-read after root correction.",
+  "confirmed": [
+    {
+      "evidence": [
+        "public/i18n.js:145-156",
+        "public/i18n.css:1-3,10-11"
+      ],
+      "claim": "Shared runtime marks the opposite target: FR page shows UK flag targeting en; EN page shows French flag targeting fr. Visible text is cleared, decorative CSS asset has no emoji/font dependency, and shared runtime sets a current-language aria-label and title."
+    },
+    {
+      "evidence": [
+        "public/i18n.js:179-183",
+        "public/help.html language button",
+        "public/index.html language button",
+        "public/entry.html language button"
+      ],
+      "claim": "Controls remain native type=button. Unchanged delegated click listener respects disabled/aria-disabled and toggles once. Native Enter/Space activation is retained by source semantics; no new custom keyboard handler or native keyboard execution by reviewer."
+    },
+    {
+      "evidence": [
+        "public/i18n.css:1-3",
+        "tests/browser/help.browser.mjs:162-171"
+      ],
+      "claim": "CSS keeps at least 44px height and 44px mobile minimum width plus visible focus outline. Help layout assertion still checks visible controls at least 44px; it was not weakened."
+    },
+    {
+      "evidence": [
+        "server/index.mjs:68",
+        "server/auth/http.mjs:7",
+        "ux184/flags-css-review.json"
+      ],
+      "claim": "Both actual production HTML CSP paths already allow data: images; no production CSP relaxation was required. Both decoded SVGs parse with local paths/clips only, no script/event/external resources."
+    },
+    {
+      "evidence": [
+        "tests/browser/help.browser.mjs:51",
+        "tests/browser/recovery.browser.mjs:58",
+        "tests/browser/notifications.browser.mjs:38"
+      ],
+      "claim": "Root corrected three fixture image CSP mismatches to allow data: images. Existing securitypolicyviolation observers and noErrors checks remain."
+    },
+    {
+      "evidence": [
+        "tests/browser/help.browser.mjs:187-194"
+      ],
+      "claim": "Help fixture now checks opposite target and localized aria, then actually loads the effective computed CSS SVG in Image and requires onload plus nonzero natural dimensions. This goes beyond checking the background declaration. Scenario remains pending native CI; no execution here."
+    },
+    {
+      "evidence": [
+        "public/device-transition.html:22",
+        "public/device-transition.js:35-38",
+        "public/i18n.js:179-183",
+        "public/i18n.css:1-3,10",
+        "server/transition/http.mjs:2,77"
+      ],
+      "claim": "Legacy transition language control stays native type=button with its original explicit click handler and has no data-jm-language marker. New data-jm-language-target is style-only for the global runtime, whose click delegation still matches only data-jm-language; no double toggle added. :is selector includes both control kinds and preserves 44px/focus. Transition HTML inherits AUTH_HEADERS permitting data: images."
+    }
+  ],
+  "findings": [
+    {
+      "id": "UX184-I18N-LEGACY-ARIA",
+      "severity": "low",
+      "confidence": "high",
+      "status": "resolved_in_root_source_correction_read_only_verified",
+      "files": [
+        {
+          "file": "public/app.js",
+          "lines": [
+            49,
+            50,
+            54
+          ]
+        },
+        {
+          "file": "public/entry.js",
+          "lines": [
+            64,
+            65,
+            144
+          ]
+        }
+      ],
+      "trigger": "Shared language changes call apply(), then registered app/entry listeners call their local render. Entry also renders after access/installation state changes.",
+      "impact": "Localized accessible action requirement is not consistently met on legacy neutral home/entry surfaces. No login/routing or target-language failure established.",
+      "originalActual": "Local render rewrites EN/FR text and overwrites aria-label with Switch to English in FR or Passer en français in EN; data target and localized title stay owned by shared runtime. CSS font-size:0 still hides text so visual flags remain correct.",
+      "resolution": {
+        "evidence": [
+          "public/app.js:49-52",
+          "public/entry.js:64-67",
+          "public/device-transition.js:29-32",
+          "public/device-transition.html:12",
+          "public/i18n.css:1-3,10"
+        ],
+        "claim": "app and entry render the same empty text, opposite target, current-language aria-label and title as shared runtime, including subsequent controller renders. Root also aligned the legacy transition custom button and loaded i18n.css after its local stylesheet."
+      },
+      "testGapHistorical": "Existing homepage/entry co-loading i18n test checks language and client link but not final text/target/aria/title after controller render or change.",
+      "targetedCoverageRead": [
+        "tests/i18n.test.mjs: homepage/entry co-loading test now asserts final empty text/target/localized aria after controllers render, plus homepage toggle; existing request-count and single-toggle expectations retained.",
+        "tests/device-transition-controller.test.mjs: harness now records attributes; new case asserts FR→EN→FR targets/names and no transfer fetch on language changes. The harness does not simulate real DOM event bubbling; source absence of data-jm-language on custom button independently rules out global delegated double handling."
+      ]
+    }
+  ],
+  "detailReport": "/workspace/scratch/bb431be72395/ux184/flags-css-review.json",
+  "detailSha256": "df50a0515e618e20d2a53f02c6c69f8b849b3498e7e16f094334713248dd6c10",
+  "validation": {
+    "rootReported": "Root reports 115/115 targeted tests for i18n/device controller/entry lifecycle after correction and three controller syntax checks green. Prior three fixture syntax checks/global syntax were also green. Reviewer did not rerun any check.",
+    "reviewerExecutedTests": 0,
+    "reviewerNativeBrowserRuns": 0,
+    "newFixtureDecodeStatus": "read and source-reviewed; awaits native CI"
+  },
+  "snapshot": [
+    {
+      "file": "public/i18n.js",
+      "sha256": "603e5a6aedeb733a78e82a8cfbb8a28c25c11d208666bbbae47a1610197e0e4b"
+    },
+    {
+      "file": "public/i18n.css",
+      "sha256": "b887041e13aa8770bc1f69f18e850474994e10589e90be7a9e19f3c54ed217c6"
+    },
+    {
+      "file": "public/app.js",
+      "sha256": "a6494021b786c1d3fbf2f848d7ec86f59b40dd071891d51deabba2ccf6a36d0c"
+    },
+    {
+      "file": "public/entry.js",
+      "sha256": "6d212fe11f1e5683e4228014417f4602a23c436702ba5a463c9da42cdc3fa141"
+    },
+    {
+      "file": "public/device-transition.js",
+      "sha256": "1c2ce8412e4b9b939cd767549055516c4693186f3af6a03a2c25436f2312cba7"
+    },
+    {
+      "file": "public/device-transition.html",
+      "sha256": "e1827839e4174539db9e8932f22c7b0735cb423a24c9e5fb342a36b4ace3ea1f"
+    },
+    {
+      "file": "tests/i18n.test.mjs",
+      "sha256": "7fd78f185183d15072f4f7e645ed730aa299c3bcc1a940e817151ff25e85d4a2"
+    },
+    {
+      "file": "tests/device-transition-controller.test.mjs",
+      "sha256": "0f1750f46e2f99b0f610ba938c68494d52acc7c7e903a05dc3c7b1708a72a77e"
+    },
+    {
+      "file": "tests/browser/help.browser.mjs",
+      "sha256": "45ecb93c35aefcc08fd8e912e61614cd5f5e14b5af26aa4ef34b8193851db493"
+    },
+    {
+      "file": "tests/browser/recovery.browser.mjs",
+      "sha256": "0c5422acfdbc35355638833d820aefa93f81cbd04a15f0051df9fea69adb9f2e"
+    },
+    {
+      "file": "tests/browser/notifications.browser.mjs",
+      "sha256": "89c1274b472dd7fae1b4abf67d738b7ceaeb420b993ad2474f71e17907ff1954"
+    }
+  ],
+  "limits": [
+    "Shared branch snapshots identify this final read-only observation. Source/test corrections and execution are owned by root; no application edit or test run by reviewer.",
+    "CSS/SVG structural inspection is not pixel rendering. No screenshots, forced-colour check or live host verification performed.",
+    "No application/test file edit, Git mutation, new suite, network, private session, backup or production operation by this reviewer."
+  ],
+  "openFindings": [],
+  "followupSvgContinuity": {
+    "decodedAssetCount": 2,
+    "sha256": [
+      "05208e651660c38e262fa2ad195d00af58733c869d4d84e8286e6f6fb2b77773",
+      "d660a863f121a7e63f8cb3196851f729aaa4ccbdb66bf6100384a2d8ab5fb5f3"
+    ],
+    "detailCssSnapshotNote": "Linked SVG/CSS detail report is the earlier exact CSS snapshot. Current CSS only broadens its selector to :is([data-jm-language],[data-jm-language-target]); decoded SVG hashes are unchanged and current CSS hash is in this report."
+  }
+}

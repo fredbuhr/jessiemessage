@@ -1,0 +1,49 @@
+{
+  "report": {
+    "path": "/workspace/scratch/bb431be72395/ux184/chat-report.json",
+    "sha256": "3345f73ac68199b93267a46f1a82c05d08567e0bfba8496f423af055adfd42a4",
+    "bytes": 7864
+  },
+  "files": [
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/public/chat.html",
+      "sha256": "d9712767733a50d6ddb3b074fa84878d2265ef99e6f34f84d923119ad0e4f193",
+      "bytes": 17516,
+      "relativePath": "public/chat.html",
+      "changed": true,
+      "baseSha256": "7fbf63133107cd9fdb7a2038196398c7e817cf292107d56c1654999bf92af16f"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/public/chat.css",
+      "sha256": "c3b5d78a0eb1ae7a135bf6b40d590330906e11bd292a49a28171c9e4639db50e",
+      "bytes": 21479,
+      "relativePath": "public/chat.css",
+      "changed": true,
+      "baseSha256": "8e9867360a6dd4ae6602686a3ee9180974a2231aacc14773a9b13b46091d2a11"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/tests/chat-accessibility-markup.test.mjs",
+      "sha256": "516324744c532a9e85e134993829d95614bf3496e7183c53f71e9e00af7ff1ea",
+      "bytes": 6159,
+      "relativePath": "tests/chat-accessibility-markup.test.mjs",
+      "changed": true,
+      "baseSha256": "554c146be7465ebdbfb95e149af078fb365d7e20b1772117e36174ded578d400"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/tests/browser/chat-accessibility.browser.mjs",
+      "sha256": "c87c46cea3a2959e6ee3463ad711ed6f3c60ae5528e49bc99e5e3f4e7b820733",
+      "bytes": 134784,
+      "relativePath": "tests/browser/chat-accessibility.browser.mjs",
+      "changed": true,
+      "baseSha256": "0e6d45f9fc06bd041688d64214d7431290eb3e1ebe9baafe3fd8d68c04d34b9a"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/public/chat.js",
+      "sha256": "ef88172452810c43960d3ab55ec4bd6c0493589ea3b92ef1fcaa2b4014ed6134",
+      "bytes": 157279,
+      "relativePath": "public/chat.js",
+      "changed": false,
+      "baseSha256": "ef88172452810c43960d3ab55ec4bd6c0493589ea3b92ef1fcaa2b4014ed6134"
+    }
+  ]
+}

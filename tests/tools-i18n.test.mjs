@@ -73,13 +73,20 @@ test("broadcast HTML marks interface leaves and loads the shared runtime/catalog
   assert.ok(html.indexOf('src="/i18n-tools.js"') < html.indexOf('src="/broadcast.js"'));
   assert.ok(html.indexOf('src="/session-clock.js"') < html.indexOf('src="/broadcast.js"'));
   assert.match(html, /data-jm-language/); assert.match(html, /data-jm-i18n-placeholder="Écris ton message…"/);
-  const h = harness(), homeLink = h.root.querySelectorAll("a").find(node => node.getAttribute("href") === "/admin" && node.getAttribute("data-jm-i18n") === "Accueil admin");
-  assert.equal(homeLink.textContent, "Accueil admin");
+  const h = harness(), homeLinks = h.root.querySelectorAll("a").filter(node => node.getAttribute("href") === "/admin");
+  assert.equal(homeLinks.length, 1);
+  const homeLink = homeLinks[0];
+  assert.equal(homeLink.textContent.trim(), "Jessie");
+  assert.equal(homeLink.getAttribute("aria-label"), "Accueil admin");
+  assert.equal(homeLink.getAttribute("title"), "Accueil admin");
   h.visible(); h.switch("en");
-  assert.equal(homeLink.textContent, "Admin home"); assert.equal(homeLink.getAttribute("href"), "/admin");
+  assert.equal(homeLink.textContent.trim(), "Jessie"); assert.equal(homeLink.getAttribute("href"), "/admin");
+  assert.equal(homeLink.getAttribute("aria-label"), "Admin home");
+  assert.equal(homeLink.getAttribute("title"), "Admin home");
   assert.equal(h.ids.get("campaign-body").getAttribute("placeholder"), "Write your message…");
   assert.equal(h.ids.get("audience-title").textContent, "Recipients"); h.switch("fr");
-  assert.equal(homeLink.textContent, "Accueil admin");
+  assert.equal(homeLink.getAttribute("aria-label"), "Accueil admin");
+  assert.equal(homeLink.getAttribute("title"), "Accueil admin");
   assert.equal(h.ids.get("audience-title").textContent, "Les destinataires"); assert.equal(h.calls.length, 0);
 });
 

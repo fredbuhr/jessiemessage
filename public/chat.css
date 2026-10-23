@@ -27,6 +27,8 @@
 /* Secondary actions use the same controls in a bounded, ordinary panel. */
 .icon-button{display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;min-width:44px;padding:0;border:0;border-radius:12px;background:transparent;color:var(--ink);font:inherit;font-size:25px;line-height:1}
 .icon-button:hover:not(:disabled){background:#382333}.icon-button[aria-expanded=true]{background:#493047}
+/* Keep one Options entry, including the inbox before a conversation is selected. */
+.page.has-conversation #open-account-menu,.page:not(.has-conversation) #open-conversation-menu{display:none}
 .chat-menu{position:absolute;z-index:30;top:78px;right:28px;width:min(320px,calc(100% - 24px));max-height:calc(100% - 92px);overflow:auto;padding:14px;background:var(--surface);border:1px solid #76556b;border-radius:16px;box-shadow:0 15px 50px #0009;overscroll-behavior:contain}
 .chat-menu .dialog-head{margin-bottom:6px}.chat-menu .dialog-head h2{font-size:16px}.chat-menu .account-nav,.menu-actions,.menu-links{display:grid;gap:3px;min-width:0}
 .chat-menu .account-nav a,.chat-menu .account-nav button,.menu-actions>button,.menu-links>a{display:flex;align-items:center;justify-content:flex-start;min-height:44px;min-width:0;max-width:100%;padding:10px 12px;border:0;border-radius:10px;background:transparent;color:#dbc2d2;font:inherit;font-size:14px;line-height:1.45;text-align:left;text-decoration:none;white-space:normal;overflow-wrap:anywhere}

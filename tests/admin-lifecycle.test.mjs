@@ -60,8 +60,12 @@ function harness({ visible = true, currentSession = session(), intercept, clipbo
   const document = { visibilityState: visible ? "visible" : "hidden", body: new Element("body"), getElementById: element,
     createElement: (tagName) => new Element(tagName), addEventListener: (name, handler) => documentEvents.set(name, handler) };
   const state = { currentSession, clipboardCalls: [], clients, invitations };
+  const pageLocation = { pathname, search, replace: value => navigations.push(value) };
   const context = vm.createContext({ document, window: { confirm, addEventListener: (name, handler) => windowEvents.set(name, handler) },
-    location: { pathname, search, replace: value => navigations.push(value) }, JessieNotificationLink: { read: () => notification }, history: { replaceState: (...args) => history.push(args) }, AbortController, URLSearchParams,
+    location: pageLocation, JessieNotificationLink: { read: () => notification }, history: { replaceState(...args) {
+      history.push(args); const target = new URL(args[2], "https://example.invalid");
+      pageLocation.pathname = target.pathname; pageLocation.search = target.search;
+    } }, AbortController, URLSearchParams,
     navigator: { clipboard: { writeText: async (value) => { state.clipboardCalls.push(value); if (clipboard) return clipboard(value); } } },
     Date: class extends Date { static now() { return now; } },
     setTimeout: (handler, delay) => { const id = ++timerId; timers.set(id, { handler, at: now + delay }); return id; }, clearTimeout: (id) => timers.delete(id),
@@ -87,7 +91,7 @@ function harness({ visible = true, currentSession = session(), intercept, clipbo
     } });
   vm.runInContext(clockSource, context);
   vm.runInContext(source, context, { filename: "public/admin-login.js" });
-  return { element, document, calls, state, timers, createButton, history, navigations,
+  return { element, document, calls, state, timers, createButton, history, navigations, location: pageLocation,
     async event(name, value = {}) { const handler = documentEvents.get(name) ?? windowEvents.get(name); assert.equal(typeof handler, "function", name); handler(value); await flush(); },
     async hide() { document.visibilityState = "hidden"; await this.event("visibilitychange"); },
     async show() { document.visibilityState = "visible"; await this.event("visibilitychange"); },
@@ -748,6 +752,23 @@ test("administrator home is separate from client management and reads no private
   assert.equal(f.element("access-title").textContent, "Administration"); assert.equal(f.element("access-tools").hidden, true);
   assert.equal(f.calls.some(call => call.path.startsWith("/api/admin/")), false);
   await f.hide(); assert.equal(f.element("connected").hidden, true); assert.equal(f.element("connected-name").textContent, "");
+});
+
+test("home and clients keep one home destination policy through logout to the canonical login page", async () => {
+  for (const pathname of ["/admin", "/admin/clients"]) {
+    const f = harness({ pathname }); await flush();
+    assert.equal(f.element("admin-home-link").hidden, pathname === "/admin");
+    assert.equal(f.element("admin-home-current").hidden, pathname !== "/admin");
+    assert.equal(f.element("admin-chat-link").hidden, false, "the sole messages CTA follows capability and identity proofs");
+    await f.click("logout-button");
+    assert.equal(f.location.pathname, "/admin/login");
+    assert.equal(f.element("admin-home-link").hidden, false, "the login view restores its home link after history changes");
+    assert.equal(f.element("admin-home-current").hidden, true);
+    assert.equal(f.element("admin-chat-link").hidden, true);
+    assert.equal(f.element("login-form").hidden, false);
+    assert.equal(posts(f).filter(call => call.path === "/api/auth/logout").length, 1);
+    assert.deepEqual(f.navigations, [], "logout does not guess a new authenticated destination");
+  }
 });
 
 test("administrator sign-in opens the home or exact notified message only after the final session proof", async () => {

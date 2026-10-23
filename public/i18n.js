@@ -143,8 +143,14 @@
       refreshMarker(node);
     }
     for (const button of nodes(root, "[data-jm-language]")) {
-      button.textContent = language === "fr" ? "EN" : "FR";
-      button.setAttribute("aria-label", language === "fr" ? "Switch to English" : "Passer en français");
+      // The flag is a decorative CSS image, with an explicit translated action
+      // for assistive technology. SVG works on Windows without emoji flag fonts.
+      const target = language === "fr" ? "en" : "fr";
+      const label = language === "fr" ? "Passer en anglais" : "Switch to French";
+      button.textContent = "";
+      button.setAttribute("data-jm-language-target", target);
+      button.setAttribute("aria-label", label);
+      button.setAttribute("title", label);
     }
   }
   function purgeParameters() {

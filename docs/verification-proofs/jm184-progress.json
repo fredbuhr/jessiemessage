@@ -1,0 +1,20 @@
+{
+  "type": "jm184-corrective-progress",
+  "status": "code_frozen_local_checks_passed_native_qualification_pending",
+  "base": "c786ea592e331780aaac16beea6ea546897c8ca4",
+  "branch": "fix/interface-184",
+  "candidateVersion": "1.8.4",
+  "activeVersion": "1.8.3",
+  "activeSource": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+  "activeCheckpointSha256": "17f575ebe83d0a9d9acf74e9436bff59eabcf8b5ed1bb8f0f99897c867c78a22",
+  "node": "v24.22.1",
+  "schemaMigrations": 36,
+  "merged": false,
+  "published": false,
+  "deployed": false,
+  "nativeQualified": false,
+  "privateScreenshotsPublished": false,
+  "hostedActionsPerformed": false,
+  "nextAction": "Publish exact branch checkpoint and qualify its PR natively with all5jobs and synthetic screenshots before merge/publication; production183 unchanged.",
+  "localVerification": "jm184/local-verification.json"
+}

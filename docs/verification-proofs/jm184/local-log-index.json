@@ -1,0 +1,31 @@
+{
+  "type": "jm184-local-logs",
+  "records": [
+    {
+      "path": "local/profile184-targeted.tap",
+      "sha256": "16cabe8073eef1c9d82c35a1db831163062b8ab33f0ea27d38888361ccbc5c78",
+      "bytes": 5466
+    },
+    {
+      "path": "local/ux184-admin-navigation-first.tap",
+      "sha256": "7fed5234608587e4b30a62245dee4f6fe449cc07b97b70d1fd8ef057dd41f010",
+      "bytes": 19038
+    },
+    {
+      "path": "local/ux184-admin-lifecycle-final.tap",
+      "sha256": "792f5152f4019aed4d8a27d46aa83a5180c0d2d3595c5daecb1b5c8d86a3863c",
+      "bytes": 14039
+    },
+    {
+      "path": "local/chat-targeted.log",
+      "sha256": "79f29e629d92c6cdc5b8fcd86b3b7abb85e934697fb07763eeaae3e9e734ac08",
+      "bytes": 16052
+    },
+    {
+      "path": "local/chat-markup-final.log",
+      "sha256": "89bc9e29da1d462ac3f385148f72944262db43fbf687d99d5345a6829cd08791",
+      "bytes": 577
+    }
+  ],
+  "note": "The first chat run includes its explicit failed new test fixture parser; final affected markup suite4/4 and unchanged129 behavior cases form the composed result. Admin74 and56 overlap."
+}

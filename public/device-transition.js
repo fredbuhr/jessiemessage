@@ -26,8 +26,10 @@
     const t = words[locale]; document.documentElement.lang = locale; document.title = t.pageTitle;
     for (const [id, key] of [["transition-eyebrow", "eyebrow"], ["transition-title", "title"], ["transition-copy", "copy"], ["transition-notifications", "note"]]) document.getElementById(id).textContent = t[key];
     start.textContent = t[statusKey && statusKey !== "preparing" ? "retry" : "start"]; back.textContent = t.back; login.textContent = t.login;
-    status.textContent = statusKey ? t[statusKey] : ""; language.textContent = locale === "fr" ? "EN" : "FR";
-    language.setAttribute("aria-label", locale === "fr" ? "Switch to English" : "Passer en français");
+    status.textContent = statusKey ? t[statusKey] : ""; language.textContent = "";
+    language.setAttribute("data-jm-language-target", locale === "fr" ? "en" : "fr");
+    language.setAttribute("aria-label", locale === "fr" ? "Passer en anglais" : "Switch to French");
+    language.setAttribute("title", locale === "fr" ? "Passer en anglais" : "Switch to French");
     refreshLogin();
   }
   language.addEventListener("click", () => {

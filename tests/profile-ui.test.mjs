@@ -5,6 +5,7 @@ import vm from "node:vm";
 
 const source = await readFile(new URL("../public/profile.js", import.meta.url), "utf8");
 const translations = await readFile(new URL("../public/i18n-profile.js", import.meta.url), "utf8");
+const i18nRuntime = await readFile(new URL("../public/i18n.js", import.meta.url), "utf8");
 const id = number => number.toString(16).padStart(32, "0");
 const jpeg = value => new Blob([value], { type: "image/jpeg" });
 const deferred = () => { let resolve, reject; const promise = new Promise((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; };
@@ -18,7 +19,7 @@ class Element {
     this.classList = { toggle: (name, on) => { const values = new Set(this.className.split(/\s+/).filter(Boolean));
       if (on) values.add(name); else values.delete(name); this.className = [...values].join(" "); } };
   }
-  get isConnected() { return this === this.ownerDocument.body || Boolean(this.parentElement?.isConnected); }
+  get isConnected() { return this === this.ownerDocument.documentElement || Boolean(this.parentElement?.isConnected); }
   get textContent() { return this._text + this.children.map(child => child.textContent).join(""); }
   set textContent(value) { this._text = String(value); for (const child of this.children) child.parentElement = null; this.children = []; }
   get value() { return this._value; }
@@ -37,11 +38,18 @@ class Element {
     return event;
   }
   querySelectorAll(selector) {
-    const matches = node => selector.startsWith(".") ? node.className.split(/\s+/).includes(selector.slice(1)) : node.tagName === selector;
-    return this.children.flatMap(child => [...(matches(child) ? [child] : []), ...child.querySelectorAll(selector)]);
+    return this.children.flatMap(child => [...(child.matches(selector) ? [child] : []), ...child.querySelectorAll(selector)]);
   }
+  matches(selector) { return selector.split(",").some(part => {
+    part = part.trim();
+    if (part.startsWith(".")) return this.className.split(/\s+/).includes(part.slice(1));
+    if (part.startsWith("#")) return this.id === part.slice(1);
+    const attribute = /^\[([^\]]+)\]$/.exec(part);
+    return attribute ? this.getAttribute(attribute[1]) !== null : this.tagName === part;
+  }); }
   querySelector(selector) { return this.querySelectorAll(selector)[0] ?? null; }
   focus() { if (this.isConnected && !this.disabled) this.ownerDocument.activeElement = this; }
+  click() { this.clicks = (this.clicks ?? 0) + 1; this.emit("click"); }
   showModal() { this.open = true; }
   close() { this.open = false; this.emit("close"); }
 }
@@ -50,22 +58,23 @@ function harness({ role = "client", avatarsEnabled = true, avatar = false, inter
   const events = new Map(), windowEvents = new Map(), calls = [], binaryCalls = [], created = [], revoked = [], saved = [], errors = [];
   const add = (map, name, handler) => { if (!map.has(name)) map.set(name, new Set()); map.get(name).add(handler); };
   const document = { visibilityState: "visible", createElement(tag) { return new Element(tag, document); },
+    querySelectorAll: selector => document.documentElement.querySelectorAll(selector),
     addEventListener: (name, handler) => add(events, name, handler), removeEventListener: (name, handler) => events.get(name)?.delete(handler) };
-  document.body = new Element("body", document); document.activeElement = document.body;
+  document.documentElement = new Element("html", document); document.body = new Element("body", document);
+  document.documentElement.append(document.body); document.activeElement = document.body;
   const button = new Element("button", document); document.body.append(button);
   const base = `/api/profile/${role}`;
   const state = { owner: true, profile: { pseudonym: "Envoyer", version: "1", avatarId: avatar ? id(1) : null, avatarUrl: avatar ? `${base}/avatar?v=1` : null } };
-  const dictionary = new Map();
   const context = vm.createContext({ matchMedia: () => ({ matches: coarse }), document, Blob, AbortController, DOMException, console,
+    navigator: { language: language === "en" ? "en-GB" : "fr-FR" },
     __prepareImageUpload: async file => file,
     createImageBitmap: async () => bitmap,
     window: { addEventListener: (name, handler) => add(windowEvents, name, handler), removeEventListener: (name, handler) => windowEvents.get(name)?.delete(handler) },
-    URL: { createObjectURL(blob) { const url = `blob:profile-${created.length + 1}`; created.push({ url, blob }); return url; }, revokeObjectURL: url => revoked.push(url) },
-    JessieI18n: { register: values => Object.entries(values).forEach(([key, value]) => dictionary.set(key, value)),
-      text(node, text) { node.textContent = language === "en" ? dictionary.get(text) ?? text : text; },
-      attr(node, name, text) { node.setAttribute(name, language === "en" ? dictionary.get(text) ?? text : text); }, forget() {} } });
+    URL: { createObjectURL(blob) { const url = `blob:profile-${created.length + 1}`; created.push({ url, blob }); return url; }, revokeObjectURL: url => revoked.push(url) } });
+  vm.runInContext(i18nRuntime, context, { filename: "public/i18n.js" });
   vm.runInContext(translations, context);
   vm.runInContext(`const prepareImageUpload = __prepareImageUpload;\n${source.replace(/^import[^\n]+;\n/gm, "").replace(/export (async )?function /g, "$1function ")}\nglobalThis.__profile = {createProfileUI, prepareProfileAvatar};`, context);
+  const runtimeListeners = { visibilitychange: events.get("visibilitychange")?.size ?? 0, pagehide: windowEvents.get("pagehide")?.size ?? 0 };
   const ui = context.__profile.createProfileUI({ role, host: document.body, button, avatarsEnabled, isCurrent: () => state.owner,
     prepareAvatar: prepareAvatar ?? (async file => file),
     async request(path, options) {
@@ -82,7 +91,8 @@ function harness({ role = "client", avatarsEnabled = true, avatar = false, inter
     onSaved: value => saved.push(value), onError: error => errors.push(error)
   });
   const element = selector => document.body.querySelector(`.${selector}`);
-  return { ui, document, button, calls, binaryCalls, state, created, revoked, saved, errors, context, events, windowEvents, element,
+  return { ui, document, button, calls, binaryCalls, state, created, revoked, saved, errors, context, events, windowEvents, element, runtimeListeners,
+    language: value => context.JessieI18n.setLanguage(value),
     async choose(blob) { const file = element("profile-file"); file.files = [blob]; file.emit("change"); await flush(); },
     async save() { element("profile-form").emit("submit"); await flush(); },
     async click(selector) { element(selector).emit("click"); await flush(); },
@@ -230,8 +240,8 @@ test("Escape returns focus to the opener; Tab stays inside the modal", async () 
 test("destroy removes listeners, revokes avatar URLs and cannot be reopened", async () => {
   const h = harness({ avatar: true }); await h.ui.open(); await flush(); h.ui.destroy(); h.ui.destroy();
   assert.equal(h.element("profile-dialog"), null); assert.deepEqual(h.revoked, ["blob:profile-1"]);
-  assert.equal(h.button.listeners.get("click").size, 0); assert.equal(h.events.get("visibilitychange").size, 0);
-  assert.equal(h.windowEvents.get("pagehide").size, 0); assert.equal(await h.ui.open(), false);
+  assert.equal(h.button.listeners.get("click").size, 0); assert.equal(h.events.get("visibilitychange").size, h.runtimeListeners.visibilitychange);
+  assert.equal(h.windowEvents.get("pagehide").size, h.runtimeListeners.pagehide); assert.equal(await h.ui.open(), false);
 });
 
 test("the default avatar crop makes a 256px central JPEG and releases the bitmap/canvas", async () => {
@@ -256,4 +266,79 @@ test("touch profile loading and saving do not open a keyboard; desktop name focu
     assert.equal(h.document.activeElement, h.button); assert.equal(h.element("profile-dialog").open, false);
     await h.ui.open(); assert.equal(h.document.activeElement, h.element(coarse ? "profile-close" : "profile-pseudonym")); h.ui.destroy();
   }
+});
+
+test("both profile roles translate their existing UI bindings in place without translating a name or making requests", async () => {
+  for (const role of ["client", "admin"]) for (const initial of ["fr", "en"]) {
+    const h = harness({ role, language: initial }); h.state.profile.pseudonym = "Mon profil"; await h.ui.open();
+    const dialog = h.element("profile-dialog"), input = h.element("profile-pseudonym"), choose = h.element("profile-choose-avatar");
+    input.value = "Enregistrer le profil"; input.focus(); const calls = h.calls.length;
+    for (const language of ["en", "fr", "en"]) {
+      h.language(language);
+      assert.equal(h.document.documentElement.lang, language);
+      assert.equal(dialog.querySelector("h2").textContent, language === "en" ? "My profile" : "Mon profil");
+      assert.equal(h.element("profile-close").textContent, language === "en" ? "Close profile" : "Fermer le profil");
+      assert.equal(input.parentElement.querySelector("span").textContent, language === "en" ? "Public name" : "Nom public");
+      assert.equal(choose.textContent, language === "en" ? "Choose or replace your avatar" : "Choisir ou remplacer l’avatar");
+      assert.equal(h.element("profile-file").getAttribute("aria-label"), choose.textContent);
+      assert.equal(h.element("profile-file").hidden, true, "browser-owned file captions cannot override the chosen UI language");
+      assert.equal(h.element("profile-remove-avatar").textContent, language === "en" ? "Remove avatar" : "Retirer l’avatar");
+      assert.equal(h.element("profile-save").textContent, language === "en" ? "Save profile" : "Enregistrer le profil");
+      assert.equal(input.value, "Enregistrer le profil"); assert.equal(h.document.activeElement, input); assert.equal(h.calls.length, calls);
+    }
+    await h.click("profile-choose-avatar"); assert.equal(h.element("profile-file").clicks, 1); assert.equal(h.calls.length, calls);
+    h.ui.close(); h.language("fr"); await h.ui.open();
+    assert.equal(dialog.querySelector("h2").textContent, "Mon profil"); assert.equal(input.value, "Mon profil", "saved public name matching a UI key remains raw");
+    h.ui.destroy();
+  }
+});
+
+test("language changes during an outstanding profile read update loading UI and remain in force when it completes", async () => {
+  const gate = deferred(), h = harness({ intercept: () => gate.promise });
+  const opening = h.ui.open();
+  assert.equal(h.element("profile-status").textContent, "Chargement du profil…");
+  h.language("en");
+  assert.equal(h.element("profile-status").textContent, "Loading your profile…");
+  assert.equal(h.element("profile-dialog").querySelector("h2").textContent, "My profile");
+  gate.resolve(structuredClone(h.state.profile)); await opening;
+  assert.equal(h.element("profile-status").textContent, ""); assert.equal(h.element("profile-save").textContent, "Save profile");
+  assert.equal(h.element("profile-pseudonym").value, "Envoyer"); assert.equal(h.calls.length, 1); h.ui.destroy();
+});
+
+test("avatar preparation, an outstanding save and saved feedback follow later language choices without changing the draft or replaying a request", async () => {
+  const preparation = deferred(), saving = deferred();
+  const h = harness({ prepareAvatar: () => preparation.promise, intercept(path, options) { if (options.mutation && path === "/api/profile/client") return saving.promise; } });
+  await h.ui.open(); h.element("profile-pseudonym").value = "Nom privé <b>brut</b>";
+  await h.choose(jpeg("synthetic avatar")); h.language("en");
+  assert.equal(h.element("profile-status").textContent, "Preparing your avatar…"); assert.equal(h.calls.length, 1);
+  preparation.resolve(jpeg("prepared")); await flush();
+  assert.equal(h.element("profile-status").textContent, "Avatar ready. Save your profile to apply it.");
+  await h.save(); assert.equal(h.element("profile-status").textContent, "Saving your profile…");
+  const calls = h.calls.length; h.language("fr");
+  assert.equal(h.element("profile-status").textContent, "Enregistrement du profil…"); assert.equal(h.calls.length, calls);
+  assert.equal(h.element("profile-pseudonym").value, "Nom privé <b>brut</b>");
+  h.language("en"); saving.resolve({ pseudonym: "Nom privé <b>brut</b>", version: "2", avatarId: id(99), avatarUrl: "/api/profile/client/avatar?v=2" }); await flush();
+  assert.equal(h.element("profile-feedback").textContent, "Profile saved.");
+  h.language("fr"); assert.equal(h.element("profile-feedback").textContent, "Profil enregistré.");
+  assert.equal(h.calls.length, calls); assert.equal(h.saved[0].pseudonym, "Nom privé <b>brut</b>"); h.ui.destroy();
+});
+
+test("translated load errors, avatar errors and conflict actions preserve their French sources and raw draft", async () => {
+  const failed = harness({ intercept() { throw Object.assign(new Error("synthetic unavailable"), { status: 503 }); } });
+  await failed.ui.open(); failed.language("en");
+  assert.equal(failed.element("profile-status").textContent, "Your profile is unavailable. Try again shortly.");
+  assert.equal(failed.element("profile-retry").textContent, "Retry loading");
+  failed.language("fr"); assert.equal(failed.element("profile-status").textContent, "Le profil est indisponible. Réessaie dans un moment."); failed.ui.destroy();
+  const avatar = harness({ prepareAvatar() { throw Object.assign(new Error("synthetic format"), { code: "media_format" }); } });
+  await avatar.ui.open(); await avatar.choose(jpeg("invalid")); avatar.language("en");
+  assert.equal(avatar.element("profile-status").textContent, "Choose a JPEG, PNG or WebP photo."); avatar.ui.destroy();
+  const conflict = harness({ intercept(path, options) { if (options.mutation) throw Object.assign(new Error("synthetic conflict"), { status: 409 }); } });
+  await conflict.ui.open(); conflict.element("profile-pseudonym").value = "Garder mon brouillon"; await conflict.save();
+  const calls = conflict.calls.length; conflict.language("en");
+  assert.equal(conflict.element("profile-status").textContent, "The profile changed elsewhere. Your draft has been kept.");
+  assert.equal(conflict.element("profile-conflict").querySelector("p").textContent, "The profile changed elsewhere. Your draft has been kept.");
+  assert.equal(conflict.element("profile-reload").textContent, "Reload the saved profile");
+  assert.equal(conflict.element("profile-keep-draft").textContent, "Keep my draft");
+  assert.equal(conflict.element("profile-pseudonym").value, "Garder mon brouillon"); assert.equal(conflict.calls.length, calls);
+  conflict.language("fr"); assert.equal(conflict.element("profile-keep-draft").textContent, "Garder mon brouillon"); conflict.ui.destroy();
 });

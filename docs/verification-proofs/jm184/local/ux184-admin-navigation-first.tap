@@ -1,0 +1,456 @@
+TAP version 13
+# Subtest: administrator HTML translations cover static labels, MFA help and native hints without translating form values or URLs
+ok 1 - administrator HTML translations cover static labels, MFA help and native hints without translating form values or URLs
+  ---
+  duration_ms: 2.292849
+  type: 'test'
+  ...
+# Subtest: backup settings translate the daily state and manual recovery limits without renaming local tools
+ok 2 - backup settings translate the daily state and manual recovery limits without renaming local tools
+  ---
+  duration_ms: 24.101042
+  type: 'test'
+  ...
+# Subtest: administrator language switches update static and loaded private UI in place while names, values and requests remain unchanged
+ok 3 - administrator language switches update static and loaded private UI in place while names, values and requests remain unchanged
+  ---
+  duration_ms: 124.635799
+  type: 'test'
+  ...
+# Subtest: administrator private bindings are cleared on hide and language changes cannot restore a cleared account or issue requests
+ok 4 - administrator private bindings are cleared on hide and language changes cannot restore a cleared account or issue requests
+  ---
+  duration_ms: 42.248876
+  type: 'test'
+  ...
+# Subtest: plain 404 optional features preserve an authentication-only administrator session without an error banner
+    # Subtest: restored session
+    ok 1 - restored session
+      ---
+      duration_ms: 22.201477
+      type: 'test'
+      ...
+    # Subtest: successful login
+    ok 2 - successful login
+      ---
+      duration_ms: 4.282109
+      type: 'test'
+      ...
+    1..2
+ok 5 - plain 404 optional features preserve an authentication-only administrator session without an error banner
+  ---
+  duration_ms: 27.824156
+  type: 'test'
+  ...
+# Subtest: plain 401 from an optional authenticated request clears the revoked session
+ok 6 - plain 401 from an optional authenticated request clears the revoked session
+  ---
+  duration_ms: 3.413229
+  type: 'test'
+  ...
+# Subtest: plain 503 remains a visible service error rather than a disabled optional feature
+ok 7 - plain 503 remains a visible service error rather than a disabled optional feature
+  ---
+  duration_ms: 3.154368
+  type: 'test'
+  ...
+# Subtest: a successful HTTP session response containing malformed JSON is still refused
+ok 8 - a successful HTTP session response containing malformed JSON is still refused
+  ---
+  duration_ms: 2.580881
+  type: 'test'
+  ...
+# Subtest: a late plain 404 body cannot clear a newer administrator's access after hide
+ok 9 - a late plain 404 body cannot clear a newer administrator's access after hide
+  ---
+  duration_ms: 29.296399
+  type: 'test'
+  ...
+# Subtest: initially hidden administrator page clears anonymous credentials and does no request until visible
+ok 10 - initially hidden administrator page clears anonymous credentials and does no request until visible
+  ---
+  duration_ms: 7.733757
+  type: 'test'
+  ...
+# Subtest: initial visibility and pageshow notifications share one administrator bootstrap
+ok 11 - initial visibility and pageshow notifications share one administrator bootstrap
+  ---
+  duration_ms: 6.198872
+  type: 'test'
+  ...
+# Subtest: an anonymous login keeps its in-memory fields across the authenticator app switch and proves the session before return
+ok 12 - an anonymous login keeps its in-memory fields across the authenticator app switch and proves the session before return
+  ---
+  duration_ms: 5.393055
+  type: 'test'
+  ...
+# Subtest: a page navigation clears an anonymous login even after a temporary background suspension
+ok 13 - a page navigation clears an anonymous login even after a temporary background suspension
+  ---
+  duration_ms: 5.758722
+  type: 'test'
+  ...
+# Subtest: session replacement and failed return proofs discard the temporarily retained login fields
+ok 14 - session replacement and failed return proofs discard the temporarily retained login fields
+  ---
+  duration_ms: 14.744141
+  type: 'test'
+  ...
+# Subtest: a rejected login after an authenticator return still clears its password and security code
+ok 15 - a rejected login after an authenticator return still clears its password and security code
+  ---
+  duration_ms: 1.834327
+  type: 'test'
+  ...
+# Subtest: visibility hide and pagehide erase administrator identity, clients, invitation secret and credentials
+ok 16 - visibility hide and pagehide erase administrator identity, clients, invitation secret and credentials
+  ---
+  duration_ms: 8.015903
+  type: 'test'
+  ...
+# Subtest: late client-list and capability responses cannot repopulate an administrator page after hide
+ok 17 - late client-list and capability responses cannot repopulate an administrator page after hide
+  ---
+  duration_ms: 3.116879
+  type: 'test'
+  ...
+# Subtest: return validates a fresh administrator session before loading any new private data and ignores the old list
+ok 18 - return validates a fresh administrator session before loading any new private data and ignores the old list
+  ---
+  duration_ms: 3.0448
+  type: 'test'
+  ...
+# Subtest: an old login response and its finally cannot replace a fresh view or unlock a newer login
+ok 19 - an old login response and its finally cannot replace a fresh view or unlock a newer login
+  ---
+  duration_ms: 5.838727
+  type: 'test'
+  ...
+# Subtest: a hidden pending logout is not replayed and its old finally cannot unlock a new invitation action
+ok 20 - a hidden pending logout is not replayed and its old finally cannot unlock a new invitation action
+  ---
+  duration_ms: 5.158667
+  type: 'test'
+  ...
+# Subtest: a late clipboard result and finally cannot affect the new visible administrator action
+ok 21 - a late clipboard result and finally cannot affect the new visible administrator action
+  ---
+  duration_ms: 5.81115
+  type: 'test'
+  ...
+# Subtest: late invitation creation stays hidden and resuming performs GET validation without replaying its POST
+ok 22 - late invitation creation stays hidden and resuming performs GET validation without replaying its POST
+  ---
+  duration_ms: 3.851093
+  type: 'test'
+  ...
+# Subtest: hidden sessions stop their timers and expired server proof reveals no identity on return
+ok 23 - hidden sessions stop their timers and expired server proof reveals no identity on return
+  ---
+  duration_ms: 3.398827
+  type: 'test'
+  ...
+# Subtest: pagehide and duplicate return events trigger exactly one fresh session and no protected actions while hidden
+ok 24 - pagehide and duplicate return events trigger exactly one fresh session and no protected actions while hidden
+  ---
+  duration_ms: 22.925252
+  type: 'test'
+  ...
+# Subtest: administrator request security options remain intact for login and authenticated actions
+ok 25 - administrator request security options remain intact for login and authenticated actions
+  ---
+  duration_ms: 3.504544
+  type: 'test'
+  ...
+# Subtest: cookie actor changes during private reads discard the old audience before rebuilding from GET proof
+ok 26 - cookie actor changes during private reads discard the old audience before rebuilding from GET proof
+  ---
+  duration_ms: 5.981377
+  type: 'test'
+  ...
+# Subtest: a failed final GET proof after committed invitation creation remains an unconfirmed operation and is never retried
+ok 27 - a failed final GET proof after committed invitation creation remains an unconfirmed operation and is never retried
+  ---
+  duration_ms: 12.676703
+  type: 'test'
+  ...
+# Subtest: an old proof rejected after hide and return cannot clear the newly validated administrator view
+ok 28 - an old proof rejected after hide and return cannot clear the newly validated administrator view
+  ---
+  duration_ms: 6.354676
+  type: 'test'
+  ...
+# Subtest: clipboard copying requires a current matching session and never copies a previous actor's invitation
+ok 29 - clipboard copying requires a current matching session and never copies a previous actor's invitation
+  ---
+  duration_ms: 4.301852
+  type: 'test'
+  ...
+# Subtest: repeated final proof failures permit only one GET recovery per visible intent
+ok 30 - repeated final proof failures permit only one GET recovery per visible intent
+  ---
+  duration_ms: 3.530156
+  type: 'test'
+  ...
+# Subtest: administrator lists traverse 650 entries independently with only one page retained
+ok 31 - administrator lists traverse 650 entries independently with only one page retained
+  ---
+  duration_ms: 191.110039
+  type: 'test'
+  ...
+# Subtest: an older page is painted only after its final current-session proof
+ok 32 - an older page is painted only after its final current-session proof
+  ---
+  duration_ms: 14.607901
+  type: 'test'
+  ...
+# Subtest: late older-page data and errors after hide cannot replace a new account or its cursor
+ok 33 - late older-page data and errors after hide cannot replace a new account or its cursor
+  ---
+  duration_ms: 21.054617
+  type: 'test'
+  ...
+# Subtest: a changed actor during pagination discards the returned page and rebuilds both first pages
+ok 34 - a changed actor during pagination discards the returned page and rebuilds both first pages
+  ---
+  duration_ms: 27.666215
+  type: 'test'
+  ...
+# Subtest: invalid pagination metadata never advances or replaces an already verified page
+ok 35 - invalid pagination metadata never advances or replaces an already verified page
+  ---
+  duration_ms: 41.936695
+  type: 'test'
+  ...
+# Subtest: only invited email-verified approved finite active access offers renewal and expired access is identified
+ok 36 - only invited email-verified approved finite active access offers renewal and expired access is identified
+  ---
+  duration_ms: 4.186945
+  type: 'test'
+  ...
+# Subtest: manual admission allows approval without age assurance only after invitation consumption and email verification
+ok 37 - manual admission allows approval without age assurance only after invitation consumption and email verification
+  ---
+  duration_ms: 3.575242
+  type: 'test'
+  ...
+# Subtest: a client list with missing or unknown admission fields is rejected before private rows are rendered
+ok 38 - a client list with missing or unknown admission fields is rejected before private rows are rendered
+  ---
+  duration_ms: 6.636539
+  type: 'test'
+  ...
+# Subtest: renewal snapshots the chosen duration and expiry, preserves the busy draft and refreshes only the current client page
+ok 39 - renewal snapshots the chosen duration and expiry, preserves the busy draft and refreshes only the current client page
+  ---
+  duration_ms: 12.361387
+  type: 'test'
+  ...
+# Subtest: renewal validates whole-day input locally and gives a duration-specific server rejection
+ok 40 - renewal validates whole-day input locally and gives a duration-specific server rejection
+  ---
+  duration_ms: 3.8132
+  type: 'test'
+  ...
+# Subtest: a concurrent renewal conflict refreshes the current date and never replays the mutation
+ok 41 - a concurrent renewal conflict refreshes the current date and never replays the mutation
+  ---
+  duration_ms: 4.736732
+  type: 'test'
+  ...
+# Subtest: unknown renewal outcomes perform GET reconciliation without claiming success or replaying POST
+ok 42 - unknown renewal outcomes perform GET reconciliation without claiming success or replaying POST
+  ---
+  duration_ms: 11.014858
+  type: 'test'
+  ...
+# Subtest: a failed list read after successful renewal keeps the mutation unconfirmed and preserves the draft
+ok 43 - a failed list read after successful renewal keeps the mutation unconfirmed and preserves the draft
+  ---
+  duration_ms: 3.153322
+  type: 'test'
+  ...
+# Subtest: renewal preflight detects a changed session before sending any mutation
+ok 44 - renewal preflight detects a changed session before sending any mutation
+  ---
+  duration_ms: 3.785629
+  type: 'test'
+  ...
+# Subtest: an old renewal response and finally cannot reveal data or unlock a new account's pending renewal
+ok 45 - an old renewal response and finally cannot reveal data or unlock a new account's pending renewal
+  ---
+  duration_ms: 14.976137
+  type: 'test'
+  ...
+# Subtest: a cookie change during renewal reconciliation clears the previous client and retains no secret cursor
+ok 46 - a cookie change during renewal reconciliation clears the previous client and retains no secret cursor
+  ---
+  duration_ms: 12.653703
+  type: 'test'
+  ...
+# Subtest: an unconfirmed renewal preserves an edited duration when GET finds the exact same expiry
+ok 47 - an unconfirmed renewal preserves an edited duration when GET finds the exact same expiry
+  ---
+  duration_ms: 10.243615
+  type: 'test'
+  ...
+# Subtest: long administrator sessions use bounded server checks and survive a network interruption without a new login
+ok 48 - long administrator sessions use bounded server checks and survive a network interruption without a new login
+  ---
+  duration_ms: 3.395728
+  type: 'test'
+  ...
+# Subtest: device reads are lazy, validated and private; targeted revocation uses CSRF and leaves the current device connected
+ok 49 - device reads are lazy, validated and private; targeted revocation uses CSRF and leaves the current device connected
+  ---
+  duration_ms: 4.814825
+  type: 'test'
+  ...
+# Subtest: device revocation and global logout require confirmation; current-device revocation clears the view
+ok 50 - device revocation and global logout require confirmation; current-device revocation clears the view
+  ---
+  duration_ms: 9.417999
+  type: 'test'
+  ...
+# Subtest: late device data after hide cannot repopulate a new account and malformed pages remain hidden
+ok 51 - late device data after hide cannot repopulate a new account and malformed pages remain hidden
+  ---
+  duration_ms: 6.469653
+  type: 'test'
+  ...
+# Subtest: an isolated conversation capability failure offers retry without losing the administrator session
+    # Subtest: 403
+    ok 1 - 403
+      ---
+      duration_ms: 2.247233
+      type: 'test'
+      ...
+    # Subtest: 503
+    ok 2 - 503
+      ---
+      duration_ms: 2.854471
+      type: 'test'
+      ...
+    1..2
+ok 52 - an isolated conversation capability failure offers retry without losing the administrator session
+  ---
+  duration_ms: 5.892414
+  type: 'test'
+  ...
+# Subtest: administrator home is separate from client management and reads no private audience lists
+ok 53 - administrator home is separate from client management and reads no private audience lists
+  ---
+  duration_ms: 2.098091
+  type: 'test'
+  ...
+# Subtest: administrator sign-in opens the home or exact notified message only after the final session proof
+ok 54 - administrator sign-in opens the home or exact notified message only after the final session proof
+  ---
+  duration_ms: 3.442004
+  type: 'test'
+  ...
+# Subtest: administrator login keeps a closed continue target including client management
+ok 55 - administrator login keeps a closed continue target including client management
+  ---
+  duration_ms: 8.457691
+  type: 'test'
+  ...
+# Subtest: each administrator tool exposes one labelled home destination and one messages destination
+ok 56 - each administrator tool exposes one labelled home destination and one messages destination
+  ---
+  duration_ms: 21.166966
+  type: 'test'
+  ...
+# Subtest: the shared administrator document retains one capability-gated messages CTA and a non-link current brand
+ok 57 - the shared administrator document retains one capability-gated messages CTA and a non-link current brand
+  ---
+  duration_ms: 6.59142
+  type: 'test'
+  ...
+# Subtest: external administrator page navigation keeps the Strict cookie and a closed return path
+ok 58 - external administrator page navigation keeps the Strict cookie and a closed return path
+  ---
+  duration_ms: 108.776778
+  type: 'test'
+  ...
+# Subtest: backup navigation keeps its canonical login target and the slash alias retains the return query
+ok 59 - backup navigation keeps its canonical login target and the slash alias retains the return query
+  ---
+  duration_ms: 35.176508
+  type: 'test'
+  ...
+# Subtest: navigation bridge never authenticates APIs, changes mutation checks or intercepts a presented session
+ok 60 - navigation bridge never authenticates APIs, changes mutation checks or intercepts a presented session
+  ---
+  duration_ms: 11.474876
+  type: 'test'
+  ...
+# Subtest: disabled routes and the recipe origin cannot acquire a primary-only backup bridge
+ok 61 - disabled routes and the recipe origin cannot acquire a primary-only backup bridge
+  ---
+  duration_ms: 14.149826
+  type: 'test'
+  ...
+# Subtest: a server without authentication does not acquire the login slash alias
+ok 62 - a server without authentication does not acquire the login slash alias
+  ---
+  duration_ms: 9.908187
+  type: 'test'
+  ...
+# Subtest: a delayed refusal on the new clients page cannot erase a newer administrator login
+ok 63 - a delayed refusal on the new clients page cannot erase a newer administrator login
+  ---
+  duration_ms: 55.352304
+  type: 'test'
+  ...
+# Subtest: broadcast HTML marks interface leaves and loads the shared runtime/catalog before its controller
+ok 64 - broadcast HTML marks interface leaves and loads the shared runtime/catalog before its controller
+  ---
+  duration_ms: 20.928036
+  type: 'test'
+  ...
+# Subtest: broadcast language switches translate live counts/status/date but preserve raw collisions, draft, audience and acknowledgement without HTTP
+ok 65 - broadcast language switches translate live counts/status/date but preserve raw collisions, draft, audience and acknowledgement without HTTP
+  ---
+  duration_ms: 53.397279
+  type: 'test'
+  ...
+# Subtest: FR/EN selected counts update immediately while eligibility remains unprepared and no request is sent
+ok 66 - FR/EN selected counts update immediately while eligibility remains unprepared and no request is sent
+  ---
+  duration_ms: 25.418569
+  type: 'test'
+  ...
+# Subtest: CRM switching preserves raw names, label collisions, notes, inputs and selected conversation without requests
+ok 67 - CRM switching preserves raw names, label collisions, notes, inputs and selected conversation without requests
+  ---
+  duration_ms: 38.002913
+  type: 'test'
+  ...
+# Subtest: broadcast feature checks cannot postpone cookie renewal and offline recovery preserves the draft
+ok 68 - broadcast feature checks cannot postpone cookie renewal and offline recovery preserves the draft
+  ---
+  duration_ms: 21.244214
+  type: 'test'
+  ...
+# Subtest: all private-interface catalogs can coexist and every static broadcast marker has a registered translation
+ok 69 - all private-interface catalogs can coexist and every static broadcast marker has a registered translation
+  ---
+  duration_ms: 79.414331
+  type: 'test'
+  ...
+# Subtest: broadcast video labels, live progress and typed campaign details switch FR/EN without altering private draft or audience
+ok 70 - broadcast video labels, live progress and typed campaign details switch FR/EN without altering private draft or audience
+  ---
+  duration_ms: 21.655018
+  type: 'test'
+  ...
+1..70
+# tests 74
+# suites 0
+# pass 74
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 830.075638

@@ -1,0 +1,116 @@
+{
+  "status": "bounded_svg_css_and_real_csp_review_no_concrete_source_defect_found",
+  "timestamp": "2026-10-22T23:57:48.303485+00:00",
+  "scope": "Two existing SVG data URLs in public/i18n.css, flag meaning/selectors/target sizes and actual source CSP headers. Parent separately owns JavaScript language/ARIA binding review.",
+  "css": {
+    "file": "public/i18n.css",
+    "sha256": "12555acb0b2d8ef3af12513e169ef2f405a9145246a0f58ed09d864a0cff6c11",
+    "evidence": [
+      {
+        "line": 1,
+        "claim": "Language action remains inline-flex, flex-shrink:0 and min-height44px; min-width46px. Text font-size0 leaves the decorative flag visible; accessible action naming is controlled separately by JavaScript, outside this CSS sub-review."
+      },
+      {
+        "line": 3,
+        "claim": "At<=480px minimum width44px is retained and minimum height44px remains inherited; padding8px10px does not remove the44px target guard."
+      },
+      {
+        "line": 10,
+        "claim": "Pseudo-element is24×16px, nonshrinking, centered/contain, with the English/UK flag as default."
+      },
+      {
+        "line": 11,
+        "claim": "data-jm-language-target=fr overrides only the image to the French tricolour. Parent independently validated that JavaScript marks the opposite destination language."
+      }
+    ]
+  },
+  "decodedSvg": [
+    {
+      "label": "english-uk",
+      "viewBox": "0 0 60 30",
+      "sha256": "05208e651660c38e262fa2ad195d00af58733c869d4d84e8286e6f6fb2b77773",
+      "bytes": 545,
+      "elements": [
+        "clipPath",
+        "g",
+        "path",
+        "svg"
+      ],
+      "internalRefs": [
+        "url(#t)",
+        "url(#s)"
+      ]
+    },
+    {
+      "label": "french",
+      "viewBox": "0 0 3 2",
+      "sha256": "d660a863f121a7e63f8cb3196851f729aaa4ccbdb66bf6100384a2d8ab5fb5f3",
+      "bytes": 175,
+      "elements": [
+        "path",
+        "svg"
+      ],
+      "internalRefs": []
+    }
+  ],
+  "svgChecks": {
+    "xmlParse": "Both parse with SVG namespace and viewBox. No DOCTYPE/entity declaration.",
+    "elements": "English:svg/clipPath/g/path. French:svg/path only.",
+    "activeOrExternalResources": "No script/foreignObject/image/use/a, event attributes, href/src, text/font dependency or external URL. Only two local fragment clip-path references url(#t)/url(#s) in English asset; namespace URI is not a resource fetch.",
+    "visualMeaning": "English asset uses blue background, diagonal white/red saltires and central white/red cross, identifying the UK flag. French asset has left blue, centre white, right red vertical thirds. Neither depends on emoji/font glyph availability.",
+    "aspectRatio": "English viewBox60×30 gives2:1; French3×2 gives3:2. background-size:contain preserves those ratios inside24×16 instead of distorting them.",
+    "actualPixelRender": "Not executed. Local static XML/geometry/colour inspection only; no native browser, suite or new capture was run."
+  },
+  "realCsp": {
+    "evidence": [
+      {
+        "file": "server/index.mjs",
+        "line": 68,
+        "policyFragment": "img-src 'self' data:",
+        "claim": "Used by actual public/static reply via securityHeaders and writeHead at79–80."
+      },
+      {
+        "file": "server/auth/http.mjs",
+        "line": 7,
+        "policyFragment": "img-src 'self' data: blob:",
+        "claim": "Actual AUTH_HEADERS are spread into reply() at45–47, used by protected surfaces."
+      },
+      {
+        "file": "server/chat/http.mjs",
+        "line": 217,
+        "claim": "Video variant appends media-src to AUTH_HEADERS; img-src data: is preserved."
+      },
+      {
+        "file": "server/broadcast/http.mjs",
+        "line": 260,
+        "claim": "Same preservation on video broadcast HTML variant."
+      }
+    ],
+    "conclusion": "Both real HTML CSP header paths already permit data: images; these inline SVG background images do not require a production CSP relaxation.",
+    "hashes": [
+      {
+        "file": "server/index.mjs",
+        "sha256": "b6d2d01d9fe5f68a18065d5c815d8ca8953d99a820eca86cd28a6a92803a24d2"
+      },
+      {
+        "file": "server/auth/http.mjs",
+        "sha256": "96f04e5f6cd0226044b9c56c186f812fc84978406b7e558c442cf87f123ba8e6"
+      },
+      {
+        "file": "server/chat/http.mjs",
+        "sha256": "f4fe7bf665a48d2097f64711fb23ec6ff6efe71091dd8c42dfa1314b4c55641f"
+      },
+      {
+        "file": "server/broadcast/http.mjs",
+        "sha256": "7b7ab056196252be45b5eaba1e944ad1b89380a295908320372eda3d3e343d3f"
+      }
+    ]
+  },
+  "openFindings": [],
+  "limits": [
+    "No app/Git/server file was modified. Only scratch decoded SVGs and this review report were written.",
+    "No tests, existing14green flag tests, suites, CI, network, host, private session or browser/capture run were initiated.",
+    "CSS dimensions and flag meaning are source/geometry checks, not a pixel-level browser certification. Parent owns i18n.js action/ARIA/event validation and fixture CSP fixes.",
+    "Parent separately found legacy app.js/entry.js overwriting localized ARIA after apply/onChange and reported it to root. Flag assets/target selectors remain correct; this report does not certify those legacy ARIA labels."
+  ]
+}

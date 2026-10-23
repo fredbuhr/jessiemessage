@@ -1,0 +1,177 @@
+{
+  "status": "implemented_targeted_checks_passed_native_browser_pending",
+  "createdAt": "2026-10-22T23:55:31.306041+00:00",
+  "owner": "peer_a11",
+  "branch": "fix/interface-184",
+  "base": "c786ea592e331780aaac16beea6ea546897c8ca4",
+  "baseTree": "e40e7ba402b3a917805d4897be83bd67f4adb505",
+  "productionUnchanged": "1.8.3 source48fd42b808b2bc4d95d3f3ba21244c032d0a938f, delivery closed; no host action",
+  "policy": [
+    {
+      "page": "/admin connected or checking current home",
+      "homeDestinations": 0,
+      "messagesDestinations": "1 only after chat capability and fresh identity proof, otherwise0",
+      "presentation": "Non-link Jessie brand; unique existing Ouvrir les conversations CTA; dashboard tool cards retained."
+    },
+    {
+      "page": "/admin/clients connected",
+      "homeDestinations": 1,
+      "messagesDestinations": "1 only after chat capability and fresh identity proof, otherwise0",
+      "presentation": "Logo is the sole home link, labelled/titled Accueil admin; unique existing CTA above clients management."
+    },
+    {
+      "page": "/admin/login anonymous",
+      "homeDestinations": 1,
+      "messagesDestinations": 0,
+      "presentation": "Logo home link and MFA form. A connected login still follows the existing fixed continue/notification destination or /admin."
+    },
+    {
+      "page": "readiness/tasks/broadcast/announcements/backups/closures/privacy/manual-backups",
+      "homeDestinations": 1,
+      "messagesDestinations": 1,
+      "presentation": "Logo is the sole home link, labelled/titled Accueil admin with FR/EN translation; retain a single Messages link. No text Home duplicate."
+    },
+    {
+      "page": "logout /admin or /admin/clients -> /admin/login",
+      "homeDestinations": 1,
+      "messagesDestinations": 0,
+      "presentation": "Navigation is updated after history.replaceState as well as initial load and session rendering."
+    }
+  ],
+  "implementation": [
+    "Shared administrator header removes the duplicate Home and Messaging navigation group; preserves the capability-gated messages CTA and its id/lifecycle.",
+    "Shared document explicitly toggles linked brand vs non-link current brand by pathname; no generic navigation crawler or route rewriting.",
+    "Eight tool headers remove textual Home link and use the logo with translated aria-label/title. Brand targets have minimum44px height and focus-visible outline.",
+    "MFA, session proofs, closed continue allowlist, notification fragments, CSRF, logout HTTP semantics and private tools guards remain unchanged.",
+    "Chat files and language runtime/styles belong to other owners and were not edited here."
+  ],
+  "review": {
+    "reviewer": "delivery_review/writer183",
+    "method": "Read-only bounded source review, no execution",
+    "finding": "Logout originally updated logo before history changed. Fixed by updating after replaceState; VM and native regression added.",
+    "openFindings": []
+  },
+  "verification": {
+    "runtime": "Nodev24.19.0",
+    "initialTargeted": {
+      "command": "node --test --test-reporter=tap tests/admin-navigation.test.mjs tests/admin-lifecycle.test.mjs tests/admin-i18n.test.mjs tests/tools-i18n.test.mjs",
+      "path": "/workspace/scratch/bb431be72395/ux184-admin-navigation-first.tap",
+      "sha256": "7fed5234608587e4b30a62245dee4f6fe449cc07b97b70d1fd8ef057dd41f010",
+      "tests": 74,
+      "pass": 74,
+      "fail": 0,
+      "skipped": 0
+    },
+    "finalChangedHarnessAndLogout": {
+      "command": "node --test --test-reporter=tap tests/admin-lifecycle.test.mjs",
+      "path": "/workspace/scratch/bb431be72395/ux184-admin-lifecycle-final.tap",
+      "sha256": "792f5152f4019aed4d8a27d46aa83a5180c0d2d3595c5daecb1b5c8d86a3863c",
+      "tests": 56,
+      "pass": 56,
+      "fail": 0,
+      "skipped": 0
+    },
+    "counting": "Initial74/74 and final56/56 overlap; they are not130 distinct tests. Final lifecycle adds one new test to its previously passing55.",
+    "syntaxChecked": [
+      "public/admin-login.js",
+      "tests/browser/admin-navigation.browser.mjs",
+      "tests/browser/entry-navigation.browser.mjs"
+    ],
+    "nativeAdded": [
+      "Anonymous login visible home1/messages0.",
+      "Connected admin home visible home0/messages1 after capability proof; current brand non-link.",
+      "Clients visible home1/messages1 and accessible brand label/title.",
+      "Logout changes pathname to login and restores home1/messages0.",
+      "Existing external Strict-cookie return, MFA final proof, closed continue and notification destination checks retained."
+    ],
+    "nativeBrowser": "Not run locally; no cloud browser or actual device. Existing native fixtures updated for future qualification."
+  },
+  "files": [
+    {
+      "file": "public/admin-login.html",
+      "sha256": "d20507dc15d02ad467fd0104b245d16f0ddc240143045c0d0846d8fee68f920d",
+      "bytes": 14596
+    },
+    {
+      "file": "public/admin-login.js",
+      "sha256": "350b8db80e28f1cbe955c90abda34b3f024996ebe11675f07859e664c9f80d21",
+      "bytes": 39361
+    },
+    {
+      "file": "public/admin-navigation.css",
+      "sha256": "c3e51aad0d1decd3c82b3b9ead7b62f82587a9939c6a2478625ea2d6e405e93d",
+      "bytes": 1235
+    },
+    {
+      "file": "public/readiness.html",
+      "sha256": "ac48c066275ee8941d706f9f0dac8fb199542ea7ca21549aca9995836dea782c",
+      "bytes": 9725
+    },
+    {
+      "file": "public/tasks.html",
+      "sha256": "0e75c416aa924f0f4bed8cce29dbd25b262abd595030427db75cc06087c030d7",
+      "bytes": 7045
+    },
+    {
+      "file": "public/broadcast.html",
+      "sha256": "7b3d86aa39e4d85eae2fbb136992f46c691cc61ed65c2932a62020704d7e1345",
+      "bytes": 14566
+    },
+    {
+      "file": "public/announcements.html",
+      "sha256": "5cffbe6a2a1fd0a723e893919728154a6c3adbbe5906b0b83e812dd86db30e4a",
+      "bytes": 7802
+    },
+    {
+      "file": "public/backups.html",
+      "sha256": "75a4094f73c663a1dc3c158a23002e57a306a459057dbf865b0eebeea35e4517",
+      "bytes": 8756
+    },
+    {
+      "file": "public/closures.html",
+      "sha256": "8c4cdbc147412c4b16a2194eaada85bfd73af5b405ac79628c0d322ea4805b95",
+      "bytes": 5969
+    },
+    {
+      "file": "public/privacy.html",
+      "sha256": "df649a5044872d13f643b43f64d1914e038c504603183ff847a6242413900c40",
+      "bytes": 7060
+    },
+    {
+      "file": "public/manual-backups.html",
+      "sha256": "9033c3360369fa695d323ffd77fd9bffc168d24745e73995c59c4f22b652a1a2",
+      "bytes": 4198
+    },
+    {
+      "file": "tests/admin-navigation.test.mjs",
+      "sha256": "340c175604865b4cc25ccc6084d3f31e5cdb368d73594bc6aad037aa18cb2b02",
+      "bytes": 11163
+    },
+    {
+      "file": "tests/admin-lifecycle.test.mjs",
+      "sha256": "a91ee1782fa4acf22fae8d14db9f6adbc1c58c0ffc6288a8b8bfe4ee0dd30b5c",
+      "bytes": 62451
+    },
+    {
+      "file": "tests/tools-i18n.test.mjs",
+      "sha256": "1489d2d3f7b6fecc4ea2881a72ec7d3e38e50ee90eeb7ba0de5f056e8fa576a5",
+      "bytes": 23110
+    },
+    {
+      "file": "tests/browser/admin-navigation.browser.mjs",
+      "sha256": "e4740aaeee53e4c2b4dbbf529bf63660cd9e37a32802696b1331df1313828101",
+      "bytes": 7659
+    },
+    {
+      "file": "tests/browser/entry-navigation.browser.mjs",
+      "sha256": "7a8b30fc0f33349aaadb0b968f48047121166aac7ad6fc54c8fb238371aa69eb",
+      "bytes": 14334
+    }
+  ],
+  "limits": [
+    "No production account, real message, notification, SQL/database, backup, private configuration, host or Manager operation.",
+    "No commit, push, PR, CI dispatch or version bump by this agent.",
+    "No new native browser run or screenshot qualification claimed; root owns integration and release.",
+    "Only owned files plus the tools-i18n navigation block and admin-lifecycle history/logout block explicitly authorized by root were edited."
+  ]
+}
