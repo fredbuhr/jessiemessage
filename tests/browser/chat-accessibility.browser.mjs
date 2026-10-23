@@ -346,6 +346,8 @@ async function clickComposerAction(page, selector) {
 }
 async function openMessageDetails(page, sequence) {
   const selector = `#messages [data-sequence="${sequence}"] .message-details-toggle`;
+  // A native inbox click returns before its asynchronous message page renders.
+  await waitUntil(() => page.execute("return !!document.querySelector(arguments[0])", selector), "message details control loaded");
   if (await page.execute("return document.querySelector(arguments[0]).getAttribute('aria-expanded')==='true'", selector)) return;
   await tabUntil(page, selector); await page.key("\uE007");
   await waitUntil(() => page.execute("return document.querySelector(arguments[0]).getAttribute('aria-expanded')==='true'", selector), "message details opened through the native keyboard control");
