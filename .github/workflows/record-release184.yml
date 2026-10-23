@@ -1,5 +1,5 @@
 # Qualify only synthetic writer behavior; no hosting or release mutation.
-# Pending release/staging pins still refuse recording after these tests pass.
+# Finalized pins still require actual startup and public HTTP identity before recording.
 name: Qualify 1.8.4 metadata operator
 
 on:

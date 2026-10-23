@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Record qualified 1.8.4 metadata after startup and public HTTP checks.
 
-Source/tree are pinned to qualified main. Published release ID and hosted staging
-receipt remain pending; missing pins refuse before private or network access.
+Source/tree, published release ID and hosted staging receipt are pinned.
+Actual startup and public HTTP identity remain required before recording.
 No SQL, Manager, runtime start, key write,
 archive or backup action. Only the existing checkpoint is replaced atomically.
 Historical sections, staging receipts and prior active state are preserved.
@@ -41,7 +41,7 @@ STAGING180_SHA = 'c43b16b305be8be861c65dfae2881634a28beec6d0067ee0d6c26f6c274d9a
 STAGING181_SHA = '606c28375d3a6b483fab4cc99481487308923cd5b048927a085c56ddceaf3f93'
 STAGING182_SHA = 'ba1aa8d0527dd8bbff76c86e274c9681ce9b6546bfd997a47e44988a92e3157f'
 STAGING183_SHA = '4a30e3c82d3cb8bc54b13e24aa8dcf9a9ca5800843f8dac39f96c41eaf0f0a09'
-STAGING_SHA = 'STAGING_PENDING'
+STAGING_SHA = 'd188abf49b9a61035f0b4790a1512eb89ed7851025726dd63f47ad493f2b7f57'
 VIDEO_RECEIPT_SHA = '9ba65419109c16b7bc94101c63becee5c156b611e6f8f917a210fe7d216b2ff4'
 BUNDLE_SHA = 'bcca2f3fd91ffc0dec51a7077eb9e192a53b6e653b60c7db7159e473b83aac85'
 PROFILE = 'photos-notify-recovery-crm-broadcast-video'
@@ -52,7 +52,7 @@ BASE_NAMES = sorted(['runtime-database.json', 'runtime-auth.json', 'runtime-mess
 BUNDLE_NAMES = sorted(BASE_NAMES + ['runtime-video.json'])
 VIDEO_DDL = ['0034_video_storage_state.sql', '0035_video_assets.sql', '0036_message_video.sql']
 LIMIT = 2 * 1024 * 1024
-RELEASE_ID = None
+RELEASE_ID = 421341347
 RELEASE_TAG = 'v1.8.4'
 
 
