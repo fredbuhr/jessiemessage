@@ -1,0 +1,60 @@
+{
+  "type": "release184_startup_identity_independent_review",
+  "status": "passed",
+  "scope": "read_only_source_and_durable_evidence_review",
+  "reportedIdentity": {
+    "version": "1.8.4",
+    "commit": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "nodeVersion": "v24.22.1",
+    "startupUi": "23/10/2026 11:44:16",
+    "provenance": "USER_REPORTED",
+    "precision": "seconds_as_displayed; no_millisecond_epoch_inferred"
+  },
+  "applicationTree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+  "writer": {
+    "operator": "054f19dfd0fd5fa8a7e7db4a51077540ff079592",
+    "sha256": "60f9cf6a518da4d91733ed1e40bd1e8b5d8fcbe05a639ce606cba19a46bfe27b",
+    "stagingSha256": "d188abf49b9a61035f0b4790a1512eb89ed7851025726dd63f47ad493f2b7f57",
+    "releaseId": 421341347,
+    "nativeRun": 39933260498,
+    "nativeTests": 26,
+    "liveNativeStatus": "success",
+    "attempt": 1,
+    "sourcePackHashVerified": true,
+    "logHashVerified": true
+  },
+  "liveGetChecks": {
+    "tagSource": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "releaseId": 421341347,
+    "releaseSource": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "runSource": "054f19dfd0fd5fa8a7e7db4a51077540ff079592"
+  },
+  "wrapperRequirements": [
+    "Verify downloaded bytes SHA256 before compile/exec",
+    "Use exact pinned raw URL at054f19dfd0fd5fa8a7e7db4a51077540ff079592",
+    "Pass namespace __name__=__main__",
+    "Run via python3 heredoc with no extra arguments"
+  ],
+  "effectsReviewed": {
+    "sql": false,
+    "restart": false,
+    "managerChange": false,
+    "privateReads": true,
+    "anonymousHttpsGet": true,
+    "checkpointAtomicReplace": true,
+    "historicalSectionsPreserved": true
+  },
+  "qualificationLimits": [
+    "Reported UI identifies startup; it is not an independent process/socket inspection",
+    "Final metadata record not yet executed or acquired",
+    "No synthetic tests or CI rerun; no helper/host execution"
+  ],
+  "actionsPerformed": {
+    "localReadOnlyReview": true,
+    "githubGetOnly": true,
+    "scratchProofWritten": true,
+    "repoModified": false,
+    "helperExecuted": false,
+    "hostAccessed": false
+  }
+}

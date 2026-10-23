@@ -1,0 +1,51 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_184_hosted_identity",
+  "status": "application184_identity_user_reported_metadata_pending",
+  "date": "2026-10-23",
+  "provenance": {
+    "classification": "USER_REPORTED",
+    "surface": "admin_readiness",
+    "description": "User supplied exactly four startup identity fields from the live administration page after Manager activation. No direct agent PID, Manager or startup-log inspection.",
+    "startupDisplayIsUiTextOnly": true,
+    "observationTimestampProvided": false
+  },
+  "displayedFields": {
+    "Version de l’application": "1.8.4",
+    "Commit au démarrage": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "Version Node.js": "v24.22.1",
+    "Relevé au démarrage": "23/10/2026 11:44:16"
+  },
+  "sourceTreeFromQualifiedCommit": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+  "schemaEvidence": "jm180-hosted-schema36.json",
+  "schemaIsNotPartOfDisplayedIdentity": true,
+  "hostedPreparationEvidence": "jm184-hosted-preparation.json",
+  "qualificationEvidence": "jm184/main-native-final.json",
+  "publicationEvidence": "jm184/publication-native.json",
+  "currentState": {
+    "applicationVersion": "1.8.4",
+    "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "nodeVersion": "v24.22.1",
+    "schemaMigrations": 36,
+    "metadataCheckpointVersion": "1.8.3",
+    "metadataCheckpointSchema": 36,
+    "metadataCheckpointSha256": "17f575ebe83d0a9d9acf74e9436bff59eabcf8b5ed1bb8f0f99897c867c78a22",
+    "metadataAlignmentPending": true,
+    "latestLastVerified": "v1.8.4",
+    "releaseIdLastVerified": 421341347,
+    "rollback172Prechecked": true,
+    "rollback172Started": false,
+    "hostedFunctionalChecksComplete": false
+  },
+  "publicAvailability": {
+    "currentWriterHttpCheckPending": true,
+    "nextCheck": "The qualified metadata writer checks current startup log and public anonymous HTTP from the host before any metadata write."
+  },
+  "limits": [
+    "Startup display preserved verbatim: no epoch, milliseconds or timezone conversion invented.",
+    "SQL36 and prior prechecks derive from separate evidence, not these four identity fields.",
+    "No new direct agent PID, process-binary, Manager, private startup-log or logged-in browser observation.",
+    "No checkpoint alignment before actual successful writer receipt.",
+    "Physical keyboard and notifications, deferred backup and other untried cases remain unverified."
+  ]
+}

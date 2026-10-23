@@ -1,29 +1,31 @@
-# Activer JessieMessage 1.8.4
+# Enregistrer JessieMessage 1.8.4
 
-La préparation et le CHECK sont acquis par retour utilisateur : `PREPARATION_184_CHECK_OK`, source `1a41e08abc87c3a29d9163fbf8cd2342eb04693c`, arbre `e0964b50c03d3881d851f01f86f58777d22b2c10`, Node v24.22.1. Reçu `d188abf49b9a61035f0b4790a1512eb89ed7851025726dd63f47ad493f2b7f57` recalculé indépendamment. [Preuve](verification-proofs/jm184-hosted-preparation.json). Ne répéter ni préparation SSH ni CHECK autonome. L’application et le checkpoint restent 1.8.3 tant que l’identité184 n’est pas rapportée.
+L’[identité active](verification-proofs/jm184-hosted-identity.json) est rapportée par l’utilisateur : **1.8.4**, source `1a41e08abc87c3a29d9163fbf8cd2342eb04693c`, Node **v24.22.1**, relevé UI exact **`23/10/2026 11:44:16`**. Préparation, CHECK et activation sont acquis ; ne pas les répéter. Le checkpoint privé reste1.8.3 jusqu’au reçu de succès du writer. [État courant](REPRISE.md).
 
-## Action actuelle : commandes Manager puis activation
+## Action actuelle : métadonnées seules
 
-1. Ouvrir les [paramètres Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application) du service Node239143, nommé **recette.jessiemessage.com** dans le Manager et desservant aussi **jessiemessage.com**.
-2. Renseigner les champs ci-dessous, puis enregistrer.
+1. Ouvrir le [terminal SSH de l’application Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), service239143 nommé **recette.jessiemessage.com** et desservant aussi **jessiemessage.com**.
+2. Coller cette commande une seule fois :
 
-| Champ | Valeur exacte préparée et précontrôlée |
-| --- | --- |
-| Run | `bash /srv/customer/jessiemessage-private/start-primary-release184-1a41e08a.sh` |
-| Build | `bash /srv/customer/jessiemessage-private/check-primary-release184-1a41e08a.sh` |
-| Port | `3000` |
+```bash
+env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD184'
+import hashlib, urllib.request
 
-3. Si l’enregistrement a déjà redémarré l’application, passer directement au relevé d’identité. Sinon, ouvrir le [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) et cliquer **Redémarrer** une seule fois. Aucun nouveau champ de répertoire GUI n’est supposé nécessaire ; les lanceurs utilisent le checkout préparé exact.
-4. Ouvrir [État du service](https://jessiemessage.com/admin/readiness), en utilisant [la connexion admin](https://jessiemessage.com/admin/login) si nécessaire. Recopier les quatre champs :
+url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/054f19dfd0fd5fa8a7e7db4a51077540ff079592/ops/record-release184.py"
+code = urllib.request.urlopen(url, timeout=30).read()
+expected = "60f9cf6a518da4d91733ed1e40bd1e8b5d8fcbe05a639ce606cba19a46bfe27b"
+if hashlib.sha256(code).hexdigest() != expected:
+    raise SystemExit("Empreinte incorrecte : arrêt.")
 
-| Champ de l’application | Valeur à vérifier |
-| --- | --- |
-| Version de l’application | `1.8.4` |
-| Commit au démarrage | `1a41e08abc87c3a29d9163fbf8cd2342eb04693c` |
-| Version Node.js | `v24.22.1` |
-| Relevé au démarrage | La nouvelle date et heure réellement affichées, à recueillir |
+exec(compile(code, "<enregistrement184>", "exec"), {"__name__": "__main__"})
+PY_RECORD184
+```
 
-Le writer final est épinglé sur le vrai reçu et la release421341347, opérateur `054f19dfd0fd5fa8a7e7db4a51077540ff079592`, SHA256 `60f9cf6a518da4d91733ed1e40bd1e8b5d8fcbe05a639ce606cba19a46bfe27b`. [Qualification native39933260498](https://github.com/fredbuhr/jessiemessage/actions/runs/39933260498) acquise **26/26**, tentative1 ; son exécution attend cette identité réelle. Aucune commande de writer n’est donnée à cette étape.
+3. Recopier le JSON complet. Le résultat attendu est `release184_metadata_recorded` (ou `release184_metadata_already_recorded` si déjà effectué), source exacte ci-dessus, `metadataOnly:true`, `noRestart:true`, `publicReady:true`, SQL36 et nouvelle empreinte de checkpoint. En cas d’erreur ou de résultat incomplet, inspecter le reçu et l’état durable avant toute relance.
+
+L’opérateur immuable `054f19dfd0fd5fa8a7e7db4a51077540ff079592`, SHA256 `60f9cf6a518da4d91733ed1e40bd1e8b5d8fcbe05a639ce606cba19a46bfe27b`, est épinglé sur le vrai reçu de préparation `d188abf49b9a61035f0b4790a1512eb89ed7851025726dd63f47ad493f2b7f57` et la release421341347. [Qualification native39933260498](https://github.com/fredbuhr/jessiemessage/actions/runs/39933260498) : **26/26**, tentative1. [Contre-revue identité/opérateur](verification-proofs/jm184/hosted-identity-independent-review.json).
+
+Le writer contrôle le code et les lanceurs, les reçus antérieurs, le journal de démarrage, les HTTP publics et la publication avant de remplacer atomiquement le seul checkpoint. Il conserve les historiques, l’état antérieur et le repli ; aucune migration SQL, action Manager ou opération de démarrage. Aucun succès de ce writer n’est encore rapporté.
 
 ## Références à préserver
 
@@ -33,4 +35,4 @@ Le writer final est épinglé sur le vrai reçu et la release421341347, opérate
 - Checkpoint183 protégé : `17f575ebe83d0a9d9acf74e9436bff59eabcf8b5ed1bb8f0f99897c867c78a22`. Aucune écriture de métadonnées184 acquise.
 - Node privé, configurations `runtime-video-180` / `recurring-backup-052`, SQL36 et repli1.7.2 précontrôlé, jamais démarré, conservés. Aucun nouveau test de backup, PC, message ou notification réel.
 
-La commande de préparation exécutée reste consultable dans l’historique de ce document et dans l’opérateur immuable `e7e6f11815007a53a9502672500476f6f87e9f25` ; elle n’est plus l’action courante. [REPRISE](REPRISE.md) distingue la version publiée de la version active.
+La commande de préparation exécutée reste consultable dans l’historique de ce document et dans l’opérateur immuable `e7e6f11815007a53a9502672500476f6f87e9f25` ; elle n’est plus l’action courante. L’activation184 est également acquise ; ne pas modifier de nouveau le Manager. [REPRISE](REPRISE.md) distingue la version publiée de la version active.
