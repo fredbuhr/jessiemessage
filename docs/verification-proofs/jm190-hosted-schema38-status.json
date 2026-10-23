@@ -1,0 +1,108 @@
+{
+  "type": "jessiemessage-release190-hosted-schema38-status",
+  "reportedDate": "2026-10-23",
+  "evidenceKind": "USER_REPORTED",
+  "reportedStatus": {
+    "status": "release190_schema_status",
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "applied": 38,
+    "pending": 0,
+    "migrated": false,
+    "runtimeStarted": false,
+    "restart184Allowed": false,
+    "restart172Allowed": false,
+    "rollbackAfterMigrationQualified": false,
+    "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
+    "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+    "nodeVersion": "v24.22.1",
+    "metadataOnly": false,
+    "managerChanged": false,
+    "checkpointChanged": false,
+    "hostedPrecheckPassed": false,
+    "noRestart": true
+  },
+  "canonicalProjectionSha256": "665b1fb59f3df513347ab5d5f3816448d26f82528f997d6c059cdd58859810e4",
+  "operator": {
+    "source": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
+    "sha256": "3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2",
+    "mode": "status"
+  },
+  "interpretation": {
+    "applied": 38,
+    "pending": 0,
+    "migratedFalseMeans": "This status command applies no migration; it does not mean the database remains on36.",
+    "schema38LedgerReported": true,
+    "actualPhysicalTableInventoryAcquired": false,
+    "upgradeAttemptPresenceAndHashReported": false,
+    "schemaReceiptPresenceAndHashReported": false,
+    "upgradeReceiptAcquired": false,
+    "hostedCHECK185Acquired": false,
+    "hostedCHECK190Acquired": false,
+    "runtime190Acquired": false,
+    "agentPrivateHostAccess": false,
+    "restart184Or172Allowed": false
+  },
+  "nextAction": "Read only durable attempt/success-file presence and SHA256 with same pinned helper identity/file, no SQL operation or credentials; no upgrade replay, keep Node stopped.",
+  "expectedTraceHashesDerivedLocallyNotObserved": {
+    "attemptSha256": "db873cb4f9d751ab167bd960bd35a5962b89df23a5f99616d0693d6fa4b4b48e",
+    "possibleReceipts": [
+      {
+        "migrationsAppliedByUpgrade": 2,
+        "sha256": "0d12dfd9ea9c9510729d39f743159a70a2457b2d999b6d334ae09043fa5d6dfb",
+        "receipt": {
+          "status": "release190_schema38_confirmed",
+          "schemaMigrations": 38,
+          "applicationTables": 37,
+          "applied": 2,
+          "unchanged": 36,
+          "migrated": true,
+          "runtimeStarted": false,
+          "serviceStopOperatorAttested": true,
+          "restart184Allowed": false,
+          "restart172Allowed": false,
+          "rollbackAfterMigrationQualified": false,
+          "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
+          "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+          "nodeVersion": "v24.22.1",
+          "metadataOnly": false,
+          "managerChanged": false,
+          "checkpointChanged": false,
+          "hostedPrecheckPassed": false,
+          "noRestart": true,
+          "attemptSha256": "db873cb4f9d751ab167bd960bd35a5962b89df23a5f99616d0693d6fa4b4b48e",
+          "stagingReceiptSha256": "3a4788b4a31cac3d55f09950e3b98f99a700e0f0dd8af21f83a6135bd01d8cd0"
+        }
+      },
+      {
+        "migrationsAppliedByUpgrade": 0,
+        "sha256": "fb3b02726f64e60b9bc848490d8b83745314dd2de264541918389ba66735d178",
+        "receipt": {
+          "status": "release190_schema38_confirmed",
+          "schemaMigrations": 38,
+          "applicationTables": 37,
+          "applied": 0,
+          "unchanged": 38,
+          "migrated": false,
+          "runtimeStarted": false,
+          "serviceStopOperatorAttested": true,
+          "restart184Allowed": false,
+          "restart172Allowed": false,
+          "rollbackAfterMigrationQualified": false,
+          "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
+          "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+          "nodeVersion": "v24.22.1",
+          "metadataOnly": false,
+          "managerChanged": false,
+          "checkpointChanged": false,
+          "hostedPrecheckPassed": false,
+          "noRestart": true,
+          "attemptSha256": "db873cb4f9d751ab167bd960bd35a5962b89df23a5f99616d0693d6fa4b4b48e",
+          "stagingReceiptSha256": "3a4788b4a31cac3d55f09950e3b98f99a700e0f0dd8af21f83a6135bd01d8cd0"
+        }
+      }
+    ],
+    "meaning": "Locally derived expected hashes, not observed hosted evidence"
+  },
+  "independentReview": "followup190 independently reproduced the deterministic attempt and both possible success receipts from exact helper3c52; no hosted file read or write."
+}

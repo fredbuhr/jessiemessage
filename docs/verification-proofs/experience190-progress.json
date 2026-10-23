@@ -1,7 +1,7 @@
 {
   "type": "experience190-progress",
   "version": 2,
-  "status": "service_stopped_upgrade_execution_uncertain_readonly_inspection_required",
+  "status": "schema38_status_confirmed_durable_receipt_hash_not_yet_reported",
   "release": {
     "version": "1.9.0",
     "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
@@ -120,7 +120,9 @@
     "started190": false,
     "metadataRecorded190": false,
     "hostMutations": false,
-    "serviceStoppedReported": true
+    "serviceStoppedReported": true,
+    "schema38StatusRead": true,
+    "schema38ReceiptAcquired": false
   },
   "limits": [
     "Synthetic Chrome mobile/desktop and multiple browser sessions; no physical phone or two physical devices",
@@ -128,7 +130,7 @@
     "No production190 verification or new hosted backup trial; previous deferred work remains deferred"
   ],
   "nextAction": {
-    "only": "Read durable attempt/success-file presence and hashes then same pinned status; no mutation",
+    "only": "Read durable attempt/success-file presence and SHA256 only; no SQL or credentials",
     "operator": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
     "migratorSha256": "3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2",
     "instructions": "../operations-release190.md",
@@ -136,7 +138,7 @@
     "keepServiceStopped": true,
     "doNotReplayUpgrade": true,
     "doNotRerunPreparation": true,
-    "following": "Decide only after current SQL and durable traces are reported; no assumptions from erased shell"
+    "following": "After coherent durable schema38 receipt: separate185/190 CHECKs, activation190 identity and final writer"
   },
   "historyProofs": [
     "jm190/pr-native-initial.json",
@@ -163,7 +165,15 @@
     "proof": "jm190/migrator-tty-native.json",
     "realControllingTerminalTested": true
   },
-  "sqlStatus": {
+  "interruption": {
+    "evidence": "USER_REPORTED_AND_CAPTURE",
+    "proof": "jm190-hosted-interruption.json",
+    "upgradeExecution": "unknown",
+    "shellCleared": true,
+    "schema38ReceiptSeen": false,
+    "currentSQLKnown": true
+  },
+  "sqlStatusBeforeInterruption": {
     "evidence": "USER_REPORTED",
     "applied": 36,
     "pending": 2,
@@ -173,11 +183,14 @@
     "target38And37ArePlanMetadata": true,
     "currentState": "unknown_after_possible_upgrade"
   },
-  "interruption": {
-    "evidence": "USER_REPORTED_AND_CAPTURE",
-    "proof": "jm190-hosted-interruption.json",
-    "upgradeExecution": "unknown",
-    "shellCleared": true,
-    "schema38ReceiptSeen": false
+  "sqlStatus": {
+    "applied": 38,
+    "pending": 0,
+    "migratedByStatus": false,
+    "runtimeStarted": false,
+    "proof": "jm190-hosted-schema38-status.json",
+    "currentState": "SQL38_ledger_confirmed_by_user_report",
+    "target38And37ArePlanMetadata": true,
+    "durableReceiptSeen": false
   }
 }
