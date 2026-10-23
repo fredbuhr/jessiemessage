@@ -163,7 +163,9 @@ def pinned_json(path, expected_sha, code):
 
 def precheck(path):
     data = file(path, limit=65536); lines = data.splitlines()
-    require(1 <= len(lines) <= 16 and all(canonical(parse(line)) == canonical(PRECHECK) for line in lines), 'PRECHECK_NOT_PASSED')
+    # Manager may append a valid receipt for each build or short-lived check.
+    # The strict 64 KiB file bound limits parsing; every retained line must pass.
+    require(lines and all(canonical(parse(line)) == canonical(PRECHECK) for line in lines), 'PRECHECK_NOT_PASSED')
     return dict(path=str(path), sha256=digest(data), passedReceipts=len(lines), pendingClosures=False, version=2)
 
 

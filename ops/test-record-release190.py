@@ -116,6 +116,80 @@ class Recording(unittest.TestCase):
         self.assertEqual(rollback['status'],'hosted_precheck_passed_not_started')
         self.assertEqual(updated['developmentSimplification']['release184']['rollback'],self.document['developmentSimplification']['release184']['rollback'])
 
+    def test_precheck_accepts_all_passed_receipts_within_byte_limit(self):
+        line = self.m.canonical(self.m.PRECHECK) + b'\n'
+        self.assertEqual(len(line), 182)
+        for count in (1, 16, 17, 21, 360):
+            with self.subTest(count=count):
+                data = line * count
+                self.write(self.current['precheckLog'], data)
+                result = self.m.precheck(self.current['precheckLog'])
+                self.assertEqual(result['passedReceipts'], count)
+                self.assertEqual(result['sha256'], self.m.digest(data))
+                self.assertEqual(self.current['precheckLog'].read_bytes(), data)
+        data = line[:-1] + b' ' * (65536 - len(line)) + b'\n'
+        self.assertEqual(len(data), 65536)
+        self.write(self.current['precheckLog'], data)
+        self.assertEqual(self.m.precheck(self.current['precheckLog'])['passedReceipts'], 1)
+
+    def test_repeated_current_prechecks_record_and_retry_preserve_all_evidence(self):
+        self.add_rollback()
+        data = (self.m.canonical(self.m.PRECHECK) + b'\n') * 21
+        self.write(self.current['precheckLog'], data)
+        result = self.m.record()
+        self.assertEqual(result['status'], 'release190_metadata_recorded')
+        updated = self.m.parse(self.path.read_bytes())
+        section = updated['developmentSimplification'].pop('release190')
+        self.assertEqual(section['evidence']['precheck']['passedReceipts'], 21)
+        self.assertEqual(section['evidence']['precheck']['sha256'], self.m.digest(data))
+        self.assertEqual(section['rollback']['precheck']['passedReceipts'], 1)
+        self.assertEqual(section['priorActiveService'], self.old)
+        updated['activeService'] = self.old
+        self.assertEqual(updated, self.document)
+        before, inode = self.path.read_bytes(), self.path.stat().st_ino
+        self.assertEqual(self.m.record()['status'], 'release190_metadata_already_recorded')
+        self.assertEqual(self.path.read_bytes(), before)
+        self.assertEqual(self.path.stat().st_ino, inode)
+        self.assertEqual(self.current['precheckLog'].read_bytes(), data)
+
+    def test_empty_and_oversized_prechecks_refuse_before_http_without_writes(self):
+        self.add_rollback()
+        line = self.m.canonical(self.m.PRECHECK) + b'\n'
+        for log in (self.current['precheckLog'], self.rollback['precheckLog']):
+            original = log.read_bytes()
+            for data in (b'', line * 361):
+                with self.subTest(log=log.name, size=len(data)):
+                    self.write(log, data)
+                    before = self.path.read_bytes()
+                    with mock.patch.object(self.m, 'collect_http', side_effect=AssertionError('invalid precheck must precede HTTP')):
+                        with self.assertRaises(self.m.RecordError):
+                            self.m.record()
+                    self.assertEqual(self.path.read_bytes(), before)
+                    self.assertEqual(log.read_bytes(), data)
+            self.write(log, original)
+
+    def test_every_precheck_line_is_required_even_among_many_passed_receipts(self):
+        self.add_rollback()
+        line = self.m.canonical(self.m.PRECHECK) + b'\n'
+        wrong = [self.m.canonical(dict(self.m.PRECHECK, **change)) + b'\n' for change in (
+            {'status': 'failed'}, {'pendingClosures': True}, {'version': 1},
+            {'scope': 'other'}, {'started': True}, {'unexpected': False})]
+        wrong += [b'\n', b'not a receipt\n', b'{"version":2,"version":2}\n', b'{"version":NaN}\n']
+        for log in (self.current['precheckLog'], self.rollback['precheckLog']):
+            original = log.read_bytes()
+            for bad in wrong:
+                for offset in (0, 10, 21):
+                    with self.subTest(log=log.name, bad=bad[:45], offset=offset):
+                        data = line * offset + bad + line * (21 - offset)
+                        self.write(log, data)
+                        before = self.path.read_bytes()
+                        with mock.patch.object(self.m, 'collect_http', side_effect=AssertionError('invalid precheck must precede HTTP')):
+                            with self.assertRaises((self.m.RecordError, ValueError)):
+                                self.m.record()
+                        self.assertEqual(self.path.read_bytes(), before)
+                        self.assertEqual(log.read_bytes(), data)
+            self.write(log, original)
+
     def test_partial_rollback_pins_fail_without_checkpoint_write(self):
         before=self.path.read_bytes(); self.m.ROLLBACK185_SOURCE='d'*40
         with self.assertRaisesRegex(self.m.RecordError,'ROLLBACK_PINS_REQUIRED'):self.m.record()
