@@ -1,8 +1,10 @@
-# Livraison 1.10.0 — prochaine action : préparation et CHECK
+# Livraison 1.10.0 — procédure conservée, préparation suspendue
 
 La 1.10.0 est fusionnée, qualifiée PR/main 5/5 puis publiée (source 51b0cf22…, release/latest 422111737). La production active et son checkpoint restent1.9.0, Node 24.22.1, SQL 38. Aucune opération hébergée 1100 acquise.
 
-## Préparer sans arrêter 190
+**Pause demandée par l’utilisateur avant toute poursuite :** le [contrôle du versionnage et de la conservation métier](version-audit-1100.md) précède une éventuelle reprise. Ne pas exécuter les commandes ci-dessous pendant cette pause ; aucun reçu de préparation1100 n’est acquis.
+
+## Préparer sans arrêter 190 — après décision de reprise
 
 Dans le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), exécuter ce bloc une fois. Il crée un nouveau checkout et ses lanceurs, puis lance seulement le CHECK. Aucune migration SQL, aucun démarrage ou changement de Manager/checkpoint.
 

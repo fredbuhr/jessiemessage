@@ -2,7 +2,7 @@
 
 Retrouve ton espace sur [jessiemessage.com](https://jessiemessage.com/) et l’[aide du site](https://jessiemessage.com/help).
 
-**Ce guide décrit la 1.8.3 active selon ton relevé admin USER_REPORTED** : commit `48fd42b808b2bc4d95d3f3ba21244c032d0a938f`, Node `v24.22.1`, texte de démarrage exact **`23/10/2026 00:56:57`**. La [preuve d’identité](verification-proofs/jm183-hosted-identity.json) conserve ces champs UI. **Application, checkpoint privé et latest sont désormais alignés en1.8.3/SQL36 selon le [reçu final USER_REPORTED](verification-proofs/jm183-hosted-metadata.json)**, `publicReady:true`, après écriture des seules métadonnées sans redémarrage. La livraison technique est close : aucune préparation, CHECK, activation, redémarrage ou exécution du writer n’est à répéter. [État de référence](REPRISE.md). Historiques et repli sont préservés ; les retours antérieurs sur la [liste commune](verification-proofs/jm181-hosted-interface.json) et le [parcours vidéo](verification-proofs/jm180-hosted-interface.json) restent distincts d’une nouvelle recette complète. Téléphone, clavier et notifications système réels restent à confirmer ; la sauvegarde manuelle reste non vérifiée et son test reporté à ta demande.
+**L’application active et son checkpoint privé sont en 1.9.0 / Node v24.22.1 / SQL38**, selon le [reçu final utilisateur](verification-proofs/jm190-hosted-metadata.json), source `5dda0dd4453d34a0be839d2a1402301dea835381`. Les fonctions de la [1.9.0](experience190.md) conservent les parcours décrits ici et ajoutent notamment les préférences privées, la galerie, les photos multiples et le suivi « À répondre ». **La 1.10.0 est publiée comme latest, qualifiée et non déployée** : le profil public de Jessie et la conservation des choix de profil pendant un changement temporaire de fenêtre appartiennent à cette nouvelle version. Sa préparation reste suspendue jusqu’à ta décision de reprise après l’audit ; aucune opération de livraison n’est à lancer depuis ce guide. [État de référence](REPRISE.md). Le repli compatible SQL38 est la **1.8.5**, précontrôlée et jamais démarrée. Les retours antérieurs sur la [liste commune](verification-proofs/jm181-hosted-interface.json) et le [parcours vidéo](verification-proofs/jm180-hosted-interface.json) restent distincts d’une nouvelle recette complète. Téléphone, clavier et notifications système réels restent à confirmer ; la sauvegarde manuelle reste non vérifiée et son test reporté à ta demande.
 
 ## Se connecter et gérer les accès
 
@@ -21,7 +21,7 @@ Dans [État du service](https://jessiemessage.com/admin/readiness), consulte les
 
 ## Profil et emojis
 
-Les fonctions de profil et le catalogue existent déjà ; les changements de présentation ci-dessous sont ceux de la 1.8.3. [REPRISE](REPRISE.md) reste la référence de livraison.
+Les fonctions de profil et le catalogue existent déjà ; les changements de présentation ci-dessous ont été introduits en 1.8.3 et sont conservés en 1.9.0. [REPRISE](REPRISE.md) reste la référence de livraison.
 
 **Mon profil.** Dans la messagerie, ouvre **Options → Mon profil** pour modifier ton **Nom public**, limité à 64 caractères et visible dans tes échanges. Il est distinct du surnom privé enregistré dans une **Fiche**. Avec **Choisir ou remplacer l’avatar**, sélectionne une photo et vérifie son aperçu rond ; **Retirer l’avatar** prépare son retrait. Choisis **Enregistrer le profil** pour appliquer le nom et l’avatar. Si le profil a changé ailleurs, recharge la version enregistrée ou garde ton brouillon, puis confirme l’enregistrement.
 

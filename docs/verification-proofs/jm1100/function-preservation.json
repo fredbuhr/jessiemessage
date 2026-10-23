@@ -1,0 +1,6239 @@
+{
+  "format": "jessiemessage-functional-preservation-audit",
+  "version": 1,
+  "recordedAt": "2026-10-23T17:28:09.401794+00:00",
+  "readOnlyReview": true,
+  "noTestsRerun": true,
+  "noHostOrGithubCalls": true,
+  "scope": "Exact deployed 1.9.0 source to exact qualified/released 1.10.0 tree; inherited business preservation, changed production code and existing complete native logs.",
+  "baseline": {
+    "version": "1.9.0",
+    "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
+    "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+    "deploymentEvidence": "docs/verification-proofs/jm190-hosted-metadata.json (user-supplied receipt, no host access by reviewer)",
+    "nativeQualification": {
+      "run": 39962172927,
+      "fiveJobsSuccessful": true,
+      "general": {
+        "tests": 4064,
+        "passed": 4012,
+        "skipped": 52
+      },
+      "browserPassed": 250,
+      "httpsPassed": 11,
+      "mariadbEachPassed": 598
+    }
+  },
+  "candidate": {
+    "version": "1.10.0",
+    "releasedSource": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+    "localContentEquivalentSource": "ab70dba8b34816be07eb9de0e6de65fbb8feb255",
+    "tree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+    "notDeployed": true,
+    "nativeRun": 39991790308,
+    "nativeRunUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39991790308"
+  },
+  "conclusion": {
+    "inheritedBusinessLossIdentified": false,
+    "accidentalFeatureRemovalIdentified": false,
+    "authorizationWeakeningIdentified": false,
+    "newRuntimeBlockerIdentified": false,
+    "qualifier": "Absence of identified regression in exact source/behavior diff plus recorded complete native assertions; not proof of all physical/hosted behaviors."
+  },
+  "fileInventory": {
+    "beforeAllFiles": 1483,
+    "afterAllFiles": 1530,
+    "unchangedAllFiles": 1461,
+    "modifiedAllFiles": [
+      ".github/workflows/ci.yml",
+      "docs/PLAN-IMPLEMENTATION.md",
+      "docs/PRODUCT.md",
+      "docs/REPRISE.md",
+      "docs/experience190.md",
+      "docs/verification-proofs/experience190-progress.json",
+      "package-lock.json",
+      "package.json",
+      "public/chat.html",
+      "public/chat.js",
+      "public/i18n-chat.js",
+      "public/i18n-preferences.js",
+      "public/preferences.js",
+      "public/profile.js",
+      "server/chat/http.mjs",
+      "server/index.mjs",
+      "server/profile/http.mjs",
+      "tests/browser/chat-accessibility.browser.mjs",
+      "tests/browser/preferences.browser.mjs",
+      "tests/profile-ui.test.mjs",
+      "tests/rehearsal/auth-fixture.mjs",
+      "tests/rehearsal/experience.rehearsal.mjs"
+    ],
+    "addedAllFiles": [
+      "docs/AUDIT-DEMARRAGE-190.md",
+      "docs/operations-release190.md",
+      "docs/public-profile-1100.md",
+      "docs/verification-proofs/jm1100/local-review.json",
+      "docs/verification-proofs/jm185/main-final.json",
+      "docs/verification-proofs/jm190-Manager-command-inversion.json",
+      "docs/verification-proofs/jm190-hosted-activation-problem.json",
+      "docs/verification-proofs/jm190-hosted-empty-runtime-log.json",
+      "docs/verification-proofs/jm190-hosted-full-preflight.json",
+      "docs/verification-proofs/jm190-hosted-identity.json",
+      "docs/verification-proofs/jm190-hosted-interruption.json",
+      "docs/verification-proofs/jm190-hosted-metadata.json",
+      "docs/verification-proofs/jm190-hosted-precheck-log-inspection.json",
+      "docs/verification-proofs/jm190-hosted-prechecks.json",
+      "docs/verification-proofs/jm190-hosted-preparation.json",
+      "docs/verification-proofs/jm190-hosted-schema-status.json",
+      "docs/verification-proofs/jm190-hosted-schema38-status.json",
+      "docs/verification-proofs/jm190-hosted-upgrade-confirmation.json",
+      "docs/verification-proofs/jm190-hosted-writer-precheck-refusal.json",
+      "docs/verification-proofs/jm190-startup-targeted-audit.json",
+      "docs/verification-proofs/jm190/main-native-final.json",
+      "docs/verification-proofs/jm190/merged-main.json",
+      "docs/verification-proofs/jm190/migrator-staged-native.json",
+      "docs/verification-proofs/jm190/migrator-tty-initial.json",
+      "docs/verification-proofs/jm190/migrator-tty-native.json",
+      "docs/verification-proofs/jm190/pr-native-authfixture.json",
+      "docs/verification-proofs/jm190/pr-native-final.json",
+      "docs/verification-proofs/jm190/publication-native.json",
+      "docs/verification-proofs/jm190/spec-completion-review.json",
+      "docs/verification-proofs/jm190/visual-review-main-final.json",
+      "docs/verification-proofs/jm190/writer-final-native.json",
+      "docs/verification-proofs/jm190/writer-precheck-count-native.json",
+      "public/i18n-public-profile.js",
+      "public/profile-publication.js",
+      "public/public-profile-model.js",
+      "public/public-profile.css",
+      "public/public-profile.html",
+      "public/public-profile.js",
+      "server/public-profile/http.mjs",
+      "server/public-profile/service.mjs",
+      "server/public-profile/store.mjs",
+      "server/public-profile/validation.mjs",
+      "tests/browser/public-profile.browser.mjs",
+      "tests/public-profile-http.test.mjs",
+      "tests/public-profile-model.test.mjs",
+      "tests/public-profile-routing.test.mjs",
+      "tests/public-profile.test.mjs"
+    ],
+    "deletedAllFiles": [],
+    "productionBefore": 348,
+    "productionAfter": 358,
+    "productionUnchanged": 339,
+    "productionModified": [
+      "public/chat.html",
+      "public/chat.js",
+      "public/i18n-chat.js",
+      "public/i18n-preferences.js",
+      "public/preferences.js",
+      "public/profile.js",
+      "server/chat/http.mjs",
+      "server/index.mjs",
+      "server/profile/http.mjs"
+    ],
+    "productionAdded": [
+      "public/i18n-public-profile.js",
+      "public/profile-publication.js",
+      "public/public-profile-model.js",
+      "public/public-profile.css",
+      "public/public-profile.html",
+      "public/public-profile.js",
+      "server/public-profile/http.mjs",
+      "server/public-profile/service.mjs",
+      "server/public-profile/store.mjs",
+      "server/public-profile/validation.mjs"
+    ],
+    "productionDeleted": [],
+    "productionObjectInventory": [
+      {
+        "path": "public/access.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "150130a28228923a7200b08a9b7da01b1fd6dcfa"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "150130a28228923a7200b08a9b7da01b1fd6dcfa"
+        }
+      },
+      {
+        "path": "public/access.html",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "734547ad09f2f79e1cbf9cd34f07d85eb59d0f9e"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "734547ad09f2f79e1cbf9cd34f07d85eb59d0f9e"
+        }
+      },
+      {
+        "path": "public/access.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "dedae1da8f3d074bfe40e26d102444ae04b6337a"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "dedae1da8f3d074bfe40e26d102444ae04b6337a"
+        }
+      },
+      {
+        "path": "public/admin-login.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a2aeef34d02592050edb0029723bee84e2223056"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a2aeef34d02592050edb0029723bee84e2223056"
+        }
+      },
+      {
+        "path": "public/admin-login.html",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "09726254def7c73bd3a3f9907eb4ccfb2fcb4620"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "09726254def7c73bd3a3f9907eb4ccfb2fcb4620"
+        }
+      },
+      {
+        "path": "public/admin-login.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "80fdd177eb594eca8a8ca912ffba805c8cca1517"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "80fdd177eb594eca8a8ca912ffba805c8cca1517"
+        }
+      },
+      {
+        "path": "public/admin-navigation.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b62f94d6247a3487fec57b094f6d4ffea579f6ae"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b62f94d6247a3487fec57b094f6d4ffea579f6ae"
+        }
+      },
+      {
+        "path": "public/announcement-banner.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c2a4551879855fd6f3734b39359ac5adf56ba2cc"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c2a4551879855fd6f3734b39359ac5adf56ba2cc"
+        }
+      },
+      {
+        "path": "public/announcement-banner.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "27f8b3d7add09865f68f089a58635450af833ca3"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "27f8b3d7add09865f68f089a58635450af833ca3"
+        }
+      },
+      {
+        "path": "public/announcements-model.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0d9bb2b8c171fc8cf15d344089b6c3a7abb592ca"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0d9bb2b8c171fc8cf15d344089b6c3a7abb592ca"
+        }
+      },
+      {
+        "path": "public/announcements.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b3af024e9b7a06a6d167f721cce6b0bca1cd6b08"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b3af024e9b7a06a6d167f721cce6b0bca1cd6b08"
+        }
+      },
+      {
+        "path": "public/announcements.html",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9655e806dfd4ca10b81220d33b231c52be88d642"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9655e806dfd4ca10b81220d33b231c52be88d642"
+        }
+      },
+      {
+        "path": "public/announcements.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2bf837516bd7cb539f6abb8485ed47aa6c623067"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2bf837516bd7cb539f6abb8485ed47aa6c623067"
+        }
+      },
+      {
+        "path": "public/app.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "39d0ef46d51057612d9176d9d7ec0a28d3e3d055"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "39d0ef46d51057612d9176d9d7ec0a28d3e3d055"
+        }
+      },
+      {
+        "path": "public/apple-touch-icon.png",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "08a9ed44707ba99467ccdbe0cf8ef0116d13f6b2"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "08a9ed44707ba99467ccdbe0cf8ef0116d13f6b2"
+        }
+      },
+      {
+        "path": "public/backups.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f73891f14c4022c02b10a051db4b96243d1239ce"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f73891f14c4022c02b10a051db4b96243d1239ce"
+        }
+      },
+      {
+        "path": "public/backups.html",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "10e387faccf8aabfc8096013ba8e850e98acb62e"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "10e387faccf8aabfc8096013ba8e850e98acb62e"
+        }
+      },
+      {
+        "path": "public/backups.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b1c0e6d908c348a994abeaaf0742e75754e09a28"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b1c0e6d908c348a994abeaaf0742e75754e09a28"
+        }
+      },
+      {
+        "path": "public/brand/asset-manifest.json",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "131205e7f47ce84f3bcaf833dc81268bcd62ebb4"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "131205e7f47ce84f3bcaf833dc81268bcd62ebb4"
+        }
+      },
+      {
+        "path": "public/brand/brand.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "eb83eedf79cd28d555478b831c83601fb1f2faa9"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "eb83eedf79cd28d555478b831c83601fb1f2faa9"
+        }
+      },
+      {
+        "path": "public/brand/icon-128.png",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8c9fb12dc4e6fce2a1e4fbc8f32e743c043e75fc"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8c9fb12dc4e6fce2a1e4fbc8f32e743c043e75fc"
+        }
+      },
+      {
+        "path": "public/brand/icon-16.png",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "60779caa355ab52f226d98e521b7adb662636f59"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "60779caa355ab52f226d98e521b7adb662636f59"
+        }
+      },
+      {
+        "path": "public/brand/icon-192.png",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d24dbe17134026c9a2a98940c02f9f6b7f900797"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d24dbe17134026c9a2a98940c02f9f6b7f900797"
+        }
+      },
+      {
+        "path": "public/brand/icon-32.png",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "7a692079df9298ad5e150519fbd0875a9e118213"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "7a692079df9298ad5e150519fbd0875a9e118213"
+        }
+      },
+      {
+        "path": "public/brand/icon-48.png",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e6991f9747bd1e9662338f10e1f4ca4f8d628400"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e6991f9747bd1e9662338f10e1f4ca4f8d628400"
+        }
+      },
+      {
+        "path": "public/brand/icon-512.png",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "58792a0109848d0d88e8addfe82fc4f6b61f0e61"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "58792a0109848d0d88e8addfe82fc4f6b61f0e61"
+        }
+      },
+      {
+        "path": "public/brand/icon-64.png",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4f0fa901e584c766c16bf93ea98cd45b2c39e529"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4f0fa901e584c766c16bf93ea98cd45b2c39e529"
+        }
+      },
+      {
+        "path": "public/brand/icon-maskable-512.png",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f040ef89d37db98a9d8beb8162279590423ab4d6"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f040ef89d37db98a9d8beb8162279590423ab4d6"
+        }
+      },
+      {
+        "path": "public/broadcast-model.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b5616247e5b8523fcb392cb940d8ab9edca961e3"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b5616247e5b8523fcb392cb940d8ab9edca961e3"
+        }
+      },
+      {
+        "path": "public/broadcast.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f1064ed51ad66ab975aedd7f3704b272211c2512"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f1064ed51ad66ab975aedd7f3704b272211c2512"
+        }
+      },
+      {
+        "path": "public/broadcast.html",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2e93db46aadfea1f9b6e8c62ef9d4e86262e4e5e"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2e93db46aadfea1f9b6e8c62ef9d4e86262e4e5e"
+        }
+      },
+      {
+        "path": "public/broadcast.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9a8d637741e0fd00228d674aaece53ac3bf7cac7"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9a8d637741e0fd00228d674aaece53ac3bf7cac7"
+        }
+      },
+      {
+        "path": "public/chat-drafts.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "cf835952fbfd8f6abe6b00b2b998da5da249a58c"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "cf835952fbfd8f6abe6b00b2b998da5da249a58c"
+        }
+      },
+      {
+        "path": "public/chat-model.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1855567869764da53b31cec27d369ae74730c5b1"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1855567869764da53b31cec27d369ae74730c5b1"
+        }
+      },
+      {
+        "path": "public/chat.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "18a3f453111e66a158a4cb667d90fd0e5f7a0505"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "18a3f453111e66a158a4cb667d90fd0e5f7a0505"
+        }
+      },
+      {
+        "path": "public/chat.html",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "47d046cb7ce4e9f2204637c55762aab1be69d2e2"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "99c3b0a0596ac2dc5a32f322208e525ba1bd95b6"
+        }
+      },
+      {
+        "path": "public/chat.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "826757c3523f5752e788287a716f7ad65620b39f"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0581690fdc517b8f6130420a75a105810eb481b8"
+        }
+      },
+      {
+        "path": "public/closures.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6921164556021749fbe5b86d3a7dea7675223878"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6921164556021749fbe5b86d3a7dea7675223878"
+        }
+      },
+      {
+        "path": "public/closures.html",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "7ff21b2a0849fdc89d2a41ee06921b301232dfa4"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "7ff21b2a0849fdc89d2a41ee06921b301232dfa4"
+        }
+      },
+      {
+        "path": "public/closures.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f669c4cd78425adb8568e03dcb88eaf2b26c31be"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f669c4cd78425adb8568e03dcb88eaf2b26c31be"
+        }
+      },
+      {
+        "path": "public/conversation-download.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "48e65f0f2193abb4b87880568c4c1ff0cf5ef35b"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "48e65f0f2193abb4b87880568c4c1ff0cf5ef35b"
+        }
+      },
+      {
+        "path": "public/crm-model.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "07a098d850b9e7d4f4cb4019cf6bdb1269df6db3"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "07a098d850b9e7d4f4cb4019cf6bdb1269df6db3"
+        }
+      },
+      {
+        "path": "public/crm.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f6ff672a0a41ccb0c699e24784d982d93657e679"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f6ff672a0a41ccb0c699e24784d982d93657e679"
+        }
+      },
+      {
+        "path": "public/crm.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "95df4acafd408e2e0bc90d437f165d7ad9785fd2"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "95df4acafd408e2e0bc90d437f165d7ad9785fd2"
+        }
+      },
+      {
+        "path": "public/device-transition.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "320365b77b4431c799ad1134eb890e2ccc6566d8"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "320365b77b4431c799ad1134eb890e2ccc6566d8"
+        }
+      },
+      {
+        "path": "public/device-transition.html",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f2330c0f8edecacbce9a66cc20e89e7f88a04bd7"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f2330c0f8edecacbce9a66cc20e89e7f88a04bd7"
+        }
+      },
+      {
+        "path": "public/device-transition.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ecaeb1c2e12a0e0ef725b17afccee69f937c1150"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ecaeb1c2e12a0e0ef725b17afccee69f937c1150"
+        }
+      },
+      {
+        "path": "public/emoji-catalog.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8b7f188fae57034b64fdb29ae9db96d8e5665ac5"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8b7f188fae57034b64fdb29ae9db96d8e5665ac5"
+        }
+      },
+      {
+        "path": "public/emoji.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f0549909e007503495dd45628abb0fde5b915833"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f0549909e007503495dd45628abb0fde5b915833"
+        }
+      },
+      {
+        "path": "public/entry-model.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9756599b1aac69ccc4469240740495ede1df090e"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9756599b1aac69ccc4469240740495ede1df090e"
+        }
+      },
+      {
+        "path": "public/entry.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b7f0933331d289b16779cdbb5a7d100b08b59636"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b7f0933331d289b16779cdbb5a7d100b08b59636"
+        }
+      },
+      {
+        "path": "public/entry.html",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3968d8a90e37b14c5cc0cda3be648625c82c25c9"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3968d8a90e37b14c5cc0cda3be648625c82c25c9"
+        }
+      },
+      {
+        "path": "public/entry.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e0730953a4fb039df29fe081fb458b531649a3ee"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e0730953a4fb039df29fe081fb458b531649a3ee"
+        }
+      },
+      {
+        "path": "public/favicon.ico",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "44b30cacf74181a040658e9e8d1b052248db9438"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "44b30cacf74181a040658e9e8d1b052248db9438"
+        }
+      },
+      {
+        "path": "public/followup.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "744ea3b2a4b723bda1e43129ea22e45fc2fb90d2"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "744ea3b2a4b723bda1e43129ea22e45fc2fb90d2"
+        }
+      },
+      {
+        "path": "public/help-link.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "79ae13246634ae981ff75804cd76c5fd46eb6604"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "79ae13246634ae981ff75804cd76c5fd46eb6604"
+        }
+      },
+      {
+        "path": "public/help.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "62170260502fa09a0d23ab0b52c0db99917cc3be"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "62170260502fa09a0d23ab0b52c0db99917cc3be"
+        }
+      },
+      {
+        "path": "public/help.html",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d631ecbf2973aae9f14ac1258452a4ee9c690742"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d631ecbf2973aae9f14ac1258452a4ee9c690742"
+        }
+      },
+      {
+        "path": "public/help.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b07e5aacce297f3614fa36e2f0fc22c332cc2a8f"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b07e5aacce297f3614fa36e2f0fc22c332cc2a8f"
+        }
+      },
+      {
+        "path": "public/i18n-access.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "bc2933b470162e0457b6039301a74838256bbd4d"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "bc2933b470162e0457b6039301a74838256bbd4d"
+        }
+      },
+      {
+        "path": "public/i18n-admin.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "25c4fed4f5b10e8be79cf6f26327de3479a566dc"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "25c4fed4f5b10e8be79cf6f26327de3479a566dc"
+        }
+      },
+      {
+        "path": "public/i18n-backups.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c32e38f58e05ceffb8e5f79a83ab7e1f3bf2ee7c"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c32e38f58e05ceffb8e5f79a83ab7e1f3bf2ee7c"
+        }
+      },
+      {
+        "path": "public/i18n-broadcast.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9e6114da2b27fdfb477b251f45230d398e91a848"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9e6114da2b27fdfb477b251f45230d398e91a848"
+        }
+      },
+      {
+        "path": "public/i18n-chat.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "fd7c5d5010d606d803374abc655d4ad43590d331"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4627c252dcef447b08489ec02bf863d2aa53f06d"
+        }
+      },
+      {
+        "path": "public/i18n-closures.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "84898b9c6fefd306100f79a5a68eec08026d3756"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "84898b9c6fefd306100f79a5a68eec08026d3756"
+        }
+      },
+      {
+        "path": "public/i18n-manual-backups.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6cb1f1ff7e0cfb3db7b5402762b8f0b4ce3aa6a4"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6cb1f1ff7e0cfb3db7b5402762b8f0b4ce3aa6a4"
+        }
+      },
+      {
+        "path": "public/i18n-preferences.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "008053acf6b39e0a34cfee3e2d3b5408f337e95d"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d4ce4b6782e3b8d22143b36443de63321fd77c76"
+        }
+      },
+      {
+        "path": "public/i18n-privacy.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "22298ea1ffee3d683925a80486dd32467c672040"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "22298ea1ffee3d683925a80486dd32467c672040"
+        }
+      },
+      {
+        "path": "public/i18n-profile.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "accf20c3ee73567d114d7de0178a125588c4a6a1"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "accf20c3ee73567d114d7de0178a125588c4a6a1"
+        }
+      },
+      {
+        "path": "public/i18n-public-profile.js",
+        "before": null,
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6dbeaeae2f0121d5a7f5371cc92934307ae0dd91"
+        }
+      },
+      {
+        "path": "public/i18n-readiness.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "848e6bd7d8c6b74c04da1d888776ff33007bd1ec"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "848e6bd7d8c6b74c04da1d888776ff33007bd1ec"
+        }
+      },
+      {
+        "path": "public/i18n-tools.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9d658099729e540c0334edd1c98bf11bc69dbd25"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9d658099729e540c0334edd1c98bf11bc69dbd25"
+        }
+      },
+      {
+        "path": "public/i18n.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "7ef57ae9b019b4f902de285659656aad24667acb"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "7ef57ae9b019b4f902de285659656aad24667acb"
+        }
+      },
+      {
+        "path": "public/i18n.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4d5188afc74dc4e84859258a8c932bd0fee07a82"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4d5188afc74dc4e84859258a8c932bd0fee07a82"
+        }
+      },
+      {
+        "path": "public/icon.svg",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6369b9929cd54827f6325ec77839dcc559af1abb"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6369b9929cd54827f6325ec77839dcc559af1abb"
+        }
+      },
+      {
+        "path": "public/image-preparation.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d3b80fc0ccb604ceba62b065dd370ed7f666fdfd"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d3b80fc0ccb604ceba62b065dd370ed7f666fdfd"
+        }
+      },
+      {
+        "path": "public/index.html",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e4de44cd04e43d783c7f963a54d60636a73d7546"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e4de44cd04e43d783c7f963a54d60636a73d7546"
+        }
+      },
+      {
+        "path": "public/manifest.webmanifest",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f04b33f830cd8ad986a202fe71baf6d784b31f09"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f04b33f830cd8ad986a202fe71baf6d784b31f09"
+        }
+      },
+      {
+        "path": "public/manual-backups.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1d4b40ecc9a7f30e8f5f1754ae7c4ad3b43682f5"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1d4b40ecc9a7f30e8f5f1754ae7c4ad3b43682f5"
+        }
+      },
+      {
+        "path": "public/manual-backups.html",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "936b993759c94b57949d837278fcb69995e939a0"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "936b993759c94b57949d837278fcb69995e939a0"
+        }
+      },
+      {
+        "path": "public/manual-backups.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "cd3216514acc77a4afc2e7767da66d797359e0e7"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "cd3216514acc77a4afc2e7767da66d797359e0e7"
+        }
+      },
+      {
+        "path": "public/notification-link.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "74f609c3161336a1495da559ab7782087d8f611f"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "74f609c3161336a1495da559ab7782087d8f611f"
+        }
+      },
+      {
+        "path": "public/notifications.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "878fbcfee389b392b430a6259485c4942bf18079"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "878fbcfee389b392b430a6259485c4942bf18079"
+        }
+      },
+      {
+        "path": "public/notifications.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5d690013888e8c15603511612546f4a3acf70bc3"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5d690013888e8c15603511612546f4a3acf70bc3"
+        }
+      },
+      {
+        "path": "public/password-change.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "bd45741a772c6e459168152889666f4d4e20755a"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "bd45741a772c6e459168152889666f4d4e20755a"
+        }
+      },
+      {
+        "path": "public/password-fields.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d173b2e8cd6919a691940cd84b21577fa94bd100"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d173b2e8cd6919a691940cd84b21577fa94bd100"
+        }
+      },
+      {
+        "path": "public/password-fields.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "816d8d4063e90cafa485c3835d7d72f5166b7918"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "816d8d4063e90cafa485c3835d7d72f5166b7918"
+        }
+      },
+      {
+        "path": "public/photo-batch.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b9fb182c2f5744564c98ac01a1b3b052b760a08a"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b9fb182c2f5744564c98ac01a1b3b052b760a08a"
+        }
+      },
+      {
+        "path": "public/preferences-catalogue.json",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6292570d1b5f2697491c36c037cc2510484a92b9"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6292570d1b5f2697491c36c037cc2510484a92b9"
+        }
+      },
+      {
+        "path": "public/preferences-model.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "fabd508a806cdf7c73c287ad706322b6a95468c8"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "fabd508a806cdf7c73c287ad706322b6a95468c8"
+        }
+      },
+      {
+        "path": "public/preferences.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9408c251ebe3382adccf11dcad950619f72c2294"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9408c251ebe3382adccf11dcad950619f72c2294"
+        }
+      },
+      {
+        "path": "public/preferences.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "87a4b0370a7425563da82f3f137f9421b3b038a1"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4e3e1756f62dd94b419ec4c86b3839635f3bead2"
+        }
+      },
+      {
+        "path": "public/privacy.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f88b5d2c88a6ea3a8f965bdf85f13a277c989524"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f88b5d2c88a6ea3a8f965bdf85f13a277c989524"
+        }
+      },
+      {
+        "path": "public/privacy.html",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "7f6b043301c7c30b8637925d3c6ff8db5e465f99"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "7f6b043301c7c30b8637925d3c6ff8db5e465f99"
+        }
+      },
+      {
+        "path": "public/privacy.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0688a41eb67b72e4a2838127647de16cf1903922"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0688a41eb67b72e4a2838127647de16cf1903922"
+        }
+      },
+      {
+        "path": "public/private-archive.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "cc73912228b70a688e6a819af0cc78b7c08970be"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "cc73912228b70a688e6a819af0cc78b7c08970be"
+        }
+      },
+      {
+        "path": "public/profile-publication.js",
+        "before": null,
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6170578716260f03dec386a75c6505da850f39aa"
+        }
+      },
+      {
+        "path": "public/profile.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6b620cd7432205caa53b7e418fa4614975482436"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6b620cd7432205caa53b7e418fa4614975482436"
+        }
+      },
+      {
+        "path": "public/profile.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "823cada7b60cc68af73816ad73e624909c0198cb"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d4e8f12d2c8eabbd41bc3999da6c66bb1d1e576b"
+        }
+      },
+      {
+        "path": "public/public-profile-model.js",
+        "before": null,
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8dfb415cef7ac7b273046c050947f77d1ae6365b"
+        }
+      },
+      {
+        "path": "public/public-profile.css",
+        "before": null,
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1f0175e6ef86f034fc4f435dc0fbb0b9ff002635"
+        }
+      },
+      {
+        "path": "public/public-profile.html",
+        "before": null,
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ef41454890ce7296256685e2aba08dee8f045330"
+        }
+      },
+      {
+        "path": "public/public-profile.js",
+        "before": null,
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d469768f067f021d2804a670028d0c1c9755d85b"
+        }
+      },
+      {
+        "path": "public/quick-replies.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2607b0051a56053043fd55c2b68f65d06fd6d1c6"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2607b0051a56053043fd55c2b68f65d06fd6d1c6"
+        }
+      },
+      {
+        "path": "public/readiness-model.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "014e8990ec1a13fc3bea54106bb20c645905df12"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "014e8990ec1a13fc3bea54106bb20c645905df12"
+        }
+      },
+      {
+        "path": "public/readiness.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ff94b74f9f6bf22edc1d8c1faf3144e6edb9adcd"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ff94b74f9f6bf22edc1d8c1faf3144e6edb9adcd"
+        }
+      },
+      {
+        "path": "public/readiness.html",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d3fa3beb95f3c864ecb776634882d46146aa711b"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d3fa3beb95f3c864ecb776634882d46146aa711b"
+        }
+      },
+      {
+        "path": "public/readiness.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "34146d24f45a83d38fcf781cd85cfa3a72983c34"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "34146d24f45a83d38fcf781cd85cfa3a72983c34"
+        }
+      },
+      {
+        "path": "public/recover-model.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "fee2bab5331330fa13ff73f1681fe58c6c8cc923"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "fee2bab5331330fa13ff73f1681fe58c6c8cc923"
+        }
+      },
+      {
+        "path": "public/recover.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4a5849a39551ed495e35126678f13ebf77d683fb"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4a5849a39551ed495e35126678f13ebf77d683fb"
+        }
+      },
+      {
+        "path": "public/recover.html",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "90a9d8d6eab9e7cab5ae80467bf03b651d99585f"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "90a9d8d6eab9e7cab5ae80467bf03b651d99585f"
+        }
+      },
+      {
+        "path": "public/recover.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "95088e2a5afad53beedea5a31f380478de13d940"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "95088e2a5afad53beedea5a31f380478de13d940"
+        }
+      },
+      {
+        "path": "public/session-clock.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9820f4693b52e6225a664f806a21ec96f6f53a84"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9820f4693b52e6225a664f806a21ec96f6f53a84"
+        }
+      },
+      {
+        "path": "public/styles.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6a42197501bf444b3bfb65b9fb2581c62665ecac"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6a42197501bf444b3bfb65b9fb2581c62665ecac"
+        }
+      },
+      {
+        "path": "public/sw.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b0b8dd5b146c16e1bd27e20409cd9178d5be5ddd"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b0b8dd5b146c16e1bd27e20409cd9178d5be5ddd"
+        }
+      },
+      {
+        "path": "public/tasks-model.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "68c08ef18ee21dd86949f1b076c2362e9b13db01"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "68c08ef18ee21dd86949f1b076c2362e9b13db01"
+        }
+      },
+      {
+        "path": "public/tasks.css",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a9cbcf84268bc23feea4ab8461d96e08dab9bf10"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a9cbcf84268bc23feea4ab8461d96e08dab9bf10"
+        }
+      },
+      {
+        "path": "public/tasks.html",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1727de3e3cd125f9fa542d66b36b565dc036d44a"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1727de3e3cd125f9fa542d66b36b565dc036d44a"
+        }
+      },
+      {
+        "path": "public/tasks.js",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "85ccae099249cab0cbaf9f9b49b27920eb54b1b5"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "85ccae099249cab0cbaf9f9b49b27920eb54b1b5"
+        }
+      },
+      {
+        "path": "server/access/admission.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0a3be3c7da33635a82c18f71963604da569e54e8"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0a3be3c7da33635a82c18f71963604da569e54e8"
+        }
+      },
+      {
+        "path": "server/access/config.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "68afe30d447d4286895ab88454c2bbd8a2ddd2be"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "68afe30d447d4286895ab88454c2bbd8a2ddd2be"
+        }
+      },
+      {
+        "path": "server/access/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e0d0e99e68ea780bf7451f5aa83826f9b978d55b"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e0d0e99e68ea780bf7451f5aa83826f9b978d55b"
+        }
+      },
+      {
+        "path": "server/access/pagination.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8ddc6ef81799e3833427962c8cd4fd1fdda0f2e9"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8ddc6ef81799e3833427962c8cd4fd1fdda0f2e9"
+        }
+      },
+      {
+        "path": "server/access/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5e8f3297fc349f17242249efbfbb82224ea4b44e"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5e8f3297fc349f17242249efbfbb82224ea4b44e"
+        }
+      },
+      {
+        "path": "server/access/store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "02c9d9c4007c7952f696e3060d309a48ac007b32"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "02c9d9c4007c7952f696e3060d309a48ac007b32"
+        }
+      },
+      {
+        "path": "server/account-password/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f460221c5fc407e012908cab9cdbc086f553ee13"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f460221c5fc407e012908cab9cdbc086f553ee13"
+        }
+      },
+      {
+        "path": "server/account-password/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "11a13667b2f6f1a72014e30bfdb167f2e2e739f7"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "11a13667b2f6f1a72014e30bfdb167f2e2e739f7"
+        }
+      },
+      {
+        "path": "server/announcements/crypto.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "59c2a4e1c32ebde1f46eb420f623a1ed445ddf1e"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "59c2a4e1c32ebde1f46eb420f623a1ed445ddf1e"
+        }
+      },
+      {
+        "path": "server/announcements/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3eb70225f61d73cc39dd917b1df97d8e42328477"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3eb70225f61d73cc39dd917b1df97d8e42328477"
+        }
+      },
+      {
+        "path": "server/announcements/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e312939107db1ba248adb9f465f83aaa7c4b5a6e"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e312939107db1ba248adb9f465f83aaa7c4b5a6e"
+        }
+      },
+      {
+        "path": "server/announcements/store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5fb3dd13a62fb285de70de9463ee116846d84325"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5fb3dd13a62fb285de70de9463ee116846d84325"
+        }
+      },
+      {
+        "path": "server/announcements/validation.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "bce352a881ec0fb69ff1b773310ef09d8419f7f9"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "bce352a881ec0fb69ff1b773310ef09d8419f7f9"
+        }
+      },
+      {
+        "path": "server/auth/config.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "250fc7b88d9b90bd80da44111a4ecaa533d5d374"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "250fc7b88d9b90bd80da44111a4ecaa533d5d374"
+        }
+      },
+      {
+        "path": "server/auth/crypto.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "84071d6264b812bc2f78e03726f7f01ed789d49c"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "84071d6264b812bc2f78e03726f7f01ed789d49c"
+        }
+      },
+      {
+        "path": "server/auth/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a55d6fd9176d80fb109181831d33554fa4fb91fd"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a55d6fd9176d80fb109181831d33554fa4fb91fd"
+        }
+      },
+      {
+        "path": "server/auth/recovery-store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b72edafaba82b37657fb62f9f6dd4e47a9874116"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b72edafaba82b37657fb62f9f6dd4e47a9874116"
+        }
+      },
+      {
+        "path": "server/auth/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "02116a474c832d800d2c5fd471cb7ae0fa1c5ae9"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "02116a474c832d800d2c5fd471cb7ae0fa1c5ae9"
+        }
+      },
+      {
+        "path": "server/auth/session-policy.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "01d3bda6849f59dafaa34cb0b35fabfb1bbb0965"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "01d3bda6849f59dafaa34cb0b35fabfb1bbb0965"
+        }
+      },
+      {
+        "path": "server/auth/store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d66875900315c05c976e9e11c321203c5b157f40"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d66875900315c05c976e9e11c321203c5b157f40"
+        }
+      },
+      {
+        "path": "server/backup/alert-delivery.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "76b7b5df3132ea13466ed38d2fa86230d610dc82"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "76b7b5df3132ea13466ed38d2fa86230d610dc82"
+        }
+      },
+      {
+        "path": "server/backup/alert-files.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4cd431d088596e35ac7df301f2a937a81d2f758e"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4cd431d088596e35ac7df301f2a937a81d2f758e"
+        }
+      },
+      {
+        "path": "server/backup/alert-state.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d9f316f25fbd87054b2190b939f20a02c4775594"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d9f316f25fbd87054b2190b939f20a02c4775594"
+        }
+      },
+      {
+        "path": "server/backup/alert-worker.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "671fc33939cd2afa903cc5a0076d7e031ae253ae"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "671fc33939cd2afa903cc5a0076d7e031ae253ae"
+        }
+      },
+      {
+        "path": "server/backup/application-scope.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "290b95cf681b7392aa9159f4ce7a50bf67977daa"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "290b95cf681b7392aa9159f4ce7a50bf67977daa"
+        }
+      },
+      {
+        "path": "server/backup/checkpoint-archive.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2940205e9b44d18778d56faa95b7e50d2d6e00ce"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2940205e9b44d18778d56faa95b7e50d2d6e00ce"
+        }
+      },
+      {
+        "path": "server/backup/checkpoint-encryption.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8e3911c1b3be035f9b9893aa236c2fa2c2d95975"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8e3911c1b3be035f9b9893aa236c2fa2c2d95975"
+        }
+      },
+      {
+        "path": "server/backup/checkpoint-file-inventory.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "36bc36e9681b0ce64a53484c8d4791c68198359e"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "36bc36e9681b0ce64a53484c8d4791c68198359e"
+        }
+      },
+      {
+        "path": "server/backup/checkpoint-files.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3dd363038c6534343399de52b7c27935ceb05147"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3dd363038c6534343399de52b7c27935ceb05147"
+        }
+      },
+      {
+        "path": "server/backup/checkpoint-receipt.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3576faf0655edaa863dc8d8783e8149e79b46571"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3576faf0655edaa863dc8d8783e8149e79b46571"
+        }
+      },
+      {
+        "path": "server/backup/closure-reconciliation-replay.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "91bb99c9f6c06f112654167df2f75cb4e0f98903"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "91bb99c9f6c06f112654167df2f75cb4e0f98903"
+        }
+      },
+      {
+        "path": "server/backup/closure-reconciliation.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a5a2d4f5d86370e059df57a9e25211a33f652353"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a5a2d4f5d86370e059df57a9e25211a33f652353"
+        }
+      },
+      {
+        "path": "server/backup/copy-catalog.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "71bb9f3f9205aacfb26748964caee1daf1bc8cb7"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "71bb9f3f9205aacfb26748964caee1daf1bc8cb7"
+        }
+      },
+      {
+        "path": "server/backup/copy-files.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8b150d809e0ace25abba00d05843bdb1bf555ddf"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8b150d809e0ace25abba00d05843bdb1bf555ddf"
+        }
+      },
+      {
+        "path": "server/backup/copy-http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4e3b90c7b58626cc5f3a27f9f912a307eb005bc2"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4e3b90c7b58626cc5f3a27f9f912a307eb005bc2"
+        }
+      },
+      {
+        "path": "server/backup/copy-kit.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0562b6eee29282d4c5fffbd9aa22554ed2771bd8"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0562b6eee29282d4c5fffbd9aa22554ed2771bd8"
+        }
+      },
+      {
+        "path": "server/backup/copy-service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "90d57888e3fe090c51c474a42d25ee19fbd2317d"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "90d57888e3fe090c51c474a42d25ee19fbd2317d"
+        }
+      },
+      {
+        "path": "server/backup/copy-state.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f70e4be12f4dac3beb7468dde6fbb1f7dc82ffb8"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f70e4be12f4dac3beb7468dde6fbb1f7dc82ffb8"
+        }
+      },
+      {
+        "path": "server/backup/crypto-store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "bc0aae7d6158398914369e144d37c4d2fb6d2898"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "bc0aae7d6158398914369e144d37c4d2fb6d2898"
+        }
+      },
+      {
+        "path": "server/backup/freshness-reader.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "867052c9df6be6994f167c087ef7cd99c16f421f"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "867052c9df6be6994f167c087ef7cd99c16f421f"
+        }
+      },
+      {
+        "path": "server/backup/freshness.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "01baedf7f9fdc38caeaef92ef3a8956e2ef6ddce"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "01baedf7f9fdc38caeaef92ef3a8956e2ef6ddce"
+        }
+      },
+      {
+        "path": "server/backup/inspection-diagnostics.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f7465611184a5d50f10b806f9593594e4ee2ee4b"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f7465611184a5d50f10b806f9593594e4ee2ee4b"
+        }
+      },
+      {
+        "path": "server/backup/inspection.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3e51ba9e99495931cf6df6b78d67313ff627cd7d"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3e51ba9e99495931cf6df6b78d67313ff627cd7d"
+        }
+      },
+      {
+        "path": "server/backup/local-closure-parent.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "322e4f32eeb1b67dee14a2f38a0d1ee59e208b4a"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "322e4f32eeb1b67dee14a2f38a0d1ee59e208b4a"
+        }
+      },
+      {
+        "path": "server/backup/managed-closures.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1e150cbbc7bf4b57a69cdeb4e7b89040b2e06a23"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1e150cbbc7bf4b57a69cdeb4e7b89040b2e06a23"
+        }
+      },
+      {
+        "path": "server/backup/managed-runtime.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8d12942436ccb5de2adb72ff1ba632d27ffee980"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8d12942436ccb5de2adb72ff1ba632d27ffee980"
+        }
+      },
+      {
+        "path": "server/backup/managed-witness.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3f63b8fa058963ee45657e6bf08bcae6756f30fd"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3f63b8fa058963ee45657e6bf08bcae6756f30fd"
+        }
+      },
+      {
+        "path": "server/backup/manifest.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ae627acd4a3adfbafc8b793d96efb22d99fb8a0e"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ae627acd4a3adfbafc8b793d96efb22d99fb8a0e"
+        }
+      },
+      {
+        "path": "server/backup/manual-backup-files.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f26a3b1ad8a9db7f756b9d42fb7a050642f1e3ee"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f26a3b1ad8a9db7f756b9d42fb7a050642f1e3ee"
+        }
+      },
+      {
+        "path": "server/backup/manual-backup-http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8763b09b6d62830e7d3df300446b2b0defad4ac7"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8763b09b6d62830e7d3df300446b2b0defad4ac7"
+        }
+      },
+      {
+        "path": "server/backup/manual-backup-service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "94ccb0a057b74cfb75744a8baf1892da46587a3b"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "94ccb0a057b74cfb75744a8baf1892da46587a3b"
+        }
+      },
+      {
+        "path": "server/backup/manual-operator-context.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "93e4e3197b2a41ec95174acbf09f36b9fead91cd"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "93e4e3197b2a41ec95174acbf09f36b9fead91cd"
+        }
+      },
+      {
+        "path": "server/backup/manual-restore.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e4622807095abefc322a58feff1ce231c62e0d63"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e4622807095abefc322a58feff1ce231c62e0d63"
+        }
+      },
+      {
+        "path": "server/backup/operational-checkpoint.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "557038c5fde82d0525112bd309529a549c1c2b86"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "557038c5fde82d0525112bd309529a549c1c2b86"
+        }
+      },
+      {
+        "path": "server/backup/parent-gateway.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ef49f63b6b6fd7d8a105bffda91d250c776f3530"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ef49f63b6b6fd7d8a105bffda91d250c776f3530"
+        }
+      },
+      {
+        "path": "server/backup/periodic-monitor.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1a3dc07645025bf106de3f9dc1b7d33b8c61971d"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1a3dc07645025bf106de3f9dc1b7d33b8c61971d"
+        }
+      },
+      {
+        "path": "server/backup/profiles.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "72ac6e5eac7d7e032f8082c8bcbc2ce2672e2cbd"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "72ac6e5eac7d7e032f8082c8bcbc2ce2672e2cbd"
+        }
+      },
+      {
+        "path": "server/backup/reconciliation-progress.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d4f175ab85129e01263f8180ffefccd732226533"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d4f175ab85129e01263f8180ffefccd732226533"
+        }
+      },
+      {
+        "path": "server/backup/recovery-store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2a249af353cef9a9f5f55699e25ed0950f2c70fa"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2a249af353cef9a9f5f55699e25ed0950f2c70fa"
+        }
+      },
+      {
+        "path": "server/backup/recurring-checkpoint-files.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f7e81770667e1687828512a8dc462006c6458e65"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f7e81770667e1687828512a8dc462006c6458e65"
+        }
+      },
+      {
+        "path": "server/backup/recurring-checkpoint.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0be3eaf408e297896d40170c70f32f173b0f7cdb"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0be3eaf408e297896d40170c70f32f173b0f7cdb"
+        }
+      },
+      {
+        "path": "server/backup/recurring-supervisor.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a060dd73ed9dab1e8326d9dd1e9d5bb3d5bc1c87"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a060dd73ed9dab1e8326d9dd1e9d5bb3d5bc1c87"
+        }
+      },
+      {
+        "path": "server/backup/registry-continuity.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "dd5568bffde14e168a882a28f75267efc1904050"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "dd5568bffde14e168a882a28f75267efc1904050"
+        }
+      },
+      {
+        "path": "server/backup/registry-snapshot.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "407db410ecab34dcb0afbeb5e667b16331112333"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "407db410ecab34dcb0afbeb5e667b16331112333"
+        }
+      },
+      {
+        "path": "server/backup/registry-witness.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "76336d8bf55882d6329495582b3459c803533fe7"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "76336d8bf55882d6329495582b3459c803533fe7"
+        }
+      },
+      {
+        "path": "server/backup/snapshot.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2dfeda7c63e5734011881ff2b72d86156f251d37"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2dfeda7c63e5734011881ff2b72d86156f251d37"
+        }
+      },
+      {
+        "path": "server/backup/verification-kit.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ffb924079bd11c7b8e8113389ec0744c9d12585b"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ffb924079bd11c7b8e8113389ec0744c9d12585b"
+        }
+      },
+      {
+        "path": "server/backup/verify.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a7cff26a91d17f5212d197d3b255f9845e4305f6"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a7cff26a91d17f5212d197d3b255f9845e4305f6"
+        }
+      },
+      {
+        "path": "server/backup/video-checkpoint-files.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e18845adb70a348b394e21f444b8e779ef3169fc"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e18845adb70a348b394e21f444b8e779ef3169fc"
+        }
+      },
+      {
+        "path": "server/backup/video-inventory.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "540e2d4f8cb030e80b6453d8abb37a31df696745"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "540e2d4f8cb030e80b6453d8abb37a31df696745"
+        }
+      },
+      {
+        "path": "server/backup/witness-enrollment-http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b00df0408278f31fc5ba2a3da2f98f5510c16248"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b00df0408278f31fc5ba2a3da2f98f5510c16248"
+        }
+      },
+      {
+        "path": "server/backup/witness-enrollment.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d10a94cb14d49985db4ade218f4e42467686c193"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d10a94cb14d49985db4ade218f4e42467686c193"
+        }
+      },
+      {
+        "path": "server/backup/witness-genesis.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "cf03b300091d0a313f0de859df71c9685053f3d9"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "cf03b300091d0a313f0de859df71c9685053f3d9"
+        }
+      },
+      {
+        "path": "server/backup/witness-observation-maintenance.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "161fe311d6d54f1087a896b3be58192041cae252"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "161fe311d6d54f1087a896b3be58192041cae252"
+        }
+      },
+      {
+        "path": "server/backup/witness-observer.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3840f34f47f1b41d667def40b2680cb5b2821bd0"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3840f34f47f1b41d667def40b2680cb5b2821bd0"
+        }
+      },
+      {
+        "path": "server/backup/witness-origin-context.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9d1daa3bf0de2bb709feda58d7565ca9486bf491"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9d1daa3bf0de2bb709feda58d7565ca9486bf491"
+        }
+      },
+      {
+        "path": "server/backup/witness-origin-diagnostics.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9e4b3cf785572c21b99344bc9d9bf0720e0803d3"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9e4b3cf785572c21b99344bc9d9bf0720e0803d3"
+        }
+      },
+      {
+        "path": "server/backup/witness-origin-operator.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d44365421fff250f2f000ebc70b919cfd8e2d4ab"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d44365421fff250f2f000ebc70b919cfd8e2d4ab"
+        }
+      },
+      {
+        "path": "server/backup/witness-recovery-control.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "cc4793a37aca0ff63e71f383d87678325e474f83"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "cc4793a37aca0ff63e71f383d87678325e474f83"
+        }
+      },
+      {
+        "path": "server/backup/witness-recovery-parent.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "03ec2f88f4974422f5f95a52807a646e86adf0d2"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "03ec2f88f4974422f5f95a52807a646e86adf0d2"
+        }
+      },
+      {
+        "path": "server/backup/witness-recovery-server.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "57e4c3ada60b64176193221c0e05024826c540c4"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "57e4c3ada60b64176193221c0e05024826c540c4"
+        }
+      },
+      {
+        "path": "server/backup/witness-transport.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "017dccd7a3913ec6752bfb6486c271f1d9a3da95"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "017dccd7a3913ec6752bfb6486c271f1d9a3da95"
+        }
+      },
+      {
+        "path": "server/broadcast/audience.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d8ce81997049923ae023a495a9924682d99de9dc"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d8ce81997049923ae023a495a9924682d99de9dc"
+        }
+      },
+      {
+        "path": "server/broadcast/config.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "61d3371d990a7042ec63c8ba88a207b3956f2b4a"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "61d3371d990a7042ec63c8ba88a207b3956f2b4a"
+        }
+      },
+      {
+        "path": "server/broadcast/crypto.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b80241a1a76e5cae8e4e0ee90f672fb4b5bf8112"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b80241a1a76e5cae8e4e0ee90f672fb4b5bf8112"
+        }
+      },
+      {
+        "path": "server/broadcast/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "222a3c8c6a0394c27d6fa12f8028b04e9bd5e2cc"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "222a3c8c6a0394c27d6fa12f8028b04e9bd5e2cc"
+        }
+      },
+      {
+        "path": "server/broadcast/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b81efe70f8e1006df8ee00741168006951dc998f"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b81efe70f8e1006df8ee00741168006951dc998f"
+        }
+      },
+      {
+        "path": "server/broadcast/store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "904a8c3c4ca5e1881181502bd7593dcdd3db0216"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "904a8c3c4ca5e1881181502bd7593dcdd3db0216"
+        }
+      },
+      {
+        "path": "server/broadcast/validation.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0881520080221d50c08f44cd5df27c6776610da2"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0881520080221d50c08f44cd5df27c6776610da2"
+        }
+      },
+      {
+        "path": "server/broadcast/worker.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5e0cb88bbcdc5672358f6ea549a7a5720908461c"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5e0cb88bbcdc5672358f6ea549a7a5720908461c"
+        }
+      },
+      {
+        "path": "server/chat/archive-transfer.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d6b4051994f7ec378831d212ea8b45e381ea09b9"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d6b4051994f7ec378831d212ea8b45e381ea09b9"
+        }
+      },
+      {
+        "path": "server/chat/client-export-http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6d2f215fcbc05d9bd4183b1ad32f272d34d3d703"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6d2f215fcbc05d9bd4183b1ad32f272d34d3d703"
+        }
+      },
+      {
+        "path": "server/chat/config.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a31765aeba6e8fce268587b686c9081b6d4c5dc8"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a31765aeba6e8fce268587b686c9081b6d4c5dc8"
+        }
+      },
+      {
+        "path": "server/chat/conversation-export.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2a8076bafddc1cca5030eb95b3c6ad427065ae54"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2a8076bafddc1cca5030eb95b3c6ad427065ae54"
+        }
+      },
+      {
+        "path": "server/chat/crypto.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b396df0a4a5e036736d87b9a33cf7eaa1f02620b"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b396df0a4a5e036736d87b9a33cf7eaa1f02620b"
+        }
+      },
+      {
+        "path": "server/chat/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9a19dd351abf7b5471ac27a2c9e22724f0e71729"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "59545ce66d96360852be3319ac4ee16c92a59f87"
+        }
+      },
+      {
+        "path": "server/chat/profile-avatar.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f5650473ba5e8130b0afbea779a3855dcf957422"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f5650473ba5e8130b0afbea779a3855dcf957422"
+        }
+      },
+      {
+        "path": "server/chat/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "14d4cd44828721e4e62fc0819c0da70da7e51376"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "14d4cd44828721e4e62fc0819c0da70da7e51376"
+        }
+      },
+      {
+        "path": "server/chat/store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "46c52edc84436c21016ac437d6bd047c743c8808"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "46c52edc84436c21016ac437d6bd047c743c8808"
+        }
+      },
+      {
+        "path": "server/chat/streaming-conversation-export.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "916fd2d2f994e9989f4e6edbc1d5c5b045a64078"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "916fd2d2f994e9989f4e6edbc1d5c5b045a64078"
+        }
+      },
+      {
+        "path": "server/chat/zip-stream.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c61adc948dfc4cacebf938f5917155feee72fb1d"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c61adc948dfc4cacebf938f5917155feee72fb1d"
+        }
+      },
+      {
+        "path": "server/config/private-auth-environment.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "066b35ed93930aefa7097c8712da9763482c6f6a"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "066b35ed93930aefa7097c8712da9763482c6f6a"
+        }
+      },
+      {
+        "path": "server/config/runtime-authentication.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "7f19fbcd0193601b09cdf72fd64c624363df0270"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "7f19fbcd0193601b09cdf72fd64c624363df0270"
+        }
+      },
+      {
+        "path": "server/config/runtime-broadcast.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "fb5495d8aa2dfa424841ceb39f32c24642f299bd"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "fb5495d8aa2dfa424841ceb39f32c24642f299bd"
+        }
+      },
+      {
+        "path": "server/config/runtime-crm.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0657671b74379775e73002ab70befc000529d239"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0657671b74379775e73002ab70befc000529d239"
+        }
+      },
+      {
+        "path": "server/config/runtime-database-file.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9323eee656c483877e83aa1c728a0c54d17834f9"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9323eee656c483877e83aa1c728a0c54d17834f9"
+        }
+      },
+      {
+        "path": "server/config/runtime-media-storage.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3a5973a6f613767cce4d46620bb3d3e8aede0c93"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3a5973a6f613767cce4d46620bb3d3e8aede0c93"
+        }
+      },
+      {
+        "path": "server/config/runtime-media.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8382ea804378dd64a179bd038a32626ee2d910ee"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8382ea804378dd64a179bd038a32626ee2d910ee"
+        }
+      },
+      {
+        "path": "server/config/runtime-messaging.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c84362c6280269f1fdfe0b8905925e4d09413c49"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c84362c6280269f1fdfe0b8905925e4d09413c49"
+        }
+      },
+      {
+        "path": "server/config/runtime-notifications-file.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ef4c2122ebbf84e311785f0299dd6a59c009acf0"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ef4c2122ebbf84e311785f0299dd6a59c009acf0"
+        }
+      },
+      {
+        "path": "server/config/runtime-video-storage.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "68be6ee5f4b7b64ba3698d5566230a2483338948"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "68be6ee5f4b7b64ba3698d5566230a2483338948"
+        }
+      },
+      {
+        "path": "server/config/runtime-video.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "61fbb0c4898d0b11d645cd5f166ebb7aeab49d1d"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "61fbb0c4898d0b11d645cd5f166ebb7aeab49d1d"
+        }
+      },
+      {
+        "path": "server/crm/config.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3bf6dd0ecab9d70310cdc5c48205f32d0fbd990f"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3bf6dd0ecab9d70310cdc5c48205f32d0fbd990f"
+        }
+      },
+      {
+        "path": "server/crm/crypto.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "cc4d39985cc0b442632b7aef0b69e84a98691f77"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "cc4d39985cc0b442632b7aef0b69e84a98691f77"
+        }
+      },
+      {
+        "path": "server/crm/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a4e813d7283d5374748da44d72e4e9813cf84c89"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a4e813d7283d5374748da44d72e4e9813cf84c89"
+        }
+      },
+      {
+        "path": "server/crm/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "373842f4e9db26a67590c249e13b721508f7aa18"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "373842f4e9db26a67590c249e13b721508f7aa18"
+        }
+      },
+      {
+        "path": "server/crm/store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ebfb1676efb35022b1a5590fd50d3c8c78dbceef"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ebfb1676efb35022b1a5590fd50d3c8c78dbceef"
+        }
+      },
+      {
+        "path": "server/crm/validation.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2fb127ca34bd15ea6273ff17326dc4006642f447"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2fb127ca34bd15ea6273ff17326dc4006642f447"
+        }
+      },
+      {
+        "path": "server/data/closure-http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5689fbd3036eb0cccc8c8c94744ef38f3a04a7bc"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5689fbd3036eb0cccc8c8c94744ef38f3a04a7bc"
+        }
+      },
+      {
+        "path": "server/data/closure-operations.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "7a340263a1e879cd2f42086b2928e5ad96d5e130"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "7a340263a1e879cd2f42086b2928e5ad96d5e130"
+        }
+      },
+      {
+        "path": "server/data/closure-service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "50368dcce40f9459760ac228aea5de15b8de957d"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "50368dcce40f9459760ac228aea5de15b8de957d"
+        }
+      },
+      {
+        "path": "server/data/deletion-store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b41004233ccae94000fe5516491d1f194e786b35"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b41004233ccae94000fe5516491d1f194e786b35"
+        }
+      },
+      {
+        "path": "server/data/deletion.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "dc695d373c02207846b7b55846401f2a2109703d"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "dc695d373c02207846b7b55846401f2a2109703d"
+        }
+      },
+      {
+        "path": "server/data/erasure-journal.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "aef442e22d8989c3dbe1aa12a3367999f8e7a538"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "aef442e22d8989c3dbe1aa12a3367999f8e7a538"
+        }
+      },
+      {
+        "path": "server/data/erasure-schema.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1311fd1b16559b9d60fd1262236b44b66944fc5d"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1311fd1b16559b9d60fd1262236b44b66944fc5d"
+        }
+      },
+      {
+        "path": "server/data/erasure-state.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "bc5334685a286c1a24b6e4c7913e21a7a6c8d3b9"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "bc5334685a286c1a24b6e4c7913e21a7a6c8d3b9"
+        }
+      },
+      {
+        "path": "server/data/erasure-store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3424a7ff8489be943b203cc09704bf2ae42e6716"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3424a7ff8489be943b203cc09704bf2ae42e6716"
+        }
+      },
+      {
+        "path": "server/data/erasure.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6fde475e249579f48292d4b011f0adf071df3296"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6fde475e249579f48292d4b011f0adf071df3296"
+        }
+      },
+      {
+        "path": "server/data/export.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8e278975f47a9fed926b5930b8a3443480c218fa"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8e278975f47a9fed926b5930b8a3443480c218fa"
+        }
+      },
+      {
+        "path": "server/data/policy.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4739a7620be9760660a1ef7925aef82ba24ad93f"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4739a7620be9760660a1ef7925aef82ba24ad93f"
+        }
+      },
+      {
+        "path": "server/data/rollback.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1caaa76c674c111ddfea9a9a3db93bd6096a5e19"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1caaa76c674c111ddfea9a9a3db93bd6096a5e19"
+        }
+      },
+      {
+        "path": "server/data/store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b95b5a3a80462ede7fe52d298501df0cb9ff6173"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b95b5a3a80462ede7fe52d298501df0cb9ff6173"
+        }
+      },
+      {
+        "path": "server/data/writer.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8514f7b39a5efe1a8d5cd6348497ea48b5dca1b9"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8514f7b39a5efe1a8d5cd6348497ea48b5dca1b9"
+        }
+      },
+      {
+        "path": "server/db/connection.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9688a1210d233a0dec70cc0c7e3c5766a4c28293"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9688a1210d233a0dec70cc0c7e3c5766a4c28293"
+        }
+      },
+      {
+        "path": "server/db/migrations.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1776021b520413327845adff63aefc5d12b01b39"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1776021b520413327845adff63aefc5d12b01b39"
+        }
+      },
+      {
+        "path": "server/db/runtime.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3f399bae51fc64ae0b264aa4d0cdae3efe4a16bd"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3f399bae51fc64ae0b264aa4d0cdae3efe4a16bd"
+        }
+      },
+      {
+        "path": "server/db/shared-runtime-privileges.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "40271d7a2fc5cb28f6755fcddeaf1a71c440cce5"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "40271d7a2fc5cb28f6755fcddeaf1a71c440cce5"
+        }
+      },
+      {
+        "path": "server/db/store-migrations.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "81f7470c1b72a77079d5d66b1d5a0c13e394e343"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "81f7470c1b72a77079d5d66b1d5a0c13e394e343"
+        }
+      },
+      {
+        "path": "server/entry/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "dc8dfcd8a22d2b501432b3d4aa9f7d4d93974b34"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "dc8dfcd8a22d2b501432b3d4aa9f7d4d93974b34"
+        }
+      },
+      {
+        "path": "server/experience/migrations.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "10a1cc39e7f32ecd93b6b6dc971ae5b0b91e1e58"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "10a1cc39e7f32ecd93b6b6dc971ae5b0b91e1e58"
+        }
+      },
+      {
+        "path": "server/experience/migrations/0037_profile_preferences.sql",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "aa4a44dbc7afc863ddeeb8e7c53ef1ce711f0108"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "aa4a44dbc7afc863ddeeb8e7c53ef1ce711f0108"
+        }
+      },
+      {
+        "path": "server/experience/migrations/0038_reply_tracking.sql",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "02e6d954fe1375e14266e5bb266d21299843661b"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "02e6d954fe1375e14266e5bb266d21299843661b"
+        }
+      },
+      {
+        "path": "server/files/private-directory.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "37bf0e1705d6d1a8be6605f560d7eafce204be8a"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "37bf0e1705d6d1a8be6605f560d7eafce204be8a"
+        }
+      },
+      {
+        "path": "server/files/private-json.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "912910a0a3ab404d89cf4ca10001f3a53b3059c8"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "912910a0a3ab404d89cf4ca10001f3a53b3059c8"
+        }
+      },
+      {
+        "path": "server/http/admission.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "df506c017c87fa0b6c0556bb1cd36d27cb710524"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "df506c017c87fa0b6c0556bb1cd36d27cb710524"
+        }
+      },
+      {
+        "path": "server/http/peer-address.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c65f19b81aed87e7fef6d7835f812d1461079804"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c65f19b81aed87e7fef6d7835f812d1461079804"
+        }
+      },
+      {
+        "path": "server/http/request-origin.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5f0a17446c0a04a1aaf8756c1b5f735a52fcf445"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5f0a17446c0a04a1aaf8756c1b5f735a52fcf445"
+        }
+      },
+      {
+        "path": "server/index.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "aa57935423522c8afeca5b65236399c430a22f17"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0bc96836eaa643978440202f1faa8f8be878b713"
+        }
+      },
+      {
+        "path": "server/lifecycle.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ca9bb1c4937419c3ac555c4e1942c8ff802f0387"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ca9bb1c4937419c3ac555c4e1942c8ff802f0387"
+        }
+      },
+      {
+        "path": "server/mail/backup-alert-message.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1f9dcdf94fb3c8593fad0b361661a20249d4b586"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1f9dcdf94fb3c8593fad0b361661a20249d4b586"
+        }
+      },
+      {
+        "path": "server/mail/config.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "295d04c03081d64a6808dfcb80f7759d63f3be8f"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "295d04c03081d64a6808dfcb80f7759d63f3be8f"
+        }
+      },
+      {
+        "path": "server/mail/crypto.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "93cf96d3fc53d13c0ca6d6b42d29b7d464872399"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "93cf96d3fc53d13c0ca6d6b42d29b7d464872399"
+        }
+      },
+      {
+        "path": "server/mail/store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "05353462eb540ce4c73178709256820aae8945ac"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "05353462eb540ce4c73178709256820aae8945ac"
+        }
+      },
+      {
+        "path": "server/mail/transport.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "42066d6006bda1058e1cd0ee3edbf13c72614edb"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "42066d6006bda1058e1cd0ee3edbf13c72614edb"
+        }
+      },
+      {
+        "path": "server/mail/worker.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8e9647d1f626023445fb8c1f4d029d7b318d2d91"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8e9647d1f626023445fb8c1f4d029d7b318d2d91"
+        }
+      },
+      {
+        "path": "server/media/backup-admission.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d5f56d422d6cd1ca6af046d54523c9da8fdd15f9"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d5f56d422d6cd1ca6af046d54523c9da8fdd15f9"
+        }
+      },
+      {
+        "path": "server/media/backup-limits.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "440ebc5adb82571927aeeeb6b1b874ac5973af71"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "440ebc5adb82571927aeeeb6b1b874ac5973af71"
+        }
+      },
+      {
+        "path": "server/media/capacity-store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "061779bc73f4108d7a8c03385e9216f90f4e4cf1"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "061779bc73f4108d7a8c03385e9216f90f4e4cf1"
+        }
+      },
+      {
+        "path": "server/media/config.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1e52ca6e4782715359adb5364e0c49309b425497"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1e52ca6e4782715359adb5364e0c49309b425497"
+        }
+      },
+      {
+        "path": "server/media/dto.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4893340a0c9b7a73bcb089b10d50efbec30d0975"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4893340a0c9b7a73bcb089b10d50efbec30d0975"
+        }
+      },
+      {
+        "path": "server/media/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "55fd20b0dc7ca0e51a89112323c61fb80d2b9b7a"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "55fd20b0dc7ca0e51a89112323c61fb80d2b9b7a"
+        }
+      },
+      {
+        "path": "server/media/image-worker.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "94a380e5c54d4c4ec70987b24cc9cbe10ab75dde"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "94a380e5c54d4c4ec70987b24cc9cbe10ab75dde"
+        }
+      },
+      {
+        "path": "server/media/image.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f1c8783a6f9b73050d890a353e4d22ed9e275f1f"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f1c8783a6f9b73050d890a353e4d22ed9e275f1f"
+        }
+      },
+      {
+        "path": "server/media/inventory-store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "94b2e406c010021982095cfceb28ef49d502756f"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "94b2e406c010021982095cfceb28ef49d502756f"
+        }
+      },
+      {
+        "path": "server/media/inventory.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2b39b6e9dab524b485638d438f8024a23983dfb1"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2b39b6e9dab524b485638d438f8024a23983dfb1"
+        }
+      },
+      {
+        "path": "server/media/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "97e1023e9258fbb77e60f006b31314479fbb95da"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "97e1023e9258fbb77e60f006b31314479fbb95da"
+        }
+      },
+      {
+        "path": "server/media/storage.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5349ffcce515d43cb69f81f9fb6c962ad2494a9d"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5349ffcce515d43cb69f81f9fb6c962ad2494a9d"
+        }
+      },
+      {
+        "path": "server/media/store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "68d7e5296d728531217e8a1377e84fed0c2cf612"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "68d7e5296d728531217e8a1377e84fed0c2cf612"
+        }
+      },
+      {
+        "path": "server/notifications/config.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b7be19f84eafb4b324b21b7694fc755bbe6dae00"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b7be19f84eafb4b324b21b7694fc755bbe6dae00"
+        }
+      },
+      {
+        "path": "server/notifications/crypto.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4c0521991d2997279619b36dc89ef2e599b96c63"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4c0521991d2997279619b36dc89ef2e599b96c63"
+        }
+      },
+      {
+        "path": "server/notifications/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0cf00ac4974ade6f892038660de9eb515f991c80"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0cf00ac4974ade6f892038660de9eb515f991c80"
+        }
+      },
+      {
+        "path": "server/notifications/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "958b2a217ba85748eb99487ab2272748752e2e10"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "958b2a217ba85748eb99487ab2272748752e2e10"
+        }
+      },
+      {
+        "path": "server/notifications/store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2b1ab1206d65da6169ca0898151ff4d090b81fb9"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2b1ab1206d65da6169ca0898151ff4d090b81fb9"
+        }
+      },
+      {
+        "path": "server/notifications/transport.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "71509ef3523a2a208a1b05227c75bf912bb86d28"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "71509ef3523a2a208a1b05227c75bf912bb86d28"
+        }
+      },
+      {
+        "path": "server/notifications/validation.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "28695d5e752ff8fb231ab6c70ecf462946deacfb"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "28695d5e752ff8fb231ab6c70ecf462946deacfb"
+        }
+      },
+      {
+        "path": "server/notifications/worker.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c8bc9be0916053d32876e96ae03d5b89a05ec3bd"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c8bc9be0916053d32876e96ae03d5b89a05ec3bd"
+        }
+      },
+      {
+        "path": "server/operations/dto.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d2acbd18e32c1e165d3943567fe43476e0c26cf8"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d2acbd18e32c1e165d3943567fe43476e0c26cf8"
+        }
+      },
+      {
+        "path": "server/operations/external-probe.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "97508a1537cae9d0b567bf454452d0baa82027f0"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "97508a1537cae9d0b567bf454452d0baa82027f0"
+        }
+      },
+      {
+        "path": "server/operations/monitor.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "603a3c06754f14f484b747ec3e0f28dd4e890c0f"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "603a3c06754f14f484b747ec3e0f28dd4e890c0f"
+        }
+      },
+      {
+        "path": "server/operations/store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "01865f3ddee39c27422469d27c525844e367cd12"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "01865f3ddee39c27422469d27c525844e367cd12"
+        }
+      },
+      {
+        "path": "server/preferences/crypto.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "dfa2904c84fe7a1761e4545105bc6e3a2ffcec64"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "dfa2904c84fe7a1761e4545105bc6e3a2ffcec64"
+        }
+      },
+      {
+        "path": "server/preferences/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a51e0e90e7c0e6ebabad358b6bf37632a58140c8"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a51e0e90e7c0e6ebabad358b6bf37632a58140c8"
+        }
+      },
+      {
+        "path": "server/preferences/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ef6df6c50c03dca00f8ab96d997b5606493e1d6a"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ef6df6c50c03dca00f8ab96d997b5606493e1d6a"
+        }
+      },
+      {
+        "path": "server/preferences/store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2c38d0fc2465f57f97199e9447c82263a9f69763"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2c38d0fc2465f57f97199e9447c82263a9f69763"
+        }
+      },
+      {
+        "path": "server/preferences/validation.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "dfa87b92ae12200494a269932589b47a268629ca"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "dfa87b92ae12200494a269932589b47a268629ca"
+        }
+      },
+      {
+        "path": "server/preflight/config.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b273fd45fa6ad938e8d0a9c68243eeec36477373"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b273fd45fa6ad938e8d0a9c68243eeec36477373"
+        }
+      },
+      {
+        "path": "server/preflight/database.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "7595edf6a34fe7398c423943549bf6c558629016"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "7595edf6a34fe7398c423943549bf6c558629016"
+        }
+      },
+      {
+        "path": "server/preflight/platform.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "00590e37b1eac342b775c8ab6ca99274c58b11f2"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "00590e37b1eac342b775c8ab6ca99274c58b11f2"
+        }
+      },
+      {
+        "path": "server/preflight/privilege-diagnostics.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "60b7baaa589d2b0cca3c5aea74c57d36c271ce87"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "60b7baaa589d2b0cca3c5aea74c57d36c271ce87"
+        }
+      },
+      {
+        "path": "server/preflight/report.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e0da3fe837801702c3a41fa108ffcae68a508c7d"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e0da3fe837801702c3a41fa108ffcae68a508c7d"
+        }
+      },
+      {
+        "path": "server/privacy/choices.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c447e284006557a31e06c42913a4e6b459439c7b"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c447e284006557a31e06c42913a4e6b459439c7b"
+        }
+      },
+      {
+        "path": "server/privacy/draft.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0d133194d9be99ba58c09fc5145a70e2afc3d17f"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0d133194d9be99ba58c09fc5145a70e2afc3d17f"
+        }
+      },
+      {
+        "path": "server/privacy/files.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2e7e67822a23a46c40e9e283861e422a7b23defd"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2e7e67822a23a46c40e9e283861e422a7b23defd"
+        }
+      },
+      {
+        "path": "server/privacy/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3c0b2c003c888f34c4f8e31218b2772126f69026"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "3c0b2c003c888f34c4f8e31218b2772126f69026"
+        }
+      },
+      {
+        "path": "server/privacy/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6c653171f3be7a00ea7d2e82aeb2a95bd260aadf"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6c653171f3be7a00ea7d2e82aeb2a95bd260aadf"
+        }
+      },
+      {
+        "path": "server/profile/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "2d4bc01288f71c5c41a702d44276d6a6b6530507"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "885e975aa243554e8b2b27643ec2ce2f28d54682"
+        }
+      },
+      {
+        "path": "server/profile/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1078ad11b918f5e8815682177389a06f0787dffd"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1078ad11b918f5e8815682177389a06f0787dffd"
+        }
+      },
+      {
+        "path": "server/profile/store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5dc31216a9f9056f7d3cf8938ae681a51183c8dc"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5dc31216a9f9056f7d3cf8938ae681a51183c8dc"
+        }
+      },
+      {
+        "path": "server/profile/validation.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "cb1cceb486ed58cb2d696e5d268413e741fd9bd4"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "cb1cceb486ed58cb2d696e5d268413e741fd9bd4"
+        }
+      },
+      {
+        "path": "server/public-profile/http.mjs",
+        "before": null,
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "9525a7064324f53c37fe0d78bbe21c8ca3520196"
+        }
+      },
+      {
+        "path": "server/public-profile/service.mjs",
+        "before": null,
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d23c849688926eafb0a8223888134b1eda894325"
+        }
+      },
+      {
+        "path": "server/public-profile/store.mjs",
+        "before": null,
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6c587e4a86c73c0e5f2eb2d903373e1a65e5bf36"
+        }
+      },
+      {
+        "path": "server/public-profile/validation.mjs",
+        "before": null,
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f9cfcaf0e76d14e18ac95ecc6c8737fd30365cdf"
+        }
+      },
+      {
+        "path": "server/quick-replies/files.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "26f4f5f50b63bf6ffdfb024e8dfed51a322e2600"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "26f4f5f50b63bf6ffdfb024e8dfed51a322e2600"
+        }
+      },
+      {
+        "path": "server/quick-replies/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a618dd68543563334e7c76e880495a2f7bef838b"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a618dd68543563334e7c76e880495a2f7bef838b"
+        }
+      },
+      {
+        "path": "server/quick-replies/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "303e6c98887f9570f93348febde9a60b24b71684"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "303e6c98887f9570f93348febde9a60b24b71684"
+        }
+      },
+      {
+        "path": "server/quick-replies/validation.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c0b82b1410ff977aee79c5d3fb2e1a55da15978c"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c0b82b1410ff977aee79c5d3fb2e1a55da15978c"
+        }
+      },
+      {
+        "path": "server/readiness/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e866ed39fcb0827897f2d817f588d45eede20b4e"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "e866ed39fcb0827897f2d817f588d45eede20b4e"
+        }
+      },
+      {
+        "path": "server/readiness/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "30c61a90afa17d6c4b2d11e69a5675f508e60915"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "30c61a90afa17d6c4b2d11e69a5675f508e60915"
+        }
+      },
+      {
+        "path": "server/release-features.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a0f5400d79c00aa92bb2467a6a2a7824297c6c54"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a0f5400d79c00aa92bb2467a6a2a7824297c6c54"
+        }
+      },
+      {
+        "path": "server/release.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b7dd1d37a5593990ec142d303a151d967220502d"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "b7dd1d37a5593990ec142d303a151d967220502d"
+        }
+      },
+      {
+        "path": "server/reset/config.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4ebd02210252f1e4e60a6e8f3c72f772d1f66962"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "4ebd02210252f1e4e60a6e8f3c72f772d1f66962"
+        }
+      },
+      {
+        "path": "server/reset/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "bfdae56980f7e7463c6c29cdc2ce078e99d63a8b"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "bfdae56980f7e7463c6c29cdc2ce078e99d63a8b"
+        }
+      },
+      {
+        "path": "server/reset/mail-crypto.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "7b07a487600874bf2630d2b76ea20722255ffa10"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "7b07a487600874bf2630d2b76ea20722255ffa10"
+        }
+      },
+      {
+        "path": "server/reset/mail-store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8674c69b11b96c73d74511e8bdb8c90ac4a5df34"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "8674c69b11b96c73d74511e8bdb8c90ac4a5df34"
+        }
+      },
+      {
+        "path": "server/reset/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a7935b4889570e4100bb9a2a754e9bf284abb786"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a7935b4889570e4100bb9a2a754e9bf284abb786"
+        }
+      },
+      {
+        "path": "server/reset/store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "37ee7c1b2a0e2df20d39c5c84920566389283ebc"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "37ee7c1b2a0e2df20d39c5c84920566389283ebc"
+        }
+      },
+      {
+        "path": "server/site.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "bffc928d9846a9bb8f1c12ed497ad1a605c221d4"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "bffc928d9846a9bb8f1c12ed497ad1a605c221d4"
+        }
+      },
+      {
+        "path": "server/tasks/crypto.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5bbe6907bc9e953fff04f25da5877a32b15ca85c"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "5bbe6907bc9e953fff04f25da5877a32b15ca85c"
+        }
+      },
+      {
+        "path": "server/tasks/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c88a907de8d56ed11e369a08d9d28dfc7d7f8dcb"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "c88a907de8d56ed11e369a08d9d28dfc7d7f8dcb"
+        }
+      },
+      {
+        "path": "server/tasks/reply.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6b5a26a9fca06bbc2bd90ab0ef8001ceb570b55a"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "6b5a26a9fca06bbc2bd90ab0ef8001ceb570b55a"
+        }
+      },
+      {
+        "path": "server/tasks/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f56f0871b0388e2e478310de5b4b173630b2b2c4"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f56f0871b0388e2e478310de5b4b173630b2b2c4"
+        }
+      },
+      {
+        "path": "server/tasks/store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "623feb8943bc03a48bc37cd4af8cad567bd150ca"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "623feb8943bc03a48bc37cd4af8cad567bd150ca"
+        }
+      },
+      {
+        "path": "server/tasks/validation.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "bd744b9045bbeb08abbf53e6c533a68ae67c6be6"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "bd744b9045bbeb08abbf53e6c533a68ae67c6be6"
+        }
+      },
+      {
+        "path": "server/transition/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "62b86cdb39104dec7615877c2a9c956bd8936734"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "62b86cdb39104dec7615877c2a9c956bd8936734"
+        }
+      },
+      {
+        "path": "server/transition/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "65fdbc2bd9dc9d533a56e85dcbeaaf2a14115ae1"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "65fdbc2bd9dc9d533a56e85dcbeaaf2a14115ae1"
+        }
+      },
+      {
+        "path": "server/video/data-store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f8203c70043739d9166c88803eda0f0cd08bdb9e"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "f8203c70043739d9166c88803eda0f0cd08bdb9e"
+        }
+      },
+      {
+        "path": "server/video/erasure-storage.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ed4525985d049c53fd60dbbff56f29360f369cce"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "ed4525985d049c53fd60dbbff56f29360f369cce"
+        }
+      },
+      {
+        "path": "server/video/erasure-store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d4a8a0909483d822d0211e619f060b1d9eb0b587"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "d4a8a0909483d822d0211e619f060b1d9eb0b587"
+        }
+      },
+      {
+        "path": "server/video/http.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a18e2b8bbff1d1ee347a68331b48bb437197733c"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "a18e2b8bbff1d1ee347a68331b48bb437197733c"
+        }
+      },
+      {
+        "path": "server/video/message-store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "92da2af47ab645c06273fabc064bd7334ecc8f13"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "92da2af47ab645c06273fabc064bd7334ecc8f13"
+        }
+      },
+      {
+        "path": "server/video/migrations.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1f3533199c9e85935e84aa3941fb8a3c4c8ae612"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "1f3533199c9e85935e84aa3941fb8a3c4c8ae612"
+        }
+      },
+      {
+        "path": "server/video/migrations/0034_video_storage_state.sql",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "757454e13783049e0cbadc69fddcbab434bcccb5"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "757454e13783049e0cbadc69fddcbab434bcccb5"
+        }
+      },
+      {
+        "path": "server/video/migrations/0035_video_assets.sql",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "61bfecd8626c057bcbb0825b7bc81ad6c9163852"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "61bfecd8626c057bcbb0825b7bc81ad6c9163852"
+        }
+      },
+      {
+        "path": "server/video/migrations/0036_message_video.sql",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "25b36732d649d8225808b13603134267cf8db85c"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "25b36732d649d8225808b13603134267cf8db85c"
+        }
+      },
+      {
+        "path": "server/video/mp4.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "928e2577f1c01dae3a9dea7645391ffb288b4ac0"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "928e2577f1c01dae3a9dea7645391ffb288b4ac0"
+        }
+      },
+      {
+        "path": "server/video/service.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "46f5833698fe79e558697e5f96acd80c0e2fcb01"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "46f5833698fe79e558697e5f96acd80c0e2fcb01"
+        }
+      },
+      {
+        "path": "server/video/storage.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "879e37b3831d8e6a3483c112e1c29844d887d4e5"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "879e37b3831d8e6a3483c112e1c29844d887d4e5"
+        }
+      },
+      {
+        "path": "server/video/store.mjs",
+        "before": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0d6b3fb1319b214f8753699d2555ec6d9bc3cfd8"
+        },
+        "after": {
+          "mode": "100644",
+          "type": "blob",
+          "gitBlob": "0d6b3fb1319b214f8753699d2555ec6d9bc3cfd8"
+        }
+      }
+    ]
+  },
+  "serverModuleContentInventory": [
+    {
+      "module": "access",
+      "inheritedFiles": 6,
+      "unchangedFiles": 6,
+      "beforeInventorySha256": "104282c2db125079db9c0e2272b9baf37cda82aa1839a7b60bb5845cc495ee04",
+      "afterInventorySha256": "104282c2db125079db9c0e2272b9baf37cda82aa1839a7b60bb5845cc495ee04",
+      "changedReviewed": []
+    },
+    {
+      "module": "account-password",
+      "inheritedFiles": 2,
+      "unchangedFiles": 2,
+      "beforeInventorySha256": "092844df86b77b1649456c2f54bbe3885ebd7d65c33ed7cfc2d82194399f50ba",
+      "afterInventorySha256": "092844df86b77b1649456c2f54bbe3885ebd7d65c33ed7cfc2d82194399f50ba",
+      "changedReviewed": []
+    },
+    {
+      "module": "announcements",
+      "inheritedFiles": 5,
+      "unchangedFiles": 5,
+      "beforeInventorySha256": "7bdea6d813bb9b9fad676aac5a4189b377bd94244b1b125324e4a24d39090a59",
+      "afterInventorySha256": "7bdea6d813bb9b9fad676aac5a4189b377bd94244b1b125324e4a24d39090a59",
+      "changedReviewed": []
+    },
+    {
+      "module": "auth",
+      "inheritedFiles": 7,
+      "unchangedFiles": 7,
+      "beforeInventorySha256": "3b1a36d72cc1ef89267f523be6bf018068cea468ff203c7d1f14535280814bb2",
+      "afterInventorySha256": "3b1a36d72cc1ef89267f523be6bf018068cea468ff203c7d1f14535280814bb2",
+      "changedReviewed": []
+    },
+    {
+      "module": "backup",
+      "inheritedFiles": 62,
+      "unchangedFiles": 62,
+      "beforeInventorySha256": "05f25781e3a263ede5f7f7bf76c6d687058cb0ea36d1fe21ae67442b9cc52589",
+      "afterInventorySha256": "05f25781e3a263ede5f7f7bf76c6d687058cb0ea36d1fe21ae67442b9cc52589",
+      "changedReviewed": []
+    },
+    {
+      "module": "broadcast",
+      "inheritedFiles": 8,
+      "unchangedFiles": 8,
+      "beforeInventorySha256": "eadf5eef246ed8f4d9b30a67bbec84b5e8160529bd5b1bfb11fb99add45485a1",
+      "afterInventorySha256": "eadf5eef246ed8f4d9b30a67bbec84b5e8160529bd5b1bfb11fb99add45485a1",
+      "changedReviewed": []
+    },
+    {
+      "module": "chat",
+      "inheritedFiles": 11,
+      "unchangedFiles": 10,
+      "beforeInventorySha256": "6cd04fcdf89e1ec3ae7e5be918eb81efcb7583d8b2f49bedfb1fc0303d70a870",
+      "afterInventorySha256": "7f66672da33e0d4751dd92761562bc72d16e653746e7221bdbcf49c7519d6bdf",
+      "changedReviewed": [
+        "server/chat/http.mjs"
+      ]
+    },
+    {
+      "module": "config",
+      "inheritedFiles": 11,
+      "unchangedFiles": 11,
+      "beforeInventorySha256": "723957dd21dbda4384c0bcea0e940933972a192903ef9cd0f6c168c0630a494e",
+      "afterInventorySha256": "723957dd21dbda4384c0bcea0e940933972a192903ef9cd0f6c168c0630a494e",
+      "changedReviewed": []
+    },
+    {
+      "module": "crm",
+      "inheritedFiles": 6,
+      "unchangedFiles": 6,
+      "beforeInventorySha256": "649e5860db39f8c7ce2a6d0c8c7d44b3ecbd8bd8c12a5fb5d07b36eeed17c017",
+      "afterInventorySha256": "649e5860db39f8c7ce2a6d0c8c7d44b3ecbd8bd8c12a5fb5d07b36eeed17c017",
+      "changedReviewed": []
+    },
+    {
+      "module": "data",
+      "inheritedFiles": 15,
+      "unchangedFiles": 15,
+      "beforeInventorySha256": "b57a673c78e83e4348f186acd4d5b910d6fdb9e51079f088d4032608f0062a71",
+      "afterInventorySha256": "b57a673c78e83e4348f186acd4d5b910d6fdb9e51079f088d4032608f0062a71",
+      "changedReviewed": []
+    },
+    {
+      "module": "db",
+      "inheritedFiles": 5,
+      "unchangedFiles": 5,
+      "beforeInventorySha256": "b45e11da0cf874a7ce21f0720ac4fb89c3a1c187adffb3c52bd976757b892ec1",
+      "afterInventorySha256": "b45e11da0cf874a7ce21f0720ac4fb89c3a1c187adffb3c52bd976757b892ec1",
+      "changedReviewed": []
+    },
+    {
+      "module": "entry",
+      "inheritedFiles": 1,
+      "unchangedFiles": 1,
+      "beforeInventorySha256": "78f9308cfd176b6e53417a4be90e8e8b8e7410e043158dfe9684e9f5915e7d62",
+      "afterInventorySha256": "78f9308cfd176b6e53417a4be90e8e8b8e7410e043158dfe9684e9f5915e7d62",
+      "changedReviewed": []
+    },
+    {
+      "module": "experience",
+      "inheritedFiles": 3,
+      "unchangedFiles": 3,
+      "beforeInventorySha256": "237977d56e8a505d6663ae7d159b82e76fab693a0d6d2aa43bf6310715c46cab",
+      "afterInventorySha256": "237977d56e8a505d6663ae7d159b82e76fab693a0d6d2aa43bf6310715c46cab",
+      "changedReviewed": []
+    },
+    {
+      "module": "files",
+      "inheritedFiles": 2,
+      "unchangedFiles": 2,
+      "beforeInventorySha256": "bb91a2ce9a7341877fe66e16b698ff47590e1eec6a78f92906393b2f073aed65",
+      "afterInventorySha256": "bb91a2ce9a7341877fe66e16b698ff47590e1eec6a78f92906393b2f073aed65",
+      "changedReviewed": []
+    },
+    {
+      "module": "http",
+      "inheritedFiles": 3,
+      "unchangedFiles": 3,
+      "beforeInventorySha256": "612a3a3a4ca25a80bc74d006fafd602cf1abe8e393781de2cce8cdd53376c4f5",
+      "afterInventorySha256": "612a3a3a4ca25a80bc74d006fafd602cf1abe8e393781de2cce8cdd53376c4f5",
+      "changedReviewed": []
+    },
+    {
+      "module": "index.mjs",
+      "inheritedFiles": 1,
+      "unchangedFiles": 0,
+      "beforeInventorySha256": "449c48f375755fdad6b3ed7b3d517db57f1fe501d0a4af00c97c5721e67b88ca",
+      "afterInventorySha256": "0f6dd9f5f43be777538d06ac4d4af9ddf5cbdac27c68ca609d4562ab43ef6358",
+      "changedReviewed": [
+        "server/index.mjs"
+      ]
+    },
+    {
+      "module": "lifecycle.mjs",
+      "inheritedFiles": 1,
+      "unchangedFiles": 1,
+      "beforeInventorySha256": "fb0c4ebf738d31dc86a3ef746c0a2063c7b6b111c58f5e9031317dda9bc47825",
+      "afterInventorySha256": "fb0c4ebf738d31dc86a3ef746c0a2063c7b6b111c58f5e9031317dda9bc47825",
+      "changedReviewed": []
+    },
+    {
+      "module": "mail",
+      "inheritedFiles": 6,
+      "unchangedFiles": 6,
+      "beforeInventorySha256": "547aa0e1fcb25314116368b30805b8a64c0412bcc48e693ea164362000eb22fe",
+      "afterInventorySha256": "547aa0e1fcb25314116368b30805b8a64c0412bcc48e693ea164362000eb22fe",
+      "changedReviewed": []
+    },
+    {
+      "module": "media",
+      "inheritedFiles": 13,
+      "unchangedFiles": 13,
+      "beforeInventorySha256": "cf0aaa283c3e8d4d8a8ae711c6c47707d470472f6f820cbb4765cf2fa1f2f044",
+      "afterInventorySha256": "cf0aaa283c3e8d4d8a8ae711c6c47707d470472f6f820cbb4765cf2fa1f2f044",
+      "changedReviewed": []
+    },
+    {
+      "module": "notifications",
+      "inheritedFiles": 8,
+      "unchangedFiles": 8,
+      "beforeInventorySha256": "e933b171073996b18f49433d069c8ca857b83f0d1042da661832874e819314cd",
+      "afterInventorySha256": "e933b171073996b18f49433d069c8ca857b83f0d1042da661832874e819314cd",
+      "changedReviewed": []
+    },
+    {
+      "module": "operations",
+      "inheritedFiles": 4,
+      "unchangedFiles": 4,
+      "beforeInventorySha256": "7d68e486d1db7e067855cb9dfd9193b3b0c8f999e8bd6777ec9b700a616e19b9",
+      "afterInventorySha256": "7d68e486d1db7e067855cb9dfd9193b3b0c8f999e8bd6777ec9b700a616e19b9",
+      "changedReviewed": []
+    },
+    {
+      "module": "preferences",
+      "inheritedFiles": 5,
+      "unchangedFiles": 5,
+      "beforeInventorySha256": "f67ef51548905b6f10654a290804140b8526fa17fd868ac5afe220e0864b585e",
+      "afterInventorySha256": "f67ef51548905b6f10654a290804140b8526fa17fd868ac5afe220e0864b585e",
+      "changedReviewed": []
+    },
+    {
+      "module": "preflight",
+      "inheritedFiles": 5,
+      "unchangedFiles": 5,
+      "beforeInventorySha256": "c805d27b669f99c18dbc1e2b6b52bba8532a19418590b8c4c4576ae84fd54039",
+      "afterInventorySha256": "c805d27b669f99c18dbc1e2b6b52bba8532a19418590b8c4c4576ae84fd54039",
+      "changedReviewed": []
+    },
+    {
+      "module": "privacy",
+      "inheritedFiles": 5,
+      "unchangedFiles": 5,
+      "beforeInventorySha256": "f37e5ee604c8ba443fc3a58dd7fca814c1cc3718b736de30d9fc5bb16a183b5e",
+      "afterInventorySha256": "f37e5ee604c8ba443fc3a58dd7fca814c1cc3718b736de30d9fc5bb16a183b5e",
+      "changedReviewed": []
+    },
+    {
+      "module": "profile",
+      "inheritedFiles": 4,
+      "unchangedFiles": 3,
+      "beforeInventorySha256": "28c510927fc371fb7d1ec62a1730a73c6d4529d5edbff3c4f59912a11fa55bc9",
+      "afterInventorySha256": "9f75bb79e1789fb0386998e931ca9f49a7df2283740552a9f69c16e5f6eccdbb",
+      "changedReviewed": [
+        "server/profile/http.mjs"
+      ]
+    },
+    {
+      "module": "quick-replies",
+      "inheritedFiles": 4,
+      "unchangedFiles": 4,
+      "beforeInventorySha256": "d6ae1eed9c3975ce361c25bad785d6ca14a35cca9ed8f98cd8815313986b6a30",
+      "afterInventorySha256": "d6ae1eed9c3975ce361c25bad785d6ca14a35cca9ed8f98cd8815313986b6a30",
+      "changedReviewed": []
+    },
+    {
+      "module": "readiness",
+      "inheritedFiles": 2,
+      "unchangedFiles": 2,
+      "beforeInventorySha256": "7882989a9b115e53b6e84d255774ebdeffb19c0187f3de4dc268a50c852fb6d6",
+      "afterInventorySha256": "7882989a9b115e53b6e84d255774ebdeffb19c0187f3de4dc268a50c852fb6d6",
+      "changedReviewed": []
+    },
+    {
+      "module": "release-features.mjs",
+      "inheritedFiles": 1,
+      "unchangedFiles": 1,
+      "beforeInventorySha256": "ed6ae81b77d87dba70a5f7c10d264a6176aa8cd520adba4ffc014d9b538e9da2",
+      "afterInventorySha256": "ed6ae81b77d87dba70a5f7c10d264a6176aa8cd520adba4ffc014d9b538e9da2",
+      "changedReviewed": []
+    },
+    {
+      "module": "release.mjs",
+      "inheritedFiles": 1,
+      "unchangedFiles": 1,
+      "beforeInventorySha256": "d9107c74a0e6a3feb23396c2620e373d0b0a11edc16c6d084c7ae87ccc3d096c",
+      "afterInventorySha256": "d9107c74a0e6a3feb23396c2620e373d0b0a11edc16c6d084c7ae87ccc3d096c",
+      "changedReviewed": []
+    },
+    {
+      "module": "reset",
+      "inheritedFiles": 6,
+      "unchangedFiles": 6,
+      "beforeInventorySha256": "db8cd84347d0da7d2ed47b998726700e1dbd0e1d2bfd28077753a35fda8eebc6",
+      "afterInventorySha256": "db8cd84347d0da7d2ed47b998726700e1dbd0e1d2bfd28077753a35fda8eebc6",
+      "changedReviewed": []
+    },
+    {
+      "module": "site.mjs",
+      "inheritedFiles": 1,
+      "unchangedFiles": 1,
+      "beforeInventorySha256": "65dcefe53a00e53d5b28f207b3825b5db970c6d89ddcf814a239256f07b2ba10",
+      "afterInventorySha256": "65dcefe53a00e53d5b28f207b3825b5db970c6d89ddcf814a239256f07b2ba10",
+      "changedReviewed": []
+    },
+    {
+      "module": "tasks",
+      "inheritedFiles": 6,
+      "unchangedFiles": 6,
+      "beforeInventorySha256": "6a562a6bb8df6942fe2aa3fff967b04de827a446ba9de9425bc91b95be81e01d",
+      "afterInventorySha256": "6a562a6bb8df6942fe2aa3fff967b04de827a446ba9de9425bc91b95be81e01d",
+      "changedReviewed": []
+    },
+    {
+      "module": "transition",
+      "inheritedFiles": 2,
+      "unchangedFiles": 2,
+      "beforeInventorySha256": "694b64a204f6053639d5438552044c7e0fdb449aca7657cd309d78b7038d0b7f",
+      "afterInventorySha256": "694b64a204f6053639d5438552044c7e0fdb449aca7657cd309d78b7038d0b7f",
+      "changedReviewed": []
+    },
+    {
+      "module": "video",
+      "inheritedFiles": 13,
+      "unchangedFiles": 13,
+      "beforeInventorySha256": "3adb40a42f548da441ed0d29bdcd7f0787abd2893774b73f3b85806705c85ca3",
+      "afterInventorySha256": "3adb40a42f548da441ed0d29bdcd7f0787abd2893774b73f3b85806705c85ca3",
+      "changedReviewed": []
+    }
+  ],
+  "dependenciesAndScriptsUnchangedExceptRootVersion": {
+    "package.json": true,
+    "package-lock.json": true
+  },
+  "schema": {
+    "migrations": 38,
+    "allMigrationFilesUnchanged": true,
+    "applicationCreateTableCount": 36,
+    "migrationLedgerTables": 1,
+    "physicalTablesExpected": 37,
+    "createdApplicationTables": [
+      "users",
+      "invitations",
+      "sessions",
+      "conversations",
+      "admin_mfa",
+      "admin_recovery_codes",
+      "auth_session_state",
+      "auth_rate_limits",
+      "client_auth_state",
+      "email_verifications",
+      "client_session_state",
+      "mail_outbox",
+      "messages",
+      "chat_receipts",
+      "chat_events",
+      "media_assets",
+      "message_media",
+      "crm_profiles",
+      "crm_labels",
+      "crm_memberships",
+      "client_password_resets",
+      "password_reset_outbox",
+      "broadcast_preferences",
+      "broadcast_campaigns",
+      "broadcast_recipients",
+      "media_storage_state",
+      "media_storage_objects",
+      "push_subscriptions",
+      "push_outbox",
+      "user_profiles",
+      "announcements",
+      "crm_tasks",
+      "profile_preferences",
+      "video_storage_state",
+      "video_assets",
+      "message_video"
+    ],
+    "alteredTables": [
+      "users",
+      "crm_tasks"
+    ],
+    "note": "Migration 0037 CREATE TABLE profile_preferences; 0038 ALTER TABLE crm_tasks. Source expectation only; no hosted inventory."
+  },
+  "catalogue": {
+    "file": "public/preferences-catalogue.json",
+    "unchangedBytes": true,
+    "sha256": "5ce26f14f15fb9c3447b07777aa5c8d17a6e823e8099dbb37959fc48f00f93cb",
+    "preferences": 691,
+    "categories": 25,
+    "aliases": 934,
+    "version": "2026-10-23-recherche-1"
+  },
+  "releaseFeatureGatesUnchanged": true,
+  "testInventory": {
+    "beforeTestJsFiles": 417,
+    "afterTestJsFiles": 422,
+    "removedTestFiles": [],
+    "literalTitleOccurrencesBefore": 4271,
+    "literalTitleOccurrencesAfter": 4292,
+    "removedLiteralTitles": [
+      {
+        "file": "tests/profile-ui.test.mjs",
+        "title": "hiding the page aborts preparation and discards all private draft data",
+        "occurrences": 1
+      }
+    ],
+    "addedLiteralTitles": [
+      {
+        "file": "tests/browser/chat-accessibility.browser.mjs",
+        "title": "Chrome 320px: profile preference draft resumes after same-owner verification and is discarded for a replaced session",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/browser/preferences.browser.mjs",
+        "title": "real Chrome preferences: temporary hiding retains unsaved choices and search without an automatic write",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/browser/preferences.browser.mjs",
+        "title": "real Chrome preferences: hiding during an uncertain save keeps the draft and never retries that save",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/browser/preferences.browser.mjs",
+        "title": "real Chrome preferences: an initial load interrupted by temporary hiding resumes by GET only",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/browser/public-profile.browser.mjs",
+        "title": "real Chrome public Jessie profile: public snapshot only, safe text, FR/EN and mobile width; unpublish is unavailable",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/browser/public-profile.browser.mjs",
+        "title": "real Chrome publication requires explicit snapshot, preserves hidden draft and blocks replay after conflict or uncertain save",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/profile-ui.test.mjs",
+        "title": "temporary hiding aborts unfinished avatar work and preserves the profile draft until the owner can resume",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/profile-ui.test.mjs",
+        "title": "a prepared avatar survives a temporary hide in memory and the old preview is revoked",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/profile-ui.test.mjs",
+        "title": "an initial profile load interrupted by temporary hiding resumes with a fresh read and never writes",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/public-profile-http.test.mjs",
+        "title": "public GET and HEAD disclose only the explicit published snapshot, with no-store headers",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/public-profile-http.test.mjs",
+        "title": "publication administration rejects clients, absent sessions, forged origins, CSRF and unexpected input",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/public-profile-model.test.mjs",
+        "title": "public profile client model accepts bounded public snapshots without treating user text as markup",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/public-profile-model.test.mjs",
+        "title": "public profile client model rejects private fields, malformed versions and unbounded or duplicate choices",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/public-profile-routing.test.mjs",
+        "title": "the application serves the public profile page and module graph without enabling private APIs",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/public-profile-routing.test.mjs",
+        "title": "profile handler composition exposes only the publication service's public DTO anonymously",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/public-profile.test.mjs",
+        "title": "public profile starts hidden and explicit snapshots survive reload, private edits and unpublishing",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/public-profile.test.mjs",
+        "title": "public profile CAS refuses a stale device and revoked authorization before commit preserves prior publication",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/public-profile.test.mjs",
+        "title": "publication validation rejects unknown IDs, duplicates, hidden owner fields, getters, malformed versions and oversized text",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/public-profile.test.mjs",
+        "title": "competing publication writers cannot silently overwrite an acknowledged snapshot",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/public-profile.test.mjs",
+        "title": "untrusted published files fail closed and preserve bytes",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/public-profile.test.mjs",
+        "title": "public-profile budgets reject denied reads and shutdown never returns saved content",
+        "occurrences": 1
+      },
+      {
+        "file": "tests/rehearsal/experience.rehearsal.mjs",
+        "title": "public Jessie profile is an explicit admin snapshot; temporary hiding preserves the private draft after actual session proof",
+        "occurrences": 1
+      }
+    ],
+    "note": "Only old hide-discard title/expectation replaced intentionally by same-owner suspend/resume requirement. Static literal extraction is not an executed-test count. Existing test assertions and fixture changes manually reviewed; no accidental assertion deletion/weakening identified.",
+    "workflow": "Only adds public-profile PNG artifact upload; original jobs/test commands remain unchanged.",
+    "fixtureChange": "Strict teardown additionally allows exact owned public-profile JSON filename when feature enabled; unknown files and lock files remain rejected."
+  },
+  "nativeQualification": {
+    "source": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+    "tree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+    "allFiveJobsSuccessful": true,
+    "logs": [
+      {
+        "name": "verify",
+        "file": "verify.log",
+        "bytes": 577490,
+        "sha256": "fc82d12474329dc54e3958a869746536c8f8c42e092ca3be19096ca430942136",
+        "node": "v24.22.1",
+        "totals": {
+          "tests": 4078,
+          "pass": 4026,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 52
+        },
+        "sha256Verified": true,
+        "byteCountVerified": true,
+        "totalsExtractedFromFullLog": {
+          "tests": 4078,
+          "pass": 4026,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 52
+        },
+        "totalsVerified": true
+      },
+      {
+        "name": "browser",
+        "file": "browser.log",
+        "bytes": 54266,
+        "sha256": "b1878199736cd51176936ddb7d4b6874a55d87ee4824df16af355377d5346521",
+        "node": "v24.22.1",
+        "totals": {
+          "tests": 256,
+          "pass": 256,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "sha256Verified": true,
+        "byteCountVerified": true,
+        "totalsExtractedFromFullLog": {
+          "tests": 256,
+          "pass": 256,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "totalsVerified": true
+      },
+      {
+        "name": "https",
+        "file": "https.log",
+        "bytes": 41640,
+        "sha256": "0524bdaac3162e28bded29ef807f298f69991251776cdf9c7098939e88412b0e",
+        "node": "v24.22.1",
+        "totals": {
+          "tests": 12,
+          "pass": 12,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "sha256Verified": true,
+        "byteCountVerified": true,
+        "totalsExtractedFromFullLog": {
+          "tests": 12,
+          "pass": 12,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "totalsVerified": true
+      },
+      {
+        "name": "mariadb1011",
+        "file": "mariadb1011.log",
+        "bytes": 355080,
+        "sha256": "d8daec3989acaa142eaad92d5404e6d35e68a77082f688c3bad802bf10cfe40e",
+        "node": "v24.22.1",
+        "totals": {
+          "tests": 598,
+          "pass": 598,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "sha256Verified": true,
+        "byteCountVerified": true,
+        "totalsExtractedFromFullLog": {
+          "tests": 598,
+          "pass": 598,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "totalsVerified": true
+      },
+      {
+        "name": "mariadb114",
+        "file": "mariadb114.log",
+        "bytes": 355835,
+        "sha256": "6ebbf9a72eb33a6522373489f6f8e085d68191625a1d42f67500b7362c9d84c7",
+        "node": "v24.22.1",
+        "totals": {
+          "tests": 598,
+          "pass": 598,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "sha256Verified": true,
+        "byteCountVerified": true,
+        "totalsExtractedFromFullLog": {
+          "tests": 598,
+          "pass": 598,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "totalsVerified": true
+      }
+    ],
+    "generalSkips": {
+      "total": 52,
+      "unchangedFrom190": true,
+      "explanation": "50 database/native integration roots run separately in the database jobs, plus 2 procfs-absence branch tests skipped because real procfs is available. Both MariaDB, Chrome and HTTPS jobs report zero skipped tests."
+    }
+  },
+  "coverageMatrix": [
+    {
+      "id": "access",
+      "feature": "Invitations et accès client",
+      "businessCriteria": "Invitation à usage unique, vérification email, approbation admin, expiration/renouvellement/révocation, une conversation autorisée.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 9,
+        "unchanged": 9,
+        "changedReviewed": [],
+        "patterns": [
+          "server/access/*",
+          "public/access.*"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "mariadb1011.log",
+          "line": 524,
+          "title": "real HTTP invitation, encrypted verification mail and gated client access (synthetic disposable database only)",
+          "result": "pass"
+        },
+        {
+          "log": "mariadb114.log",
+          "line": 701,
+          "title": "real MariaDB invitation and restricted client access persistence (synthetic disposable database only)",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "sessions-mfa",
+      "feature": "Authentification, MFA et sessions",
+      "businessCriteria": "MFA admin, sessions persistantes et indépendantes par appareil, cookies protégés, révocation, expiration, récupération admin.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 11,
+        "unchanged": 11,
+        "changedReviewed": [],
+        "patterns": [
+          "server/auth/*",
+          "public/admin-login.*",
+          "public/session-clock.js"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "https.log",
+          "line": 284,
+          "title": "real Chrome + MariaDB: HTTPS administrator MFA, protected cookie, revocation, expiry and recovery replay",
+          "result": "pass"
+        },
+        {
+          "log": "mariadb1011.log",
+          "line": 1119,
+          "title": "real MariaDB administrator authentication persistence (synthetic disposable database only)",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "password",
+      "feature": "Récupération et changement de mot de passe",
+      "businessCriteria": "Récupération client à usage unique; rotation volontaire actuelle renouvelle session/CSRF, révoque autres appareils/liens et conserve clés/données; œil masqué à la suspension.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 15,
+        "unchanged": 15,
+        "changedReviewed": [],
+        "patterns": [
+          "server/reset/*",
+          "server/account-password/*",
+          "public/password-*",
+          "public/recover*"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "https.log",
+          "line": 295,
+          "title": "client password change retains current browser and ciphertext, revokes old device/reset link, and preserves photo reads",
+          "result": "pass"
+        },
+        {
+          "log": "https.log",
+          "line": 296,
+          "title": "admin password change preserves MFA and current session, requires one new sign-in elsewhere and retains private selections",
+          "result": "pass"
+        },
+        {
+          "log": "mariadb1011.log",
+          "line": 3582,
+          "title": "real HTTP client recovery, encrypted mail, single use and unchanged access gates (synthetic disposable database only)",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "private-chat",
+      "feature": "Conversation privée, historique et suppression",
+      "businessCriteria": "Textes et légendes, isolation entre clients, historique paginé, envoi explicite/idempotent, suppression contrôlée; aucun annuaire client.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 16,
+        "unchanged": 13,
+        "changedReviewed": [
+          "public/chat.html",
+          "public/chat.js",
+          "server/chat/http.mjs"
+        ],
+        "patterns": [
+          "server/chat/*",
+          "public/chat*"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "mariadb1011.log",
+          "line": 1778,
+          "title": "real HTTP private chat, ciphertext, receipts, deletion and live authorization (synthetic disposable database only)",
+          "result": "pass"
+        },
+        {
+          "log": "https.log",
+          "line": 301,
+          "title": "real Chrome + MariaDB: independent client sessions, live text and JPEG, memory draft and exact notification after new login",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "text-draft",
+      "feature": "Brouillon texte et reprise explicite",
+      "businessCriteria": "Brouillon lié au rôle/compte/session, stockage borné dans le même onglet, reprise après vérification; requête incertaine conservée sans envoi automatique.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 2,
+        "unchanged": 1,
+        "changedReviewed": [
+          "public/chat.js"
+        ],
+        "patterns": [
+          "public/chat-drafts.js",
+          "public/chat.js"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "browser.log",
+          "line": 273,
+          "title": "Chrome: real same-tab reload restores only the authorized text draft and a changed session purges it",
+          "result": "pass"
+        },
+        {
+          "log": "browser.log",
+          "line": 219,
+          "title": "Chrome: suspended text and explicit recipient return only after session proof, and another account purges them",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "photos",
+      "feature": "Photos privées",
+      "businessCriteria": "Formats normalisés, chiffrement, quotas et autorisation actuelle de lecture; les clients continuent de joindre des photos.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 14,
+        "unchanged": 14,
+        "changedReviewed": [],
+        "patterns": [
+          "server/media/*",
+          "public/image-preparation.js"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "mariadb1011.log",
+          "line": 2785,
+          "title": "real HTTP private media uses normalized encrypted files and current delivery authorization (synthetic disposable fixtures only)",
+          "result": "pass"
+        },
+        {
+          "log": "browser.log",
+          "line": 373,
+          "title": "phone photo preparation really resizes twenty MP, preserves alpha and applies EXIF orientation",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "video",
+      "feature": "Vidéos réservées administratrice",
+      "businessCriteria": "Création admin seulement, MP4/H264 borné, refus client direct/rejeu; lecture des vidéos reçues/historiques et galerie pour les deux rôles.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 15,
+        "unchanged": 14,
+        "changedReviewed": [
+          "public/chat.js"
+        ],
+        "patterns": [
+          "server/video/*",
+          "public/chat.js",
+          "server/release-features.mjs"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "https.log",
+          "line": 308,
+          "title": "real HTTPS SQL36 runtime: admin-only H264 upload, client refusal, two-role decode/seek, idempotent replay and gallery",
+          "result": "pass"
+        },
+        {
+          "log": "browser.log",
+          "line": 458,
+          "title": "client video history stays playable but direct picker events cannot create a draft (320px fr)",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "gallery",
+      "feature": "Galerie et retour au message",
+      "businessCriteria": "Historique complet autorisé et paginé, filtre mois/date, précédent/suivant/clavier/swipe, zoom natif/pan, retour message ancien sans changer le suivi de réponse.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 16,
+        "unchanged": 15,
+        "changedReviewed": [
+          "public/chat.js"
+        ],
+        "patterns": [
+          "public/chat.js",
+          "public/chat.css",
+          "public/chat-model.js",
+          "server/media/*"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "browser.log",
+          "line": 277,
+          "title": "Chrome photo viewer crosses unloaded history, preserves scroll and finds an old month/message",
+          "result": "pass"
+        },
+        {
+          "log": "browser.log",
+          "line": 279,
+          "title": "Chrome photo viewer keeps native pinch zoom and unrestricted pan permission while zoomed",
+          "result": "pass"
+        }
+      ],
+      "limits": "Native Chrome viewport/touch assertions; physical Safari/Android and an alternate-timezone/DST gallery trial remain unacquired."
+    },
+    {
+      "id": "multi-photo",
+      "feature": "Sélection et envoi de plusieurs photos",
+      "businessCriteria": "Dix maximum, prévisualiser/ajouter/retirer, ordre/légende unique, progression, réessai explicite sans doublon après acquittement perdu.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 16,
+        "unchanged": 15,
+        "changedReviewed": [
+          "public/chat.js"
+        ],
+        "patterns": [
+          "public/photo-batch.js",
+          "public/chat.js",
+          "server/media/*",
+          "server/chat/store.mjs"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "browser.log",
+          "line": 278,
+          "title": "Chrome multiple photos preview before one send and retry only a failed item",
+          "result": "pass"
+        },
+        {
+          "log": "https.log",
+          "line": 293,
+          "title": "five real photo drafts survive one lost committed batch acknowledgement without new uploads or duplicate SQL messages",
+          "result": "pass"
+        }
+      ],
+      "limits": "Lost ACK is injected after a real SQL commit; no physical radio/OS interruption or media recovery after closing/reloading the page is claimed."
+    },
+    {
+      "id": "profile-avatar",
+      "feature": "Profil privé, pseudonyme et avatar",
+      "businessCriteria": "Profil propriétaire, pseudonyme verbatim, avatar privé lié à conversation, conflits conservant le brouillon, anciennes URLs invalidées après retrait.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 6,
+        "unchanged": 4,
+        "changedReviewed": [
+          "public/profile.js",
+          "server/profile/http.mjs"
+        ],
+        "patterns": [
+          "server/profile/*",
+          "server/chat/profile-avatar.mjs",
+          "public/profile.js"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "https.log",
+          "line": 300,
+          "title": "real HTTPS/SQL profiles: both roles persist names and avatars, foreign reads fail and removed URLs cannot resurrect",
+          "result": "pass"
+        },
+        {
+          "log": "mariadb1011.log",
+          "line": 3417,
+          "title": "real MariaDB own profiles, bounded private avatars and simultaneous updates (synthetic disposable database only)",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "emoji",
+      "feature": "Émojis",
+      "businessCriteria": "Catalogue 268 choix, FR/EN, carnations compatibles, insertion au curseur sans envoi automatique; Unicode conservé.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 3,
+        "unchanged": 2,
+        "changedReviewed": [
+          "public/chat.js"
+        ],
+        "patterns": [
+          "public/emoji*",
+          "public/chat.js"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "browser.log",
+          "line": 232,
+          "title": "Chrome 320px: keyboard emoji panel inserts at the selection without photos or automatic sending, and Escape restores focus",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "read-receipts",
+      "feature": "Lecture et badges privés",
+      "businessCriteria": "Accusés réservés à Jessie, client sans état de lecture admin; positions persistées pour badges/appareils et distinctes du suivi « À répondre ».",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 13,
+        "unchanged": 11,
+        "changedReviewed": [
+          "public/chat.js",
+          "server/chat/http.mjs"
+        ],
+        "patterns": [
+          "server/chat/*",
+          "public/chat.js",
+          "public/chat-model.js"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "browser.log",
+          "line": 228,
+          "title": "Chrome: only Jessie sees a read receipt after a metadata-only poll, with stable focus and French / English labels",
+          "result": "pass"
+        },
+        {
+          "log": "https.log",
+          "line": 294,
+          "title": "real reply controls keep reads pending and synchronize manual handling, reopening and one observed individual reply",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "client-export",
+      "feature": "Téléchargement et export client",
+      "businessCriteria": "Conversation ZIP avec médias autorisés, export strictement isolé au client, streaming authentifié sans modifier source/capacité.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 7,
+        "unchanged": 7,
+        "changedReviewed": [],
+        "patterns": [
+          "server/chat/*export*",
+          "server/chat/zip-stream.mjs",
+          "server/data/export.mjs",
+          "public/conversation-download.js",
+          "public/private-archive.js"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "mariadb1011.log",
+          "line": 3990,
+          "title": "real HTTP conversation ZIP streams isolate video deliveries and authenticate GCM before a valid ZIP footer",
+          "result": "pass"
+        },
+        {
+          "log": "mariadb114.log",
+          "line": 4029,
+          "title": "real read-only MariaDB client video exports stream authenticated files without changing SQL or source capacity",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "crm",
+      "feature": "CRM et groupes privés",
+      "businessCriteria": "Fiches privées, surnoms/notes chiffrées, tags/groupes manuels, filtres/pagination, conflits explicites; aucune segmentation auto par préférences.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 9,
+        "unchanged": 9,
+        "changedReviewed": [],
+        "patterns": [
+          "server/crm/*",
+          "public/crm*"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "mariadb1011.log",
+          "line": 2045,
+          "title": "real HTTP private CRM, encrypted notes, scoped labels and current authorization (synthetic disposable database only)",
+          "result": "pass"
+        },
+        {
+          "log": "mariadb114.log",
+          "line": 2181,
+          "title": "real MariaDB private CRM ownership, optimistic saves and inbox filters (synthetic disposable schema only)",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "broadcast",
+      "feature": "Diffusions et annonces",
+      "businessCriteria": "Audience ciblée/tous au-delà de100, pagination, livraison privée atomique/idempotente, annonces datées/expirantes, vidéo admin conservée.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 23,
+        "unchanged": 23,
+        "changedReviewed": [],
+        "patterns": [
+          "server/broadcast/*",
+          "server/announcements/*",
+          "public/broadcast*",
+          "public/announcement*"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "mariadb1011.log",
+          "line": 1530,
+          "title": "real MariaDB: 2,500-client audience is bounded, atomic, retryable and resumes without duplicate messages",
+          "result": "pass"
+        },
+        {
+          "log": "mariadb114.log",
+          "line": 994,
+          "title": "real MariaDB announcements are private, atomic, scheduled, expiring and retryable with ordinary delivery",
+          "result": "pass"
+        },
+        {
+          "log": "browser.log",
+          "line": 199,
+          "title": "Chrome mobile FR/EN: schedule, review the complete audience and publish one announcement without overflow",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "tasks",
+      "feature": "Tâches privées",
+      "businessCriteria": "Plusieurs tâches par client, échéance/report/fin/réouverture, état partagé entre sessions admin; rappels dans app ouverte.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 10,
+        "unchanged": 10,
+        "changedReviewed": [],
+        "patterns": [
+          "server/tasks/*",
+          "public/tasks*"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "mariadb1011.log",
+          "line": 3800,
+          "title": "real MariaDB private tasks persist, retry, page and serialize simultaneous administrators",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "quick-replies",
+      "feature": "Réponses rapides et personnelles",
+      "businessCriteria": "Six phrases fixes +50 personnelles par admin, FR/EN, titres64/texte4096, liste commune, insertion sans envoi, CAS préserve texte en cours.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 5,
+        "unchanged": 5,
+        "changedReviewed": [],
+        "patterns": [
+          "server/quick-replies/*",
+          "public/quick-replies.js"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "browser.log",
+          "line": 269,
+          "title": "Chrome 320px fr: personal replies join the preset list, persist between sessions and CAS conflicts preserve both catalogue and draft",
+          "result": "pass"
+        },
+        {
+          "log": "browser.log",
+          "line": 264,
+          "title": "Chrome 320px fr: quick replies preserve the draft and send only after editing and explicit submission",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "follow-up",
+      "feature": "Suivi « À répondre »",
+      "businessCriteria": "État indépendant des lectures, ancienneté/filtre, traitement/réouverture CAS, réponse individuelle liée au message observé; diffusions/annonces ne soldent pas la demande.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 11,
+        "unchanged": 10,
+        "changedReviewed": [
+          "public/chat.js"
+        ],
+        "patterns": [
+          "server/tasks/*",
+          "server/chat/store.mjs",
+          "server/chat/service.mjs",
+          "public/followup.js",
+          "public/crm.js",
+          "public/chat.js"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "mariadb1011.log",
+          "line": 3509,
+          "title": "real SQL reply task tracks incoming, concurrent replies, broadcasts, historical requests and two sessions",
+          "result": "pass"
+        },
+        {
+          "log": "https.log",
+          "line": 294,
+          "title": "real reply controls keep reads pending and synchronize manual handling, reopening and one observed individual reply",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "private-preferences",
+      "feature": "Goûts et fantasmes privés",
+      "businessCriteria": "Facultatifs, 691 choix/25 catégories/934 alias exacts, recherche FR/EN, chiffrés propriétaire, lecture admin de conversation seulement, effacement/CAS interappareils.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 12,
+        "unchanged": 11,
+        "changedReviewed": [
+          "public/preferences.js"
+        ],
+        "patterns": [
+          "server/preferences/*",
+          "public/preferences*",
+          "server/experience/*"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "mariadb1011.log",
+          "line": 3264,
+          "title": "real MariaDB preferences: owner-only encrypted selections, cross-device CAS, authorised peer view and safe clearing",
+          "result": "pass"
+        },
+        {
+          "log": "https.log",
+          "line": 291,
+          "title": "own choices are optional, bilingual-searchable, encrypted and synchronized; other clients cannot read them",
+          "result": "pass"
+        },
+        {
+          "log": "browser.log",
+          "line": 407,
+          "title": "real Chrome preferences: concurrent device changes preserve a draft until explicit resolution; admin peer view is read-only",
+          "result": "pass"
+        }
+      ],
+      "limits": "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+    },
+    {
+      "id": "notifications",
+      "feature": "Notifications et liens profonds",
+      "businessCriteria": "Choix par appareil, permission explicite, payload neutre, lien exact après connexion, pas de fuite client et pas de resoumission automatique.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 12,
+        "unchanged": 12,
+        "changedReviewed": [],
+        "patterns": [
+          "server/notifications/*",
+          "public/notifications*",
+          "public/notification-link.js",
+          "public/sw.js"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "mariadb1011.log",
+          "line": 3190,
+          "title": "real MariaDB private notification transactions (synthetic disposable database only)",
+          "result": "pass"
+        },
+        {
+          "log": "browser.log",
+          "line": 244,
+          "title": "Chrome: a notification reaches its exact old message for each role, directly or after required login",
+          "result": "pass"
+        },
+        {
+          "log": "https.log",
+          "line": 301,
+          "title": "real Chrome + MariaDB: independent client sessions, live text and JPEG, memory draft and exact notification after new login",
+          "result": "pass"
+        }
+      ],
+      "limits": "Synthetic Chrome/native SQL assertions do not prove real Push delivery by OS/browser while backgrounded or on an actual phone."
+    },
+    {
+      "id": "manual-backup",
+      "feature": "Sauvegarde manuelle et restauration existantes",
+      "businessCriteria": "Capture à la demande depuis administration, téléchargement chiffré, données/vidéo/clés/catalogue personnel conservés; aucun retour aux sauvegardes PC automatiques.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 68,
+        "unchanged": 68,
+        "changedReviewed": [],
+        "patterns": [
+          "server/backup/*",
+          "public/manual-backups*",
+          "public/backups*"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "mariadb1011.log",
+          "line": 1295,
+          "title": "offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only)",
+          "result": "pass"
+        },
+        {
+          "log": "mariadb114.log",
+          "line": 3864,
+          "title": "native SQL36 video backup captures two encrypted roots, resumes a separate clone and preserves old closure receipts",
+          "result": "pass"
+        },
+        {
+          "log": "browser.log",
+          "line": 381,
+          "title": "real Chrome: manual backup creation and encrypted download are explicit, translated and keyboard accessible at three widths",
+          "result": "pass"
+        }
+      ],
+      "limits": "No new hosted backup/restore test: user deferred it. New optional public snapshot is outside historical backup manifest and can be republished; this documented new-feature limit removes no inherited backup item."
+    },
+    {
+      "id": "closures",
+      "feature": "Fermetures définitives et cycle des données",
+      "businessCriteria": "Confirmation admin, journal/arrêt producteurs/effacement contrôlé, autres clients préservés; restauration distincte conserve fermetures et quarantaine.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 24,
+        "unchanged": 24,
+        "changedReviewed": [],
+        "patterns": [
+          "server/data/*",
+          "server/backup/*closure*",
+          "server/video/erasure*",
+          "public/closures*"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "mariadb1011.log",
+          "line": 845,
+          "title": "durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)",
+          "result": "pass"
+        },
+        {
+          "log": "mariadb114.log",
+          "line": 2492,
+          "title": "local closures drain the real managed process and preserve durable SQL/photo absence without a PC (disposable MariaDB only)",
+          "result": "pass"
+        },
+        {
+          "log": "browser.log",
+          "line": 192,
+          "title": "real Chrome: closure preview, separate confirmation and status at mobile and desktop widths in FR/EN",
+          "result": "pass"
+        }
+      ],
+      "limits": "Synthetic disposable fixtures only; no real-account deletion or hosted restore performed."
+    },
+    {
+      "id": "public-profile",
+      "feature": "Nouveau profil public de Jessie",
+      "businessCriteria": "Publication/retrait admin explicites; copie limitée nom/bio/choix sélectionnés; privé reste séparé, aucune préférence cliente/URL avatar privée exposée; CAS/rate/CSRF et réautorisation.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 4,
+        "unchanged": 0,
+        "changedReviewed": [
+          "public/chat.html",
+          "public/profile.js",
+          "server/index.mjs",
+          "server/profile/http.mjs"
+        ],
+        "patterns": [
+          "server/profile/http.mjs",
+          "server/index.mjs",
+          "public/chat.html",
+          "public/profile.js"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "https.log",
+          "line": 292,
+          "title": "public Jessie profile is an explicit admin snapshot; temporary hiding preserves the private draft after actual session proof",
+          "result": "pass"
+        },
+        {
+          "log": "browser.log",
+          "line": 427,
+          "title": "real Chrome public Jessie profile: public snapshot only, safe text, FR/EN and mobile width; unpublish is unavailable",
+          "result": "pass"
+        }
+      ],
+      "limits": "New feature, no baseline capability to lose. Snapshot unavailable until explicit publish; excluded from historical backups as documented. No hosted public route trial performed."
+    },
+    {
+      "id": "resume-profile",
+      "feature": "Brouillon profil après changement de fenêtre",
+      "businessCriteria": "Suspension temporaire conserve en mémoire sélection/recherche/catégories/avatar préparé et attend même propriétaire authentifié; pas de réenregistrement auto. Fermeture explicite/pagehide/déconnexion/changement propriétaire effacent, mots de passe effacés à suspension.",
+      "result": "preserved; no accidental business loss identified",
+      "inheritedSource": {
+        "files": 3,
+        "unchanged": 0,
+        "changedReviewed": [
+          "public/chat.js",
+          "public/preferences.js",
+          "public/profile.js"
+        ],
+        "patterns": [
+          "public/preferences.js",
+          "public/profile.js",
+          "public/chat.js"
+        ]
+      },
+      "existingNativeEvidence": [
+        {
+          "log": "browser.log",
+          "line": 280,
+          "title": "Chrome 320px: profile preference draft resumes after same-owner verification and is discarded for a replaced session",
+          "result": "pass"
+        },
+        {
+          "log": "browser.log",
+          "line": 408,
+          "title": "real Chrome preferences: temporary hiding retains unsaved choices and search without an automatic write",
+          "result": "pass"
+        },
+        {
+          "log": "browser.log",
+          "line": 409,
+          "title": "real Chrome preferences: hiding during an uncertain save keeps the draft and never retries that save",
+          "result": "pass"
+        },
+        {
+          "log": "browser.log",
+          "line": 410,
+          "title": "real Chrome preferences: an initial load interrupted by temporary hiding resumes by GET only",
+          "result": "pass"
+        }
+      ],
+      "limits": "Behavior intentionally changes legacy hide-discard assertion to satisfy reported bug. In-memory same-page recovery only; page reload/closure is not recovered. Physical application switching/OS eviction unverified."
+    }
+  ],
+  "intentionalBehaviorChanges": [
+    {
+      "before": "Temporary document hiding closed profile/preferences and erased unsaved choices.",
+      "after": "Suspend dialog and preserve current owner draft in memory; reveal only after fresh same-owner proof.",
+      "reason": "Explicitly requested bugfix; no automatic POST/save replay; explicit close/pagehide/logout/account replacement still destroy data and password fields still clear."
+    },
+    {
+      "before": "Private preferences had no anonymous publication surface.",
+      "after": "New explicit Jessie snapshot with public-only DTO; private choice changes do not auto-publish.",
+      "reason": "Requested public profile; no client preference publication."
+    },
+    {
+      "before": "Translation of a parent label could replace its search input node.",
+      "after": "Translate leaf text spans, retaining input identity/value.",
+      "reason": "Preserve typed search through FR/EN changes."
+    }
+  ],
+  "documentationFindings": [
+    {
+      "file": "docs/PRODUCT.md",
+      "severity": "documentation-current-state-drift",
+      "finding": "Opening active-production claim still says 1.8.4/SQL36 and Available section says active base1.8.4, despite later 1.9.0 deployed paragraph and authoritative REPRISE. Final paragraph also refers to 1.8.3 active reported.",
+      "businessLoss": false,
+      "status": "Reported to parent for separate version documentation reconciliation."
+    }
+  ],
+  "newFeatureLimitations": [
+    {
+      "feature": "Public snapshot backup",
+      "detail": "jessie-public-profile.json intentionally remains outside historical manual backup manifest; can be explicitly republished. Existing backup sources/formats/data untouched.",
+      "document": "docs/public-profile-1100.md"
+    }
+  ],
+  "notEstablished": [
+    "Physical iOS/Android app switching, keyboard/password-manager behavior, OS tab eviction and real radio disconnects.",
+    "Real OS/browser background Push receipt.",
+    "Alternate-timezone/DST gallery run.",
+    "Complete hosted functional regression suite, live customer sends/deletes or hosted 1.10 startup/public route.",
+    "New hosted backup creation/download/restore trial (user-deferred; not reopened)."
+  ],
+  "reviewedScopeDocuments": [
+    "AGENTS.md",
+    "docs/specs/cahier-20261023.md",
+    "docs/experience190.md",
+    "docs/PRODUCT.md",
+    "docs/public-profile-1100.md",
+    "docs/verification-proofs/jm190/spec-completion-review.json",
+    "docs/verification-proofs/jm190/main-native-final.json"
+  ],
+  "independentChangedCodeReview": "Child runtime_diff independently reviewed narrow production diff and ownership/lifecycle boundaries; found no blocker, authorization weakening or inherited capability removal."
+}

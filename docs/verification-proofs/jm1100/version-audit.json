@@ -1,0 +1,604 @@
+{
+  "title": "Audit du versionnage JessieMessage avant toute poursuite de livraison1100",
+  "date": "2026-10-23",
+  "scope": "Current remote version metadata and relevant runtime/tooling version audit; follow-up corrections to four current documentation files. No hosting access, restart, CHECK, database change, publication, application code mutation or remote mutation by this subtask.",
+  "repository": "fredbuhr/jessiemessage",
+  "semantics": {
+    "rule": "AGENTS.md lines28-29: package.json is application version source; compatible feature increments minor, compatible fix increments patch, breaking change increments major.",
+    "explanation": "1.10.0 means major1, minor10, patch0. It follows1.9.0 because10>9; these components are integers, not a decimal number.",
+    "featureBumpRationale": "1.10.0 adds public Jessie profile and retention of in-memory preference draft on temporary window absence; compatible new functions."
+  },
+  "remoteSnapshot": {
+    "releaseCount": 25,
+    "tagCount": 25,
+    "completeWithinEndpointPage": true,
+    "pagination": "100 requested for release list,25 returned; matching-refs/tags returns25.",
+    "latest": {
+      "tag": "v1.10.0",
+      "id": 422111737,
+      "source": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+      "publishedAt": "2026-10-23T17:12:09Z"
+    },
+    "allPackageLockTriplesMatch": true,
+    "allTagsMatchReleaseTargets": true,
+    "allStablePublished": true,
+    "allNodeEngines": ">=24 <25",
+    "rows": [
+      {
+        "tag": "v1.0.0",
+        "releaseId": 418723470,
+        "source": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
+        "tagSource": "70b48aa845b70ca960724c8d37a6e94b3d5f47a8",
+        "packageVersion": "1.0.0",
+        "lockVersion": "1.0.0",
+        "lockRootVersion": "1.0.0",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.1.0",
+        "releaseId": 418834885,
+        "source": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+        "tagSource": "84669ed570b59b10a1a94a164f24f0e60e6cb5a7",
+        "packageVersion": "1.1.0",
+        "lockVersion": "1.1.0",
+        "lockRootVersion": "1.1.0",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.1.1",
+        "releaseId": 418895187,
+        "source": "cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a",
+        "tagSource": "cfa7dd3559e51c0fdc63ccc6fbc78d98609b947a",
+        "packageVersion": "1.1.1",
+        "lockVersion": "1.1.1",
+        "lockRootVersion": "1.1.1",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.2.0",
+        "releaseId": 418899662,
+        "source": "763b632185ce13eb875110c9107687b2d278ff67",
+        "tagSource": "763b632185ce13eb875110c9107687b2d278ff67",
+        "packageVersion": "1.2.0",
+        "lockVersion": "1.2.0",
+        "lockRootVersion": "1.2.0",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.3.0",
+        "releaseId": 418985447,
+        "source": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
+        "tagSource": "afd0e98cdb4027ac4cb444ddb05afeda0a84fb6b",
+        "packageVersion": "1.3.0",
+        "lockVersion": "1.3.0",
+        "lockRootVersion": "1.3.0",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.3.1",
+        "releaseId": 419029583,
+        "source": "baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8",
+        "tagSource": "baf91e0e7ec9ffee7723e7332e07b7437c8dc5a8",
+        "packageVersion": "1.3.1",
+        "lockVersion": "1.3.1",
+        "lockRootVersion": "1.3.1",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.3.2",
+        "releaseId": 419056359,
+        "source": "194557719780aed4c2d56dac2c9ec91e0f2886a9",
+        "tagSource": "194557719780aed4c2d56dac2c9ec91e0f2886a9",
+        "packageVersion": "1.3.2",
+        "lockVersion": "1.3.2",
+        "lockRootVersion": "1.3.2",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.3.3",
+        "releaseId": 419073053,
+        "source": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+        "tagSource": "ca0d40648036d57fdee55b91d47d5d5a874a626e",
+        "packageVersion": "1.3.3",
+        "lockVersion": "1.3.3",
+        "lockRootVersion": "1.3.3",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.3.4",
+        "releaseId": 419562116,
+        "source": "4538148660fbf1487807fb1518747d8f5753cd3b",
+        "tagSource": "4538148660fbf1487807fb1518747d8f5753cd3b",
+        "packageVersion": "1.3.4",
+        "lockVersion": "1.3.4",
+        "lockRootVersion": "1.3.4",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.4.0",
+        "releaseId": 419572740,
+        "source": "56d4595059df9292fc54ba4d4e948eeb793bae96",
+        "tagSource": "56d4595059df9292fc54ba4d4e948eeb793bae96",
+        "packageVersion": "1.4.0",
+        "lockVersion": "1.4.0",
+        "lockRootVersion": "1.4.0",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.4.1",
+        "releaseId": 419688886,
+        "source": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+        "tagSource": "bf022233fcb76ee4db89e0c33c64b9498adb9d50",
+        "packageVersion": "1.4.1",
+        "lockVersion": "1.4.1",
+        "lockRootVersion": "1.4.1",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.5.0",
+        "releaseId": 419695814,
+        "source": "abca467c45c9385371a9095ab359e78c99140370",
+        "tagSource": "abca467c45c9385371a9095ab359e78c99140370",
+        "packageVersion": "1.5.0",
+        "lockVersion": "1.5.0",
+        "lockRootVersion": "1.5.0",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.5.1",
+        "releaseId": 419827910,
+        "source": "71e62184d2d25a4242e0349c403027e1eeb6537c",
+        "tagSource": "71e62184d2d25a4242e0349c403027e1eeb6537c",
+        "packageVersion": "1.5.1",
+        "lockVersion": "1.5.1",
+        "lockRootVersion": "1.5.1",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.6.0",
+        "releaseId": 419841377,
+        "source": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+        "tagSource": "9590741e7065067aee9d1ad5d1206739cc27eb6b",
+        "packageVersion": "1.6.0",
+        "lockVersion": "1.6.0",
+        "lockRootVersion": "1.6.0",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.7.0",
+        "releaseId": 419960010,
+        "source": "ba639f7bc2c89e3d35afc55ca72efa94c3ccfefb",
+        "tagSource": "ba639f7bc2c89e3d35afc55ca72efa94c3ccfefb",
+        "packageVersion": "1.7.0",
+        "lockVersion": "1.7.0",
+        "lockRootVersion": "1.7.0",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.7.1",
+        "releaseId": 420135576,
+        "source": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+        "tagSource": "c2d7b3b31c6d0955892829f808dc4135d7d8debf",
+        "packageVersion": "1.7.1",
+        "lockVersion": "1.7.1",
+        "lockRootVersion": "1.7.1",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.7.2",
+        "releaseId": 420600213,
+        "source": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+        "tagSource": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+        "packageVersion": "1.7.2",
+        "lockVersion": "1.7.2",
+        "lockRootVersion": "1.7.2",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.8.0",
+        "releaseId": 420607423,
+        "source": "fd6e53b14b520231b0b307a2761331dd8c740a5b",
+        "tagSource": "fd6e53b14b520231b0b307a2761331dd8c740a5b",
+        "packageVersion": "1.8.0",
+        "lockVersion": "1.8.0",
+        "lockRootVersion": "1.8.0",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.8.1",
+        "releaseId": 420741528,
+        "source": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+        "tagSource": "1ae4c75152795ea6f31c2ff364e337a1d5a04e31",
+        "packageVersion": "1.8.1",
+        "lockVersion": "1.8.1",
+        "lockRootVersion": "1.8.1",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.8.2",
+        "releaseId": 421075470,
+        "source": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+        "tagSource": "78e6b8b2f6b19020c060345b9313a81829e9c8da",
+        "packageVersion": "1.8.2",
+        "lockVersion": "1.8.2",
+        "lockRootVersion": "1.8.2",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.8.3",
+        "releaseId": 421266798,
+        "source": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+        "tagSource": "48fd42b808b2bc4d95d3f3ba21244c032d0a938f",
+        "packageVersion": "1.8.3",
+        "lockVersion": "1.8.3",
+        "lockRootVersion": "1.8.3",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.8.4",
+        "releaseId": 421341347,
+        "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+        "tagSource": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+        "packageVersion": "1.8.4",
+        "lockVersion": "1.8.4",
+        "lockRootVersion": "1.8.4",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.8.5",
+        "releaseId": 421892280,
+        "source": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
+        "tagSource": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
+        "packageVersion": "1.8.5",
+        "lockVersion": "1.8.5",
+        "lockRootVersion": "1.8.5",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.9.0",
+        "releaseId": 421892314,
+        "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
+        "tagSource": "5dda0dd4453d34a0be839d2a1402301dea835381",
+        "packageVersion": "1.9.0",
+        "lockVersion": "1.9.0",
+        "lockRootVersion": "1.9.0",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      },
+      {
+        "tag": "v1.10.0",
+        "releaseId": 422111737,
+        "source": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+        "tagSource": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+        "packageVersion": "1.10.0",
+        "lockVersion": "1.10.0",
+        "lockRootVersion": "1.10.0",
+        "engines": {
+          "node": ">=24 <25"
+        },
+        "versionsAgree": true,
+        "tagReleaseAgree": true,
+        "draft": false,
+        "prerelease": false
+      }
+    ]
+  },
+  "identities": {
+    "published1100": {
+      "version": "1.10.0",
+      "source": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+      "tree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+      "releaseId": 422111737,
+      "hostedPrepared": false,
+      "hostedChecked": false,
+      "deployed": false
+    },
+    "activeHostedUserReceipt": {
+      "version": "1.9.0",
+      "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
+      "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+      "nodeVersion": "v24.22.1",
+      "schema": 38,
+      "tableCount": 37,
+      "checkpoint": "01692bfda8ef4a0cab2d102a183c0ab88fe9e8d99858d6e9b583f8b85ffde674",
+      "basis": "docs/verification-proofs/jm190-hosted-metadata.json user-reported hosted receipt, not direct independent live host inspection"
+    },
+    "fallback": {
+      "version": "1.8.5",
+      "source": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
+      "tree": "7ec449cb3a63a091c5233993923ceb69f8314366",
+      "releaseId": 421892280,
+      "schema": 38,
+      "active": false,
+      "everStarted": false,
+      "basis": "docs/REPRISE.md and hosted metadata receipts"
+    },
+    "currentRemoteDocsMain": {
+      "commit": "269fcbdf1a8c5bed3666cf235fd772bbb9fa7386",
+      "tree": "ddb1c017515231e42c16cfbbf24a698759126ab1"
+    },
+    "localWorkTree": {
+      "tree": "ddb1c017515231e42c16cfbbf24a698759126ab1",
+      "matchesRemoteDocsMain": true,
+      "trackedModifications": false,
+      "localTagsLatest": "v1.8.1",
+      "localTagCacheStale": true
+    }
+  },
+  "runtimeInspection": {
+    "files": [
+      "server/release.mjs",
+      "public/readiness-model.js",
+      "server/release-features.mjs",
+      "server/experience/migrations.mjs",
+      "server/video/migrations.mjs",
+      "package.json",
+      "package-lock.json",
+      "public/manifest.webmanifest",
+      "scripts/build-workbench.mjs"
+    ],
+    "validation": "Server and browser semver regex accept arbitrary-length nonnegative numeric components and preserve1.10.0 as a string.",
+    "versionCapture": "Server startup reads actual package.json version and git state; it does not substitute an expected commit environment variable.",
+    "numericConversionSearch": "No application semver parseFloat/lexicographic ordering path found in scoped public/server/scripts/ops search. Number(version) matches inspected refer to integer schema, CAS, MFA or data versions.",
+    "currentFlags": {
+      "VIDEO_CREATION_ENABLED": true,
+      "QUICK_REPLIES_WRITABLE": true
+    },
+    "schemaIndependence": "SQL38 is33baseline+3video+2experience; version1.9 comments mark historical introduction.1.10 adds no migration.",
+    "smoke": {
+      "command": "Pure import safeRelease + parseRelease with 1.10.0; no runtime/app start",
+      "exit": 0,
+      "output": "{\"server\":{\"version\":\"1.10.0\",\"commit\":\"51b0cf22e3adbad7ed26653e96706ba707aaf839\",\"nodeVersion\":\"v24.22.1\",\"startedAt\":0},\"browser\":{\"version\":\"1.10.0\",\"commit\":\"51b0cf22e3adbad7ed26653e96706ba707aaf839\",\"nodeVersion\":\"v24.22.1\",\"startedAt\":0}}\n"
+    }
+  },
+  "findings": [
+    {
+      "id": "V-01",
+      "severity": "documentation",
+      "path": "docs/REPRISE.md",
+      "location": "opening paragraph",
+      "problem": "Opening paragraph claims active application, publication/latest and private checkpoint all still agree on1.9.0, but remote latest isv1.10.0.",
+      "recommendation": "State active application and private checkpoint1.9.0, latest published1.10.0, and not yet deployed. User suspended preparation pending audit.",
+      "isRollback": false
+    },
+    {
+      "id": "V-02",
+      "severity": "documentation_ambiguity",
+      "paths": [
+        "docs/REPRISE.md",
+        "docs/PLAN-IMPLEMENTATION.md"
+      ],
+      "problem": "Historical1.9 release sections call421892314 latest without always saying 'at that delivery'. The explicit1.10 block and PRODUCT correctly distinguish current latest and active app.",
+      "recommendation": "Qualify historical latest claims as historical; do not change immutable release IDs or sources."
+    },
+    {
+      "id": "V-03",
+      "severity": "cosmetic_tooling",
+      "path": "scripts/build-workbench.mjs",
+      "line": 47,
+      "problem": "Offline mockup generated README hardcodes0.3.1; content explicitly says it is not the production installable app.",
+      "recommendation": "Clarify identifier is historical mockup or derive appropriate label if this exporter is still used. Not a runtime downgrade."
+    },
+    {
+      "id": "V-04",
+      "severity": "local_cache",
+      "problem": "Local Git tags stop atv1.8.1 while all six newer tags throughv1.10.0 exist remotely.",
+      "recommendation": "Use remote snapshot as source for this audit; local tag absence alone is not publication loss."
+    },
+    {
+      "id": "V-05",
+      "severity": "documentation",
+      "paths": [
+        "docs/ARCHITECTURE.md",
+        "docs/DATABASE.md",
+        "docs/guide-jessie.md",
+        "MONITORING.md"
+      ],
+      "problem": "Current prose still described1.8.1/1.8.2/1.8.3, SQL36 and fallback1.7.2 as current; monitor also described already-merged182 workflow as unmerged.",
+      "resolution": "Updated only current prose to active1.9/SQL38, latest1.10 not deployed and paused, compatible fallback1.8.5; historical sections preserved."
+    }
+  ],
+  "nonIssues": [
+    "1.10.0 is numerically later than1.9.0 in semantic versioning.",
+    "Node24.22.1, schema38, backup-format versions and dependency versions are independent counters.",
+    "1.8.5 is a compatible fallback reference, not an active downgrade.",
+    "Historical runtime-video-180 and recurring-backup-052 names identify established operations; they do not set current app version.",
+    "Current main may contain documentation-only commits after immutable published source."
+  ],
+  "methods": [
+    "Read AGENTS.md and beginning of authoritative REPRISE plus relevant PLAN/PRODUCT/release operation files.",
+    "GitHub connector read-only releases list, matching tag refs, latest endpoint and source files at exact release SHAs.",
+    "For all25 published versions, parsed package.json and both root package-lock version locations and compared to remote tag and release target.",
+    "Scoped rg and direct reads for runtime version validation/capture, schema/version gates, flags and version-bearing tooling strings.",
+    "Pure local import smoke for safeRelease and parseRelease preserving1.10.0."
+  ],
+  "actualCoverage": {
+    "allPublishedReleases": 25,
+    "allRemoteTags": 25,
+    "allReleasePackageManifests": 25,
+    "allReleasePackageLocks": 25,
+    "currentLatestChecked": true,
+    "currentProductionHostDirectlyInspected": false,
+    "historicalTagImmutabilityAcrossTimeProven": false,
+    "functionalRegressionExhaustivelyProven": false,
+    "note": "Current snapshot preserves25 releases/tags and mappings. This audit alone cannot prove no tag was ever moved in the past or prove all business functions; separate source/functional audit is needed.",
+    "schemaSourceTableCount": {
+      "baseCreateTables": 32,
+      "videoCreateTables": 3,
+      "experienceCreateTables": 1,
+      "applicationTables": 36,
+      "migrationLedgerTables": 1,
+      "physicalTablesInSourcePlan": 37,
+      "migrations": 38,
+      "receiptField": "applicationTables:37 retained as received; not an independent live physical inventory"
+    }
+  },
+  "restrictionsObserved": {
+    "noHostingActions": true,
+    "noDeployment": true,
+    "noPublication": true,
+    "noCodeDocumentChanges": false,
+    "noPrivateRuntimeCaptureRead": true,
+    "noCodeChanges": true,
+    "noRemoteMutation": true
+  },
+  "documentationFollowup": {
+    "authorizedByParent": true,
+    "filesUpdated": [
+      "docs/ARCHITECTURE.md",
+      "docs/DATABASE.md",
+      "docs/guide-jessie.md",
+      "MONITORING.md"
+    ],
+    "scope": "Only current version/status prose, source-plan schema composition, existing monitor workflow behavior and closely related completed/inconclusive A11 observation. Historical sections preserved. No commit or remote mutation.",
+    "validation": [
+      "git diff --check on four changed files passed",
+      "Relative local links in four changed files all exist",
+      "Explicit architecture and monitoring historical sections byte-identical to HEAD"
+    ],
+    "note": "Root agent separately consolidates REPRISE, PLAN, PRODUCT, README and structured progress."
+  }
+}

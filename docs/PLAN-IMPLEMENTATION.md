@@ -2,20 +2,21 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Évolution 1.10.0 — publiée, préparation hébergée en attente
+## Évolution 1.10.0 — publiée, audit terminé et livraison suspendue
 
 Code fusionné, PR et main qualifiés5/5 sousNode24.22.1. [Source et preuves](REPRISE.md).
 
 Publication immuable acquise : release/latest422111737 sur la source exacte `51b0cf22e3adbad7ed26653e96706ba707aaf839`, opérateurs42/42 et workflow2/2.
 
-1. Préparer le checkout exact et le CHECK sans arrêter190 ; recueillir le reçu avant d’indiquer les champs Manager.
-2. Activer1100 via Manager, vérifier son identité réelle puis qualifier le writer sur le reçu et enregistrer les métadonnées. SQL38 inchangé ;190 et185 conservées. Aucune migration, sauvegarde ou manipulation PC à ajouter.
+**Audit terminé avant de poursuivre :** les25 tags/releases et leurs versions package/lock sont cohérents ; comparaison des sources1.9.0/1.10.0 et des fonctions métier réalisée, états documentaires périmés corrigés. [Résultats et preuves](version-audit-1100.md). Aucun déploiement ni nouvelle publication pendant cet audit.
+
+**Pause hébergée maintenue :** présenter le résultat à l’utilisateur et attendre sa décision de reprise. Les étapes ultérieures conservées sont préparation du checkout exact et CHECK, puis activation Manager, identité réelle et writer qualifié sur le reçu. Elles ne sont pas à exécuter pendant cette pause. SQL38 inchangé ;190 et185 conservées. Aucune migration, sauvegarde ou manipulation PC à ajouter.
 
 [Périmètre](public-profile-1100.md). Les essais sur téléphone réel ne sont pas déduits des tests synthétiques. Aucun déploiement1100 acquis à ce stade.
 
 ## Évolution 1.9.0 — livraison terminée
 
-Les quatre lots et les six fonctions du [cahier](specs/cahier-20261023.md) sont codés, fusionnés, qualifiés PR/main5/5, publiés et déployés. Source `5dda0dd4453d34a0be839d2a1402301dea835381`, release/latest421892314, Nodev24.22.1, SQL38. [État et preuves](verification-proofs/experience190-progress.json).
+Les quatre lots et les six fonctions du [cahier](specs/cahier-20261023.md) sont codés, fusionnés, qualifiés PR/main5/5, publiés et déployés. Source `5dda0dd4453d34a0be839d2a1402301dea835381`, release421892314, latest lors de cette livraison, Nodev24.22.1, SQL38. [État et preuves](verification-proofs/experience190-progress.json).
 
 Le [reçu final utilisateur](verification-proofs/jm190-hosted-metadata.json) confirme `release190_metadata_recorded`, `publicReady:true`, checkpoint `01692bfda8ef4a0cab2d102a183c0ab88fe9e8d99858d6e9b583f8b85ffde674`, historiques et autres blocs préservés, sans redémarrage. Le repli1.8.5 compatibleSQL38 est précontrôlé, jamais démarré. Les deux blocages Manager/writer sont résolus et leurs preuves conservées dans REPRISE.
 
@@ -50,7 +51,7 @@ Corrections intégrées à1.8.3, distinctes des constats historiques de cet audi
 3. **B05 : admission du témoin historiqueP2 conditionnel**, et éventuellement **I01 : refus explicite de l’ancien coffreP3 conditionnel**. Fixtures uniquement, aucune réactivation du témoin, PC ou parcours de sauvegarde reporté. I01 ne démontre aucune perte actuelle ni défaut des archives vidéo actives.
 4. Qualification de la source corrective1.8.3 acquise ; publication et activation restent des étapes distinctes. Le constat d’audit seul ne prouvait aucun déploiement.
 
-Les sections182 ci-dessous restent l’historique de livraison acquis ; les cinq défauts et l’amélioration ci-dessus sont corrigés dans la1.8.3 dont l’identité active est désormais rapportée. Les reprises ne doivent ni les oublier, ni rejouer les anciens lots. [État final structuré](verification-proofs/audit2-182-progress.json). À la clôture183, production et checkpoint étaient rapportés1.8.3 / Node24.22.1 / SQL36, avec latest183 concordant ; la livraison184 désormais close est décrite dans l’état courant. Le chantier juridiqueA10, la sauvegarde hébergée, le PC et les réservesA11/A12 conservent leur statut précédent.
+Les sections182 ci-dessous restent l’historique de livraison acquis ; les cinq défauts et l’amélioration ci-dessus sont corrigés dans la1.8.3 dont l’identité active est désormais rapportée. Les reprises ne doivent ni les oublier, ni rejouer les anciens lots. [État final structuré](verification-proofs/audit2-182-progress.json). À la clôture183, production et checkpoint étaient rapportés1.8.3 / Node24.22.1 / SQL36, avec latest183 concordant ; les livraisons ultérieures et leur état courant sont décrits dans REPRISE. Le chantier juridiqueA10, la sauvegarde hébergée, le PC et les réservesA11/A12 conservent leur statut précédent.
 
 ## Point de départ acquis avant le correctif182
 
@@ -80,13 +81,13 @@ Les corrections des lots1 à3 étaient actives dès la1.8.2 selon son identité 
 
 **A10 mis de côté à la demande de l’utilisateur :** usage déclaré personnel et consenti, sans conclusion juridique ajoutée. Le [candidat556fc385](https://github.com/fredbuhr/jessiemessage/commit/556fc38573a97e52cecdf49fba1c25b7b2de5040), branche `docs/privacy-notice-refresh`, reste conservé sans fusion, qualification native ou activation. Le modèle privé est lu par le runtime ; ne pas le déployer pour clore artificiellement cette réserve. Les notes D01/D08 sont [enregistrées](verification-proofs/jm182-hosted-privacy-notes.json), sans accès aux valeurs ni nouvelle saisie à demander. Aucun questionnaire, mécanisme de consentement ou publication de notice n’est ouvert dans ce lot. Les [critères examinés antérieurement](verification-proofs/jm182-a10-purpose-review.json) restent une preuve historique, pas une question à répéter.
 
-À la clôture182, l’application et le checkpoint étaient en1.8.2/SQL36 selon son reçu final. L’application active, le checkpoint et latest sont désormais1.8.3 selon le reçu final183. Les tests ciblés suivent les modifications ; une CI complète qualifie chaque source stabilisée, sans relancer des suites vertes identiques. Une éventuelle migration exigerait une qualification explicite et un repli compatible ; aucune n’est ajoutée à ce lot.
+À la clôture182, l’application et le checkpoint étaient en1.8.2/SQL36 selon son reçu final. À la clôture183, l’application, le checkpoint et latest étaient1.8.3 selon son reçu final. L’état courant1.9.0/SQL38 et la publication1.10.0 sont consignés dans REPRISE. Les tests ciblés suivent les modifications ; une CI complète qualifie chaque source stabilisée, sans relancer des suites vertes identiques. Une éventuelle migration exigerait une qualification explicite et un repli compatible ; aucune n’est ajoutée à ce lot.
 
 A12 décrit aussi de la dette de croissance, sans panne actuelle prouvée : fermeture au-delà de 10 000 campagnes globales, calcul de dernière activité désormais mesuré sur fixtures de 1 000/10 000 événements et budgets de polling. Les durées observées ne sont ni un benchmark ni une qualification de concurrence du mutualisé ; le parcours de l’historique reste une dette de croissance. Ne pas augmenter les plafonds, migrer SQL ou purger l’histoire par principe. Si un seuil ou une mesure démontre un blocage pour l’usage retenu, intégrer le correctif au lot concerné avant qualification. Les extractions générales de parseurs CHECK/contrôleurs restent facultatives après lancement ; retirer seulement les reliquats sans usage démontré.
 
-## État de livraison et contrôles reportés
+## Clôture historique1.8.3 et contrôles reportés
 
-La livraison **1.8.3** est active selon l’identité utilisateur : source `48fd42b808b2bc4d95d3f3ba21244c032d0a938f`, Node24.22.1 ; SQL36 issu de la preuve séparée, repli **1.7.2** précontrôlé et jamais démarré. Le checkpoint privé est aligné1.8.3, SHA-256 `17f575ebe83d0a9d9acf74e9436bff59eabcf8b5ed1bb8f0f99897c867c78a22`, selon le reçu final183 acquis sans redémarrage. G1–G4 et les opérations déjà acquises ne sont pas à rejouer. L’audit et les correctifs à venir ne réétiquettent pas les preuves historiques comme une qualification de leurs nouveaux cas.
+Lors de sa clôture, la livraison **1.8.3** était active selon l’identité utilisateur : source `48fd42b808b2bc4d95d3f3ba21244c032d0a938f`, Node24.22.1 ; SQL36 issu de la preuve séparée, repli **1.7.2** précontrôlé et jamais démarré. Son checkpoint privé était aligné1.8.3, SHA-256 `17f575ebe83d0a9d9acf74e9436bff59eabcf8b5ed1bb8f0f99897c867c78a22`, selon le reçu final183 acquis sans redémarrage. G1–G4 et les opérations déjà acquises ne sont pas à rejouer. L’audit et les correctifs à venir ne réétiquettent pas les preuves historiques comme une qualification de leurs nouveaux cas.
 
 **Les domaines sont terminés :** édition Web FTP annoncée enregistrée et [13 GET publics réussis](verification-proofs/accueil-redirect-confirmed-20261022.json), accueil/www vers le principal avec chemins et paramètres conservés. Conserver le service Node239143 et `recette.jessiemessage.com` comme origine de compatibilité ; même runtime/base que le principal, jamais cible de test destructible. Aucun changement Apache, DNS, certificat ou PHP à rejouer.
 
@@ -111,7 +112,7 @@ La décision cite les fonctions abandonnées ci-dessus. Elle ne suffit pas à su
 | **Recherche de messages/notes** | Recherche de clients livrée ; recherche dans les contenus absente. | Périmètre à préciser, sans ajout au lot en cours. |
 | **Réactions** | Absentes. | Usage à préciser, sans engagement de développement automatique. |
 
-La **personnalisation des réponses**, intégrée depuis 1.8.0, est conservée dans la1.8.2 ; l’utilisateur confirme le fonctionnement de la liste commune. Les sujets de cette table restent à préciser et non ouverts ; ils n’autorisent pas l’ouverture implicite d’autres évolutions.
+La **personnalisation des réponses**, intégrée depuis 1.8.0, est conservée dans la1.9.0 active et la1.10.0 publiée ; l’utilisateur confirme le fonctionnement de la liste commune. Les sujets de cette table restent à préciser et non ouverts ; ils n’autorisent pas l’ouverture implicite d’autres évolutions.
 
 ## Exploitation et limites conservées
 
@@ -127,7 +128,7 @@ La récupération autonome après perte totale de l’hôte, le témoin frais à
 
 Conserver des checkpoints Git reprenables et la preuve de chaque opération distante, tout en poursuivant plusieurs sous-tâches cohérentes d’un même livrable sans demander une nouvelle permission générale. Ne pas relancer les mêmes audits et suites vertes sans changement, échec ou préoccupation nouvelle. Regrouper les contrôles quand leurs dépendances le permettent ; ne jamais promouvoir une omission ou un test unitaire en essai réel sur téléphone, hébergement ou compte client.
 
-**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Les quatre lots de correction sont livrés ; aucun lot technique ne reste ouvert pour1.8.2, et les réserves conservent leur portée sans ouvrir automatiquement un travail. Conserver un checkpoint publié après chaque résultat cohérent : branche/commit/arbre, contrôles acquis, limites et prochaine action unique. Après interruption, lire le résultat durable avant toute nouvelle mutation. La livraison active rapportée1.8.3 et ses métadonnées sont alignées ; ses preuves natives et hébergées restent distinctes des cas non essayés. La sauvegarde hébergée reste volontairement reportée. Les contrats et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) sont conservés sans réétiquetage.
+**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Les quatre lots de correction sont livrés ; aucun lot technique ne reste ouvert pour1.8.2, et les réserves conservent leur portée sans ouvrir automatiquement un travail. Conserver un checkpoint publié après chaque résultat cohérent : branche/commit/arbre, contrôles acquis, limites et prochaine action unique. Après interruption, lire le résultat durable avant toute nouvelle mutation. La livraison active rapportée1.9.0 et ses métadonnées sont alignées ; la publication1.10.0 reste non déployée et sa préparation suspendue ; ses preuves natives et hébergées restent distinctes des cas non essayés. La sauvegarde hébergée reste volontairement reportée. Les contrats et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) sont conservés sans réétiquetage.
 
 ## Livraisons closes
 
