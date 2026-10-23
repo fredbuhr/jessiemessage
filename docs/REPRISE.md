@@ -2,6 +2,12 @@
 
 **23 octobre 2026 — application active, checkpoint privé et latest : 1.8.4 / Node v24.22.1 / SQL36. Livraison technique184 close.** L’identité et les reçus hébergés sont rapportés par l’utilisateur (**USER_REPORTED**), sans inspection privée directe par l’agent. Qualification, publication, préparation, CHECK, activation et enregistrement final sont acquis. Aucune opération technique supplémentaire n’est en attente pour ce lot ; les limites et contrôles reportés sont conservés ci-dessous.
 
+## Évolution 1.9.0 — six fonctions demandées, en développement
+
+Base réelle vérifiée : main `904ab4301bbda71e047d5b3b5dad41d45149c1cf`, application active1.8.4 ci-dessus ; aucune PR ouverte au départ. Branche `feat/private-experience-190`. Le [cahier fourni](specs/cahier-20261023.md) a été lu intégralement ; manifeste et catalogue JSON contrôlés, source complète691préférences/25catégories/934alias, SHA256 `5ce26f14f15fb9c3447b07777aa5c8d17a6e823e8099dbb37959fc48f00f93cb`. La maquette ne sera pas copiée en production.
+
+Quatre lots d’un même résultat : droits vidéo et compte ; préférences facultatives ; galerie et photos multiples ; suivi « À répondre » et qualification transversale. Implémentation en cours, sans qualification finale, publication, migration ou activation190 acquise. [Point de reprise compact](verification-proofs/experience190-progress.json). Les fonctions rejetées lors de la comparaison ne sont pas ouvertes. Production184 et essais reportés restent inchangés.
+
 ## Correctif interface 1.8.4 — livraison close et alignée
 
 Les cinq demandes sont corrigées : profil FR/EN avec commande d’avatar traduite, un seul menu Options, accès client conservé dans ce menu, drapeaux de langue et destinations admin dédoublonnées. Une course préexistante des tâches, découverte pendant la qualification, est également corrigée ; sa régression retient volontairement le résumé de sauvegarde avant de libérer les filtres.

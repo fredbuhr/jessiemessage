@@ -2,6 +2,17 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
+## Évolution1.9.0 — demande du23octobre, en cours
+
+[Cahier intégral](specs/cahier-20261023.md), [état compact](verification-proofs/experience190-progress.json). Reprendre les composants existants et la vraie base184 ; une livraison finale, quatre jalons de développement :
+
+1. Droits et compte : vidéo réservée admin sur tous les chemins ; mot de passe actuel/nouveau/confirmation, rotation volontaire des sessions et œil partagé.
+2. Profils : catalogue complet immuable, choix privés facultatifs chiffrés côté serveur, rechercheFR/EN/alias et consultation admin autorisée en lecture seule.
+3. Photos : navigation paginée/date/message d’origine, puis file limitée de dix photos avec aperçu et reprise idempotente des seuls échecs.
+4. Suivi : tâche réservée « À répondre », watermark conditionnel protégeant les entrants simultanés, reprise historique déterminable ; qualification transversale, publication et déploiement selon le mécanisme existant.
+
+Aucun lot n’est encore déclaré codé ou testé. Production1.8.4/SQL36 inchangée. Aucune nouvelle infrastructure, reprise automatique des sauvegardes reportées ou action sur les comptes réels.
+
 ## Correctif interface 1.8.4 — terminé
 
 Les cinq demandes et la course préexistante des tâches sont corrigées dans la source publiée `1a41e08abc87c3a29d9163fbf8cd2342eb04693c`, arbre `e0964b50c03d3881d851f01f86f58777d22b2c10`. Contre-revues, PR132 et main **5/5**, captures synthétiques et publication **2/2** acquis. Préparation et CHECK acquis ; l’[identité active184](verification-proofs/jm184-hosted-identity.json) est rapportée : version1.8.4, Nodev24.22.1, UI `23/10/2026 11:44:16`. [Bilan](UX-184-20261023.md), [état](verification-proofs/jm184-progress.json).

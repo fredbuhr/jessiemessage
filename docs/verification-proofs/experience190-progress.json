@@ -1,0 +1,49 @@
+{
+  "type": "experience190-progress",
+  "status": "implementation_in_progress",
+  "branch": "feat/private-experience-190",
+  "baselineMain": "904ab4301bbda71e047d5b3b5dad41d45149c1cf",
+  "activeVersion": "1.8.4",
+  "activeSource": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+  "activeSchema": 36,
+  "candidateVersion": "1.9.0",
+  "specSha256": "c71cae4c464cedb8b880e736013ebf3b2624a4afccf2205da06a95ed50aa47be",
+  "catalogueSha256": "5ce26f14f15fb9c3447b07777aa5c8d17a6e823e8099dbb37959fc48f00f93cb",
+  "catalogueCounts": {
+    "categories": 25,
+    "preferences": 691,
+    "aliases": 934
+  },
+  "lots": [
+    {
+      "name": "rights-and-account",
+      "coded": false,
+      "tested": false,
+      "deployed": false,
+      "productionVerified": false
+    },
+    {
+      "name": "preferences",
+      "coded": false,
+      "tested": false,
+      "deployed": false,
+      "productionVerified": false
+    },
+    {
+      "name": "photos",
+      "coded": false,
+      "tested": false,
+      "deployed": false,
+      "productionVerified": false
+    },
+    {
+      "name": "reply-followup",
+      "coded": false,
+      "tested": false,
+      "deployed": false,
+      "productionVerified": false
+    }
+  ],
+  "actualHostMutationsPerformed": false,
+  "nextAction": "Complete lot1 implementation and targeted synthetic tests, review integration; other lots build on the same verified base. No replay of184 operators."
+}
