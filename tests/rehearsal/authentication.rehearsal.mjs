@@ -178,7 +178,9 @@ test("real Chrome + MariaDB: HTTPS administrator MFA, protected cookie, revocati
 
     await signOutThisDevice(page);
     await waitUntil(() => page.execute("return location.pathname === '/admin/login'"), "logout returns to the login URL");
-    assert.equal(await sessionCookie(page), initialCookie, "logout preserves the cookie value so a late response cannot erase a newer login");
+    const signedOutCookie = await sessionCookie(page);
+    assert.equal(signedOutCookie.value === initialCookie.value, true, "logout preserves the cookie value so a late response cannot erase a newer login");
+    assert.equal(signedOutCookie.secure && signedOutCookie.httpOnly && signedOutCookie.sameSite === "Strict", true);
     assert.equal((await fixtureRequest(fixture.origin, "/api/auth/session", { cookie: initialCookie })).status, 401, "SQL revocation rejects the cookie that remains in the browser");
     await entry(page, "signed_out"); await signedOutEntry(fixture.origin);
     await page.navigate("/admin/login"); await loginForm(page);

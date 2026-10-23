@@ -251,7 +251,7 @@ test("real Chrome + MariaDB: independent client sessions, live text and JPEG, me
     assert.equal(await first.execute("return document.getElementById('message-body').value"), draft);
     await openChatOptions(first); await first.click("#logout");
     await waitUntil(() => first.execute(clientForm), "this-device logout returns to client sign-in");
-    assert.equal((await first.cookies()).some(cookie => cookie.name === clientCookie), false);
+    assert.equal((await protectedClientCookie(first)).value === firstCookie.value, true, "logout retains the revoked cookie without replacing a later login");
     assert.equal(await sessionStatus(first), 401); assert.equal(await sessionStatus(second), 200, "logging out device A leaves device B's SQL session valid");
     assert.equal((await protectedClientCookie(second)).value === secondCookie.value, true);
     await photoVisible(second, caption);

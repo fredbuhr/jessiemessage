@@ -118,7 +118,7 @@ test("the real dual-origin runtime shares schema thirty, source sessions, encryp
         for (const role of ["admin", "client"]) {
           const response = await request(port, origin, role === "admin" ? "/api/auth/session" : "/api/access/session", { cookie: cookie(role) });
           assert.equal(response.status, 200); assert.equal(response.json().user.id, users[role].toString("hex"));
-          assert.match(response.headers["set-cookie"][0], /Secure; HttpOnly; SameSite=Strict/);
+          assert.equal(response.headers["set-cookie"], undefined, "session reads leave the native cookie unchanged");
         }
         const sw = await request(port, origin, "/sw.js"); assert.equal(sw.status, 200); assert.equal(sw.headers["service-worker-allowed"], "/");
       }

@@ -1594,7 +1594,7 @@ test("Chrome 320px: profile preference draft resumes after same-owner verificati
       await waitUntil(() => page.execute("return !document.getElementById('open-profile').hidden"), "profile module mounted");
       if (role === "admin") await page.click(".contact");
       await clickOptionsAction(page, "#open-profile");
-      await waitUntil(() => page.execute("return !document.querySelector('.preferences-search').disabled"), "preference catalogue loaded");
+      await waitUntil(() => page.execute("const section=document.querySelector('.preferences-section');return !!section&&!section.hidden&&section.getAttribute('aria-busy')==='false'&&!document.querySelector('.preferences-search').disabled"), "preference catalogue fully loaded");
       await page.type(".preferences-search", choice.fr); await page.click(`[data-preference-id="${choice.id}"]`);
       await page.execute("Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>window.__hidden?'hidden':'visible'});window.__hidden=true;document.dispatchEvent(new Event('visibilitychange'))");
       assert.equal(await page.execute("return document.querySelector('.profile-dialog').open"), false);
