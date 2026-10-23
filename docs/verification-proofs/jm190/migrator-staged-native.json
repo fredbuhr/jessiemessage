@@ -1,0 +1,42 @@
+{
+  "type": "jm190-staged-migration-operator-qualification",
+  "source": "ba7d4cdaa63db1afc0922578b09c29152605a7c9",
+  "tree": "5397d69291c245f6be99eb50280e5bb925529bf3",
+  "baseOperator": "5859b591e0349bae011147e6aed6ebf330a7a4ba",
+  "stagingReceiptSha256": "3a4788b4a31cac3d55f09950e3b98f99a700e0f0dd8af21f83a6135bd01d8cd0",
+  "migratorSha256": "6515976d94f544fefb163959a9be9e25dbf6dbde2e4486840495fe6b3ed221dd",
+  "run": {
+    "id": 39965300066,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39965300066",
+    "attempt": 1,
+    "event": "push",
+    "branch": "ops/release190-tools",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "job": {
+    "id": 120453476632,
+    "name": "operators",
+    "head": "ba7d4cdaa63db1afc0922578b09c29152605a7c9",
+    "conclusion": "success"
+  },
+  "node": "v24.22.1",
+  "tests": {
+    "passed": 8,
+    "failed": 0,
+    "scope": "synthetic migration policy, refusal before private IO for missing pins, status without writes, durable upgrade marker, stop attestation, refusal of interrupted/partial schemas, masked-credential fallback"
+  },
+  "delta": "Only runtime change is STAGING_SHA pin. Existing qualifier scoped to changed migration operator; other3helpers unchanged and previously qualified49 in publication workflow.",
+  "hosted": {
+    "sqlStatusChecked": false,
+    "migrated": false,
+    "precheckPassed": false,
+    "started": false
+  },
+  "nextAction": "Personal hosted status command only; application remains running. No migration, service stop or CHECK inferred.",
+  "log": {
+    "bytes": 43040,
+    "sha256": "a1d4bb1176fec21dfbde8a8ca0a2b18f364b164c68c87dff3b8a971bfeba5140"
+  },
+  "independentReview": "Two-file remote/local blob comparison verified; runtime differs only in staging hash, guards retained."
+}
