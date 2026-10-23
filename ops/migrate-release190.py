@@ -8,6 +8,7 @@ No command is usable until qualified source/tree and hosted staging are pinned.
 """
 import getpass
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -126,6 +127,11 @@ def environment():
                 GIT_CONFIG_GLOBAL='/dev/null', GIT_TERMINAL_PROMPT='0', JESSIEMESSAGE_PRIVATE_PATH_MODE='linux-dirfd')
 
 
+def _open_terminal():
+    # A controlling terminal is not seekable; avoid open()'s BufferedRandom.
+    return io.TextIOWrapper(io.FileIO('/dev/tty', 'r+'), encoding='utf-8', write_through=True)
+
+
 def identity():
     require(all(re.fullmatch('[a-f0-9]{40}', pin) for pin in (SOURCE, TREE)), 'QUALIFICATION_PENDING')
     require(re.fullmatch('[a-f0-9]{64}', STAGING_SHA), 'STAGING_PENDING')
@@ -165,7 +171,7 @@ def main(args):
     attempt, receipt = PRIVATE / 'jm190-upgrade-attempt.json', PRIVATE / 'jm190-schema38.json'
     if mode == 'upgrade':
         require(not attempt.exists() and not attempt.is_symlink() and not receipt.exists() and not receipt.is_symlink(), 'EXISTING_ATTEMPT_INSPECT_STATUS_NO_RETRY')
-    with open('/dev/tty', 'r+', encoding='utf-8') as terminal:
+    with _open_terminal() as terminal:
         require(terminal.isatty(), 'TTY_REQUIRED')
         terminal.write('Identité SQL du compte de migration existant : '); terminal.flush()
         user = terminal.readline(100).rstrip('\n')

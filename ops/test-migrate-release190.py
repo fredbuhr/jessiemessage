@@ -1,11 +1,19 @@
 """Synthetic migration policy and local durable-marker tests; no SQL/hosting."""
 import importlib.util
+import fcntl
+import hashlib
 import io
 import json
+import os
 from pathlib import Path
+import pty
+import select
 import shutil
 import subprocess
+import sys
 import tempfile
+import termios
+import time
 import unittest
 import warnings
 from unittest import mock
@@ -105,7 +113,7 @@ class Wrapper(unittest.TestCase):
                 self.assertTrue((self.module.PRIVATE / 'jm190-upgrade-attempt.json').is_file())
             return process
         with mock.patch.object(self.module, 'identity', return_value=(Path('/synthetic-checkout'), Path('/synthetic-node'))), \
-                mock.patch('builtins.open', return_value=terminal), mock.patch.object(self.module.getpass, 'getpass', return_value=self.password), \
+                mock.patch.object(self.module, '_open_terminal', return_value=terminal), mock.patch.object(self.module.getpass, 'getpass', return_value=self.password), \
                 mock.patch.object(self.module.subprocess, 'run', side_effect=execute), mock.patch('sys.stdout', new_callable=io.StringIO) as output:
             self.module.main(args)
             return json.loads(output.getvalue())
@@ -117,7 +125,7 @@ class Wrapper(unittest.TestCase):
         self.assertEqual(result['receiptSha256'], self.module.digest(receipt.read_bytes()))
         self.assertNotIn(self.password, attempt.read_text() + receipt.read_text())
         with mock.patch.object(self.module, 'identity', return_value=(Path('/unused'), Path('/unused'))), \
-                mock.patch('builtins.open', side_effect=AssertionError('no second credential prompt')):
+                mock.patch.object(self.module, '_open_terminal', side_effect=AssertionError('no second credential prompt')):
             with self.assertRaisesRegex(self.module.MigrationRefused, 'EXISTING_ATTEMPT_INSPECT_STATUS_NO_RETRY'):
                 self.module.main(['upgrade', '--service-stopped'])
 
@@ -147,12 +155,82 @@ class Wrapper(unittest.TestCase):
             warnings.warn('echo cannot be disabled', self.module.getpass.GetPassWarning)
             raise AssertionError('getpass fallback must stop before reading a password')
         with mock.patch.object(self.module, 'identity', return_value=(Path('/unused'), Path('/unused'))), \
-                mock.patch('builtins.open', return_value=terminal), \
+                mock.patch.object(self.module, '_open_terminal', return_value=terminal), \
                 mock.patch.object(self.module.getpass, 'getpass', side_effect=unprotected_prompt), \
                 mock.patch.object(self.module.subprocess, 'run', side_effect=AssertionError('no Node')):
             with self.assertRaises(self.module.getpass.GetPassWarning):
                 self.module.main(['upgrade','--service-stopped'])
         self.assertEqual(list(self.module.PRIVATE.iterdir()), [])
+
+
+class ControllingTerminal(unittest.TestCase):
+    def test_real_tty_prompts_hide_password_and_send_it_only_to_node_stdin_without_writes(self):
+        user = 'migration_pty'
+        password = 'Synthetic-only PTY $() password with spaces'
+        expected_hash = hashlib.sha256(password.encode()).hexdigest()
+        with tempfile.TemporaryDirectory(prefix='migrate190-pty-', dir=HERE.parent) as temporary:
+            directory = Path(temporary); private = directory / 'private'; private.mkdir(mode=0o700)
+            # Exercise the real Python main, terminal/getpass and real Node
+            # subprocess. Only identity and the SQL program are replaced.
+            node_program = """
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+let password='';for await(const chunk of process.stdin)password+=chunk.toString('utf8');
+assert.equal(createHash('sha256').update(password).digest('hex'),EXPECTED_HASH);
+assert.equal(JSON.stringify(process.argv).includes(password),false);
+assert.equal(JSON.stringify(process.env).includes(password),false);
+assert.deepEqual(process.argv.slice(1),['migration_pty','status']);
+process.stdout.write(JSON.stringify({status:'release190_schema_status',schemaMigrations:38,
+applicationTables:37,applied:36,pending:2,migrated:false,runtimeStarted:false,
+restart184Allowed:true,restart172Allowed:true,rollbackAfterMigrationQualified:false})+'\\n');
+""".replace('EXPECTED_HASH', json.dumps(expected_hash))
+            program = f"""
+import importlib.util
+from pathlib import Path
+spec=importlib.util.spec_from_file_location('migrate190_real_pty',{str(HERE / 'migrate-release190.py')!r})
+module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+module.PRIVATE=Path({str(private)!r})
+module.identity=lambda:(Path({str(directory)!r}),Path({shutil.which('node')!r}))
+module.NODE_LIBRARY='';module.NODE_MAIN={node_program!r}
+module.main(['status'])
+assert list(module.PRIVATE.iterdir())==[], 'status must not create any receipt or marker'
+"""
+            master, slave = pty.openpty(); transcript = bytearray(); process = None
+            initial_echo = termios.tcgetattr(slave)[3] & termios.ECHO
+            def controlling_terminal():
+                os.setsid(); fcntl.ioctl(0, termios.TIOCSCTTY, 0)
+            try:
+                process = subprocess.Popen([sys.executable, '-c', program], stdin=slave, stdout=slave, stderr=slave,
+                    preexec_fn=controlling_terminal, env=dict(os.environ, PYTHONDONTWRITEBYTECODE='1'))
+                def read_until(expected, timeout=8):
+                    deadline = time.monotonic() + timeout
+                    while expected not in transcript:
+                        remaining = deadline - time.monotonic()
+                        self.assertGreater(remaining, 0, 'missing terminal prompt: ' + transcript.decode('utf-8', errors='replace'))
+                        readable, _, _ = select.select([master], [], [], min(remaining, 0.2))
+                        if readable:
+                            chunk = os.read(master, 4096)
+                            if chunk: transcript.extend(chunk)
+                        elif process.poll() is not None:
+                            self.fail('process exited before terminal prompt: ' + transcript.decode('utf-8', errors='replace'))
+                read_until('Identité SQL du compte de migration existant : '.encode())
+                os.write(master, (user + '\n').encode())
+                read_until('Mot de passe SQL de ce compte (saisie masquée) : '.encode())
+                self.assertEqual(termios.tcgetattr(slave)[3] & termios.ECHO, 0, 'secret prompt must disable terminal echo')
+                os.write(master, (password + '\n').encode())
+                read_until(b'"hostedPrecheckPassed":false')
+                self.assertEqual(process.wait(timeout=8), 0, transcript.decode('utf-8', errors='replace'))
+                self.assertEqual(termios.tcgetattr(slave)[3] & termios.ECHO, initial_echo, 'getpass must restore terminal echo')
+                self.assertNotIn(password.encode(), transcript)
+                receipts = [json.loads(line) for line in transcript.decode().splitlines() if line.startswith('{')]
+                self.assertEqual(len(receipts), 1)
+                self.assertEqual(receipts[0]['status'], 'release190_schema_status')
+                self.assertFalse(receipts[0]['migrated']); self.assertFalse(receipts[0]['runtimeStarted'])
+                self.assertEqual(list(private.iterdir()), [])
+            finally:
+                if process is not None and process.poll() is None:
+                    process.kill(); process.wait(timeout=3)
+                os.close(master); os.close(slave)
 
 
 if __name__ == '__main__':
