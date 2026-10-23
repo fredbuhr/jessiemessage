@@ -1,0 +1,364 @@
+{
+  "artifactId": 12467639391,
+  "runId": 39876426084,
+  "head": "304923ad2be78ab3c6fe8f250ef814db36a9c886",
+  "tree": "4d64087c8c01413da0569995977cd7968b83717b",
+  "zip": "/workspace/scratch/bb431be72395/ux184/pr131-final-homepage-render.zip",
+  "sha256": "sha256:f0ffb79768160c4a25ca12fd7ec80862b48403ac53437e0f9a994f27c7770753",
+  "apiDigestMatched": true,
+  "bytes": 3721407,
+  "files": [
+    {
+      "name": "admin-home-1280-bottom.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/admin-home-1280-bottom.png",
+      "bytes": 83765,
+      "sha256": "e2411cc083c4c5e9e69c636df37d0b1842213822f7735ff680fb17330fc7def2",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/admin-home-1280-bottom.png",
+      "initialSha256": "e2411cc083c4c5e9e69c636df37d0b1842213822f7735ff680fb17330fc7def2",
+      "byteIdentical": true
+    },
+    {
+      "name": "admin-home-320-bottom.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/admin-home-320-bottom.png",
+      "bytes": 40944,
+      "sha256": "577aa79414852562ac9bc247dc496dfe6078df2424a61f659728e07d928d1ad2",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/admin-home-320-bottom.png",
+      "initialSha256": "577aa79414852562ac9bc247dc496dfe6078df2424a61f659728e07d928d1ad2",
+      "byteIdentical": true
+    },
+    {
+      "name": "admin-home-1280.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/admin-home-1280.png",
+      "bytes": 143676,
+      "sha256": "5c6c5c155ac04377e6ad0b6dedb06eb0cf41921bbd890d623ade10ef3ae20f41",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/admin-home-1280.png",
+      "initialSha256": "5c6c5c155ac04377e6ad0b6dedb06eb0cf41921bbd890d623ade10ef3ae20f41",
+      "byteIdentical": true
+    },
+    {
+      "name": "admin-home-320.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/admin-home-320.png",
+      "bytes": 60235,
+      "sha256": "64f06ae58e2445dbfceac402362c6417d819b6892711bf1fc8778a7f5c14f0f0",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/admin-home-320.png",
+      "initialSha256": "64f06ae58e2445dbfceac402362c6417d819b6892711bf1fc8778a7f5c14f0f0",
+      "byteIdentical": true
+    },
+    {
+      "name": "chat-options-admin-1280-conversation.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/chat-options-admin-1280-conversation.png",
+      "bytes": 110768,
+      "sha256": "43c6db1a54cc8fb62acfc0fde09d38b0a23172d4136126f33eb90c5b05e221e6",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-admin-1280-conversation.png",
+      "initialSha256": "b1a8d93cbce6b52da68d141ff2d8e5e95a57d721e02728564f6f6a1963b1bd2c",
+      "byteIdentical": false,
+      "dimensions": [
+        [
+          1280,
+          757
+        ],
+        [
+          1280,
+          757
+        ]
+      ],
+      "differenceBBoxExclusive": [
+        113,
+        99,
+        1251,
+        728
+      ],
+      "differentPixels": 4093
+    },
+    {
+      "name": "chat-options-admin-1280-inbox.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/chat-options-admin-1280-inbox.png",
+      "bytes": 125666,
+      "sha256": "5f00e47e32bae7e8dd56a7e5ee93bd6b41cec0564a41fdb1deda024b2c4e5f90",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-admin-1280-inbox.png",
+      "initialSha256": "68c1ef196cad17bb8cb9b4ee53e78113cddb2a9a7f02529f059e0af78364f02d",
+      "byteIdentical": false,
+      "dimensions": [
+        [
+          1280,
+          757
+        ],
+        [
+          1280,
+          757
+        ]
+      ],
+      "differenceBBoxExclusive": [
+        113,
+        272,
+        183,
+        280
+      ],
+      "differentPixels": 251
+    },
+    {
+      "name": "chat-options-admin-1280-open.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/chat-options-admin-1280-open.png",
+      "bytes": 120243,
+      "sha256": "d852ab7ca89f2be873330b26f63cceab8027b7d1aee405cca1af5172c94f20f5",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-admin-1280-open.png",
+      "initialSha256": "a39eae1c86b95b64b1c493e820919eda99a861d8abf5883f3a4c5b212f80c3f4",
+      "byteIdentical": false,
+      "dimensions": [
+        [
+          1280,
+          757
+        ],
+        [
+          1280,
+          757
+        ]
+      ],
+      "differenceBBoxExclusive": [
+        113,
+        272,
+        1251,
+        728
+      ],
+      "differentPixels": 4085
+    },
+    {
+      "name": "chat-options-admin-320-conversation.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/chat-options-admin-320-conversation.png",
+      "bytes": 51024,
+      "sha256": "466e7d6abbd193b0ece1184617716fc9f7029b2e96c4bc06e9f8abf0349d2f1d",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-admin-320-conversation.png",
+      "initialSha256": "48c10414b07592ded712b0a9db8393a55feccac663408fae719b1ba0bf7fb625",
+      "byteIdentical": false,
+      "dimensions": [
+        [
+          320,
+          844
+        ],
+        [
+          320,
+          844
+        ]
+      ],
+      "differenceBBoxExclusive": [
+        239,
+        802,
+        241,
+        828
+      ],
+      "differentPixels": 18
+    },
+    {
+      "name": "chat-options-admin-320-inbox.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/chat-options-admin-320-inbox.png",
+      "bytes": 22316,
+      "sha256": "0cc1c0da68e29bbc068d84e96dd6fb1366a9ad174018d82f86fe438b71353326",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-admin-320-inbox.png",
+      "initialSha256": "c4df093d61dc24c8291a66bf14756370eaaacdddab0635d037d447f1cd64ee7d",
+      "byteIdentical": false,
+      "dimensions": [
+        [
+          320,
+          844
+        ],
+        [
+          320,
+          844
+        ]
+      ],
+      "differenceBBoxExclusive": [
+        84,
+        242,
+        154,
+        250
+      ],
+      "differentPixels": 251
+    },
+    {
+      "name": "chat-options-admin-320-open.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/chat-options-admin-320-open.png",
+      "bytes": 57273,
+      "sha256": "33b046bc6ce46672f837cddf24121f87b0f06dddcd2369882497f201c6f6c91e",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-admin-320-open.png",
+      "initialSha256": "2ef0c5917c3d123df2457a04338c116599ba989b0144f6abe422e006a511eb4f",
+      "byteIdentical": false,
+      "dimensions": [
+        [
+          320,
+          844
+        ],
+        [
+          320,
+          844
+        ]
+      ],
+      "differenceBBoxExclusive": [
+        239,
+        802,
+        241,
+        828
+      ],
+      "differentPixels": 18
+    },
+    {
+      "name": "chat-options-client-1280-conversation.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/chat-options-client-1280-conversation.png",
+      "bytes": 187677,
+      "sha256": "d44602fcd3f588e8e47171576c39c02ad422c3419ac8c9eec0c81e5174f838f7",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-client-1280-conversation.png",
+      "initialSha256": "d97aa5d497b194e58145764acf557323bf798256fe19bd72e713dae215a6f2cc",
+      "byteIdentical": false,
+      "dimensions": [
+        [
+          1280,
+          757
+        ],
+        [
+          1280,
+          757
+        ]
+      ],
+      "differenceBBoxExclusive": [
+        27,
+        88,
+        31,
+        108
+      ],
+      "differentPixels": 13
+    },
+    {
+      "name": "chat-options-client-1280-open.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/chat-options-client-1280-open.png",
+      "bytes": 196561,
+      "sha256": "fced2038c63ff78b64eb2729940ba5b4f4785940cd2ca80389ac7af41b7597fd",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-client-1280-open.png",
+      "initialSha256": "170c1a080606fc9ba6e1b6d8d978cbf1a8adbee1ce19699ffa7d15618ee24eb9",
+      "byteIdentical": false,
+      "dimensions": [
+        [
+          1280,
+          757
+        ],
+        [
+          1280,
+          757
+        ]
+      ],
+      "differenceBBoxExclusive": [
+        27,
+        88,
+        31,
+        108
+      ],
+      "differentPixels": 13
+    },
+    {
+      "name": "chat-options-client-320-conversation.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/chat-options-client-320-conversation.png",
+      "bytes": 49435,
+      "sha256": "c70190c4d1b6cfdc46e65e87bf2d6670afb3da7473d8eaf3bdbc2dc13eab0daa",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-client-320-conversation.png",
+      "initialSha256": "c70190c4d1b6cfdc46e65e87bf2d6670afb3da7473d8eaf3bdbc2dc13eab0daa",
+      "byteIdentical": true
+    },
+    {
+      "name": "chat-options-client-320-open.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/chat-options-client-320-open.png",
+      "bytes": 55553,
+      "sha256": "9664729aefd90bba20b2b91bcca98e0acdeac00b5c940de5f769de68974da4ad",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-client-320-open.png",
+      "initialSha256": "9664729aefd90bba20b2b91bcca98e0acdeac00b5c940de5f769de68974da4ad",
+      "byteIdentical": true
+    },
+    {
+      "name": "client-home-1280.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/client-home-1280.png",
+      "bytes": 171141,
+      "sha256": "9fc13dbe28eff3814124b37d95a46f1467e3d8086a3f3dfd80dc16f428a886d6",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/client-home-1280.png",
+      "initialSha256": "9fc13dbe28eff3814124b37d95a46f1467e3d8086a3f3dfd80dc16f428a886d6",
+      "byteIdentical": true
+    },
+    {
+      "name": "home-en-1280-bottom.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/home-en-1280-bottom.png",
+      "bytes": 360559,
+      "sha256": "1a5a7cd0ab1061a5e04c626d1db23860c504b3e8f58ea86f8722bcbc8576eaa1",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/home-en-1280-bottom.png",
+      "initialSha256": "1a5a7cd0ab1061a5e04c626d1db23860c504b3e8f58ea86f8722bcbc8576eaa1",
+      "byteIdentical": true
+    },
+    {
+      "name": "client-home-320.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/client-home-320.png",
+      "bytes": 65151,
+      "sha256": "6d1903bf83ea7d1099e47ea41afd3698a31a683962e8a60273f11f59c1e94869",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/client-home-320.png",
+      "initialSha256": "6d1903bf83ea7d1099e47ea41afd3698a31a683962e8a60273f11f59c1e94869",
+      "byteIdentical": true
+    },
+    {
+      "name": "home-en-1280-top.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/home-en-1280-top.png",
+      "bytes": 407243,
+      "sha256": "4fa6bf7858c74ab621e7246c11b0c64cc370dd87d2beab2d4e60c1e9d2874af2",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/home-en-1280-top.png",
+      "initialSha256": "4fa6bf7858c74ab621e7246c11b0c64cc370dd87d2beab2d4e60c1e9d2874af2",
+      "byteIdentical": true
+    },
+    {
+      "name": "home-en-320-top.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/home-en-320-top.png",
+      "bytes": 137901,
+      "sha256": "b08f607cca88a88d12197f0e6c0b052a030d5c0484d96052302a1deab1a7e8bb",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/home-en-320-top.png",
+      "initialSha256": "b08f607cca88a88d12197f0e6c0b052a030d5c0484d96052302a1deab1a7e8bb",
+      "byteIdentical": true
+    },
+    {
+      "name": "home-en-390-top.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/home-en-390-top.png",
+      "bytes": 158609,
+      "sha256": "26050dcbc50493b9d6395a6331ca55abde8517bb494d62b5230979bcc862de95",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/home-en-390-top.png",
+      "initialSha256": "26050dcbc50493b9d6395a6331ca55abde8517bb494d62b5230979bcc862de95",
+      "byteIdentical": true
+    },
+    {
+      "name": "home-fr-1280-bottom.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/home-fr-1280-bottom.png",
+      "bytes": 396688,
+      "sha256": "ebbac0a0ad6916d2692c56426a2d58e04b059899d2cfa62ad3765c25c771f521",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/home-fr-1280-bottom.png",
+      "initialSha256": "ebbac0a0ad6916d2692c56426a2d58e04b059899d2cfa62ad3765c25c771f521",
+      "byteIdentical": true
+    },
+    {
+      "name": "home-fr-1280-top.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/home-fr-1280-top.png",
+      "bytes": 455418,
+      "sha256": "6c851a82ee0a315f2f45fc523e734241dc5da5babe5d5837eadf1dd039a35f46",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/home-fr-1280-top.png",
+      "initialSha256": "6c851a82ee0a315f2f45fc523e734241dc5da5babe5d5837eadf1dd039a35f46",
+      "byteIdentical": true
+    },
+    {
+      "name": "home-fr-320-top.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/home-fr-320-top.png",
+      "bytes": 141394,
+      "sha256": "f64534540dd107751ae61320219186ed561639bc8d886590d98a975b55fa041f",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/home-fr-320-top.png",
+      "initialSha256": "f64534540dd107751ae61320219186ed561639bc8d886590d98a975b55fa041f",
+      "byteIdentical": true
+    },
+    {
+      "name": "home-fr-390-top.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-final-screenshots/home-fr-390-top.png",
+      "bytes": 161371,
+      "sha256": "77153078d5691e69247f570ba406f66131a01b57b82a74af1e62cdcfb760cdba",
+      "initialFile": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/home-fr-390-top.png",
+      "initialSha256": "77153078d5691e69247f570ba406f66131a01b57b82a74af1e62cdcfb760cdba",
+      "byteIdentical": true
+    }
+  ]
+}

@@ -91,6 +91,10 @@
       "sha256": "0e75c416aa924f0f4bed8cce29dbd25b262abd595030427db75cc06087c030d7"
     },
     {
+      "path": "public/tasks.js",
+      "sha256": "1d189b50765765ecba3f882a05fb0290a1d56a6d719553a2c6f3d5bf15532e63"
+    },
+    {
       "path": "tests/admin-lifecycle.test.mjs",
       "sha256": "a91ee1782fa4acf22fae8d14db9f6adbc1c58c0ffc6288a8b8bfe4ee0dd30b5c"
     },
@@ -121,6 +125,10 @@
     {
       "path": "tests/browser/recovery.browser.mjs",
       "sha256": "0c5422acfdbc35355638833d820aefa93f81cbd04a15f0051df9fea69adb9f2e"
+    },
+    {
+      "path": "tests/browser/tasks.browser.mjs",
+      "sha256": "f4422c321aa73d6a5d03e50f99f59c380f77cf7cf65baa5853900c954e179201"
     },
     {
       "path": "tests/chat-accessibility-markup.test.mjs",

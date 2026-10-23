@@ -1,0 +1,64 @@
+{
+  "status": "independent_review_approved_pending_native_deterministic_qualification",
+  "baseCommit": "a0a8a6a048654b1700b14738edfa99d3ee4cfc66",
+  "reviewedFiles": [
+    {
+      "file": "public/tasks.js",
+      "sha256": "1d189b50765765ecba3f882a05fb0290a1d56a6d719553a2c6f3d5bf15532e63"
+    },
+    {
+      "file": "tests/browser/tasks.browser.mjs",
+      "sha256": "f4422c321aa73d6a5d03e50f99f59c380f77cf7cf65baa5853900c954e179201"
+    }
+  ],
+  "nativeFailure": {
+    "run": "39877314782",
+    "job": "120165944753",
+    "tests": 231,
+    "passed": 230,
+    "failed": 1,
+    "skipped": 0,
+    "log": "/workspace/scratch/bb431be72395/ux184/logs/main184-browser.log",
+    "logSha256": "bd3ac09ea8805d327b848db7ab0e95365d0faacd7c5c2a9364a5d70ddcbadca0",
+    "failure": "Timed out: future task remains open",
+    "location": "tests/browser/tasks.browser.mjs:124 before correction"
+  },
+  "causality": [
+    "save() keeps busy=true while a confirmed save closes the editor, awaits loadList(false,true), then awaits loadSummary(true).",
+    "The previous controls() enabled filter/refresh/pagination when listBusy became false even though save busy remained true.",
+    "A filter change clears the task map and attempts loadList(); that load is refused by busy&&!afterSave. The save finally block merely re-enables controls and does not load the chosen view.",
+    "This is a real UI interaction because the filter was enabled. The observed native timeout is consistent with this interleaving, but that failed log alone did not record the pending-summary boundary.",
+    "The task source/model/browser fixture were unchanged between the1.8.3 source48fd42b808b2bc4d95d3f3ba21244c032d0a938f and main184a0a8a6a048654b1700b14738edfa99d3ee4cfc66; the mechanism predates184."
+  ],
+  "diffReview": {
+    "application": "Only two lines add busy to the disabled conditions of task-filter, refresh-tasks and more-tasks. Their disabled period now matches the guard of loadList/loadSummary. Once save finally clears busy, controls() re-enables them normally.",
+    "fixture": "Adds held summary responses; before the second POST postponement, retains the resulting summary. After the confirmed task revision2/list refresh/closed editor, asserts all three controls disabled before releasing the summary. The next explicit filter change waits for the native control to be enabled.",
+    "regressionStrength": "Against original controls(), the new held-summary assertion deterministically fails immediately; the helper wait alone is not being used to hide the race. Future task visibility, complete/reopen sequence, exact expectedVersions[0,1,2,3], zero notification/mail requests and layout assertions remain.",
+    "scope": "No timeout increase, removed assertion, changed API, automatic replay, SQL/schema/version change or altered idempotency contract.",
+    "findings": []
+  },
+  "boundedReproduction": {
+    "status": "passed",
+    "log": "/workspace/scratch/bb431be72395/ux184/task-filter-race-review.log",
+    "logSha256": "792ab51b5997be800e4c94dea5fbb2d7319812f8b7ff57cdad58501541e966ae",
+    "method": "Read original source with git show at the pinned commit and corrected working source; extract each actual controls() function, execute only that function in isolated V8 contexts with minimal DOM/state stubs, compare three disabled flags.",
+    "nodeVersion": "v24.19.0",
+    "scenarios": [
+      "idle",
+      "save_waiting_on_summary",
+      "save_finished",
+      "list_in_flight",
+      "session_paused",
+      "uncertain_request_retained_not_sending"
+    ],
+    "result": "Only save_waiting_on_summary changes: all three controls go from enabled to disabled. Idle and save-finished re-enable all three; loading, paused and uncertain-not-sending behavior is unchanged.",
+    "applicationModuleImported": false,
+    "actualSaveExecuted": false,
+    "browser": false,
+    "network": false,
+    "sql": false,
+    "limit": "This proves the controls transition in the chosen state, not a full asynchronous save or native browser reproduction."
+  },
+  "remaining": "Run the new deterministic browser scenario on native CI with the corrected exact source before qualifying main/release. No native browser, CI or general test rerun was performed by this review.",
+  "mutations": "Only this JSON report and the scratch reproduction log were written. No repository source, test, Git state, production service or user data changed by the reviewer."
+}

@@ -1,0 +1,502 @@
+{
+  "status": "completed_success",
+  "conclusion": "success",
+  "repository": "fredbuhr/jessiemessage",
+  "pullRequest": 131,
+  "runId": 39876426084,
+  "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39876426084",
+  "runNumber": 738,
+  "runAttempt": 1,
+  "event": "pull_request",
+  "head": "304923ad2be78ab3c6fe8f250ef814db36a9c886",
+  "tree": "4d64087c8c01413da0569995977cd7968b83717b",
+  "temporaryMergeCommit": "7669d60700bbf973beb062921b463467585c960c",
+  "temporaryMergeTree": "4d64087c8c01413da0569995977cd7968b83717b",
+  "temporaryMergeParents": [
+    "c786ea592e331780aaac16beea6ea546897c8ca4",
+    "304923ad2be78ab3c6fe8f250ef814db36a9c886"
+  ],
+  "actualCheckoutAllFiveJobLogs": "7669d60700bbf973beb062921b463467585c960c",
+  "nativeNode": "v24.22.1 verified in all five complete logs",
+  "requiredJobs": 5,
+  "requiredJobsSucceeded": 5,
+  "requiredJobsFailed": 0,
+  "jobs": [
+    {
+      "id": 120163037682,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T00:09:52Z",
+      "completedAt": "2026-10-23T00:12:02Z",
+      "nativeSummary": {
+        "tests": 3954,
+        "suites": 0,
+        "pass": 3906,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 48,
+        "todo": 0,
+        "duration_ms": 97456.789194
+      },
+      "nativeNode": "v24.22.1",
+      "actualCheckout": "7669d60700bbf973beb062921b463467585c960c",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/pr131-final-verify.log",
+        "sha256": "a8fd2037fc33024acedffb42d96414c203f50ff356cf9ed407683b0c3eb7bca0",
+        "gitBlobSha": "60980c90d8eb70cde618044a30f0af2f440a3beb",
+        "gitHashObjectMatched": true,
+        "blobCreated": true,
+        "bytes": 560407,
+        "lines": 4286
+      }
+    },
+    {
+      "id": 120163037823,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T00:09:53Z",
+      "completedAt": "2026-10-23T00:11:20Z",
+      "nativeSummary": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 60772.036893
+      },
+      "nativeNode": "v24.22.1",
+      "actualCheckout": "7669d60700bbf973beb062921b463467585c960c",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/pr131-final-auth.log",
+        "sha256": "b7f75712332d13d003c8c39cc6073d81e4456a545ff0eba7b50ad4056468a350",
+        "gitBlobSha": "8b72978cf2197faee8e598008e3a9748f4207746",
+        "gitHashObjectMatched": true,
+        "blobCreated": true,
+        "bytes": 38829,
+        "lines": 411
+      }
+    },
+    {
+      "id": 120163037887,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T00:10:06Z",
+      "completedAt": "2026-10-23T00:17:44Z",
+      "nativeSummary": {
+        "tests": 576,
+        "suites": 0,
+        "pass": 576,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 417463.196582
+      },
+      "nativeNode": "v24.22.1",
+      "actualCheckout": "7669d60700bbf973beb062921b463467585c960c",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/pr131-final-mariadb-10.11.log",
+        "sha256": "4a21207a96cd7508f94f07d596f0ea9809b4a510d9646014d0a9b8311e3b49a4",
+        "gitBlobSha": "0a64f2d0101b5116d69a6d8eae77edab737350c3",
+        "gitHashObjectMatched": true,
+        "blobCreated": true,
+        "bytes": 340789,
+        "lines": 4233
+      }
+    },
+    {
+      "id": 120163037906,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T00:09:52Z",
+      "completedAt": "2026-10-23T00:14:00Z",
+      "nativeSummary": {
+        "tests": 231,
+        "suites": 0,
+        "pass": 231,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 231016.248518
+      },
+      "nativeNode": "v24.22.1",
+      "actualCheckout": "7669d60700bbf973beb062921b463467585c960c",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/pr131-final-browser.log",
+        "sha256": "c0fd5e91a0939bf7798e699c2ac28b4acfae6de49f32249337632d2a1da29c14",
+        "gitBlobSha": "fd72299b41562b1fc2109169de4d015710558488",
+        "gitHashObjectMatched": true,
+        "blobCreated": true,
+        "bytes": 49900,
+        "lines": 491
+      }
+    },
+    {
+      "id": 120163037956,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T00:09:52Z",
+      "completedAt": "2026-10-23T00:17:27Z",
+      "nativeSummary": {
+        "tests": 576,
+        "suites": 0,
+        "pass": 576,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 410440.687848
+      },
+      "nativeNode": "v24.22.1",
+      "actualCheckout": "7669d60700bbf973beb062921b463467585c960c",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/pr131-final-mariadb-11.4.log",
+        "sha256": "d3386ff7fb5e4a2ecf7de33dd7f5b7f6296ac3159c8600f93f2fbb1a256efda9",
+        "gitBlobSha": "6a218a6d46759f08b48cdbb8655c571a4a26bbc2",
+        "gitHashObjectMatched": true,
+        "blobCreated": true,
+        "bytes": 341365,
+        "lines": 4241
+      }
+    }
+  ],
+  "polls": [
+    {
+      "at": "2026-10-23T00:10:44.946Z"
+    },
+    {
+      "at": "2026-10-23T00:11:30.542Z",
+      "jobs": [
+        {
+          "id": 120163037682,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120163037823,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037887,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120163037906,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120163037956,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:12:16.182Z",
+      "jobs": [
+        {
+          "id": 120163037682,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037823,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037887,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120163037906,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120163037956,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:13:01.947Z",
+      "jobs": [
+        {
+          "id": 120163037682,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037823,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037887,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120163037906,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120163037956,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:14:02.034Z",
+      "jobs": [
+        {
+          "id": 120163037682,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037823,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037887,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120163037906,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120163037956,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:14:47.609Z",
+      "jobs": [
+        {
+          "id": 120163037682,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037823,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037887,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120163037906,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037956,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:15:45.698Z",
+      "jobs": [
+        {
+          "id": 120163037682,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037823,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037887,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120163037906,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037956,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:16:31.433Z",
+      "jobs": [
+        {
+          "id": 120163037682,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037823,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037887,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120163037906,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037956,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:17:16.999Z",
+      "jobs": [
+        {
+          "id": 120163037682,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037823,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037887,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120163037906,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037956,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:18:02.666Z",
+      "jobs": [
+        {
+          "id": 120163037682,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037823,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037887,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037906,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120163037956,
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "artifact": {
+    "mode": "metadata_only",
+    "api": {
+      "artifacts": [
+        {
+          "id": 12467639391,
+          "name": "homepage-render",
+          "size_in_bytes": 3721407,
+          "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12467639391",
+          "archive_download_url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12467639391/zip",
+          "expired": false,
+          "created_at": "2026-10-23T00:13:57Z",
+          "expires_at": "2026-10-30T00:13:55Z",
+          "updated_at": "2026-10-23T00:13:57Z",
+          "digest": "sha256:f0ffb79768160c4a25ca12fd7ec80862b48403ac53437e0f9a994f27c7770753",
+          "workflow_run": {
+            "id": 39876426084,
+            "repository_id": 1419524991,
+            "head_repository_id": 1419524991,
+            "head_branch": "fix/interface-184",
+            "head_sha": "304923ad2be78ab3c6fe8f250ef814db36a9c886"
+          }
+        }
+      ]
+    },
+    "uploadedFilesCountFromJobLog": 24,
+    "zipDownloadedByThisReviewer": false
+  },
+  "sourceMetadata": "/workspace/scratch/bb431be72395/ux184/pr-final-source-metadata.json",
+  "previousOriginalRun": {
+    "runId": 39875548292,
+    "report": "/workspace/scratch/bb431be72395/ux184/pr-native.json",
+    "sha256": "2087d1e03dd9efd5a0d7dd49682bc3d004d55c3d94f4540875308c8d4544ee9d",
+    "conclusion": "failure_retained"
+  },
+  "declaredDeltaFromOriginal": "Fixture-only native summary opening and visibility check before same logout click; proof documents; no application change.",
+  "independentFiveLogCrosscheck": {
+    "path": "/workspace/scratch/bb431be72395/ux184/pr-final-log-crosscheck.json",
+    "sha256": "cfea38597f1c3e0e7bb7378220f78722ec36b5db2030458d0f618a3017d56ac9"
+  },
+  "remoteMutationsPerformed": [
+    {
+      "operation": "create_blob",
+      "count": 5,
+      "purpose": "Parent-authorized complete UTF-8 logs, exact git hash-object matching; no commit/ref/run mutation."
+    }
+  ],
+  "production": "1.8.3 unchanged",
+  "runUpdatedAt": "2026-10-23T00:17:44Z",
+  "completedAt": "2026-10-23T00:20:49.097Z",
+  "limits": [
+    "Counts overlap across suites; do not sum as unique tests.",
+    "Decoded UTF-8 logs retain complete job pre/postamble and BOM; SHA256 concerns these bytes, not a ZIP.",
+    "No application/test edits, suite execution, ref/commit/CI/host mutation by reviewer. Separate visual owner inspects PNG content."
+  ],
+  "nextAction": "Collect push/main39877314782 for merged a0a8a6a048654b1700b14738edfa99d3ee4cfc66."
+}

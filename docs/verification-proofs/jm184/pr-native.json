@@ -1,0 +1,1088 @@
+{
+  "status": "completed_failure",
+  "conclusion": "failure",
+  "repository": "fredbuhr/jessiemessage",
+  "pullRequest": 131,
+  "runId": 39875548292,
+  "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39875548292",
+  "runNumber": 737,
+  "runAttempt": 1,
+  "event": "pull_request",
+  "head": "cc08f6cd95f045968916a2f38bbfea1586c1e946",
+  "tree": "948ff33ac222f36693eefe23d4b9e4a601510dc3",
+  "headAndTreeVerifiedFromNativeRunApi": true,
+  "sourceCommit": "cc08f6cd95f045968916a2f38bbfea1586c1e946",
+  "sourceParent": [
+    "c786ea592e331780aaac16beea6ea546897c8ca4"
+  ],
+  "temporaryMergeCommit": "e0419f0e96609a29f5d0f2b7a3910d6f360767d8",
+  "temporaryMergeTree": "948ff33ac222f36693eefe23d4b9e4a601510dc3",
+  "temporaryMergeParents": [
+    "c786ea592e331780aaac16beea6ea546897c8ca4",
+    "cc08f6cd95f045968916a2f38bbfea1586c1e946"
+  ],
+  "requiredJobs": 5,
+  "requiredJobsSucceeded": 4,
+  "requiredJobsFailed": 1,
+  "jobs": [
+    {
+      "id": 120160141648,
+      "run_id": 39875548292,
+      "workflow_name": "CI",
+      "head_branch": "fix/interface-184",
+      "run_url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/runs/39875548292",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVJw7f88AAAAb-hpBUA",
+      "head_sha": "cc08f6cd95f045968916a2f38bbfea1586c1e946",
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/jobs/120160141648",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39875548292/job/120160141648",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-10-23T00:01:37Z",
+      "started_at": "2026-10-23T00:01:39Z",
+      "completed_at": "2026-10-23T00:06:19Z",
+      "name": "Chrome keyboard and chat lifecycle",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-23T00:01:40Z",
+          "completed_at": "2026-10-23T00:01:41Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-23T00:01:41Z",
+          "completed_at": "2026-10-23T00:01:43Z"
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-23T00:01:43Z",
+          "completed_at": "2026-10-23T00:01:48Z"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-23T00:01:48Z",
+          "completed_at": "2026-10-23T00:01:50Z"
+        },
+        {
+          "name": "Exercise real Chrome with synthetic local fixtures",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 5,
+          "started_at": "2026-10-23T00:01:50Z",
+          "completed_at": "2026-10-23T00:06:14Z"
+        },
+        {
+          "name": "Homepage rendering in French and English",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-23T00:06:14Z",
+          "completed_at": "2026-10-23T00:06:17Z"
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 11,
+          "started_at": "2026-10-23T00:06:17Z",
+          "completed_at": "2026-10-23T00:06:17Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-23T00:06:17Z",
+          "completed_at": "2026-10-23T00:06:17Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-23T00:06:17Z",
+          "completed_at": "2026-10-23T00:06:17Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/fredbuhr/jessiemessage/check-runs/120160141648",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000031346,
+      "runner_name": "GitHub Actions 1000031346",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions",
+      "nativeSummary": {
+        "tests": 231,
+        "suites": 0,
+        "pass": 228,
+        "fail": 3,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 264684.80428
+      },
+      "nativeNode": "v24.22.1",
+      "actualCheckout": "e0419f0e96609a29f5d0f2b7a3910d6f360767d8",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/pr131-browser.log",
+        "sha256": "b7799941cc5e353fe3830113be25bc5c68427dfdfe9042d215ac291f4f259ca6",
+        "bytes": 52671,
+        "lines": 517
+      }
+    },
+    {
+      "id": 120160141653,
+      "run_id": 39875548292,
+      "workflow_name": "CI",
+      "head_branch": "fix/interface-184",
+      "run_url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/runs/39875548292",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVJw7f88AAAAb-hpBVQ",
+      "head_sha": "cc08f6cd95f045968916a2f38bbfea1586c1e946",
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/jobs/120160141653",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39875548292/job/120160141653",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-23T00:01:37Z",
+      "started_at": "2026-10-23T00:01:39Z",
+      "completed_at": "2026-10-23T00:06:31Z",
+      "name": "MariaDB 11.4",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-23T00:01:40Z",
+          "completed_at": "2026-10-23T00:01:41Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-23T00:01:41Z",
+          "completed_at": "2026-10-23T00:01:53Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-23T00:01:53Z",
+          "completed_at": "2026-10-23T00:01:55Z"
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-23T00:01:55Z",
+          "completed_at": "2026-10-23T00:01:59Z"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-23T00:01:59Z",
+          "completed_at": "2026-10-23T00:02:00Z"
+        },
+        {
+          "name": "Install native MariaDB checkpoint clients",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-23T00:02:00Z",
+          "completed_at": "2026-10-23T00:02:13Z"
+        },
+        {
+          "name": "Create disposable runtime and offline schema inspection accounts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-23T00:02:13Z",
+          "completed_at": "2026-10-23T00:02:13Z"
+        },
+        {
+          "name": "Exercise migrations and constraints on disposable database",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-23T00:02:13Z",
+          "completed_at": "2026-10-23T00:06:28Z"
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-10-23T00:06:28Z",
+          "completed_at": "2026-10-23T00:06:28Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-23T00:06:28Z",
+          "completed_at": "2026-10-23T00:06:28Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-10-23T00:06:28Z",
+          "completed_at": "2026-10-23T00:06:28Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-10-23T00:06:28Z",
+          "completed_at": "2026-10-23T00:06:28Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/fredbuhr/jessiemessage/check-runs/120160141653",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000031345,
+      "runner_name": "GitHub Actions 1000031345",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions",
+      "nativeSummary": {
+        "tests": 576,
+        "suites": 0,
+        "pass": 576,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 254666.836153
+      },
+      "nativeNode": "v24.22.1",
+      "actualCheckout": "e0419f0e96609a29f5d0f2b7a3910d6f360767d8",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/pr131-mariadb-11.4.log",
+        "sha256": "885376fc98f58aeef81b8fc43c75a6ca84bf36c6fa303bbc3ce700ecfba86acc",
+        "bytes": 340776,
+        "lines": 4238
+      }
+    },
+    {
+      "id": 120160141698,
+      "run_id": 39875548292,
+      "workflow_name": "CI",
+      "head_branch": "fix/interface-184",
+      "run_url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/runs/39875548292",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVJw7f88AAAAb-hpBgg",
+      "head_sha": "cc08f6cd95f045968916a2f38bbfea1586c1e946",
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/jobs/120160141698",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39875548292/job/120160141698",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-23T00:01:37Z",
+      "started_at": "2026-10-23T00:01:39Z",
+      "completed_at": "2026-10-23T00:03:52Z",
+      "name": "verify",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-23T00:01:39Z",
+          "completed_at": "2026-10-23T00:01:40Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-23T00:01:40Z",
+          "completed_at": "2026-10-23T00:01:42Z"
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-23T00:01:42Z",
+          "completed_at": "2026-10-23T00:01:51Z"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-23T00:01:51Z",
+          "completed_at": "2026-10-23T00:01:52Z"
+        },
+        {
+          "name": "Verify private Node preparation with synthetic files",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-23T00:01:52Z",
+          "completed_at": "2026-10-23T00:01:53Z"
+        },
+        {
+          "name": "Run tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-23T00:01:53Z",
+          "completed_at": "2026-10-23T00:03:35Z"
+        },
+        {
+          "name": "Build offline workbench",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-23T00:03:35Z",
+          "completed_at": "2026-10-23T00:03:50Z"
+        },
+        {
+          "name": "Downloadable preview (open HTML, no console)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-23T00:03:50Z",
+          "completed_at": "2026-10-23T00:03:51Z"
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-23T00:03:51Z",
+          "completed_at": "2026-10-23T00:03:51Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-10-23T00:03:51Z",
+          "completed_at": "2026-10-23T00:03:51Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-10-23T00:03:51Z",
+          "completed_at": "2026-10-23T00:03:51Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/fredbuhr/jessiemessage/check-runs/120160141698",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000031344,
+      "runner_name": "GitHub Actions 1000031344",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions",
+      "nativeSummary": {
+        "tests": 3954,
+        "suites": 0,
+        "pass": 3906,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 48,
+        "todo": 0,
+        "duration_ms": 101645.3812
+      },
+      "nativeNode": "v24.22.1",
+      "actualCheckout": "e0419f0e96609a29f5d0f2b7a3910d6f360767d8",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/pr131-verify.log",
+        "sha256": "3ca11401afdfce852fb8f2d8a5f145ad5ae684f19022e4fa2d5a117ef7560e30",
+        "bytes": 560468,
+        "lines": 4286
+      }
+    },
+    {
+      "id": 120160141832,
+      "run_id": 39875548292,
+      "workflow_name": "CI",
+      "head_branch": "fix/interface-184",
+      "run_url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/runs/39875548292",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVJw7f88AAAAb-hpCCA",
+      "head_sha": "cc08f6cd95f045968916a2f38bbfea1586c1e946",
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/jobs/120160141832",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39875548292/job/120160141832",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-23T00:01:37Z",
+      "started_at": "2026-10-23T00:01:39Z",
+      "completed_at": "2026-10-23T00:03:13Z",
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-23T00:01:40Z",
+          "completed_at": "2026-10-23T00:01:42Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-23T00:01:42Z",
+          "completed_at": "2026-10-23T00:01:56Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-23T00:01:56Z",
+          "completed_at": "2026-10-23T00:01:58Z"
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-23T00:01:58Z",
+          "completed_at": "2026-10-23T00:02:03Z"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-23T00:02:03Z",
+          "completed_at": "2026-10-23T00:02:04Z"
+        },
+        {
+          "name": "Create disposable DML-only runtime account",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-23T00:02:04Z",
+          "completed_at": "2026-10-23T00:02:04Z"
+        },
+        {
+          "name": "Rehearse authentication and independent messaging sessions over loopback HTTPS",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-23T00:02:04Z",
+          "completed_at": "2026-10-23T00:03:10Z"
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-23T00:03:10Z",
+          "completed_at": "2026-10-23T00:03:10Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-23T00:03:10Z",
+          "completed_at": "2026-10-23T00:03:10Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-10-23T00:03:10Z",
+          "completed_at": "2026-10-23T00:03:10Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-23T00:03:10Z",
+          "completed_at": "2026-10-23T00:03:10Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/fredbuhr/jessiemessage/check-runs/120160141832",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000031348,
+      "runner_name": "GitHub Actions 1000031348",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions",
+      "nativeSummary": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 64988.04993
+      },
+      "nativeNode": "v24.22.1",
+      "actualCheckout": "e0419f0e96609a29f5d0f2b7a3910d6f360767d8",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/pr131-auth.log",
+        "sha256": "30a71f4c014ca57c115d0164b427da63ee436f7c0b164684f42e57f23e900a23",
+        "bytes": 38954,
+        "lines": 413
+      }
+    },
+    {
+      "id": 120160141906,
+      "run_id": 39875548292,
+      "workflow_name": "CI",
+      "head_branch": "fix/interface-184",
+      "run_url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/runs/39875548292",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVJw7f88AAAAb-hpCUg",
+      "head_sha": "cc08f6cd95f045968916a2f38bbfea1586c1e946",
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/jobs/120160141906",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39875548292/job/120160141906",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-23T00:01:37Z",
+      "started_at": "2026-10-23T00:01:39Z",
+      "completed_at": "2026-10-23T00:08:55Z",
+      "name": "MariaDB 10.11",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-23T00:01:39Z",
+          "completed_at": "2026-10-23T00:01:40Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-23T00:01:40Z",
+          "completed_at": "2026-10-23T00:01:53Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-23T00:01:53Z",
+          "completed_at": "2026-10-23T00:01:55Z"
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-23T00:01:55Z",
+          "completed_at": "2026-10-23T00:02:00Z"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-23T00:02:00Z",
+          "completed_at": "2026-10-23T00:02:01Z"
+        },
+        {
+          "name": "Install native MariaDB checkpoint clients",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-23T00:02:01Z",
+          "completed_at": "2026-10-23T00:02:10Z"
+        },
+        {
+          "name": "Create disposable runtime and offline schema inspection accounts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-23T00:02:10Z",
+          "completed_at": "2026-10-23T00:02:10Z"
+        },
+        {
+          "name": "Exercise migrations and constraints on disposable database",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-23T00:02:10Z",
+          "completed_at": "2026-10-23T00:08:53Z"
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-10-23T00:08:53Z",
+          "completed_at": "2026-10-23T00:08:53Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-23T00:08:53Z",
+          "completed_at": "2026-10-23T00:08:54Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-10-23T00:08:54Z",
+          "completed_at": "2026-10-23T00:08:54Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-10-23T00:08:54Z",
+          "completed_at": "2026-10-23T00:08:54Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/fredbuhr/jessiemessage/check-runs/120160141906",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000031347,
+      "runner_name": "GitHub Actions 1000031347",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions",
+      "nativeSummary": {
+        "tests": 576,
+        "suites": 0,
+        "pass": 576,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 402688.567329
+      },
+      "nativeNode": "v24.22.1",
+      "actualCheckout": "e0419f0e96609a29f5d0f2b7a3910d6f360767d8",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/pr131-mariadb-10.11.log",
+        "sha256": "8bc026296572880aa2793663c8b403a7151f4b5681a3ee6a3bb5b54dc086ed42",
+        "bytes": 340729,
+        "lines": 4232
+      }
+    }
+  ],
+  "polls": [
+    {
+      "at": "2026-10-23T00:02:13.593Z"
+    },
+    {
+      "at": "2026-10-23T00:03:05.025Z",
+      "jobs": [
+        {
+          "id": 120160141648,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120160141653,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120160141698,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120160141832,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120160141906,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:03:40.681Z",
+      "jobs": [
+        {
+          "id": 120160141648,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120160141653,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120160141698,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120160141832,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141906,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:04:16.291Z",
+      "jobs": [
+        {
+          "id": 120160141648,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120160141653,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120160141698,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141832,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141906,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:04:57.241Z",
+      "jobs": [
+        {
+          "id": 120160141648,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120160141653,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120160141698,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141832,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141906,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:05:42.803Z",
+      "jobs": [
+        {
+          "id": 120160141648,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120160141653,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120160141698,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141832,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141906,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:06:28.368Z",
+      "jobs": [
+        {
+          "id": 120160141648,
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 120160141653,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120160141698,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141832,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141906,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:07:25.224Z",
+      "jobs": [
+        {
+          "id": 120160141648,
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 120160141653,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141698,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141832,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141906,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:08:10.830Z",
+      "jobs": [
+        {
+          "id": 120160141648,
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 120160141653,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141698,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141832,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141906,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:08:56.474Z",
+      "jobs": [
+        {
+          "id": 120160141648,
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 120160141653,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141698,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141832,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141906,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:09:32.087Z",
+      "jobs": [
+        {
+          "id": 120160141648,
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 120160141653,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141698,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141832,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120160141906,
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "logs": [
+    {
+      "id": 120160141648,
+      "path": "/workspace/scratch/bb431be72395/ux184/logs/pr131-browser.log"
+    },
+    {
+      "id": 120160141653,
+      "path": "/workspace/scratch/bb431be72395/ux184/logs/pr131-mariadb-11.4.log"
+    },
+    {
+      "id": 120160141698,
+      "path": "/workspace/scratch/bb431be72395/ux184/logs/pr131-verify.log"
+    },
+    {
+      "id": 120160141832,
+      "path": "/workspace/scratch/bb431be72395/ux184/logs/pr131-auth.log"
+    },
+    {
+      "id": 120160141906,
+      "path": "/workspace/scratch/bb431be72395/ux184/logs/pr131-mariadb-10.11.log"
+    }
+  ],
+  "artifact": {
+    "mode": "metadata_only",
+    "api": {
+      "artifacts": [
+        {
+          "id": 12468342927,
+          "name": "homepage-render",
+          "size_in_bytes": 3721607,
+          "url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12468342927",
+          "archive_download_url": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/12468342927/zip",
+          "expired": false,
+          "created_at": "2026-10-23T00:06:16Z",
+          "expires_at": "2026-10-30T00:06:15Z",
+          "updated_at": "2026-10-23T00:06:16Z",
+          "digest": "sha256:66f04d8ca8dcefe38ee6046658f05692c179d0d4b80a849234f069e42d3b3f75",
+          "workflow_run": {
+            "id": 39875548292,
+            "repository_id": 1419524991,
+            "head_repository_id": 1419524991,
+            "head_branch": "fix/interface-184",
+            "head_sha": "cc08f6cd95f045968916a2f38bbfea1586c1e946"
+          }
+        }
+      ]
+    },
+    "uploadedFilesCountFromJobLog": 24,
+    "zipDownloadedByThisReviewer": false
+  },
+  "failure": {
+    "job": 120160141648,
+    "subcases": [
+      "320px",
+      "1280px"
+    ],
+    "parentTestAlsoCountedFailed": true,
+    "sourceAtThisHead": "tests/browser/entry-navigation.browser.mjs:131 calls page.click('#logout-button') while public/admin-login.html:101–116 wraps it in closed details#account-settings.",
+    "nativeFailure": "WebDriver POST element/click HTTP400 in both subcases",
+    "classification": "Outdated test interaction after a UI fold, not evidence of failing logout handler; root independently confirmed source cause.",
+    "ownerCorrection": "Root owns fixture-only correction on a subsequent head. Original failure retained.",
+    "contextLog": "/workspace/scratch/bb431be72395/ux184/logs/pr131-browser-failure-context.log"
+  },
+  "remoteMutationsPerformed": 0,
+  "production": "1.8.3 unchanged",
+  "pollingPolicy": "At least30seconds between repeat job-state polls; no rerun/dispatch",
+  "logSource": "GitHub fetch_workflow_job_logs decoded UTF-8 contents, including complete job pre/postamble; SHA256 is of saved UTF-8 logs.",
+  "runUpdatedAt": "2026-10-23T00:08:56Z",
+  "nextAction": "Qualify new fixture-only PR head304923ad2be78ab3c6fe8f250ef814db36a9c886 in its own run/report. Original PR run failed and remains so.",
+  "limits": [
+    "No application/test/Git/ref/CI mutation, suite execution, production/private host operation or screenshot retrieval by this reviewer.",
+    "Artifact metadata and uploaded file count only; no independent image-content verification in this collection.",
+    "Job test counts overlap across suites and are not added into an invented unique-test total."
+  ],
+  "completedAt": "2026-10-23T00:10:31.815309+00:00",
+  "nativeNode": {
+    "version": "v24.22.1",
+    "verifiedInAllFiveJobLogs": true
+  },
+  "allFiveActualCheckoutsEqualApiMergeCommit": true,
+  "independentThreeLogCrosscheck": {
+    "path": "/workspace/scratch/bb431be72395/ux184/pr-log-crosscheck.json",
+    "sha256": "d2a925be5d1baf0760ba98465c09f73a726f9eba79a54d542d8f520c64154db6"
+  }
+}

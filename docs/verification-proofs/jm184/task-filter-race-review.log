@@ -1,0 +1,8 @@
+{"type":"bounded_controls_only_comparison","node":"v24.19.0","originalCommit":"a0a8a6a048654b1700b14738edfa99d3ee4cfc66","originalSourceSha256":"74c0f6167079e9d3359f82530adecb29b9e270319e0429df448b1e91a7b63bcb","correctedSourceSha256":"1d189b50765765ecba3f882a05fb0290a1d56a6d719553a2c6f3d5bf15532e63","importedApplicationModule":false,"network":false,"browser":false,"sql":false,"actualSaveExecuted":false}
+{"scenario":"idle","originalDisabled":{"task-filter":false,"refresh-tasks":false,"more-tasks":false},"correctedDisabled":{"task-filter":false,"refresh-tasks":false,"more-tasks":false}}
+{"scenario":"save_waiting_on_summary","originalDisabled":{"task-filter":false,"refresh-tasks":false,"more-tasks":false},"correctedDisabled":{"task-filter":true,"refresh-tasks":true,"more-tasks":true}}
+{"scenario":"save_finished","originalDisabled":{"task-filter":false,"refresh-tasks":false,"more-tasks":false},"correctedDisabled":{"task-filter":false,"refresh-tasks":false,"more-tasks":false}}
+{"scenario":"list_in_flight","originalDisabled":{"task-filter":true,"refresh-tasks":true,"more-tasks":true},"correctedDisabled":{"task-filter":true,"refresh-tasks":true,"more-tasks":true}}
+{"scenario":"session_paused","originalDisabled":{"task-filter":true,"refresh-tasks":true,"more-tasks":true},"correctedDisabled":{"task-filter":true,"refresh-tasks":true,"more-tasks":true}}
+{"scenario":"uncertain_request_retained_not_sending","originalDisabled":{"task-filter":false,"refresh-tasks":false,"more-tasks":false},"correctedDisabled":{"task-filter":false,"refresh-tasks":false,"more-tasks":false}}
+CONTROLS_COMPARISON_PASSED
