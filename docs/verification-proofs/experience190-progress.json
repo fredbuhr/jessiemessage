@@ -1,7 +1,7 @@
 {
   "type": "experience190-progress",
   "version": 2,
-  "status": "SQL38_and185_190_CHECKs_passed_awaiting_Manager190_activation_identity",
+  "status": "activation190_not_confirmed_ManagerBuild_contains_start_diagnostic_log_required",
   "release": {
     "version": "1.9.0",
     "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
@@ -117,13 +117,14 @@
     "migrated": true,
     "prechecked185": true,
     "prechecked190": true,
-    "started190": false,
+    "started190": null,
     "metadataRecorded190": false,
     "hostMutations": false,
     "serviceStoppedReported": true,
     "schema38StatusRead": true,
     "schema38ReceiptAcquired": true,
-    "precheckProof": "jm190-hosted-prechecks.json"
+    "precheckProof": "jm190-hosted-prechecks.json",
+    "activationProblemProof": "jm190-hosted-activation-problem.json"
   },
   "limits": [
     "Synthetic Chrome mobile/desktop and multiple browser sessions; no physical phone or two physical devices",
@@ -131,7 +132,7 @@
     "No production190 verification or new hosted backup trial; previous deferred work remains deferred"
   ],
   "nextAction": {
-    "only": "User saves exact190 Manager Build/Run, starts once if still stopped, then reports actual readiness identity",
+    "only": "Read jm190 startup log in strict read-only mode; no Run/Build or migration; visible Build is incorrectly start and Run is unobserved",
     "operator": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
     "migratorSha256": "3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2",
     "instructions": "../operations-release190.md",
@@ -139,7 +140,7 @@
     "keepServiceStopped": true,
     "doNotReplayUpgrade": true,
     "doNotRerunPreparation": true,
-    "following": "After actual190 identity: execute already-qualified final metadata writer"
+    "following": "After actual log evidence: correct both Manager fields and determine bounded190 restart path, then identity and writer"
   },
   "historyProofs": [
     "jm190/pr-native-initial.json",

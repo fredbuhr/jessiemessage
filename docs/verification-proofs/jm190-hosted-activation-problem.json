@@ -1,0 +1,56 @@
+{
+  "type": "jm190-hosted-activation-configuration-problem",
+  "reportedDate": "2026-10-23",
+  "evidenceKind": "USER_ATTACHED_SCREENSHOTS_OBSERVED_BY_ROOT",
+  "images": [
+    {
+      "name": "image(20261023-145354).png",
+      "sha256": "56d7e86c5e1ed14010e310f00a6d6668992d175f1b53133ed2cec1eeb73a81a4"
+    },
+    {
+      "name": "image(20261023-145409).png",
+      "sha256": "5499c40337f00c86911c24dc494dc77b848aba926d6c9bfd5a18bd0856fb6dbf"
+    }
+  ],
+  "observedManager": {
+    "service": 239143,
+    "displayName": "recette.jessiemessage.com",
+    "state": "Arrêté",
+    "executionWarningIcon": true,
+    "visibleConsole": "Connected to stream only; no error details visible",
+    "Build": "bash /srv/customer/jessiemessage-private/start-primary-release190-5dda0dd4.sh",
+    "BuildIsIncorrect": true,
+    "Run": "not visible in screenshot"
+  },
+  "observedPublicPage": {
+    "url": "https://jessiemessage.com/admin/readiness/",
+    "content": "Infomaniak maintenance page",
+    "appIdentityVisible": false
+  },
+  "interpretation": {
+    "visibleConfigurationError": "Build contains long-running start launcher instead of check launcher.",
+    "maintenancePageConsistentWithStoppedNode": true,
+    "uniqueCauseOfFailedExecutionConfirmed": false,
+    "whetherStartLauncherWasExecuted": null,
+    "whetherStartupRecordAlreadyExists": null,
+    "doNotAssumeEmptyConsoleMeansEmptyPrivateLog": true,
+    "SQL38AndBothPrechecksRemainAcquired": true,
+    "noRuntime190IdentityAcquired": true,
+    "noMetadata190Recorded": true,
+    "agentPrivateHostAccess": false
+  },
+  "nextAction": "Read only the strict private jm190 runtime log and extract safe technical counters/identities/error codes; no Run/Build or migration replay before actual evidence. Correct Manager Build/Run after the diagnostic determines a bounded restart path.",
+  "diagnosticReview": {
+    "commandSha256": "438f3d234bb3ae43e94e63b11668a33ecc7ba0d3c5c5d270dfd4a02d331214d2",
+    "ASTValid": true,
+    "reviewers": [
+      "root",
+      "followup190"
+    ],
+    "qualifiedHelperReused": true,
+    "readsOnly": "jm190-node24221.log",
+    "printsRawLines": false,
+    "callsMainOrStartsRuntime": false,
+    "writesOrErasesFiles": false
+  }
+}

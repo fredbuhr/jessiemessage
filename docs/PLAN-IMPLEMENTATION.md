@@ -7,10 +7,10 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 Les quatre lots et les six fonctions du [cahier](specs/cahier-20261023.md) sont codés, fusionnés, qualifiésPR/main5/5 et publiés. Source190 `5dda0dd4453d34a0be839d2a1402301dea835381`, release/latest421892314 ; repliSQL38 compatible185 publié non latest. [État et preuves](verification-proofs/experience190-progress.json), [procédure exacte](operations-release190.md).
 
 1. **Acquis :** préparation190/185, migration SQL38 et reçu durable confirmé, CHECK185/190 réussis sans démarrage. Ne pas les rejouer.
-2. **À effectuer :** enregistrer les scripts190 exacts dans Build/Run de Manager, démarrer190 une seule fois, puis relever version/commit/Node/date réels. Aucun Run/Build184 ou172 sur SQL38 ;185 reste seulement précontrôlée.
+2. **À effectuer d’abord :** lire le journal190 en lecture seule après la capture montrant start190 dans Build, Node arrêté et avertissement d’exécution. Aucun nouveau Run/Build avant les traces ; préserver le journal. Puis corriger les deux champs et reprendre un démarrage adapté au résultat, relever l’identité réelle.184/172 sont incompatibles SQL38 ;185 reste seulement précontrôlée.
 3. Après identité190 concordante, utiliser le writer déjà épinglé et qualifié9/9 (run39972263974) pour enregistrer les métadonnées et vérifier le checkpoint final sans redémarrage.
 
-Dernière identité démarrée confirmée1.8.4 ; SQL38 et les deux CHECK sont acquis selon les preuves utilisateur. Aucun démarrage190 encore rapporté. Aucune nouvelle infrastructure, reprise des sauvegardes reportées ou action sur les comptes réels. Téléphone physique et fonctions190 en production restent non vérifiés.
+Dernière identité démarrée confirmée1.8.4 ; SQL38 et les deux CHECK sont acquis selon les preuves utilisateur. Tentative d’activation190 non confirmée ; démarrage réel incertain, journal à lire. Aucune nouvelle infrastructure, reprise des sauvegardes reportées ou action sur les comptes réels. Téléphone physique et fonctions190 en production restent non vérifiés.
 
 ## Correctif interface 1.8.4 — terminé
 
