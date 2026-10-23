@@ -1,0 +1,20 @@
+{
+  "provenance": "User terminal output in current conversation; no direct private host inspection inferred",
+  "release": "1.10.1",
+  "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+  "tree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+  "command": "bash /srv/customer/jessiemessage-private/check-primary-release1101-9eb99f1f.sh",
+  "launcherSha256FromStaging": "4157337466a14bd18c0262412309ac92ec9318648af272865b0feb564622a652",
+  "stagingReceiptSha256": "aa2d9240ded66106ee919ad1baa8949559be816edc93bc6998954359bccc2b1a",
+  "checkExitCode": 0,
+  "checkMarker": "CHECK_1101_OK",
+  "stdout": [
+    "CHECK1101_EXIT=0",
+    "CHECK_1101_OK"
+  ],
+  "fullPrecheckLogDirectlyReadByAgent": false,
+  "checkContractStartsRuntime": false,
+  "activationConfirmed": false,
+  "metadataRecorded": false,
+  "nextAction": "Manager activation with pinned START in top execution field and CHECK in bottom build field; port3000"
+}

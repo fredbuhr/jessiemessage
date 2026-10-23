@@ -2,13 +2,15 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Audit prépublic terminé ; préparation1.10.1 acquise, CHECK attendu
+## Audit prépublic terminé ; CHECK1.10.1 acquis, activation attendue
 
 Les134 points, la seconde revue de couverture, les six correctifs, les qualifications PR/main5/5 et la publication1.10.1 sont acquis. [Rapport et preuves](AUDIT-PUBLIC-1100-20261023.md), [état actuel](REPRISE.md). Aucun nouveau correctif ni CI du code inchangé n’est à relancer.
 
 La tentative initiale [non confirmée](verification-proofs/final-public-1100/hosted-preparation1101-not-confirmed.json), l’[inspection reçue](verification-proofs/final-public-1100/hosted-inspection1101.json) et la récupération bornée qualifiée6/6 sont conservées comme historique. Le [reçu de préparation1101](verification-proofs/final-public-1100/hosted-preparation1101.json), SHA256 `aa2d9240ded66106ee919ad1baa8949559be816edc93bc6998954359bccc2b1a`, rapporte désormais le candidat exact préparé après correction2700→0700 de la seule nouvelle racine de dépendances, sans CHECK ni démarrage. Ne rejouer aucune de ces opérations.
 
-**Prochaine action unique :** exécuter une fois le [CHECK1101](operations-release1101.md#check1101--prochaine-action), puis recevoir son code de sortie et le marqueur `CHECK_1101_OK`. Manager, activation et writer restent en attente de validation de ce résultat. Le [writer final épinglé et qualifié16/16](verification-proofs/final-public-1100/writer1101-final-native.json) attend le CHECK puis l’identité réellement démarrée avant utilisation. Aucun nouveau correctif applicatif ni CI applicative inchangée à relancer.
+**CHECK acquis selon le [résultat utilisateur](verification-proofs/final-public-1100/hosted-check1101.json) :** `CHECK1101_EXIT=0`, puis `CHECK_1101_OK`. Ne pas le rejouer.
+
+**Prochaine action unique :** [activation Manager1101](operations-release1101.md#activation-manager--prochaine-action). Fermer les éditeurs de préférences et attendre la confirmation des enregistrements déjà lancés avant d’arrêter la1.10.0 encore affectée par F-05. Renseigner Exécution en haut avec start1101, Build en bas avec check1101, port3000 conservé, puis recevoir l’identité réelle1.10.1/source9eb99f1f…/Nodev24.22.1 et sa date de démarrage. Le [writer final qualifié16/16](verification-proofs/final-public-1100/writer1101-final-native.json) attend cette identité avant utilisation ; son exécution n’est pas acquise. Aucun nouveau correctif applicatif ni CI applicative inchangée à relancer.
 
 La1.10.0 reste la dernière identité active attestée et le dernier checkpoint confirmé. Les GET publics health/ready200 après l’échec ne prouvent pas l’activation1101. F-05 empêche l’ouverture au public en l’état. Les points physiques non exercés et la sauvegarde hébergée reportée restent des limites déclarées ; aucun envoi ni effacement de compte réel n’est ajouté.
 
