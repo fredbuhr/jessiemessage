@@ -1,5 +1,7 @@
 # Audit du versionnage et de la conservation métier — 23 octobre 2026
 
+> État historique à la clôture de cet audit. L’utilisateur a ensuite demandé de reprendre la livraison ; la préparation et son CHECK sont autorisés, avec reçu attendu. [État courant](REPRISE.md).
+
 **1.10.0 suit bien 1.9.0. Aucune perte de fonction métier détectée dans les sources comparées et les qualifications disponibles.** La préparation et l’activation sur l’hébergement restent suspendues à la demande de l’utilisateur. Cet audit n’a ni redémarré l’application, ni modifié la base, ni changé une release ou un tag.
 
 ## Pourquoi 1.10.0 ?

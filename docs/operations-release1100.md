@@ -1,10 +1,10 @@
-# Livraison 1.10.0 — procédure conservée, préparation suspendue
+# Livraison 1.10.0 — reprise autorisée, préparation et CHECK à effectuer
 
 La 1.10.0 est fusionnée, qualifiée PR/main 5/5 puis publiée (source 51b0cf22…, release/latest 422111737). La production active et son checkpoint restent1.9.0, Node 24.22.1, SQL 38. Aucune opération hébergée 1100 acquise.
 
-**Pause demandée par l’utilisateur avant toute poursuite :** le [contrôle du versionnage et de la conservation métier](version-audit-1100.md) précède une éventuelle reprise. Ne pas exécuter les commandes ci-dessous pendant cette pause ; aucun reçu de préparation1100 n’est acquis.
+**Reprise demandée par l’utilisateur après l’[audit terminé](version-audit-1100.md).** Le bloc ci-dessous constitue la prochaine action. Aucun reçu de préparation1100 n’est acquis ; attendre son JSON et le marqueur de CHECK avant de modifier Manager.
 
-## Préparer sans arrêter 190 — après décision de reprise
+## Préparer sans arrêter 190
 
 Dans le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), exécuter ce bloc une fois. Il crée un nouveau checkout et ses lanceurs, puis lance seulement le CHECK. Aucune migration SQL, aucun démarrage ou changement de Manager/checkpoint.
 
@@ -36,7 +36,7 @@ PY_PREPARE1100
 
 Recueillir le JSON de préparation et `PREPARATION_1100_CHECK_OK`. La présence d’un reçu n’atteste pas à elle seule le CHECK : le marqueur suivant est séparé. Si la commande échoue ou est interrompue, conserver les sorties et inspecter les fichiers/reçus avant de reprendre ; ne pas la rejouer pour découvrir son résultat.
 
-## Étapes suivantes, non encore demandées
+## Étapes suivantes, dépendantes du reçu
 
 Après validation du reçu, les champs Manager du service Node 239143, nommé recette et servant aussi jessiemessage.com, devront pointer vers les nouveaux lanceurs : **Commande d’exécution en haut → start1100**, **Commande de build en bas → check1100**. Ne pas les modifier avant le reçu. Port 3000 et Node privé24.22.1 conservés.
 

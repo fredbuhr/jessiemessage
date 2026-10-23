@@ -20,14 +20,14 @@
   "productionVerified": false,
   "activeHostedVersion": "1.9.0",
   "checkpointSha256": "01692bfda8ef4a0cab2d102a183c0ab88fe9e8d99858d6e9b583f8b85ffde674",
-  "nextAction": "explain_version_and_functional_audit_then_wait_for_user_decision_before_hosting_preparation",
+  "nextAction": "user_runs_pinned_preparation_and_CHECK_then_returns_receipt_and_marker",
   "operator": "6836e25df78e6b7c7f2f0b53650ca16efd4dc3ea",
   "prepareSha256": "927ab81fd80c79d03badd2f83ecfa7125f572301833768e9088adefc39939a28",
   "writerFinalPinsPending": true,
   "noSqlMigration": true,
   "noHostMutationByAgent": true,
   "connectionInterruptionCause": "not_established_no_telemetry",
-  "deploymentPausedByUser": true,
+  "deploymentPausedByUser": false,
   "versionAudit": "../../version-audit-1100.md",
   "versionAuditCompleted": true,
   "functionalPreservationAuditCompleted": true,
@@ -36,5 +36,7 @@
     "version-audit.json",
     "function-preservation.json",
     "function-preservation-matrix.md"
-  ]
+  ],
+  "deploymentResumeAuthorized": true,
+  "resumeRecordedAt": "2026-10-23T17:33:06.583395+00:00"
 }

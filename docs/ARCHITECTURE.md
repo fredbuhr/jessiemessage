@@ -1,6 +1,6 @@
 # Architecture technique
 
-**Vue du code et de l’exploitation au 23 octobre 2026.** [REPRISE](REPRISE.md) reste l’unique référence de version active, sources, accès et repli. Le service rapporté et son checkpoint sont **1.9.0 / Node v24.22.1 / SQL38**, selon le [reçu final USER_REPORTED](verification-proofs/jm190-hosted-metadata.json). **1.10.0 est publiée comme latest, qualifiée et non déployée** ; sa préparation reste suspendue à la demande de l’utilisateur jusqu’à sa décision de reprise après l’audit. Le [plan courant](PLAN-IMPLEMENTATION.md) distingue ces états et les contrôles complémentaires non acquis.
+**Vue du code et de l’exploitation au 23 octobre 2026.** [REPRISE](REPRISE.md) reste l’unique référence de version active, sources, accès et repli. Le service rapporté et son checkpoint sont **1.9.0 / Node v24.22.1 / SQL38**, selon le [reçu final USER_REPORTED](verification-proofs/jm190-hosted-metadata.json). **1.10.0 est publiée comme latest, qualifiée et non déployée** ; l’utilisateur a demandé de reprendre après l’audit ; le reçu de préparation et CHECK reste attendu. Le [plan courant](PLAN-IMPLEMENTATION.md) distingue ces états et les contrôles complémentaires non acquis.
 
 ## Composition actuelle
 
