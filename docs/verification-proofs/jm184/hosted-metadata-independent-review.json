@@ -1,0 +1,73 @@
+{
+  "type": "release184_hosted_metadata_independent_review",
+  "status": "passed",
+  "date": "2026-10-23",
+  "provenance": "USER_REPORTED final stdout compared to immutable prior UI identity and native writer qualification; no private host access",
+  "reportedReceipt": {
+    "status": "release184_metadata_recorded",
+    "version": "1.8.4",
+    "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+    "metadataOnly": true,
+    "noRestart": true,
+    "schemaMigrations": 36,
+    "release": {
+      "version": "1.8.4",
+      "commit": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "nodeVersion": "v24.22.1",
+      "startedAt": 1792748656772
+    },
+    "publicReady": true,
+    "rollbackRelease": "1.7.2",
+    "rollbackPrecheckedNotStarted": true,
+    "historicalRelease183Preserved": true,
+    "historicalRelease182Preserved": true,
+    "historicalRelease181Preserved": true,
+    "historicalRelease180Preserved": true,
+    "historicalRelease171Preserved": true,
+    "historicalRelease160Preserved": true,
+    "priorActivePreserved": true,
+    "otherBlocksPreserved": true,
+    "checkpointSha256": "3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212"
+  },
+  "checks": {
+    "sourceVersionNodeAndTreeConcordant": true,
+    "startupEpochFromActualReceipt": 1792748656772,
+    "startupParis": "2026-10-23T11:44:16.772+02:00",
+    "startupUiConcordant": true,
+    "requiredTrueFlags": [
+      "metadataOnly",
+      "noRestart",
+      "publicReady",
+      "rollbackPrecheckedNotStarted",
+      "historicalRelease183Preserved",
+      "historicalRelease182Preserved",
+      "historicalRelease181Preserved",
+      "historicalRelease180Preserved",
+      "historicalRelease171Preserved",
+      "historicalRelease160Preserved",
+      "priorActivePreserved",
+      "otherBlocksPreserved"
+    ],
+    "checkpointSha256Reported": "3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212",
+    "metadataOnlyAndNoRestart": true,
+    "writerSource": "054f19dfd0fd5fa8a7e7db4a51077540ff079592",
+    "writerSha256": "60f9cf6a518da4d91733ed1e40bd1e8b5d8fcbe05a639ce606cba19a46bfe27b",
+    "writerNativeRun": 39933260498,
+    "writerNativeTests": 26
+  },
+  "limits": [
+    "Checkpoint SHA256 is reported by the executed qualified writer; agent has not independently hashed the private checkpoint file.",
+    "SQL36 is reported metadata and preserved earlier schema evidence; receipt is not a new live SQL query.",
+    "Public ready is reported by the writer after its HTTP checks, not a separate agent HTTP or PID inspection.",
+    "Physical keyboard/system notifications, deferred backup, A10/A11/A12 scope and limits remain unchanged."
+  ],
+  "actions": {
+    "readOnly": true,
+    "helperExecuted": false,
+    "testsRerun": false,
+    "ciRerun": false,
+    "hostAccessed": false,
+    "repositoryModified": false
+  }
+}

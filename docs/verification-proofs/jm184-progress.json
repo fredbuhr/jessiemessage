@@ -1,6 +1,6 @@
 {
   "type": "jm184-corrective-progress",
-  "status": "active_identity_reported_awaiting_metadata_recording",
+  "status": "delivery_closed_active_checkpoint_and_latest_aligned",
   "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
   "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
   "version": "1.8.4",
@@ -16,7 +16,7 @@
   "preparerSha256": "3fa75e684177e68cd68d8182f7dca3c10a466c153801a7314c1bf0c779df7b1c",
   "activeVersion": "1.8.4",
   "activeSource": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
-  "activeCheckpointSha256": "17f575ebe83d0a9d9acf74e9436bff59eabcf8b5ed1bb8f0f99897c867c78a22",
+  "activeCheckpointSha256": "3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212",
   "node": "v24.22.1",
   "schemaMigrations": 36,
   "merged": true,
@@ -25,13 +25,13 @@
   "deployed": true,
   "hostedPreparation": true,
   "hostedCheck": true,
-  "metadataRecorded": false,
-  "writerReady": true,
+  "metadataRecorded": true,
+  "writerReady": false,
   "writerStagingPin": "d188abf49b9a61035f0b4790a1512eb89ed7851025726dd63f47ad493f2b7f57",
   "writerReleaseIdPin": 421341347,
   "privateScreenshotsPublished": false,
   "hostedActionsPerformed": false,
-  "nextAction": "User executes the hash-verified final metadata operator054f19df once and returns its complete JSON receipt. No preparation, CHECK or activation rerun; inspect any incomplete result before retry.",
+  "nextAction": "None for release184. Do not repeat preparation, CHECK, Manager activation or metadata writer. Normal use and concrete user feedback only; deferred checks remain deferred.",
   "priorFailures": [
     "jm184/initial-browser-failure.json",
     "jm184/initial-main-browser-failure.json"
@@ -53,6 +53,10 @@
   "activeTree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
   "activeStartupDisplay": "23/10/2026 11:44:16",
   "activeIdentityClassification": "USER_REPORTED",
-  "metadataCheckpointVersion": "1.8.3",
-  "hostedIdentity": true
+  "metadataCheckpointVersion": "1.8.4",
+  "hostedIdentity": true,
+  "writerExecuted": true,
+  "publicReady": true,
+  "hostedMetadataClassification": "USER_REPORTED",
+  "startupEpochMillisecondsFromReceipt": 1792748656772
 }

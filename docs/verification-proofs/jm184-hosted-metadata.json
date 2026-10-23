@@ -1,0 +1,71 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_184_hosted_metadata",
+  "status": "release184_metadata_recorded_user_reported",
+  "date": "2026-10-23",
+  "provenance": {
+    "classification": "USER_REPORTED",
+    "description": "User executed the immutable SHA256-pinned qualified record-release184.py in their own Infomaniak SSH terminal and supplied its full JSON result. No direct agent PID, socket, startup-log or checkpoint-file inspection.",
+    "operatorSource": "054f19dfd0fd5fa8a7e7db4a51077540ff079592",
+    "helperSha256": "60f9cf6a518da4d91733ed1e40bd1e8b5d8fcbe05a639ce606cba19a46bfe27b",
+    "qualificationProof": "jm184/writer-final/native.json"
+  },
+  "receipt": {
+    "status": "release184_metadata_recorded",
+    "version": "1.8.4",
+    "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+    "metadataOnly": true,
+    "noRestart": true,
+    "schemaMigrations": 36,
+    "release": {
+      "version": "1.8.4",
+      "commit": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "nodeVersion": "v24.22.1",
+      "startedAt": 1792748656772
+    },
+    "publicReady": true,
+    "rollbackRelease": "1.7.2",
+    "rollbackPrecheckedNotStarted": true,
+    "historicalRelease183Preserved": true,
+    "historicalRelease182Preserved": true,
+    "historicalRelease181Preserved": true,
+    "historicalRelease180Preserved": true,
+    "historicalRelease171Preserved": true,
+    "historicalRelease160Preserved": true,
+    "priorActivePreserved": true,
+    "otherBlocksPreserved": true,
+    "checkpointSha256": "3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212"
+  },
+  "currentState": {
+    "applicationVersion": "1.8.4",
+    "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+    "nodeVersion": "v24.22.1",
+    "schemaMigrations": 36,
+    "metadataCheckpointVersion": "1.8.4",
+    "metadataCheckpointSha256": "3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212",
+    "metadataAlignmentPending": false,
+    "latest": "v1.8.4",
+    "latestReleaseId": 421341347,
+    "rollbackVersion": "1.7.2",
+    "rollbackPrechecked": true,
+    "rollbackStarted": false,
+    "backupFunctionalCheck": "deferred_unverified_by_user_request"
+  },
+  "startupTime": {
+    "epochMillisecondsFromWriterReceipt": 1792748656772,
+    "utc": "2026-10-23T09:44:16.772000+00:00",
+    "europeParis": "2026-10-23T11:44:16.772000+02:00",
+    "earlierDisplayedText": "23/10/2026 11:44:16",
+    "earlierUiIdentityProof": "jm184-hosted-identity.json",
+    "epochNotInferredFromUiText": true
+  },
+  "limits": [
+    "This is user-reported evidence from the qualified guarded writer; not direct agent inspection of host PID, socket, Manager or private checkpoint file.",
+    "The checkpoint SHA256 is reported by the writer after guarded write/readback; no full private checkpoint was supplied to recompute it here.",
+    "publicReady:true is the writer result after current anonymous HTTP checks; no response headers or full bodies invented.",
+    "Does not establish physical-device keyboard behavior or receipt of Push, deferred hosted backup, A11 topology, growth capacity or exhaustive hosted functional coverage.",
+    "Schema36 is the preserved qualified schema identity reported by this operator, not a new direct SQL status query."
+  ]
+}
