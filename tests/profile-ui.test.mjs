@@ -105,7 +105,8 @@ function harness({ role = "client", avatarsEnabled = true, avatar = false, inter
     async choose(blob) { const file = element("profile-file"); file.files = [blob]; file.emit("change"); await flush(); },
     async save() { element("profile-form").emit("submit"); await flush(); },
     async click(selector) { element(selector).emit("click"); await flush(); },
-    hide() { document.visibilityState = "hidden"; for (const fn of events.get("visibilitychange") ?? []) fn(); } };
+    hide() { document.visibilityState = "hidden"; for (const fn of events.get("visibilitychange") ?? []) fn(); },
+    show() { document.visibilityState = "visible"; for (const fn of events.get("visibilitychange") ?? []) fn(); } };
 }
 
 test("profile loads for either role, preserves a user name verbatim and saves through the account adapter", async () => {
@@ -177,13 +178,26 @@ test("only the latest avatar preparation can publish a preview; closing aborts a
   assert.deepEqual(h.revoked, ["blob:profile-1"]); assert.equal(h.element("profile-pseudonym").value, ""); h.ui.destroy();
 });
 
-test("hiding the page aborts preparation and discards all private draft data", async () => {
+test("temporary hiding aborts unfinished avatar work and preserves the profile draft until the owner can resume", async () => {
   const pending = deferred(); let signal;
   const h = harness({ prepareAvatar(file, options) { signal = options.signal; return pending.promise; } });
   await h.ui.open(); h.element("profile-pseudonym").value = "Private draft"; await h.choose(jpeg("pending")); h.hide();
   pending.resolve(jpeg("too late")); await flush();
   assert.equal(signal.aborted, true); assert.equal(h.element("profile-dialog").open, false);
-  assert.equal(h.element("profile-pseudonym").value, ""); assert.equal(h.created.length, 0); h.ui.destroy();
+  assert.equal(h.element("profile-pseudonym").value, "Private draft"); assert.equal(h.created.length, 0);
+  h.state.owner = false; h.show();
+  assert.equal(h.element("profile-dialog").open, false, "an unverified owner cannot reveal the retained draft");
+  h.state.owner = true; h.ui.resume();
+  assert.equal(h.element("profile-dialog").open, true); assert.equal(h.element("profile-pseudonym").value, "Private draft");
+  h.ui.close(); assert.equal(h.element("profile-pseudonym").value, ""); h.ui.destroy();
+});
+
+test("a prepared avatar survives a temporary hide in memory and the old preview is revoked", async () => {
+  const h = harness(); await h.ui.open(); await h.choose(jpeg("prepared"));
+  assert.equal(h.created.length, 1); h.hide();
+  assert.deepEqual(h.revoked, ["blob:profile-1"]); h.show();
+  assert.equal(h.element("profile-dialog").open, true); assert.equal(h.created.length, 2);
+  assert.equal(await h.created[1].blob.text(), "prepared"); h.ui.destroy();
 });
 
 test("old saves and old authentication errors cannot affect a newer opening or owner", async () => {
@@ -396,4 +410,16 @@ test("password controls translate in place and hide passwords on page suspension
   assert.equal(h.element("profile-password-save").textContent, "Save new password");
   assert.equal(input.value, "unchanged synthetic secret"); h.hide();
   assert.equal(input.type, "password"); assert.equal(input.value, ""); h.ui.destroy();
+});
+
+
+test("an initial profile load interrupted by temporary hiding resumes with a fresh read and never writes", async () => {
+  const late = deferred(); let first = true;
+  const h = harness({ intercept(path, options) { if (!options.mutation && first) { first = false; return late.promise; } } });
+  const opening = h.ui.open(); await flush(); h.hide();
+  late.resolve({ pseudonym: "Obsolete response", version: "1", avatarId: null, avatarUrl: null }); await opening;
+  assert.equal(h.element("profile-dialog").open, false); assert.equal(h.element("profile-pseudonym").value, "");
+  h.show(); await flush();
+  assert.equal(h.element("profile-dialog").open, true); assert.equal(h.element("profile-pseudonym").value, "Envoyer");
+  assert.equal(h.calls.filter(call => call.options.mutation).length, 0); h.ui.destroy();
 });

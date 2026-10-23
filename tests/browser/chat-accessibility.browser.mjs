@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
 import { createConversationExporter } from "../../server/chat/conversation-export.mjs";
+import preferencesCatalogue from "../../public/preferences-catalogue.json" with { type: "json" };
 
 const publicRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../public");
 const id = (n) => n.toString(16).padStart(32, "0");
@@ -24,7 +25,7 @@ let fixture;
 function resetFixture() {
   fixture = { deleteRequests: 0, now: Date.now() - 600000, latest: 3, events: [], eventRequests: 0, eventHolds: [], read: { client: "0", admin: "0" }, signedIn: true, loginRequests: 0, notificationsEnabled: false, sent: [], messageRequests: [],
     quickReplies: { version: "0", replies: [] }, quickReplyRequests: [], quickReplyReads: 0,
-    profileEnabled: false, profileAvatarsEnabled: true, profileRequests: [], avatarRequests: [], avatarUploads: [], profiles: {
+    profileEnabled: false, profileAvatarsEnabled: true, preferencesEnabled: false, preferenceRequests: [], preferences: {}, profileRequests: [], avatarRequests: [], avatarUploads: [], profiles: {
       client: { pseudonym: peerName, version: "1", avatarId: null }, admin: { pseudonym: "Jessie", version: "1", avatarId: null },
     } };
 }
@@ -75,11 +76,11 @@ window.addEventListener("unhandledrejection", event => { window.__browserErrors.
 window.addEventListener("securitypolicyviolation", event => { window.__browserErrors.push("CSP: " + event.violatedDirective); });
 `;
 const fileNames = ["conversation-download.js", "quick-replies.js", "crm.js", "crm-model.js", "crm.css", "private-archive.js", "notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "admin-navigation.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "chat-drafts.js", "session-clock.js", "image-preparation.js", "photo-batch.js", "chat.css", "i18n.js", "help-link.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
-  "emoji-catalog.js", "emoji.css", "profile.js", "profile.css", "i18n-profile.js",
-  "password-change.js", "recover-model.js", "password-fields.js", "password-fields.css", "preferences.js", "preferences-model.js", "preferences.css", "i18n-preferences.js", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
+  "emoji-catalog.js", "emoji.css", "profile.js", "profile.css", "i18n-profile.js", "profile-publication.js", "public-profile-model.js", "i18n-public-profile.js", "public-profile.css",
+  "password-change.js", "recover-model.js", "password-fields.js", "password-fields.css", "preferences.js", "preferences-model.js", "preferences-catalogue.json", "preferences.css", "i18n-preferences.js", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
   "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png", "brand/icon-128.png",
   "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
-const contentTypes = { ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8",
+const contentTypes = { ".json": "application/json; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8",
   ".webmanifest": "application/manifest+json", ".png": "image/png", ".ico": "image/x-icon" };
 
 async function startFixtureServer() {
@@ -169,6 +170,19 @@ async function startFixtureServer() {
         // creates a push subscription or sends a notification.
         sendJson(200, { enabled: true, vapidPublicKey: Buffer.from([4, ...Array(64).fill(1)]).toString("base64url") }); return;
       }
+      const preferencesRoute = /^\/api\/profile\/(admin|client)\/preferences$/.exec(url.pathname);
+      if (fixture.preferencesEnabled && preferencesRoute) {
+        const role = preferencesRoute[1];
+        const saved = fixture.preferences[role] ?? { version: "0", catalogueVersion: preferencesCatalogue.meta.version, selectedIds: [] };
+        if (request.method === "POST") {
+          let raw = ""; for await (const chunk of request) raw += chunk;
+          const input = JSON.parse(raw); fixture.preferenceRequests.push({ role, ...input });
+          assert.equal(request.headers["x-csrf-token"], fixture.csrf ?? "A".repeat(43));
+          if (input.expectedVersion !== saved.version) { sendJson(409, { error: "preferences_changed" }); return; }
+          fixture.preferences[role] = { version: String(Number(saved.version) + 1), catalogueVersion: input.catalogueVersion, selectedIds: input.selectedIds };
+        }
+        sendJson(200, fixture.preferences[role] ?? saved); return;
+      }
       const ownProfile = /^\/api\/profile\/(admin|client)$/.exec(url.pathname);
       if (fixture.profileEnabled && ownProfile) {
         const role = ownProfile[1];
@@ -241,7 +255,7 @@ async function startFixtureServer() {
           if (feature === "media" && fixture.mediaDisabled) { sendJson(404, { error: "not_found" }); return; }
           sendJson(200, { enabled: true,
             ...(fixture.videoReadOnly && feature === "chat" ? { video: { enabled: true, creationEnabled: false, maxBytes: 104857600, mime: "video/mp4" } } : {}),
-            ...(fixture.profileEnabled && feature === "chat" ? { profile: { enabled: true, avatars: fixture.profileAvatarsEnabled } } : {}),
+            ...(fixture.profileEnabled && feature === "chat" ? { profile: { enabled: true, avatars: fixture.profileAvatarsEnabled, preferencesEnabled: fixture.preferencesEnabled } } : {}),
             ...(fixture.clientExportEnabled && feature === "chat" && role === "client" ? { conversationExport: { enabled: true, photos: true, maxBytes: 32 * 1024 * 1024 } } : {}) }); return;
         }
         if (feature === "chat" && request.method === "GET") {
@@ -874,13 +888,14 @@ test("Chrome: real avatar crop, private preview cleanup on controlled hiding, ex
       const discardedPreview = await page.execute("return document.querySelector('.profile-avatar-preview img').src");
       assert.match(discardedPreview, /^blob:/); assert.equal(fixture.avatarUploads.length, 0); assert.equal(fixture.profileRequests.length, 0);
       await page.execute("Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>window.__profileHidden?'hidden':'visible'});window.__profileHidden=true;document.dispatchEvent(new Event('visibilitychange'))");
-      assert.equal(await page.execute("return !document.querySelector('.profile-dialog').open && document.querySelector('.profile-pseudonym').value==='' && !document.querySelector('.profile-avatar-preview img').getAttribute('src')"), true, "controlled hiding clears the private profile DOM");
+      assert.equal(await page.execute("return !document.querySelector('.profile-dialog').open && document.querySelector('.profile-pseudonym').value==='Unsaved private profile draft' && !document.querySelector('.profile-avatar-preview img').getAttribute('src')"), true, "controlled hiding retains the in-memory draft and revokes its visible preview");
       assert.equal(await page.execute("return window.__revokedBlobUrls.includes(arguments[0])", discardedPreview), true, "discarded preview's actual object URL is revoked");
       assert.equal(fixture.profileRequests.length, 0); assert.equal(fixture.avatarUploads.length, 0);
       await page.execute("window.__profileHidden=false;document.dispatchEvent(new Event('visibilitychange'))");
       await waitUntil(() => page.execute("return !document.getElementById('workspace').hidden"), "same-session chat resumes after controlled visibility");
-      await clickOptionsAction(page, "#open-profile");
-      await waitUntil(() => page.execute("return document.querySelector('.profile-dialog').matches(':modal') && document.querySelector('.profile-pseudonym').value===arguments[0]", originalName), "reopening discards the unsaved profile draft");
+      await waitUntil(() => page.execute("return document.querySelector('.profile-dialog').matches(':modal') && document.querySelector('.profile-pseudonym').value==='Unsaved private profile draft'"), "same-owner revalidation restores the open draft");
+      await page.click(".profile-close"); await clickOptionsAction(page, "#open-profile");
+      await waitUntil(() => page.execute("return document.querySelector('.profile-dialog').matches(':modal') && document.querySelector('.profile-pseudonym').value===arguments[0]", originalName), "explicitly closing discards the unsaved profile draft");
       await chooseSyntheticAvatar(); await page.click(".profile-save");
       await waitUntil(() => page.execute("return !document.querySelector('.profile-dialog').open"), "explicit save finishes the avatar upload");
       assert.equal(fixture.avatarUploads.length, 1); assert.equal(fixture.avatarUploads[0].role, role);
@@ -1562,4 +1577,38 @@ test("Chrome photo viewer keeps native pinch zoom and unrestricted pan permissio
     } catch {}
     throw error;
   } finally {await page.close();}
+});
+
+
+test("Chrome 320px: profile preference draft resumes after same-owner verification and is discarded for a replaced session", { timeout: 90000 }, async () => {
+  const choice = preferencesCatalogue.categories[0].preferences[0];
+  for (const role of ["client", "admin"]) {
+    resetFixture(); fixture.profileEnabled = true; fixture.preferencesEnabled = true;
+    const page = await browser(320);
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      await waitUntil(() => page.execute("return !document.getElementById('open-profile').hidden"), "profile module mounted");
+      if (role === "admin") await page.click(".contact");
+      await clickOptionsAction(page, "#open-profile");
+      await waitUntil(() => page.execute("return !document.querySelector('.preferences-search').disabled"), "preference catalogue loaded");
+      await page.type(".preferences-search", choice.fr); await page.click(`[data-preference-id="${choice.id}"]`);
+      await page.execute("Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>window.__hidden?'hidden':'visible'});window.__hidden=true;document.dispatchEvent(new Event('visibilitychange'))");
+      assert.equal(await page.execute("return document.querySelector('.profile-dialog').open"), false);
+      await page.execute("window.__hidden=false;document.dispatchEvent(new Event('visibilitychange'))");
+      await waitUntil(() => page.execute("return document.querySelector('.profile-dialog').matches(':modal') && !document.querySelector('.preferences-section').hidden"), "same-session proof restores the active profile");
+      assert.equal(await page.execute("return document.querySelector('.preferences-search').value"), choice.fr);
+      assert.equal(await page.execute("return document.querySelector('.preferences-selected').textContent"), choice.fr);
+      assert.equal(fixture.preferenceRequests.length, 0);
+      await page.execute("window.__hidden=true;document.dispatchEvent(new Event('visibilitychange'))");
+      fixture.csrf = "B".repeat(43);
+      await page.execute("window.__hidden=false;document.dispatchEvent(new Event('visibilitychange'))");
+      await waitUntil(() => page.execute("return !document.getElementById('workspace').hidden && !document.getElementById('open-profile').hidden"), "replaced session bootstraps a new profile owner");
+      assert.equal(await page.execute("return !!document.querySelector('.profile-dialog')?.open"), false, "the old profile is not reopened for a new session");
+      await clickOptionsAction(page, "#open-profile");
+      await waitUntil(() => page.execute("const section=document.querySelector('.preferences-section');return !!section&&!section.hidden&&section.getAttribute('aria-busy')==='false'&&!document.querySelector('.preferences-search').disabled"), "new owner preferences fully loaded");
+      assert.equal(await page.execute("return document.querySelector('.preferences-search').value"), "");
+      assert.equal(await page.execute("return document.querySelector('.preferences-selected').textContent"), "Aucune sélection.");
+      assert.equal(fixture.preferenceRequests.length, 0); await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
 });

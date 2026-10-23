@@ -42,6 +42,7 @@ globalThis.JessieI18n?.register({
   "Vidéos indisponibles pour le moment": "Videos are temporarily unavailable",
 
   "Options": "Options",
+  "Le profil de Jessie": "Jessie’s profile",
   "Autres options": "More options",
   "Accueil admin": "Admin home",
   "Détails": "Details",

@@ -40,6 +40,12 @@ const publicFiles = new Map([
   ["/emoji-catalog.js", ["emoji-catalog.js", "text/javascript; charset=utf-8"]],
   ["/emoji.css", ["emoji.css", "text/css; charset=utf-8"]],
   ["/profile.js", ["profile.js", "text/javascript; charset=utf-8"]],
+  ["/jessie", ["public-profile.html", "text/html; charset=utf-8"]],
+  ["/public-profile.js", ["public-profile.js", "text/javascript; charset=utf-8"]],
+  ["/public-profile.css", ["public-profile.css", "text/css; charset=utf-8"]],
+  ["/profile-publication.js", ["profile-publication.js", "text/javascript; charset=utf-8"]],
+  ["/public-profile-model.js", ["public-profile-model.js", "text/javascript; charset=utf-8"]],
+  ["/i18n-public-profile.js", ["i18n-public-profile.js", "text/javascript; charset=utf-8"]],
   ["/password-fields.js", ["password-fields.js", "text/javascript; charset=utf-8"]],
   ["/password-fields.css", ["password-fields.css", "text/css; charset=utf-8"]],
   ["/password-change.js", ["password-change.js", "text/javascript; charset=utf-8"]],
@@ -331,7 +337,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
   const { createAuthHandler } = await import("./auth/http.mjs");
   const { createOperationsStore } = await import("./operations/store.mjs");
   const { createOperationsMonitor } = await import("./operations/monitor.mjs");
-  let pool, transport, operations, notificationTransport, notificationWorker, closureHandler, quickRepliesHandler, preferencesService;
+  let pool, transport, operations, notificationTransport, notificationWorker, closureHandler, quickRepliesHandler, preferencesService, publicationService;
   try {
     videoConfig = video ? (await import("./config/runtime-video-storage.mjs")).runtimeVideoConfiguration(env) : null;
     pool = await createRuntimePool(env);
@@ -390,7 +396,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     }
     let diagnosticClosing;
     const diagnostics = { close() {
-      if (!diagnosticClosing) diagnosticClosing = Promise.allSettled([readinessService.close(), operations.close(), closureHandler?.close(), privacyHandler?.close(), backupHandler?.close(), quickRepliesHandler?.close?.(), preferencesService?.close?.(), crmHandler?.close?.(), legacyHandlers?.crmHandler?.close?.(), chatHandler?.close?.(), legacyHandlers?.chatHandler?.close?.()]).then((results) => {
+      if (!diagnosticClosing) diagnosticClosing = Promise.allSettled([readinessService.close(), operations.close(), closureHandler?.close(), privacyHandler?.close(), backupHandler?.close(), quickRepliesHandler?.close?.(), preferencesService?.close?.(), publicationService?.close?.(), crmHandler?.close?.(), legacyHandlers?.crmHandler?.close?.(), chatHandler?.close?.(), legacyHandlers?.chatHandler?.close?.()]).then((results) => {
         if (results.some((result) => result.status === "rejected")) throw new Error("Private diagnostics could not close cleanly.");
       });
       return diagnosticClosing;
@@ -598,9 +604,14 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         authStore: store, key: chatConfig.key, clock,
         ...(experience ? { preferencesStore, preferencesKey: crmConfig.key } : {}) });
       preferencesService = profileService.preferences;
-      profileHandler = createProfileHandler(profileService, { origin: chatConfig.origin });
-      if (legacyHandlers) legacyHandlers.profileHandler = createProfileHandler(profileService, { origin: RECIPE_ORIGIN });
-      const profileCapabilities = { profileEnabled: true, passwordEnabled: true, preferencesEnabled: experience, avatarsEnabled: mediaConfig.enabled, announcementsEnabled: announcements, tasksEnabled: tasks && crmConfig.enabled, ...(video ? { videoEnabled: true, videoCreationEnabled: VIDEO_CREATION_ENABLED } : {}) };
+      if (experience && backupDirectory !== undefined) {
+        const { createPublicProfileService } = await import("./public-profile/service.mjs");
+        publicationService = createPublicProfileService({ directory: backupDirectory, chatService, authStore: store, key: crmConfig.key, clock });
+      }
+      const profiles = publicationService ? { ...profileService, publication: publicationService } : profileService;
+      profileHandler = createProfileHandler(profiles, { origin: chatConfig.origin });
+      if (legacyHandlers) legacyHandlers.profileHandler = createProfileHandler(profiles, { origin: RECIPE_ORIGIN });
+      const profileCapabilities = { profileEnabled: true, passwordEnabled: true, preferencesEnabled: experience, publicationEnabled: Boolean(publicationService), avatarsEnabled: mediaConfig.enabled, announcementsEnabled: announcements, tasksEnabled: tasks && crmConfig.enabled, ...(video ? { videoEnabled: true, videoCreationEnabled: VIDEO_CREATION_ENABLED } : {}) };
       chatHandler = createChatHandler(chatService, { origin: chatConfig.origin, clientConversationExporter, ...profileCapabilities });
       if (legacyHandlers) legacyHandlers.chatHandler = createChatHandler(chatService, { origin: RECIPE_ORIGIN, clientConversationExporter, ...profileCapabilities });
       if (broadcastConfig.enabled) {
@@ -682,7 +693,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
   } catch (error) {
     videoConfig?.key.fill(0);
     closureHandler?.close();
-    quickRepliesHandler?.close?.(); preferencesService?.close?.();
+    quickRepliesHandler?.close?.(); preferencesService?.close?.(); publicationService?.close?.();
     await notificationTransport?.close().catch(() => {});
     await notificationWorker?.stop().catch(() => {});
     await operations?.close().catch(() => {});

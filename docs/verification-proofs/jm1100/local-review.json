@@ -1,0 +1,23 @@
+{
+  "status": "local_checks_and_independent_review_passed_native_pending",
+  "node": "v24.19.0",
+  "targeted": {
+    "tests": 75,
+    "passed": 75,
+    "failed": 0,
+    "skipped": 0
+  },
+  "general": {
+    "tests": 4074,
+    "passed": 3830,
+    "failed": 0,
+    "skipped": 244
+  },
+  "syntaxSources": 769,
+  "independentReview": "no_blocking_findings",
+  "nativeChrome": "not_available_locally_pending_CI",
+  "deployed": false,
+  "schema": 38,
+  "catalogueUnchanged": true,
+  "hostMutations": false
+}

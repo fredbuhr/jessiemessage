@@ -2,6 +2,14 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
+## Évolution 1.10.0 — profil public et sélection conservée
+
+1. Implémenter et vérifier le profil public `/jessie`, sa publication/retrait admin explicite et le retour au profil après changement temporaire de fenêtre. Critères : aucune préférence client publique, aucun choix perdu pour le même compte, aucun envoi automatique à la reprise.
+2. Qualifier le diff stabilisé par les tests ciblés et CI PR/main, publier1.10.0 immuable sur la source validée. SQL38 inchangé ;190 conservée pour repli.
+3. Préparer le checkout exact et les commandes Manager, puis recueillir l’identité de démarrage avant l’enregistrement final. Aucun déploiement1100 acquis à ce stade.
+
+[Périmètre courant](public-profile-1100.md), [production et reprise](REPRISE.md). Les essais réels de téléphone restent distincts des tests synthétiques.
+
 ## Évolution 1.9.0 — livraison terminée
 
 Les quatre lots et les six fonctions du [cahier](specs/cahier-20261023.md) sont codés, fusionnés, qualifiés PR/main5/5, publiés et déployés. Source `5dda0dd4453d34a0be839d2a1402301dea835381`, release/latest421892314, Nodev24.22.1, SQL38. [État et preuves](verification-proofs/experience190-progress.json).

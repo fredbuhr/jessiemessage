@@ -197,6 +197,67 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
       const state = await fixture.privatePreferencesState([firstChoice, secondChoice]); assert.equal(state.rows, 2); assert.equal(state.encrypted, true);
       assert.deepEqual((await json(other, "client", "/api/profile/client/preferences")).data.selectedIds, []);
     });
+    await t.test("public Jessie profile is an explicit admin snapshot; temporary hiding preserves the private draft after actual session proof", async () => {
+      const anonymous = await browser(320), displayName = "Synthetic Jessie public profile", bio = "A synthetic public introduction for the isolated rehearsal.";
+      const publicChoices = [firstChoice, secondChoice];
+      await attest(anonymous, fixture);
+      assert.equal((await json(anonymous, null, "/api/public/jessie")).status, 404, "saving private preferences has not published anything");
+      const capability = await json(admin, "admin", "/api/chat/admin/capabilities");
+      assert.equal(capability.status, 200); assert.equal(capability.data.profile.publicationEnabled, true, "actual configured service enables the admin controls");
+      assert.notEqual((await json(client, "client", "/api/chat/client/capabilities")).data.profile.publicationEnabled, true);
+      await openProfile(admin);
+      await waitUntil(() => admin.execute("const section=document.querySelector('.profile-publication');return !!section&&!section.hidden&&!section.querySelector('input').disabled&&!section.querySelector('.profile-publication-actions button').disabled"), "SQL-backed administrator can load the publication controller");
+      await admin.execute(`const original=window.fetch;window.__publicationTransport={original,writes:0};
+        window.fetch=function(input,options={}){const path=new URL(typeof input==='string'?input:input.url,location.origin).pathname;
+          if(path==='/api/profile/admin/publication'&&options.method==='POST')window.__publicationTransport.writes++;
+          return original.call(this,input,options);};`);
+      try {
+        await admin.type(".preferences-search", "STRAIGHT");
+        await waitUntil(() => admin.execute("return !!document.querySelector('[data-preference-id=\"'+arguments[0]+'\"]')", firstChoice), "additional unsaved private choice available");
+        await admin.click(`[data-preference-id="${firstChoice}"]`);
+        await admin.type(".profile-publication input", displayName); await admin.type(".profile-publication textarea", bio);
+        await admin.execute("Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>window.__profileRehearsalHidden?'hidden':'visible'});window.__profileRehearsalHidden=true;document.dispatchEvent(new Event('visibilitychange'))");
+        assert.equal(await admin.execute("return document.querySelector('.profile-dialog').open"), false);
+        await admin.execute("window.__profileRehearsalHidden=false;document.dispatchEvent(new Event('visibilitychange'))");
+        await waitUntil(() => admin.execute("return !document.getElementById('workspace').hidden&&document.querySelector('.profile-dialog').matches(':modal')&&!document.querySelector('.preferences-section').hidden&&!document.querySelector('.profile-publication input').disabled"), "actual session GET permits same-owner profile restoration", 20000);
+        assert.equal(await admin.execute("return document.querySelector('.preferences-search').value"), "STRAIGHT");
+        assert.deepEqual(await admin.execute("return [...document.querySelectorAll('.preferences-selected button')].map(node=>node.textContent).sort()"), catalogue.categories[0].preferences.slice(0, 2).map(choice => choice.fr).sort());
+        assert.equal(await admin.execute("return document.querySelector('.profile-publication textarea').value"), bio);
+        assert.equal(await admin.execute("return __publicationTransport.writes"), 0, "visibility restoration has not published the retained draft");
+        assert.deepEqual((await json(adminDevice, "admin", "/api/profile/admin/preferences")).data.selectedIds, [secondChoice], "the extra choice remains unsaved in the real SQL store");
+        await admin.click(".profile-publication-actions button:first-child");
+        await waitUntil(() => admin.execute("return document.querySelector('.profile-publication-status').textContent==='Profil public publié.'"), "explicit publish acknowledged", 20000);
+        assert.equal(await admin.execute("return __publicationTransport.writes"), 1);
+        const published = await json(anonymous, null, "/api/public/jessie");
+        assert.equal(published.status, 200); assert.deepEqual(published.data, { displayName, bio, catalogueVersion, selectedIds: publicChoices });
+        assert.equal((await anonymous.cookies()).some(cookie => [cookieName("admin"), cookieName("client")].includes(cookie.name)), false, "public reads have no authenticated cookie");
+        await anonymous.navigate("/jessie");
+        await waitUntil(() => anonymous.execute("return !document.getElementById('public-profile-content').hidden&&document.getElementById('public-profile-name').textContent===arguments[0]", displayName), "public page renders without signing in", 20000);
+        assert.equal(await anonymous.execute("return document.getElementById('public-profile-bio').textContent"), bio);
+        assert.deepEqual(await anonymous.execute("return [...document.querySelectorAll('.public-preference-list li')].map(node=>node.textContent)"), catalogue.categories[0].preferences.slice(0, 2).map(choice => choice.fr));
+        assert.equal(await anonymous.execute("return document.documentElement.scrollWidth<=innerWidth"), true, "public profile fits a 320px screen");
+        const directory = new URL("../../artifacts/homepage/", import.meta.url); await mkdir(directory, { recursive: true });
+        await writeFile(new URL("experience-public-320-profile.png", directory), Buffer.from(await anonymous.screenshot(), "base64"));
+        const current = await json(admin, "admin", "/api/profile/admin/publication"); assert.equal(current.status, 200);
+        const forbidden = await json(client, "client", "/api/profile/admin/publication", { expectedVersion: current.data.version, published: false, displayName, bio, catalogueVersion, selectedIds: publicChoices });
+        assert.ok([401, 403].includes(forbidden.status), "a real client session cannot perform an admin publication write");
+        assert.deepEqual((await json(anonymous, null, "/api/public/jessie")).data, published.data);
+        await admin.click(`[data-preference-id="${firstChoice}"]`); await admin.click(".preferences-actions button:first-child");
+        await waitUntil(() => admin.execute("return document.querySelector('.preferences-status').textContent==='Préférences enregistrées.'"), "private changes saved separately", 20000);
+        assert.deepEqual((await json(adminDevice, "admin", "/api/profile/admin/preferences")).data.selectedIds, [secondChoice]);
+        assert.deepEqual((await json(anonymous, null, "/api/public/jessie")).data, published.data, "saving a private change does not update the public snapshot");
+        assert.equal((await json(admin, "admin", "/api/profile/admin/publication")).data.version, current.data.version);
+        assert.equal(await admin.execute("return __publicationTransport.writes"), 1);
+        await admin.click(".profile-publication-actions button:nth-child(2)");
+        await waitUntil(() => admin.execute("return document.querySelector('.profile-publication-status').textContent==='Profil public retiré.'"), "explicit unpublish acknowledged", 20000);
+        assert.equal(await admin.execute("return __publicationTransport.writes"), 2);
+        assert.equal((await json(anonymous, null, "/api/public/jessie")).status, 404);
+        await anonymous.navigate("/jessie");
+        await waitUntil(() => anonymous.execute("return document.getElementById('public-profile-content').hidden&&document.getElementById('public-profile-status').textContent==='Ce profil n’est pas disponible pour le moment.'"), "withdrawn public content is no longer rendered", 20000);
+      } finally {
+        await admin.execute("if(window.__publicationTransport){window.fetch=__publicationTransport.original;delete window.__publicationTransport;}if(document.querySelector('.profile-dialog')?.open)document.querySelector('.profile-close').click();");
+      }
+    });
     await t.test("five real photo drafts survive one lost committed batch acknowledgement without new uploads or duplicate SQL messages", async () => {
       const before = await json(client, "client", `/api/chat/client/conversations/${conversation}/messages`); assert.equal(before.status, 200);
       const bytes = await client.execute(`const canvas=document.createElement('canvas');canvas.width=96;canvas.height=64;const context=canvas.getContext('2d');
