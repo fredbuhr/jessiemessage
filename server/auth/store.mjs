@@ -230,6 +230,38 @@ export function createAuthStore(pool, { clock } = {}) {
       }, true);
     },
 
+    async getPasswordChangeRecord(tokenHash, { now }) {
+      bytes(tokenHash, 32); instant(now);
+      return withConnection(async (connection) => {
+        const actor = await lockedAdminSession(connection, tokenHash, now);
+        if (!actor) return null;
+        const user = (await connection.query("SELECT password_hash FROM users WHERE id = ? FOR UPDATE", [actor.userId]))[0];
+        if (!user || typeof user.password_hash !== "string") return null;
+        return { userId: actor.userId, passwordHash: user.password_hash, generation: actor.mfaVersion };
+      }, true);
+    },
+
+    async changePassword({ tokenHash, expectedPasswordHash, expectedGeneration, passwordHash, session, now }) {
+      bytes(tokenHash, 32); bytes(session?.id, 16); bytes(session?.tokenHash, 32); instant(now);
+      if (typeof expectedPasswordHash !== "string" || typeof passwordHash !== "string" || passwordHash.length < 1 || passwordHash.length > 255
+        || !Number.isSafeInteger(expectedGeneration) || expectedGeneration < 1) invalid();
+      return withConnection(async (connection) => {
+        const actor = await lockedAdminSession(connection, tokenHash, now);
+        if (!actor || actor.mfaVersion !== expectedGeneration) return null;
+        const user = (await connection.query("SELECT password_hash FROM users WHERE id = ? FOR UPDATE", [actor.userId]))[0];
+        now = sessionNow(actor.now);
+        if (!user || user.password_hash !== expectedPasswordHash || now >= actor.expiresAt) return null;
+        const expiresAt = adminSessionExpiry(now);
+        await connection.query("UPDATE users SET password_hash = ?, updated_at = GREATEST(updated_at, ?) WHERE id = ?", [passwordHash, sqlDate(now), actor.userId]);
+        await connection.query("UPDATE sessions SET revoked_at = GREATEST(created_at, ?) WHERE user_id = ? AND revoked_at IS NULL", [sqlDate(now), actor.userId]);
+        await connection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [session.id, actor.userId, session.tokenHash, sqlDate(now), sqlDate(expiresAt)]);
+        // The replacement inherits the already authenticated MFA assurance;
+        // this operation changes only the password, never the TOTP enrollment.
+        await connection.query("INSERT INTO auth_session_state (session_id, last_seen_at, mfa_verified_at, mfa_version) VALUES (?, ?, ?, ?)", [session.id, sqlDate(now), sqlDate(now), actor.mfaVersion]);
+        return { userId: actor.userId, role: "admin", pseudonym: actor.pseudonym, expiresAt };
+      }, true);
+    },
+
     async listDevices(tokenHash, { now, afterId = null, limit = 50 }) {
       bytes(tokenHash, 32); instant(now); if (afterId !== null) bytes(afterId, 16);
       if (!Number.isInteger(limit) || limit < 1 || limit > 50) invalid();

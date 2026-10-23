@@ -1,0 +1,75 @@
+{
+  "status": "failed_corrections_in_progress",
+  "source": "0e76d1576b7d4e5cc68af9cb0dd7c60fcd48d08d",
+  "tree": "e760109950e91c043e2288af78917bda35a20794",
+  "pr": 133,
+  "run": 39954872379,
+  "attempt": 1,
+  "node": "v24.22.1",
+  "productionChanged": false,
+  "jobs": {
+    "verify": {
+      "passed": 4004,
+      "skipped": 51,
+      "failed": 0,
+      "status": "success"
+    },
+    "browser": {
+      "passed": 235,
+      "failed": 12,
+      "skipped": 0,
+      "status": "failure"
+    },
+    "https": {
+      "passed": 5,
+      "failed": 4,
+      "skipped": 0,
+      "status": "failure"
+    },
+    "MariaDB10.11": {
+      "passed": 573,
+      "failed": 20,
+      "skipped": 0,
+      "status": "failure"
+    },
+    "MariaDB11.4": {
+      "passed": 573,
+      "failed": 20,
+      "skipped": 0,
+      "status": "failure"
+    }
+  },
+  "failures": [
+    "Real CAS conflict was sanitized by chat transaction: now fixed with typed error preserved after rollback; confidentiality/atomic CAS retained",
+    "Old test fixtures still uploading client videos: replace by explicit synthetic historical seeding or admin sender, retain runtime rejection",
+    "Profile browser fixture needs all new transitive static imports",
+    "Gallery native swipe from center; wait for loaded conversation before multi-photo file selection; native confirmation remains pending",
+    "Gallery integration expectations must use canonical message-date/message-ID order, retain exhaustive cursors and BIGINT",
+    "Preauth test requests lacked X-Jessie-Request; CRM menu must be opened before actual click",
+    "Shared recover-model.js is public for password-change forms on either origin; recovery endpoints still primary-only"
+  ],
+  "logs": {
+    "general": {
+      "path": "/workspace/scratch/bb431be72395/experience190/pr-initial-general.log",
+      "sha256": "11a3950ae8fcc8ad01f0388a713684fc66d85b0d8a69a1dff6ac9afc4c135341"
+    },
+    "browser": {
+      "path": "/workspace/scratch/bb431be72395/experience190/pr-initial-browser.log",
+      "sha256": "12c3668ee1a12ce1c39ae27dbb75791969636c2fb721186f61077b0755d7c2ce"
+    },
+    "auth": {
+      "path": "/workspace/scratch/bb431be72395/experience190/pr-initial-auth.log",
+      "sha256": "ab90d5d2e789d5f83ae1f2fc955187d1651b43f6723d63b4854547f3c0aeed3b"
+    },
+    "db1011": {
+      "path": "/workspace/scratch/bb431be72395/experience190/pr-initial-db1011.log",
+      "sha256": "82a9762d568927185d2a198d4a20eb792be1b255c17b2e120523d01926145e10"
+    },
+    "db114": {
+      "path": "/workspace/scratch/bb431be72395/experience190/pr-initial-db114.log",
+      "sha256": "b641153174ed4fb358a42a58a54f8d0af9f04a54e2818d2f2d6578a0c65cd216"
+    }
+  },
+  "nativeQualified": false,
+  "nextAction": "Publish corrected exact branch with SQL38 lifecycle coverage; qualify real rollback185 before main190 fusion."
+}

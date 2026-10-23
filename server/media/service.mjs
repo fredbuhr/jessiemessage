@@ -214,11 +214,13 @@ export async function createMediaService({ store, chatService, authStore, storag
       const conversation = id(conversationId), message = id(messageId), { request } = await context("client", raw);
       return content(await store.getMessageAsset({ ...request, now: currentTime(), conversationId: conversation, messageId: message }), "full");
     }),
-    gallery: (role, raw, conversationId, { before = null, limit = 50 } = {}) => guarded(async () => {
+    gallery: (role, raw, conversationId, { before = null, after = null, from = null, until = null, limit = 50 } = {}) => guarded(async () => {
       if (before !== null) cursor(before); pageSize(limit);
+      if (after !== null) { cursor(after); if (before !== null || limit !== 1) fail("MEDIA_INPUT"); }
+      if ([from, until].some(value => value !== null && (!Number.isSafeInteger(value) || value < 0 || value > 253402300799999)) || from !== null && until !== null && from >= until) fail("MEDIA_INPUT");
       const conversation = id(conversationId); const { actor, request } = await context(role, raw);
       await consumeBudget(actor.user.id, "gallery", request.now);
-      const result = await store.gallery({ ...request, now: currentTime(), conversationId: conversation, before, limit });
+      const result = await store.gallery({ ...request, now: currentTime(), conversationId: conversation, before, limit, ...(after === null ? {} : { after }), ...(from === null ? {} : { from }), ...(until === null ? {} : { until }) });
       return { items: result.items.map((item) => ({ messageId: item.messageId.toString("hex"), sequence: item.sequence,
         sender: item.senderId.equals(id(actor.user.id)) ? "me" : "peer", createdAt: item.createdAt,
         media: mediaDTO({ ...item.asset, createdAt: item.createdAt, sharedHere: true }, role, { conversationId, messageId: item.messageId.toString("hex") }) })), nextBefore: result.nextBefore, hasMore: result.hasMore };

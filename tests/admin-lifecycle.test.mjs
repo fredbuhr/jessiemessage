@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 
+const passwordFields = await readFile(new URL("../public/password-fields.js", import.meta.url), "utf8");
 const clockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
 const source = await readFile(new URL("../public/admin-login.js", import.meta.url), "utf8");
 const initialTime = 1750000000000;
@@ -22,9 +23,13 @@ class Element {
       toggle: (value, enabled) => { const include = enabled ?? !classes.has(value); if (include) classes.add(value); else classes.delete(value); return include; } };
   }
   addEventListener(name, handler) { this.events.set(name, handler); }
+  removeEventListener(name, handler) { if (this.events.get(name) === handler) this.events.delete(name); }
+  removeAttribute(name) { this.attributes.delete(name); }
+  remove() { if (this.parentElement) this.parentElement.children = this.parentElement.children.filter(x => x !== this); this.parentElement = null; }
+  insertBefore(value, before) { value.remove(); const index = this.children.indexOf(before); value.parentElement = this; this.children.splice(index < 0 ? this.children.length : index, 0, value); }
   setAttribute(name, value) { this.attributes.set(name, value); }
   getAttribute(name) { return this.attributes.get(name) ?? null; }
-  append(...children) { this.children.push(...children); }
+  append(...children) { for (const child of children) { child.remove(); child.parentElement = this; this.children.push(child); } }
   replaceChildren(...children) { this.children = [...children]; }
   querySelectorAll(selector) { return this.children.flatMap((child) => [selector === child.tagName ? child : null, ...child.querySelectorAll(selector)]).filter(Boolean); }
   reset() { for (const field of this.querySelectorAll("input")) { field.value = field.defaultValue; field.checked = false; } }
@@ -42,9 +47,10 @@ function harness({ visible = true, currentSession = session(), intercept, clipbo
   invitations = [invitationRow(2)] } = {}) {
   const nodes = new Map(), documentEvents = new Map(), windowEvents = new Map(), calls = [], timers = new Map(), history = [], navigations = [];
   let now = initialTime, timerId = 0;
-  const element = (id, tagName = "div") => { if (!nodes.has(id)) nodes.set(id, new Element(tagName)); return nodes.get(id); };
+  const element = (id, tagName = "div") => { if (!nodes.has(id)) { const node = new Element(tagName); node.id = id; nodes.set(id, node); } return nodes.get(id); };
   const form = element("login-form", "form"), tools = element("access-tools"), connected = element("connected");
   const email = element("email", "input"), password = element("password", "input"), factor = element("factor", "input");
+  password.type = "password";
   form.append(email, password, factor, element("login-button", "button")); form.hidden = true; connected.hidden = true; tools.hidden = true;
   const invitationForm = element("invitation-form", "form"), createButton = new Element("button");
   const hours = element("invitation-hours", "input"), days = element("invitation-days", "input"), unlimited = element("invitation-unlimited", "input");
@@ -57,7 +63,7 @@ function harness({ visible = true, currentSession = session(), intercept, clipbo
     tools.append(navigation);
   }
   connected.append(tools, element("logout-button", "button"), element("logout-all-button", "button"));
-  const document = { visibilityState: visible ? "visible" : "hidden", body: new Element("body"), getElementById: element,
+  const document = { readyState: "loading", visibilityState: visible ? "visible" : "hidden", body: new Element("body"), getElementById: element,
     createElement: (tagName) => new Element(tagName), addEventListener: (name, handler) => documentEvents.set(name, handler) };
   const state = { currentSession, clipboardCalls: [], clients, invitations };
   const pageLocation = { pathname, search, replace: value => navigations.push(value) };
@@ -89,6 +95,8 @@ function harness({ visible = true, currentSession = session(), intercept, clipbo
       if (path.startsWith("/api/auth/logout")) return response(200, { status: "signed_out" });
       throw new Error(`Unexpected request: ${path}`);
     } });
+  vm.runInContext(passwordFields, context);
+  context.JessiePasswordFields.enhance(password, { button: element("toggle-password", "button") });
   vm.runInContext(clockSource, context);
   vm.runInContext(source, context, { filename: "public/admin-login.js" });
   return { element, document, calls, state, timers, createButton, history, navigations, location: pageLocation,

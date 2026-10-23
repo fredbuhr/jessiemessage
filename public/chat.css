@@ -50,3 +50,14 @@
 @media(max-width:430px){.video-draft{grid-template-columns:1fr;gap:4px}.video-preview video{max-height:140px}.video-draft-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.video-draft-actions p{flex:1;margin:0}.video-draft-actions progress{flex-basis:100%;order:2}}
 
 .personal-reply-row{min-width:0}.personal-reply-insert{width:100%}.personal-reply-actions{display:flex;flex-wrap:wrap;gap:6px 18px}.personal-reply-actions button{min-height:44px}.personal-reply-editor{display:grid;gap:12px;margin-top:14px}.personal-reply-editor label{display:grid;gap:6px;font-size:13px}.personal-reply-editor input,.personal-reply-editor select,.personal-reply-editor textarea{box-sizing:border-box;min-width:0;width:100%;min-height:44px;padding:10px;border:1px solid #62455b;border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;font-size:16px}.personal-reply-editor textarea{resize:vertical;line-height:1.5}.personal-reply-confirm{padding:10px;border:1px solid #62455b;border-radius:10px}#personal-replies-status:empty{display:none}
+
+/* Bounded photo selection and one-original-at-a-time viewer. */
+.photo-batch{padding:10px;margin-bottom:10px;background:#19131d;border:1px solid #61465b;border-radius:13px}.photo-batch p{font-size:12px;color:var(--muted);margin:0 0 8px}.photo-batch-list{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}.photo-batch-item{flex:0 0 92px;display:flex;flex-direction:column;gap:5px;align-items:center;font-size:11px;text-align:center}.photo-batch-item img{width:82px;height:82px;object-fit:cover;border-radius:8px}.photo-batch-item .text-button{font-size:10px;padding:4px}.lightbox-navigation{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.lightbox-navigation .button{min-width:44px;min-height:44px}.media-date-filter{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0}.media-date-filter input{background:#241c28;color:var(--ink);border:1px solid #76556b;border-radius:8px;padding:8px;font:inherit}.lightbox-image img{max-height:calc(100dvh - 190px)}
+
+.media-date-heading{grid-column:1/-1;font-size:13px;color:var(--muted);font-weight:500;margin:12px 0 0}
+
+/* Keep horizontal swipes in the viewer while retaining native scroll/zoom. */
+.lightbox-image{touch-action:pan-y pinch-zoom}
+.lightbox-image.is-zoomed{touch-action:auto}
+
+.reply-followup{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;padding:.35rem 1rem;border-bottom:1px solid #4b3445}.reply-followup[hidden]{display:none}.reply-followup p{font-size:.8rem;margin:.2rem 0}.reply-followup p:first-child{margin-right:auto}.reply-followup button{font-size:.8rem}

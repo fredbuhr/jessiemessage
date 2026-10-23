@@ -1,6 +1,6 @@
 const ID = /^[0-9a-f]{32}$/;
 const accessStates = new Set(["all", "active", "pending", "expired", "revoked", "suspended", "deleted"]);
-export const emptyFilters = () => ({ q: "", tagId: "", groupId: "", access: "all", unread: false, reminder: "all" });
+export const emptyFilters = () => ({ q: "", tagId: "", groupId: "", access: "all", unread: false, reply: false, reminder: "all" });
 export function canonicalVersion(value) {
   if (typeof value !== "string" || value.length > 10 || !/^(0|[1-9][0-9]*)$/.test(value) || BigInt(value) > 4294967295n || BigInt(value).toString() !== value) throw new TypeError("invalid_version");
   return value;
@@ -12,7 +12,7 @@ export function createCrmState() {
 }
 export function setFilters(state, input) {
   const next = { ...emptyFilters(), ...input };
-  if (typeof next.q !== "string" || next.q.length > 80 || !accessStates.has(next.access) || typeof next.unread !== "boolean" || !["all", "due", "upcoming", "none"].includes(next.reminder)
+  if (typeof next.q !== "string" || next.q.length > 80 || !accessStates.has(next.access) || typeof next.unread !== "boolean" || typeof next.reply !== "boolean" || !["all", "due", "upcoming", "none"].includes(next.reminder)
     || [next.tagId, next.groupId].some((value) => value !== "" && (typeof value !== "string" || value.length !== 32 || !ID.test(value)))) throw new TypeError("invalid_filters");
   if (JSON.stringify(next) === JSON.stringify(state.filters)) return false;
   state.filters = next; state.filterEpoch += 1; state.contacts.clear(); state.cursor = null; state.hasMore = false; return true;
@@ -23,6 +23,7 @@ export function contactQuery(filters, afterId = null) {
   if (filters.access !== "all") query.set("access", filters.access);
   if (filters.reminder !== "all") query.set("reminder", filters.reminder);
   if (filters.unread) query.set("unread", "1");
+  if (filters.reply) query.set("reply", "1");
   if (afterId) query.set("afterId", afterId);
   return query.toString();
 }

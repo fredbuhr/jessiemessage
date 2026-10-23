@@ -138,3 +138,13 @@ test("acknowledged sends remove their persistent marker and text together", asyn
   state.pending = null; state.draft = ""; drafts.write(state);
   const next = create(store); await next.bind(owner()); assert.equal(next.read(state.id), null); assert.equal(next.selected(), null);
 });
+
+
+test("photo selections persist only caption text before send and no uncertain batch becomes a text-only retry", async () => {
+  const store = storage(), drafts = create(store); await drafts.bind(owner());
+  const state = { ...draft(101,"Synthetic batch caption"), photoBatch: { started:false, items:[{ file:new Blob(["private-photo-bytes"]),mediaId:id(700),clientMessageId:id(800) }] } };
+  assert.equal(drafts.write(state),true); assert.equal(drafts.read(id(101)).hadAttachment,true);
+  assert.doesNotMatch([...store.values.values()].join(""),/private-photo-bytes|mediaId|clientMessageId/);
+  state.photoBatch.started=true; assert.equal(drafts.write(state),true);
+  assert.equal(drafts.read(id(101)),null);
+});

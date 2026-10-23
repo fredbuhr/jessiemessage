@@ -1,0 +1,126 @@
+{
+  "format": "jessiemessage-targeted-review",
+  "reviewer": "preferences190",
+  "reviewedHead": "30353c07fb3780c23e578175fb1a44e04df74e43",
+  "workingTree": "Additional integration and test deltas were present; no edits made during this review.",
+  "scope": [
+    "preferences privacy/CAS/encryption",
+    "password change/session rotation",
+    "experience SQL38 opt-in integration",
+    "video permissions via independent followup190 review",
+    "previously reported photo defects and their corrections"
+  ],
+  "productionActions": false,
+  "newTestsExecutedDuringReview": false,
+  "newlyConfirmedBlockers": [],
+  "findings": [
+    {
+      "area": "preferences",
+      "result": "No additional concrete blocker found. This is author self-review, not independent implementation review.",
+      "references": [
+        "server/preferences/http.mjs:20-26",
+        "server/preferences/service.mjs",
+        "server/preferences/store.mjs:38-50",
+        "server/preferences/crypto.mjs",
+        "public/preferences.js"
+      ],
+      "evidence": [
+        "Separate role cookie authentication; no peer client route and no caller-supplied owner identity.",
+        "Admin peer read is read-only and obtains client identity from authorised conversation under withConversation.",
+        "AES-256-GCM with per-owner HKDF key and owner/revision AAD; IDs and catalogue version encrypted.",
+        "Row lock plus expected-version CAS preserves conflicting draft; exact one-revision response-loss replay is idempotent.",
+        "Private API responses use no-store; no selected IDs in request URLs or browser storage."
+      ]
+    },
+    {
+      "area": "password",
+      "result": "No additional concrete blocker found in independent code review.",
+      "references": [
+        "server/account-password/service.mjs",
+        "server/account-password/http.mjs",
+        "server/auth/store.mjs:244-261",
+        "server/access/store.mjs:404-420",
+        "public/password-change.js",
+        "public/chat.js"
+      ],
+      "evidence": [
+        "Existing shared password validation and hash verification are reused, including minimum eight characters.",
+        "Password hash and credential/MFA generation are compared under transaction before mutation.",
+        "Old sessions are revoked and a fresh current session is inserted atomically; admin MFA assurance preserved.",
+        "Client password-reset tokens and reset mail outbox are invalidated on voluntary change.",
+        "Existing session expiry helpers remain in use; profile password callback refreshes current session before rebuilding UI owner.",
+        "No message/media keys are altered."
+      ]
+    },
+    {
+      "area": "experience integration",
+      "result": "No additional concrete blocker found. Parent reported and corrected announcements strict SQL36 assertion independently.",
+      "references": [
+        "server/index.mjs:285-287",
+        "server/index.mjs",
+        "server/experience/migrations/0037_profile_preferences.sql",
+        "server/announcements/store.mjs"
+      ],
+      "evidence": [
+        "experience defaults false and requires video; schema options are explicit.",
+        "Preferences store/key and capabilities are mounted only for experience; old profile behavior remains available.",
+        "Preferences FK uses RESTRICT, compatible with explicit erasure ordering integrated by parent.",
+        "SQL38 native createConfiguredServer fixture is owned by parent and remains separate evidence."
+      ]
+    },
+    {
+      "area": "video",
+      "result": "Independent followup190 code review reported no blocker; no new test execution by reviewer.",
+      "references": [
+        "server/video/http.mjs:246",
+        "server/video/service.mjs:207",
+        "server/video/store.mjs:267",
+        "server/video/store.mjs:297",
+        "server/video/message-store.mjs:112",
+        "server/media/image.mjs",
+        "server/media/image-worker.mjs",
+        "server/media/service.mjs"
+      ],
+      "evidence": [
+        "Client upload/send guard exists at HTTP before admission/body, service, store and append layers; reuse of old video ID is denied.",
+        "Client GET/HEAD delivery and old history remain readable.",
+        "Photo path accepts recognised photo formats and decodes/reencodes before storage; disguised video does not persist original.",
+        "HTTP cleanup and upload ticket release awaited in finally; no alternate paste/drop/import URL send path found."
+      ]
+    },
+    {
+      "area": "photos prior review",
+      "result": "Previously reported concrete issues were corrected by photos190 and reread; tests cited are agent-reported.",
+      "evidence": [
+        "Upload/send stops at first failure and retries stable contiguous prefix, preserving preview order and first-photo caption.",
+        "Definitive 400/404/413/415/422 errors permit failed-item removal; uncertain or sent items remain protected.",
+        "Caption-delivered tracking prevents duplicate caption on final failed-item removal.",
+        "Gallery uses canonical date/message-ID ordering and scoped sequence pivot.",
+        "Reply watermark is captured before batch prepare/upload and retained across retries.",
+        "photos190 reported 107 targeted tests passing after corrections."
+      ]
+    }
+  ],
+  "priorPreferenceTestEvidence": {
+    "unitAndExistingProfile": {
+      "passed": 22,
+      "failed": 0,
+      "skipped": 0,
+      "runtime": "Node v24.19.0"
+    },
+    "subsequentPreferenceUnitHttp": {
+      "passed": 10,
+      "failed": 0
+    },
+    "databaseIntegration": {
+      "status": "skipped",
+      "reason": "No explicitly enabled disposable local DB environment."
+    },
+    "browser": {
+      "status": "prerequisite unavailable",
+      "reason": "ChromeDriver unavailable; zero browser assertions executed."
+    },
+    "syntaxAndWhitespace": "Passed on owned preference files.",
+    "caveat": "No native Node v24.22.1, real-host, production or full-suite claim is made by this reviewer."
+  }
+}

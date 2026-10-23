@@ -446,3 +446,61 @@ test("media routing is exact, unexpected methods do not touch service and HEAD n
   }
   assert.equal(calls.length, 0);
 });
+
+test("photo selection is bounded to ten and fully validated before any message write", async t => {
+  const {base,calls}=await fixture(t);
+  const input=n=>({...imageInput,clientMessageId:n.toString(16).padStart(32,"0")});
+  for (const messages of [[],Array.from({length:11},(_,n)=>input(n+1)),[input(1),input(1)],[input(1),{...input(2),caption:7}]]) {
+    const response=await fetch(`${base}${conversationPath()}/messages/batch`,{method:"POST",headers:mutation(),body:JSON.stringify({messages})});
+    assert.equal(response.status,400);
+  }
+  assert.equal(calls.filter(([name])=>name==="send").length,0);
+  const response=await fetch(`${base}${conversationPath()}/messages/batch`,{method:"POST",headers:mutation(),body:JSON.stringify({messages:Array.from({length:10},(_,n)=>input(n+1))})});
+  assert.equal(response.status,200);privateHeaders(response);
+  const data=await response.json();assert.equal(data.results.length,10);noPrivateFields(data);
+});
+test("photo batch returns per-file failure and retry reuses existing per-message idempotency",async t=>{
+  const recorded=new Map();let fail=true;
+  const {base}=await fixture(t,{send:async(role,token,conversationId,input)=>{
+    if(input.clientMessageId==="2".repeat(32)&&fail){fail=false;throw Object.assign(new Error(),{code:"MEDIA_UNAVAILABLE"});}
+    const duplicate=recorded.has(input.clientMessageId);
+    if(!duplicate)recorded.set(input.clientMessageId,message(role,{clientMessageId:input.clientMessageId,sequence:String(recorded.size+1)}));
+    return {message:recorded.get(input.clientMessageId),duplicate};
+  }});
+  const inputs=["1","2","3"].map(n=>({...imageInput,clientMessageId:n.repeat(32)}));
+  const send=()=>fetch(`${base}${conversationPath("client")}/messages/batch`,{method:"POST",headers:mutation("client"),body:JSON.stringify({messages:inputs})});
+  const first=await(await send()).json();assert.equal(first.results[1].status,503);assert.equal(first.results[2].status,424);assert.equal(recorded.size,1);
+  const second=await(await send()).json();assert.equal(recorded.size,3);assert.deepEqual(second.results.map(row=>row.duplicate),[true,false,false]);
+});
+test("gallery month spans are passed to authorized history and nearest newer photo is bounded",async t=>{
+  const {base,calls,service}=await fixture(t);
+  const from=now-1000,until=now+1000;
+  assert.equal((await fetch(`${base}${conversationPath("client")}/gallery?from=${from}&until=${until}`,{headers:{Cookie:cookie("client")}})).status,200);
+  assert.deepEqual(calls.at(-1),["gallery","client",tokens.client,ids.conversation,{before:null,limit:50,from,until}]);
+  for(const suffix of [`?from=${until}&until=${from}`,"?from=-1","?from=01","?from=1&from=2","?until=253402300800000","?after=1&limit=2","?after=1&before=3&limit=1"])
+    assert.equal((await fetch(`${base}${conversationPath()}/gallery${suffix}`,{headers:{Cookie:cookie("admin")}})).status,400,suffix);
+  service.gallery=async()=>({items:[{messageId:ids.message,sequence:"2",sender:"peer",createdAt:now,media:asset("admin",true)}],nextBefore:null,hasMore:false});
+  assert.equal((await fetch(`${base}${conversationPath()}/gallery?after=1&limit=1`,{headers:{Cookie:cookie("admin")}})).status,200);
+  service.gallery=async()=>({items:[{messageId:ids.message,sequence:"2",sender:"peer",createdAt:now,media:asset("admin",true)},{messageId:ids.message,sequence:"1",sender:"peer",createdAt:now,media:asset("admin",true)}],nextBefore:null,hasMore:false});
+  assert.equal((await fetch(`${base}${conversationPath()}/gallery?limit=2`,{headers:{Cookie:cookie("admin")}})).status,503,"duplicate delivery metadata is not exposed");
+});
+test("clients cannot inject administrative reply tracking into ordinary or batched photo sends",async t=>{
+  const {base,calls}=await fixture(t);
+  for(const suffix of ["","/batch"]){
+    const value={...imageInput,replyThrough:"1",replyVersion:"1"};
+    const response=await fetch(`${base}${conversationPath("client")}/messages${suffix}`,{method:"POST",headers:mutation("client"),body:JSON.stringify(suffix?{messages:[value]}:value)});
+    assert.equal(response.status,400);
+  }
+  assert.equal(calls.filter(([name])=>name==="send").length,0);
+});
+
+test("gallery validates canonical date and identity order independently of message sequences",async t=>{
+  const {base,service}=await fixture(t);
+  const item=(messageId,seq,createdAt)=>({messageId,sequence:seq,sender:"peer",createdAt,media:asset("admin",true,{fullUrl:`${conversationPath()}/messages/${messageId}/full`,thumbnailUrl:`${conversationPath()}/messages/${messageId}/thumb`})});
+  for(const items of [[item("a".repeat(32),"1",now),item("b".repeat(32),"2",now-1)],[item("b".repeat(32),"1",now),item("a".repeat(32),"2",now)]]){
+    service.gallery=async()=>({items,nextBefore:null,hasMore:false});
+    assert.equal((await fetch(`${base}${conversationPath()}/gallery`,{headers:{Cookie:cookie("admin")}})).status,200);
+  }
+  service.gallery=async()=>({items:[item("a".repeat(32),"2",now),item("b".repeat(32),"1",now)],nextBefore:null,hasMore:false});
+  assert.equal((await fetch(`${base}${conversationPath()}/gallery`,{headers:{Cookie:cookie("admin")}})).status,503,"equal-date IDs must be descending even if sequences descend");
+});

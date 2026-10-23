@@ -207,7 +207,12 @@ test("the real dual-origin runtime shares schema thirty, source sessions, encryp
     const recoveryPort = runtime.server.address().port;
 
     await t.test("recovery is available only at the primary authority while both ordinary sessions remain connected", async () => {
-      for (const path of ["/recover", "/recover.js", "/recover-model.js", "/recover.css", "/api/access/recovery/capabilities"]) {
+      // Validation is also used by the own-password profile form on either origin.
+      for (const origin of [primary, recipe]) {
+        const shared = await request(recoveryPort, origin, "/recover-model.js");
+        assert.equal(shared.status, 200); assert.equal(shared.headers["cache-control"], "no-store");
+      }
+      for (const path of ["/recover", "/recover.js", "/recover.css", "/api/access/recovery/capabilities"]) {
         const active = await request(recoveryPort, primary, path), legacy = await request(recoveryPort, recipe, path);
         assert.equal(active.status, 200); assert.equal(active.headers["cache-control"], "no-store");
         assert.equal(legacy.status, 404);

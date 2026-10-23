@@ -6,6 +6,7 @@ import { quickReplyOptions } from "../public/quick-replies.js";
 import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "../public/emoji-catalog.js";
 import { webcrypto } from "node:crypto";
 import { createChatDrafts } from "../public/chat-drafts.js";
+import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "../public/photo-batch.js";
 
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
 const sessionClockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
@@ -117,7 +118,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
     return state.conversations.get(owner);
   };
   const storedMessages = (conv) => { if (!state.messages.has(conv.id)) state.messages.set(conv.id, [{ id: id(500 + Number.parseInt(conv.clientId, 16)), sequence: "1", sender: "peer", body: "Envoyer", createdAt: now, deletedAt: null, clientMessageId: null }]); return state.messages.get(conv.id); };
-  const context = vm.createContext({ __chatDrafts: { createChatDrafts }, __emojis: { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji }, __quickReplies: { quickReplyOptions }, document, window: { addEventListener: (name, handler) => addEvent(windowEvents, name, handler) }, navigator: { language: language === "fr" ? "fr-FR" : "en-US" },
+  const context = vm.createContext({ __photoBatch: { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH }, __chatDrafts: { createChatDrafts }, __emojis: { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji }, __quickReplies: { quickReplyOptions }, document, window: { addEventListener: (name, handler) => addEvent(windowEvents, name, handler) }, navigator: { language: language === "fr" ? "fr-FR" : "en-US" },
     sessionStorage: { getItem: () => null, setItem() {} },
     location: { pathname: currentSession?.user.role === "admin" ? "/admin/messages" : "/messages", replace: (path) => redirects.push(path), reload() { redirects.push("reload"); } },
     Date: class extends Date { static now() { return time; } }, AbortController, TextEncoder, Blob, crypto: webcrypto, queueMicrotask,
@@ -162,7 +163,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   vm.runInContext(catalogueSource, context, { filename: "public/i18n-chat.js" });
   vm.runInContext(sessionClockSource, context, { filename: "public/session-clock.js" });
   vm.runInContext(`globalThis.__model = (() => {${modelSource.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}};})();`, context, { filename: "public/chat-model.js" });
-  const executable = source.replace('import { createChatDrafts } from "/chat-drafts.js";', 'const {createChatDrafts} = __chatDrafts;').replace('import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,emojiSkinTones,insertEmoji} = __emojis;').replace('import { quickReplyOptions } from "/quick-replies.js";', 'const {quickReplyOptions} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = async (file) => file;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
+  const executable = source.replace('import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "/photo-batch.js";', 'const {createPhotoBatch,removePhoto,runPhotoBatch,MAX_PHOTO_BATCH} = __photoBatch;').replace('import { createChatDrafts } from "/chat-drafts.js";', 'const {createChatDrafts} = __chatDrafts;').replace('import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,emojiSkinTones,insertEmoji} = __emojis;').replace('import { quickReplyOptions } from "/quick-replies.js";', 'const {quickReplyOptions} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = async (file) => file;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
     "\nglobalThis.__inspect = () => ({ready, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration});";
   vm.runInContext(executable, context, { filename: "public/chat.js", importModuleDynamically: async () => { throw new Error("Optional feature disabled in fixture"); } });
   return { element, document, state, calls, redirects, timers, revoked, createdUrls, context, conversation, inspect: () => context.__inspect(),
@@ -296,15 +297,15 @@ test("photo rows, images, gallery cards and accessibility names translate in pla
   } }); await flush();
   const article = messages(f).children[0], photo = article.querySelector(".photo-open"), image = photo.querySelector("img");
   assert.ok(image); await f.click("open-gallery");
-  const card = f.element("media-grid").children[0], galleryPhoto = card.querySelector(".photo-open"), galleryImage = galleryPhoto.querySelector("img");
+  const card = f.element("media-grid").querySelector(".media-card"), galleryPhoto = card.querySelector(".photo-open"), galleryImage = galleryPhoto.querySelector("img");
   assert.ok(galleryImage); galleryPhoto.focus(); const before = f.calls.length, urls = [...f.createdUrls];
   f.language("en");
   assert.equal(messages(f).children[0], article); assert.equal(photo.querySelector("img"), image);
-  assert.equal(f.element("media-grid").children[0], card); assert.equal(galleryPhoto.querySelector("img"), galleryImage);
+  assert.equal(f.element("media-grid").querySelector(".media-card"), card); assert.equal(galleryPhoto.querySelector("img"), galleryImage);
   assert.equal(f.document.activeElement, galleryPhoto); assert.equal(article.querySelector(".photo-caption").textContent, "Envoyer");
   assert.equal(photo.getAttribute("aria-label"), "Enlarge this message’s photo"); assert.equal(image.getAttribute("aria-label"), "Private photo");
   assert.equal(galleryPhoto.getAttribute("aria-label"), "Enlarge this private photo"); assert.equal(galleryImage.getAttribute("aria-label"), "Private photo");
-  assert.equal(f.element("media-title").textContent, "Conversation photos"); assert.match(card.textContent, new RegExp(dateText("en").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.equal(f.element("media-title").textContent, "Conversation photos"); assert.match(card.textContent, new RegExp(new Date(now).toLocaleString("en-US", {...dateOptions,year:"numeric"}).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   f.language("fr"); assert.equal(f.element("media-title").textContent, "Photos de la conversation");
   assert.equal(f.calls.length, before); assert.deepEqual(f.createdUrls, urls); assert.equal(f.revoked.length, 0);
 });
@@ -459,4 +460,16 @@ test("personal replies keep their title and body verbatim while management contr
   assert.equal(row.querySelector("strong"), null);
   for (const handler of row.querySelector(".personal-reply-insert").events.get("click")) handler({}); await flush();
   assert.equal(f.element("message-body").value, "Mes photos <b>texte brut</b>"); assert.equal(f.state.posts, 0);
+});
+
+test("an old gallery photo shows its year and translates that exact date without loading another image", async () => {
+  let f; const oldDate=Date.UTC(2020,0,15,12);
+  f=harness({intercept:path=>path.endsWith('/full')?photoResponse():undefined});await flush();
+  const item=photoFixture(f);f.context.__oldGalleryPhoto={media:item.media,messageId:item.id,sequence:item.sequence,createdAt:oldDate};
+  f.run("openLightbox(__oldGalleryPhoto,currentState(),el('open-gallery'))");await flush();
+  assert.equal(f.element('lightbox-status').textContent,`Photo privée · ${new Date(oldDate).toLocaleString('fr-FR',{...dateOptions,year:'numeric'})}`);
+  const before=f.calls.length, image=f.element('lightbox-image').querySelector('img');
+  f.language('en');
+  assert.equal(f.element('lightbox-status').textContent,`Private photo · ${new Date(oldDate).toLocaleString('en-US',{...dateOptions,year:'numeric'})}`);
+  assert.equal(f.element('lightbox-image').querySelector('img'),image);assert.equal(f.calls.length,before);
 });

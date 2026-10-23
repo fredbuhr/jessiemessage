@@ -84,7 +84,7 @@ export async function checkMessagingSchema(env, { video = false, experience = fa
         import("../server/preferences/store.mjs"), import("../server/tasks/store.mjs")]);
       await createPreferencesStore({ pool, chatStore }).assertSchema();
       const key = Buffer.from(env.JESSIEMESSAGE_CRM_KEY ?? "", "base64url");
-      try { await createTasksStore({ pool, chatStore, key, experience }).assertSchema(schemaOptions); }
+      try { await createTasksStore({ pool, chatStore, key }).assertSchema(schemaOptions); }
       finally { key.fill(0); }
     }
     if (video) {

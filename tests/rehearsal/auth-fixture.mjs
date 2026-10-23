@@ -4,7 +4,7 @@
  * loopback test schema is required; only this exercise's tables are removed.
  */
 import { execFile } from "node:child_process";
-import { createECDH, createHash, createHmac, randomBytes } from "node:crypto";
+import { createECDH, createHash, randomBytes } from "node:crypto";
 import { request as httpRequest } from "node:http";
 import { createServer as createHttpsServer } from "node:https";
 import { chmod, lstat, mkdtemp, readFile, readdir, realpath, rmdir, unlink } from "node:fs/promises";
@@ -24,8 +24,6 @@ import { consumeSyntheticInvitation } from "../fixtures/manual-admission.mjs";
 import { generateNotificationVapidKeys } from "../../scripts/prepare-runtime-notifications.mjs";
 import { loadExperienceMigrations } from "../../server/experience/migrations.mjs";
 import { createResetStore } from "../../server/reset/store.mjs";
-import { sealPreferences } from "../../server/preferences/crypto.mjs";
-import { sealTask } from "../../server/tasks/crypto.mjs";
 import { loadVideoMigrations } from "../../server/video/migrations.mjs";
 import { createVideoStorage } from "../../server/video/storage.mjs";
 import { createVideoStore } from "../../server/video/store.mjs";
@@ -208,9 +206,8 @@ async function seedVideoCompatibility({ pool, connection, adminId, clientId, key
  * session. This fixture never changes NODE_TLS_REJECT_UNAUTHORIZED or any
  * production listener, feature configuration, mail transport, or credential.
  */
-export async function createAuthenticationFixture({ messaging = false, video = false, experience = false, rollback185 = false } = {}) {
-  if (typeof messaging !== "boolean" || typeof video !== "boolean" || typeof experience !== "boolean" || typeof rollback185 !== "boolean"
-    || video && !messaging || experience && !video || rollback185 && !experience) fail("AUTH_REHEARSAL_CONFIG");
+export async function createAuthenticationFixture({ messaging = false, video = false, experience = false } = {}) {
+  if (typeof messaging !== "boolean" || typeof video !== "boolean" || typeof experience !== "boolean" || video && !messaging || experience && !video) fail("AUTH_REHEARSAL_CONFIG");
   const confirmed = validateFixtureEnvironment();
   const env = Object.fromEntries(DATABASE_KEYS.map((key) => [key, process.env[key]]));
   env.JESSIEMESSAGE_DB_HOST = confirmed.host;
@@ -449,27 +446,6 @@ export async function createAuthenticationFixture({ messaging = false, video = f
     }
     if (video && !VIDEO_CREATION_ENABLED) compatibilityData = await seedVideoCompatibility({ pool: bootstrapPool, connection, adminId, clientId,
       key, keys: domainKeys, origin, root: videoRoot, operationsRoot });
-    if (rollback185) {
-      // Test data only, created before the 185 application starts. Use the
-      // retained envelope format and the 190 reserved-row ID/proof contract;
-      // the 190 reply engine is deliberately absent from this rollback.
-      const row = (await connection.query("SELECT id FROM conversations WHERE admin_id = ? AND client_id = ?", [adminId, clientId]))[0];
-      if (!Buffer.isBuffer(row?.id) || row.id.length !== 16) fail();
-      const now = sqlDate(Date.now()), version = "1", owner = clientId.toString("hex");
-      const encrypted = sealPreferences({ catalogueVersion: "2026-10-23-recherche-1", selectedIds: ["pref_c01_hetero-heterosexuel"] }, domainKeys.CRM, owner, version);
-      const digest = (...parts) => createHmac("sha256", domainKeys.CRM).update("jessiemessage:reply-task:v1\0").update(JSON.stringify(parts)).digest();
-      const taskId = digest("id", adminId.toString("hex"), row.id.toString("hex")).subarray(0, 16);
-      const proof = digest("state", adminId.toString("hex"), row.id.toString("hex"), "0", true, version);
-      const title = sealTask("À répondre", domainKeys.CRM, { adminId, conversationId: row.id, taskId, version, dueAt: null, done: false });
-      await connection.beginTransaction();
-      try {
-        await connection.query("INSERT INTO profile_preferences (user_id, version, selection_encrypted, created_at, updated_at) VALUES (?, ?, ?, ?, ?)", [clientId, version, encrypted, now, now]);
-        await connection.query(`INSERT INTO crm_tasks (id, admin_id, conversation_id, title_encrypted, due_at, done, version,
-          request_fingerprint, created_at, updated_at, reply_kind, reply_through, reply_reopened)
-          VALUES (?, ?, ?, ?, NULL, 0, ?, ?, ?, ?, 'reply', 0, 1)`, [taskId, adminId, row.id, title, version, proof, now, now]);
-        await connection.commit();
-      } catch (error) { await connection.rollback(); throw error; }
-    }
     await bootstrapPool.end(); bootstrapPool = null;
     configured = await createConfiguredServer(runtimeEnvironment, video ? { requestOrigin: origin, deviceTransition: true,
       recovery: true, crm: true, broadcast: true, accountClosures: true, backupDirectory: operationsRoot, video: true, ...(experience ? { experience: true, tasks: true } : {}) } : {});
@@ -547,15 +523,6 @@ export async function createAuthenticationFixture({ messaging = false, video = f
         const rows = await connection.query("SELECT (SELECT COUNT(*) FROM video_assets) AS videos,(SELECT COUNT(*) FROM message_video) AS links,(SELECT COUNT(*) FROM broadcast_campaigns) AS campaigns");
         return { videos: Number(rows[0].videos), links: Number(rows[0].links), campaigns: Number(rows[0].campaigns),
           repliesSha256: createHash("sha256").update(await readFile(join(operationsRoot, `quick-replies-${adminId.toString("hex")}.json`))).digest("hex") };
-      } } : {}),
-      ...(rollback185 ? { async rollback185State() {
-        if (stopping) fail();
-        const preferences = await connection.query("SELECT * FROM profile_preferences WHERE user_id = ?", [clientId]);
-        const replies = await connection.query("SELECT * FROM crm_tasks WHERE admin_id = ? AND reply_kind = 'reply' ORDER BY id", [adminId]);
-        const migrations = await connection.query("SELECT COUNT(*) AS amount FROM schema_migrations");
-        const hash = rows => createHash("sha256").update(JSON.stringify(rows, (_, value) => typeof value === "bigint" ? value.toString() : value)).digest("hex");
-        return { migrations: Number(migrations[0].amount), preferences: preferences.length, replies: replies.length,
-          preferencesSha256: hash(preferences), replySha256: hash(replies) };
       } } : {}),
       ...(experience ? { otherClient, async seedClientResetToken() {
         if (stopping) fail();

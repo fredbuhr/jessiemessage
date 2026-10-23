@@ -236,7 +236,7 @@ async function submit(action) {
       ? "La connexion a peut-être abouti, mais sa vérification a échoué. Actualise la page pour vérifier ta session avant de réessayer."
       : errorMessage(error), true);
   }
-  finally { if (epoch === submitEpoch) { for (const input of document.querySelectorAll('input[type="password"]')) input.value = ""; setBusy(false); updateRecoveryLink(); } }
+  finally { if (epoch === submitEpoch) { globalThis.JessiePasswordFields?.resetAll(); for (const input of document.querySelectorAll('input[type="password"]')) input.value = ""; setBusy(false); updateRecoveryLink(); } }
 }
 loginForm.addEventListener("submit", (event) => {
   event.preventDefault(); void submit(async () => {

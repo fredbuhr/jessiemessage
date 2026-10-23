@@ -647,18 +647,8 @@ for (const kind of ["invitations", "clients"]) {
 }
 
 function resetPasswordVisibility() {
-  const password = document.getElementById("password"), start = password.selectionStart, end = password.selectionEnd, direction = password.selectionDirection;
-  password.type = "password";
-  if (Number.isInteger(start) && Number.isInteger(end)) password.setSelectionRange(start, end, direction ?? "none");
-  document.getElementById("toggle-password").setAttribute("aria-pressed", "false");
-  adminUI.text(document.getElementById("toggle-password"), "Afficher le mot de passe");
+  globalThis.JessiePasswordFields?.enhance(document.getElementById("password"), { button: document.getElementById("toggle-password") }).reset();
 }
-document.getElementById("toggle-password").addEventListener("click", () => {
-  const password = document.getElementById("password"), show = password.type === "password";
-  password.type = show ? "text" : "password";
-  document.getElementById("toggle-password").setAttribute("aria-pressed", String(show));
-  adminUI.text(document.getElementById("toggle-password"), show ? "Masquer le mot de passe" : "Afficher le mot de passe");
-});
 document.getElementById("toggle-recovery-code").addEventListener("click", () => {
   const button = document.getElementById("toggle-recovery-code"), recovery = button.getAttribute("aria-pressed") !== "true";
   button.setAttribute("aria-pressed", String(recovery));

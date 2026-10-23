@@ -11,14 +11,15 @@ function actorView(value) {
 }
 export function taskView(value) {
   return checked(() => {
-    fields(value, ["id", "conversationId", "clientName", "title", "dueAt", "done", "version", "createdAt", "updatedAt"]);
+    fields(value, ["id", "conversationId", "clientName", "title", "dueAt", "done", "version", "createdAt", "updatedAt", ...(Object.hasOwn(value ?? {}, "reply") ? ["reply"] : [])]);
+    if (value.reply !== undefined && value.reply !== true) fail();
     id(value.id); id(value.conversationId); titleText(value.title); version(value.version, false);
     instant(value.createdAt); instant(value.updatedAt);
     if (value.dueAt !== null) instant(value.dueAt);
     if (typeof value.done !== "boolean" || typeof value.clientName !== "string" || value.clientName.length > 64
       || !value.clientName.length || !value.clientName.isWellFormed() || value.updatedAt < value.createdAt) fail();
     return { id: value.id, conversationId: value.conversationId, clientName: value.clientName, title: value.title,
-      dueAt: value.dueAt, done: value.done, version: value.version, createdAt: value.createdAt, updatedAt: value.updatedAt };
+      dueAt: value.dueAt, done: value.done, version: value.version, createdAt: value.createdAt, updatedAt: value.updatedAt, ...(value.reply === true ? { reply: true } : {}) };
   });
 }
 export function taskListView(value, input) {

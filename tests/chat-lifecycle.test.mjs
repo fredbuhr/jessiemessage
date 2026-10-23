@@ -6,6 +6,7 @@ import { quickReplyOptions } from "../public/quick-replies.js";
 import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "../public/emoji-catalog.js";
 import { webcrypto } from "node:crypto";
 import { createChatDrafts } from "../public/chat-drafts.js";
+import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "../public/photo-batch.js";
 
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
 const sessionClockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
@@ -113,7 +114,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   const worker = {}, workerEvents = new Map(), acknowledgements = [];
   const location = { origin: "https://example.invalid", pathname: currentSession?.user.role === "admin" ? "/admin/messages" : "/messages", hash: notification ? `#notification=${notification}` : "", replace: (path) => redirects.push(path), reload() { redirects.push("reload"); } };
   const history = { replaceState(_state, _title, path) { const next = new URL(path, location.origin); location.pathname = next.pathname; location.hash = next.hash; } };
-  const context = vm.createContext({ __chatDrafts: { createChatDrafts }, __loadProfile: async () => { if (profileLoader) return profileLoader(); if (!profileFactory) throw new Error("Optional profile disabled in fixture"); return { createProfileUI: profileFactory }; }, __emojis: { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji }, __quickReplies: { quickReplyOptions }, __prepareImageUpload: prepare, document, window: { addEventListener: (name, handler) => windowEvents.set(name, handler) },
+  const context = vm.createContext({ __photoBatch: { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH }, __chatDrafts: { createChatDrafts }, __loadProfile: async () => { if (profileLoader) return profileLoader(); if (!profileFactory) throw new Error("Optional profile disabled in fixture"); return { createProfileUI: profileFactory }; }, __emojis: { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji }, __quickReplies: { quickReplyOptions }, __prepareImageUpload: prepare, document, window: { addEventListener: (name, handler) => windowEvents.set(name, handler) },
     matchMedia: () => ({ matches: coarse }), location, history, sessionStorage: draftStorage, navigator: { serviceWorker: { controller: worker, addEventListener: (name, handler) => workerEvents.set(name, handler) } },
     Date: class extends Date { static now() { return time; } }, AbortController, TextEncoder, Uint8Array, Blob, crypto: webcrypto, queueMicrotask,
     URL: { createObjectURL: () => { const value = `blob:synthetic-${++blobId}`; createdUrls.push(value); return value; }, revokeObjectURL: (url) => revoked.push(url) },
@@ -155,7 +156,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   vm.runInContext(sessionClockSource, context, { filename: "public/session-clock.js" });
   vm.runInContext(notificationLinkSource, context, { filename: "public/notification-link.js" });
   vm.runInContext(`globalThis.__model = (() => {${modelSource.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}};})();`, context, { filename: "public/chat-model.js" });
-  const executable = source.replace('import { createChatDrafts } from "/chat-drafts.js";', 'const {createChatDrafts} = __chatDrafts;').replace('await import("/profile.js")', 'await __loadProfile()').replace('import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,emojiSkinTones,insertEmoji} = __emojis;').replace('import { quickReplyOptions } from "/quick-replies.js";', 'const {quickReplyOptions} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = __prepareImageUpload;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
+  const executable = source.replace('import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "/photo-batch.js";', 'const {createPhotoBatch,removePhoto,runPhotoBatch,MAX_PHOTO_BATCH} = __photoBatch;').replace('import { createChatDrafts } from "/chat-drafts.js";', 'const {createChatDrafts} = __chatDrafts;').replace('await import("/profile.js")', 'await __loadProfile()').replace('import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,emojiSkinTones,insertEmoji} = __emojis;').replace('import { quickReplyOptions } from "/quick-replies.js";', 'const {quickReplyOptions} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = __prepareImageUpload;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
     "\nglobalThis.__inspect = () => ({ready, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration, pendingNotification, fetchProfileBinary, avatarImageUrl, avatarContainers});";
   vm.runInContext(executable, context, { filename: "public/chat.js", importModuleDynamically: async () => { throw new Error("Optional feature disabled in fixture"); } });
   return { element, document, state, calls, redirects, timers, revoked, createdUrls, context, conversation, inspect: () => context.__inspect(),
@@ -205,6 +206,19 @@ async function selectVideo(f) {
   for (const handler of preview.events.get("loadedmetadata")) handler({});
   await flush(); return { file, preview };
 }
+
+test("clients cannot create a video draft even through a direct file-change event", async () => {
+  const f = harness({ intercept: videoCapability }); await flush();
+  const uploads = videoTransport(f);
+  assert.equal(f.element("pick-video").hidden, true);
+  f.element("video-file").files = [new Blob(["synthetic forbidden video"], { type: "video/mp4" })];
+  for (const handler of f.element("video-file").events.get("change")) handler({});
+  await flush();
+  assert.equal(f.inspect().states.get(f.inspect().selected).videoDraft, null);
+  assert.equal(f.element("video-preview").children.length, 0);
+  assert.match(f.element("chat-status").textContent, /réservé à Jessie/);
+  assert.equal(uploads.length, 0); assert.equal(posts(f).length, 0);
+});
 
 test("video selection is a local draft and cancelling upload never submits a message", async () => {
   const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: videoCapability }); await flush(); const uploads = videoTransport(f);
@@ -1377,12 +1391,10 @@ test("a read-only capability change preserves an unsaved reply draft for copying
 });
 
 const ownedVideo = (value, cleanupPending = false) => ({ id: id(value), bytes: 100, mime: "video/mp4", createdAt: now,
-  cleanupPending, contentUrl: cleanupPending ? null : `/api/video/admin/assets/${id(value)}/content` });
+  cleanupPending, contentUrl: cleanupPending ? null : `/api/video/client/assets/${id(value)}/content` });
 async function videoLibraryFixture(intercept) {
-  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: (path, options, state, calls) => videoCapability(path)
+  const f = harness({ intercept: (path, options, state, calls) => videoCapability(path)
     ?? (path.includes("/gallery?") ? response(200, { items: [], nextBefore: null, hasMore: false }) : intercept(path, options, state, calls)) });
-  await flush();
-  for (const handler of f.element("conversations").children[0].events.get("click")) handler({});
   await flush(); await f.click("open-video-gallery"); await f.click("video-gallery-library"); return f;
 }
 async function confirmVideoRemoval(f, button) {
@@ -1392,15 +1404,15 @@ async function confirmVideoRemoval(f, button) {
 
 test("owned videos use strict owner URLs, paginate and expose interrupted cleanup for retry", async () => {
   const f = await videoLibraryFixture(path => {
-    if (path === "/api/video/admin/assets?limit=20") return response(200, { assets: [ownedVideo(910)], nextCursor: id(910), hasMore: true });
-    if (path === `/api/video/admin/assets?limit=20&afterId=${id(910)}`) return response(200, { assets: [ownedVideo(911, true)], nextCursor: null, hasMore: false });
+    if (path === "/api/video/client/assets?limit=20") return response(200, { assets: [ownedVideo(910)], nextCursor: id(910), hasMore: true });
+    if (path === `/api/video/client/assets?limit=20&afterId=${id(910)}`) return response(200, { assets: [ownedVideo(911, true)], nextCursor: null, hasMore: false });
   });
   assert.equal(f.element("video-gallery-title").textContent, "Mes vidéos");
   assert.equal(f.element("video-grid").querySelector("video").src, ownedVideo(910).contentUrl);
   await f.click("more-videos"); assert.equal(f.element("video-grid").children.length, 2);
   assert.equal(f.element("video-grid").querySelectorAll("video").length, 1);
   assert.match(contents(f.element("video-grid")), /Terminer la suppression/);
-  for (const path of ["https://other.invalid" + ownedVideo(910).contentUrl, ownedVideo(910).contentUrl.replace("admin", "client"), ownedVideo(910).contentUrl + "?x=1"]) {
+  for (const path of ["https://other.invalid" + ownedVideo(910).contentUrl, ownedVideo(910).contentUrl.replace("client", "admin"), ownedVideo(910).contentUrl + "?x=1"]) {
     f.context.__candidate = path;
     assert.equal(vm.runInContext(`validVideoUrl(__candidate,currentState(),null,'${id(910)}')`, f.context), false);
   }
@@ -1409,8 +1421,8 @@ test("owned videos use strict owner URLs, paginate and expose interrupted cleanu
 test("owned video deletion requires confirmation, preserves conflicts and retries the same uncertain asset", async () => {
   let outcome = 409; const calls = [];
   const f = await videoLibraryFixture((path, options) => {
-    if (path === "/api/video/admin/assets?limit=20") return response(200, { assets: [ownedVideo(912)], nextCursor: null, hasMore: false });
-    if (path === `/api/video/admin/assets/${id(912)}/delete`) { calls.push({ path, body: options.body }); return response(outcome,
+    if (path === "/api/video/client/assets?limit=20") return response(200, { assets: [ownedVideo(912)], nextCursor: null, hasMore: false });
+    if (path === `/api/video/client/assets/${id(912)}/delete`) { calls.push({ path, body: options.body }); return response(outcome,
       outcome === 200 ? { deleted: true } : { error: outcome === 409 ? "video_in_use" : "video_unavailable" }); }
   });
   let button = f.element("video-grid").querySelector("button");
@@ -1425,7 +1437,7 @@ test("owned video deletion requires confirmation, preserves conflicts and retrie
 test("owned videos protect uncertain sends and discard late pages after an account change", async () => {
   const delayed = pause(); let reads = 0;
   const f = await videoLibraryFixture(path => {
-    if (path === "/api/video/admin/assets?limit=20") return ++reads === 1 ? response(200, { assets: [ownedVideo(913)], nextCursor: null, hasMore: false }) : delayed.promise;
+    if (path === "/api/video/client/assets?limit=20") return ++reads === 1 ? response(200, { assets: [ownedVideo(913)], nextCursor: null, hasMore: false }) : delayed.promise;
   });
   const state = f.inspect().states.get(f.inspect().selected); state.pending = { kind: "video", videoId: id(913), status: "retry" };
   vm.runInContext("renderVideoGallery()", f.context);
@@ -1438,8 +1450,8 @@ test("owned videos protect uncertain sends and discard late pages after an accou
 test("owned video deletion rechecks uncertain sends after an asynchronous confirmation", async () => {
   let deletes = 0;
   const f = await videoLibraryFixture(path => {
-    if (path === "/api/video/admin/assets?limit=20") return response(200, { assets: [ownedVideo(914)], nextCursor: null, hasMore: false });
-    if (path === `/api/video/admin/assets/${id(914)}/delete`) { deletes++; return response(200, { deleted: true }); }
+    if (path === "/api/video/client/assets?limit=20") return response(200, { assets: [ownedVideo(914)], nextCursor: null, hasMore: false });
+    if (path === `/api/video/client/assets/${id(914)}/delete`) { deletes++; return response(200, { deleted: true }); }
   });
   const button = f.element("video-grid").querySelector("button"); assert.equal(button.disabled, false);
   for (const handler of button.events.get("click")) handler({}); await flush();
@@ -1607,12 +1619,82 @@ test("touch photo/video drafts and quick replies return to a composer control in
   assert.equal(admin.document.activeElement.id, "open-composer-tools"); assert.ok(admin.element("message-body").value.length > 0); assert.equal(posts(admin).length, 0);
 });
 
-test("clients cannot create a video draft even through a direct file-change event", async () => {
-  const f = harness({ intercept: videoCapability }); await flush(); const uploads = videoTransport(f);
-  assert.equal(f.element("pick-video").hidden, true);
-  f.element("video-file").files = [new Blob(["synthetic forbidden video"], { type: "video/mp4" })];
-  for (const handler of f.element("video-file").events.get("change")) handler({}); await flush();
-  assert.equal(f.inspect().states.get(f.inspect().selected).videoDraft, null);
-  assert.equal(f.element("video-preview").children.length, 0); assert.match(f.element("chat-status").textContent, /réservé à Jessie/);
-  assert.equal(uploads.length, 0); assert.equal(posts(f).length, 0);
+test("a photo selection sent from an old segment loads recent history before upload and preserves its observed reply boundary on retry", async () => {
+  const recent = pause(); let f, loadingRecent = false, uploads = 0; const commands = [];
+  const peer = value => ({ id: id(4000 + value), sequence: String(value), sender: "peer", body: `Peer ${value}`, createdAt: now, deletedAt: null, clientMessageId: null });
+  f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept(path, options) {
+    if (path === "/api/media/admin/capabilities") return response(200, { enabled: true });
+    if (loadingRecent && path.endsWith("/messages?limit=50")) return recent.promise;
+    if (path === "/api/media/admin/assets" && options.method === "POST") return response(201, { asset: { id: id(5000 + ++uploads) } });
+    if (path.endsWith("/messages/batch")) {
+      const input = JSON.parse(options.body); commands.push(input.messages);
+      if (commands.length === 1) throw new Error("Synthetic lost photo batch response");
+      return response(200, { results: input.messages.map((item, index) => ({ clientMessageId: item.clientMessageId, duplicate: true,
+        message: { id: id(6000 + index), sequence: String(101 + index), sender: "me", body: item.caption,
+          createdAt: now, deletedAt: null, clientMessageId: item.clientMessageId } })) });
+    }
+    return undefined;
+  } }); await flush();
+  for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush();
+  const state = f.inspect().states.get(f.inspect().selected);
+  state.messages = new Map([["3", peer(3)]]); state.hasMoreAfter = true; state.nextAfter = "3";
+  Object.assign(state.conversation, { latestSequence: "100", lastReadSequence: "100", reply: { through: "100", version: "7" } });
+  f.element("image-file").files = [new Blob(["First photo"], { type: "image/jpeg" }), new Blob(["Second photo"], { type: "image/jpeg" })];
+  for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+  const batch = state.photoBatch, keys = batch.items.map(item => item.clientMessageId); loadingRecent = true;
+  await f.send("Caption on first only");
+  assert.equal(f.inspect().sendBusy, true); assert.equal(uploads, 0); assert.equal(commands.length, 0);
+  assert.equal(batch.replyThrough, "3"); assert.equal(batch.replyVersion, "7");
+  await f.send("Caption on first only");
+  assert.equal(f.calls.filter(call => call.path.endsWith("/messages?limit=50")).length, 2, "double click shares the one current-page load after the initial page");
+  recent.resolve(response(200, { conversation: state.conversation, messages: [peer(99), peer(100)], eventCursor: "100",
+    hasMoreBefore: true, nextBefore: "99", hasMoreAfter: false, nextAfter: null })); await flush();
+  assert.equal(state.hasMoreAfter, false); assert.deepEqual([...state.messages.keys()], ["99", "100"]);
+  assert.equal(uploads, 2); assert.equal(commands.length, 1); assert.equal(state.photoBatch, batch);
+  assert.deepEqual(commands[0].map(item => item.clientMessageId), keys);
+  assert.deepEqual(commands[0].map(item => item.replyThrough), ["3", "3"]);
+  assert.deepEqual(commands[0].map(item => item.replyVersion), ["7", "7"]);
+  assert.deepEqual(commands[0].map(item => item.caption), ["Caption on first only", ""]);
+  await f.send("Caption on first only");
+  assert.equal(uploads, 2); assert.equal(commands.length, 2); assert.deepEqual(commands[1], commands[0]);
+  assert.deepEqual([...state.messages.keys()], ["99", "100", "101", "102"]); assert.equal(state.photoBatch, null);
+});
+
+test("a failed current-page load leaves a photo selection untouched and never uploads it", async () => {
+  let failLatest = false, uploads = 0;
+  const f = harness({ intercept(path, options) {
+    if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+    if (failLatest && path.endsWith("/messages?limit=50")) return response(503, { error: "temporarily_unavailable" });
+    if (path === "/api/media/client/assets" && options.method === "POST") { uploads++; throw new Error("Upload must not run"); }
+    return undefined;
+  } }); await flush();
+  const state = f.inspect().states.get(f.inspect().selected); state.hasMoreAfter = true; state.nextAfter = "1";
+  f.element("image-file").files = [new Blob(["First photo"], { type: "image/jpeg" }), new Blob(["Second photo"], { type: "image/jpeg" })];
+  for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+  const batch = state.photoBatch, keys = batch.items.map(item => item.clientMessageId); failLatest = true;
+  await f.send("Keep the caption");
+  assert.equal(uploads, 0); assert.equal(posts(f).length, 0); assert.equal(state.photoBatch, batch);
+  assert.deepEqual(batch.items.map(item => item.clientMessageId), keys); assert.equal(batch.started, false); assert.equal(batch.busy, false);
+  assert.equal(f.inspect().sendBusy, false); assert.equal(f.element("message-body").value, "Keep the caption");
+});
+
+test("viewer swipes keep pinch zoom and cancelled or multi-touch gestures from changing the photo", async () => {
+  const f = harness({ intercept: path => path.includes('/gallery?') ? response(200, { items: [], hasMore: false, nextBefore: null }) : undefined }); await flush();
+  f.context.__gesturePhoto = { messageId: id(7001), sequence: "3", createdAt: now };
+  vm.runInContext("lightboxItem=__gesturePhoto",f.context);
+  f.context.visualViewport = { scale: 1 };
+  const surface=f.element('lightbox-image'), point=(x,y=50)=>({clientX:x,clientY:y});
+  const fire=(type,event)=>{for(const handler of surface.events.get(type)??[])handler(event);};
+  const start=()=>fire('touchstart',{touches:[point(100)]});
+  const end=()=>fire('touchend',{touches:[],changedTouches:[point(220)]});
+  const galleries=()=>f.calls.filter(call=>call.path.includes('/gallery?'));
+  start();fire('touchcancel',{});end();await flush();assert.equal(galleries().length,0,'a cancelled native pan never changes the photo');
+  fire('touchstart',{touches:[point(100),point(140)]});end();await flush();assert.equal(galleries().length,0,'pinch gestures are reserved for native zoom');
+  f.context.visualViewport.scale=2;vm.runInContext('updatePhotoTouchPolicy()',f.context);
+  assert.equal(surface.classList.contains('is-zoomed'),true,'zoom enables both native pan axes');
+  start();end();await flush();assert.equal(galleries().length,0,'a zoomed image can be panned without navigating');
+  f.context.visualViewport.scale=1;vm.runInContext('updatePhotoTouchPolicy()',f.context);
+  assert.equal(surface.classList.contains('is-zoomed'),false,'normal scale restores horizontal photo gestures');
+  start();end();await flush();
+  assert.equal(galleries().length,1);assert.match(galleries()[0].path,/gallery\?limit=1&before=3$/,'one completed horizontal swipe uses the displayed message cursor');
 });

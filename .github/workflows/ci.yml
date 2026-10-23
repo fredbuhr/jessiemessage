@@ -127,6 +127,15 @@ jobs:
           JESSIEMESSAGE_RUNTIME_DB_PASSWORD: ci-runtime-only-not-a-secret
           JESSIEMESSAGE_APPLICATION_DATABASE: jessiemessage_test_auth_browser_ci
 
+      - name: Profile and private preferences rendering
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: experience-https-render
+          retention-days: 7
+          if-no-files-found: warn
+          path: artifacts/homepage/experience-*.png
+
   database:
     name: MariaDB ${{ matrix.mariadb }}
     runs-on: ubuntu-latest

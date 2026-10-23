@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { tokenDigest } from "../auth/crypto.mjs";
 import { canonicalProfileName, isProfileId, isProfileVersion, ownAvatarUrl, MAX_AVATAR_THUMBNAIL_BYTES } from "./validation.mjs";
+import { createPreferencesService } from "../preferences/service.mjs";
 
 export class ProfileError extends Error {
   constructor(code, retryAfter) { super("Private profile operation could not be completed."); this.name = "ProfileError"; this.code = code; if (retryAfter !== undefined) this.retryAfter = retryAfter; }
@@ -9,11 +10,12 @@ const fail = code => { throw new ProfileError(code); };
 const allowed = new Set(["PROFILE_INPUT", "PROFILE_CONFLICT", "PROFILE_NOT_FOUND", "PROFILE_AVATAR", "CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN", "CHAT_NOT_FOUND", "ACCESS_EXPIRED", "ACCESS_PREREQUISITES", "AUTH_RATE_LIMIT", "AUTH_BUSY"]);
 const id = value => { if (!isProfileId(value)) fail("PROFILE_INPUT"); return Buffer.from(value, "hex"); };
 
-export function createProfileService({ store, chatService, storage = null, authStore, key, clock = Date.now }) {
+export function createProfileService({ store, chatService, storage = null, authStore, key, clock = Date.now, preferencesStore = null, preferencesKey = null }) {
   if (!["getProfile", "saveProfile", "getAvatar", "getPeerAvatar"].every(method => typeof store?.[method] === "function")
     || typeof chatService?.actor !== "function" || storage !== null && typeof storage?.get !== "function" || typeof authStore?.consumeRateLimit !== "function"
     || !Buffer.isBuffer(key) || key.length !== 32 || typeof clock !== "function") fail("PROFILE_CONFIG");
   const secret = Buffer.from(key);
+  const preferences = preferencesStore === null ? null : createPreferencesService({ store: preferencesStore, chatService, authStore, key: preferencesKey, clock });
   const now = () => { const value = clock(); if (!Number.isSafeInteger(value) || value < 0 || value > 253402300799999) fail("PROFILE_UNAVAILABLE"); return value; };
   async function guarded(operation) {
     try { return await operation(); }
@@ -75,6 +77,7 @@ export function createProfileService({ store, chatService, storage = null, authS
     } finally { if (!completed && Buffer.isBuffer(content)) content.fill(0); }
   }
   return Object.freeze({
+    preferences,
     actor: (role, token) => guarded(() => actor(role, token)),
     profile: (role, token) => guarded(async () => {
       const value = await context(role, token, "read");

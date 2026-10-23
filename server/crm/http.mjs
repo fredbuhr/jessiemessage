@@ -200,7 +200,7 @@ export function createCrmHandler(service, { origin, conversationExporter = null 
         reply(response, method, 200, await readFile(new URL(name, publicRoot)), { "Content-Type": type });
       } else if (route.kind === "capabilities") {
         query(url, []);
-        reply(response, method, 200, { enabled: true, limits: { labelsPerKind: 100, labelsPerClient: 32, noteCharacters: 8000 },
+        reply(response, method, 200, { enabled: true, ...(service.replyEnabled === true ? { replies: { enabled: true } } : {}), limits: { labelsPerKind: 100, labelsPerClient: 32, noteCharacters: 8000 },
           ...(conversationExporter ? { conversationExport: { enabled: true, photos: conversationExporter.photos, maxBytes: conversationExporter.maxBytes,
             ...(conversationExporter.videos === true ? { videos: true } : {}) } } : {}) });
       } else if (route.kind === "export") {
@@ -251,11 +251,11 @@ export function createCrmHandler(service, { origin, conversationExporter = null 
         if (result?.deleted !== true) throw unavailable();
         reply(response, method, 200, { deleted: true });
       } else if (route.kind === "contacts") {
-        const parsed = query(url, ["q", "tagId", "groupId", "access", "unread", "reminder", "afterId", "limit"], 50);
+        const parsed = query(url, ["q", "tagId", "groupId", "access", "unread", "reply", "reminder", "afterId", "limit"], 50);
         const options = { q: parsed.q ?? "", tagId: parsed.tagId ?? null, groupId: parsed.groupId ?? null,
-          access: parsed.access ?? "all", unread: parsed.unread !== undefined, reminder: parsed.reminder ?? "all",
+          access: parsed.access ?? "all", unread: parsed.unread !== undefined, ...(parsed.reply !== undefined ? { reply: true } : {}), reminder: parsed.reminder ?? "all",
           afterId: parsed.afterId ?? null, limit: parsed.limit };
-        if (parsed.unread !== undefined && parsed.unread !== "1" || !["all", ...STATES].includes(options.access)
+        if (parsed.reply !== undefined && (parsed.reply !== "1" || service.replyEnabled !== true) || parsed.unread !== undefined && parsed.unread !== "1" || !["all", ...STATES].includes(options.access)
           || !["all", "due", "upcoming", "none"].includes(options.reminder)) throw invalid();
         validateSearch(options.q);
         for (const field of ["tagId", "groupId", "afterId"]) if (options[field] !== null) validateId(options[field]);

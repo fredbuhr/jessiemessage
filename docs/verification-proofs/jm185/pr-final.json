@@ -1,0 +1,20 @@
+{
+  "status": "PR_qualified_merged_main_qualification_running",
+  "pr": 134,
+  "prHead": "f44fcdce7a93927969850d82859317d5bbad5532",
+  "source": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
+  "tree": "7ec449cb3a63a091c5233993923ceb69f8314366",
+  "prRun": 39957721078,
+  "prAttempt": 1,
+  "prJobsPassed": 5,
+  "mainRun": 39958956620,
+  "mainQualified": false,
+  "node": "v24.22.1",
+  "schemaMigrations": 38,
+  "tables": 37,
+  "privateDataPreserved": true,
+  "privateDataEvidence": "Synthetic real HTTPS/SQL38 start and immutable encrypted preferences/reserved-task hashes; native SQL task mutation protection. No hosted proof.",
+  "deployed": false,
+  "productionVerified": false,
+  "rollbackOnlyTests": "The four185 tests asserting dormant190 features remain on immutable185 source. Product190 uses its own active-feature and reserved-task mutation tests."
+}

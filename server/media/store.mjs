@@ -333,15 +333,24 @@ export function createMediaStore({ pool, chatStore, capacity = null, video = fal
       });
     },
 
-    async gallery({ role, tokenHash, now, conversationId, before = null, limit = 50 }) {
+    async gallery({ role, tokenHash, now, conversationId, before = null, after = null, from = null, until = null, limit = 50 }) {
       integer(limit, 100); if (before !== null) sequence(before);
+      if (after !== null) { sequence(after); if (before !== null || limit !== 1) input(); }
+      if (from !== null) instant(from); if (until !== null) instant(until);
+      if (from !== null && until !== null && from >= until) input();
       return chatStore.withConversation({ role, tokenHash, now, conversationId }, async (connection) => {
+        const cursor = before ?? after;
+        const pivot = cursor === null ? null : (await connection.query("SELECT id, created_at FROM messages WHERE conversation_id = ? AND sequence_no = ? AND created_at <= ?", [conversationId, cursor, sqlDate(now)]))[0];
+        if (cursor !== null && !pivot) fail("MEDIA_NOT_FOUND");
+        const sign = after === null ? "<" : ">";
         const rows = await connection.query(`SELECT ${assetProjection}, m.id AS delivered_message_id, m.sequence_no, m.sender_id,
           m.created_at AS delivered_at FROM messages m JOIN message_media mm ON mm.conversation_id = m.conversation_id AND mm.message_id = m.id
           JOIN media_assets a ON a.id = mm.media_id AND a.owner_id = m.sender_id WHERE m.conversation_id = ?
           AND m.deleted_at IS NULL AND a.deleted_at IS NULL AND m.created_at <= ? AND a.created_at <= ?
-          ${before === null ? "" : "AND m.sequence_no < ?"} ORDER BY m.sequence_no DESC LIMIT ?`, [conversationId, sqlDate(now), sqlDate(now), ...(before === null ? [] : [before]), limit + 1]);
-        const selected = rows.slice(0, limit), hasMore = rows.length > limit;
+          ${pivot === null ? "" : `AND (m.created_at ${sign} ? OR (m.created_at = ? AND m.id ${sign} ?))`}
+          ${from === null ? "" : "AND m.created_at >= ?"} ${until === null ? "" : "AND m.created_at < ?"}
+          ORDER BY m.created_at ${after === null ? "DESC" : "ASC"}, m.id ${after === null ? "DESC" : "ASC"} LIMIT ?`, [conversationId, sqlDate(now), sqlDate(now), ...(pivot === null ? [] : [sqlDate(timestamp(pivot.created_at)), sqlDate(timestamp(pivot.created_at)), pivot.id]), ...(from === null ? [] : [sqlDate(from)]), ...(until === null ? [] : [sqlDate(until)]), after === null ? limit + 1 : 1]);
+        const selected = rows.slice(0, limit), hasMore = after === null && rows.length > limit;
         return { items: selected.map((row) => ({ messageId: row.delivered_message_id, sequence: storedSequence(row.sequence_no), senderId: row.sender_id,
           createdAt: timestamp(row.delivered_at), asset: rawAsset(row, true) })), nextBefore: hasMore ? storedSequence(selected.at(-1).sequence_no) : null, hasMore };
       });

@@ -110,11 +110,11 @@ function renderList() {
   const nodes = [];
   for (const task of state.tasks.values()) {
     const card = document.createElement("li"); card.className = "task-card"; card.dataset.taskId = task.id; card.classList.toggle("is-due", !task.done && task.dueAt !== null && task.dueAt <= now());
-    const client = document.createElement("a"); client.className = "task-client"; client.href = `/admin/tasks?conversationId=${task.conversationId}`; ui.rawText(client, task.clientName);
-    const title = document.createElement("h2"); title.className = "task-title"; ui.rawText(title, task.title);
+    const client = document.createElement("a"); client.className = "task-client"; client.href = task.reply === true ? `/admin/messages#conversation=${task.conversationId}` : `/admin/tasks?conversationId=${task.conversationId}`; ui.rawText(client, task.clientName);
+    const title = document.createElement("h2"); title.className = "task-title"; if (task.reply === true) ui.text(title, "À répondre"); else ui.rawText(title, task.title);
     const date = document.createElement("p"); date.className = "task-date"; showDate(date, task);
-    const actions = document.createElement("div"); actions.className = "task-actions"; actions.append(button("Modifier", "edit", task));
-    if (!task.done) actions.append(button("Reporter", "postpone", task)); actions.append(button(task.done ? "Réouvrir" : "Terminer", task.done ? "reopen" : "complete", task));
+    const actions = document.createElement("div"); actions.className = "task-actions"; if (task.reply !== true) actions.append(button("Modifier", "edit", task));
+    if (task.reply !== true) { if (!task.done) actions.append(button("Reporter", "postpone", task)); actions.append(button(task.done ? "Réouvrir" : "Terminer", task.done ? "reopen" : "complete", task)); }
     card.append(client, title, date, actions); nodes.push(card);
   }
   replace(el("task-list"), ...nodes);

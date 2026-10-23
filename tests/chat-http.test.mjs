@@ -528,7 +528,7 @@ test("profile capability is explicit and independent of photo availability", asy
     const { base } = await fixture(t, {}, { profileEnabled: true, avatarsEnabled });
     const response = await fetch(`${base}/api/chat/client/capabilities`, { headers: { Cookie: cookie("client") } });
     assert.equal(response.status, 200); headersArePrivate(response);
-    assert.deepEqual((await response.json()).profile, { enabled: true, avatars: avatarsEnabled });
+    assert.deepEqual((await response.json()).profile, { enabled: true, avatars: avatarsEnabled, passwordEnabled: false, preferencesEnabled: false });
   }
 });
 
@@ -582,4 +582,19 @@ test("compatibility chat advertises video reading with creation disabled and kee
     const page = await fetch(f.base + (role === "admin" ? "/admin/messages" : "/messages"), { headers: { Cookie: cookie(role) } });
     assert.match(page.headers.get("content-security-policy"), /(?:^|;) media-src 'self' blob:/);
   }
+});
+
+
+test("reply state is private to admin and manual action is authenticated and CSRF protected", async t => {
+  const reply = { needed: true, through: "1", handledThrough: "0", version: "1", oldestAt: now };
+  const f = await fixture(t, { async messages(role) { return { conversation: { ...conversation(role), reply }, messages: [message()], hasMoreBefore: false, hasMoreAfter: false, nextBefore: null, nextAfter: null, eventCursor: "1" }; },
+    async markReply(token, id, input) { assert.equal(id, conversationId); assert.equal(token, tokens.admin); assert.deepEqual(input, { action: "handled", through: "1", expectedVersion: "1" }); return { ...reply, needed: false, handledThrough: "1", version: "2", oldestAt: null }; } });
+  const admin = await (await fetch(f.base + path("admin"), { headers: { Cookie: cookie("admin") } })).json();
+  const client = await (await fetch(f.base + path("client"), { headers: { Cookie: cookie("client") } })).json();
+  assert.deepEqual(admin.conversation.reply, reply); assert.equal(client.conversation.reply, undefined);
+  const endpoint = `/api/chat/admin/conversations/${conversationId}/reply`, body = { action: "handled", through: "1", expectedVersion: "1" };
+  assert.equal((await post(f.base, endpoint, body, mutationHeaders("admin", { "X-CSRF-Token": "x" }))).status, 403);
+  assert.equal((await post(f.base, endpoint, body, mutationHeaders("client"))).status, 401);
+  const response = await post(f.base, endpoint, body); assert.equal(response.status, 200); headersArePrivate(response);
+  assert.equal((await response.json()).reply.needed, false);
 });

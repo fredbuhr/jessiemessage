@@ -123,6 +123,7 @@ export async function createCrmService({ store, authService, authStore, key, clo
       access: accessDTO(row.access), nickname: row.nickname, notes, reminderAt, labels, version, updatedAt };
   }
   return Object.freeze({
+    replyEnabled: store.replyEnabled === true,
     actor: (token) => guarded(() => actor(token)),
     listLabels: (token, input = {}) => guarded(async () => {
       options(input, ["kind", "afterId", "limit"]);
@@ -162,12 +163,12 @@ export async function createCrmService({ store, authService, authStore, key, clo
       return profileDTO(await store.saveProfile({ ...request, conversationId: id, expectedVersion, nickname, notesEncrypted, reminderAt, labelIds }), session, conversationId);
     }),
     contacts: (token, input = {}) => guarded(async () => {
-      options(input, ["q", "tagId", "groupId", "access", "unread", "reminder", "afterId", "limit"]);
-      const { q = "", tagId = null, groupId = null, access = "all", unread = false, reminder = "all", afterId = null, limit = 50 } = input;
+      options(input, ["q", "tagId", "groupId", "access", "unread", "reply", "reminder", "afterId", "limit"]);
+      const { q = "", tagId = null, groupId = null, access = "all", unread = false, reply = false, reminder = "all", afterId = null, limit = 50 } = input;
       const search = validateSearch(q), tag = tagId === null ? null : validateId(tagId), group = groupId === null ? null : validateId(groupId), after = afterId === null ? null : validateId(afterId);
-      if (!["all", ...states].includes(access) || typeof unread !== "boolean" || !["all", "due", "upcoming", "none"].includes(reminder)) fail("CRM_INPUT"); boundedLimit(limit);
+      if (!["all", ...states].includes(access) || typeof unread !== "boolean" || typeof reply !== "boolean" || reply && store.replyEnabled !== true || !["all", "due", "upcoming", "none"].includes(reminder)) fail("CRM_INPUT"); boundedLimit(limit);
       const { request } = await context(token);
-      return pageDTO(await store.listContacts({ ...request, q: search, tagId: tag, groupId: group, access, unread, reminder, afterId: after, limit }), "contacts", limit, afterId, contactDTO);
+      return pageDTO(await store.listContacts({ ...request, q: search, tagId: tag, groupId: group, access, unread, ...(reply ? { reply: true } : {}), reminder, afterId: after, limit }), "contacts", limit, afterId, contactDTO);
     }),
   });
 }

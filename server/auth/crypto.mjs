@@ -33,7 +33,7 @@ function canonicalBase64url(value, expectedBytes) {
   return bytes;
 }
 
-function validatePassword(password) {
+export function validatePassword(password) {
   if (typeof password !== "string" || password.length < 8 || password.length > 128 || Buffer.byteLength(password, "utf8") > 512) {
     throw invalid("AUTH_PASSWORD_INVALID");
   }
