@@ -59,16 +59,17 @@ test("access handler requires exact HTTPS origin and a complete service", () => 
   assert.throws(() => createAccessHandler({}, { origin }));
 });
 
-test("client login, cookie renewal and admission renewal use the same injected clock as their services", async t => {
+test("client login and admission renewal use the shared clock while session reads preserve cookies", async t => {
   const now = Date.UTC(2024, 0, 1), expiresAt = now + 3600000, accessExpiresAt = now + 86400000;
   const session = { ...clientSession(), expiresAt };
   const { base, service } = await fixture(t, { login: () => session, session: () => session,
     renewClient: (_token, id) => ({ id, accessExpiresAt }) }, { clock: () => now });
-  for (const response of [await post(base, "/api/access/login", credentials),
-    await fetch(`${base}/api/access/session`, { headers: { Cookie: clientCookie } })]) {
-    assert.equal(response.status, 200); assert.equal((await response.json()).expiresAt, expiresAt);
-    assert.match(response.headers.get("set-cookie"), /Max-Age=3600; Secure; HttpOnly; SameSite=Strict/);
-  }
+  const login = await post(base, "/api/access/login", credentials);
+  assert.equal(login.status, 200); assert.equal((await login.json()).expiresAt, expiresAt);
+  assert.match(login.headers.get("set-cookie"), /Max-Age=3600; Secure; HttpOnly; SameSite=Strict/);
+  const current = await fetch(`${base}/api/access/session`, { headers: { Cookie: clientCookie } });
+  assert.equal(current.status, 200); assert.equal((await current.json()).expiresAt, expiresAt);
+  assert.equal(current.headers.get("set-cookie"), null);
   const renewed = await post(base, `/api/admin/clients/${clientId}/renew`, { accessDays: 1, expectedExpiresAt: now }, adminHeaders());
   assert.equal(renewed.status, 200); assert.equal((await renewed.json()).client.accessExpiresAt, accessExpiresAt);
   for (const clock of [null, true, 1, "now"]) assert.throws(() => createAccessHandler(service, { origin, clock }), TypeError);
@@ -215,7 +216,7 @@ test("client logout requires CSRF, an empty object and its client session before
     const missing = await post(base, `/api/access/${path}`, {}, headers({ Cookie: clientCookie })); assert.equal(missing.status, 403);
     const forged = await post(base, `/api/access/${path}`, { role: "admin" }, headers({ Cookie: clientCookie, "X-CSRF-Token": csrf })); assert.equal(forged.status, 400);
     const response = await post(base, `/api/access/${path}`, {}, headers({ Cookie: clientCookie, "X-CSRF-Token": csrf })); assert.equal(response.status, 200); assert.deepEqual(await response.json(), { status: "signed_out" });
-    assert.match(response.headers.get("set-cookie"), /^__Host-jessie_client=;.*Max-Age=0/);
+    assert.equal(response.headers.get("set-cookie"), null);
   }
   assert.deepEqual(calls.filter(([name]) => ["logout", "logoutAll"].includes(name)), [["logout", clientToken], ["logoutAll", clientToken]]);
 });

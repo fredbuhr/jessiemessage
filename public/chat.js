@@ -1319,9 +1319,12 @@ async function navigatePhoto(direction) {
     if (lightboxItem !== original || lightboxVersion !== version) return;
     const item = result.items?.[0];
     if (!item) { ui.text(el("lightbox-status"), direction === "previous" ? "Première photo de la conversation" : "Dernière photo de la conversation"); return; }
-    const compared = item.createdAt - original.createdAt || String(item.messageId).localeCompare(original.messageId);
-    if (!/^[a-f0-9]{32}$/.test(item.messageId ?? "") || !validMediaUrl(item.media?.fullUrl, state)
-      || !item.sequence || !Number.isSafeInteger(item.createdAt) || (direction === "previous" ? compared >= 0 : compared <= 0)) throw new Error("invalid_photo_neighbor");
+    // SQL orders historical timestamps at microsecond precision. The public
+    // millisecond date cannot reconstruct that order from a message UUID.
+    const compared = item.createdAt - original.createdAt;
+    if (!/^[a-f0-9]{32}$/.test(item.messageId ?? "") || item.messageId === original.messageId || !validMediaUrl(item.media?.fullUrl, state)
+      || sequence(item.sequence) === "0" || item.sequence === original.sequence || !Number.isSafeInteger(item.createdAt)
+      || (direction === "previous" ? compared > 0 : compared < 0)) throw new Error("invalid_photo_neighbor");
     imageUrls.remove(original.media.fullUrl); imageRequests.get(original.media.fullUrl)?.controller.abort(); imageRequests.delete(original.media.fullUrl);
     showLightboxPhoto(item, state);
     currentVersion = lightboxVersion;
@@ -2232,8 +2235,8 @@ el("lightbox-image").addEventListener("touchend", event => {
   if (Math.abs(x) > 60 && Math.abs(x) > Math.abs(y) * 2) void navigatePhoto(x > 0 ? "previous" : "next");
 }, { passive: true });
 el("close-lightbox").addEventListener("click", () => closeLightbox());
-el("media-dialog").addEventListener("close", () => { if (panel) closeMedia(); });
-el("lightbox").addEventListener("close", () => { if (lightboxItem) closeLightbox(); });
+el("media-dialog").addEventListener("close", () => { if (panel && !el("media-dialog").open) closeMedia(); });
+el("lightbox").addEventListener("close", () => { if (lightboxItem && !el("lightbox").open) closeLightbox(); });
 el("more-media").addEventListener("click", () => { void loadMediaPage(true); });
 el("older-messages").addEventListener("click", () => { void loadOlder(); });
 el("newer-messages")?.addEventListener("click", () => { void loadNewer(); });

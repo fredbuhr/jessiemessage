@@ -280,7 +280,7 @@ export function createCrmUI(adapter) {
     }
     profileReturnFocus = null;
   }
-  profileDialog.addEventListener("close", () => { if (profileOpen) closeProfile(); });
+  profileDialog.addEventListener("close", () => { if (profileOpen && !profileDialog.open) closeProfile(); });
   async function downloadConversation() {
     if (!profileOpen || !profileDialog.open || exportBusy || detailBusy || !state.selected || adapter.conversationExport?.enabled !== true) return;
     const ticket = detailTicket(state), epoch = ++exportEpoch, controller = new AbortController(); exportAbort = controller; exportBusy = true;

@@ -423,6 +423,26 @@ test("real HTTP private media uses normalized encrypted files and current delive
         const old = tiedRows.body.items.at(-1);
         const tieNext = await request(mediaPath("client", `conversations/${convA}/gallery?after=${old.sequence}&limit=1`), { headers: headersFor(a) });
         assert.equal(tieNext.body.items[0].messageId,tiedRows.body.items[0].messageId);
+        // Real SQL microseconds can disagree with ID order while projecting
+        // to the same public millisecond. Exercise the complete HTTP DTO path.
+        const microseconds = [firstMessage, repeatedMessage].sort((left, right) => left.id < right.id ? -1 : 1);
+        const seconds = sqlDate(tied - 2000).slice(0, 19);
+        for (const [index, row] of microseconds.entries()) {
+          await connection.query("UPDATE messages SET created_at = ? WHERE id = ?",
+            [`${seconds}.${index === 0 ? "123456" : "123300"}`, Buffer.from(row.id, "hex")]);
+        }
+        for (const [role, session] of [["admin", admin], ["client", a]]) {
+          const exact = await request(mediaPath(role, `conversations/${convA}/gallery?limit=2`), { headers: headersFor(session) });
+          assert.equal(exact.status, 200);
+          assert.deepEqual(exact.body.items.map(item => item.messageId), microseconds.map(row => row.id));
+          assert.equal(exact.body.items[0].createdAt, exact.body.items[1].createdAt);
+          const exactOlder = await request(mediaPath(role, `conversations/${convA}/gallery?before=${microseconds[0].sequence}&limit=1`), { headers: headersFor(session) });
+          assert.equal(exactOlder.status, 200);
+          assert.deepEqual(exactOlder.body.items.map(item => item.messageId), [microseconds[1].id]);
+          const exactNewer = await request(mediaPath(role, `conversations/${convA}/gallery?after=${microseconds[1].sequence}&limit=1`), { headers: headersFor(session) });
+          assert.equal(exactNewer.status, 200);
+          assert.deepEqual(exactNewer.body.items.map(item => item.messageId), [microseconds[0].id]);
+        }
         await connection.query("UPDATE messages SET created_at = ? WHERE id = ?", [sqlDate(tied-1000),Buffer.from(firstMessage.id,"hex")]);
         await connection.query("UPDATE messages SET created_at = ? WHERE id = ?", [sqlDate(tied-2000),Buffer.from(repeatedMessage.id,"hex")]);
         const reversed = await request(mediaPath("client", `conversations/${convA}/gallery?limit=1`), { headers: headersFor(a) });

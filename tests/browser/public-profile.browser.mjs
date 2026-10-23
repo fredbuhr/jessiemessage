@@ -47,6 +47,7 @@ test("real Chrome public Jessie profile: public snapshot only, safe text, FR/EN 
       const page = await driver.browser({ origin: source.origin, width });
       try {
         await page.navigate("/jessie"); await waitUntil(() => page.execute("return !document.getElementById('public-profile-content').hidden"), "public profile displayed");
+        assert.equal(await page.execute("return document.title"), "Jessie — Découvrir mon univers");
         assert.equal(await page.execute("return document.getElementById('public-profile-name').textContent"), source.state.displayName);
         assert.equal(await page.execute("return document.querySelectorAll('#public-profile-bio script,#public-profile-name img').length"), 0);
         assert.equal(await page.execute("return document.querySelectorAll('.public-preference-list li').length"), 2);
@@ -55,6 +56,9 @@ test("real Chrome public Jessie profile: public snapshot only, safe text, FR/EN 
         await page.execute("JessieI18n.setLanguage('en')");
         assert.equal(await page.execute("return document.querySelector('.public-preference-list li').textContent"), entry.en);
         assert.equal(await page.execute("return document.getElementById('public-preferences-title').textContent"), "My tastes & fantasies");
+        assert.equal(await page.execute("return document.title"), "Jessie — Discover my world");
+        await page.execute("JessieI18n.setLanguage('fr')");
+        assert.equal(await page.execute("return document.title"), "Jessie — Découvrir mon univers");
         source.state = { ...source.state, displayName: "Jessie", bio: "Bienvenue dans mon univers.\nRetrouvons-nous dans notre espace privé." };
         await page.navigate("/jessie"); await waitUntil(() => page.execute("return !document.getElementById('public-profile-content').hidden"), "neutral public profile capture");
         await page.execute("JessieI18n.setLanguage('fr')"); await capture(page, `public-${width}-fr.png`);

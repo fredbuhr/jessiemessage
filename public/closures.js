@@ -108,7 +108,7 @@ el("prepare").addEventListener("click", () => {
 });
 el("cancel").addEventListener("click", resetConfirmation);
 el("confirm-dialog").addEventListener("cancel", resetConfirmation);
-el("confirm-dialog").addEventListener("close", resetConfirmation);
+el("confirm-dialog").addEventListener("close", () => { if (!el("confirm-dialog").open) resetConfirmation(); });
 el("confirm-form").addEventListener("input", () => { el("confirm").disabled = busy || !el("acknowledge").checked || el("confirmation").value !== "FERMER"; });
 el("confirm-form").addEventListener("submit", event => {
   event.preventDefault();

@@ -9,9 +9,10 @@ import { join } from "node:path";
 import { createServer } from "node:https";
 import { sessionCookie } from "../../server/auth/http.mjs";
 import { raceCases, sessionRace, oldToken, newToken } from "../helpers/session-race-fixture.mjs";
+import { successRaceCases, successfulSessionRace } from "../helpers/session-success-race-fixture.mjs";
 import { startWebDriver, waitUntil } from "./webdriver.mjs";
 
-test("real Chrome: late 401 responses preserve the newer native admin/client cookie on every shared surface", { timeout: 90000 }, async () => {
+test("real Chrome: late refused and successful responses preserve newer native admin/client cookies", { timeout: 90000 }, async () => {
   const driver = await startWebDriver();
   let directory, server, page, active;
   try {
@@ -50,6 +51,25 @@ test("real Chrome: late 401 responses preserve the newer native admin/client coo
       await page.execute("return fetch('/cookie-proof').then(() => true)");
       assert.ok(seen.at(-1)?.includes(`${active.cookie}=${newToken}`), "the next request carries B");
       active.handler.close?.();
+    }
+    for (const item of successRaceCases) {
+      active = successfulSessionRace(item);
+      await page.execute("return fetch('/install-A').then(() => true)");
+      await page.execute("window.raceStatus=null;fetch(arguments[0],arguments[1]).then(r=>r.arrayBuffer().then(()=>{window.raceStatus=r.status}));return true", active.path, active.request);
+      await active.arrived;
+      const loginStatus = await page.execute("return fetch(arguments[0],arguments[1]).then(r=>r.arrayBuffer().then(()=>r.status))", `${active.prefix}/login`, active.loginRequest);
+      assert.equal(loginStatus, 200);
+      const installed = (await page.cookies()).find(cookie => cookie.name === active.cookie);
+      assert.equal(installed?.value, newToken);
+      assert.ok(installed.expiry >= Date.now() / 1000 + 180 * 86400 - 10, "login creates a 180-day browser cookie");
+      active.release();
+      await waitUntil(() => page.execute("return window.raceStatus===200"), `${item.role}/${item.operation} late 200`);
+      const preserved = (await page.cookies()).find(cookie => cookie.name === active.cookie);
+      assert.equal(preserved?.value, newToken, `${item.role}/${item.operation}: B survives older successful A`);
+      assert.equal(preserved.secure && preserved.httpOnly && preserved.sameSite === "Strict", true);
+      assert.equal(preserved.expiry, installed.expiry, "older success does not rewrite cookie lifetime");
+      await page.execute("return fetch('/cookie-proof').then(() => true)");
+      assert.ok(seen.at(-1)?.includes(`${active.cookie}=${newToken}`), "the next native request still carries B");
     }
   } finally {
     active?.release(); active?.handler.close?.();

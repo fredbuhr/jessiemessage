@@ -283,7 +283,7 @@ test("two fixed authorities share one HTTP admission but their ordinary mutation
     const host = new URL(origin).host;
     const connected = await request(port, host, undefined, { headers: { Cookie: `__Host-jessie_session=${token}` } });
     assert.equal(connected.status, 200); assert.equal(JSON.parse(connected.body).user.id, session.user.id);
-    assert.match(connected.headers["set-cookie"][0], /Secure; HttpOnly; SameSite=Strict/);
+    assert.equal(connected.headers["set-cookie"], undefined, "a session read never rewrites a browser cookie");
     const headers = { Cookie: `__Host-jessie_session=${token}`, Origin: origin, "Content-Type": "application/json", "X-CSRF-Token": csrf };
     assert.equal((await request(port, host, "/api/auth/logout", { method: "POST", headers, body: "{}" })).status, 200);
     assert.equal((await request(port, host, "/api/auth/logout", { method: "POST", headers: { ...headers, Origin: origin === primary ? recipe : primary }, body: "{}" })).status, 403);

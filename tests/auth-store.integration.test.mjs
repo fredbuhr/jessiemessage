@@ -384,7 +384,7 @@ test("real MariaDB administrator authentication persistence (synthetic disposabl
         assert.equal((await fetch(`${base}/api/auth/logout`, { method: "POST", headers: { ...headers, Cookie: cookie, "X-CSRF-Token": "bad" }, body: "{}" })).status, 403);
         const logout = await fetch(`${base}/api/auth/logout`, { method: "POST", headers: { ...headers, Cookie: cookie, "X-CSRF-Token": loggedIn.csrf }, body: "{}" });
         assert.equal(logout.status, 200);
-        assert.match(logout.headers.get("set-cookie"), /Max-Age=0/);
+        assert.equal(logout.headers.get("set-cookie"), null);
         assert.equal((await fetch(`${base}/api/auth/session`, { headers: { Cookie: cookie } })).status, 401);
         assert.equal((await fetch(`${base}/api/auth/login`, { method: "POST", headers, body: JSON.stringify(payload) })).status, 401);
         assert.equal((await connection.query("SELECT COUNT(*) AS count FROM sessions WHERE revoked_at IS NOT NULL"))[0].count, 1n);

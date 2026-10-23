@@ -1,6 +1,6 @@
 {
   "name": "jessiemessage",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "private": true,
   "type": "module",
   "description": "Private invite-only messaging PWA for Jessie",
@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "mariadb": "3.5.4",
-    "nodemailer": "10.1.1",
+    "nodemailer": "10.1.4",
     "otpauth": "9.5.2",
     "sharp": "0.35.5",
     "web-push": "3.6.7"

@@ -1,4 +1,5 @@
 globalThis.JessieI18n?.register({
+  "Jessie — Découvrir mon univers": "Jessie — Discover my world",
   "Découvrir Jessie": "Meet Jessie",
   "Mon univers": "My world",
   "Mes goûts & fantasmes": "My tastes & fantasies",

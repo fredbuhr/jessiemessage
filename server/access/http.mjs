@@ -1,7 +1,7 @@
 import { peerAddress as requestPeerAddress } from "../http/peer-address.mjs";
 import { CLIENT_ADMISSION_POLICY } from "./admission.mjs";
 import { readFile } from "node:fs/promises";
-import { checkMutation, clearCookie, httpError, isToken, readJson, reply, safeSession, sameText, sessionCookie, sessionToken } from "../auth/http.mjs";
+import { checkMutation, httpError, isToken, readJson, reply, safeSession, sameText, sessionCookie, sessionToken } from "../auth/http.mjs";
 import { decodeAccessCursor, validateAccessPage } from "./pagination.mjs";
 
 const CLIENT_COOKIE = "__Host-jessie_client";
@@ -223,12 +223,15 @@ export function createAccessHandler(service, { origin, clock = Date.now }) {
           return true;
         }
         const data = safeClientSession(session);
-        if (pathname === "/api/access/session") reply(response, method, 200, data, { "Set-Cookie": sessionCookie(token, data.expiresAt, CLIENT_COOKIE, { role: "client", now: now() }) });
+        // Login and password rotation issue cookies. Older reads must not restore
+        // a token after another tab has completed a newer login.
+        if (pathname === "/api/access/session") reply(response, method, 200, data);
         else {
           if (!sameText(request.headers["x-csrf-token"], data.csrf)) throw httpError(403, "request_rejected");
           shape(await readJson(request), []);
           await service[pathname === "/api/access/logout-all" ? "logoutAll" : "logout"](token);
-          reply(response, method, 200, { status: "signed_out" }, { "Set-Cookie": clearCookie(CLIENT_COOKIE) });
+          // SQL revokes this session; do not erase a later login's cookie.
+          reply(response, method, 200, { status: "signed_out" });
         }
       }
     } catch (error) {
