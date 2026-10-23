@@ -236,6 +236,13 @@ export async function startWebDriver() {
         cookies: () => request("GET", `${endpoint}/cookie`),
         screenshot: () => request("GET", `${endpoint}/screenshot`),
         key: (key) => request("POST", `${endpoint}/actions`, { actions: [{ type: "key", id: "keyboard", actions: [{ type: "keyDown", value: key }, { type: "keyUp", value: key }] }] }),
+        swipe: (startX, startY, endX, endY) => {
+          if (![startX,startY,endX,endY].every(value => Number.isInteger(value) && value >= 0 && value <= 10000)) throw new TypeError("Bounded viewport coordinates required");
+          return request("POST", `${endpoint}/actions`, { actions: [{ type: "pointer", id: "touch", parameters: { pointerType: "touch" }, actions: [
+            { type: "pointerMove", duration: 0, x: startX, y: startY }, { type: "pointerDown", button: 0 },
+            { type: "pointerMove", duration: 250, x: endX, y: endY }, { type: "pointerUp", button: 0 }
+          ] }] });
+        },
         close: closeSession
       };
     }

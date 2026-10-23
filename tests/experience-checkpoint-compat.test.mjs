@@ -1,15 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
-import { chmod, lstat, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { createECDH, createHash } from "node:crypto";
+import { chmod, lstat, mkdir, mkdtemp, readFile, rm, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { EXPERIENCE_APPLICATION_COVERAGE, VIDEO_APPLICATION_COVERAGE } from "../server/backup/application-scope.mjs";
 import { createdMigrationTables } from "../server/db/migrations.mjs";
 import { loadExperienceMigrations } from "../server/experience/migrations.mjs";
 import { readCheckpointReceipt, writeCheckpointReceipt } from "../server/backup/checkpoint-receipt.mjs";
+import { createBackupManifest, readManifest, writeManifest } from "../server/backup/manifest.mjs";
+import { loadRuntimeVideoEnvironment } from "../server/config/runtime-video.mjs";
 import { parseArguments as captureArguments } from "../scripts/private-checkpoint.mjs";
-import { parseArguments as verifyArguments } from "../scripts/verify-private-checkpoint.mjs";
+import { parseArguments as verifyArguments, run as verifyRun } from "../scripts/verify-private-checkpoint.mjs";
 import { parseArguments as importArguments, validateApplicationSql, run as importRun } from "../scripts/import-application-checkpoint.mjs";
 import { parseArguments as resumeArguments, inspectResumeClone, run as resumeRun } from "../scripts/resume-application-checkpoint.mjs";
 
@@ -157,4 +159,79 @@ test("a contradictory experience precheck refuses resume before credentials or c
     }), { code: "APPLICATION_CHECKPOINT_RESUME_CHECKPOINT", phase: "precheck" });
     assert.equal(accessed, false);
   }
+});
+
+async function verificationFixture(t) {
+  const f = await receiptFixture(t), sourceDirectory = join(f.directory, "source"), sourceMedia = join(f.directory, "source-media"), sourceVideo = join(f.directory, "source-video");
+  for (const path of [sourceDirectory, sourceMedia, sourceVideo, join(f.directory, "media"), join(f.directory, "video")]) await mkdir(path, { mode: 0o700 });
+  const curve = createECDH("prime256v1"); curve.setPrivateKey(Buffer.alloc(32, 7));
+  const key = number => Buffer.alloc(32, number).toString("base64url"), origin = "https://jessiemessage.com";
+  const keys = Object.fromEntries([["totpKey", 1], ["mailKey", 2], ["messageKey", 3], ["mediaKey", 4], ["notificationKey", 5], ["crmKey", 6], ["videoKey", 8]]
+    .map(([name, number]) => [name, Buffer.from(key(number), "base64url")]));
+  const bundle = () => ({
+    database: { format: "jessiemessage-runtime-database", version: 1, host: "sql.example.invalid", port: "3306", database: "source_database", user: "runtime_user", password: "synthetic-runtime-password", privilegeProfile: "infomaniak-shared-pattern" },
+    authentication: { format: "jessiemessage-runtime-auth", version: 1, origin, mfaKey: key(1) },
+    messaging: { format: "jessiemessage-runtime-messaging", version: 1, origin, mailKey: key(2), messageKey: key(3), smtpHost: "smtp.example.invalid", smtpPort: "587", smtpUser: "synthetic-smtp-user", smtpPassword: "synthetic-smtp-password" },
+    media: { format: "jessiemessage-runtime-media", version: 1, origin, mediaKey: key(4), mediaRoot: sourceMedia, ownerBytes: "1073741824", totalBytes: "10737418240", minimumFreeBytes: "0" },
+    notifications: { version: 1, origin, notificationKey: key(5), vapidPublicKey: curve.getPublicKey().toString("base64url"), vapidPrivateKey: curve.getPrivateKey().toString("base64url"), vapidSubject: "mailto:contact@jessiemessage.com" },
+    crm: { version: 1, origin, crmKey: key(6) },
+    video: { format: "jessiemessage-runtime-video", version: 1, origin, videoKey: key(8), videoRoot: sourceVideo, ownerBytes: "1073741824", totalBytes: "10737418240", minimumFreeBytes: "0" },
+  });
+  const bound = { databaseTag: "1".repeat(64), rootPathTag: "2".repeat(64), rootPhysicalTag: "3".repeat(64), rootFingerprint: "4".repeat(64), rootAncestors: ["a".repeat(64)],
+    video: { databaseTag: "1".repeat(64), rootPathTag: "5".repeat(64), rootPhysicalTag: "6".repeat(64), rootFingerprint: "7".repeat(64), rootAncestors: ["a".repeat(64)] } };
+  const manifest = createBackupManifest({ snapshot: { version: 3, coverage: EXPERIENCE_APPLICATION_COVERAGE, counts: { tables: 37, rows: 0 },
+    capacity: { rootFingerprint: bound.rootFingerprint }, video: { capacity: { rootFingerprint: bound.video.rootFingerprint } } }, identity: bound, keys, now: 1792748656772, profile: manifestProfile });
+  await unlink(join(f.directory, "manifest.json")); await writeManifest(join(f.directory, "manifest.json"), manifest, { pathMode: "strict" });
+  const metadata = await readFile(join(f.directory, "manifest.json"));
+  f.value.manifest.sha256 = digest(metadata); await writeCheckpointReceipt(f.scope, f.value);
+  const events = [], query = async statement => {
+    assert.match(statement, /^(SELECT|SET|START|SHOW) /);
+    if (statement === "SELECT DATABASE() AS name") return [{ name: "isolated_copy" }];
+    if (statement.includes("information_schema.TABLES")) return names.map(name => ({ name, kind: "BASE TABLE", engine: "InnoDB" }));
+    if (statement.includes("schema_migrations")) return plan.map(migration => ({ ...migration, state: "applied", attempts: 1 }));
+    return [];
+  };
+  const selection = command => verifyArguments([command, "--private-directory", sourceDirectory, "--private-path-mode", "linux-dirfd", "--checkpoint-directory", f.directory,
+    "--database", "isolated_copy", "--confirm-database", "isolated_copy", "--user", "copy_operator", "--profile", profile]);
+  return { ...f, manifest, events, selection, dependencies: { inheritedEnv, execArgv: [],
+    scopeOperation: async (path, operation) => operation({ path, file: name => join(path, name), assertReady: () => lstat(path, { bigint: true }), sync: async () => {} }),
+    loadEnvironment: async (_path, options) => loadRuntimeVideoEnvironment(sourceDirectory, options, { readBundle: async () => bundle() }),
+    makeStorage: async () => ({}), makeVideoStorage: async () => ({}), identity: async () => structuredClone(bound), assertIdentity: async () => {},
+    readBackupManifest: path => readManifest(path, { pathMode: "strict" }),
+    readBackup: async () => ({ backupBytes: f.value.sql.bytes, backupSha256: f.value.sql.sha256, sqlBytes: f.value.sql.uncompressedBytes, sqlSha256: hash }),
+    verifyCheckpointMedia: async () => {}, inspectClient: async () => {},
+    readSecret: async () => { events.push("password"); return "synthetic password"; },
+    dump: async (_scope, _selected, _configuration, _password, options) => {
+      events.push("dump"); assert.equal(options.experience, true); assert.equal(options.video, true); assert.deepEqual(options.tables, names);
+      return { sqlBytes: sql.length, sqlSha256: hash };
+    },
+    connect: async () => { events.push("connect"); return { query, rollback: async () => events.push("rollback"), end: async () => events.push("close") }; },
+    verifyVideo: async options => {
+      assert.equal(options.experience, true); events.push("crypto");
+      const countNames = ["rows", "mfa", "mail", "reset", "messages", "crm", "tasks", "broadcast", "broadcastRecipients", "announcements", "media", "mediaFiles", "notifications", "notificationJobs", "videos", "videoFiles", "videoBytes", "preferences"];
+      return { complete: true, healthy: true, issues: [], counts: Object.fromEntries(countNames.map(name => [name, name === "preferences" ? 1 : 0])) };
+    },
+    verifyApplicationSnapshot: async (_environment, selected) => {
+      assert.equal(selected.experience, true); events.push("snapshot");
+      return { command: "verify", verified: true, prepared: false, restored: false, releasedCandidates: 0 };
+    },
+  } };
+}
+
+test("private checkpoint verification authenticates experience coverage and verifies38 migrations without a persistent service", async t => {
+  const f = await verificationFixture(t);
+  const checked = await verifyRun(f.selection("check-application"), f.dependencies);
+  assert.equal(checked.tables, 37); assert.equal(checked.migrations, 38); assert.equal(checked.databaseConnected, false); assert.deepEqual(f.events, []);
+  const verified = await verifyRun(f.selection("verify-application"), f.dependencies);
+  assert.equal(verified.tables, 37); assert.equal(verified.migrations, 38); assert.equal(verified.counts.preferences, 1); assert.equal(verified.httpStarted, false);
+  assert.deepEqual(f.events, ["password", "dump", "connect", "crypto", "dump", "rollback", "close", "snapshot"]);
+});
+
+test("rewriting an experience receipt hash cannot bypass manifest authentication before password or SQL", async t => {
+  const f = await verificationFixture(t), changed = { ...f.manifest, signature: "0".repeat(64) };
+  await unlink(join(f.directory, "manifest.json")); await writeManifest(join(f.directory, "manifest.json"), changed, { pathMode: "strict" });
+  const metadata = await readFile(join(f.directory, "manifest.json"));
+  await writeFile(join(f.directory, "receipt.json"), `${JSON.stringify({ ...f.value, manifest: { ...f.value.manifest, sha256: digest(metadata) } })}\n`);
+  await assert.rejects(verifyRun(f.selection("verify-application"), f.dependencies));
+  assert.deepEqual(f.events, []);
 });

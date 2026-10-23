@@ -48,7 +48,7 @@ function message(sequence, role) {
   const number = Number(sequence);
   if (fixture.deletedSequences?.includes(String(sequence))) return { id: id(200 + number), sequence: String(number), sender: number === 2 ? "me" : "peer", body: null, createdAt: fixture.now + number * 1000, deletedAt: fixture.now + 5000, clientMessageId: null };
   return { id: id(200 + number), sequence: String(number), sender: number === 2 || number === 3 && fixture.ownPhoto ? "me" : "peer",
-    body: number === 1 ? "Earlier fictional message" : number === 2 ? "Fictional message from me" : number === 3 ? fixture.photoWithoutCaption ? "" : "Fictional photo caption" : `Fictional incoming body ${number}`,
+    body: number === 1 ? "Earlier fictional message" : number === 2 ? fixture.longPhotoHistory ? "Fictional long history. ".repeat(120) : "Fictional message from me" : number === 3 ? fixture.photoWithoutCaption ? "" : "Fictional photo caption" : `Fictional incoming body ${number}`,
     createdAt: fixture.now + number * 1000, deletedAt: null, clientMessageId: null,
     ...(fixture.photoSeries && number === 1 ? { media: galleryPhoto(role,1).media } : number === 3 ? { media: media(role) } : {}) };
 }
@@ -1459,14 +1459,17 @@ test("Chrome: synthetic coarse-pointer focus policy keeps keyboards closed after
 
 test("Chrome photo viewer crosses unloaded history, preserves scroll and finds an old month/message", { timeout: 45000 }, async () => {
   for (const role of ["client","admin"]) {
-    resetFixture(); fixture.photoSeries = true; const page = await browser(role === "client" ? 360 : 1280);
+    resetFixture(); fixture.photoSeries = true; fixture.longPhotoHistory = true; const page = await browser(role === "client" ? 360 : 1280);
     try {
       await loaded(page, role === "client" ? "/messages" : "/admin/messages"); if (role === "admin") await page.click(".contact"); await loadedPhoto(page);
       assert.equal(await page.execute("return !!document.querySelector('#messages [data-sequence=\"1\"]')"),false);
-      const scroll = await page.execute("const h=document.getElementById('message-scroll');h.scrollTop=1;return h.scrollTop");
+      const scroll = await page.execute("const h=document.getElementById('message-scroll');h.scrollTop=h.scrollHeight;return h.scrollTop");
       await page.click("#messages .photo-open");
       await waitUntil(()=>page.execute("return document.getElementById('lightbox').open && !!document.querySelector('#lightbox-image img')"),"photo opens");
-      await page.click("#previous-photo");
+      if (role === "client") {
+        const rect = await page.execute("const r=document.getElementById('lightbox-image').getBoundingClientRect();return {x:Math.round(r.x+30),y:Math.round(r.y+r.height/2),endX:Math.round(r.right-30)}");
+        await page.swipe(rect.x,rect.y,rect.endX,rect.y);
+      } else await page.click("#previous-photo");
       await waitUntil(()=>page.execute("return document.getElementById('lightbox-status').textContent.includes('2020')"),"older photo outside loaded messages");
       await page.key("\uE014");
       await waitUntil(()=>page.execute("return !document.getElementById('lightbox-status').textContent.includes('2020')"),"keyboard moves to newer photo");

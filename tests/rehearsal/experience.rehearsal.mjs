@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createAuthenticationFixture } from "./auth-fixture.mjs";
 import { startWebDriver, waitUntil } from "../browser/webdriver.mjs";
 
@@ -54,6 +54,38 @@ async function openProfile(page) {
   await page.click("#open-profile");
   await waitUntil(() => page.execute("return !!document.querySelector('.profile-dialog')?.open&&!document.querySelector('.profile-pseudonym').disabled&&!!document.querySelector('.preferences-search')&&!document.querySelector('.preferences-search').disabled"), "real profile and private preferences loaded", 20000);
 }
+async function captureProfile(page, role, width) {
+  const initial = await page.execute("return {categories:document.querySelectorAll('.profile-dialog .preference-category').length,open:document.querySelectorAll('.profile-dialog .preference-category[open]').length,buttons:document.querySelectorAll('.profile-dialog .preference-category button').length}");
+  assert.deepEqual(initial, { categories: 25, open: 0, buttons: 0 }, "the complete catalogue stays collapsed and is rendered lazily on a phone as well as desktop");
+  await page.click(".profile-password summary");
+  const controls = await page.execute(`return [...document.querySelectorAll('.profile-password input')].map(input=>({type:input.type,empty:input.value==='',autocomplete:input.autocomplete,
+    eye:{type:input.nextElementSibling.type,label:input.nextElementSibling.getAttribute('aria-label'),pressed:input.nextElementSibling.getAttribute('aria-pressed'),width:input.nextElementSibling.getBoundingClientRect().width,height:input.nextElementSibling.getBoundingClientRect().height}}))`);
+  assert.equal(controls.length, 3);
+  assert.deepEqual(controls.map(value => value.autocomplete), ["current-password", "new-password", "new-password"]);
+  for (const value of controls) {
+    assert.equal(value.type, "password"); assert.equal(value.empty, true); assert.equal(value.eye.type, "button");
+    assert.equal(value.eye.label, "Afficher le mot de passe"); assert.equal(value.eye.pressed, "false");
+    assert.ok(value.eye.width >= 44 && value.eye.height >= 44, "each eye has a usable touch target");
+  }
+  await page.click(".profile-password-current + .password-eye");
+  assert.equal(await page.execute("return document.querySelector('.profile-password-current').type"), "text");
+  await page.click(".profile-password-current + .password-eye");
+  assert.equal(await page.execute("return document.querySelector('.profile-password-current').type"), "password");
+  await page.click(".profile-password summary");
+  await page.execute("document.querySelector('.profile-dialog .preferences-section').scrollIntoView({block:'start'})");
+  const layout = await page.execute(`const d=document.querySelector('.profile-dialog').getBoundingClientRect();return {viewport:innerWidth,document:document.documentElement.scrollWidth,left:d.left,right:d.right,height:d.height,windowHeight:innerHeight,
+    search:document.querySelector('.profile-dialog .preferences-search').getBoundingClientRect().right}`);
+  assert.equal(layout.viewport, width); assert.ok(layout.document <= width && layout.left >= 0 && layout.right <= width + 1 && layout.search <= width + 1);
+  assert.ok(layout.height <= layout.windowHeight + 1, "the profile scrolls within the visible viewport");
+  const directory = new URL("../../artifacts/homepage/", import.meta.url); await mkdir(directory, { recursive: true });
+  await writeFile(new URL(`experience-${role}-${width}-profile.png`, directory), Buffer.from(await page.screenshot(), "base64"));
+}
+async function captureReadOnlyPreferences(page) {
+  await page.execute("document.querySelector('.crm-client-preferences').scrollIntoView({block:'start'})");
+  assert.equal(await page.execute("const d=document.querySelector('.crm-dialog').getBoundingClientRect();return document.documentElement.scrollWidth<=innerWidth&&d.left>=0&&d.right<=innerWidth+1&&d.height<=innerHeight+1"), true, "the read-only client profile fits the administrator viewport");
+  const directory = new URL("../../artifacts/homepage/", import.meta.url); await mkdir(directory, { recursive: true });
+  await writeFile(new URL("experience-admin-1280-client-preferences.png", directory), Buffer.from(await page.screenshot(), "base64"));
+}
 async function saveChoice(page, choice) {
   await page.type(".preferences-search", choice === firstChoice ? "STRAIGHT" : "GAY");
   await waitUntil(() => page.execute("return !!document.querySelector('[data-preference-id=\"'+arguments[0]+'\"]')", choice), "bilingual alias exposes the existing preference button");
@@ -103,7 +135,7 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
   try {
     fixture = await createAuthenticationFixture({ messaging: true, video: true, experience: true });
     const browser = async width => { const page = await driver.browser({ origin: fixture.origin, primaryFixturePort: fixture.primaryFixturePort, width, acceptInsecureCerts: true }); pages.push(page); return page; };
-    const client = await browser(390), clientDevice = await browser(1280), other = await browser(375), admin = await browser(1280), adminDevice = await browser(390);
+    const client = await browser(320), clientDevice = await browser(1280), other = await browser(375), admin = await browser(1280), adminDevice = await browser(320);
     await login(client, fixture, "client"); await login(clientDevice, fixture, "client"); await login(other, fixture, "client", { credentials: fixture.otherClient });
     await login(admin, fixture, "admin"); await login(adminDevice, fixture, "admin", { recoveryIndex: 1 });
     const conversation = (await json(client, "client", "/api/chat/client/conversation")).data.id;
@@ -116,14 +148,15 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
     assert.equal((await imageReadable(client, mediaPath)).status, 200);
 
     await t.test("own choices are optional, bilingual-searchable, encrypted and synchronized; other clients cannot read them", async () => {
-      await openProfile(client); await saveChoice(client, firstChoice); await client.click(".profile-close");
+      await openProfile(client); await captureProfile(client, "client", 320); await saveChoice(client, firstChoice); await client.click(".profile-close");
       const stored = await json(clientDevice, "client", "/api/profile/client/preferences"); assert.equal(stored.status, 200); assert.deepEqual(stored.data.selectedIds, [firstChoice]);
-      await openProfile(clientDevice); assert.equal(await clientDevice.execute("return document.querySelector('.preferences-selected button')?.textContent"), catalogue.categories[0].preferences[0].fr); await clientDevice.click(".profile-close");
+      await openProfile(clientDevice); await captureProfile(clientDevice, "client", 1280); assert.equal(await clientDevice.execute("return document.querySelector('.preferences-selected button')?.textContent"), catalogue.categories[0].preferences[0].fr); await clientDevice.click(".profile-close");
       assert.deepEqual((await json(other, "client", "/api/profile/client/preferences")).data.selectedIds, []);
       assert.ok([403, 404].includes((await json(other, "client", `/api/profile/client/conversations/${conversation}/preferences`)).status));
       const invalid = await json(client, "client", "/api/profile/client/preferences", { expectedVersion: stored.data.version, catalogueVersion, selectedIds: ["pref_unknown_entry"] }); assert.equal(invalid.status, 400);
-      await openProfile(admin); await saveChoice(admin, secondChoice); await admin.click(".profile-close");
+      await openProfile(admin); await captureProfile(admin, "admin", 1280); await saveChoice(admin, secondChoice); await admin.click(".profile-close");
       assert.deepEqual((await json(adminDevice, "admin", "/api/profile/admin/preferences")).data.selectedIds, [secondChoice]);
+      await openProfile(adminDevice); await captureProfile(adminDevice, "admin", 320); await adminDevice.click(".profile-close");
       assert.deepEqual((await json(admin, "admin", `/api/profile/admin/conversations/${conversation}/preferences`)).data.selectedIds, [firstChoice]);
       assert.equal((await json(admin, "admin", `/api/profile/admin/conversations/${conversation}/preferences`, { expectedVersion: stored.data.version, catalogueVersion, selectedIds: [] })).status, 405);
       await admin.click(".crm-fiche-button");
@@ -131,6 +164,7 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
       await admin.click(".crm-client-preferences summary");
       await waitUntil(() => admin.execute("return document.querySelector('.crm-client-preferences .preferences-selected .preference-choice')?.textContent===arguments[0]", catalogue.categories[0].preferences[0].fr), "client preferences are rendered read-only in the actual CRM profile");
       assert.equal(await admin.execute("const panel=document.querySelector('.crm-client-preferences');return panel.querySelector('.preferences-actions').hidden&&panel.querySelector('.preferences-search-label').hidden&&!panel.querySelector('[data-preference-id]')"), true);
+      await captureReadOnlyPreferences(admin);
       await admin.click(".crm-dialog .dialog-head button");
       const state = await fixture.privatePreferencesState([firstChoice, secondChoice]); assert.equal(state.rows, 2); assert.equal(state.encrypted, true);
       assert.deepEqual((await json(other, "client", "/api/profile/client/preferences")).data.selectedIds, []);

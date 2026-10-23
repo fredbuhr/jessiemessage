@@ -1,6 +1,6 @@
 {
   "type": "experience190-progress",
-  "status": "coded_integration_and_targeted_checks_in_progress",
+  "status": "coded_local_full_passed_native_qualification_pending",
   "branch": "feat/private-experience-190",
   "baselineMain": "904ab4301bbda71e047d5b3b5dad41d45149c1cf",
   "activeVersion": "1.8.4",
@@ -21,7 +21,8 @@
       "tested": true,
       "deployed": false,
       "productionVerified": false,
-      "testScope": "targeted_local_Node24.19_only; native_DB_and_Chrome_pending"
+      "testScope": "Node24.19_local_targeted_and_full_suite; native_DB_Chrome_HTTPS_pending",
+      "status": "coded_targeted_and_full_local_passed"
     },
     {
       "name": "preferences",
@@ -29,7 +30,8 @@
       "tested": true,
       "deployed": false,
       "productionVerified": false,
-      "testScope": "targeted_local_Node24.19_only; native_DB_and_Chrome_pending"
+      "testScope": "Node24.19_local_targeted_and_full_suite; native_DB_Chrome_HTTPS_pending",
+      "status": "coded_targeted_and_full_local_passed"
     },
     {
       "name": "photos",
@@ -37,8 +39,8 @@
       "tested": true,
       "deployed": false,
       "productionVerified": false,
-      "testScope": "targeted_local_Node24.19_only; native_DB_and_Chrome_pending",
-      "status": "review_fixes_in_progress_date_id_order_and_failed_photo_removal"
+      "testScope": "Node24.19_local_targeted_and_full_suite; native_DB_Chrome_HTTPS_pending",
+      "status": "coded_targeted_and_full_local_passed"
     },
     {
       "name": "reply-followup",
@@ -46,11 +48,12 @@
       "tested": true,
       "deployed": false,
       "productionVerified": false,
-      "testScope": "targeted_local_Node24.19_only; native_DB_and_Chrome_pending"
+      "testScope": "Node24.19_local_targeted_and_full_suite; native_DB_Chrome_HTTPS_pending",
+      "status": "coded_targeted_and_full_local_passed"
     }
   ],
   "actualHostMutationsPerformed": false,
-  "nextAction": "Finish gallery tuple ordering and lifecycle38 integration; run full local checks, review, then qualify exact branch SHA through native PR CI. Production184 untouched.",
+  "nextAction": "Qualify the next exact branch SHA in native PR CI (Node24.22.1, Chrome, HTTPS, MariaDB10.11/11.4); inspect native render artifacts. Production184 untouched.",
   "candidateSchemaMigrations": 38,
   "candidatePhysicalTables": 37,
   "localNode": "v24.19.0",
@@ -63,13 +66,39 @@
     "accountBackend": "39 initial;6HTTPfinal;8store;48sessions;12resetclock passed",
     "accountFrontend": "133passed",
     "preferences": "22passed;691choices25categories934aliaseschecked",
-    "photos": "localHTTP/service/modelpassed;reviewfixesstillbeingtested",
+    "photos": "107passed;7i18n;3webdriver_cleanup;130chat_harness_after_module_integration",
     "followup": "157passed+1DBskip",
     "rootRuntime": "109passed;3migration+6startup passed",
     "nativeRemaining": [
       "Chrome component/lifecycle tests",
       "HTTPS authentication with SQL38",
       "MariaDB10.11 and11.4 integration"
-    ]
-  }
+    ],
+    "video": "240passed;12skipped;historical_client_video_fixtures_preserved",
+    "checkpointCompatibility": "210passed;6skipped;SQL38_existing_pipeline_only",
+    "backupCoreCompatibility": "7new+91legacy+28CLI passed; nativeSQL38capture_pending",
+    "photosFinalDelta": "106lifecycle_and_photo_batch_passed;2new_old_segment_retry_and_load_failure_regressions"
+  },
+  "lastPublishedDevelopmentCommit": "30353c07fb3780c23e578175fb1a44e04df74e43",
+  "localFullSuite": {
+    "tests": 4049,
+    "passed": 3806,
+    "failed": 0,
+    "skipped": 243,
+    "logSha256": "86a1fb64556c33e1678fc2a06d3256b19dd75f7d00f7d72289ea2247391fe4ad",
+    "skipsArePasses": false,
+    "scope": "Before final old-segment photo send correction; final correction passed106 targeted tests and remains subject to full native CI."
+  },
+  "localBuild": {
+    "status": "passed",
+    "syntaxFiles": 757
+  },
+  "reviewFixes": [
+    "Gallery date/message-ID tuple ordering and strict-prefix retry preserve caption/order",
+    "Failed definitive photos removable without recreating successful/uncertain IDs",
+    "Reply watermark bounded by actually loaded/read peer sequence",
+    "Password callback re-proves new cookie owner/CSRF after atomic rotation",
+    "Announcements store explicitly accepts authenticated SQL38 plan",
+    "Photo batch returns to latest segment before uploading while preserving original immutable reply watermark"
+  ]
 }

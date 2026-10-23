@@ -6,6 +6,7 @@ import { quickReplyOptions } from "../public/quick-replies.js";
 import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "../public/emoji-catalog.js";
 import { webcrypto } from "node:crypto";
 import { createChatDrafts } from "../public/chat-drafts.js";
+import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "../public/photo-batch.js";
 
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
 const sessionClockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
@@ -113,7 +114,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   const worker = {}, workerEvents = new Map(), acknowledgements = [];
   const location = { origin: "https://example.invalid", pathname: currentSession?.user.role === "admin" ? "/admin/messages" : "/messages", hash: notification ? `#notification=${notification}` : "", replace: (path) => redirects.push(path), reload() { redirects.push("reload"); } };
   const history = { replaceState(_state, _title, path) { const next = new URL(path, location.origin); location.pathname = next.pathname; location.hash = next.hash; } };
-  const context = vm.createContext({ __chatDrafts: { createChatDrafts }, __loadProfile: async () => { if (profileLoader) return profileLoader(); if (!profileFactory) throw new Error("Optional profile disabled in fixture"); return { createProfileUI: profileFactory }; }, __emojis: { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji }, __quickReplies: { quickReplyOptions }, __prepareImageUpload: prepare, document, window: { addEventListener: (name, handler) => windowEvents.set(name, handler) },
+  const context = vm.createContext({ __photoBatch: { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH }, __chatDrafts: { createChatDrafts }, __loadProfile: async () => { if (profileLoader) return profileLoader(); if (!profileFactory) throw new Error("Optional profile disabled in fixture"); return { createProfileUI: profileFactory }; }, __emojis: { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji }, __quickReplies: { quickReplyOptions }, __prepareImageUpload: prepare, document, window: { addEventListener: (name, handler) => windowEvents.set(name, handler) },
     matchMedia: () => ({ matches: coarse }), location, history, sessionStorage: draftStorage, navigator: { serviceWorker: { controller: worker, addEventListener: (name, handler) => workerEvents.set(name, handler) } },
     Date: class extends Date { static now() { return time; } }, AbortController, TextEncoder, Uint8Array, Blob, crypto: webcrypto, queueMicrotask,
     URL: { createObjectURL: () => { const value = `blob:synthetic-${++blobId}`; createdUrls.push(value); return value; }, revokeObjectURL: (url) => revoked.push(url) },
@@ -155,7 +156,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   vm.runInContext(sessionClockSource, context, { filename: "public/session-clock.js" });
   vm.runInContext(notificationLinkSource, context, { filename: "public/notification-link.js" });
   vm.runInContext(`globalThis.__model = (() => {${modelSource.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}};})();`, context, { filename: "public/chat-model.js" });
-  const executable = source.replace('import { createChatDrafts } from "/chat-drafts.js";', 'const {createChatDrafts} = __chatDrafts;').replace('await import("/profile.js")', 'await __loadProfile()').replace('import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,emojiSkinTones,insertEmoji} = __emojis;').replace('import { quickReplyOptions } from "/quick-replies.js";', 'const {quickReplyOptions} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = __prepareImageUpload;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
+  const executable = source.replace('import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "/photo-batch.js";', 'const {createPhotoBatch,removePhoto,runPhotoBatch,MAX_PHOTO_BATCH} = __photoBatch;').replace('import { createChatDrafts } from "/chat-drafts.js";', 'const {createChatDrafts} = __chatDrafts;').replace('await import("/profile.js")', 'await __loadProfile()').replace('import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,emojiSkinTones,insertEmoji} = __emojis;').replace('import { quickReplyOptions } from "/quick-replies.js";', 'const {quickReplyOptions} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = __prepareImageUpload;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
     "\nglobalThis.__inspect = () => ({ready, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration, pendingNotification, fetchProfileBinary, avatarImageUrl, avatarContainers});";
   vm.runInContext(executable, context, { filename: "public/chat.js", importModuleDynamically: async () => { throw new Error("Optional feature disabled in fixture"); } });
   return { element, document, state, calls, redirects, timers, revoked, createdUrls, context, conversation, inspect: () => context.__inspect(),
@@ -191,9 +192,13 @@ function videoTransport(f) {
   };
   return uploads;
 }
-const videoCapability = path => path === "/api/chat/client/capabilities"
+const videoCapability = path => /^\/api\/chat\/(?:client|admin)\/capabilities$/.test(path)
   ? response(200, { enabled: true, video: { enabled: true, maxBytes: 104857600, mime: "video/mp4" } }) : undefined;
 async function selectVideo(f) {
+  if (f.state.currentSession?.user.role === "admin" && !f.inspect().selected) {
+    for (const handler of f.element("conversations").children[0].events.get("click")) handler({});
+    await flush();
+  }
   const file = new Blob(["synthetic video payload"], { type: "video/mp4" });
   f.element("video-file").files = [file];
   for (const handler of f.element("video-file").events.get("change")) handler({});
@@ -202,8 +207,21 @@ async function selectVideo(f) {
   await flush(); return { file, preview };
 }
 
+test("clients cannot create a video draft even through a direct file-change event", async () => {
+  const f = harness({ intercept: videoCapability }); await flush();
+  const uploads = videoTransport(f);
+  assert.equal(f.element("pick-video").hidden, true);
+  f.element("video-file").files = [new Blob(["synthetic forbidden video"], { type: "video/mp4" })];
+  for (const handler of f.element("video-file").events.get("change")) handler({});
+  await flush();
+  assert.equal(f.inspect().states.get(f.inspect().selected).videoDraft, null);
+  assert.equal(f.element("video-preview").children.length, 0);
+  assert.match(f.element("chat-status").textContent, /réservé à Jessie/);
+  assert.equal(uploads.length, 0); assert.equal(posts(f).length, 0);
+});
+
 test("video selection is a local draft and cancelling upload never submits a message", async () => {
-  const f = harness({ intercept: videoCapability }); await flush(); const uploads = videoTransport(f);
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: videoCapability }); await flush(); const uploads = videoTransport(f);
   const { file, preview } = await selectVideo(f);
   assert.equal(f.element("pick-video").hidden, false); assert.equal(f.element("send").disabled, false);
   assert.match(preview.src, /^blob:/); assert.equal(uploads.length, 0); assert.equal(posts(f).length, 0);
@@ -219,14 +237,14 @@ test("video selection is a local draft and cancelling upload never submits a mes
 
 test("an uncertain video message response retries the same asset and identity without uploading again", async () => {
   let f, attempts = 0; const commands = [];
-  f = harness({ intercept: (path, options) => {
+  f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: (path, options) => {
     const capability = videoCapability(path); if (capability) return capability;
-    if (path.startsWith("/api/video/client/") && path.endsWith("/messages")) {
+    if (path.startsWith("/api/video/admin/") && path.endsWith("/messages")) {
       const command = JSON.parse(options.body); commands.push(command); attempts++;
       if (attempts === 1) throw new Error("synthetic lost response");
       return response(200, { duplicate: true, message: { id: id(903), sequence: "2", sender: "me", body: command.caption,
         createdAt: now, deletedAt: null, clientMessageId: command.clientMessageId,
-        video: { id: command.videoId, bytes: 23, mime: "video/mp4", contentUrl: "/api/video/client/conversations/" + f.conversation().id + "/messages/" + id(903) + "/content" } } });
+        video: { id: command.videoId, bytes: 23, mime: "video/mp4", contentUrl: "/api/video/admin/conversations/" + f.conversation().id + "/messages/" + id(903) + "/content" } } });
     }
     return undefined;
   } });
@@ -240,9 +258,9 @@ test("an uncertain video message response retries the same asset and identity wi
   assert.match(contents(f.element("messages")), /Caption remains exact/);
   const player = f.element("messages").querySelector("video");
   assert.equal(player.controls, true); assert.equal(player.preload, "none"); assert.equal(player.autoplay, undefined);
-  assert.match(player.src, /^\/api\/video\/client\/conversations\//);
+  assert.match(player.src, /^\/api\/video\/admin\/conversations\//);
   await f.hide(); assert.equal(player.src, "");
-  await f.show(); assert.match(player.src, /^\/api\/video\/client\/conversations\//);
+  await f.show(); assert.match(player.src, /^\/api\/video\/admin\/conversations\//);
 });
 
 test("video players never adopt foreign origin, role, conversation or message URLs", async () => {
@@ -259,12 +277,12 @@ test("video players never adopt foreign origin, role, conversation or message UR
 });
 
 test("hidden video uploads abort and old acknowledgements cannot submit for another session", async () => {
-  const f = harness({ intercept: videoCapability }); await flush(); const uploads = videoTransport(f);
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: videoCapability }); await flush(); const uploads = videoTransport(f);
   const { preview } = await selectVideo(f); const oldUrl = preview.src; await f.send("Private pending caption");
   await f.hide(); assert.equal(uploads[0].aborted, true); assert.ok(f.revoked.includes(oldUrl));
   assert.equal(preview.src, ""); assert.equal(f.element("video-preview").children.length, 0);
   const pending = f.inspect().states.get(f.inspect().selected).pending; assert.equal(pending.status, "retry");
-  f.state.currentSession = session(2, "B".repeat(43)); await f.show(); uploads[0].complete(); await flush();
+  f.state.currentSession = session(2, "B".repeat(43), "admin"); await f.show(); uploads[0].complete(); await flush();
   assert.equal(posts(f).length, 0); assert.equal(f.inspect().sessionOwner.id, id(2));
   assert.equal(f.element("video-draft").hidden, true); assert.equal(f.element("message-body").value, "");
 });
@@ -1591,7 +1609,7 @@ test("touch photo/video drafts and quick replies return to a composer control in
   assert.equal(photo.document.activeElement.id, "open-composer-tools");
   photo.element("cancel-image").focus(); await photo.click("cancel-image");
   assert.equal(photo.document.activeElement.id, "open-composer-tools"); assert.equal(posts(photo).length, 0);
-  const video = harness({ coarse: true, intercept: videoCapability }); await flush(); await selectVideo(video);
+  const video = harness({ coarse: true, currentSession: session(1, "A".repeat(43), "admin"), intercept: videoCapability }); await flush(); await selectVideo(video);
   assert.equal(video.document.activeElement.id, "open-composer-tools"); await video.click("cancel-video");
   assert.equal(video.document.activeElement.id, "open-composer-tools"); assert.equal(posts(video).length, 0);
   const admin = harness({ coarse: true, currentSession: session(1, "A".repeat(43), "admin") }); await flush();
@@ -1599,4 +1617,63 @@ test("touch photo/video drafts and quick replies return to a composer control in
   await admin.click("open-quick-replies"); const reply = admin.element("quick-replies-list").children[0];
   for (const handler of reply.events.get("click")) handler({}); await flush();
   assert.equal(admin.document.activeElement.id, "open-composer-tools"); assert.ok(admin.element("message-body").value.length > 0); assert.equal(posts(admin).length, 0);
+});
+
+test("a photo selection sent from an old segment loads recent history before upload and preserves its observed reply boundary on retry", async () => {
+  const recent = pause(); let f, loadingRecent = false, uploads = 0; const commands = [];
+  const peer = value => ({ id: id(4000 + value), sequence: String(value), sender: "peer", body: `Peer ${value}`, createdAt: now, deletedAt: null, clientMessageId: null });
+  f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept(path, options) {
+    if (path === "/api/media/admin/capabilities") return response(200, { enabled: true });
+    if (loadingRecent && path.endsWith("/messages?limit=50")) return recent.promise;
+    if (path === "/api/media/admin/assets" && options.method === "POST") return response(201, { asset: { id: id(5000 + ++uploads) } });
+    if (path.endsWith("/messages/batch")) {
+      const input = JSON.parse(options.body); commands.push(input.messages);
+      if (commands.length === 1) throw new Error("Synthetic lost photo batch response");
+      return response(200, { results: input.messages.map((item, index) => ({ clientMessageId: item.clientMessageId, duplicate: true,
+        message: { id: id(6000 + index), sequence: String(101 + index), sender: "me", body: item.caption,
+          createdAt: now, deletedAt: null, clientMessageId: item.clientMessageId } })) });
+    }
+    return undefined;
+  } }); await flush();
+  for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush();
+  const state = f.inspect().states.get(f.inspect().selected);
+  state.messages = new Map([["3", peer(3)]]); state.hasMoreAfter = true; state.nextAfter = "3";
+  Object.assign(state.conversation, { latestSequence: "100", lastReadSequence: "100", reply: { through: "100", version: "7" } });
+  f.element("image-file").files = [new Blob(["First photo"], { type: "image/jpeg" }), new Blob(["Second photo"], { type: "image/jpeg" })];
+  for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+  const batch = state.photoBatch, keys = batch.items.map(item => item.clientMessageId); loadingRecent = true;
+  await f.send("Caption on first only");
+  assert.equal(f.inspect().sendBusy, true); assert.equal(uploads, 0); assert.equal(commands.length, 0);
+  assert.equal(batch.replyThrough, "3"); assert.equal(batch.replyVersion, "7");
+  await f.send("Caption on first only");
+  assert.equal(f.calls.filter(call => call.path.endsWith("/messages?limit=50")).length, 2, "double click shares the one current-page load after the initial page");
+  recent.resolve(response(200, { conversation: state.conversation, messages: [peer(99), peer(100)], eventCursor: "100",
+    hasMoreBefore: true, nextBefore: "99", hasMoreAfter: false, nextAfter: null })); await flush();
+  assert.equal(state.hasMoreAfter, false); assert.deepEqual([...state.messages.keys()], ["99", "100"]);
+  assert.equal(uploads, 2); assert.equal(commands.length, 1); assert.equal(state.photoBatch, batch);
+  assert.deepEqual(commands[0].map(item => item.clientMessageId), keys);
+  assert.deepEqual(commands[0].map(item => item.replyThrough), ["3", "3"]);
+  assert.deepEqual(commands[0].map(item => item.replyVersion), ["7", "7"]);
+  assert.deepEqual(commands[0].map(item => item.caption), ["Caption on first only", ""]);
+  await f.send("Caption on first only");
+  assert.equal(uploads, 2); assert.equal(commands.length, 2); assert.deepEqual(commands[1], commands[0]);
+  assert.deepEqual([...state.messages.keys()], ["99", "100", "101", "102"]); assert.equal(state.photoBatch, null);
+});
+
+test("a failed current-page load leaves a photo selection untouched and never uploads it", async () => {
+  let failLatest = false, uploads = 0;
+  const f = harness({ intercept(path, options) {
+    if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+    if (failLatest && path.endsWith("/messages?limit=50")) return response(503, { error: "temporarily_unavailable" });
+    if (path === "/api/media/client/assets" && options.method === "POST") { uploads++; throw new Error("Upload must not run"); }
+    return undefined;
+  } }); await flush();
+  const state = f.inspect().states.get(f.inspect().selected); state.hasMoreAfter = true; state.nextAfter = "1";
+  f.element("image-file").files = [new Blob(["First photo"], { type: "image/jpeg" }), new Blob(["Second photo"], { type: "image/jpeg" })];
+  for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+  const batch = state.photoBatch, keys = batch.items.map(item => item.clientMessageId); failLatest = true;
+  await f.send("Keep the caption");
+  assert.equal(uploads, 0); assert.equal(posts(f).length, 0); assert.equal(state.photoBatch, batch);
+  assert.deepEqual(batch.items.map(item => item.clientMessageId), keys); assert.equal(batch.started, false); assert.equal(batch.busy, false);
+  assert.equal(f.inspect().sendBusy, false); assert.equal(f.element("message-body").value, "Keep the caption");
 });

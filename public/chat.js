@@ -1146,6 +1146,9 @@ async function sendPhotoSelection() {
   if (!batch.started) { delete batch.replyThrough; captureReply(state, batch); if (batch.replyThrough === undefined) batch.replyThrough = null; }
   state.draft = batch.caption; sendBusy = true; renderMeta(state);
   try {
+    // Sending from an old gallery/message anchor returns to the current page
+    // before publishing. The reply boundary above stays tied to what was seen.
+    if (state.hasMoreAfter && (!await loadNewer({ latest: true }) || !fresh(ticket) || state.photoBatch !== batch)) return;
     const complete = await runPhotoBatch(batch, {
       current: () => fresh(ticket) && visible() && state.photoBatch === batch,
       prepare: async file => {
