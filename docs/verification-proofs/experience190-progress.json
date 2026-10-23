@@ -1,7 +1,7 @@
 {
   "type": "experience190-progress",
   "version": 2,
-  "status": "runtime190_identity_reported_metadata_writer_pending",
+  "status": "runtime190_active_final_writer_refused_PRECHECK_NOT_PASSED_logs_inspection_required",
   "release": {
     "version": "1.9.0",
     "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
@@ -141,7 +141,9 @@
     "fullMessagingPreflightProof": "jm190-hosted-full-preflight.json",
     "ManagerConfigurationCorrect": "successful190_identity_after_requested_correction_inferred_not_directly_read",
     "ManagerInversionProof": "jm190-Manager-command-inversion.json",
-    "startupIdentityProof": "jm190-hosted-identity.json"
+    "startupIdentityProof": "jm190-hosted-identity.json",
+    "writerRefusal": "PRECHECK_NOT_PASSED",
+    "writerRefusalProof": "jm190-hosted-writer-precheck-refusal.json"
   },
   "limits": [
     "Synthetic Chrome mobile/desktop and multiple browser sessions; no physical phone or two physical devices",
@@ -149,14 +151,13 @@
     "No production190 verification or new hosted backup trial; previous deferred work remains deferred"
   ],
   "nextAction": {
-    "only": "Execute immutable final metadata writer8690a825 once, no restart, report actual JSON",
+    "only": "Read/classify both existing precheck logs without mutation; no writer/CHECK/start replay",
     "instructions": "../operations-release190.md",
-    "writerSha256": "40cc11b177de7199d07b7552d440fcf7990a0f8e5e334c885ef8fca93c7d93b8",
-    "doNotReplayUpgrade": true,
-    "doNotRerunPreparation": true,
+    "doNotReplayWriter": true,
     "doNotRerunPreflight": true,
     "doNotRestart": true,
-    "following": "Validate writer receipt and checkpoint alignment; no feature verification inferred from startup alone"
+    "doNotEraseLogs": true,
+    "following": "Choose cause-specific bounded correction from actual logs, qualify changed writer if needed, then record final metadata"
   },
   "historyProofs": [
     "jm190/pr-native-initial.json",

@@ -1,0 +1,44 @@
+{
+  "type": "jm190-hosted-writer-precheck-refusal",
+  "reportedDate": "2026-10-23",
+  "evidenceKind": "USER_REPORTED_JSON",
+  "reportedResult": {
+    "status": "release190_metadata_unconfirmed",
+    "code": "PRECHECK_NOT_PASSED",
+    "metadataOnly": true,
+    "noRestart": true,
+    "noAutomaticRetry": true
+  },
+  "writer": {
+    "source": "8690a8255e1297f288f7eae8ab25811bf63d2262",
+    "sha256": "40cc11b177de7199d07b7552d440fcf7990a0f8e5e334c885ef8fca93c7d93b8",
+    "nativeQualificationPreserved": true
+  },
+  "interpretation": {
+    "refusalBeforeCheckpointOpenedOrWritten": true,
+    "sourceEvidence": "record() calls verify_evidence() before opening checkpoint; precheck() throws this code in verify_evidence().",
+    "applicationRestartedByWriter": false,
+    "identity190RemainsAcquired": true,
+    "HTTPAndFinalCheckpointNotAcquired": true,
+    "exactFailedLog": "not identified by shared error code;190 checked before185",
+    "allowedPrecheckRows": "1 through16 rows, each canonical-equal to fixed PRECHECK version2 passed",
+    "possibleCause": "empty log, too many rows or semantically different JSON; exact current log inspection required",
+    "count16CauseConfirmed": false,
+    "byteStringComparisonBugFound": false
+  },
+  "priorEvidence": "jm190-hosted-prechecks.json confirms each initial log182bytes and passed, not current post-Manager logs.",
+  "diagnostic": {
+    "commandSha256": "2a7f9275ad054f7a7d9675b78f30a09fa88bfc0375401643ff3a176b8e14cf5b",
+    "ASTValidated": true,
+    "qualifiedStrictFileReaderReused": true,
+    "bothPrecheckLogsRead": true,
+    "allRowsClassified": true,
+    "onlyAnomalousRowDetailsPrinted": true,
+    "maxDetails": 64,
+    "rawLinesPrinted": false,
+    "writesOrRestarts": false,
+    "hostExecuted": false
+  },
+  "nextAction": "Read and classify both existing precheck logs, without replaying CHECK/writer, editing/erasing logs or restarting. Choose bounded correction only from actual data.",
+  "agentPrivateHostAccess": false
+}
