@@ -1,0 +1,33 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-release1100-hosted-identity",
+  "status": "runtime_identity_reported_metadata_alignment_pending",
+  "receivedAt": "2026-10-23T17:46:49.147020+00:00",
+  "evidenceKind": "USER_REPORTED",
+  "provenance": "User transcribed the four fields from application service-state identity after Manager activation; no direct host inspection by agent.",
+  "reported": {
+    "applicationVersion": "1.10.0",
+    "commitAtStartup": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+    "nodeVersion": "v24.22.1",
+    "startupDisplayed": "23/10/2026 19:43:39"
+  },
+  "verification": {
+    "versionMatchesPublished": true,
+    "commitMatchesPublished": true,
+    "nodeMatchesQualified": true,
+    "publishedTree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+    "releaseId": 422111737,
+    "preparationEvidence": "jm1100-hosted-preparation.json",
+    "priorCheckpointVersion": "1.9.0",
+    "priorCheckpointSha256": "01692bfda8ef4a0cab2d102a183c0ab88fe9e8d99858d6e9b583f8b85ffde674",
+    "metadataAlignmentPending": true,
+    "agentHostAccess": false
+  },
+  "limitations": [
+    "Transcribed startup identity is distinct from a direct host/process inspection.",
+    "No precise epoch/millisecond timestamp inferred from displayed text.",
+    "No complete hosted function, physical-device, Push or backup validation implied.",
+    "SQL38 remains the previously reported schema; this UI identity is not a new SQL inventory."
+  ],
+  "nextAction": "qualify_final_metadata_writer_with_real_staging_receipt_and_release_then_request_its_execution"
+}

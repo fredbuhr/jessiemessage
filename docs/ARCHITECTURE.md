@@ -1,6 +1,6 @@
 # Architecture technique
 
-**Vue du code et de l’exploitation au 23 octobre 2026.** [REPRISE](REPRISE.md) reste l’unique référence de version active, sources, accès et repli. Le service rapporté et son checkpoint sont **1.9.0 / Node v24.22.1 / SQL38**, selon le [reçu final USER_REPORTED](verification-proofs/jm190-hosted-metadata.json). **1.10.0 est publiée comme latest, qualifiée et non déployée** ; la préparation et le CHECK sont acquis selon le reçu utilisateur ; activation et identité1100 restent à obtenir. Le [plan courant](PLAN-IMPLEMENTATION.md) distingue ces états et les contrôles complémentaires non acquis.
+**Vue du code et de l’exploitation au 23 octobre 2026.** [REPRISE](REPRISE.md) reste l’unique référence de version active, sources, accès et repli. L’[identité UI USER_REPORTED](verification-proofs/jm1100-hosted-identity.json) rapporte l’application active **1.10.0 / Node v24.22.1**, source `51b0cf22e3adbad7ed26653e96706ba707aaf839`, démarrage affiché `23/10/2026 19:43:39` ; latest est également1.10.0. Le schéma reste **SQL38**, sans migration1100. **Le checkpoint privé reste confirmé en1.9.0**, selon son [reçu final](verification-proofs/jm190-hosted-metadata.json), en attente du writer final1100. Cette identité n’atteste ni un nouvel inventaire SQL ni tous les parcours hébergés. Le [plan courant](PLAN-IMPLEMENTATION.md) distingue ces états et les contrôles complémentaires non acquis.
 
 ## Composition actuelle
 

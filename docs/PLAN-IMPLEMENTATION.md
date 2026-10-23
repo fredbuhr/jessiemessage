@@ -2,7 +2,7 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Évolution 1.10.0 — publiée, audit terminé et livraison reprise
+## Évolution 1.10.0 — démarrée, alignement des métadonnées restant
 
 Code fusionné, PR et main qualifiés5/5 sousNode24.22.1. [Source et preuves](REPRISE.md).
 
@@ -13,12 +13,12 @@ Publication immuable acquise : release/latest422111737 sur la source exacte `51b
 **Reprise demandée par l’utilisateur après le rapport d’audit.**
 
 1. **Acquis selon le [reçu utilisateur](verification-proofs/jm1100-hosted-preparation.json)** : checkout exact et CHECK, marqueur `PREPARATION_1100_CHECK_OK`, sans démarrage ni modification Manager/checkpoint. Ne pas les rejouer.
-2. **Prochaine action** : activer via Manager avec les deux lanceurs exacts du reçu, puis vérifier l’identité réellement démarrée.
-3. Qualifier le writer final avec le reçu réel et la release422111737, puis enregistrer les métadonnées.
+2. **Acquis selon l’[identité utilisateur](verification-proofs/jm1100-hosted-identity.json)** :1.10.0, source51b0cf22…, Nodev24.22.1, relevé UI `23/10/2026 19:43:39`. Aucun redémarrage à rejouer.
+3. Writer final épinglé au reçu réel et à la release422111737, [qualifié13/13](verification-proofs/jm1100/writer-final-native.json), run39997775658. **Prochaine action** : exécuter le bloc immuable du guide opérateur et recueillir le reçu final d’enregistrement.
 
-SQL38 inchangé ;190 et185 conservées. Aucune migration, sauvegarde ou manipulation PC à ajouter. Les étapes2 et3 restent non acquises jusqu’à leurs résultats distincts.
+SQL38 inchangé ;190 et185 conservées. Aucune migration, sauvegarde ou manipulation PC à ajouter. Seule l’exécution hébergée de l’étape3 et son reçu final restent en attente ; sa qualification native est acquise.
 
-[Périmètre](public-profile-1100.md). Les essais sur téléphone réel ne sont pas déduits des tests synthétiques. Aucun déploiement1100 acquis à ce stade.
+[Périmètre](public-profile-1100.md). Les essais sur téléphone réel ne sont pas déduits des tests synthétiques. Le démarrage1100 est rapporté ; aucune qualification exhaustive sur appareil réel ou mise à jour du checkpoint n’en est déduite.
 
 ## Évolution 1.9.0 — livraison terminée
 
@@ -134,7 +134,7 @@ La récupération autonome après perte totale de l’hôte, le témoin frais à
 
 Conserver des checkpoints Git reprenables et la preuve de chaque opération distante, tout en poursuivant plusieurs sous-tâches cohérentes d’un même livrable sans demander une nouvelle permission générale. Ne pas relancer les mêmes audits et suites vertes sans changement, échec ou préoccupation nouvelle. Regrouper les contrôles quand leurs dépendances le permettent ; ne jamais promouvoir une omission ou un test unitaire en essai réel sur téléphone, hébergement ou compte client.
 
-**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Les quatre lots de correction sont livrés ; aucun lot technique ne reste ouvert pour1.8.2, et les réserves conservent leur portée sans ouvrir automatiquement un travail. Conserver un checkpoint publié après chaque résultat cohérent : branche/commit/arbre, contrôles acquis, limites et prochaine action unique. Après interruption, lire le résultat durable avant toute nouvelle mutation. La livraison active rapportée1.9.0 et ses métadonnées sont alignées ; la publication1.10.0 reste non déployée, sa préparation et son CHECK sont acquis selon le reçu utilisateur ; ses preuves natives et hébergées restent distinctes des cas non essayés. La sauvegarde hébergée reste volontairement reportée. Les contrats et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) sont conservés sans réétiquetage.
+**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Les quatre lots de correction sont livrés ; aucun lot technique ne reste ouvert pour1.8.2, et les réserves conservent leur portée sans ouvrir automatiquement un travail. Conserver un checkpoint publié après chaque résultat cohérent : branche/commit/arbre, contrôles acquis, limites et prochaine action unique. Après interruption, lire le résultat durable avant toute nouvelle mutation. La livraison active rapportée est1.10.0 ; son checkpoint privé reste1.9.0 en attente du writer final, tandis que préparation et CHECK1100 sont acquis ; ses preuves natives et hébergées restent distinctes des cas non essayés. La sauvegarde hébergée reste volontairement reportée. Les contrats et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) sont conservés sans réétiquetage.
 
 ## Livraisons closes
 

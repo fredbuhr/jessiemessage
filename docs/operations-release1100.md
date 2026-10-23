@@ -1,6 +1,6 @@
-# Livraison 1.10.0 — préparation et CHECK acquis, activation à effectuer
+# Livraison 1.10.0 — application démarrée, métadonnées à aligner
 
-La 1.10.0 est fusionnée, qualifiée PR/main 5/5 puis publiée (source 51b0cf22…, release/latest 422111737). La production active et son checkpoint restent1.9.0, Node 24.22.1, SQL 38. Préparation et CHECK1100 acquis selon le [reçu utilisateur](verification-proofs/jm1100-hosted-preparation.json), sans démarrage ni modification Manager/checkpoint.
+La 1.10.0 est fusionnée, qualifiée PR/main 5/5 puis publiée (source 51b0cf22…, release/latest 422111737). L’[identité active1100](verification-proofs/jm1100-hosted-identity.json) est rapportée : source51b0cf22…, Node24.22.1, texte UI `23/10/2026 19:43:39`. SQL38 conservé ; checkpoint privé encore1.9.0. Préparation et CHECK1100 acquis selon le [reçu utilisateur](verification-proofs/jm1100-hosted-preparation.json), sans démarrage ni modification Manager/checkpoint.
 
 **Préparation close, ne pas rejouer le bloc ci-dessous.** Empreinte du reçu `ce8d04303cbd04047f6ab5f9f4512351bf236d93fe0b360bf775a790a4bef565`, recalculée depuis les champs rapportés. Le marqueur séparé `PREPARATION_1100_CHECK_OK` confirme la réussite du CHECK selon la commande fournie ; les champs faux et empreintes de journaux vides dans le JSON décrivent son état avant CHECK. L’hôte n’a pas été inspecté directement par l’agent.
 
@@ -36,7 +36,7 @@ PY_PREPARE1100
 
 Recueillir le JSON de préparation et `PREPARATION_1100_CHECK_OK`. La présence d’un reçu n’atteste pas à elle seule le CHECK : le marqueur suivant est séparé. Si la commande échoue ou est interrompue, conserver les sorties et inspecter les fichiers/reçus avant de reprendre ; ne pas la rejouer pour découvrir son résultat.
 
-## Prochaine action — activation Manager et identité réelle
+## Activation Manager acquise selon identité utilisateur — référence conservée
 
 Dans le [Run/Build Manager](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), service Node239143 nommé **recette.jessiemessage.com**, servant aussi jessiemessage.com :
 
@@ -46,8 +46,29 @@ Dans le [Run/Build Manager](https://manager.infomaniak.com/v3/hosting/1446368/ho
 | **Commande de build, en bas** | `bash /srv/customer/jessiemessage-private/check-primary-release1100-51b0cf22.sh` |
 | Port |3000, inchangé |
 
-Enregistrer, puis cliquer sur **Redémarrer** (ou **Lancer** si arrêté) dans le [tableau de bord Node](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), puis relever l’identité réelle dans [État du service](https://jessiemessage.com/admin/readiness). Un champ enregistré ne prouve pas le démarrage de la nouvelle source. Node privé24.22.1 conservé.
+Ces réglages sont la référence demandée avant l’identité1100 rapportée. Ne pas les réappliquer ni redémarrer de nouveau. Les champs Manager ne sont pas relus directement par l’agent ; la preuve acquise est l’identité réelle affichée dans État du service. Node privé24.22.1 conservé.
 
-L’identité attendue sera version 1.10.0, commit 51b0cf22e3adbad7ed26653e96706ba707aaf839, Node v24.22.1. Après le démarrage, qualifier le writer final sur le vrai reçu et release 422111737 avant de l’exécuter. Le writer actuellement publié est volontairement en attente et ne doit pas être lancé.
+L’identité acquise est version1.10.0, commit51b0cf22e3adbad7ed26653e96706ba707aaf839, Nodev24.22.1. Le writer final est désormais épinglé au vrai reçu `ce8d04303cbd04047f6ab5f9f4512351bf236d93fe0b360bf775a790a4bef565` et à la release422111737, puis qualifié **13/13** sousNode24.22.1 ; [preuve native](verification-proofs/jm1100/writer-final-native.json). Le writer initial non épinglé ne doit pas être lancé. Aucun checkpoint1100 ou résultat HTTP public1100 n’est encore acquis.
 
 Le profil public est masqué par défaut ; après activation, l’admin choisit explicitement sa présentation et les sélections à publier dans Mon profil → Mon profil public. La page partageable est https://jessiemessage.com/jessie. Les essais sur téléphone réel restent distincts des tests synthétiques.
+
+
+## Prochaine action — enregistrement final des métadonnées
+
+Dans le [terminal SSH](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), exécuter ce bloc une fois. Il vérifie la source réellement démarrée, les HTTP publics, les reçus et la publication, puis aligne les métadonnées privées sans redémarrage ni SQL. L’état190 complet, les historiques, autres blocs et repli185 sont préservés.
+
+```bash
+env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD1100'
+import hashlib, urllib.request
+
+url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/8882bc7da3170f2f079d163af8f3506ff8cfd2ff/ops/record-release1100.py'
+code = urllib.request.urlopen(url, timeout=30).read()
+expected = '6d6fc8dae9d46b9a5fa0665b620d06ec6208d3a8bacc261df8be434feaf486a8'
+if hashlib.sha256(code).hexdigest() != expected:
+    raise SystemExit('Empreinte incorrecte : arrêt.')
+
+exec(compile(code, '<enregistrement1100>', 'exec'), {'__name__': '__main__'})
+PY_RECORD1100
+```
+
+Recueillir le JSON `release1100_metadata_recorded` (ou `release1100_metadata_already_recorded`). Ne pas déduire son succès de la qualification native ; en cas d’interruption, inspecter son résultat durable avant toute relance. Après ce reçu seulement, enregistrer le checkpoint1100 comme aligné.

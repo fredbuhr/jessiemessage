@@ -1,0 +1,40 @@
+{
+  "status": "qualified_native_writer_published_not_hosted_executed",
+  "operator": "8882bc7da3170f2f079d163af8f3506ff8cfd2ff",
+  "tree": "99cfe9c8dbdfe0f13a93b04fa5ae862d6a61d83d",
+  "branch": "ops/record-v1.10.0",
+  "writerSha256": "6d6fc8dae9d46b9a5fa0665b620d06ec6208d3a8bacc261df8be434feaf486a8",
+  "stagingReceiptSha256": "ce8d04303cbd04047f6ab5f9f4512351bf236d93fe0b360bf775a790a4bef565",
+  "releaseId": 422111737,
+  "source": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+  "runs": [
+    {
+      "id": 39997775658,
+      "path": ".github/workflows/record-release1100.yml",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39997775658",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "sha": "8882bc7da3170f2f079d163af8f3506ff8cfd2ff"
+    }
+  ],
+  "realWriterExecuted": false,
+  "hostingAccessed": false,
+  "mainOrTagOrReleaseChanged": false,
+  "job": {
+    "id": 120565676693,
+    "name": "operator-tests",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "testsPassed": 13,
+  "node": "v24.22.1",
+  "log": "native-39997775658.log",
+  "command": "RECORD1100-CHAT.txt",
+  "logSha256": "c6a68f6379adc1732baca451725bbf63ac4a3f0fab68616c31ad46b4f0dcb798",
+  "logBytes": 20223,
+  "writerRemoteMatchesLocal": true,
+  "bootstrapSyntaxVerifiedWithoutExecuting": true,
+  "review": "Independent static review: only staging hash and release ID pins changed; guards, checkpoint190, histories and rollback185 preserved; no restart/SQL/data erasure.",
+  "agentHostAccess": false
+}
