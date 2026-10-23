@@ -1,0 +1,44 @@
+{
+  "type": "jm190-hosted-interruption",
+  "evidence": "USER_REPORTED_AND_ATTACHED_CAPTURE",
+  "image": {
+    "name": "image(20261023-143103).png",
+    "sha256": "97d68fb1082717bdfe2bf36113c4c88d481e83c1073c0a7498e6c14fc6d11b89",
+    "observed": [
+      "Infomaniak Node service239143 namedrecette.jessiemessage.com showsArrêté",
+      "Build command still referencescheck-primary-release184-1a41e08a.sh"
+    ],
+    "doesNotProve": [
+      "Whether the upgrade command was launched",
+      "Current SQL migration counts",
+      "A successful schema38 receipt",
+      "Any190 application startup or availability; left preview is not a live identity proof"
+    ]
+  },
+  "userReport": "User absent, SSH console cleared, uncertain whether upgrade ran; Node currently stopped.",
+  "lastConfirmedSQL": {
+    "applied": 36,
+    "pending": 2,
+    "proof": "jm190-hosted-schema-status.json"
+  },
+  "currentSQL": "unknown_after_possible_upgrade",
+  "upgradeExecution": "unknown",
+  "schema38ReceiptSeenByAgent": false,
+  "nextAction": "Read durable attempt/success-file presence and hashes then same pinned main(status), never replay upgrade to discover outcome.",
+  "inspection": {
+    "operator": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
+    "sha256": "3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2",
+    "files": [
+      "jm190-upgrade-attempt.json",
+      "jm190-schema38.json"
+    ],
+    "strictFileReader": "Existing file() verifies canonical path, owner, mode0600, regular nonlinked stable metadata. No contents printed, only presence and SHA256.",
+    "mainMode": "status",
+    "writesMarkerOrReceipt": false,
+    "deletesOrChangesAnyFile": false,
+    "mayRefuseIfOriginalSQLMigrationStillHoldsLock": true
+  },
+  "hostAccessByAgent": false,
+  "replayed": false,
+  "activation190": false
+}

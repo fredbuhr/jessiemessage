@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**23 octobre 2026 — application active et checkpoint privé : 1.8.4 / Node v24.22.1 / SQL36 ; dernière version publiée : 1.9.0, non activée.** L’identité et les reçus hébergés184 sont rapportés par l’utilisateur (**USER_REPORTED**), sans inspection privée directe par l’agent. La livraison184 est close. Les six fonctions190 sont codées, qualifiées et publiées ; leur préparation hébergée et le statutSQL36/2pending sont acquis ; la migration et l’activation restent à effectuer.
+**23 octobre 2026 — Node239143 arrêté ; migrationSQL incertaine après consoleSSH effacée.** Dernière version active confirmée1.8.4/Node24.22.1 ; dernier SQL lu36appliquées/2pending avant l’éventuelle migration. Version1.9.0 codée, qualifiée et publiée, sources190/185 préparées. Aucun reçuSQL38, CHECK ou démarrage190 n’a encore été rapporté. Le checkpoint privé demeure le dernier confirmé184 ; sa concordance sera recontrôlée par l’inspection.
 
 ## Évolution 1.9.0 — codée, testée et publiée ; activation en attente
 
@@ -14,11 +14,14 @@ La [publication39963496073](https://github.com/fredbuhr/jessiemessage/actions/ru
 
 **StatutSQL acquis :36 migrations appliquées et2enattente**, selon le [résultat utilisateur](verification-proofs/jm190-hosted-schema-status.json), source5dda0dd4, arbre f06a140e et Nodev24.22.1. La lecture réussie ne prouve ni migration, ni CHECK ou démarrage190. Les champs38migrations/37tables décrivent le plan cible ; aucun inventaire physique n’est déduit.
 
-**Prochaine action personnelle : arrêt de Node239143 dans Manager, constat de l’état Arrêté, puis migration gardée36→38 avec `upgrade --service-stopped`.** [Lien, compteSQL et commande exacts](operations-release190.md). Le service est nommé **recette.jessiemessage.com** et dessert aussi le principal. Le compte SQL documenté est `fb4hmr_jm_mig`, secret saisi uniquement dans le terminal. Le même migrateur qualifié9/9 (run39966310677) est réutilisé : opérateur `fbbe445bc37c90509d2af30c1ba7dc630927a40e`, SHA256 `3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2`. Aucune nouvelle pin ou qualification nécessaire pour ce mode déjà testé. [Preuve native](verification-proofs/jm190/migrator-tty-native.json), [premier défautTTY corrigé](verification-proofs/jm190/migrator-tty-initial.json).
+**Interruption rapportée : l’utilisateur ne sait pas si l’upgrade a été lancé, son SSH ayant été effacé pendant son absence.** La capture du Manager confirme **Node239143 Arrêté**, nom **recette.jessiemessage.com**, et le Build encore lié au CHECK184. Elle ne prouve ni résultat SQL ni identité applicative active. [Preuve de l’interruption](verification-proofs/jm190-hosted-interruption.json). Aucun shell vide n’est interprété comme un échec ou une réussite.
 
-Arrêt, upgrade et reçuSQL38 non encore rapportés : ne pas les déclarer acquis. Après confirmation38/0, effectuer les CHECK185/190 séparés, puis activer190 et enregistrer l’identité réelle. Garder le service arrêté après l’upgrade jusqu’aux CHECK et à la consigne d’activation190. Ne démarrer ni184 ni172 sur38 ; ne rejouer aucune préparation réussie ni migration incertaine.
+**Prochaine action unique : lire les traces durables puis le statut SQL, sans migration.** [Commande exacte](operations-release190.md) : importer le migrateur épinglé sans son main, contrôler l’identité, lire les présences et SHA256 de `jm190-upgrade-attempt.json` et `jm190-schema38.json`, puis `main(['status'])`. Opérateur `fbbe445bc37c90509d2af30c1ba7dc630927a40e`, SHA256 `3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2`, qualifié9/9. Les identifiants du compteSQL `fb4hmr_jm_mig` restent saisis dans le terminal. Aucun fichier de trace n’est effacé et aucun upgrade n’est rejoué pour connaître son résultat.
 
-**Production184/SQL36 et checkpoint `3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212` inchangés.** [Point compact](verification-proofs/experience190-progress.json). Aucun ancien staging/CHECK/bascule/writer n’est à rejouer ; aucune sauvegarde hébergée reportée, compte réel de test, PC ou réserveA10/A11/A12 n’est rouvert.
+Garder le service arrêté et ne pas lancer Run/Build184 pendant cette incertitude. Ne pas présumer SQL36 à partir de l’ancien statut, ni SQL38 à partir d’un simple marqueur. La prochaine décision dépendra des traces et de la lectureSQL actuelle ; un résultat incomplet ou un verrou exige l’inspection. Après preuveSQL38 cohérente, les CHECK185/190, l’activation190 puis le writer restent des étapes séparées.
+
+**Dernier checkpoint confirmé184** : `3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212`. [Point compact](verification-proofs/experience190-progress.json). Aucune préparation réussie ou opération incertaine n’est à rejouer. Sauvegarde reportée, PC et réservesA10/A11/A12 restent hors de cette reprise.
+
 
 ## Correctif interface 1.8.4 — livraison close et alignée
 

@@ -1,31 +1,41 @@
 # Mise en service de la 1.9.0
 
-État actif184 / Node24.22.1 ; **SQL36 désormais confirmé par le statut utilisateur** :36appliquées/2enattente. [Preuve de lecture SQL](verification-proofs/jm190-hosted-schema-status.json). Les champs38migrations/37tables décrivent le plan cible, pas un inventaire physique de la base. Aucun upgrade, CHECK ou démarrage190 acquis. Préparation190 et185 acquise selon le [reçu](verification-proofs/jm190-hosted-preparation.json), empreinte190 recalculée `3a4788b4a31cac3d55f09950e3b98f99a700e0f0dd8af21f83a6135bd01d8cd0`.
+**Node239143 arrêté, confirmé par le retour utilisateur et la capture. La migrationSQL est incertaine** : consoleSSH effacée pendant l’absence du propriétaire. [Observation et limites](verification-proofs/jm190-hosted-interruption.json). Le dernier statut connu était36appliquées/2pending ; il ne vaut pas lecture actuelle après une éventuelle exécution d’upgrade. La préparation190/185 reste acquise.
 
-**Prochaine action personnelle : arrêter l’application, attendre son état Arrêté, puis appliquer les deux migrations.**
+**Prochaine action unique : inspection en lecture seule. Ne pas relancer l’upgrade ou les préparations pour découvrir leur résultat.** Garder Node arrêté ; le Manager affiche encore le Build184, à ne pas exécuter sur un schéma potentiellement38.
 
-1. Ouvrir le [tableau de bord Node239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard). Le service porte le nom **recette.jessiemessage.com** et dessert aussi le principal.
-2. Choisir **Arrêter** puis attendre le constat d’arrêt dans Manager. Cette observation personnelle précède l’exécution du paramètre `--service-stopped` ; aucun arrêt n’est présumé dans le présent point.
-3. Seulement après cet arrêt, exécuter la commande ci-dessous dans le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal). Saisir le compte SQL existant **fb4hmr_jm_mig**, puis son mot de passe masqué. Ne transmettre aucun secret dans la discussion.
+Dans le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), utiliser :
 
 ```bash
-env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_UPGRADE190'
-import hashlib, sys, urllib.request
+env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_INSPECT190'
+import hashlib, json, urllib.request
 
 url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/fbbe445bc37c90509d2af30c1ba7dc630927a40e/ops/migrate-release190.py'
 code = urllib.request.urlopen(url, timeout=30).read()
 if hashlib.sha256(code).hexdigest() != '3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2':
     raise SystemExit('Empreinte incorrecte : arrêt.')
-sys.argv = ['migrate-release190.py', 'upgrade', '--service-stopped']
-exec(compile(code, '<migration190>', 'exec'), {'__name__': '__main__'})
-PY_UPGRADE190
+helper = {'__name__': 'jm190_inspection'}
+exec(compile(code, '<inspection190>', 'exec'), helper)
+try:
+    helper['identity']()
+    for name in ('jm190-upgrade-attempt.json', 'jm190-schema38.json'):
+        path = helper['PRIVATE'] / name
+        present = path.exists() or path.is_symlink()
+        result = {'file': name, 'present': present}
+        if present:
+            result['sha256'] = hashlib.sha256(helper['file'](path)).hexdigest()
+        print(json.dumps(result), flush=True)
+    helper['main'](['status'])
+except Exception as error:
+    reason = str(error) if isinstance(error, helper['MigrationRefused']) else type(error).__name__
+    print(json.dumps({'status': 'inspection190_incomplete', 'code': reason}))
+    raise SystemExit(1)
+PY_INSPECT190
 ```
 
-Le même migrateur reste qualifié9/9 par le [run39966310677](https://github.com/fredbuhr/jessiemessage/actions/runs/39966310677), avec un vrai test PTY. Source et empreinte inchangées. [Preuve native](verification-proofs/jm190/migrator-tty-native.json). Il recontrôle l’identité et le reçu, pose un marqueur exclusif avant SQL, applique uniquement37–38 et relit le statut38/0. Une tentative préexistante ou un résultat interrompu refuse une répétition automatique.
+La commande utilise le même migrateur qualifié9/9, importé sans lancer son main. Elle contrôle ses pins, lit uniquement la présence et l’empreinte du marqueur et du reçu via son lecteur strict, puis appelle `main(['status'])` ; aucun contenu privé de fichier n’est affiché. Elle demande le compte SQL **fb4hmr_jm_mig** puis son mot de passe masqué, uniquement dans le terminal. Aucun marqueur/reçu n’est créé ou effacé et aucune migration n’est appliquée.
 
-Rapporter le JSON et son `receiptSha256` réellement obtenus, sans relancer en cas d’échec. La migration et l’arrêt ne sont acquis qu’après le résultat rapporté. Garder l’application arrêtée ensuite : les CHECK185 et190 doivent précéder l’activation190 ;184/172 ne doivent pas être démarrées surSQL38.
-
-La lecture du statut est déjà acquise et n’est pas à répéter pour progresser normalement. Sa commande précédente était la même source avec l’unique argument `status`.
+Rapporter toutes les lignes JSON.38/0 avec un reçu présent permet d’instruire la suite ;36/2 sans marqueur ne permet pas de supposer qu’un upgrade a été effectué. Un marqueur présent sans reçu, un statut partiel ou un verrou SQL impose l’inspection avant toute décision. Un statut38/0 sans reçu ne constitue pas un reçu de migration. Aucune de ces issues n’est encore observée.
 
 La base évolue explicitement de36 à38 migrations : une table de préférences chiffrées, puis des champs dans les tâches existantes. Les33 migrations de base et3 vidéo sont identiques. Le repli technique185 accepte38 et conserve les données nouvelles sans afficher les rubriques190. Après migration, ne pas démarrer184 ou172 sur38.
 

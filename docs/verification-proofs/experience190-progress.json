@@ -1,7 +1,7 @@
 {
   "type": "experience190-progress",
   "version": 2,
-  "status": "SQL36_status_confirmed_awaiting_personal_service_stop_and_guarded_upgrade",
+  "status": "service_stopped_upgrade_execution_uncertain_readonly_inspection_required",
   "release": {
     "version": "1.9.0",
     "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
@@ -114,12 +114,13 @@
   "hosted": {
     "sourcesPrepared": true,
     "schemaStatusRead": true,
-    "migrated": false,
+    "migrated": null,
     "prechecked185": false,
     "prechecked190": false,
     "started190": false,
     "metadataRecorded190": false,
-    "hostMutations": false
+    "hostMutations": false,
+    "serviceStoppedReported": true
   },
   "limits": [
     "Synthetic Chrome mobile/desktop and multiple browser sessions; no physical phone or two physical devices",
@@ -127,15 +128,15 @@
     "No production190 verification or new hosted backup trial; previous deferred work remains deferred"
   ],
   "nextAction": {
-    "only": "User stops Node239143 in Manager, observes stopped state, then runs pinned upgrade --service-stopped and reports actual JSON receipt",
+    "only": "Read durable attempt/success-file presence and hashes then same pinned status; no mutation",
     "operator": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
     "migratorSha256": "3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2",
     "instructions": "../operations-release190.md",
     "SQLAccount": "fb4hmr_jm_mig",
+    "keepServiceStopped": true,
+    "doNotReplayUpgrade": true,
     "doNotRerunPreparation": true,
-    "noCheckBeforeSQL38": true,
-    "keepStoppedAfterUpgrade": true,
-    "following": "After actualSQL38 proof: separate185/190 CHECKs,190 activation and final writer"
+    "following": "Decide only after current SQL and durable traces are reported; no assumptions from erased shell"
   },
   "historyProofs": [
     "jm190/pr-native-initial.json",
@@ -169,6 +170,14 @@
     "migrated": false,
     "runtimeStarted": false,
     "proof": "jm190-hosted-schema-status.json",
-    "target38And37ArePlanMetadata": true
+    "target38And37ArePlanMetadata": true,
+    "currentState": "unknown_after_possible_upgrade"
+  },
+  "interruption": {
+    "evidence": "USER_REPORTED_AND_CAPTURE",
+    "proof": "jm190-hosted-interruption.json",
+    "upgradeExecution": "unknown",
+    "shellCleared": true,
+    "schema38ReceiptSeen": false
   }
 }

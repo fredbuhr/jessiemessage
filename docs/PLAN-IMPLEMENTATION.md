@@ -6,12 +6,12 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 Les quatre lots et les six fonctions du [cahier](specs/cahier-20261023.md) sont codés, fusionnés, qualifiésPR/main5/5 et publiés. Source190 `5dda0dd4453d34a0be839d2a1402301dea835381`, release/latest421892314 ; repliSQL38 compatible185 publié non latest. [État et preuves](verification-proofs/experience190-progress.json), [procédure exacte](operations-release190.md).
 
-1. Après le statutSQL36appliquées/2pending désormais acquis, arrêter personnellement le serviceNode239143 et constater son état Arrêté. Préparation190/185 et statut acquis : ne pas les rejouer.
-2. Exécuter le migrateur qualifié9/9 (run39966310677) en mode `upgrade --service-stopped` puis fournir son reçu ; attendre la preuve38appliquées/0pending. Garder le service arrêté après cette étape.
-3. CHECK185 et190 séparés, puis activation190 et relevé d’identité exact. Ne pas démarrer184 ou172 sur38.185 n’est pas à démarrer pour la qualifier comme repli.
+1. Après l’interruption signalée, inspecter uniquement les deux fichiers durables et le statutSQL courant. Node est arrêté selon capture/utilisateur ; l’exécution d’upgrade est incertaine. Ne pas répéter préparation ou migration pour savoir.
+2. Selon les traces : vérifier un éventuel reçuSQL38 déjà créé, ou préparer une reprise bornée après inspection. Un marqueur sans reçu, un état partiel ou un verrou ne vaut pas autorisation de replay.
+3. Après preuveSQL38 cohérente, CHECK185/190 séparés, puis activation190 et relevé d’identité exact. Aucun Run/Build184 ou172 sur38.
 4. Épingler et qualifier le writer avec les reçus réels et la release421892314 ; enregistrer l’identité et vérifier le checkpoint final, sans redémarrage.
 
-Production1.8.4/SQL36 inchangée. Aucune nouvelle infrastructure, reprise automatique des sauvegardes reportées ou action sur les comptes réels. Téléphone physique et production190 restent non vérifiés.
+Dernière identité active confirmée1.8.4 ; SQL actuel à relire après éventuelle migration. Node actuellement arrêté selon capture/utilisateur. Aucune nouvelle infrastructure, reprise automatique des sauvegardes reportées ou action sur les comptes réels. Téléphone physique et production190 restent non vérifiés.
 
 ## Correctif interface 1.8.4 — terminé
 
