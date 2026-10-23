@@ -14,13 +14,13 @@
   "releaseId": 422111737,
   "tag": "v1.10.0",
   "publicationRun": 39993020232,
-  "hostedPrepared": false,
-  "hostedChecked": false,
+  "hostedPrepared": true,
+  "hostedChecked": true,
   "deployed": false,
   "productionVerified": false,
   "activeHostedVersion": "1.9.0",
   "checkpointSha256": "01692bfda8ef4a0cab2d102a183c0ab88fe9e8d99858d6e9b583f8b85ffde674",
-  "nextAction": "user_runs_pinned_preparation_and_CHECK_then_returns_receipt_and_marker",
+  "nextAction": "set_exact1100_execution_and_build_commands_in_Manager_then_report_actual_readiness_identity",
   "operator": "6836e25df78e6b7c7f2f0b53650ca16efd4dc3ea",
   "prepareSha256": "927ab81fd80c79d03badd2f83ecfa7125f572301833768e9088adefc39939a28",
   "writerFinalPinsPending": true,
@@ -38,5 +38,8 @@
     "function-preservation-matrix.md"
   ],
   "deploymentResumeAuthorized": true,
-  "resumeRecordedAt": "2026-10-23T17:33:06.583395+00:00"
+  "resumeRecordedAt": "2026-10-23T17:33:06.583395+00:00",
+  "hostedEvidenceKind": "USER_REPORTED",
+  "hostedPreparationProof": "../jm1100-hosted-preparation.json",
+  "stagingReceiptSha256": "ce8d04303cbd04047f6ab5f9f4512351bf236d93fe0b360bf775a790a4bef565"
 }

@@ -12,11 +12,11 @@ Publication immuable acquise : release/latest422111737 sur la source exacte `51b
 
 **Reprise demandée par l’utilisateur après le rapport d’audit.**
 
-1. Préparer le checkout exact et lancer le CHECK sans arrêter190 ; recueillir le JSON et `PREPARATION_1100_CHECK_OK` avant les champs Manager.
-2. Après validation du reçu, activer via Manager puis vérifier l’identité réellement démarrée.
+1. **Acquis selon le [reçu utilisateur](verification-proofs/jm1100-hosted-preparation.json)** : checkout exact et CHECK, marqueur `PREPARATION_1100_CHECK_OK`, sans démarrage ni modification Manager/checkpoint. Ne pas les rejouer.
+2. **Prochaine action** : activer via Manager avec les deux lanceurs exacts du reçu, puis vérifier l’identité réellement démarrée.
 3. Qualifier le writer final avec le reçu réel et la release422111737, puis enregistrer les métadonnées.
 
-SQL38 inchangé ;190 et185 conservées. Aucune migration, sauvegarde ou manipulation PC à ajouter. Ces trois étapes restent non acquises jusqu’à leurs résultats distincts.
+SQL38 inchangé ;190 et185 conservées. Aucune migration, sauvegarde ou manipulation PC à ajouter. Les étapes2 et3 restent non acquises jusqu’à leurs résultats distincts.
 
 [Périmètre](public-profile-1100.md). Les essais sur téléphone réel ne sont pas déduits des tests synthétiques. Aucun déploiement1100 acquis à ce stade.
 
@@ -134,7 +134,7 @@ La récupération autonome après perte totale de l’hôte, le témoin frais à
 
 Conserver des checkpoints Git reprenables et la preuve de chaque opération distante, tout en poursuivant plusieurs sous-tâches cohérentes d’un même livrable sans demander une nouvelle permission générale. Ne pas relancer les mêmes audits et suites vertes sans changement, échec ou préoccupation nouvelle. Regrouper les contrôles quand leurs dépendances le permettent ; ne jamais promouvoir une omission ou un test unitaire en essai réel sur téléphone, hébergement ou compte client.
 
-**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Les quatre lots de correction sont livrés ; aucun lot technique ne reste ouvert pour1.8.2, et les réserves conservent leur portée sans ouvrir automatiquement un travail. Conserver un checkpoint publié après chaque résultat cohérent : branche/commit/arbre, contrôles acquis, limites et prochaine action unique. Après interruption, lire le résultat durable avant toute nouvelle mutation. La livraison active rapportée1.9.0 et ses métadonnées sont alignées ; la publication1.10.0 reste non déployée et sa préparation autorisée, avec reçu attendu ; ses preuves natives et hébergées restent distinctes des cas non essayés. La sauvegarde hébergée reste volontairement reportée. Les contrats et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) sont conservés sans réétiquetage.
+**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Les quatre lots de correction sont livrés ; aucun lot technique ne reste ouvert pour1.8.2, et les réserves conservent leur portée sans ouvrir automatiquement un travail. Conserver un checkpoint publié après chaque résultat cohérent : branche/commit/arbre, contrôles acquis, limites et prochaine action unique. Après interruption, lire le résultat durable avant toute nouvelle mutation. La livraison active rapportée1.9.0 et ses métadonnées sont alignées ; la publication1.10.0 reste non déployée, sa préparation et son CHECK sont acquis selon le reçu utilisateur ; ses preuves natives et hébergées restent distinctes des cas non essayés. La sauvegarde hébergée reste volontairement reportée. Les contrats et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) sont conservés sans réétiquetage.
 
 ## Livraisons closes
 

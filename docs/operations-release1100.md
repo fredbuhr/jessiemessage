@@ -1,10 +1,10 @@
-# Livraison 1.10.0 — reprise autorisée, préparation et CHECK à effectuer
+# Livraison 1.10.0 — préparation et CHECK acquis, activation à effectuer
 
-La 1.10.0 est fusionnée, qualifiée PR/main 5/5 puis publiée (source 51b0cf22…, release/latest 422111737). La production active et son checkpoint restent1.9.0, Node 24.22.1, SQL 38. Aucune opération hébergée 1100 acquise.
+La 1.10.0 est fusionnée, qualifiée PR/main 5/5 puis publiée (source 51b0cf22…, release/latest 422111737). La production active et son checkpoint restent1.9.0, Node 24.22.1, SQL 38. Préparation et CHECK1100 acquis selon le [reçu utilisateur](verification-proofs/jm1100-hosted-preparation.json), sans démarrage ni modification Manager/checkpoint.
 
-**Reprise demandée par l’utilisateur après l’[audit terminé](version-audit-1100.md).** Le bloc ci-dessous constitue la prochaine action. Aucun reçu de préparation1100 n’est acquis ; attendre son JSON et le marqueur de CHECK avant de modifier Manager.
+**Préparation close, ne pas rejouer le bloc ci-dessous.** Empreinte du reçu `ce8d04303cbd04047f6ab5f9f4512351bf236d93fe0b360bf775a790a4bef565`, recalculée depuis les champs rapportés. Le marqueur séparé `PREPARATION_1100_CHECK_OK` confirme la réussite du CHECK selon la commande fournie ; les champs faux et empreintes de journaux vides dans le JSON décrivent son état avant CHECK. L’hôte n’a pas été inspecté directement par l’agent.
 
-## Préparer sans arrêter 190
+## Historique de préparation1100 — déjà exécutée
 
 Dans le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), exécuter ce bloc une fois. Il crée un nouveau checkout et ses lanceurs, puis lance seulement le CHECK. Aucune migration SQL, aucun démarrage ou changement de Manager/checkpoint.
 
@@ -36,9 +36,17 @@ PY_PREPARE1100
 
 Recueillir le JSON de préparation et `PREPARATION_1100_CHECK_OK`. La présence d’un reçu n’atteste pas à elle seule le CHECK : le marqueur suivant est séparé. Si la commande échoue ou est interrompue, conserver les sorties et inspecter les fichiers/reçus avant de reprendre ; ne pas la rejouer pour découvrir son résultat.
 
-## Étapes suivantes, dépendantes du reçu
+## Prochaine action — activation Manager et identité réelle
 
-Après validation du reçu, les champs Manager du service Node 239143, nommé recette et servant aussi jessiemessage.com, devront pointer vers les nouveaux lanceurs : **Commande d’exécution en haut → start1100**, **Commande de build en bas → check1100**. Ne pas les modifier avant le reçu. Port 3000 et Node privé24.22.1 conservés.
+Dans le [Run/Build Manager](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), service Node239143 nommé **recette.jessiemessage.com**, servant aussi jessiemessage.com :
+
+| Champ | Valeur à enregistrer |
+| --- | --- |
+| **Commande d’exécution, en haut** | `bash /srv/customer/jessiemessage-private/start-primary-release1100-51b0cf22.sh` |
+| **Commande de build, en bas** | `bash /srv/customer/jessiemessage-private/check-primary-release1100-51b0cf22.sh` |
+| Port |3000, inchangé |
+
+Enregistrer, puis cliquer sur **Redémarrer** (ou **Lancer** si arrêté) dans le [tableau de bord Node](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), puis relever l’identité réelle dans [État du service](https://jessiemessage.com/admin/readiness). Un champ enregistré ne prouve pas le démarrage de la nouvelle source. Node privé24.22.1 conservé.
 
 L’identité attendue sera version 1.10.0, commit 51b0cf22e3adbad7ed26653e96706ba707aaf839, Node v24.22.1. Après le démarrage, qualifier le writer final sur le vrai reçu et release 422111737 avant de l’exécuter. Le writer actuellement publié est volontairement en attente et ne doit pas être lancé.
 

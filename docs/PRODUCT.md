@@ -4,7 +4,7 @@ JessieMessage est une messagerie privée sur invitation entre Jessie, en France,
 
 L’**[état courant dans REPRISE](REPRISE.md)** centralise version, déploiement, preuves, limites et prochaine action. Ce document décrit le produit, sans tenir un second journal de livraison.
 
-**La production active rapportée est 1.9.0 / Node24.22.1 / SQL38**, source `5dda0dd4453d34a0be839d2a1402301dea835381`, selon le [reçu utilisateur190](verification-proofs/jm190-hosted-metadata.json). Son checkpoint est aligné ; la dernière publication disponible est1.10.0, non déployée. La reprise est autorisée après l’audit ; la préparation1100 et son CHECK restent à effectuer ; [audit du versionnage et des fonctions](version-audit-1100.md). Aucune ancienne commande n’est à rejouer. [REPRISE](REPRISE.md) reste l’autorité pour l’état déployé.
+**La production active rapportée est 1.9.0 / Node24.22.1 / SQL38**, source `5dda0dd4453d34a0be839d2a1402301dea835381`, selon le [reçu utilisateur190](verification-proofs/jm190-hosted-metadata.json). Son checkpoint est aligné ; la dernière publication disponible est1.10.0, non déployée. La préparation1100 et son CHECK sont acquis selon le reçu utilisateur ; activation et identité1100 restent à obtenir ; [audit du versionnage et des fonctions](version-audit-1100.md). Aucune ancienne commande n’est à rejouer. [REPRISE](REPRISE.md) reste l’autorité pour l’état déployé.
 
 **Version1.10.0 publiée et qualifiée, non déployée :** profil public de Jessie avec publication/retrait explicites, conservation en mémoire du profil et des goûts/fantasmes pendant un changement temporaire de fenêtre, après vérification de la même session. Aucun changement SQL ou dépendance. [Périmètre et preuves](public-profile-1100.md).
 
