@@ -75,7 +75,13 @@ export function createProfileUI(adapter) {
   const image = node("img"); image.alt = ""; image.hidden = true;
   const fallback = node("span", "○", "profile-avatar-fallback"); preview.append(image, fallback);
   const file = node("input", null, "profile-file"); file.type = "file"; file.accept = "image/jpeg,image/png,image/webp";
-  const fileLabel = node("label", null, "profile-field"); fileLabel.append(node("span", "Choisir ou remplacer l’avatar"), file);
+  // Native file-control captions use the browser's language. Keep that
+  // control hidden and bind the visible command to our explicit UI source.
+  file.hidden = true; ui.attr(file, "aria-label", "Choisir ou remplacer l’avatar");
+  const choose = action("Choisir ou remplacer l’avatar", "profile-choose-avatar", () => {
+    if (opened && ownerCurrent() && avatarsEnabled && !busy && saved) file.click();
+  });
+  const fileLabel = node("div", null, "profile-field"); fileLabel.append(choose, file);
   const remove = action("Retirer l’avatar", "profile-remove-avatar", () => removeAvatar());
   avatarSection.append(preview, fileLabel, remove, node("small", "Le centre de la photo sera recadré en carré.", "profile-help"));
   const saveButton = node("button", "Enregistrer le profil", "button primary profile-save"); saveButton.type = "submit";
@@ -106,7 +112,7 @@ export function createProfileUI(adapter) {
   function message(text, error = false) { ui.text(status, text); status.classList.toggle("is-error", error); }
   function controls() {
     if (opened && !ownerCurrent()) { close(false); return; }
-    name.disabled = busy || !saved; file.disabled = busy || !saved;
+    name.disabled = busy || !saved; file.disabled = busy || !saved; choose.disabled = busy || !saved;
     remove.disabled = busy || !saved || !draftAvatarId && !draftBlob && !preparing;
     saveButton.disabled = busy || preparing || conflict || !saved || !validName(name.value);
     reload.disabled = busy; keep.disabled = busy; conflictBox.hidden = !conflict;
@@ -291,7 +297,7 @@ export function createProfileUI(adapter) {
   dialog.addEventListener("keydown", event => {
     if (event.key === "Escape") { event.preventDefault(); close(true); return; }
     if (event.key !== "Tab" || !opened) return;
-    const candidates = [closeButton, name, ...(avatarsEnabled ? [file, remove] : []), ...(conflict ? [reload, keep] : []), saveButton, ...(!retry.hidden ? [retry] : [])]
+    const candidates = [closeButton, name, ...(avatarsEnabled ? [choose, remove] : []), ...(conflict ? [reload, keep] : []), saveButton, ...(!retry.hidden ? [retry] : [])]
       .filter(value => !value.disabled && !value.hidden);
     const first = candidates[0], last = candidates.at(-1);
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); focus(last); }

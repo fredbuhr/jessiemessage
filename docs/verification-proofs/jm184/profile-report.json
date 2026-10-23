@@ -1,0 +1,87 @@
+{
+  "status": "implemented_local_profile_translation_coverage_passed",
+  "branch": "fix/interface-184",
+  "baseCommit": "c786ea592e331780aaac16beea6ea546897c8ca4",
+  "changedFiles": [
+    {
+      "file": "public/profile.js",
+      "sha256": "d8f159af7a798e90dc775886e7014f718b08683e20a06581b57bce397ae8d03a"
+    },
+    {
+      "file": "tests/profile-ui.test.mjs",
+      "sha256": "6a9561c0600870b742a66a8455e1842397d5639ab1cae3de51d5f17108a58b6c"
+    }
+  ],
+  "reviewedDependencies": [
+    {
+      "file": "public/i18n-profile.js",
+      "sha256": "7acceac44537b3c5b5b2016a680a3412ba5a9931b1ded37b419529532cde0e28"
+    },
+    {
+      "file": "public/i18n.js",
+      "sha256": "603e5a6aedeb733a78e82a8cfbb8a28c25c11d208666bbbae47a1610197e0e4b"
+    },
+    {
+      "file": "public/chat.js",
+      "sha256": "ef88172452810c43960d3ab55ec4bd6c0493589ea3b92ef1fcaa2b4014ed6134"
+    },
+    {
+      "file": "public/chat.html",
+      "sha256": "d9712767733a50d6ddb3b074fa84878d2265ef99e6f34f84d923119ad0e4f193"
+    },
+    {
+      "file": "public/profile.css",
+      "sha256": "2212dd6439ecb96273dbd24fef15548e0ac4f6d8864e46f83498d120fdc88eb5"
+    },
+    {
+      "file": "server/index.mjs",
+      "sha256": "b6d2d01d9fe5f68a18065d5c815d8ca8953d99a820eca86cd28a6a92803a24d2"
+    }
+  ],
+  "causes": [
+    {
+      "confirmed": "The previously visible input type=file renders browser-owned Choose file / No file chosen captions. Those captions do not use JessieI18n and can stay in the browser language after Jessie FR/EN changes.",
+      "fix": "Use a visible native button bound to the existing French UI source Choisir ou remplacer l’avatar, and hide the input while retaining its accept filter and explicit user-triggered click. The hidden input accessible label is bound to the same source. Modal keyboard traversal now uses the button."
+    },
+    {
+      "testGap": "The previous profile harness translated strings only at creation with a stub. It did not exercise the real JessieI18n bindings or language changes.",
+      "fix": "Load the actual i18n runtime in the profile harness and test initial FR/EN, in-place changes, delayed read/avatar/save, feedback/error/conflict translations and raw user values."
+    }
+  ],
+  "coverage": {
+    "catalogue": "public/i18n-profile.js already covers all30 catalogue entries used by the explicit French sources. No missing profile dictionary entry or import/static-route gap established; catalogue unchanged.",
+    "catalogueEntries": 30,
+    "loadChain": "Both /messages and /admin/messages share chat.html and chat.js. chat.js dynamically imports profile.js; profile.js imports ./i18n-profile.js; server/index.mjs serves both script assets.",
+    "explicitBindings": "Existing profile labels, hints, actions, statuses, errors, conflict actions and saved feedback use French source constants through ui.text. aria-labelledby points to the translated title; upload aria-label now uses ui.attr with the existing French source.",
+    "rawValues": "Public names and draft input values, including text identical to a French UI key and markup-like raw text, remain unchanged across language switches. No translation scans user content.",
+    "emailReview": "No email field exists in profile UI. Access/admin email labels and dictionary entries were checked structurally and are present; native email-validation messages remain browser-owned. No out-of-scope email source edited.",
+    "peerReview": "versions_reprise independently confirmed complete profile entries, explicit import/bindings, no missing profile key, and the native file-control mechanism.",
+    "browserCoordination": "delivery_review owns chat-accessibility.browser.mjs and received exact button/aria-label FR→EN→FR criteria for the existing profile browser scenario; no browser file edited by this task."
+  },
+  "validation": {
+    "command": "node --test --test-reporter=tap tests/profile-ui.test.mjs",
+    "nodeVersion": "v24.19.0",
+    "tests": 22,
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0,
+    "log": "/workspace/scratch/bb431be72395/profile184-targeted.tap",
+    "logSha256": "16cabe8073eef1c9d82c35a1db831163062b8ab33f0ea27d38888361ccbc5c78",
+    "syntax": "node --check public/profile.js and tests/profile-ui.test.mjs passed",
+    "diffWhitespace": "git diff --check passed for owned paths",
+    "meaningfulNewCases": [
+      "Both roles, both initial languages, repeated switches with focus and draft unchanged and no additional requests.",
+      "Late profile read completes in the chosen current language.",
+      "Avatar preparation, in-flight save and saved feedback follow language changes without replay.",
+      "Load/format errors and CAS conflict actions translate while the raw draft remains."
+    ],
+    "initialHarnessAdjustment": "The first run using the real engine retained its global visibility/pagehide listeners after profile destroy. Test expectation corrected to require removal of profile listeners while preserving the captured pre-existing runtime listeners."
+  },
+  "limits": [
+    "No hosted inspection or reproduction of a missing profile dictionary response; diagnosis is scoped to the confirmed native-control mechanism and local real-runtime tests.",
+    "Native OS file-picker captions and browser email-validation popups are outside JessieI18n; the visible application upload command follows Jessie language.",
+    "Node v24.19.0 local validation differs from production v24.22.1; no native browser or physical device run by this task.",
+    "Root owns i18n.js/css flag changes and other agents own chat/admin-login. Final shared-branch qualification remains root-owned.",
+    "No real account, host, send, mail, push, CI, commit or deployment operation performed."
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "type": "jm184-local-verification",
+  "status": "code_frozen_local_checks_passed_native_pending",
+  "node": "v24.19.0",
+  "productionNode": "v24.22.1",
+  "syntax": {
+    "sourceFiles": 721,
+    "result": "passed",
+    "lateChangedBrowserFixturesSeparatelySyntaxChecked": true,
+    "lateChangedControllersSeparatelyChecked": true
+  },
+  "unitResults": {
+    "profile": 22,
+    "languageRuntime": 14,
+    "otherAccessAdminChatReadinessTranslations": 57,
+    "chatFinalComposed": 133,
+    "adminInitial": 74,
+    "adminFinalChangedLifecycle": 56,
+    "adminCountsOverlap": true,
+    "doNotSumOverlappingSuites": true,
+    "lateControllerFlagsAndTransition": 115,
+    "lateControllerCountsIncludeEarlierLanguageRuntime14": true
+  },
+  "sourceManifest": "source-manifest.json",
+  "unchangedDependencies": true,
+  "unchangedSQL": true,
+  "nativeChromeAvailableLocally": false,
+  "nativeQualificationAcquired": false,
+  "privateScreenshotsPublished": false,
+  "productionChanged": false,
+  "fixtureCorrections": "Only three browser fixture img-src policies aligned to existing production self+data for embedded SVG flags. All CSP error assertions retained; Help also decodes each SVG under CSP rather than checking CSS text alone.",
+  "rootReview": "Profile hidden input and explicit translated button/Tab focus, state-only chat Options visibility and retained menu access, admin brand-only home/unique messages capability and logout home state reviewed; flags retain language storage, raw-content boundaries and accessible localized action.",
+  "lateCorrections": "app/entry controllers could overwrite shared button aria; both now use the same empty-text/target/localized-aria+title flag contract. Legacy device bridge uses the same appearance with its own existing click handler, without data-jm-language delegation. Its HTML loads i18n.css; bridge fragment/auth destinations untouched.115/115 tests and three controller syntax checks passed after changes."
+}

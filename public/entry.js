@@ -61,8 +61,10 @@ function renderInstall() {
 function render() {
   document.documentElement.lang = language; document.title = t("pageTitle");
   for (const element of document.querySelectorAll("[data-i18n]")) element.textContent = t(element.dataset.i18n);
-  el("language-switch").textContent = language === "fr" ? "EN" : "FR";
-  el("language-switch").setAttribute("aria-label", language === "fr" ? "Switch to English" : "Passer en français");
+  el("language-switch").textContent = "";
+  el("language-switch").setAttribute("data-jm-language-target", language === "fr" ? "en" : "fr");
+  el("language-switch").setAttribute("aria-label", language === "fr" ? "Passer en anglais" : "Switch to French");
+  el("language-switch").setAttribute("title", language === "fr" ? "Passer en anglais" : "Switch to French");
   clearLinks();
   const phase = state.visible && visible() ? state.phase : "idle";
   el("entry-status").textContent = phase === "idle" ? "" : t(phase);

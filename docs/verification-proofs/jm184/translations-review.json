@@ -1,0 +1,65 @@
+{
+  "status": "bounded_read_only_translation_review_complete_no_new_open_finding",
+  "at": "2026-10-22T23:55:23.011096+00:00",
+  "branch": "fix/interface-184",
+  "baseCommit": "c786ea592e331780aaac16beea6ea546897c8ca4",
+  "scope": "Public static FR/EN dictionary registrations, declared HTML markers/load edges, and profile UI bindings. Not an exhaustive audit of generated UI, browser chrome or user text.",
+  "staticCoverage": {
+    "catalogueFiles": 11,
+    "supportingInlineAndHelpSources": 5,
+    "registeredEntries": 1454,
+    "uniqueKeys": 1329,
+    "htmlSurfaces": 16,
+    "declaredMarkers": 617,
+    "missingDeclaredKeys": 0,
+    "conflictingTranslations": 0,
+    "catalogueCaptureErrors": 0,
+    "detailReport": "/workspace/scratch/bb431be72395/ux184/i18n-static-review.json",
+    "detailSha256": "8f46ace743684dbc4afaac42549cf52a266bdddcd67e4e7f2032d0bb219ec233"
+  },
+  "profile": {
+    "catalogueKeys": 30,
+    "catalogueMissingKeysObserved": 0,
+    "importEvidence": [
+      "public/chat.html:21 loads i18n.js before module chat.js:27",
+      "public/chat.js:294 imports /profile.js",
+      "public/profile.js:2 imports ./i18n-profile.js",
+      "server/index.mjs:40–42 maps the three exact profile assets"
+    ],
+    "bindings": "Profile UI leaves/actions/statuses are explicitly bound through ui.text/ui.attr. Public name input values remain raw and are not translated. Language-neutral fallback symbol and blank statuses are not missing keys.",
+    "concreteCause": "The formerly visible native file input used browser-owned captions, which do not follow the Jessie language choice. This explains a partially translated profile without a missing catalogue key.",
+    "owner": "/root/audit2_frontend_messaging",
+    "ownerCorrection": "Current profile.js:77–84 hides native file input and presents a translated button using the existing key. choose replaces file in the modal Tab cycle. Same accepted formats and owner-checked upload/save adapter retained.",
+    "ownerReportedValidation": "22/22 targeted profile tests with the real i18n engine; no rerun by this reviewer.",
+    "ownerReport": "/workspace/scratch/bb431be72395/ux184/profile-report.json"
+  },
+  "otherObservations": [
+    "Help and tasks use existing inline dictionaries; their first-pass apparent missing keys were false positives.",
+    "The three static file inputs in chat/broadcast are visually hidden with sr-only CSS. No second visible static file control was found.",
+    "English language endonyms in answer-language/notice-language choices are intentional labels; customer data/names and internal error codes were excluded."
+  ],
+  "openFindings": [],
+  "snapshot": [
+    {
+      "file": "public/profile.js",
+      "sha256": "d8f159af7a798e90dc775886e7014f718b08683e20a06581b57bce397ae8d03a"
+    },
+    {
+      "file": "public/i18n-profile.js",
+      "sha256": "7acceac44537b3c5b5b2016a680a3412ba5a9931b1ded37b419529532cde0e28"
+    },
+    {
+      "file": "public/chat.js",
+      "sha256": "ef88172452810c43960d3ab55ec4bd6c0493589ea3b92ef1fcaa2b4014ed6134"
+    },
+    {
+      "file": "server/index.mjs",
+      "sha256": "b6d2d01d9fe5f68a18065d5c815d8ca8953d99a820eca86cd28a6a92803a24d2"
+    }
+  ],
+  "limits": [
+    "Shared branch is being edited concurrently; catalogue snapshots were rechecked by the static reviewer and the local file hashes identify this observation.",
+    "Catalogue-only offline registration/literal capture and source/HTML reading were inspection, not controller or application test execution.",
+    "No unit/browser suite, CI, Git mutation, network, private session, host or backup operation by this reviewer. Root flags/runtime changes are a separate bounded counter-review requested next."
+  ]
+}

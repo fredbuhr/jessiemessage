@@ -48,7 +48,7 @@ async function helpFixture() {
         secretInUrl: request.url.includes(syntheticToken) || request.url.includes(encodeURIComponent(draft)), secretInReferrer: request.headers.referer?.includes(syntheticToken) === true });
       response.setHeader("Cache-Control", "no-store");
       response.setHeader("Referrer-Policy", "no-referrer");
-      response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+      response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
       if (request.method === "GET" && ["/help", "/recover", "/messages"].includes(url.pathname)) {
         response.writeHead(200, { "Content-Type": types.html }); response.end(html(url.pathname === "/help" ? "help.html" : url.pathname === "/recover" ? "recover.html" : "chat.html")); return;
       }
@@ -184,9 +184,14 @@ test("real Chrome: practical Help is translated, accessible and never collects p
         assert.equal(await page.execute("return location.pathname === '/help' && !location.hash && !location.search"), true, "the complete fragment and query are removed");
         assert.equal(await page.execute("return document.title"), language === "fr" ? "Jessie — Aide et confidentialité" : "Jessie — Help and privacy", "the title follows the chosen language");
         assert.equal(await page.execute("return document.querySelector('main h1').textContent"), language === "fr" ? "Un coup de main ?" : "Need a hand?");
-        assert.deepEqual(await page.execute("const buttons = [...document.querySelectorAll('button[data-jm-language]')]; return { count: buttons.length, text: buttons[0]?.textContent, label: buttons[0]?.getAttribute('aria-label') };"),
-          { count: 1, text: language === "fr" ? "EN" : "FR", label: language === "fr" ? "Switch to English" : "Passer en français" },
-          "the language button has its independently translated text and accessible name");
+        assert.deepEqual(await page.execute("const buttons = [...document.querySelectorAll('button[data-jm-language]')]; return { count: buttons.length, text: buttons[0]?.textContent, label: buttons[0]?.getAttribute('aria-label'), target: buttons[0]?.getAttribute('data-jm-language-target'), flag: getComputedStyle(buttons[0], '::before').backgroundImage.includes('data:image/svg+xml') };"),
+          { count: 1, text: "", label: language === "fr" ? "Passer en anglais" : "Switch to French", target: language === "fr" ? "en" : "fr", flag: true },
+          "the language flag has the opposite target and a localized accessible action");
+        assert.equal(await page.executeAsync(`const done = arguments[arguments.length - 1];
+          const value = getComputedStyle(document.querySelector('[data-jm-language]'), '::before').backgroundImage;
+          const image = new Image(); image.onload = () => done(image.naturalWidth > 0 && image.naturalHeight > 0);
+          image.onerror = () => done(false); image.src = JSON.parse(value.slice(4, -1));`), true,
+          "the flag SVG decodes under the same image CSP as production");
         assert.equal(await page.execute("return [...document.querySelectorAll('[data-jm-i18n]')].every(node => node.textContent === globalThis.JessieI18n.t(node.getAttribute('data-jm-i18n')))"), true,
           "all marked page copy uses the real translation catalog");
         if (language === "en") assert.equal(await page.execute("return [...document.querySelectorAll('[data-jm-i18n]')].every(node => node.getAttribute('data-jm-i18n') === 'Notifications' || node.textContent !== node.getAttribute('data-jm-i18n'))"), true,

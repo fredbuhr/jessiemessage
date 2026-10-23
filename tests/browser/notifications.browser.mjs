@@ -35,7 +35,7 @@ before(async () => {
     void (async () => {
       const url = new URL(request.url, "http://localhost");
       response.setHeader("Cache-Control", "no-store");
-      response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+      response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
       const json = (value, status = 200) => { response.writeHead(status, { "Content-Type": "application/json" }); response.end(JSON.stringify(value)); };
       if (url.pathname === "/fixture") { fixture = { enabled: false, csrf, subscriptionPosts: 0, disabled: 0 }; response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); response.end(html); return; }
       if (files.has(url.pathname)) { response.writeHead(200, { "Content-Type": url.pathname.endsWith(".css") ? "text/css; charset=utf-8" : "text/javascript; charset=utf-8" }); response.end(files.get(url.pathname)); return; }

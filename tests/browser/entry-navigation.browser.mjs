@@ -83,7 +83,12 @@ async function loginClient(page) {
 }
 async function loginAdmin(page) {
   await waitUntil(() => page.execute("return !document.getElementById('login-form').hidden && !document.getElementById('login-button').disabled"), "administrator MFA form");
+  assert.deepEqual(await adminDestinations(page), { home: 1, messages: 0 }, "anonymous MFA has only its labelled home link");
   await page.type("#email", "admin@example.invalid"); await page.type("#password", password); await page.type("#factor", "123456"); await page.click("#login-button");
+}
+async function adminDestinations(page) {
+  return page.execute(`const count = href => [...document.querySelectorAll('a[href="'+href+'"]')].filter(node => node.checkVisibility()).length;
+    return {home:count('/admin'), messages:count('/admin/messages')};`);
 }
 
 test("real Chrome: configured root is one client sign-in page and administrator home has its own tools at320/1280px", { timeout: 180000 }, async t => {
@@ -106,6 +111,9 @@ test("real Chrome: configured root is one client sign-in page and administrator 
         await page.navigate("/admin"); await waitUntil(() => page.execute("return location.pathname === '/admin/login'"), "short admin address reaches MFA login");
         await loginAdmin(page); await waitUntil(() => page.execute("return location.pathname === '/admin' && !document.getElementById('connected').hidden"), "separate administrator home");
         assert.equal(await page.execute("return document.getElementById('access-tools').hidden && !document.getElementById('admin-dashboard').hidden"), true);
+        await waitUntil(() => page.execute("return !document.getElementById('admin-chat-link').hidden"), "unique messaging CTA after capability proof");
+        assert.deepEqual(await adminDestinations(page), { home: 0, messages: 1 }, "home has no self-link or duplicate messaging CTA");
+        assert.equal(await page.execute("return !document.getElementById('admin-home-current').hidden"), true);
         await layout(page); await capture(page, `admin-home-${width}`);
         if (await page.execute("return document.documentElement.scrollHeight > innerHeight + 1")) {
           await page.execute("scrollTo(0,document.documentElement.scrollHeight)"); await capture(page, `admin-home-${width}-bottom`); await page.execute("scrollTo(0,0)");
@@ -113,10 +121,17 @@ test("real Chrome: configured root is one client sign-in page and administrator 
         await page.click('#admin-dashboard a[href="/admin/clients"]');
         await waitUntil(() => page.execute("return location.pathname === '/admin/clients' && !document.getElementById('access-tools').hidden"), "client management is its own view");
         assert.equal(await page.execute("return document.getElementById('admin-dashboard').hidden"), true);
+        await waitUntil(() => page.execute("return !document.getElementById('admin-chat-link').hidden"), "client management messaging capability");
+        assert.deepEqual(await adminDestinations(page), { home: 1, messages: 1 });
+        assert.equal(await page.execute("const home=document.getElementById('admin-home-link');return home.getAttribute('aria-label')==='Accueil admin' && home.title==='Accueil admin'"), true);
         await page.navigate("/"); await waitUntil(() => page.execute("return !document.getElementById('entry-role-choice').hidden"), "two roles remain an explicit compact choice");
         assert.equal(await page.execute("return location.pathname === '/' && document.getElementById('client-login-form').hidden"), true);
         await page.click("#entry-admin-link"); await waitUntil(() => page.execute("return location.pathname === '/admin' && !document.getElementById('connected').hidden"), "explicit administration choice");
         assert.equal(await page.execute("return Object.keys(localStorage).length === 0 && Object.keys(sessionStorage).every(key=>key==='jessiemessage.language')"), true);
+        await page.click("#logout-button");
+        await waitUntil(() => page.execute("return location.pathname === '/admin/login' && !document.getElementById('login-form').hidden"), "explicit logout returns to the MFA form");
+        assert.deepEqual(await adminDestinations(page), { home: 1, messages: 0 }, "logout restores the single home link on the login page");
+        assert.equal(await page.execute("return document.getElementById('admin-home-current').hidden"), true);
       } finally { await page.close(); }
     });
   } finally { try { await source.close(); } finally { await driver?.close(); } }

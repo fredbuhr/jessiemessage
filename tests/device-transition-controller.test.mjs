@@ -14,7 +14,7 @@ function page(fetch, { origin = primary, hash = "", search = "", role = "admin",
   const storage = new Map([["jessiemessage.language", storedLanguage]]); let sequence = 0;
   const element = (id) => {
     if (!elements.has(id)) elements.set(id, { hidden: false, disabled: false, textContent: "", href: "", listeners: new Map(),
-      setAttribute() {}, addEventListener(name, callback) { this.listeners.set(name, callback); } });
+      attributes: new Map(), setAttribute(name, value) { this.attributes.set(name, String(value)); }, getAttribute(name) { return this.attributes.get(name) ?? null; }, addEventListener(name, callback) { this.listeners.set(name, callback); } });
     return elements.get(id);
   };
   const location = { origin, hash, search, pathname: `/connect-device/${role}`, replace: (url) => navigations.push(url), assign: (url) => navigations.push(url) };
@@ -421,4 +421,16 @@ test("a complete response with a trailing newline is refused instead of navigati
   await tick();
   assert.deepEqual(p.navigations, []);
   assert.equal(p.element("transition-start").textContent, "Try again");
+});
+
+
+test("transition language flags keep their single explicit toggle and localized action", () => {
+  const f = page(async () => { throw new Error("Language must not request a transfer"); }, { sharedLanguage: true, hash: "#locale=fr" });
+  const button = f.element("transition-language");
+  assert.equal(button.textContent, ""); assert.equal(button.getAttribute("data-jm-language-target"), "en"); assert.equal(button.getAttribute("aria-label"), "Passer en anglais");
+  f.toggleLanguage();
+  assert.equal(f.document.documentElement.lang, "en"); assert.equal(button.textContent, ""); assert.equal(button.getAttribute("data-jm-language-target"), "fr"); assert.equal(button.getAttribute("aria-label"), "Switch to French");
+  f.toggleLanguage();
+  assert.equal(f.document.documentElement.lang, "fr"); assert.equal(button.getAttribute("data-jm-language-target"), "en"); assert.equal(button.getAttribute("title"), "Passer en anglais");
+  assert.equal(f.trace.includes("fetch"), false);
 });

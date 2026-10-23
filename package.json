@@ -1,6 +1,6 @@
 {
   "name": "jessiemessage",
-  "version": "1.8.3",
+  "version": "1.8.4",
   "private": true,
   "type": "module",
   "description": "Private invite-only messaging PWA for Jessie",

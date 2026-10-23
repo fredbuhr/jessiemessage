@@ -25,7 +25,7 @@ function parseMarkup(source) {
 
 function declarations(selector) {
   const result = new Map();
-  for (const match of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+  for (const match of css.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     if (!match[1].split(",").map((part) => part.trim()).includes(selector)) continue;
     for (const declaration of match[2].split(";")) {
       const colon = declaration.indexOf(":");
@@ -67,6 +67,26 @@ test("chat keyboard destinations and composer instructions keep their explicit r
   assert.equal(ids.get("message-body").attributes["aria-describedby"], "composer-help");
   assert.equal(ids.get("message-body").attributes["data-jm-i18n-placeholder"], "Écris ton message…");
   assert.equal(ids.get("composer-help").attributes["data-jm-i18n"], "Message privé · 4 096 caractères maximum");
+});
+
+test("account access stays in Options and the exclusive inbox/conversation buttons retain native relationships", () => {
+  const { ids } = parseMarkup(html), account = ids.get("account-link"), menu = ids.get("chat-menu");
+  assert.equal(account.attributes.href, "/access");
+  assert.equal(account.attributes["data-jm-i18n"], "Mon accès");
+  assert.equal(account.parent.parent, menu);
+  assert.equal(ids.get("client-aside").children.some(node => node.tag === "a"), false, "the client aside has no duplicate account shortcut");
+  for (const id of ["open-account-menu", "open-conversation-menu"]) {
+    const button = ids.get(id);
+    assert.equal(button.tag, "button");
+    assert.equal(button.attributes.type, "button");
+    assert.equal(button.attributes["aria-controls"], "chat-menu");
+    assert.equal(button.attributes["aria-expanded"], "false");
+    assert.ok(button.attributes["data-jm-i18n-aria-label"]);
+  }
+  assert.equal(declarations(".page.has-conversation #open-account-menu").get("display"), "none");
+  assert.equal(declarations(".page:not(.has-conversation) #open-conversation-menu").get("display"), "none");
+  assert.equal(declarations(".icon-button").get("min-width"), "44px");
+  assert.equal(declarations(".icon-button").get("height"), "44px");
 });
 
 test("chat CSS keeps explicit keyboard focus and the skip link out of the visual flow until focused", () => {

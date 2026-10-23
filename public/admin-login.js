@@ -50,6 +50,12 @@ const accessPages = {
   invitations: { cursor: null, nextCursor: null, hasMore: false, epoch: 0 },
   clients: { cursor: null, nextCursor: null, hasMore: false, epoch: 0 },
 };
+function updateHomeNavigation() {
+  const home = location.pathname === "/admin";
+  document.getElementById("admin-home-link").hidden = home;
+  document.getElementById("admin-home-current").hidden = !home;
+}
+updateHomeNavigation();
 
 function invalidate() {
   generation += 1; sessionCheckEpoch += 1; checkingSession = false;
@@ -94,6 +100,7 @@ function notice(message, error = false) {
 }
 
 function signedOut(message = "", { preserveCredentials = false } = {}) {
+  updateHomeNavigation();
   resumeAnonymousLogin = false;
   invalidate();
   clearAccess();
@@ -134,6 +141,7 @@ function signedIn(session) {
     location.replace("/admin");
     return;
   }
+  updateHomeNavigation();
   invalidate();
   clearAccess();
   document.getElementById("admin-chat-link").hidden = true;
@@ -314,6 +322,7 @@ async function logout(all) {
     await request(all ? "/api/auth/logout-all" : "/api/auth/logout", { mutation: true });
     signedOut(all ? "Tous tes appareils sont déconnectés." : "Cet appareil est déconnecté.");
     history.replaceState(null, "", "/admin/login");
+    updateHomeNavigation();
   } catch (error) {
     if (error.stale) return;
     if (error.status === 401) signedOut(errorMessage(error));

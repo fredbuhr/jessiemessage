@@ -1,5 +1,7 @@
 /* Shared navigation for administrator tools; the dashboard owns the full list. */
 .admin-tool-header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; }
+.admin-tool-header .brand { min-height:44px; }
+.admin-tool-header .brand[href]:focus-visible { outline:3px solid #f5e4c9; outline-offset:3px; border-radius:6px; }
 .admin-navigation { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0; }
 .admin-navigation > a, .admin-navigation > button {
   display:inline-flex; align-items:center; justify-content:center; min-height:44px;

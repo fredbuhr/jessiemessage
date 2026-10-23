@@ -3,10 +3,42 @@ import assert from "node:assert/strict";
 import { createAppServer } from "../server/index.mjs";
 import { createAuthHandler } from "../server/auth/http.mjs";
 import { request as httpRequest } from "node:http";
+import { readFile } from "node:fs/promises";
 
 const token = Buffer.alloc(32, 17).toString("base64url"), csrf = Buffer.alloc(32, 18).toString("base64url");
 const origin = "https://jessiemessage.com";
 const paths = ["/admin", "/admin/clients", "/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/admin/privacy"];
+
+test("each administrator tool exposes one labelled home destination and one messages destination", async () => {
+  const tools = ["readiness", "tasks", "broadcast", "announcements", "backups", "closures", "privacy", "manual-backups"];
+  const pages = await Promise.all(tools.map(name => readFile(new URL(`../public/${name}.html`, import.meta.url), "utf8")));
+  for (const [index, html] of pages.entries()) {
+    const header = /<header\b[^>]*>[\s\S]*?<\/header>/.exec(html)?.[0];
+    assert.ok(header, tools[index]);
+    const anchors = [...header.matchAll(/<a\b[^>]*>/g)].map(match => match[0]);
+    const home = anchors.filter(tag => /href="\/admin"/.test(tag));
+    assert.equal(home.length, 1, tools[index]);
+    assert.match(home[0], /class="brand"/);
+    assert.match(home[0], /aria-label="Accueil admin"/);
+    assert.match(home[0], /title="Accueil admin"/);
+    assert.match(home[0], /data-jm-i18n-aria-label="Accueil admin"/);
+    assert.match(home[0], /data-jm-i18n-title="Accueil admin"/);
+    assert.equal(anchors.filter(tag => /href="\/admin\/messages"/.test(tag)).length, 1, tools[index]);
+    assert.equal([...html.matchAll(/href="\/admin"/g)].length, 1, "no second home link outside the header");
+    assert.equal([...html.matchAll(/href="\/admin\/messages"/g)].length, 1, "no second messages link outside the header");
+  }
+});
+
+test("the shared administrator document retains one capability-gated messages CTA and a non-link current brand", async () => {
+  const html = await readFile(new URL("../public/admin-login.html", import.meta.url), "utf8");
+  assert.equal([...html.matchAll(/href="\/admin\/messages"/g)].length, 1);
+  assert.match(html, /<a id="admin-chat-link"[^>]*hidden/);
+  assert.equal([...html.matchAll(/href="\/admin"/g)].length, 1);
+  assert.match(html, /<a id="admin-home-link"[^>]*aria-label="Accueil admin"[^>]*title="Accueil admin"/);
+  assert.match(html, /<span id="admin-home-current" class="brand" hidden>/);
+  const connected = html.indexOf('<section id="connected" hidden');
+  assert.ok(connected >= 0 && html.indexOf('id="admin-chat-link"') > connected, "anonymous login exposes no messages shortcut");
+});
 async function fixture(t, { legacy = false, backups = true, auth = true } = {}) {
   const session = { user: { id: "1".repeat(32), role: "admin", pseudonym: "Synthetic" }, csrf, expiresAt: Date.now() + 86400000 };
   const authHandler = auth ? createAuthHandler({ login() {}, logout() {}, logoutAll() {}, async session(value) { return value === token ? session : null; } }, { origin }) : undefined;

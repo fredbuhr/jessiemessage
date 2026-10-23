@@ -55,7 +55,7 @@ async function recoveryFixture() {
     void (async () => {
       const url = new URL(request.url, "http://localhost");
       response.setHeader("Cache-Control", "no-store");
-      response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+      response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
       if (request.method === "GET" && url.pathname === "/recover") {
         response.writeHead(200, { "Content-Type": types.html }); response.end(html); return;
       }

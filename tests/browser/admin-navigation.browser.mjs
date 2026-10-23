@@ -62,8 +62,10 @@ test("real Chrome: external links retain the existing Strict admin session and r
     source = await fixture(); page = await driver.browser({ origin: source.origin, acceptInsecureCerts: true, width: 375 });
     await page.navigate("/admin/login");
     await waitUntil(() => page.execute("return !document.getElementById('login-form').hidden && !document.getElementById('login-button').disabled"), "synthetic login form");
+    assert.equal(await page.execute("return [...document.querySelectorAll('a[href=\"/admin\"]')].filter(node=>node.checkVisibility()).length===1 && [...document.querySelectorAll('a[href=\"/admin/messages\"]')].every(node=>!node.checkVisibility())"), true);
     await page.type("#email", "admin@example.invalid"); await page.type("#password", "synthetic fixture password"); await page.type("#factor", "123456"); await page.click("#login-button");
     await waitUntil(() => page.execute("return location.pathname === '/admin' && !document.getElementById('connected').hidden"), "initial administrator connection");
+    assert.equal(await page.execute("return [...document.querySelectorAll('a[href=\"/admin\"]')].every(node=>!node.checkVisibility()) && !document.getElementById('admin-home-current').hidden"), true, "the current home brand is not a self-link");
     for (const path of ["/admin", "/admin/backups"]) {
       const start = source.requests.length;
       await link(page, `${source.outside}/outside?target=${encodeURIComponent(path)}`);

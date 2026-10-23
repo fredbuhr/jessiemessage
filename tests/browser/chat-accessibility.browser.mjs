@@ -3,7 +3,7 @@
 // Run with Chrome + ChromeDriver installed. Missing binaries are a test failure.
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -314,6 +314,19 @@ async function openChatOptions(page) {
   await page.click(`#${opener}`);
   await waitUntil(() => page.execute("return !document.getElementById('chat-menu').hidden"), "options panel opens");
 }
+async function visibleOptionsButtons(page) {
+  return page.execute(`return ['open-account-menu','open-conversation-menu'].filter(id=>{
+    const button=document.getElementById(id);return button&&!button.hidden&&!button.disabled&&button.getClientRects().length>0;
+  })`);
+}
+async function captureOptions(page, name) {
+  await page.executeAsync("const done=arguments[arguments.length-1];document.fonts.ready.then(()=>requestAnimationFrame(()=>requestAnimationFrame(()=>done(true))))");
+  const png = Buffer.from(await page.screenshot(), "base64");
+  assert.equal(png.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+  const directory = new URL("../../artifacts/homepage/", import.meta.url);
+  await mkdir(directory, { recursive: true });
+  await writeFile(new URL(`${name}.png`, directory), png);
+}
 async function clickOptionsAction(page, selector) {
   await openChatOptions(page);
   if (selector === ".conversation-download-entry" && !await page.execute("return document.querySelector('.menu-extras').open")) await page.click(".menu-extras summary");
@@ -581,6 +594,46 @@ test("Chrome desktop and 320px: actual Tab / Enter contact selection and return,
   }
 });
 
+test("Chrome desktop and mobile: one Options button before selection, in conversation and after returning to the inbox", { timeout: 120000 }, async () => {
+  for (const width of [1280, 320]) for (const role of ["client", "admin"]) {
+    resetFixture(); const page = await browser(width);
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      if (role === "admin") {
+        assert.deepEqual(await visibleOptionsButtons(page), ["open-account-menu"], `${width}px: Options is available before choosing a client`);
+        await tabUntil(page, "#open-account-menu"); await page.key("\uE007");
+        await waitUntil(() => page.execute("return !document.getElementById('chat-menu').hidden && document.activeElement.id==='close-chat-menu'"), "keyboard opens inbox Options");
+        assert.deepEqual(await page.execute("const link=document.getElementById('account-link');return {href:link.getAttribute('href'),text:link.textContent,headerLinks:document.querySelectorAll('.topbar a[href=\"/admin\"],.chat-head a[href=\"/admin\"]').length}"), {href:"/admin",text:"Accueil admin",headerLinks:0});
+        await page.key("\uE00C");
+        assert.equal(await page.execute("return document.getElementById('chat-menu').hidden && document.activeElement.id==='open-account-menu'"), true);
+        await captureOptions(page, `chat-options-${role}-${width}-inbox`);
+        await tabUntil(page, ".contact"); await page.key("\uE007");
+      }
+      await loadedPhoto(page);
+      assert.deepEqual(await visibleOptionsButtons(page), ["open-conversation-menu"], `${role}, ${width}px: only conversation Options is visible`);
+      assert.equal(await page.execute("return document.querySelectorAll('#client-aside a[href=\"/access\"]').length"), 0);
+      const requests = fixture.messageRequests.length, exports = fixture.exportRequests?.length ?? 0;
+      await tabUntil(page, "#open-conversation-menu"); await page.key("\uE007");
+      await waitUntil(() => page.execute("return !document.getElementById('chat-menu').hidden && document.activeElement.id==='close-chat-menu'"), "keyboard opens conversation Options");
+      assert.deepEqual(await page.execute("const link=document.getElementById('account-link');return {href:link.getAttribute('href'),text:link.textContent,expanded:document.getElementById('open-conversation-menu').getAttribute('aria-expanded')};"), {href:role === "admin" ? "/admin" : "/access",text:role === "admin" ? "Accueil admin" : "Mon accès",expanded:"true"});
+      assert.deepEqual(await page.execute("const button=document.querySelector('[data-jm-language]');return {text:button.textContent,target:button.getAttribute('data-jm-language-target'),label:button.getAttribute('aria-label')};"), {text:"",target:"en",label:"Passer en anglais"});
+      await captureOptions(page, `chat-options-${role}-${width}-open`);
+      await page.key("\uE00C");
+      assert.equal(await page.execute("return document.getElementById('chat-menu').hidden && document.activeElement.id==='open-conversation-menu' && document.activeElement.getClientRects().length>0"), true, "Escape restores the sole visible opener");
+      const target = await page.execute("const r=document.getElementById('open-conversation-menu').getBoundingClientRect();return {width:r.width,height:r.height}");
+      assert.ok(target.width >= 44 && target.height >= 44, "the remaining button keeps its touch target");
+      await captureOptions(page, `chat-options-${role}-${width}-conversation`);
+      if (role === "admin") {
+        await tabUntil(page, "#back-to-inbox"); await page.key("\uE007");
+        assert.deepEqual(await visibleOptionsButtons(page), ["open-account-menu"], "returning to the inbox restores its only Options button");
+      }
+      assert.equal(fixture.messageRequests.length, requests);
+      assert.equal(fixture.exportRequests?.length ?? 0, exports);
+      await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+
 test("Chrome mobile: a single compact conversation bar leaves room for history and exposes account actions through its menu", { timeout: 120000 }, async () => {
   for (const width of [320, 360, 390]) for (const path of ["/messages", "/admin/messages"]) {
     resetFixture(); fixture.notificationsEnabled = true; fixture.profileEnabled = true; fixture.clientExportEnabled = true;
@@ -591,6 +644,7 @@ test("Chrome mobile: a single compact conversation bar leaves room for history a
       await waitUntil(() => page.execute("return !document.getElementById('open-notifications').hidden && !document.getElementById('open-profile').hidden"), "optional account controls mounted");
       if (path === "/messages") await waitUntil(() => page.execute("return !!document.querySelector('.conversation-download-entry:not([hidden])')"), "optional client export mounted");
       if (path === "/admin/messages") {
+        assert.deepEqual(await visibleOptionsButtons(page), ["open-account-menu"], "the inbox exposes one Options button");
         assert.equal(await page.execute("return document.querySelector('.topbar').getClientRects().length>0 && !document.getElementById('open-account-menu').disabled"), true, "the inbox has its compact account bar");
         await page.click(".contact");
       }
@@ -619,6 +673,7 @@ test("Chrome mobile: a single compact conversation bar leaves room for history a
         assert.equal(layout.width, width, context); assert.equal(layout.height, 640, context);
         assert.equal(layout.scrollWidth <= layout.width, true, `${context}: no horizontal page overflow`);
         assert.equal(layout.duplicateHeader, false, `${context}: the conversation has one header`);
+        assert.deepEqual(await visibleOptionsButtons(page), ["open-conversation-menu"], `${context}: the conversation exposes one Options button`);
         assert.equal(layout.avatar, true); assert.equal(layout.name, fixture.peerName);
         assert.ok(layout.headHeight <= 80, `${context}: conversation bar stays compact`);
         assert.equal(layout.optionsClosed && layout.toolsClosed && !layout.footerVisible, true, `${context}: secondary actions reserve no permanent rows`);
@@ -635,6 +690,9 @@ test("Chrome mobile: a single compact conversation bar leaves room for history a
         assert.ok(composer.every(control=>Math.abs((control.top+control.bottom)/2-(composer[0].top+composer[0].bottom)/2)<=8), `${context}: composer controls share a row`);
         const sent = fixture.messageRequests.length, exports = fixture.exportRequests?.length ?? 0;
         await openChatOptions(page);
+        const flag = await page.execute("const button=document.querySelector('[data-jm-language]'),style=getComputedStyle(button,'::before');return {text:button.textContent,target:button.getAttribute('data-jm-language-target'),label:button.getAttribute('aria-label'),width:style.width,height:style.height,image:style.backgroundImage};");
+        assert.deepEqual({text:flag.text,target:flag.target,label:flag.label,width:flag.width,height:flag.height}, {text:"",target:language === "fr" ? "en" : "fr",label:language === "fr" ? "Passer en anglais" : "Switch to French",width:"24px",height:"16px"});
+        assert.match(flag.image, /data:image\/svg\+xml/, `${context}: the language action has a real decorative flag`);
         assert.equal(await page.execute("return document.getElementById('chat-menu').getAttribute('role')"), null, "ordinary native controls do not masquerade as an ARIA menu");
         await page.click(".menu-extras summary");
         const selectors = ["#account-link", "#open-profile", "#open-notifications", "[data-jm-language]", "#logout", '#chat-footer a[href^="mailto:"]', "#chat-footer [data-help-link]"];
@@ -722,11 +780,13 @@ test("Chrome 320px: both roles edit their public profile with the keyboard, tran
       await tabUntil(page, ".profile-pseudonym");
       assert.equal(await page.execute("return document.activeElement.matches('.profile-pseudonym')"), true, "the name remains reachable through explicit keyboard navigation");
       assert.equal(await page.execute("return document.querySelector('.profile-header h2').textContent"), "Mon profil");
+      assert.deepEqual(await page.execute("const file=document.querySelector('.profile-file');return {button:document.querySelector('.profile-choose-avatar').textContent,hidden:file.hidden,accept:file.accept,label:file.getAttribute('aria-label')};"), {button:"Choisir ou remplacer l’avatar",hidden:true,accept:"image/jpeg,image/png,image/webp",label:"Choisir ou remplacer l’avatar"});
       assert.equal(await page.execute("return document.querySelector('.profile-avatar-preview img').hidden"), true);
       await page.type(".profile-pseudonym", "Envoyer");
       await page.execute("JessieI18n.setLanguage('en')");
       assert.equal(await page.execute("return document.querySelector('.profile-header h2').textContent"), "My profile");
       assert.equal(await page.execute("return document.querySelector('.profile-save').textContent"), "Save profile");
+      assert.deepEqual(await page.execute("return {button:document.querySelector('.profile-choose-avatar').textContent,label:document.querySelector('.profile-file').getAttribute('aria-label')};"), {button:"Choose or replace your avatar",label:"Choose or replace your avatar"});
       assert.equal(await page.execute("return document.querySelector('.profile-pseudonym').value"), "Envoyer", "the raw public name is not translated");
       const layout = await page.execute(`const dialog=document.querySelector('.profile-dialog'), rect=dialog.getBoundingClientRect();
         return {fits:rect.left>=0 && rect.right<=innerWidth && dialog.scrollWidth<=dialog.clientWidth,
@@ -742,6 +802,11 @@ test("Chrome 320px: both roles edit their public profile with the keyboard, tran
       await waitUntil(() => page.execute("return !document.getElementById('chat-menu').hidden"), "returned options button reopens its menu");
       await tabUntil(page, "#open-profile"); await page.key("\uE007");
       await waitUntil(() => page.execute("return document.querySelector('.profile-dialog').matches(':modal') && document.querySelector('.profile-pseudonym').value===arguments[0]", nextName), "reopening reloads the saved public name");
+      for (const language of ["fr", "en", "fr"]) {
+        await page.execute("JessieI18n.setLanguage(arguments[0])", language);
+        assert.deepEqual(await page.execute("return {title:document.querySelector('.profile-header h2').textContent,button:document.querySelector('.profile-choose-avatar').textContent,name:document.querySelector('.profile-pseudonym').value};"), {title:language === "fr" ? "Mon profil" : "My profile",button:language === "fr" ? "Choisir ou remplacer l’avatar" : "Choose or replace your avatar",name:nextName});
+        assert.equal(fixture.profileRequests.length, 1); assert.equal(fixture.avatarUploads.length, 0); assert.equal(fixture.messageRequests.length, 0);
+      }
       await page.key("\uE00C");
       await waitUntil(() => page.execute("return !document.querySelector('.profile-dialog').open && document.activeElement.id==='open-conversation-menu'"), "Escape restores the profile opener");
       assert.equal(fixture.profileRequests.length, 1); await noJavascriptErrors(page);

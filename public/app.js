@@ -46,8 +46,10 @@ function renderLanguage() {
     if (translation) element.setAttribute("aria-label", translation);
   }
   document.querySelector('meta[name="description"]')?.setAttribute("content", translations[language].description);
-  switcher.textContent = language === "fr" ? "EN" : "FR";
-  switcher.setAttribute("aria-label", language === "fr" ? "Switch to English" : "Passer en français");
+  switcher.textContent = "";
+  switcher.setAttribute("data-jm-language-target", language === "fr" ? "en" : "fr");
+  switcher.setAttribute("aria-label", language === "fr" ? "Passer en anglais" : "Switch to French");
+  switcher.setAttribute("title", language === "fr" ? "Passer en anglais" : "Switch to French");
   document.title = language === "fr" ? "Jessie — Mon espace privé" : "Jessie — My private space";
 }
 

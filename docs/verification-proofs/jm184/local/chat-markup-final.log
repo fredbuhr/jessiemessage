@@ -1,0 +1,12 @@
+✔ chat has an empty dedicated polite announcement outside the non-live message history (2.443368ms)
+✔ chat keyboard destinations and composer instructions keep their explicit relationships and translation markers (2.365365ms)
+✔ account access stays in Options and the exclusive inbox/conversation buttons retain native relationships (2.540205ms)
+✔ chat CSS keeps explicit keyboard focus and the skip link out of the visual flow until focused (3.777249ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 160.84033
