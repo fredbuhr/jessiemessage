@@ -1,0 +1,113 @@
+{
+  "status": "release184_writer_native_synthetic_qualification_passed",
+  "repository": "fredbuhr/jessiemessage",
+  "branch": "ops/record-v1.8.4",
+  "source": "054f19dfd0fd5fa8a7e7db4a51077540ff079592",
+  "tree": "065207842ad04bbc6bd70415cd12443a44665b2f",
+  "workflow": {
+    "name": "Qualify 1.8.4 metadata operator",
+    "path": ".github/workflows/record-release184.yml",
+    "id": 393872389,
+    "runId": 39933260498,
+    "runNumber": 1,
+    "attempt": 1,
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39933260498",
+    "uniqueRunsForExactSha": 1
+  },
+  "job": {
+    "id": 120346490861,
+    "name": "operator-tests",
+    "status": "completed",
+    "conclusion": "success",
+    "run_id": 39933260498,
+    "logs_url": null,
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1
+      },
+      {
+        "name": "Checkout exact operator commit",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2
+      },
+      {
+        "name": "Use qualified Node.js 24.22.1",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3
+      },
+      {
+        "name": "Test metadata recording with isolated synthetic files",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4
+      },
+      {
+        "name": "Post Use qualified Node.js 24.22.1",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7
+      },
+      {
+        "name": "Post Checkout exact operator commit",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9
+      }
+    ]
+  },
+  "nodeVersion": "v24.22.1",
+  "command": "python3 ops/test_record_release184.py",
+  "testCommandRuns": 1,
+  "passedTestLines": 26,
+  "testSummary": "Ran 26 tests in 0.744s; OK",
+  "sourceWriterSha256": "60f9cf6a518da4d91733ed1e40bd1e8b5d8fcbe05a639ce606cba19a46bfe27b",
+  "checkoutObservedExact": true,
+  "setupNodeVersionObservedExact": true,
+  "log": {
+    "path": "/workspace/scratch/bb431be72395/ux184/writer-final/native.log",
+    "bytes": 22995,
+    "sha256": "c5391766eb5232f7ccc4c1a01c53177a671ec527a26b1124421c07f91f05340d",
+    "gitBlobSha": "36bd3aeecbbd8125af5c2be2ea95315131c57243",
+    "gitHashObject": "36bd3aeecbbd8125af5c2be2ea95315131c57243",
+    "gitHashObjectConcordant": true,
+    "fetchedOnce": true,
+    "preservedUtf8Bom": true,
+    "retention": "Unreferenced GitHub blob only; no ref or branch mutation"
+  },
+  "nativeQualificationScope": "Synthetic writer behavior only; actual startup and hosted identity remain required before recording.",
+  "externalActions": {
+    "githubGetOnlyExceptAuthorizedLogBlob": true,
+    "logBlobCreatedOnly": true,
+    "rerun": false,
+    "branchChanged": false,
+    "refChanged": false,
+    "helperExecuted": false,
+    "hostAccessed": false,
+    "activationObserved": false
+  },
+  "connectorFallback": "Workflow-name runs URL rejected by connector whitelist; /actions/runs?head_sha=... succeeded.",
+  "independentLocalReview": {
+    "status": "passed",
+    "checks": [
+      "unique exact-source run and successful job",
+      "exact checkout and Node v24.22.1 observed",
+      "one test command and 26 passed test lines",
+      "native log byte count, SHA256 and Git blob SHA concordant"
+    ],
+    "readOnly": true
+  }
+}

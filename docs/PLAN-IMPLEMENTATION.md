@@ -2,13 +2,14 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Correctif interface 1.8.4 — préparation hébergée restante
+## Correctif interface 1.8.4 — activation hébergée restante
 
 Code, contre-revues, PR 132 et main **5/5**, captures synthétiques et publication **2/2** acquis. Les cinq corrections demandées et la course des tâches sont terminées dans la source publiée. [Bilan](UX-184-20261023.md), [état](verification-proofs/jm184-progress.json).
 
-1. Recueillir la préparation 184 et `PREPARATION_184_CHECK_OK` avec le reçu complet.
-2. Donner ensuite les instructions Manager exactes, puis vérifier l’identité réelle : version 1.8.4, commit publié et Node v24.22.1 ; heure de démarrage à recueillir.
-3. Épingler le vrai reçu et la release dans le writer, qualifier ses tests natifs puis enregistrer les seules métadonnées et recueillir le résultat final.
+Préparation184 et CHECK acquis selon le reçu utilisateur, SHA `d188abf49b9a61035f0b4790a1512eb89ed7851025726dd63f47ad493f2b7f57` recalculé ; ne pas les relancer.
+
+1. Appliquer les instructions Manager exactes, puis vérifier l’identité réelle : version 1.8.4, commit publié et Node v24.22.1 ; heure de démarrage à recueillir.
+2. Après l’identité réelle184, exécuter le writer final déjà épinglé et qualifié26/26 (run39933260498), puis recueillir son reçu de métadonnées. Aucun enregistrement184 n’est encore acquis.
 
 La production et le checkpoint restent 1.8.3 tant que ces étapes ne sont pas acquises. SQL36 et configurations inchangés ; aucune reprise automatique des sauvegardes reportées, du PC, d’A10 ou des réserves A11/A12.
 
@@ -33,7 +34,7 @@ Corrections intégrées à1.8.3, distinctes des constats historiques de cet audi
 3. **B05 : admission du témoin historiqueP2 conditionnel**, et éventuellement **I01 : refus explicite de l’ancien coffreP3 conditionnel**. Fixtures uniquement, aucune réactivation du témoin, PC ou parcours de sauvegarde reporté. I01 ne démontre aucune perte actuelle ni défaut des archives vidéo actives.
 4. Qualification de la source corrective1.8.3 acquise ; publication et activation restent des étapes distinctes. Le constat d’audit seul ne prouvait aucun déploiement.
 
-Les sections182 ci-dessous restent l’historique de livraison acquis ; les cinq défauts et l’amélioration ci-dessus sont corrigés dans la1.8.3 dont l’identité active est désormais rapportée. Les reprises ne doivent ni les oublier, ni rejouer les anciens lots. [État final structuré](verification-proofs/audit2-182-progress.json). Production et checkpoint rapportés1.8.3 / Node24.22.1 / SQL36, latest concordant ; chantier juridiqueA10, sauvegarde hébergée, PC et réservesA11/A12 conservent leur statut précédent.
+Les sections182 ci-dessous restent l’historique de livraison acquis ; les cinq défauts et l’amélioration ci-dessus sont corrigés dans la1.8.3 dont l’identité active est désormais rapportée. Les reprises ne doivent ni les oublier, ni rejouer les anciens lots. [État final structuré](verification-proofs/audit2-182-progress.json). À la clôture183, production et checkpoint étaient rapportés1.8.3 / Node24.22.1 / SQL36, avec latest183 concordant ; la publication184 et son activation restante sont décrites dans l’état courant. Le chantier juridiqueA10, la sauvegarde hébergée, le PC et les réservesA11/A12 conservent leur statut précédent.
 
 ## Point de départ acquis avant le correctif182
 

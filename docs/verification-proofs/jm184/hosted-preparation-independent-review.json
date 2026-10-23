@@ -1,0 +1,105 @@
+{
+  "review": "JessieMessage 1.8.4 preparation receipt independent read-only review",
+  "date": "2026-10-23",
+  "evidenceClass": "USER_REPORTED with local static verification",
+  "inputs": [
+    "ux184/user-staging184-reported.json",
+    "jessiemessage/docs/operations-release184.md",
+    "jessiemessage/docs/REPRISE.md beginning and Accès section",
+    "git:9110372:docs/operations-release183.md",
+    "git:160653b:docs/operations-release183.md",
+    "git:e7e6f11815007a53a9502672500476f6f87e9f25:ops/prepare-release184.py"
+  ],
+  "result": "consistent_preparation_and_separate_check_reported_no_start",
+  "receiptHash": {
+    "algorithm": "SHA-256 of sorted compact JSON excluding receipt and receiptSha256, plus LF",
+    "serializedBytes": 2050,
+    "computed": "d188abf49b9a61035f0b4790a1512eb89ed7851025726dd63f47ad493f2b7f57",
+    "reported": "d188abf49b9a61035f0b4790a1512eb89ed7851025726dd63f47ad493f2b7f57",
+    "matches": true
+  },
+  "preparer": {
+    "commit": "e7e6f11815007a53a9502672500476f6f87e9f25",
+    "sourceSha256": "3fa75e684177e68cd68d8182f7dca3c10a466c153801a7314c1bf0c779df7b1c",
+    "matchesPublishedPin": true,
+    "readOnlyNotExecuted": true
+  },
+  "staticReceiptComparison": {
+    "expectedFieldCount": 42,
+    "mismatches": [],
+    "source": "Pinned preparer constants, release_plan and receipt construction read without execution",
+    "launcherHashesReported": {
+      "start": "3e564f1a61d102c53644b9e3449488c183b7321f164321ed915accdce9074473",
+      "check": "db74a9fb9d608c46cae09c89da69c0c335ba9679bfc9ad111b212b59c0a45daf"
+    },
+    "launcherByteHashesIndependentlyRecomputed": false,
+    "launcherHashLimit": "Private launcher bytes not available; receipt integrity and their reported values checked, hosted bytes not inspected."
+  },
+  "phaseDistinction": {
+    "receiptPhase": "Staging before CHECK. Empty log hashes and precheckPassed:false are expected and historical.",
+    "separateCheckEvidence": {
+      "marker": "PREPARATION_184_CHECK_OK",
+      "projection": {
+        "version": 2,
+        "type": "local_closure_precheck",
+        "status": "passed",
+        "pendingClosures": false,
+        "started": false
+      },
+      "provenance": "User output supplied in parent task. Marker from pinned wrapper is emitted only after all full precheck records match expected scope, erased:false and externalContinuityVerified:false.",
+      "qualification": "CHECK acquired by user report; no direct private log inspection."
+    },
+    "currentConclusion": "Preparation and local CHECK reported acquired. Runtime activation 1.8.4 not yet acquired. Active identity and checkpoint remain 1.8.3 by latest evidence.",
+    "doNotRewriteHistoricalReceipt": true,
+    "doNotRerunPreparationOrCheck": true,
+    "noNewSQLStatusClaim": true
+  },
+  "documentationFindings": [
+    {
+      "severity": "stale_reference",
+      "file": "docs/REPRISE.md",
+      "section": "Accès et commandes de l’application active",
+      "finding": "Table still shows release182 launchers and checkout despite active183; parent is correcting."
+    },
+    {
+      "severity": "expected_pending_update",
+      "file": "docs/REPRISE.md and docs/operations-release184.md",
+      "finding": "Preparation/CHECK pending wording predates newly reported successful user output; update as USER_REPORTED, while activation remains pending."
+    }
+  ],
+  "managerGuidance": {
+    "historicalBasis": "git 9110372 documents exact GUI flow after preparation183 acquired; 160653b confirms same fields.",
+    "applicationUrl": "https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application",
+    "serviceId": 239143,
+    "serviceName": "recette.jessiemessage.com",
+    "alsoServes": "jessiemessage.com",
+    "Run": "bash /srv/customer/jessiemessage-private/start-primary-release184-1a41e08a.sh",
+    "Build": "bash /srv/customer/jessiemessage-private/check-primary-release184-1a41e08a.sh",
+    "Port": "3000",
+    "directoryIfExistingApplicableFieldOnly": "/srv/customer/jessiemessage-operator/production-184-1a41e08a",
+    "directoryGuiLabelEstablished": false,
+    "saveAndRestart": "Enregistrer les commandes. Si l’enregistrement a déjà redémarré le service, passer au relevé d’identité. Sinon, ouvrir le tableau de bord Node et cliquer Redémarrer une seule fois.",
+    "dashboardUrl": "https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard",
+    "afterStartReadinessUrl": "https://jessiemessage.com/admin/readiness",
+    "afterStartIdentityToReport": {
+      "version": "1.8.4",
+      "commit": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "node": "v24.22.1",
+      "startupDate": "Actual displayed date, not inferred or fabricated"
+    },
+    "finalWriter": "Waits for actual activation identity and separate final pinning/native qualification; not authorized by this preparation review."
+  },
+  "operationsPerformed": {
+    "localReads": true,
+    "localReceiptHashComputation": true,
+    "reportWritten": true,
+    "cloudBrowser": false,
+    "realServer": false,
+    "sql": false,
+    "mail": false,
+    "push": false,
+    "backup": false,
+    "testsOrReruns": false,
+    "sourceOrGitMutation": false
+  }
+}

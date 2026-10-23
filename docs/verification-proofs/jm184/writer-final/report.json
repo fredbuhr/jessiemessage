@@ -1,0 +1,98 @@
+{
+  "status": "release184_writer_pins_finalized_synthetic_qualified_local_only",
+  "branch": "ops/record-v1.8.4",
+  "scope": "local_source_preparation_only",
+  "baselineOperator": {
+    "source": "e7e6f11815007a53a9502672500476f6f87e9f25",
+    "tree": "277c83d86bdcf4ff51591cb51ade0c82c879b732"
+  },
+  "application": {
+    "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+    "releaseId": 421341347,
+    "tag": "v1.8.4"
+  },
+  "staging": {
+    "canonicalReceiptPath": "/workspace/scratch/bb431be72395/ux184/user-staging184-canonical-receipt.json",
+    "canonicalReceiptSha256": "d188abf49b9a61035f0b4790a1512eb89ed7851025726dd63f47ad493f2b7f57",
+    "reportedStdoutPath": "/workspace/scratch/bb431be72395/ux184/user-staging184-reported.json",
+    "reportedStdoutSha256": "0393608797642b43750a8d46ccc2edede4a104a9c063f1f7af43793be26ce0fb",
+    "canonicalization": "Remove receipt and receiptSha256 only, then json.dumps(value,sort_keys=True,separators=(',',':'))+'\\n'",
+    "status": "PREPARATION_184_CHECK_OK_reported",
+    "started": false,
+    "identityObserved": false
+  },
+  "changes": [
+    "STAGING_SHA finalized",
+    "RELEASE_ID finalized",
+    "Writer docstring states acquired pins and required actual startup/public HTTP identity",
+    "Workflow comment updated; execution unchanged"
+  ],
+  "preserved": {
+    "otherExecutableWriterLogic": true,
+    "testFileByteExact": true,
+    "sourceAndTree": true,
+    "baseline183CheckpointSha256": "17f575ebe83d0a9d9acf74e9436bff59eabcf8b5ed1bb8f0f99897c867c78a22",
+    "allHistoricalPinsAndSections": true,
+    "rollback172": true
+  },
+  "validation": {
+    "command": "python3 ops/test_record_release184.py",
+    "runs": 1,
+    "exitCode": 0,
+    "tests": 26,
+    "result": "OK",
+    "log": "/workspace/scratch/bb431be72395/ux184/writer-final/synthetic-tests.log",
+    "fixtures": "isolated synthetic files; source inspection, HTTP and publication transport replaced by fixtures",
+    "staticAstComparison": "equal after normalizing only top-level docstring and STAGING_SHA/RELEASE_ID literals",
+    "independentStaticReview": "passed"
+  },
+  "prohibitedActionsPerformed": {
+    "helperExecuted": false,
+    "realOperatorExecuted": false,
+    "gitExecuted": false,
+    "apiAccessed": false,
+    "hostAccessed": false,
+    "published": false,
+    "mainRepositoryModified": false,
+    "activationPerformed": false
+  },
+  "files": [
+    {
+      "path": "ops/record-release184.py",
+      "mode": "100644",
+      "bytes": 29949,
+      "sha256": "60f9cf6a518da4d91733ed1e40bd1e8b5d8fcbe05a639ce606cba19a46bfe27b",
+      "beforeSha256": "ce661f3fd3e17c6634fcc6771cb7b18437149da35df905b9e4e4187402596dfe",
+      "changed": true
+    },
+    {
+      "path": "ops/test_record_release184.py",
+      "mode": "100644",
+      "bytes": 45493,
+      "sha256": "aa443b51e1341e1ef8f5ab46770f9460f7326a61cfdf8d4677d59c9e251cf720",
+      "beforeSha256": "aa443b51e1341e1ef8f5ab46770f9460f7326a61cfdf8d4677d59c9e251cf720",
+      "changed": false
+    },
+    {
+      "path": ".github/workflows/record-release184.yml",
+      "mode": "100644",
+      "bytes": 1146,
+      "sha256": "9f81b71c90874683b7c29663f818ac8acd0792d1e778ed77c61d1334bd393f65",
+      "beforeSha256": "e0a29031f0025985adc1f20b8fb4ae2e67d448cb23c1a1e6f76162e8806c09b5",
+      "changed": true
+    }
+  ],
+  "sourcePack": {
+    "path": "/workspace/scratch/bb431be72395/ux184/writer-final/source-pack.json",
+    "sha256": "d2970bb56fb4dff86f04e2e8b15d226d60d46a6bebfa0b1e4a0ed60aab5e0622",
+    "encoding": "ASCII JSON",
+    "files": 3
+  },
+  "next": [
+    "Root may publish these exact three source files on ops/record-v1.8.4",
+    "Native qualification must pass 26 tests against published source",
+    "User activation remains pending",
+    "Writer must wait for actual startup and public HTTP identity"
+  ]
+}

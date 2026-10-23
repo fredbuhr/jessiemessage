@@ -1,6 +1,6 @@
 {
   "type": "jm184-corrective-progress",
-  "status": "published_awaiting_hosted_preparation_and_check",
+  "status": "prepared_and_prechecked_awaiting_manager_activation",
   "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
   "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
   "version": "1.8.4",
@@ -23,15 +23,15 @@
   "nativeQualified": true,
   "published": true,
   "deployed": false,
-  "hostedPreparation": false,
-  "hostedCheck": false,
+  "hostedPreparation": true,
+  "hostedCheck": true,
   "metadataRecorded": false,
   "writerReady": false,
-  "writerStagingPin": "STAGING_PENDING",
-  "writerReleaseIdPin": null,
+  "writerStagingPin": "d188abf49b9a61035f0b4790a1512eb89ed7851025726dd63f47ad493f2b7f57",
+  "writerReleaseIdPin": 421341347,
   "privateScreenshotsPublished": false,
   "hostedActionsPerformed": false,
-  "nextAction": "User runs the pinned preparation184 and CHECK once, returns full staging receipt and PREPARATION_184_CHECK_OK; inspect before Manager activation.",
+  "nextAction": "User saves exact184 Run/Build in Manager239143, activates once if not already restarted by save, then returns actual version/commit/Node/start timestamp. No SSH preparation or standaloneCHECK rerun.",
   "priorFailures": [
     "jm184/initial-browser-failure.json",
     "jm184/initial-main-browser-failure.json"
@@ -40,5 +40,14 @@
     "Physical mobile keyboard and system notifications are not newly attested.",
     "Hosted backup remains postponed.",
     "A10 parked, A11 inconclusive and A12 limits retained."
-  ]
+  ],
+  "stagingReceiptSha256": "d188abf49b9a61035f0b4790a1512eb89ed7851025726dd63f47ad493f2b7f57",
+  "launcherSha256": "3e564f1a61d102c53644b9e3449488c183b7321f164321ed915accdce9074473",
+  "checkLauncherSha256": "db74a9fb9d608c46cae09c89da69c0c335ba9679bfc9ad111b212b59c0a45daf",
+  "writerOperator": "054f19dfd0fd5fa8a7e7db4a51077540ff079592",
+  "writerSha256": "60f9cf6a518da4d91733ed1e40bd1e8b5d8fcbe05a639ce606cba19a46bfe27b",
+  "writerAwaitingStartupIdentity": true,
+  "writerQualified": true,
+  "writerRun": 39933260498,
+  "writerTests": 26
 }

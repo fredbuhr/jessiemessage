@@ -1,0 +1,32 @@
+{
+  "source-pack.json": "d2970bb56fb4dff86f04e2e8b15d226d60d46a6bebfa0b1e4a0ed60aab5e0622",
+  "changes.diff": "197e1a774b48f2d6bba338a69bb84064b40f9133a2e5597cf6b6cb9881c48d0c",
+  "synthetic-tests.log": "c0ecbbed5a33e760e746f64b13694ab0ea1311f67257d66fbc5f5abac05128ff",
+  "report.json": "fcf6c9e81374799edd1d421a78688ed81a233724939b329413147df3616fc5fc",
+  "sourceFiles": [
+    {
+      "path": "ops/record-release184.py",
+      "mode": "100644",
+      "bytes": 29949,
+      "sha256": "60f9cf6a518da4d91733ed1e40bd1e8b5d8fcbe05a639ce606cba19a46bfe27b",
+      "beforeSha256": "ce661f3fd3e17c6634fcc6771cb7b18437149da35df905b9e4e4187402596dfe",
+      "changed": true
+    },
+    {
+      "path": "ops/test_record_release184.py",
+      "mode": "100644",
+      "bytes": 45493,
+      "sha256": "aa443b51e1341e1ef8f5ab46770f9460f7326a61cfdf8d4677d59c9e251cf720",
+      "beforeSha256": "aa443b51e1341e1ef8f5ab46770f9460f7326a61cfdf8d4677d59c9e251cf720",
+      "changed": false
+    },
+    {
+      "path": ".github/workflows/record-release184.yml",
+      "mode": "100644",
+      "bytes": 1146,
+      "sha256": "9f81b71c90874683b7c29663f818ac8acd0792d1e778ed77c61d1334bd393f65",
+      "beforeSha256": "e0a29031f0025985adc1f20b8fb4ae2e67d448cb23c1a1e6f76162e8806c09b5",
+      "changed": true
+    }
+  ]
+}

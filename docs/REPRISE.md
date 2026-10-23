@@ -1,8 +1,8 @@
 # Reprendre JessieMessage
 
-**23 octobre 2026 — application active et checkpoint privé : 1.8.3 / Node v24.22.1 / SQL36 ; latest publié : 1.8.4, à préparer puis activer.** L’identité et les reçus hébergés sont rapportés par l’utilisateur (**USER_REPORTED**), sans inspection privée directe par l’agent. La livraison technique183 est close : qualification, publication, préparation, CHECK, activation et enregistrement final acquis. Aucune opération technique supplémentaire n’est en attente pour ce lot ; les réserves et contrôles non réalisés sont conservés ci-dessous.
+**23 octobre 2026 — application active et checkpoint privé : 1.8.3 / Node v24.22.1 / SQL36 ; latest publié : 1.8.4, préparée et précontrôlée, activation à effectuer.** L’identité et les reçus hébergés sont rapportés par l’utilisateur (**USER_REPORTED**), sans inspection privée directe par l’agent. La livraison technique183 est close : qualification, publication, préparation, CHECK, activation et enregistrement final acquis. Aucune opération technique supplémentaire n’est en attente pour ce lot ; les réserves et contrôles non réalisés sont conservés ci-dessous.
 
-## Correctif interface 1.8.4 — publié, préparation hébergée à effectuer
+## Correctif interface 1.8.4 — préparation et CHECK acquis, activation restante
 
 Les cinq demandes sont corrigées : profil FR/EN avec commande d’avatar traduite, un seul menu Options, accès client conservé dans ce menu, drapeaux de langue et destinations admin dédoublonnées. Une course préexistante des tâches, découverte pendant la qualification, est également corrigée ; sa régression retient volontairement le résumé de sauvegarde avant de libérer les filtres.
 
@@ -10,7 +10,7 @@ La [PR 132](https://github.com/fredbuhr/jessiemessage/pull/132) et le vrai main 
 
 La [publication 39880194316](https://github.com/fredbuhr/jessiemessage/actions/runs/39880194316) a réussi **2/2**, avec **38/38** tests du publisher et **22/22** de préparation natifs avant création du [tag/release v1.8.4](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.4). Release **421341347**, latest et tag vérifiés sur la source exacte ci-dessus. Opérateur **`e7e6f11815007a53a9502672500476f6f87e9f25`**, préparateur SHA-256 **`3fa75e684177e68cd68d8182f7dca3c10a466c153801a7314c1bf0c779df7b1c`**. [Preuve de publication](verification-proofs/jm184/publication-native.json), [identité publiée](verification-proofs/jm184/publication-live-identity.json).
 
-**Application active et checkpoint privé : 1.8.3 ; latest publié : 1.8.4.** Aucune préparation, aucun CHECK ni démarrage 184 n’a encore été rapporté. Prochaine action unique : la [préparation 184 et son CHECK](operations-release184.md), puis recueillir le reçu complet et `PREPARATION_184_CHECK_OK` avant de donner l’activation Manager. Les commandes 183 sont closes et ne doivent pas être rejouées. Node, dépendances, configurations et SQL36 restent inchangés. Le writer 184 est encore bloqué avant toute lecture privée ou réseau : reçu de staging et release ID finaux à épingler séparément, puis qualification native avant son emploi. [État courant](verification-proofs/jm184-progress.json).
+**Application active et checkpoint privé : 1.8.3 ; latest publié : 1.8.4.** La [préparation et le CHECK184](verification-proofs/jm184-hosted-preparation.json) sont acquis par retour utilisateur : reçu `d188abf49b9a61035f0b4790a1512eb89ed7851025726dd63f47ad493f2b7f57`, empreinte recalculée, marqueur `PREPARATION_184_CHECK_OK`. Aucun démarrage184 n’est encore acquis. Prochaine action : [enregistrer les commandes184 dans le Manager et activer une seule fois](operations-release184.md), puis recueillir l’identité réelle avant les métadonnées. Ne répéter ni préparation SSH ni CHECK autonome. Les commandes 183 sont closes et ne doivent pas être rejouées. Node, dépendances, configurations et SQL36 restent inchangés. Le writer final184 est épinglé sur le vrai reçu et la release421341347 ; sa [qualification native39933260498](https://github.com/fredbuhr/jessiemessage/actions/runs/39933260498) est acquise **26/26**, tentative1, et son exécution attend l’identité réelle184. [Preuve](verification-proofs/jm184/writer-final/native.json). L’opérateur provisoire de la branche publication reste inutilisable et ne doit pas être exécuté. [État courant](verification-proofs/jm184-progress.json).
 
 ## Correctif messagerie1.8.3 — livraison close et alignée
 
@@ -43,7 +43,7 @@ Le [plan de correction exécuté](PLAN-IMPLEMENTATION.md#second-audit-après-liv
 | Élément | Référence acquise |
 | --- | --- |
 | Application active | **1.8.3**, source `48fd42b808b2bc4d95d3f3ba21244c032d0a938f`, arbre qualifié `1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58` ; [identité utilisateur](verification-proofs/jm183-hosted-identity.json), [tag/releasev1.8.3](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.3). |
-| Publication disponible | **1.8.4**, tag/release/latest421341347 sur `1a41e08abc87c3a29d9163fbf8cd2342eb04693c`, arbre `e0964b50c03d3881d851f01f86f58777d22b2c10` ; préparation et CHECK184 à recueillir avant activation. [Opération courante](operations-release184.md). |
+| Publication disponible | **1.8.4**, tag/release/latest421341347 sur `1a41e08abc87c3a29d9163fbf8cd2342eb04693c`, arbre `e0964b50c03d3881d851f01f86f58777d22b2c10` ; préparation et CHECK184 acquis ; activation et identité réelle restantes. [Opération courante](operations-release184.md). |
 | Identité au démarrage | Node **v24.22.1**, relevé UI exact **`23/10/2026 00:56:57`** ; [identitéUI183](verification-proofs/jm183-hosted-identity.json). Epoch `1792709817104` rapporté par le writer après lecture du vrai journal, soit `00:56:57.104` à Paris, concordant avec l’UI. |
 | Base | **SQL36** : 33 migrations de base et 3 migrations vidéo ; [preuve SQL36 antérieure](verification-proofs/jm180-hosted-schema36.json), migrations inchangées et CHECK183 acquis séparément. Aucune migration ajoutée pour1.8.3 ; aucun nouveau résultat SQL déduit des seuls champs UI. |
 | Préparation et qualification | [Préparation/CHECK183](verification-proofs/jm183-hosted-preparation.json) acquis ; [CI main183](verification-proofs/jm183/main-native.json) **5/5**, qualification de branche et du writer26/26 conservées séparément. |
@@ -106,15 +106,17 @@ La [sauvegarde privée D01/D08](verification-proofs/jm182-hosted-privacy-notes.j
 
 Le service Node **239143**, nommé **recette.jessiemessage.com** dans le Manager, dessert aussi **jessiemessage.com**, avec **le même runtime et la même base**. Recette est une origine de compatibilité pour les anciens appareils/PWA/Push, jamais une cible de qualification destructive. Accès directs : [SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), [Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), [état du service](https://jessiemessage.com/admin/readiness), [tâches](https://jessiemessage.com/admin/tasks), [connexion admin directe](https://jessiemessage.com/admin/login).
 
-| Champ Manager | Lanceurs182 préparés pour l’identité active rapportée — référence, pas consigne de redémarrage |
+| Champ Manager | Référence183 de l’identité active rapportée — ne pas réexécuter |
 | --- | --- |
-| Run | `bash /srv/customer/jessiemessage-private/start-primary-release182-78e6b8b2.sh` |
-| Build | `bash /srv/customer/jessiemessage-private/check-primary-release182-78e6b8b2.sh` |
+| Run | `bash /srv/customer/jessiemessage-private/start-primary-release183-48fd42b8.sh` |
+| Build | `bash /srv/customer/jessiemessage-private/check-primary-release183-48fd42b8.sh` |
 | Port | **3000** |
-| Checkout | `/srv/customer/jessiemessage-operator/production-182-78e6b8b2` |
-| Journal | `/srv/customer/jessiemessage-private/jm182-node24221.log` — ne pas tronquer. |
+| Checkout | `/srv/customer/jessiemessage-operator/production-183-48fd42b8` |
+| Journal | `/srv/customer/jessiemessage-private/jm183-node24221.log` — ne pas tronquer. |
 
 Les lanceurs181 antérieurs `start-primary-release181-1ae4c751.sh` et `check-primary-release181-1ae4c751.sh` restent conservés sous `/srv/customer/jessiemessage-private`. Le repli technique1.7.2 conserve ses lanceurs `start-primary-release172-6b3319a7.sh` et `check-primary-release172-6b3319a7.sh`, précontrôlés sans démarrage. Les anciens lanceurs1.7.1/1.6.0 restent historiques et inutilisables sur SQL36. Le Node privé officiel est épinglé ; ne pas remplacer le binaire système du fournisseur.
+
+Les commandes184 déjà préparées et précontrôlées sont données uniquement dans les [consignes d’activation courantes](operations-release184.md). Leur emploi attend la modification Manager ; aucune identité184 n’est présumée.
 
 ## Domaines et éléments à préserver
 
