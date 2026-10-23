@@ -1,0 +1,310 @@
+{
+  "format": "jessiemessage-native-main-qualification",
+  "version": 1,
+  "status": "main_qualified_native",
+  "observedAt": "2026-10-23T13:23:26.367012+00:00",
+  "release": "1.8.5",
+  "purpose": "SQL38-compatible application rollback; 190 preferences and reply engine remain dormant",
+  "repository": "fredbuhr/jessiemessage",
+  "pr": 134,
+  "prHead": "f44fcdce7a93927969850d82859317d5bbad5532",
+  "source": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
+  "tree": "7ec449cb3a63a091c5233993923ceb69f8314366",
+  "run": {
+    "id": 39958956620,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39958956620",
+    "attempt": 1,
+    "event": "push",
+    "branch": "main",
+    "workflow": ".github/workflows/ci.yml",
+    "status": "completed",
+    "conclusion": "success",
+    "createdAt": "2026-10-23T13:09:58Z",
+    "completedAt": "2026-10-23T13:17:38Z"
+  },
+  "nativeNode": "v24.22.1",
+  "jobsPassed": 5,
+  "jobsExpected": 5,
+  "jobs": [
+    {
+      "name": "Chrome keyboard and chat lifecycle",
+      "id": 120431782195,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39958956620/job/120431782195",
+      "runId": 39958956620,
+      "attempt": 1,
+      "head": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T13:10:00Z",
+      "completedAt": "2026-10-23T13:14:51Z",
+      "nodeVersion": "v24.22.1",
+      "nodeEvidence": "2026-10-23T13:10:09.8340659Z node: v24.22.1",
+      "tests": 233,
+      "passed": 233,
+      "failed": 0,
+      "skipped": 0,
+      "countEvidence": {
+        "tests": {
+          "count": 233,
+          "line": "2026-10-23T13:14:47.7835839Z ℹ tests 233"
+        },
+        "pass": {
+          "count": 233,
+          "line": "2026-10-23T13:14:47.7836264Z ℹ pass 233"
+        },
+        "fail": {
+          "count": 0,
+          "line": "2026-10-23T13:14:47.7836463Z ℹ fail 0"
+        },
+        "skipped": {
+          "count": 0,
+          "line": "2026-10-23T13:14:47.7836896Z ℹ skipped 0"
+        }
+      },
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/experience190/185-main-chrome.log",
+        "bytes": 49511,
+        "sha256": "add8632b47cc28b7ba98e00b0e9fef95fbbddb1f8e5fac92320b87c2b1f0902c"
+      }
+    },
+    {
+      "name": "MariaDB 10.11",
+      "id": 120431782427,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39958956620/job/120431782427",
+      "runId": 39958956620,
+      "attempt": 1,
+      "head": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T13:10:01Z",
+      "completedAt": "2026-10-23T13:17:38Z",
+      "nodeVersion": "v24.22.1",
+      "nodeEvidence": "2026-10-23T13:10:25.7779703Z node: v24.22.1",
+      "tests": 577,
+      "passed": 577,
+      "failed": 0,
+      "skipped": 0,
+      "countEvidence": {
+        "tests": {
+          "count": 577,
+          "line": "2026-10-23T13:17:34.4451593Z # tests 577"
+        },
+        "pass": {
+          "count": 577,
+          "line": "2026-10-23T13:17:34.4452284Z # pass 577"
+        },
+        "fail": {
+          "count": 0,
+          "line": "2026-10-23T13:17:34.4452620Z # fail 0"
+        },
+        "skipped": {
+          "count": 0,
+          "line": "2026-10-23T13:17:34.4464307Z # skipped 0"
+        }
+      },
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/experience190/185-main-db1011.log",
+        "bytes": 340536,
+        "sha256": "6061b6072680ada5c78fed891ee430484c7cf5d31203f063778e9b8fc30ac569"
+      }
+    },
+    {
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "id": 120431782605,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39958956620/job/120431782605",
+      "runId": 39958956620,
+      "attempt": 1,
+      "head": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T13:10:00Z",
+      "completedAt": "2026-10-23T13:11:40Z",
+      "nodeVersion": "v24.22.1",
+      "nodeEvidence": "2026-10-23T13:10:22.1319952Z node: v24.22.1",
+      "tests": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "countEvidence": {
+        "tests": {
+          "count": 5,
+          "line": "2026-10-23T13:11:37.2051384Z ℹ tests 5"
+        },
+        "pass": {
+          "count": 5,
+          "line": "2026-10-23T13:11:37.2052581Z ℹ pass 5"
+        },
+        "fail": {
+          "count": 0,
+          "line": "2026-10-23T13:11:37.2053029Z ℹ fail 0"
+        },
+        "skipped": {
+          "count": 0,
+          "line": "2026-10-23T13:11:37.2053954Z ℹ skipped 0"
+        }
+      },
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/experience190/185-main-https.log",
+        "bytes": 38703,
+        "sha256": "ed93b68f90d3fbcf6c00cb7d33c338635526443d31728fc86e6a379ca2e951da"
+      }
+    },
+    {
+      "name": "MariaDB 11.4",
+      "id": 120431782654,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39958956620/job/120431782654",
+      "runId": 39958956620,
+      "attempt": 1,
+      "head": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T13:10:01Z",
+      "completedAt": "2026-10-23T13:16:40Z",
+      "nodeVersion": "v24.22.1",
+      "nodeEvidence": "2026-10-23T13:10:20.8173923Z node: v24.22.1",
+      "tests": 577,
+      "passed": 577,
+      "failed": 0,
+      "skipped": 0,
+      "countEvidence": {
+        "tests": {
+          "count": 577,
+          "line": "2026-10-23T13:16:38.0593364Z # tests 577"
+        },
+        "pass": {
+          "count": 577,
+          "line": "2026-10-23T13:16:38.0593964Z # pass 577"
+        },
+        "fail": {
+          "count": 0,
+          "line": "2026-10-23T13:16:38.0594234Z # fail 0"
+        },
+        "skipped": {
+          "count": 0,
+          "line": "2026-10-23T13:16:38.0594833Z # skipped 0"
+        }
+      },
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/experience190/185-main-db114.log",
+        "bytes": 340697,
+        "sha256": "4861704d62f722d0ca08a76658567d1903fc8cf0bd7468c36ef00f67b694a1f3"
+      }
+    },
+    {
+      "name": "verify",
+      "id": 120431782729,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39958956620/job/120431782729",
+      "runId": 39958956620,
+      "attempt": 1,
+      "head": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T13:10:00Z",
+      "completedAt": "2026-10-23T13:12:25Z",
+      "nodeVersion": "v24.22.1",
+      "nodeEvidence": "2026-10-23T13:10:10.5652093Z node: v24.22.1",
+      "tests": 3997,
+      "passed": 3948,
+      "failed": 0,
+      "skipped": 49,
+      "countEvidence": {
+        "tests": {
+          "count": 3997,
+          "line": "2026-10-23T13:12:04.4608316Z ℹ tests 3997"
+        },
+        "pass": {
+          "count": 3948,
+          "line": "2026-10-23T13:12:04.4609036Z ℹ pass 3948"
+        },
+        "fail": {
+          "count": 0,
+          "line": "2026-10-23T13:12:04.4609410Z ℹ fail 0"
+        },
+        "skipped": {
+          "count": 49,
+          "line": "2026-10-23T13:12:04.4610172Z ℹ skipped 49"
+        }
+      },
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/experience190/185-main-general.log",
+        "bytes": 565963,
+        "sha256": "4cf5edf2ddc4ddc69ac75ac2d7e5590748b30071f17eaf788cab9e01b603156a"
+      },
+      "build": {
+        "name": "Build offline workbench",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    }
+  ],
+  "rawEvidence": {
+    "run": {
+      "path": "/workspace/scratch/bb431be72395/experience190/185-main-run.json",
+      "bytes": 12446,
+      "sha256": "19480670d558147d5d15077661dd6df0294e75eb738a2d15aac87996040b353e"
+    },
+    "jobs": {
+      "path": "/workspace/scratch/bb431be72395/experience190/185-main-jobs.json",
+      "bytes": 13654,
+      "sha256": "3cb31349d1f6731a041fb4c224a41e4e04e8466226e2c0c551513652d7a7f87e"
+    },
+    "commit": {
+      "path": "/workspace/scratch/bb431be72395/experience190/185-main-commit.json",
+      "bytes": 2740,
+      "sha256": "99896f0b9595841cbe637b1555b70740a05fb330bdcfdba4223a1020b01d2035"
+    }
+  },
+  "sourceChecks": {
+    "runHeadMatchesSource": true,
+    "allFiveJobHeadsMatchSource": true,
+    "runTreeMatchesExpected": true,
+    "commitApiTreeMatchesExpected": true,
+    "firstAttemptOnly": true,
+    "allFiveJobsCompletedSuccessfully": true,
+    "allFiveLogsDownloaded": true,
+    "nativeNodeObservedInAllFiveLogs": true
+  },
+  "totals": {
+    "general": {
+      "tests": 3997,
+      "passed": 3948,
+      "failed": 0,
+      "skipped": 49
+    },
+    "chrome": {
+      "tests": 233,
+      "passed": 233,
+      "failed": 0,
+      "skipped": 0
+    },
+    "https": {
+      "tests": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mariadb10_11": {
+      "tests": 577,
+      "passed": 577,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mariadb11_4": {
+      "tests": 577,
+      "passed": 577,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "schemaMigrations": 38,
+  "applicationTables": 37,
+  "deployed": false,
+  "productionVerified": false,
+  "qualificationRerunPerformed": false,
+  "method": "Read-only GitHub REST run, attempt1 jobs, commit tree and five decoded job logs. Existing successful qualification was inspected, not rerun.",
+  "limitations": [
+    "Native CI uses synthetic isolated data; no hosted service, production database, real user account, real notification delivery or physical device was inspected.",
+    "Skipped general tests are omissions, not successes; database, Chrome and HTTPS jobs have zero skips.",
+    "This evidence qualifies the exact merged185 source. It neither publishes185 nor declares its hosted rollback CHECK passed."
+  ]
+}

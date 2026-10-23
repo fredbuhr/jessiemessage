@@ -1,18 +1,25 @@
 {
   "type": "experience190-progress",
-  "status": "final_code_reconciled_with185_awaiting_full_native_qualification",
-  "branch": "feat/private-experience-190",
-  "baselineMain": "904ab4301bbda71e047d5b3b5dad41d45149c1cf",
-  "activeVersion": "1.8.4",
-  "activeSource": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
-  "activeSchema": 36,
-  "candidateVersion": "1.9.0",
-  "specSha256": "c71cae4c464cedb8b880e736013ebf3b2624a4afccf2205da06a95ed50aa47be",
-  "catalogueSha256": "5ce26f14f15fb9c3447b07777aa5c8d17a6e823e8099dbb37959fc48f00f93cb",
-  "catalogueCounts": {
-    "categories": 25,
+  "version": 2,
+  "status": "coded_native_tested_published_awaiting_host_source_preparation",
+  "release": {
+    "version": "1.9.0",
+    "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
+    "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+    "schemaMigrations": 38,
+    "physicalTables": 37,
+    "coded": true,
+    "tested": true,
+    "published": true,
+    "deployed": false,
+    "productionVerified": false
+  },
+  "catalogue": {
+    "sha256": "5ce26f14f15fb9c3447b07777aa5c8d17a6e823e8099dbb37959fc48f00f93cb",
     "preferences": 691,
-    "aliases": 934
+    "categories": 25,
+    "aliases": 934,
+    "specSha256": "c71cae4c464cedb8b880e736013ebf3b2624a4afccf2205da06a95ed50aa47be"
   },
   "lots": [
     {
@@ -21,8 +28,7 @@
       "tested": true,
       "deployed": false,
       "productionVerified": false,
-      "testScope": "Node24.19_local_targeted_and_full_suite; native_DB_Chrome_HTTPS_pending",
-      "status": "coded_targeted_and_full_local_passed"
+      "testScope": "Qualified native Node24.22.1 PR and exactmain5of5; synthetic Chrome mobile/desktop and SQL38; not physical phone or production"
     },
     {
       "name": "preferences",
@@ -30,8 +36,7 @@
       "tested": true,
       "deployed": false,
       "productionVerified": false,
-      "testScope": "Node24.19_local_targeted_and_full_suite; native_DB_Chrome_HTTPS_pending",
-      "status": "coded_targeted_and_full_local_passed"
+      "testScope": "Qualified native Node24.22.1 PR and exactmain5of5; synthetic Chrome mobile/desktop and SQL38; not physical phone or production"
     },
     {
       "name": "photos",
@@ -39,8 +44,7 @@
       "tested": true,
       "deployed": false,
       "productionVerified": false,
-      "testScope": "Node24.19_local_targeted_and_full_suite; native_DB_Chrome_HTTPS_pending",
-      "status": "coded_targeted_and_full_local_passed"
+      "testScope": "Qualified native Node24.22.1 PR and exactmain5of5; synthetic Chrome mobile/desktop and SQL38; not physical phone or production"
     },
     {
       "name": "reply-followup",
@@ -48,99 +52,93 @@
       "tested": true,
       "deployed": false,
       "productionVerified": false,
-      "testScope": "Node24.19_local_targeted_and_full_suite; native_DB_Chrome_HTTPS_pending",
-      "status": "coded_targeted_and_full_local_passed"
+      "testScope": "Qualified native Node24.22.1 PR and exactmain5of5; synthetic Chrome mobile/desktop and SQL38; not physical phone or production"
     }
   ],
-  "actualHostMutationsPerformed": false,
-  "nextAction": "Run full native PR190 qualification on the merged185 ancestry, including realHTTPS batch lostACK and shared reply followup; finish main185 CI then merge190 and qualify exact main. Production184 SQL36 untouched.",
-  "candidateSchemaMigrations": 38,
-  "candidatePhysicalTables": 37,
-  "localNode": "v24.19.0",
-  "nativeNodeRequired": "v24.22.1",
-  "pr": 133,
-  "nativeQualified": false,
-  "published": false,
-  "deployed": false,
-  "targetedResults": {
-    "accountBackend": "39 initial;6HTTPfinal;8store;48sessions;12resetclock passed",
-    "accountFrontend": "133passed",
-    "preferences": "22passed;691choices25categories934aliaseschecked",
-    "photos": "107passed;7i18n;3webdriver_cleanup;130chat_harness_after_module_integration",
-    "followup": "157passed+1DBskip",
-    "rootRuntime": "109passed;3migration+6startup passed",
-    "nativeRemaining": [
-      "Chrome component/lifecycle tests",
-      "HTTPS authentication with SQL38",
-      "MariaDB10.11 and11.4 integration"
-    ],
-    "video": "240passed;12skipped;historical_client_video_fixtures_preserved",
-    "checkpointCompatibility": "210passed;6skipped;SQL38_existing_pipeline_only",
-    "backupCoreCompatibility": "7new+91legacy+28CLI passed; nativeSQL38capture_pending",
-    "photosFinalDelta": "106lifecycle_and_photo_batch_passed;2new_old_segment_retry_and_load_failure_regressions",
-    "preferencesFinalDelta": "25passed; new real transaction mock conflict/replay/foreign-error/session-revocation regressions",
-    "galleryFinalDelta": "137local accessibility/lifecycle/i18n passed;8targeted actualChrome gallery+video passed"
+  "activeHosted": {
+    "version": "1.8.4",
+    "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "schema": 36,
+    "node": "v24.22.1",
+    "checkpointSha256": "3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212",
+    "evidence": "USER_REPORTED184; no private host inspection or mutation"
   },
-  "lastPublishedDevelopmentCommit": "bb2f1b896bb5703454ec292de890ac51d5a0d657",
-  "localFullSuite": {
-    "tests": 4049,
-    "passed": 3806,
-    "failed": 0,
-    "skipped": 243,
-    "logSha256": "86a1fb64556c33e1678fc2a06d3256b19dd75f7d00f7d72289ea2247391fe4ad",
-    "skipsArePasses": false,
-    "scope": "Before final old-segment photo send correction; final correction passed106 targeted tests and remains subject to full native CI."
-  },
-  "localBuild": {
-    "status": "passed",
-    "syntaxFiles": 757
-  },
-  "reviewFixes": [
-    "Gallery date/message-ID tuple ordering and strict-prefix retry preserve caption/order",
-    "Failed definitive photos removable without recreating successful/uncertain IDs",
-    "Reply watermark bounded by actually loaded/read peer sequence",
-    "Password callback re-proves new cookie owner/CSRF after atomic rotation",
-    "Announcements store explicitly accepts authenticated SQL38 plan",
-    "Photo batch returns to latest segment before uploading while preserving original immutable reply watermark",
-    "Preferences transaction preserves typed CAS conflict after rollback; no forged driver error accepted",
-    "Browser and SQL fixtures use existing admin-only video paths or explicitly seed historical client media",
-    "Primary-only recovery endpoints remain distinct from public shared password validation module",
-    "Photo gallery dates include year for older histories",
-    "Native swipe and native pinch/pan preserve the viewer navigation policy",
-    "Asynchronous photo navigation restores the controller focus without overriding a deliberate different focus"
-  ],
-  "nativeAttempts": [
-    {
-      "source": "0e76d1576b7d4e5cc68af9cb0dd7c60fcd48d08d",
-      "run": 39954872379,
-      "status": "failure",
-      "proof": "jm190/pr-native-initial.json"
+  "qualification": {
+    "pr": 133,
+    "prHead": "0b9a1676eadb12dee0d1ff9c93ad2fa1659faf65",
+    "prRun": 39960947259,
+    "mainRun": 39962172927,
+    "attempt": 1,
+    "jobsPassedEach": 5,
+    "node": "v24.22.1",
+    "results": {
+      "generalPassed": 4012,
+      "generalSkipped": 52,
+      "Chrome": 250,
+      "HTTPS": 11,
+      "MariaDB10.11": 598,
+      "MariaDB11.4": 598,
+      "failed": 0,
+      "nativeNode": "v24.22.1",
+      "physicalPhoneTested": false
     },
-    {
-      "source": "bb2f1b896bb5703454ec292de890ac51d5a0d657",
-      "run": 39956453367,
-      "status": "four_success_one_browser_failure",
-      "proof": "jm190/pr-native-revision2.json"
-    }
-  ],
-  "rollbackCandidate": {
+    "proof": "jm190/main-native-final.json",
+    "visualReview": "jm190/visual-review-main-final.json",
+    "specReview": "jm190/spec-completion-review.json"
+  },
+  "publication": {
+    "version": "1.9.0",
+    "id": 421892314,
+    "latest": true,
+    "run": 39963496073,
+    "operator": "5859b591e0349bae011147e6aed6ebf330a7a4ba",
+    "preparerSha256": "d976c224b7ff898720f44b1f018440a29791c40936c504c7782a2874758e35d6",
+    "nativeOperatorTests": 49,
+    "jobsPassed": 2
+  },
+  "rollback185": {
     "version": "1.8.5",
     "pr": 134,
     "source": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
     "tree": "7ec449cb3a63a091c5233993923ceb69f8314366",
-    "nativeQualified": false,
+    "nativeQualified": true,
     "deployed": false,
     "prNativeQualified": true,
     "prRun": 39957721078,
-    "mainRun": 39958956620
+    "mainRun": 39958956620,
+    "published": true,
+    "releaseId": 421892280,
+    "latest": false,
+    "hostedPrechecked": false
   },
-  "nativeLifecycleCoverage": "MariaDB10.11 and11.4 each598passed/0skip including real SQL38 capture/import/crypto/closure",
-  "targetedBrowser": {
-    "source": "39e2a6742d753f6340761d90cb454b691239d726",
-    "run": 39959023152,
-    "passed": 8,
-    "failed": 0,
-    "skipped": 0
+  "hosted": {
+    "sourcesPrepared": false,
+    "schemaStatusRead": false,
+    "migrated": false,
+    "prechecked185": false,
+    "prechecked190": false,
+    "started190": false,
+    "metadataRecorded190": false,
+    "hostMutations": false
   },
-  "finalExtraHTTPSCoverage": "Added real5-photo batch with lost server ACK, exact retry keys/no new uploads and one caption; real reply state and seen boundary across2admin sessions. Pending native final."
+  "limits": [
+    "Synthetic Chrome mobile/desktop and multiple browser sessions; no physical phone or two physical devices",
+    "Lost network acknowledgement injected around real committed SQL-backed HTTPS sends; no physical radio disconnect",
+    "No production190 verification or new hosted backup trial; previous deferred work remains deferred"
+  ],
+  "nextAction": {
+    "only": "Run qualified source preparer on host and retain actual190/185 staging receipts",
+    "operator": "5859b591e0349bae011147e6aed6ebf330a7a4ba",
+    "preparerSha256": "d976c224b7ff898720f44b1f018440a29791c40936c504c7782a2874758e35d6",
+    "instructions": "../operations-release190.md",
+    "noCheckBeforeSQL38": true,
+    "following": "Pin/qualify migrator from actual receipt, status, personal service stop, upgrade, separate CHECKs,190 activation and final writer"
+  },
+  "historyProofs": [
+    "jm190/pr-native-initial.json",
+    "jm190/pr-native-revision2.json",
+    "jm190/pr-native-authfixture.json",
+    "jm190/targeted-browser-final.json",
+    "jm190/pr-native-final.json"
+  ]
 }

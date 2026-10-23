@@ -1,6 +1,6 @@
 # Six évolutions — 1.9.0
 
-Le [cahier fourni](specs/cahier-20261023.md) définit le périmètre. Les six fonctions sont codées ; la qualification finale reste en cours. L’application active reste **1.8.4 / SQL36**. [État et preuves](verification-proofs/experience190-progress.json), [reprise opérateur](REPRISE.md).
+Le [cahier fourni](specs/cahier-20261023.md) définit le périmètre. Les six fonctions sont codées, fusionnées, qualifiées et publiées en1.9.0 ; leur activation hébergée reste à effectuer. L’application active reste **1.8.4 / SQL36**. [État et preuves](verification-proofs/experience190-progress.json), [reprise opérateur](REPRISE.md).
 
 | Fonction | Résultat implémenté |
 | --- | --- |
@@ -20,3 +20,5 @@ Le repli technique **1.8.5** accepte SQL38 sans activer les fonctions190 et prot
 ## Validation et livraison
 
 Les preuves séparent tests locaux, Chrome synthétique, HTTPS avec vraie base SQL et MariaDB10.11/11.4. Elles ne constituent pas un essai sur téléphone physique ou sur l’hébergement. Aucun compte réel n’a servi aux essais. La fusion et les CI exactes précèdent publication, préparation, migration, CHECK, activation et enregistrement ; chaque étape doit avoir son reçu. Aucune activation190 n’est acquise à ce stade.
+
+Source publiée `5dda0dd4453d34a0be839d2a1402301dea835381`, arbre `f06a140e738f20994425c714a278b0646f651c1b` ; [CI main5/5](verification-proofs/jm190/main-native-final.json), [publication2/2 et49tests opérateurs](verification-proofs/jm190/publication-native.json). [Préparation et activation](operations-release190.md).

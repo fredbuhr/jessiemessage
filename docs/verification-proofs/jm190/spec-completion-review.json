@@ -1,0 +1,392 @@
+{
+  "format": "jessiemessage-spec-completion-review",
+  "version": 1,
+  "reviewedAt": "2026-10-23T13:28:57.724690+00:00",
+  "scope": "Final bounded comparison of all six cahier sections against implementation and existing proofs; not a new general security audit.",
+  "source": "0b9a1676eadb12dee0d1ff9c93ad2fa1659faf65",
+  "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+  "specReadInFull": {
+    "path": "docs/specs/cahier-20261023.md",
+    "bytes": 24491,
+    "sha256": "c71cae4c464cedb8b880e736013ebf3b2624a4afccf2205da06a95ed50aa47be"
+  },
+  "catalogue": {
+    "path": "public/preferences-catalogue.json",
+    "bytes": 153503,
+    "sha256": "5ce26f14f15fb9c3447b07777aa5c8d17a6e823e8099dbb37959fc48f00f93cb",
+    "version": "2026-10-23-recherche-1",
+    "categories": 25,
+    "preferences": 691,
+    "aliases": 934,
+    "idsPreservedByByteExactSource": true
+  },
+  "contextDocumentsReadInFull": [
+    "docs/experience190.md",
+    "docs/verification-proofs/experience190-progress.json",
+    "docs/verification-proofs/jm190/pr-native-initial.json",
+    "docs/verification-proofs/jm190/pr-native-revision2.json",
+    "docs/verification-proofs/jm190/targeted-review.json",
+    "docs/verification-proofs/jm190/targeted-browser-final.json",
+    "docs/verification-proofs/jm190/pr-native-authfixture.json"
+  ],
+  "conclusion": {
+    "allSixImplemented": true,
+    "uncodedPriorityRequirementIdentified": false,
+    "newRuntimeBlockerIdentified": false,
+    "nativeGlobalQualification": "pending completion of corrected PR run and later exact merged-main run",
+    "production": "not deployed or verified",
+    "physicalPhone": "not executed"
+  },
+  "nativeEvidenceAtReview": {
+    "earlierCandidate": {
+      "source": "2400004cdbd84974dbc79f0d0e4c73580eb17af9",
+      "run": 39959659264,
+      "attempt": 1,
+      "overall": "not qualified;4 jobs passed and HTTPS failed from test live-FileList misuse",
+      "general": {
+        "tests": 4064,
+        "passed": 4012,
+        "failed": 0,
+        "skipped": 52
+      },
+      "chrome": {
+        "passed": 250,
+        "failed": 0,
+        "skipped": 0
+      },
+      "mariadb10_11": {
+        "passed": 598,
+        "failed": 0,
+        "skipped": 0
+      },
+      "mariadb11_4": {
+        "passed": 598,
+        "failed": 0,
+        "skipped": 0
+      },
+      "https": {
+        "passed": 8,
+        "failed": 3,
+        "skipped": 0,
+        "includesParentFailure": true
+      },
+      "proof": "docs/verification-proofs/jm190/pr-native-authfixture.json"
+    },
+    "correctedCandidate": {
+      "source": "0b9a1676eadb12dee0d1ff9c93ad2fa1659faf65",
+      "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+      "run": 39960947259,
+      "attempt": 1,
+      "globalStatus": "pending; do not infer5/5 from successful subsets",
+      "changeScope": "Only tests/rehearsal/experience.rehearsal.mjs changes in0b9a: snapshot numeric FileList count before production resets file input. Business idempotency/watermark assertions remain strict.",
+      "https": {
+        "job": 120438489405,
+        "status": "completed",
+        "conclusion": "success",
+        "node": "v24.22.1",
+        "tests": 11,
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0,
+        "log": {
+          "path": "/workspace/scratch/bb431be72395/experience190/pr-corrected-auth.raw.log",
+          "bytes": 42246,
+          "sha256": "034c4082bf6770d3290832deae3d1faa19bdf16ef201357bead401ebeff9f0db"
+        },
+        "businessEvidenceLines": [
+          "2026-10-23T13:25:32.5122645Z   ✔ five real photo drafts survive one lost committed batch acknowledgement without new uploads or duplicate SQL messages (2684.705513ms)",
+          "2026-10-23T13:25:40.2330508Z   ✔ real reply controls keep reads pending and synchronize manual handling, reopening and one observed individual reply (7720.704431ms)"
+        ]
+      },
+      "general": "Parent reported passed; current counts/log not independently collected by this reviewer.",
+      "otherJobs": "In progress at parent update; exact final native evidence is owned by root."
+    }
+  },
+  "features": [
+    {
+      "id": "preferences",
+      "specSection": 1,
+      "name": "Mes goûts & fantasmes",
+      "codeStatus": "implemented",
+      "criteriaCovered": [
+        "Optional and initially empty for both own profiles; a single positive family, no negative questionnaire/scoring/automatic inference or public directory.",
+        "Exact supplied catalogue, stable IDs and category order; 25 categories, 691 distinct preferences and 934 aliases, version 2026-10-23-recherche-1. English category translations remain separate from catalogue IDs.",
+        "Collapsible categories, multiple selection, FR/EN/aliases search normalized for case/accents/punctuation, retained selection summary, explicit save and clear; failed CAS preserves draft.",
+        "Server-side encrypted owner/revision-bound IDs, role session determines owner, server rejects unknown IDs/claimed owner and canonicalizes duplicates.",
+        "Authorised conversation administrator has read-only peer access; cross-client reads/writes fail; close/logout/owner changes clear private UI and responses use no-store.",
+        "Retired selections survive encrypted reads rather than disappearing on a catalogue-version change."
+      ],
+      "code": [
+        "public/preferences-catalogue.json",
+        "public/preferences-model.js",
+        "public/preferences.js",
+        "public/profile.js",
+        "public/crm.js",
+        "server/preferences/http.mjs",
+        "server/preferences/service.mjs",
+        "server/preferences/store.mjs",
+        "server/preferences/crypto.mjs",
+        "server/experience/migrations/0037_profile_preferences.sql"
+      ],
+      "tests": [
+        "tests/preferences.test.mjs",
+        "tests/preferences-http.test.mjs",
+        "tests/preferences-store.test.mjs",
+        "tests/preferences-store.integration.test.mjs",
+        "tests/browser/preferences.browser.mjs",
+        "tests/rehearsal/experience.rehearsal.mjs"
+      ],
+      "nativeEvidence": "Earlier real SQL/Chrome runs cover encrypted own choices, cross-device CAS and rights. Corrected current HTTPS11/11 includes both-role own profiles, authorised admin read-only client view, client clearing on another current session and independent admin selections.",
+      "remainingEvidenceLimits": [
+        "No actual future catalogue migration was deployed; preservation is tested using a synthetic retired entry.",
+        "No production or physical-device validation."
+      ],
+      "localTestEvidence": "Existing targeted/full local evidence in experience190-progress.json; no tests rerun during this review.",
+      "nativeFinalSourceGloballyQualified": false,
+      "deployed": false,
+      "productionVerified": false,
+      "physicalPhoneVerified": false
+    },
+    {
+      "id": "admin-video",
+      "specSection": 2,
+      "name": "Vidéos administrateurs uniquement",
+      "codeStatus": "implemented",
+      "criteriaCovered": [
+        "Client creation UI/capability disabled while photo sending and received/historical video reading remain available.",
+        "HTTP denies authenticated client upload/send before admission/body/storage; service, storage reserve/commit and message append repeat the role check.",
+        "Reusing a previously stored client video ID cannot create a new client message; administrator quota/size/storage limits are retained.",
+        "Photo pipeline checks actual JPEG/PNG/WebP format, decodes and re-encodes before allocation; a renamed MP4 is not stored as the original. No new drop/paste/remote-import mechanism is introduced.",
+        "A client mixed photo/video selection keeps admissible photos and explains refusal; text links are unchanged. Existing videos are not purged."
+      ],
+      "code": [
+        "public/chat.js",
+        "server/chat/http.mjs",
+        "server/chat/service.mjs",
+        "server/video/http.mjs",
+        "server/video/service.mjs",
+        "server/video/store.mjs",
+        "server/video/message-store.mjs",
+        "server/media/image.mjs",
+        "server/media/image-worker.mjs",
+        "server/media/service.mjs"
+      ],
+      "tests": [
+        "tests/video-http.test.mjs",
+        "tests/video-message-service.test.mjs",
+        "tests/video-store.integration.test.mjs",
+        "tests/chat-service.test.mjs",
+        "tests/chat-lifecycle.test.mjs",
+        "tests/rehearsal/video.rehearsal.mjs",
+        "tests/video-deletion-flow.integration.test.mjs"
+      ],
+      "nativeEvidence": "Earlier HTTPS/native jobs exercise administrator H264 upload, direct client refusal, two-role decode/seek and historical client video fixtures. MariaDB lifecycle suites retain historical assets and closure semantics. Current full qualification remains pending.",
+      "remainingEvidenceLimits": [
+        "No hosted upload or physical-phone playback test."
+      ],
+      "localTestEvidence": "Existing targeted/full local evidence in experience190-progress.json; no tests rerun during this review.",
+      "nativeFinalSourceGloballyQualified": false,
+      "deployed": false,
+      "productionVerified": false,
+      "physicalPhoneVerified": false
+    },
+    {
+      "id": "gallery",
+      "specSection": 3,
+      "name": "Galerie photo",
+      "codeStatus": "implemented",
+      "criteriaCovered": [
+        "Viewer previous/next buttons, ArrowLeft/ArrowRight/Escape and native horizontal touch navigation; accessible labels and guarded focus restoration.",
+        "Native pinch zoom and unrestricted pan while zoomed are preserved; close restores conversation reading position.",
+        "Server-paginated authorised full conversation history, scoped date/message-ID tuple ordering and uint64 sequence pivots; one attachment per existing photo message.",
+        "Thumbnails and month filter query message timestamps, with local month boundaries matching local conversation date formatting; originals are not all preloaded.",
+        "See message loads an older segment using the exact message/sequence and highlights it; unavailable/deleted media does not target an unrelated message.",
+        "Photo viewing does not mutate the independent reply task."
+      ],
+      "code": [
+        "public/chat.js",
+        "public/chat-model.js",
+        "public/chat.css",
+        "server/media/http.mjs",
+        "server/media/service.mjs",
+        "server/media/store.mjs"
+      ],
+      "tests": [
+        "tests/media-http.test.mjs",
+        "tests/media-service.test.mjs",
+        "tests/media-store.integration.test.mjs",
+        "tests/chat-lifecycle.test.mjs",
+        "tests/browser/chat-accessibility.browser.mjs"
+      ],
+      "nativeEvidence": "Targeted real Chrome8/8 validates historical navigation/date/origin, native swipe and pinch. Earlier full Chrome250/250 and MariaDB598/598 jobs passed the gallery and rights suites. Native viewport combinations include client360/admin1280 for gallery; they are not a physical-device matrix.",
+      "remainingEvidenceLimits": [
+        "No explicit alternate-timezone/DST native run was located; local-time coherence is established from the shared formatting/boundary code.",
+        "No physical Safari/Android or production test."
+      ],
+      "localTestEvidence": "Existing targeted/full local evidence in experience190-progress.json; no tests rerun during this review.",
+      "nativeFinalSourceGloballyQualified": false,
+      "deployed": false,
+      "productionVerified": false,
+      "physicalPhoneVerified": false
+    },
+    {
+      "id": "multi-photo",
+      "specSection": 4,
+      "name": "Plusieurs photos",
+      "codeStatus": "implemented",
+      "criteriaCovered": [
+        "At most10 files enforced by UI and batch endpoint; previews support adding/removing before a single explicit send, and order is deterministic.",
+        "Existing normalization, encrypted media storage and quotas reused; uploads are serial with preparation/upload/sending progress, and no pre-confirmation message creation.",
+        "Server-authenticated individual sends use stable per-photo idempotency identities; sent/uncertain identities are protected and only remaining failures are retried.",
+        "One caption is sent on the first photo only; lost response, double click, partial upload/send failure and returning from an older segment retain stable identities and the captured reply boundary.",
+        "Definitively missing/refused photos can be removed; quota/format/network failures preserve remaining selection and display errors. Previews are revoked and no persistent private-photo browser store is added."
+      ],
+      "code": [
+        "public/photo-batch.js",
+        "public/chat.js",
+        "public/image-preparation.js",
+        "server/media/http.mjs",
+        "server/media/service.mjs",
+        "server/chat/store.mjs"
+      ],
+      "tests": [
+        "tests/photo-batch.test.mjs",
+        "tests/chat-lifecycle.test.mjs",
+        "tests/media-http.test.mjs",
+        "tests/media-service.test.mjs",
+        "tests/browser/chat-accessibility.browser.mjs",
+        "tests/rehearsal/experience.rehearsal.mjs"
+      ],
+      "nativeEvidence": "Corrected current real HTTPS subtest passed:5 distinct real JPEG previews; remove+add before send; actual SQL batch commits5 once; deliberately lost committed ACK requires explicit retry with identical IDs/media/captions, zero new uploads, one caption and5 unique messages. Component Chrome tests cover both roles; the real lost-ACK integration uses a synthetic client.",
+      "remainingEvidenceLimits": [
+        "The cut is an injected lost HTTP acknowledgement after real commit, not a physical radio/OS interruption or persistent resume after page closure.",
+        "No production or physical-device validation."
+      ],
+      "localTestEvidence": "Existing targeted/full local evidence in experience190-progress.json; no tests rerun during this review.",
+      "nativeFinalSourceGloballyQualified": false,
+      "deployed": false,
+      "productionVerified": false,
+      "physicalPhoneVerified": false
+    },
+    {
+      "id": "reply-followup",
+      "specSection": 5,
+      "name": "À répondre",
+      "codeStatus": "implemented",
+      "criteriaCovered": [
+        "Existing crm_tasks holds one reserved task per administrator/conversation (unique key); no parallel ticket source, private client-facing DTOs contain no reply state.",
+        "Read receipts and gallery viewing never handle an incoming request; filter and current unread badges remain distinct, with oldest waiting time in the reply UI.",
+        "Only committed individual admin sends carrying an immutable seen/read/loaded client watermark can handle that boundary; failure, duplicate retry, broadcast/announcement/notification do not globally clear state.",
+        "Manual needed/handled actions use expectedVersion CAS and a captured client sequence, shared across admin sessions; new incoming during reply remains pending.",
+        "Historical classification excludes broadcast-recipient deliveries and derives the last real individual admin baseline; generic task editing cannot change reserved state.",
+        "Photo and video send paths carry the same captured boundary, including upload latency and retry."
+      ],
+      "code": [
+        "server/tasks/reply.mjs",
+        "server/tasks/store.mjs",
+        "server/chat/store.mjs",
+        "server/chat/service.mjs",
+        "server/chat/http.mjs",
+        "server/crm/store.mjs",
+        "public/followup.js",
+        "public/crm.js",
+        "public/chat.js",
+        "server/experience/migrations/0038_reply_tracking.sql"
+      ],
+      "tests": [
+        "tests/reply-tracking.test.mjs",
+        "tests/reply-flow.integration.test.mjs",
+        "tests/browser/followup.browser.mjs",
+        "tests/chat-service.test.mjs",
+        "tests/chat-http.test.mjs",
+        "tests/rehearsal/experience.rehearsal.mjs"
+      ],
+      "nativeEvidence": "Real SQL tests cover simultaneous incoming, two sessions, broadcasts, history and version conflicts. Corrected current HTTPS subtest passed real client text, persisted read receipt without handling, manual handled/reopen shared across2 admins, invisible client controls and an actual individual response whose POST is bound to the exact observed sequence/version.",
+      "remainingEvidenceLimits": [
+        "Legacy administrator sends without a captured watermark conservatively do not clear current pending state.",
+        "Historical classification relies on existing individual-message and broadcast-recipient provenance; no claim to reconstruct external/off-platform answers.",
+        "No production or two-physical-device validation."
+      ],
+      "localTestEvidence": "Existing targeted/full local evidence in experience190-progress.json; no tests rerun during this review.",
+      "nativeFinalSourceGloballyQualified": false,
+      "deployed": false,
+      "productionVerified": false,
+      "physicalPhoneVerified": false
+    },
+    {
+      "id": "password",
+      "specSection": 6,
+      "name": "Mot de passe et œil",
+      "codeStatus": "implemented",
+      "criteriaCovered": [
+        "Authenticated own client/admin profile form has current/new/confirmation; owner comes from session and wrong password/mismatch is non-mutating.",
+        "Shared password validation retains minimum8, existing hashing and rate protection; no plaintext password persistence/email or journal exposure is introduced.",
+        "Atomic hash/generation CAS renews current cookie/CSRF while revoking old sessions; current admin MFA assurance survives, client reset links/outbox are invalidated.",
+        "Unchanged message/media keys preserve encrypted history; ordinary persistent-session expiry/renewal policy is retained outside the voluntary password operation.",
+        "Shared eye component across login/change/recovery/password forms is masked initially, typebutton, keyboard-accessible and labelled, preserves selection/value/autocomplete and never intercepts paste; profile close/page hide resets visibility."
+      ],
+      "code": [
+        "server/account-password/service.mjs",
+        "server/account-password/http.mjs",
+        "server/auth/store.mjs",
+        "server/access/store.mjs",
+        "public/password-change.js",
+        "public/password-fields.js",
+        "public/password-fields.css",
+        "public/profile.js",
+        "public/chat.js"
+      ],
+      "tests": [
+        "tests/account-password-service.test.mjs",
+        "tests/account-password-store.test.mjs",
+        "tests/account-password-http.test.mjs",
+        "tests/account-password.integration.test.mjs",
+        "tests/browser/password-account.browser.mjs",
+        "tests/rehearsal/experience.rehearsal.mjs",
+        "tests/device-transition-runtime.integration.test.mjs"
+      ],
+      "nativeEvidence": "Real SQL and corrected current HTTPS exercise both own-password rotations, old-password/login refusal, current session/CSRF use, old-device401 then successful new-password sign-in, reset-link invalidation and retained preferences/photo/history. Native Chrome component matrix covers both roles320/1280, eye selection/value, keyboard, errors and double-submit.",
+      "remainingEvidenceLimits": [
+        "MFA backup codes remain MFA recovery factors; the revoked password-reset bearer-link path is the existing client password recovery flow.",
+        "No physical password-manager integration, actual-phone keyboard or production-session test."
+      ],
+      "localTestEvidence": "Existing targeted/full local evidence in experience190-progress.json; no tests rerun during this review.",
+      "nativeFinalSourceGloballyQualified": false,
+      "deployed": false,
+      "productionVerified": false,
+      "physicalPhoneVerified": false
+    }
+  ],
+  "crossCutting": {
+    "architecture": "Existing Infomaniak Node/PWA, profile/auth/chat/media/task components and encrypted-data paths reused; no new paid service/infrastructure requested or identified.",
+    "schema": "Base1–33 and video34–36 preserved; additive37 preferences and38 reserved-task fields;37 physical tables. Explicit experience opt-in.",
+    "rollback": "185 compatible with SQL38 preserves encrypted preferences and reserved tasks with features dormant; separate native main5/5 evidence exists in docs/verification-proofs/jm185/main-final.json. No185 hosted CHECK or activation is inferred.",
+    "regressionEvidence": "Existing native suites include invitations/access, persistent sessions, messages/photos/admin video/historical reads, notifications, tasks/tags, broadcasts and SQL38 data lifecycle. Green aggregate suites establish their recorded assertions, not real Push delivery or hosted backup testing.",
+    "mobileCoverage": "Native Chrome synthetic viewport/touch/keyboard tests, including320/1280 component matrices and360 photo UI. This is not six features on two physical devices.",
+    "productionBaseline": "1.8.4/SQL36 remains the user-reported active state; this review does not inspect or mutate the host."
+  },
+  "priorityRemaining": [
+    {
+      "priority": "qualification gate",
+      "item": "Complete corrected PR run39960947259 and qualify the exact merged190 main commit before publication. Current corrected HTTPS11/11 is acquired; the full current5/5 and exact main do not yet exist in this review.",
+      "requiresCodeChange": false
+    },
+    {
+      "priority": "deployment evidence gate",
+      "item": "Published/staged sources, separately guarded SQL36→38 upgrade while stopped, own185/190 CHECK receipts,190 activation/startup identity and metadata receipt remain distinct later operations. Do not label these as already deployed.",
+      "requiresCodeChange": false
+    }
+  ],
+  "explicitNotPerformed": [
+    "Production/host inspection or mutation",
+    "Physical iOS/Android phone or two physical devices",
+    "Real client messages or live Push notification receipt",
+    "Physical network disconnect or OS-background suspension",
+    "New hosted backup/restore trial",
+    "New general audit or any green-suite rerun by this reviewer"
+  ],
+  "newTestsExecutedDuringReview": false,
+  "filesOwnedByThisReview": [
+    "docs/verification-proofs/jm190/spec-completion-review.json"
+  ]
+}

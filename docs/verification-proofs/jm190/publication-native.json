@@ -1,0 +1,117 @@
+{
+  "format": "jessiemessage190-publication-evidence",
+  "version": 1,
+  "operator": {
+    "source": "5859b591e0349bae011147e6aed6ebf330a7a4ba",
+    "tree": "5df58a657f07c785be795b6eb299b22b8fecb823",
+    "branch": "ops/publish-v1.9.0",
+    "preparerPath": "ops/prepare-release190.py",
+    "preparerSha256": "d976c224b7ff898720f44b1f018440a29791c40936c504c7782a2874758e35d6",
+    "remotePreparerMatchesManifest": true,
+    "manifestFiles": 10,
+    "independentReview": "10 files and hashes reviewed; only source/tree/CI pins finalized, hosted receipt and release-ID guards retained."
+  },
+  "run": {
+    "id": 39963496073,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39963496073",
+    "attempt": 1,
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "head": "5859b591e0349bae011147e6aed6ebf330a7a4ba"
+  },
+  "jobs": [
+    {
+      "id": 120447231416,
+      "name": "operator-tests",
+      "head": "5859b591e0349bae011147e6aed6ebf330a7a4ba",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 120447461705,
+      "name": "publish",
+      "head": "5859b591e0349bae011147e6aed6ebf330a7a4ba",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "nativeNode": "v24.22.1",
+  "nativeTests": {
+    "preparer": 25,
+    "migrator": 8,
+    "metadataWriter": 9,
+    "publisher": 7,
+    "total": 49,
+    "failed": 0
+  },
+  "qualifiedMain": {
+    "release185": {
+      "source": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
+      "tree": "7ec449cb3a63a091c5233993923ceb69f8314366",
+      "run": 39958956620,
+      "jobsPassed": 5
+    },
+    "release190": {
+      "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
+      "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+      "run": 39962172927,
+      "jobsPassed": 5
+    }
+  },
+  "releases": [
+    {
+      "version": "1.8.5",
+      "tag": "v1.8.5",
+      "id": 421892280,
+      "source": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
+      "tagSource": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
+      "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.5",
+      "draft": false,
+      "prerelease": false,
+      "createdAt": "2026-10-23T13:09:54Z",
+      "publishedAt": "2026-10-23T13:43:43Z"
+    },
+    {
+      "version": "1.9.0",
+      "tag": "v1.9.0",
+      "id": 421892314,
+      "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
+      "tagSource": "5dda0dd4453d34a0be839d2a1402301dea835381",
+      "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.9.0",
+      "draft": false,
+      "prerelease": false,
+      "createdAt": "2026-10-23T13:33:13Z",
+      "publishedAt": "2026-10-23T13:43:45Z"
+    }
+  ],
+  "latest": {
+    "id": 421892314,
+    "tag": "v1.9.0",
+    "source": "5dda0dd4453d34a0be839d2a1402301dea835381"
+  },
+  "activeHostedVersion": "1.8.4",
+  "activeHostedSchema": 36,
+  "deployed": false,
+  "productionVerified": false,
+  "hostMutations": false,
+  "remaining": [
+    "personal hosted source preparation and actual receipts",
+    "pin and qualify status/migration operator to actual staging receipt",
+    "personal service stop, guarded SQL36-to38 upgrade and SQL38 proof",
+    "separate185/190 CHECKs then190 activation and real identity",
+    "pin and qualify metadata writer to actual receipts and releaseID before final recording"
+  ],
+  "logs": {
+    "operator-tests": {
+      "bytes": 51905,
+      "sha256": "985fa3aad8ef8b4675d008dda7fc03dbcf4d334cd12a05936f0fba39d691483f"
+    },
+    "publish": {
+      "bytes": 18409,
+      "sha256": "eddca2f91edc200bb03d38760a8a428034f499f6b8f46c9431d572d8b877735d"
+    }
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "format": "jessiemessage-native-ci-evidence",
+  "version": 1,
+  "status": "all_five_native_jobs_passed",
+  "recordedAt": "2026-10-23T13:33:17.942334Z",
+  "repository": "fredbuhr/jessiemessage",
+  "pr": 133,
+  "prUrl": "https://github.com/fredbuhr/jessiemessage/pull/133",
+  "source": "0b9a1676eadb12dee0d1ff9c93ad2fa1659faf65",
+  "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+  "run": 39960947259,
+  "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39960947259",
+  "attempt": 1,
+  "event": "pull_request",
+  "branch": "feat/private-experience-190",
+  "workflow": ".github/workflows/ci.yml",
+  "runStatus": "completed",
+  "runConclusion": "success",
+  "node": "v24.22.1",
+  "nativeQualified": true,
+  "coded": true,
+  "tested": true,
+  "deployed": false,
+  "productionVerified": false,
+  "hostMutations": false,
+  "githubMutations": false,
+  "jobs": {
+    "verify": {
+      "id": 120438489123,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39960947259/job/120438489123",
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "0b9a1676eadb12dee0d1ff9c93ad2fa1659faf65",
+      "attempt": 1,
+      "startedAt": "2026-10-23T13:24:36Z",
+      "completedAt": "2026-10-23T13:26:39Z",
+      "node": "v24.22.1",
+      "tests": 4064,
+      "passed": 4012,
+      "failed": 0,
+      "skipped": 52,
+      "cancelled": 0,
+      "todo": 0,
+      "log": {
+        "file": "pr-corrected-general.log",
+        "bytes": 575866,
+        "sha256": "ab2774b628ef3412f13082169627c4a3c5b8af3f7393cb56e2537a45b6784312"
+      }
+    },
+    "MariaDB 11.4": {
+      "id": 120438489361,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39960947259/job/120438489361",
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "0b9a1676eadb12dee0d1ff9c93ad2fa1659faf65",
+      "attempt": 1,
+      "startedAt": "2026-10-23T13:24:36Z",
+      "completedAt": "2026-10-23T13:30:24Z",
+      "node": "v24.22.1",
+      "tests": 598,
+      "passed": 598,
+      "failed": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "todo": 0,
+      "log": {
+        "file": "pr-corrected-db114.log",
+        "bytes": 358212,
+        "sha256": "89980d9a6b9353e7b521fd86f598841000cc146dea2c79532743d4a0406e4283"
+      }
+    },
+    "Chrome HTTPS authentication and messaging with MariaDB": {
+      "id": 120438489405,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39960947259/job/120438489405",
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "0b9a1676eadb12dee0d1ff9c93ad2fa1659faf65",
+      "attempt": 1,
+      "startedAt": "2026-10-23T13:24:36Z",
+      "completedAt": "2026-10-23T13:26:38Z",
+      "node": "v24.22.1",
+      "tests": 11,
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "todo": 0,
+      "log": {
+        "file": "pr-corrected-auth.raw.log",
+        "bytes": 42246,
+        "sha256": "034c4082bf6770d3290832deae3d1faa19bdf16ef201357bead401ebeff9f0db"
+      }
+    },
+    "MariaDB 10.11": {
+      "id": 120438489545,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39960947259/job/120438489545",
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "0b9a1676eadb12dee0d1ff9c93ad2fa1659faf65",
+      "attempt": 1,
+      "startedAt": "2026-10-23T13:24:36Z",
+      "completedAt": "2026-10-23T13:32:13Z",
+      "node": "v24.22.1",
+      "tests": 598,
+      "passed": 598,
+      "failed": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "todo": 0,
+      "log": {
+        "file": "pr-corrected-db1011.log",
+        "bytes": 356220,
+        "sha256": "34b8b76e6722d16830acd5e81636679f320d9c5cdffddf3198021bc0c2190924"
+      }
+    },
+    "Chrome keyboard and chat lifecycle": {
+      "id": 120438489684,
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39960947259/job/120438489684",
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "0b9a1676eadb12dee0d1ff9c93ad2fa1659faf65",
+      "attempt": 1,
+      "startedAt": "2026-10-23T13:24:37Z",
+      "completedAt": "2026-10-23T13:29:36Z",
+      "node": "v24.22.1",
+      "tests": 250,
+      "passed": 250,
+      "failed": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "todo": 0,
+      "log": {
+        "file": "pr-corrected-browser.log",
+        "bytes": 52389,
+        "sha256": "a121c53cb6e76c11551a35321c4a300d8812baf04a8a2d66f71e3b0747f6ecc6"
+      }
+    }
+  },
+  "build": {
+    "job": 120438489123,
+    "step": "Build offline workbench",
+    "status": "success",
+    "packageVersion": "1.9.0",
+    "output": "artifacts/JessieMessage.html",
+    "uploadedPreviewArtifactSha256": "cb7642a9729bdb27f5857190f32939669c624a165e81a0b461f63a339e562611"
+  },
+  "scope": "Synthetic owned loopback fixtures, real Chrome, HTTPS and disposable MariaDB 10.11/11.4; no hosted production operation.",
+  "limitations": [
+    "Physical mobile devices and Infomaniak production remain unverified.",
+    "The general job reports 52 integration skips explicitly; each of the four native jobs reports zero skipped tests."
+  ],
+  "rawApiEvidence": {
+    "run": {
+      "file": "pr-corrected-run-final.json",
+      "bytes": 12930,
+      "sha256": "f4b04a8c7b1a49f556821d66082685bd61faef2b3052941275986c866675cf6b"
+    },
+    "attempt1Jobs": {
+      "file": "pr-corrected-jobs-final.json",
+      "bytes": 13951,
+      "sha256": "fbe9e6599b7577935903781dffe9da8d2f9a0ba3428a2e45b809fbc0cfc15df6"
+    }
+  }
+}

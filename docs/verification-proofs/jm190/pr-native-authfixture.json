@@ -1,0 +1,68 @@
+{
+  "status": "four_native_jobs_passed_new_HTTPS_fixture_failure_corrected_in_next_source",
+  "source": "2400004cdbd84974dbc79f0d0e4c73580eb17af9",
+  "tree": "ec03595b5819603d6595e4645cc0231e893b47ef",
+  "pr": 133,
+  "run": 39959659264,
+  "attempt": 1,
+  "node": "v24.22.1",
+  "nativeQualified": false,
+  "jobs": {
+    "verify": {
+      "passed": 4012,
+      "skipped": 52,
+      "failed": 0
+    },
+    "Chrome": {
+      "passed": 250,
+      "skipped": 0,
+      "failed": 0
+    },
+    "HTTPS": {
+      "passed": 8,
+      "failed": 3,
+      "skipped": 0,
+      "parentFailureIncluded": true
+    },
+    "MariaDB1011": {
+      "passed": 598,
+      "failed": 0,
+      "skipped": 0
+    },
+    "MariaDB114": {
+      "passed": 598,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "cause": "The synthetic photo selector counted a live FileList after production synchronously cleared input.value. The false zero assertion stopped the photo exercise, leaving five drafts that then made the following reply exercise send a batch. The actual handledThrough=7 was correct for that batch; the assertion expected the first caption message sequence=3.",
+  "correction": "Snapshot numeric file count before dispatch. Add an explicit no-draft/no-caption precondition to isolate the following reply exercise. Production code and all strict idempotency/watermark/version assertions remain unchanged.",
+  "correctedSource": "0b9a1676eadb12dee0d1ff9c93ad2fa1659faf65",
+  "correctedTree": "f06a140e738f20994425c714a278b0646f651c1b",
+  "nextRun": 39960947259,
+  "hostMutations": false,
+  "deployed": false,
+  "productionVerified": false,
+  "logs": {
+    "general": {
+      "bytes": 576271,
+      "sha256": "b88b4ad20e87e06d839248878daf74a42a85ec4c5aa2f3d9949e7948578f1306"
+    },
+    "browser": {
+      "bytes": 52368,
+      "sha256": "80aabd64b32689369dad9605a0b1d5db449622de2e6d8423dd84e1162667de90"
+    },
+    "db1011": {
+      "bytes": 356226,
+      "sha256": "d861068bdcc99179af5ebe7bee1383d2b4a2b19a83a1cbb42be923b1fbd07975"
+    },
+    "db114": {
+      "bytes": 356904,
+      "sha256": "e0209b581abbbccd04a073ea663818d6255e9a7c174c79ab7bec1ae5f837f2e4"
+    },
+    "HTTPS": {
+      "bytes": 45640,
+      "sha256": "afe8f078a4cbeb6a1a5d1e6626611243f675fa9194f407416d252992f292eb4b"
+    }
+  }
+}

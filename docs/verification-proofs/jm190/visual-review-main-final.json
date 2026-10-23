@@ -1,0 +1,797 @@
+{
+  "format": "jessiemessage-visual-review",
+  "version": 1,
+  "status": "main_final_artifacts_reviewed_no_blocking_visual_regression_observed",
+  "recordedAt": "2026-10-23T13:40:51.262392+00:00",
+  "reviewer": "account190_frontend",
+  "coded": true,
+  "tested": true,
+  "deployed": false,
+  "productionVerified": false,
+  "identity": {
+    "id": 39962172927,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39962172927",
+    "number": 749,
+    "attempt": 1,
+    "event": "push",
+    "branch": "main",
+    "head": "5dda0dd4453d34a0be839d2a1402301dea835381",
+    "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+    "statusAtReview": "in_progress",
+    "conclusionAtReview": null
+  },
+  "identityChecks": {
+    "runFetchedFromGitHubAPI": true,
+    "headAndTreeMatchMergedSource": true,
+    "mainTreeMatchesQualifiedPRTree": true,
+    "bothMainArchivesAndBothPRBaselinesVerifiedAgainstAPIDigestAndSize": true
+  },
+  "artifacts": [
+    {
+      "id": 12505825860,
+      "name": "homepage-render",
+      "createdAt": "2026-10-23T13:38:13Z",
+      "apiBytes": 3723501,
+      "apiDigest": "sha256:0849dc852187c91bea4f293f38c9721fa0aaa5da1dc62359f9b1ecebd1616e81",
+      "zip": "/workspace/scratch/bb431be72395/experience190/main-final-homepage.zip",
+      "verifiedBytes": 3723501,
+      "verifiedSha256": "0849dc852187c91bea4f293f38c9721fa0aaa5da1dc62359f9b1ecebd1616e81",
+      "directory": "/workspace/scratch/bb431be72395/experience190/main-final-homepage",
+      "expectedAndActualPNGCount": 24,
+      "safeExtraction": "Digest and exact archive size checked before extraction; exact unique flat PNG-name allowlist; no directories, slashes, backslashes, symlinks or traversal; extracted-size bounds10MiB/25MiB; PNG signature checked for every entry.",
+      "workflowRunAndHeadMatched": true
+    },
+    {
+      "id": 12505686099,
+      "name": "experience-https-render",
+      "createdAt": "2026-10-23T13:35:24Z",
+      "apiBytes": 400071,
+      "apiDigest": "sha256:c7918e3a3820b17638a110575ad58bbadc2507b63489f2895b1854668143c026",
+      "zip": "/workspace/scratch/bb431be72395/experience190/main-final-profiles.zip",
+      "verifiedBytes": 400071,
+      "verifiedSha256": "c7918e3a3820b17638a110575ad58bbadc2507b63489f2895b1854668143c026",
+      "directory": "/workspace/scratch/bb431be72395/experience190/main-final-profiles",
+      "expectedAndActualPNGCount": 5,
+      "safeExtraction": "Digest and exact archive size checked before extraction; exact unique flat PNG-name allowlist; no directories, slashes, backslashes, symlinks or traversal; extracted-size bounds10MiB/25MiB; PNG signature checked for every entry.",
+      "workflowRunAndHeadMatched": true
+    }
+  ],
+  "baseline": {
+    "run": 39960947259,
+    "source": "0b9a1676eadb12dee0d1ff9c93ad2fa1659faf65",
+    "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+    "profileArtifact": {
+      "id": 12504333252,
+      "bytes": 399501,
+      "digest": "sha256:0e6cb553c7f374b25c33b4d4d57987681e631b40d323a99cc1a7162da0e3dd2e",
+      "allFiveExistingPNGsMatchedVerifiedZIP": true
+    },
+    "homepageArtifact": {
+      "id": 12505286413,
+      "bytes": 3723319,
+      "digest": "sha256:b082cd684a98525274e82b0c0905092ed271859d1a04764ca67268d5655cfa4d"
+    },
+    "artifactReferenceCorrection": "12505250814 is the downloadable build preview, not the homepage-render screenshot artifact."
+  },
+  "profileReview": {
+    "compared": 5,
+    "byteIdentical": 2,
+    "different": 3,
+    "allDimensionsUnchanged": true,
+    "allFiveOpenedAtFullSize": true,
+    "files": [
+      {
+        "name": "experience-admin-1280-client-preferences.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-profiles/experience-admin-1280-client-preferences.png",
+        "bytes": 79390,
+        "sha256": "5b10a07699ce2bd43c944cd79c4db8688bf6dccf768c2a5e9d8883f1baa853df",
+        "baselineSha256": "ceb4c8eb43f3c8a31bcadae3db6b12bf22f7fedb86016af2596659a9c7653803",
+        "dimensions": [
+          1280,
+          757
+        ],
+        "byteIdentical": false,
+        "differentPixels": 69619,
+        "maxChannelDelta": 6,
+        "differenceBBoxExclusive": [
+          24,
+          95,
+          305,
+          729
+        ],
+        "visuallyReviewedAtFullSize": true,
+        "observation": "Full-size MAIN and PR PNGs reviewed. All modal pixels in [305,16,975,741] are identical. Differences are entirely in the blurred synthetic inbox left of the modal. The readonly section shows the client choice and one collapsed category, with no preferences search/save/choice control."
+      },
+      {
+        "name": "experience-admin-1280-profile.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-profiles/experience-admin-1280-profile.png",
+        "bytes": 113944,
+        "sha256": "4a62c00192051a14c160c2a1134703be637c751f8a93a06ee3c1b01d87776d9c",
+        "baselineSha256": "bda568c8004f3e1f985bedc0f6b666f9013a344ac50618c3cf01bb7afe4cd50a",
+        "dimensions": [
+          1280,
+          757
+        ],
+        "byteIdentical": false,
+        "differentPixels": 102921,
+        "maxChannelDelta": 30,
+        "differenceBBoxExclusive": [
+          24,
+          96,
+          830,
+          727
+        ],
+        "visuallyReviewedAtFullSize": true,
+        "observation": "Full-size MAIN and PR PNGs reviewed. The blurred synthetic inbox/background differs. Inside modal [410,12,870,745], only13 pixels differ:11 rounded input-edge pixels by at most1 channel level and2 left-margin pixels by up to30 blue levels. The modal labels, controls and geometry have no visible change. Background variation is consistent with the independently seeded contact order; this is an inference, not a pixel-level proof of its cause."
+      },
+      {
+        "name": "experience-admin-320-profile.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-profiles/experience-admin-320-profile.png",
+        "bytes": 59492,
+        "sha256": "2f9112275cbeec36885cdd729c400f2b6f9a1002986fdc8f3a7a7882f7319c87",
+        "baselineSha256": "2f9112275cbeec36885cdd729c400f2b6f9a1002986fdc8f3a7a7882f7319c87",
+        "dimensions": [
+          320,
+          844
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": true,
+        "observation": "Byte-identical to PR baseline and also opened at full size in this pass; no visible regression."
+      },
+      {
+        "name": "experience-client-1280-profile.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-profiles/experience-client-1280-profile.png",
+        "bytes": 101128,
+        "sha256": "0698dc6e660497254ae3d1acbd54f335c63927ab4a460ab1b79702ca644660b6",
+        "baselineSha256": "0698dc6e660497254ae3d1acbd54f335c63927ab4a460ab1b79702ca644660b6",
+        "dimensions": [
+          1280,
+          757
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": true,
+        "observation": "Byte-identical to PR baseline and also opened at full size in this pass; no visible regression."
+      },
+      {
+        "name": "experience-client-320-profile.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-profiles/experience-client-320-profile.png",
+        "bytes": 57203,
+        "sha256": "d392e0453ad8a84ece4cfc00d1e3646caae93ff62f5c76f805c19515d3c1bafc",
+        "baselineSha256": "3fcfc4d3062464aa506ee0883be47156022674c29d6ed2cbf1b6de55871d909b",
+        "dimensions": [
+          320,
+          844
+        ],
+        "byteIdentical": false,
+        "differentPixels": 2993,
+        "maxChannelDelta": 3,
+        "differenceBBoxExclusive": [
+          301,
+          80,
+          310,
+          436
+        ],
+        "visuallyReviewedAtFullSize": true,
+        "observation": "Full-size MAIN and PR PNGs reviewed. Every modal/content pixel in [19,12,301,832] is identical; differences are confined to right-edge band x301..309 and maximum channel delta3. This is consistent with native scrollbar/edge paint variation; no geometry or visible content change."
+      }
+    ],
+    "observations": [
+      "320px dialogs fit the viewport with wrapped category names and readable counts; vertical scrolling remains inside the dialog.",
+      "1280px layout preserves label, optional/privacy explanation, search, selected summary and category order.",
+      "Selections match the staged fixture flow: client320/admin1280 empty before save; client1280 shows its saved Hétéro choice; admin320 shows its own Gay choice; readonly CRM shows the selected client Hétéro choice. Screenshots alone do not prove authorization.",
+      "The long search placeholder is clipped within its native single-line input while the complete visible label remains readable; no horizontal layout overflow observed.",
+      "Readonly preferences show no search, selection editing or preferences save control; the separate Enregistrer la fiche button above belongs to CRM notes."
+    ]
+  },
+  "homepageReview": {
+    "compared": 24,
+    "byteIdentical": 15,
+    "different": 9,
+    "allDimensionsUnchanged": true,
+    "all24ReviewedInMAINContactSheet": true,
+    "allNineDifferentPNGsOpenedAtFullSize": true,
+    "files": [
+      {
+        "name": "admin-home-1280-bottom.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/admin-home-1280-bottom.png",
+        "bytes": 83765,
+        "sha256": "e2411cc083c4c5e9e69c636df37d0b1842213822f7735ff680fb17330fc7def2",
+        "baselineSha256": "e2411cc083c4c5e9e69c636df37d0b1842213822f7735ff680fb17330fc7def2",
+        "dimensions": [
+          1280,
+          757
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": false,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Byte-identical to PR baseline; checked as part of the complete MAIN contact sheet, with no new full-size inspection claimed for this unchanged scene."
+      },
+      {
+        "name": "admin-home-1280.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/admin-home-1280.png",
+        "bytes": 143676,
+        "sha256": "5c6c5c155ac04377e6ad0b6dedb06eb0cf41921bbd890d623ade10ef3ae20f41",
+        "baselineSha256": "5c6c5c155ac04377e6ad0b6dedb06eb0cf41921bbd890d623ade10ef3ae20f41",
+        "dimensions": [
+          1280,
+          757
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": false,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Byte-identical to PR baseline; checked as part of the complete MAIN contact sheet, with no new full-size inspection claimed for this unchanged scene."
+      },
+      {
+        "name": "admin-home-320-bottom.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/admin-home-320-bottom.png",
+        "bytes": 40944,
+        "sha256": "577aa79414852562ac9bc247dc496dfe6078df2424a61f659728e07d928d1ad2",
+        "baselineSha256": "577aa79414852562ac9bc247dc496dfe6078df2424a61f659728e07d928d1ad2",
+        "dimensions": [
+          320,
+          844
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": false,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Byte-identical to PR baseline; checked as part of the complete MAIN contact sheet, with no new full-size inspection claimed for this unchanged scene."
+      },
+      {
+        "name": "admin-home-320.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/admin-home-320.png",
+        "bytes": 60235,
+        "sha256": "64f06ae58e2445dbfceac402362c6417d819b6892711bf1fc8778a7f5c14f0f0",
+        "baselineSha256": "64f06ae58e2445dbfceac402362c6417d819b6892711bf1fc8778a7f5c14f0f0",
+        "dimensions": [
+          320,
+          844
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": false,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Byte-identical to PR baseline; checked as part of the complete MAIN contact sheet, with no new full-size inspection claimed for this unchanged scene."
+      },
+      {
+        "name": "chat-options-admin-1280-conversation.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/chat-options-admin-1280-conversation.png",
+        "bytes": 110764,
+        "sha256": "6c9d07f6e74fb638de6b7280c4ad52db8cd6c3cb1de539091d5fd2a98f256413",
+        "baselineSha256": "c86d5adfab6692a3695eefe85dfaa5200c5067c9de811061b299f1b0aaab463e",
+        "dimensions": [
+          1280,
+          757
+        ],
+        "byteIdentical": false,
+        "differentPixels": 99,
+        "maxChannelDelta": 121,
+        "differenceBBoxExclusive": [
+          168,
+          272,
+          1251,
+          728
+        ],
+        "visuallyReviewedAtFullSize": true,
+        "reviewedInMAINContactSheet": true,
+        "syntheticTimestampRegion": [
+          100,
+          265,
+          190,
+          285
+        ],
+        "timestampDifferentPixels": 89,
+        "outsideTimestampDifferentPixels": 10,
+        "outsideTimestampMaxChannelDelta": 1,
+        "observation": "Synthetic contact timestamp differs (89pixels). Other10pixels are localized Send-button edge paint with maximum channel delta1; labels and geometry are unchanged."
+      },
+      {
+        "name": "chat-options-admin-1280-inbox.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/chat-options-admin-1280-inbox.png",
+        "bytes": 125700,
+        "sha256": "71b2e82dc4052f3e89de09a09c9af45d0f9160ea5e9b29095e4b75ada77d28f4",
+        "baselineSha256": "d365369f8eddd2b75781419e964d9460804a6c09483ec975f3a33a1ba5d61a89",
+        "dimensions": [
+          1280,
+          757
+        ],
+        "byteIdentical": false,
+        "differentPixels": 89,
+        "maxChannelDelta": 143,
+        "differenceBBoxExclusive": [
+          168,
+          272,
+          183,
+          280
+        ],
+        "visuallyReviewedAtFullSize": true,
+        "reviewedInMAINContactSheet": true,
+        "syntheticTimestampRegion": [
+          100,
+          265,
+          190,
+          285
+        ],
+        "timestampDifferentPixels": 89,
+        "outsideTimestampDifferentPixels": 0,
+        "outsideTimestampMaxChannelDelta": 0,
+        "observation": "Synthetic contact timestamp differs (89pixels). Every other pixel is identical."
+      },
+      {
+        "name": "chat-options-admin-1280-open.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/chat-options-admin-1280-open.png",
+        "bytes": 120224,
+        "sha256": "06548fe889d75ba06478f6e5abc58705b2f892f82e2487bd943e2aee7f976395",
+        "baselineSha256": "be3f0e363eb94cd99615c67ce65ce21f3963254a29b625f2080211e9a5ed08ee",
+        "dimensions": [
+          1280,
+          757
+        ],
+        "byteIdentical": false,
+        "differentPixels": 99,
+        "maxChannelDelta": 121,
+        "differenceBBoxExclusive": [
+          168,
+          272,
+          1251,
+          728
+        ],
+        "visuallyReviewedAtFullSize": true,
+        "reviewedInMAINContactSheet": true,
+        "syntheticTimestampRegion": [
+          100,
+          265,
+          190,
+          285
+        ],
+        "timestampDifferentPixels": 89,
+        "outsideTimestampDifferentPixels": 10,
+        "outsideTimestampMaxChannelDelta": 1,
+        "observation": "Synthetic contact timestamp differs (89pixels). Other10pixels are localized Send-button edge paint with maximum channel delta1; labels and geometry are unchanged."
+      },
+      {
+        "name": "chat-options-admin-320-conversation.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/chat-options-admin-320-conversation.png",
+        "bytes": 51024,
+        "sha256": "466e7d6abbd193b0ece1184617716fc9f7029b2e96c4bc06e9f8abf0349d2f1d",
+        "baselineSha256": "497b033d98e5ad7572b773747821e8cd779c9e8ba5171ed2ab29110a34d38f54",
+        "dimensions": [
+          320,
+          844
+        ],
+        "byteIdentical": false,
+        "differentPixels": 11,
+        "maxChannelDelta": 1,
+        "differenceBBoxExclusive": [
+          17,
+          197,
+          230,
+          408
+        ],
+        "visuallyReviewedAtFullSize": true,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Localized edge paint only, with the measured pixel count/bounds/channel delta; full-size inspection shows unchanged text, controls and geometry."
+      },
+      {
+        "name": "chat-options-admin-320-inbox.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/chat-options-admin-320-inbox.png",
+        "bytes": 22364,
+        "sha256": "f92ec93fc062fe740f9dbd6fa7d93eef16893c764cf9a83cd30db2a5ad438328",
+        "baselineSha256": "6e3fc2f9710b1566982408ea9b78965f9da081b46900033cd2bad68189a396dd",
+        "dimensions": [
+          320,
+          844
+        ],
+        "byteIdentical": false,
+        "differentPixels": 89,
+        "maxChannelDelta": 143,
+        "differenceBBoxExclusive": [
+          139,
+          242,
+          154,
+          250
+        ],
+        "visuallyReviewedAtFullSize": true,
+        "reviewedInMAINContactSheet": true,
+        "syntheticTimestampRegion": [
+          90,
+          235,
+          165,
+          255
+        ],
+        "timestampDifferentPixels": 89,
+        "outsideTimestampDifferentPixels": 0,
+        "outsideTimestampMaxChannelDelta": 0,
+        "observation": "Synthetic contact timestamp differs (89pixels). Every other pixel is identical."
+      },
+      {
+        "name": "chat-options-admin-320-open.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/chat-options-admin-320-open.png",
+        "bytes": 57273,
+        "sha256": "33b046bc6ce46672f837cddf24121f87b0f06dddcd2369882497f201c6f6c91e",
+        "baselineSha256": "5c759d0a6d4058daf6b4558477d0259445fff9467cf33514346d5c8d52573441",
+        "dimensions": [
+          320,
+          844
+        ],
+        "byteIdentical": false,
+        "differentPixels": 5,
+        "maxChannelDelta": 1,
+        "differenceBBoxExclusive": [
+          24,
+          403,
+          230,
+          408
+        ],
+        "visuallyReviewedAtFullSize": true,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Localized edge paint only, with the measured pixel count/bounds/channel delta; full-size inspection shows unchanged text, controls and geometry."
+      },
+      {
+        "name": "chat-options-client-1280-conversation.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/chat-options-client-1280-conversation.png",
+        "bytes": 187685,
+        "sha256": "faa9e7e3f46fbc1939b1741327a5c78237ac369cf440b15ffd9a86885f9754ed",
+        "baselineSha256": "0310a7135e07da6a02acb1b90f96097f5dce20a9466153eeadb03f9eb2a182a9",
+        "dimensions": [
+          1280,
+          757
+        ],
+        "byteIdentical": false,
+        "differentPixels": 2,
+        "maxChannelDelta": 1,
+        "differenceBBoxExclusive": [
+          335,
+          106,
+          336,
+          108
+        ],
+        "visuallyReviewedAtFullSize": true,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Localized edge paint only, with the measured pixel count/bounds/channel delta; full-size inspection shows unchanged text, controls and geometry."
+      },
+      {
+        "name": "chat-options-client-1280-open.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/chat-options-client-1280-open.png",
+        "bytes": 196564,
+        "sha256": "89acaf441dc0916f4cfb52c1a44def36e1b80a78e6218618ec08a3bbf01f1413",
+        "baselineSha256": "fced2038c63ff78b64eb2729940ba5b4f4785940cd2ca80389ac7af41b7597fd",
+        "dimensions": [
+          1280,
+          757
+        ],
+        "byteIdentical": false,
+        "differentPixels": 2,
+        "maxChannelDelta": 1,
+        "differenceBBoxExclusive": [
+          335,
+          106,
+          336,
+          108
+        ],
+        "visuallyReviewedAtFullSize": true,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Localized edge paint only, with the measured pixel count/bounds/channel delta; full-size inspection shows unchanged text, controls and geometry."
+      },
+      {
+        "name": "chat-options-client-320-conversation.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/chat-options-client-320-conversation.png",
+        "bytes": 49435,
+        "sha256": "c70190c4d1b6cfdc46e65e87bf2d6670afb3da7473d8eaf3bdbc2dc13eab0daa",
+        "baselineSha256": "7c709823523e7dd02a8730893092c55ab4dbdabf65aabdd816dbc5631a5f9839",
+        "dimensions": [
+          320,
+          844
+        ],
+        "byteIdentical": false,
+        "differentPixels": 1,
+        "maxChannelDelta": 4,
+        "differenceBBoxExclusive": [
+          261,
+          18,
+          262,
+          19
+        ],
+        "visuallyReviewedAtFullSize": true,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Localized edge paint only, with the measured pixel count/bounds/channel delta; full-size inspection shows unchanged text, controls and geometry."
+      },
+      {
+        "name": "chat-options-client-320-open.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/chat-options-client-320-open.png",
+        "bytes": 55553,
+        "sha256": "9664729aefd90bba20b2b91bcca98e0acdeac00b5c940de5f769de68974da4ad",
+        "baselineSha256": "9664729aefd90bba20b2b91bcca98e0acdeac00b5c940de5f769de68974da4ad",
+        "dimensions": [
+          320,
+          844
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": false,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Byte-identical to PR baseline; checked as part of the complete MAIN contact sheet, with no new full-size inspection claimed for this unchanged scene."
+      },
+      {
+        "name": "client-home-1280.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/client-home-1280.png",
+        "bytes": 171969,
+        "sha256": "33e72300f43273b4052f2098d79d1c303f5a4806a3fcc5c1445c74b4dcd8b961",
+        "baselineSha256": "33e72300f43273b4052f2098d79d1c303f5a4806a3fcc5c1445c74b4dcd8b961",
+        "dimensions": [
+          1280,
+          757
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": false,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Byte-identical to PR baseline; checked as part of the complete MAIN contact sheet, with no new full-size inspection claimed for this unchanged scene."
+      },
+      {
+        "name": "client-home-320.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/client-home-320.png",
+        "bytes": 65889,
+        "sha256": "91fd0341644dce382de89132ea1cd0521c61fe83b823f29de9fabe596c700f4d",
+        "baselineSha256": "91fd0341644dce382de89132ea1cd0521c61fe83b823f29de9fabe596c700f4d",
+        "dimensions": [
+          320,
+          844
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": false,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Byte-identical to PR baseline; checked as part of the complete MAIN contact sheet, with no new full-size inspection claimed for this unchanged scene."
+      },
+      {
+        "name": "home-en-1280-bottom.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/home-en-1280-bottom.png",
+        "bytes": 360559,
+        "sha256": "1a5a7cd0ab1061a5e04c626d1db23860c504b3e8f58ea86f8722bcbc8576eaa1",
+        "baselineSha256": "1a5a7cd0ab1061a5e04c626d1db23860c504b3e8f58ea86f8722bcbc8576eaa1",
+        "dimensions": [
+          1280,
+          757
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": false,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Byte-identical to PR baseline; checked as part of the complete MAIN contact sheet, with no new full-size inspection claimed for this unchanged scene."
+      },
+      {
+        "name": "home-en-1280-top.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/home-en-1280-top.png",
+        "bytes": 407243,
+        "sha256": "4fa6bf7858c74ab621e7246c11b0c64cc370dd87d2beab2d4e60c1e9d2874af2",
+        "baselineSha256": "4fa6bf7858c74ab621e7246c11b0c64cc370dd87d2beab2d4e60c1e9d2874af2",
+        "dimensions": [
+          1280,
+          757
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": false,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Byte-identical to PR baseline; checked as part of the complete MAIN contact sheet, with no new full-size inspection claimed for this unchanged scene."
+      },
+      {
+        "name": "home-en-320-top.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/home-en-320-top.png",
+        "bytes": 137901,
+        "sha256": "b08f607cca88a88d12197f0e6c0b052a030d5c0484d96052302a1deab1a7e8bb",
+        "baselineSha256": "b08f607cca88a88d12197f0e6c0b052a030d5c0484d96052302a1deab1a7e8bb",
+        "dimensions": [
+          320,
+          844
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": false,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Byte-identical to PR baseline; checked as part of the complete MAIN contact sheet, with no new full-size inspection claimed for this unchanged scene."
+      },
+      {
+        "name": "home-en-390-top.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/home-en-390-top.png",
+        "bytes": 158609,
+        "sha256": "26050dcbc50493b9d6395a6331ca55abde8517bb494d62b5230979bcc862de95",
+        "baselineSha256": "26050dcbc50493b9d6395a6331ca55abde8517bb494d62b5230979bcc862de95",
+        "dimensions": [
+          390,
+          844
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": false,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Byte-identical to PR baseline; checked as part of the complete MAIN contact sheet, with no new full-size inspection claimed for this unchanged scene."
+      },
+      {
+        "name": "home-fr-1280-bottom.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/home-fr-1280-bottom.png",
+        "bytes": 396688,
+        "sha256": "ebbac0a0ad6916d2692c56426a2d58e04b059899d2cfa62ad3765c25c771f521",
+        "baselineSha256": "ebbac0a0ad6916d2692c56426a2d58e04b059899d2cfa62ad3765c25c771f521",
+        "dimensions": [
+          1280,
+          757
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": false,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Byte-identical to PR baseline; checked as part of the complete MAIN contact sheet, with no new full-size inspection claimed for this unchanged scene."
+      },
+      {
+        "name": "home-fr-1280-top.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/home-fr-1280-top.png",
+        "bytes": 455418,
+        "sha256": "6c851a82ee0a315f2f45fc523e734241dc5da5babe5d5837eadf1dd039a35f46",
+        "baselineSha256": "6c851a82ee0a315f2f45fc523e734241dc5da5babe5d5837eadf1dd039a35f46",
+        "dimensions": [
+          1280,
+          757
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": false,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Byte-identical to PR baseline; checked as part of the complete MAIN contact sheet, with no new full-size inspection claimed for this unchanged scene."
+      },
+      {
+        "name": "home-fr-320-top.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/home-fr-320-top.png",
+        "bytes": 141394,
+        "sha256": "f64534540dd107751ae61320219186ed561639bc8d886590d98a975b55fa041f",
+        "baselineSha256": "f64534540dd107751ae61320219186ed561639bc8d886590d98a975b55fa041f",
+        "dimensions": [
+          320,
+          844
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": false,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Byte-identical to PR baseline; checked as part of the complete MAIN contact sheet, with no new full-size inspection claimed for this unchanged scene."
+      },
+      {
+        "name": "home-fr-390-top.png",
+        "file": "/workspace/scratch/bb431be72395/experience190/main-final-homepage/home-fr-390-top.png",
+        "bytes": 161371,
+        "sha256": "77153078d5691e69247f570ba406f66131a01b57b82a74af1e62cdcfb760cdba",
+        "baselineSha256": "77153078d5691e69247f570ba406f66131a01b57b82a74af1e62cdcfb760cdba",
+        "dimensions": [
+          390,
+          844
+        ],
+        "byteIdentical": true,
+        "differentPixels": 0,
+        "maxChannelDelta": 0,
+        "differenceBBoxExclusive": null,
+        "visuallyReviewedAtFullSize": false,
+        "reviewedInMAINContactSheet": true,
+        "observation": "Byte-identical to PR baseline; checked as part of the complete MAIN contact sheet, with no new full-size inspection claimed for this unchanged scene."
+      }
+    ],
+    "allFourOptionsPanelCropsIdentical": [
+      {
+        "name": "chat-options-admin-1280-open.png",
+        "bboxExclusive": [
+          932,
+          78,
+          1252,
+          410
+        ],
+        "pixelIdentical": true
+      },
+      {
+        "name": "chat-options-client-1280-open.png",
+        "bboxExclusive": [
+          932,
+          78,
+          1252,
+          410
+        ],
+        "pixelIdentical": true
+      },
+      {
+        "name": "chat-options-admin-320-open.png",
+        "bboxExclusive": [
+          12,
+          60,
+          308,
+          392
+        ],
+        "pixelIdentical": true
+      },
+      {
+        "name": "chat-options-client-320-open.png",
+        "bboxExclusive": [
+          12,
+          60,
+          308,
+          392
+        ],
+        "pixelIdentical": true
+      }
+    ],
+    "contactSheet": "/workspace/scratch/bb431be72395/experience190/main-final-homepage-contact.png",
+    "conclusion": "All14 non-chat homepage/login/admin-tool captures are byte-identical. Of10 chat captures, one is byte-identical and nine differ only in the synthetic timestamp or localized edge paint. All four complete Options panels are pixel-identical, preserving single menu entry, flags and deduplicated destinations."
+  },
+  "independentProfileReview": {
+    "reviewer": "followup190",
+    "scope": "Read-only inspection of the same five MAIN PNGs; no browser, test, file edit or production operation.",
+    "result": "No blocking layout issue observed. Long labels wrap at320px; counts remain readable; owner selections are distinct; CRM preferences are visually read-only. Placeholder clipping is native single-line behavior. The separate CRM save button is not a preferences edit control."
+  },
+  "nativeAssertionContext": {
+    "https": {
+      "job": 120442637728,
+      "passed": 11,
+      "failed": 0,
+      "file": "main-final-auth.log",
+      "bytes": 41456,
+      "sha256": "56f9d68c8ae380c91adbf955c014c0c0ce3f0891ecb594c8701d77941e7182af",
+      "logRead": true
+    },
+    "chrome": {
+      "job": 120442637796,
+      "passed": 250,
+      "failed": 0,
+      "skipped": 0,
+      "file": "main-final-browser.log",
+      "bytes": 51603,
+      "sha256": "c55c9075fba42cf23a1225e2b63547198ca713aa3626aa46e16387312531fd30",
+      "logRead": true
+    },
+    "actualProfileAssertions": "On actual HTTPS SQL38 for both roles at320/1280: document/dialog/search bounds, visible viewport height, all25 categories collapsed with zero choice buttons initially, three masked password inputs with current/new/new autocomplete, keyboard-capable type=button eyes with translated labels and44px targets; readonly CRM actions/search hidden and no choice buttons. Main HTTPS log confirms all six experience subtests passed.",
+    "overallCIRemainsOwnedByRoot": true,
+    "overallRunAtReview": "in_progress; no all-five-jobs conclusion inferred from screenshot or browser artifacts."
+  },
+  "openBlockingVisualFindings": [],
+  "limits": [
+    "Artifact review covers only the supplied synthetic scenes and their measured comparison; it is separate from native functional assertions.",
+    "The five profile PNGs are intentionally scrolled to preferences; password fields/header/save/clear controls outside that scroll segment are covered by native assertions, not visually certified from these screenshots.",
+    "Gallery, photo-batch progress and follow-up controls have native test coverage but no dedicated PNG in these two artifacts.",
+    "No real phone, software keyboard, push delivery, private production account or hosted activation was exercised.",
+    "Minor paint differences are measured and consistent with native rendering timing; their precise browser-internal cause was not independently proved.",
+    "No source, Git, publishing, CI rerun, production mutation or newly captured browser session occurred during this review."
+  ]
+}

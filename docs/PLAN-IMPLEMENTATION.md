@@ -2,23 +2,16 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Évolution1.9.0 — demande du23octobre, en cours
+## Évolution1.9.0 — activation hébergée restante
 
-[Cahier intégral](specs/cahier-20261023.md), [état compact](verification-proofs/experience190-progress.json). Reprendre les composants existants et la vraie base184 ; une livraison finale, quatre jalons de développement :
+Les quatre lots et les six fonctions du [cahier](specs/cahier-20261023.md) sont codés, fusionnés, qualifiésPR/main5/5 et publiés. Source190 `5dda0dd4453d34a0be839d2a1402301dea835381`, release/latest421892314 ; repliSQL38 compatible185 publié non latest. [État et preuves](verification-proofs/experience190-progress.json), [procédure exacte](operations-release190.md).
 
-1. Droits et compte : vidéo réservée admin sur tous les chemins ; mot de passe actuel/nouveau/confirmation, rotation volontaire des sessions et œil partagé.
-2. Profils : catalogue complet immuable, choix privés facultatifs chiffrés côté serveur, rechercheFR/EN/alias et consultation admin autorisée en lecture seule.
-3. Photos : navigation paginée/date/message d’origine, puis file limitée de dix photos avec aperçu et reprise idempotente des seuls échecs.
-4. Suivi : tâche réservée « À répondre », watermark conditionnel protégeant les entrants simultanés, reprise historique déterminable ; qualification transversale, publication et déploiement selon le mécanisme existant.
+1. Préparer uniquement les deux sources/lanceurs190 et185 avec le préparateur qualifié ; obtenir les empreintes réelles des reçus, sans CHECK ou démarrage surSQL36.
+2. Épingler et qualifier le migrateur avec le reçu190 réel ; lire le statutSQL, puis arrêt personnelManager, migration gardée36→38 et preuve38 appliquées/0 en attente.
+3. CHECK185 et190 séparés, puis activation190 et relevé d’identité exact. Ne pas démarrer184 ou172 sur38.185 n’est pas à démarrer pour la qualifier comme repli.
+4. Épingler et qualifier le writer avec les reçus réels et la release421892314 ; enregistrer l’identité et vérifier le checkpoint final, sans redémarrage.
 
-Les quatre lots et corrections de revue sont codés. Restent :
-
-1. Terminer laCI main185 (PR5/5 acquise), repliSQL38 fusionné 7a40de9… ; aucune activation185.
-2. Qualifier le raccord final190 surPR133, avec les deux parcoursHTTPS batch/ACK et suivi entre appareils ; les deux MariaDB598/598 et le Chrome ciblé8/8 sont acquis sur leurs sources identifiées.
-3. Fusionner puis qualifier le vraiSHA main190, inspecter les rendus et publier les deux références immuables (185 non latest,190 latest).
-4. Qualifier les opérateurs épinglés ; préparation, statutSQL, arrêt personnelManager, migration36→38, CHECK185/190, activation190 et reçu final seront des opérations distinctes avec preuves. Aucune opération hébergée n’est acquise.
-
-Production1.8.4/SQL36 inchangée. Aucune nouvelle infrastructure, reprise automatique des sauvegardes reportées ou action sur les comptes réels.
+Production1.8.4/SQL36 inchangée. Aucune nouvelle infrastructure, reprise automatique des sauvegardes reportées ou action sur les comptes réels. Téléphone physique et production190 restent non vérifiés.
 
 ## Correctif interface 1.8.4 — terminé
 
