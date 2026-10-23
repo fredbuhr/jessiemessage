@@ -1,0 +1,31 @@
+name: Qualify read-only JessieMessage 1.10.1 staging inspector
+
+on:
+  push:
+    branches: ["ops/inspect-v1.10.1"]
+    paths: ["ops/inspect-staging1101.py", "ops/test-inspect-staging1101.py", ".github/workflows/inspect-staging1101.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: inspect-jessiemessage-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  inspector-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact operator commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Retain qualified Node.js 24.22.1 toolchain
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+          package-manager-cache: false
+      - name: Test read-only diagnostic without private paths or network
+        run: python3 ops/test-inspect-staging1101.py
