@@ -1494,8 +1494,11 @@ test("Chrome photo viewer crosses unloaded history, preserves scroll and finds a
       catch { const probe=await page.execute("return {touch:window.__photoTouchProbe??null,status:document.getElementById('lightbox-status')?.textContent??null}"); assert.fail(`older photo navigation: ${JSON.stringify({role,...probe,cursors:fixture.galleryRequests??[]})}`); }
       assert.ok(fixture.galleryRequests.some(query=>new URLSearchParams(query).get('before')==='3'),"the native previous-photo gesture requests the original message cursor");
       await waitUntil(()=>page.execute("const image=document.querySelector('#lightbox-image img');return !!image&&image.complete&&image.naturalWidth>0&&window.__photoOriginalSources[image.src]===arguments[0]",`/api/media/${role}/conversations/${conversationId}/messages/${id(201)}/full`),"the decoded older image comes from its exact authorized message");
+      if(role==='admin')assert.equal(await page.execute("return document.activeElement.id"),'previous-photo','asynchronous navigation restores its temporarily disabled control');
+      await page.execute(`window.__photoKeyProbe={focused:document.activeElement.id,events:[]};document.addEventListener('keydown',event=>window.__photoKeyProbe.events.push({key:event.key,target:event.target.id,inDialog:document.getElementById('lightbox').contains(event.target)}));`);
       await page.key("\uE014");
       await waitUntil(()=>page.execute("return !document.getElementById('lightbox-status').textContent.includes('2020')"),"keyboard moves to newer photo");
+      assert.ok(fixture.galleryRequests.some(query=>new URLSearchParams(query).get('after')==='1'),'ArrowRight requests the displayed older message cursor');
       await waitUntil(()=>page.execute("const image=document.querySelector('#lightbox-image img');return !!image&&image.complete&&image.naturalWidth>0&&window.__photoOriginalSources[image.src]===arguments[0]",`/api/media/${role}/conversations/${conversationId}/messages/${id(203)}/full`),"the decoded newer image comes from its exact authorized message");
       await page.key("\uE00C");
       assert.equal(await page.execute("return document.getElementById('message-scroll').scrollTop"),scroll);
@@ -1512,7 +1515,7 @@ test("Chrome photo viewer crosses unloaded history, preserves scroll and finds a
       try {
         const directory=new URL('../../artifacts/homepage/',import.meta.url);await mkdir(directory,{recursive:true});
         await writeFile(new URL('debug190-gallery.png',directory),Buffer.from(await page.screenshot(),'base64'));
-        const probe=await page.execute("return {touch:window.__photoTouchProbe??null,bounds:window.__photoTouchBounds??null,status:document.getElementById('lightbox-status')?.textContent??null}");
+        const probe=await page.execute("return {touch:window.__photoTouchProbe??null,bounds:window.__photoTouchBounds??null,keyboard:window.__photoKeyProbe??null,active:document.activeElement?.id??null,status:document.getElementById('lightbox-status')?.textContent??null}");
         await writeFile(new URL('debug190-gallery.json',directory),JSON.stringify({role,...probe,cursors:fixture.galleryRequests??[]},null,2)+'\n');
       } catch {}
       throw error;

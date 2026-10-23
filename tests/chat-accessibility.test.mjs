@@ -491,3 +491,17 @@ test("CRM-backed inbox pagination has the same focused final-page fallback", asy
   assert.equal(f.element("more-conversations").hidden, true);
   assert.equal(f.document.activeElement.dataset.conversationId, id(103));
 });
+
+test("photo navigation restores a control blurred by temporary disabling without stealing a newer focus choice", async t=>{
+  for(const moved of [false,true])await t.test(moved?'user moved to close':'disabled control lost focus',async()=>{
+    const gate=pause();const f=libraryHarness();await flush();
+    f.context.__focusPhoto={media:libraryAsset(801),messageId:id(901),sequence:'3',createdAt:now};
+    f.run("openLightbox(__focusPhoto,currentState(),el('open-gallery'))");await flush();
+    const fetch=f.context.fetch;f.context.fetch=(path,options)=>path.includes('/gallery?')?gate.promise:fetch(path,options);
+    const control=f.element('previous-photo');control.focus();await f.click('previous-photo');assert.equal(control.disabled,true);
+    // Native Chrome moves focus to body when the active button is disabled.
+    f.document.activeElement=f.document.body;if(moved)f.element('close-lightbox').focus();
+    gate.resolve(response(200,{items:[{messageId:id(902),sequence:'2',createdAt:now-1000,media:libraryAsset(802)}],hasMore:false,nextBefore:null}));await flush();
+    assert.equal(control.disabled,false);assert.equal(f.document.activeElement,moved?f.element('close-lightbox'):control);
+  });
+});

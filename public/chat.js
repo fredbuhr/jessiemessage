@@ -1309,6 +1309,8 @@ async function openLightbox(item, state, opener) {
 async function navigatePhoto(direction) {
   const state = currentState(), original = lightboxItem, version = lightboxVersion;
   if (!state || !original?.messageId || !original.sequence || lightboxBusy || !visible()) return;
+  const ticket = snapshot(state), focused = el("lightbox").contains(document.activeElement) ? document.activeElement : null;
+  let currentVersion = version;
   lightboxBusy = true; renderLightboxControls();
   try {
     const cursor = direction === "previous" ? "before" : "after";
@@ -1321,8 +1323,16 @@ async function navigatePhoto(direction) {
       || !item.sequence || !Number.isSafeInteger(item.createdAt) || (direction === "previous" ? compared >= 0 : compared <= 0)) throw new Error("invalid_photo_neighbor");
     imageUrls.remove(original.media.fullUrl); imageRequests.get(original.media.fullUrl)?.controller.abort(); imageRequests.delete(original.media.fullUrl);
     showLightboxPhoto(item, state);
+    currentVersion = lightboxVersion;
   } catch (error) { if (lightboxItem === original) await handleMediaError(error, state, "lightbox-status"); }
-  finally { lightboxBusy = false; if (lightboxItem) renderLightboxControls(); }
+  finally {
+    if (fresh(ticket) && lightboxItem && lightboxVersion === currentVersion) {
+      lightboxBusy = false; renderLightboxControls();
+      // Chrome blurs a focused navigation button while it is disabled. Restore
+      // that control only if the user has not focused another control meanwhile.
+      if (el("lightbox").open && focused && focusWasLost(focused)) focusVisible(focused);
+    }
+  }
 }
 async function seePhotoMessage() {
   const state = currentState(), item = lightboxItem;
