@@ -2,14 +2,13 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Évolution1.9.0 — enregistrement final restant
+## Évolution 1.9.0 — livraison terminée
 
-Les quatre lots et les six fonctions du [cahier](specs/cahier-20261023.md) sont codés, fusionnés, qualifiésPR/main5/5 et publiés. Source190 `5dda0dd4453d34a0be839d2a1402301dea835381`, release/latest421892314 ; repliSQL38 compatible185 publié non latest. [État et preuves](verification-proofs/experience190-progress.json), [procédure exacte](operations-release190.md).
+Les quatre lots et les six fonctions du [cahier](specs/cahier-20261023.md) sont codés, fusionnés, qualifiés PR/main5/5, publiés et déployés. Source `5dda0dd4453d34a0be839d2a1402301dea835381`, release/latest421892314, Nodev24.22.1, SQL38. [État et preuves](verification-proofs/experience190-progress.json).
 
-1. **Acquis :** préparation190/185, SQL38, CHECKs locaux, précontrôle complet et identité190 démarrée (version/source/Node exacts, relevé23octobre17:31:26 à Paris). L’inversion Manager expliquait le blocage. Ne rien rejouer.
-2. **Cause du refus établie et correction qualifiée :**21 succès exacts dépassaient la borne16 de l’ancien writer. [Inspection acquise](verification-proofs/jm190-hosted-precheck-log-inspection.json). Le correctif opérateur1b54fa79, limité à cette borne, a réussi13/13 sous Nodev24.22.1 ; chaque ligne et plafond64KiB restent validés. [Preuve native](verification-proofs/jm190/writer-precheck-count-native.json). **Restant :** exécuter une fois le writer corrigé pour obtenir le reçu final et aligner le checkpoint. Aucun effacement de journal, CHECK, migration ou redémarrage.
+Le [reçu final utilisateur](verification-proofs/jm190-hosted-metadata.json) confirme `release190_metadata_recorded`, `publicReady:true`, checkpoint `01692bfda8ef4a0cab2d102a183c0ab88fe9e8d99858d6e9b583f8b85ffde674`, historiques et autres blocs préservés, sans redémarrage. Le repli1.8.5 compatibleSQL38 est précontrôlé, jamais démarré. Les deux blocages Manager/writer sont résolus et leurs preuves conservées dans REPRISE.
 
-Application190 démarrée selon l’identité utilisateur ; métadonnées privées encore184 tant que le writer n’est pas acquis. Aucune nouvelle infrastructure, reprise des sauvegardes reportées ou action sur les comptes réels. Téléphone physique et fonctions190 en production restent non vérifiés séparément.
+**Aucune étape de livraison restante.** [Bilan opérateur clos](operations-release190.md). Les tests natifs restent acquis sans replay ; les essais fonctionnels sur téléphone et entre appareils ne sont pas déduits du démarrage ou du reçu final. Sauvegardes reportées et autres sujets hors périmètre conservent leur état sans nouvelle action automatique.
 
 ## Correctif interface 1.8.4 — terminé
 

@@ -1,0 +1,81 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage_190_hosted_metadata",
+  "status": "release190_metadata_recorded_user_reported",
+  "date": "2026-10-23",
+  "provenance": {
+    "classification": "USER_REPORTED",
+    "description": "User executed immutable SHA256-pinned qualified writer in own Infomaniak SSH terminal and supplied full JSON. Agent did not directly inspect private checkpoint, startup log, PID or socket.",
+    "operatorSource": "1b54fa79bb4ab8fa92867b9764ed497a30cca23e",
+    "helperSha256": "4bf91668b9ae60b74a1269e35e3c7dc21b176c450e4dae41cb7431fcbbd8bf72",
+    "qualificationProof": "jm190/writer-precheck-count-native.json"
+  },
+  "receipt": {
+    "status": "release190_metadata_recorded",
+    "version": "1.9.0",
+    "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
+    "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+    "metadataOnly": true,
+    "noRestart": true,
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "release": {
+      "version": "1.9.0",
+      "commit": "5dda0dd4453d34a0be839d2a1402301dea835381",
+      "nodeVersion": "v24.22.1",
+      "startedAt": 1792769486560
+    },
+    "publicReady": true,
+    "rollbackRelease": "1.8.5",
+    "rollbackAfterMigrationQualified": true,
+    "restart184Allowed": false,
+    "restart172Allowed": false,
+    "historicalRelease184Preserved": true,
+    "priorActivePreserved": true,
+    "otherBlocksPreserved": true,
+    "checkpointSha256": "01692bfda8ef4a0cab2d102a183c0ab88fe9e8d99858d6e9b583f8b85ffde674"
+  },
+  "startupTime": {
+    "epochMillisecondsFromWriterReceipt": 1792769486560,
+    "utc": "2026-10-23T15:31:26.560+00:00",
+    "europeParis": "2026-10-23T17:31:26.560+02:00",
+    "earlierDisplayedText": "23/10/2026 17:31:26",
+    "matchesEarlierUIToSecond": true,
+    "epochNotInferredFromUiText": true
+  },
+  "currentState": {
+    "applicationVersion": "1.9.0",
+    "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
+    "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+    "nodeVersion": "v24.22.1",
+    "schemaMigrations": 38,
+    "metadataCheckpointVersion": "1.9.0",
+    "metadataCheckpointSha256": "01692bfda8ef4a0cab2d102a183c0ab88fe9e8d99858d6e9b583f8b85ffde674",
+    "metadataAlignmentPending": false,
+    "latest": "v1.9.0",
+    "latestReleaseId": 421892314,
+    "rollbackVersion": "1.8.5",
+    "rollbackPrechecked": true,
+    "rollbackStarted": false,
+    "backupFunctionalCheck": "deferred_unverified_by_user_request"
+  },
+  "review": {
+    "receiptShapeAndValuesMatchQualifiedWriter": true,
+    "allPublishedSourcePinsMatch": true,
+    "startupTimeMatchesEarlierUI": true,
+    "independentReadOnlyReview": "closure190_receipt_review: favorable; exact source/tree/version/node/schema/startup instant; qualified185 means prechecked never started; checkpoint hash reported after readback.",
+    "githubTagAndLatestReadAgain": true,
+    "githubLatestReleaseId": 421892314,
+    "githubTagSource": "5dda0dd4453d34a0be839d2a1402301dea835381",
+    "technicalDeliveryClosed": true,
+    "productionFunctionalCoverageComplete": false
+  },
+  "limits": [
+    "User-reported qualified writer evidence; no direct agent private-host inspection.",
+    "Checkpoint SHA256 reported after guarded replacement/readback, not independently recomputed from private checkpoint contents.",
+    "publicReady is acquired from guarded writer current HTTP checks; detailed raw responses not supplied.",
+    "Schema38/37 are the qualified schema identity validated from pinned receipt and source, not a new direct SQL query or physical inventory.",
+    "Rollback185 is SQL38-compatible and prechecked, never started; no running185 identity or restoration trial inferred.",
+    "Physical phone, cross-device production feature scenarios and deferred hosted backup are not acquired."
+  ]
+}

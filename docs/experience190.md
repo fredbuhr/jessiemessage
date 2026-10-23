@@ -1,6 +1,6 @@
 # Six évolutions — 1.9.0
 
-Le [cahier fourni](specs/cahier-20261023.md) définit le périmètre. Les six fonctions sont codées, fusionnées, qualifiées et publiées en1.9.0 ; leur activation hébergée reste à effectuer. L’application active reste **1.8.4 / SQL36**. [État et preuves](verification-proofs/experience190-progress.json), [reprise opérateur](REPRISE.md).
+Le [cahier fourni](specs/cahier-20261023.md) définit le périmètre. Les six fonctions sont codées, fusionnées, qualifiées, publiées et déployées en **1.9.0 / SQL38**. Le [reçu final utilisateur](verification-proofs/jm190-hosted-metadata.json) confirme identité, disponibilité publique et alignement des métadonnées, sans redémarrage. [État et preuves](verification-proofs/experience190-progress.json), [reprise opérateur](REPRISE.md).
 
 | Fonction | Résultat implémenté |
 | --- | --- |
@@ -19,6 +19,6 @@ Le repli technique **1.8.5** accepte SQL38 sans activer les fonctions190 et prot
 
 ## Validation et livraison
 
-Les preuves séparent tests locaux, Chrome synthétique, HTTPS avec vraie base SQL et MariaDB10.11/11.4. Elles ne constituent pas un essai sur téléphone physique ou sur l’hébergement. Aucun compte réel n’a servi aux essais. La fusion et les CI exactes précèdent publication, préparation, migration, CHECK, activation et enregistrement ; chaque étape doit avoir son reçu. Aucune activation190 n’est acquise à ce stade.
+Les preuves séparent tests locaux, Chrome synthétique, HTTPS avec vraie base SQL et MariaDB10.11/11.4 des résultats hébergés. Aucun compte réel n’a servi aux essais synthétiques. Publication, préparation, migration, CHECK, précontrôle complet, activation et enregistrement final ont désormais leurs preuves. Le démarrage et la disponibilité publique de la bonne source sont acquis selon le reçu utilisateur ; les essais fonctionnels sur téléphone physique et entre appareils en production restent non acquis.
 
-Source publiée `5dda0dd4453d34a0be839d2a1402301dea835381`, arbre `f06a140e738f20994425c714a278b0646f651c1b` ; [CI main5/5](verification-proofs/jm190/main-native-final.json), [publication2/2 et49tests opérateurs](verification-proofs/jm190/publication-native.json). [Préparation et activation](operations-release190.md).
+Source publiée `5dda0dd4453d34a0be839d2a1402301dea835381`, arbre `f06a140e738f20994425c714a278b0646f651c1b` ; [CI main5/5](verification-proofs/jm190/main-native-final.json), [publication2/2 et49tests opérateurs](verification-proofs/jm190/publication-native.json). [Bilan de livraison clos](operations-release190.md).

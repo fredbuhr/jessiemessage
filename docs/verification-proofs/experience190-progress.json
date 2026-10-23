@@ -1,7 +1,7 @@
 {
   "type": "experience190-progress",
   "version": 2,
-  "status": "runtime190_active_corrected_final_writer_qualified13_published_host_execution_remaining",
+  "status": "release190_deployed_metadata_aligned_technical_delivery_closed",
   "release": {
     "version": "1.9.0",
     "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
@@ -65,10 +65,14 @@
     "displayedStartedAt": "23/10/2026 17:31:26",
     "timezone": "Europe/Paris",
     "runtimeCurrentlyActive": true,
-    "evidence": "USER_REPORTED_READINESS_UI",
+    "evidence": "USER_REPORTED_READINESS_UI_AND_QUALIFIED_WRITER_RECEIPT",
     "identityProof": "jm190-hosted-identity.json",
-    "metadataCheckpointVersion": "1.8.4",
-    "metadataCheckpointSha256": "3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212"
+    "metadataCheckpointVersion": "1.9.0",
+    "metadataCheckpointSha256": "01692bfda8ef4a0cab2d102a183c0ab88fe9e8d99858d6e9b583f8b85ffde674",
+    "startedAt": 1792769486560,
+    "metadataProof": "jm190-hosted-metadata.json",
+    "publicReady": true,
+    "metadataAlignmentPending": false
   },
   "qualification": {
     "pr": 133,
@@ -101,7 +105,8 @@
     "operator": "5859b591e0349bae011147e6aed6ebf330a7a4ba",
     "preparerSha256": "d976c224b7ff898720f44b1f018440a29791c40936c504c7782a2874758e35d6",
     "nativeOperatorTests": 49,
-    "jobsPassed": 2
+    "jobsPassed": 2,
+    "tagAndLatestReverifiedAtClosure": true
   },
   "rollback185": {
     "version": "1.8.5",
@@ -116,7 +121,9 @@
     "published": true,
     "releaseId": 421892280,
     "latest": false,
-    "hostedPrechecked": true
+    "hostedPrechecked": true,
+    "hostedMetadataRecorded": true,
+    "runtimeStarted": false
   },
   "hosted": {
     "sourcesPrepared": true,
@@ -125,7 +132,7 @@
     "prechecked185": true,
     "prechecked190": true,
     "started190": true,
-    "metadataRecorded190": false,
+    "metadataRecorded190": true,
     "hostMutations": false,
     "serviceStoppedReported": false,
     "schema38StatusRead": true,
@@ -133,9 +140,9 @@
     "precheckProof": "jm190-hosted-prechecks.json",
     "activationProblemProof": "jm190-hosted-activation-problem.json",
     "startupLogEmptyReported": true,
-    "recordedStartup190": false,
+    "recordedStartup190": true,
     "emptyLogProof": "jm190-hosted-empty-runtime-log.json",
-    "currentManagerState": "190_serves_readiness_identity_per_user_report",
+    "currentManagerState": "190_active_and_publicReady_per_qualified_writer_receipt",
     "startupLogEmptyEvidenceTiming": "before_latest_attempt",
     "fullMessagingPreflightPassed": true,
     "fullMessagingPreflightProof": "jm190-hosted-full-preflight.json",
@@ -145,21 +152,25 @@
     "writerRefusal": "PRECHECK_NOT_PASSED",
     "writerRefusalProof": "jm190-hosted-writer-precheck-refusal.json",
     "writerRefusalCause": "21 strictly valid receipts exceed arbitrary count16; 3822bytes under64KiB",
-    "precheckLogInspectionProof": "jm190-hosted-precheck-log-inspection.json"
+    "precheckLogInspectionProof": "jm190-hosted-precheck-log-inspection.json",
+    "metadataProof": "jm190-hosted-metadata.json",
+    "writerRefusalResolved": true,
+    "publicReady": true,
+    "hostMutationsScope": "false means no direct agent host mutation; user executed preparations/migration/activation/writer"
   },
   "limits": [
     "Synthetic Chrome mobile/desktop and multiple browser sessions; no physical phone or two physical devices",
     "Lost network acknowledgement injected around real committed SQL-backed HTTPS sends; no physical radio disconnect",
-    "No production190 verification or new hosted backup trial; previous deferred work remains deferred"
+    "Production runtime identity, HTTP readiness and metadata alignment acquired by qualified writer user receipt; physical-device functional scenarios and deferred hosted backup remain unverified"
   ],
   "nextAction": {
-    "only": "Execute corrected immutable hash-checked metadata-only writer once and acquire final JSON",
+    "only": "None for technical delivery; do not replay completed deployment operations",
     "instructions": "../operations-release190.md",
-    "doNotReplayOldWriter": true,
+    "doNotReplayWriter": true,
     "doNotRerunPreflight": true,
     "doNotRestart": true,
     "doNotEraseLogs": true,
-    "following": "Verify reported final receipt and checkpoint alignment"
+    "automaticFunctionalOrBackupWorkOpened": false
   },
   "historyProofs": [
     "jm190/pr-native-initial.json",
@@ -225,7 +236,9 @@
     "nativePassed": 13,
     "attempt": 1,
     "proof": "jm190/writer-precheck-count-native.json",
-    "hostExecuted": false
+    "hostExecuted": true,
+    "hostResult": "release190_metadata_recorded",
+    "hostProof": "jm190-hosted-metadata.json"
   },
   "hostedPrechecks": {
     "185": {
@@ -262,5 +275,12 @@
     "proof": "jm190/writer-final-native.json",
     "hostExecuted": true,
     "hostResult": "PRECHECK_NOT_PASSED_before_checkpoint_access"
+  },
+  "productionVerification": {
+    "runtimeIdentity": true,
+    "publicReadiness": true,
+    "metadataAlignment": true,
+    "provenance": "USER_REPORTED_QUALIFIED_WRITER_RECEIPT",
+    "physicalDeviceFunctionalCoverage": false
   }
 }
