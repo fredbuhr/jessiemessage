@@ -88,8 +88,8 @@ function controls() {
   el("new-task").hidden = !state.draft && (!state.conversationId || !contextReady);
   ui.text(el("new-task"), state.pending ? "Reprendre la demande" : state.draft?.dirty ? "Reprendre mon brouillon" : "Ajouter une tâche");
   el("new-task").disabled = busy || sessionPaused || state.csrfFailed;
-  el("task-filter").disabled = listBusy || sessionPaused; el("refresh-tasks").disabled = listBusy || sessionPaused;
-  el("more-tasks").hidden = !state.hasMore; el("more-tasks").disabled = listBusy || sessionPaused;
+  el("task-filter").disabled = listBusy || busy || sessionPaused; el("refresh-tasks").disabled = listBusy || busy || sessionPaused;
+  el("more-tasks").hidden = !state.hasMore; el("more-tasks").disabled = listBusy || busy || sessionPaused;
   el("reload").hidden = !sessionPaused && !state.csrfFailed;
   for (const button of el("task-list").querySelectorAll("button")) button.disabled = frozen;
 }

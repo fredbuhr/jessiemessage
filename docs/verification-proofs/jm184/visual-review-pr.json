@@ -1,0 +1,182 @@
+{
+  "status": "independent_visual_review_completed_no_blocking_visual_defect_observed",
+  "reviewer": "versions_reprise/second_visual_review",
+  "timestamp": "2026-10-23T00:08:32.115907+00:00",
+  "pullRequest": 131,
+  "runId": 39875548292,
+  "head": "cc08f6cd95f045968916a2f38bbfea1586c1e946",
+  "treeReportedByRoot": "948ff33ac222f36693eefe23d4b9e4a601510dc3",
+  "nativeJob": {
+    "id": 120160141648,
+    "name": "Chrome keyboard and chat lifecycle",
+    "conclusionObservedViaAPI": "failure",
+    "interpretation": "PNG availability is not a successful CI conclusion. Root separately identified an obsolete logout-action test targeting a closed disclosure and prepared a test-only correction; this reviewer neither edited nor reran it."
+  },
+  "artifact": {
+    "id": 12468342927,
+    "name": "homepage-render",
+    "zip": "/workspace/scratch/bb431be72395/ux184/pr131-homepage-render.zip",
+    "sha256": "sha256:66f04d8ca8dcefe38ee6046658f05692c179d0d4b80a849234f069e42d3b3f75",
+    "apiDigestMatched": true,
+    "bytes": 3721607,
+    "entries": 24,
+    "downloadProcessExitCode": 0,
+    "safeExtraction": "24 unique flat PNG names; no slash/backslash/traversal/symlink, total extracted bytes below20MiB, ZIP below20MiB. Digest checked before extraction.",
+    "allFilesManifest": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots-manifest.json",
+    "allFilesManifestSha256": "d2d6d5ee5a84f147ebee63305a00a61f3ad2392a83ec2d81ec2bce1590b2f6c5"
+  },
+  "filesReviewed": [
+    {
+      "name": "chat-options-admin-1280-open.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-admin-1280-open.png",
+      "sha256": "a39eae1c86b95b64b1c493e820919eda99a861d8abf5883f3a4c5b212f80c3f4",
+      "width": 1280,
+      "height": 757
+    },
+    {
+      "name": "chat-options-admin-320-open.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-admin-320-open.png",
+      "sha256": "2ef0c5917c3d123df2457a04338c116599ba989b0144f6abe422e006a511eb4f",
+      "width": 320,
+      "height": 844
+    },
+    {
+      "name": "chat-options-client-1280-open.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-client-1280-open.png",
+      "sha256": "170c1a080606fc9ba6e1b6d8d978cbf1a8adbee1ce19699ffa7d15618ee24eb9",
+      "width": 1280,
+      "height": 757
+    },
+    {
+      "name": "chat-options-client-320-open.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-client-320-open.png",
+      "sha256": "9664729aefd90bba20b2b91bcca98e0acdeac00b5c940de5f769de68974da4ad",
+      "width": 320,
+      "height": 844
+    },
+    {
+      "name": "chat-options-admin-1280-conversation.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-admin-1280-conversation.png",
+      "sha256": "b1a8d93cbce6b52da68d141ff2d8e5e95a57d721e02728564f6f6a1963b1bd2c",
+      "width": 1280,
+      "height": 757
+    },
+    {
+      "name": "chat-options-admin-320-conversation.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-admin-320-conversation.png",
+      "sha256": "48c10414b07592ded712b0a9db8393a55feccac663408fae719b1ba0bf7fb625",
+      "width": 320,
+      "height": 844
+    },
+    {
+      "name": "chat-options-client-1280-conversation.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-client-1280-conversation.png",
+      "sha256": "d97aa5d497b194e58145764acf557323bf798256fe19bd72e713dae215a6f2cc",
+      "width": 1280,
+      "height": 757
+    },
+    {
+      "name": "chat-options-client-320-conversation.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-client-320-conversation.png",
+      "sha256": "c70190c4d1b6cfdc46e65e87bf2d6670afb3da7473d8eaf3bdbc2dc13eab0daa",
+      "width": 320,
+      "height": 844
+    },
+    {
+      "name": "chat-options-admin-1280-inbox.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-admin-1280-inbox.png",
+      "sha256": "68c1ef196cad17bb8cb9b4ee53e78113cddb2a9a7f02529f059e0af78364f02d",
+      "width": 1280,
+      "height": 757
+    },
+    {
+      "name": "chat-options-admin-320-inbox.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/chat-options-admin-320-inbox.png",
+      "sha256": "c4df093d61dc24c8291a66bf14756370eaaacdddab0635d037d447f1cd64ee7d",
+      "width": 320,
+      "height": 844
+    },
+    {
+      "name": "admin-home-1280.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/admin-home-1280.png",
+      "sha256": "5c6c5c155ac04377e6ad0b6dedb06eb0cf41921bbd890d623ade10ef3ae20f41",
+      "width": 1280,
+      "height": 757
+    },
+    {
+      "name": "admin-home-320.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/admin-home-320.png",
+      "sha256": "64f06ae58e2445dbfceac402362c6417d819b6892711bf1fc8778a7f5c14f0f0",
+      "width": 320,
+      "height": 844
+    },
+    {
+      "name": "client-home-1280.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/client-home-1280.png",
+      "sha256": "9fc13dbe28eff3814124b37d95a46f1467e3d8086a3f3dfd80dc16f428a886d6",
+      "width": 1280,
+      "height": 757
+    },
+    {
+      "name": "client-home-320.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/client-home-320.png",
+      "sha256": "6d1903bf83ea7d1099e47ea41afd3698a31a683962e8a60273f11f59c1e94869",
+      "width": 320,
+      "height": 844
+    },
+    {
+      "name": "home-en-1280-top.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/home-en-1280-top.png",
+      "sha256": "4fa6bf7858c74ab621e7246c11b0c64cc370dd87d2beab2d4e60c1e9d2874af2",
+      "width": 1280,
+      "height": 757
+    },
+    {
+      "name": "home-en-320-top.png",
+      "file": "/workspace/scratch/bb431be72395/ux184/pr131-screenshots/home-en-320-top.png",
+      "sha256": "b08f607cca88a88d12197f0e6c0b052a030d5c0484d96052302a1deab1a7e8bb",
+      "width": 320,
+      "height": 844
+    }
+  ],
+  "observations": [
+    {
+      "topic": "One Options button",
+      "result": "observed",
+      "details": "At320px and1280px, client and selected-admin conversation screenshots each show one visible vertical-ellipsis opener in the conversation header. Administrator inbox screenshots show one opener in the account header before selection. No second visible opener is present in these images."
+    },
+    {
+      "topic": "Options content and client access",
+      "result": "observed",
+      "details": "Both roles show a single Options panel with Fermer, their appropriate account destination, the language flag, logout, Photos and collapsed Autres options. The visible panel labels fit both widths. Client Mon accès appears in the panel; it is absent from the desktop client sidebar and from the closed conversation header."
+    },
+    {
+      "topic": "Administrator navigation",
+      "result": "observed",
+      "details": "The selected-admin Options panel contains Accueil admin. Closed conversation/inbox screenshots have no duplicate administration navigation links in their header. Administrator-home captures retain the dashboard and primary Ouvrir les conversations action while omitting the former redundant Accueil admin/Messagerie header links."
+    },
+    {
+      "topic": "Language flags",
+      "result": "observed",
+      "details": "A clear UK flag appears on French menus and client/admin home views at320/1280px; a clear French tricolour appears on the English neutral home at both widths. No EN/FR text or missing-glyph box appears in these captured language controls."
+    },
+    {
+      "topic": "Brand and layout",
+      "result": "observed",
+      "details": "Jessie logo/text remain visible on desktop and home/inbox views. Options panels stay within the captured320px width, with distinct close control and legible menu rows. Dashboard navigation cards and visible home controls remain contained within their view."
+    },
+    {
+      "topic": "Profile editor",
+      "result": "not_captured_in_this_artifact",
+      "details": "No profile-editor PNG exists among the24 entries. The captured Autres options disclosures are collapsed, so this review does not visually certify hidden profile actions or the editor. Root explicitly retained the native FR/EN/FR/profile UI assertions as separate behavioral evidence; no new screenshot/test/source change was requested or performed."
+    }
+  ],
+  "openBlockingVisualFindings": [],
+  "limits": [
+    "Sixteen of24 supplied PNGs inspected directly; the ten chat Options states, four client/admin home states and two English neutral-home top states are listed with exact hashes. Remaining archive entries were downloaded and hashed but are not claimed visually reviewed.",
+    "Static synthetic screenshots establish visible presentation only. They do not prove interaction, focus movement, translation after switching, screen-reader behavior, hidden disclosure content or actual hosted/mobile-device operation.",
+    "The profile editor has no dedicated screenshot. No visual certification of that editor or claim that the failed Chrome job passed is made.",
+    "Artifact is tied to headcc08f6cd and the stated PR run. Later prepared/qualified revisions require their own CI record; no later-head qualification is inferred here.",
+    "No app/source/Git modification, CI rerun, new capture, cloud browser, real site, real account or production operation by this reviewer."
+  ]
+}

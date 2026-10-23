@@ -22,7 +22,7 @@ catch(error){if(error.name==='AbortError')window.__taskCancelled.push(path);thro
 
 async function fixture({ uncertain = false } = {}) {
   const resources = new Map(await Promise.all(assets.map(async name => ["/" + name, await readFile(new URL(`../../public/${name}`, import.meta.url))])));
-  const state = { owner: 1, tasks: new Map(), writes: [], requests: [], commits: new Map(), dropped: false, errors: [], denied: null, postDenied: null, holdLists: false, pendingLists: [] };
+  const state = { owner: 1, tasks: new Map(), writes: [], requests: [], commits: new Map(), dropped: false, errors: [], denied: null, postDenied: null, holdLists: false, pendingLists: [], holdSummaries: false, pendingSummaries: [] };
   const session = () => ({ user: { id: id(8000 + state.owner), role: "admin", pseudonym: "Synthetic Jessie" },
     csrf: state.owner === 1 ? "A".repeat(43) : "B".repeat(42) + "A", expiresAt: Date.now() + 8 * 3600000 });
   const profile = () => ({ conversationId, client: { id: id(2), pseudonym: "Client synthétique", email: "synthetic@example.invalid", status: "active" },
@@ -36,7 +36,11 @@ async function fixture({ uncertain = false } = {}) {
     if (path === "/api/auth/session") { json(state.denied ?? 200, state.denied ? { error: "unauthorized" } : session()); return; }
     if (path === "/api/auth/logout") { for await (const _chunk of request) { /* Synthetic logout. */ } json(200, {}); return; }
     if (path === `/api/admin/crm/conversations/${conversationId}`) { json(200, profile()); return; }
-    if (path === "/api/admin/crm/tasks/summary") { json(200, { dueCount: state.owner === 1 ? [...state.tasks.values()].filter(task => !task.done && task.dueAt !== null && task.dueAt <= Date.now()).length : 0, serverTime: Date.now() }); return; }
+    if (path === "/api/admin/crm/tasks/summary") {
+      const summary = { dueCount: state.owner === 1 ? [...state.tasks.values()].filter(task => !task.done && task.dueAt !== null && task.dueAt <= Date.now()).length : 0, serverTime: Date.now() };
+      if (state.holdSummaries) { state.pendingSummaries.push(() => json(200, summary)); return; }
+      json(200, summary); return;
+    }
     if (path === "/api/admin/crm/tasks" && request.method === "GET") {
       const filter = url.searchParams.get("filter") ?? "open", afterId = url.searchParams.get("afterId"), limit = Number(url.searchParams.get("limit") ?? 50);
       const selected = state.owner === 1 ? [...state.tasks.values()].filter(task => (!url.searchParams.get("conversationId") || task.conversationId === url.searchParams.get("conversationId"))
@@ -90,6 +94,7 @@ async function openPage(source, width = 320, language = "fr") {
   } catch (error) { await page.close(); throw error; }
 }
 async function chooseFilter(page, value) {
+  await waitUntil(() => page.execute("return !document.getElementById('task-filter').disabled"), "task list ready for an explicit filter change");
   await page.execute("const filter=document.getElementById('task-filter');filter.value=arguments[0];filter.dispatchEvent(new Event('change',{bubbles:true}))", value);
 }
 async function setDue(page, offset) {
@@ -118,9 +123,13 @@ test("Chrome mobile FR/EN: create, postpone, complete and reopen a private clien
       await waitUntil(() => page.execute("return document.querySelectorAll('.task-card').length===1"), "overdue task is available in due view");
       await page.click('[data-task-action="postpone"]');
       await waitUntil(() => page.execute("return document.getElementById('task-dialog').open"), "postpone editor opens");
+      source.state.holdSummaries = true;
       await setDue(page, 24 * 3600000); await page.click("#save-task");
       await waitUntil(() => source.state.tasks.get(taskId).version === "2" && page.execute("return !document.getElementById('task-dialog').open && document.querySelectorAll('.task-card').length===0"), "postponed task leaves the due view");
       assert.ok(source.state.tasks.get(taskId).dueAt > Date.now());
+      await waitUntil(() => source.state.pendingSummaries.length === 1, "save summary is deliberately held after the list refresh");
+      assert.equal(await page.execute("return ['task-filter','refresh-tasks','more-tasks'].every(id=>document.getElementById(id).disabled)"), true, "list controls stay frozen until the save summary finishes");
+      source.state.holdSummaries = false; source.state.pendingSummaries.shift()();
       await chooseFilter(page, "open"); await waitUntil(() => page.execute("return document.querySelectorAll('.task-card').length===1"), "future task remains open");
       await page.click('[data-task-action="complete"]');
       await waitUntil(() => source.state.tasks.get(taskId).done && page.execute("return !document.getElementById('task-dialog').open && document.querySelectorAll('.task-card').length===0"), "completed task leaves open view");

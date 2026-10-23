@@ -1,0 +1,19 @@
+{
+  "type": "jm184-merged-main",
+  "pr": 131,
+  "prUrl": "https://github.com/fredbuhr/jessiemessage/pull/131",
+  "qualifiedPrHead": "304923ad2be78ab3c6fe8f250ef814db36a9c886",
+  "qualifiedPrRun": 39876426084,
+  "mainSource": "a0a8a6a048654b1700b14738edfa99d3ee4cfc66",
+  "tree": "4d64087c8c01413da0569995977cd7968b83717b",
+  "parents": [
+    "c786ea592e331780aaac16beea6ea546897c8ca4",
+    "304923ad2be78ab3c6fe8f250ef814db36a9c886"
+  ],
+  "expectedHeadMerge": true,
+  "merged": true,
+  "mainRun": 39877314782,
+  "mainQualification": "pending_at_merge",
+  "productionVersion": "1.8.3",
+  "hostedActionPerformed": false
+}
