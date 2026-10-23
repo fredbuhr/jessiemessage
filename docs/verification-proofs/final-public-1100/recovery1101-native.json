@@ -1,0 +1,35 @@
+{
+  "status": "bounded_recovery_native_qualified",
+  "operator": "e279b4677f9d300eb7ad92c3e51deb423762739c",
+  "tree": "8b5f42533b7923ee3b74498e66d0818799119353",
+  "branch": "ops/recover-v1.10.1",
+  "scriptSha256": "c5d4ad602a17eb3799d9b228c68e4f2f56105c794c01b0625273e47cd9b6c41f",
+  "run": 40015619392,
+  "attempt": 1,
+  "conclusion": "success",
+  "completedAtUtc": "2026-10-23T19:58:57Z",
+  "job": 120626802416,
+  "tests": 6,
+  "passes": 6,
+  "omissions": 0,
+  "nodeVersion": "v24.22.1",
+  "allowedChanges": [
+    "new candidate dependency root mode2700 to0700 after complete validation",
+    "exclusive creation of absent staging1101 receipt"
+  ],
+  "noStage": true,
+  "noCopy": true,
+  "noDeletion": true,
+  "noCheck": true,
+  "noRuntimeStart": true,
+  "noManagerChange": true,
+  "noSQL": true,
+  "activeFilesPreserved": true,
+  "hostedExecutionConfirmed": false,
+  "log": {
+    "file": "recovery1101-job120626802416.log.gz",
+    "sha256": "3f7d2530bd84ebf1267b17c0a887746e9480f674934c1a1e611748a372d2e78f",
+    "uncompressedSha256": "423095c912e7b16a01989345402877da32d2e3d83351d2e0211e5f8c3a49aa30",
+    "roundTripVerified": true
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "provenance": "User terminal output in current conversation; no direct private host access inferred",
+  "inspector": "3b78d417b29dd28a231401edfe48913e19146026",
+  "receipt": {
+    "status": "release1101_read_only_diagnostic",
+    "noResume": true,
+    "noCheck": true,
+    "noRuntimeAction": true,
+    "outputs": {
+      "checkout": {
+        "present": true,
+        "kind": "directory",
+        "owned": true,
+        "mode": "2700",
+        "empty": null
+      },
+      "start": {
+        "present": true,
+        "kind": "file",
+        "owned": true,
+        "mode": "0700",
+        "empty": false
+      },
+      "check": {
+        "present": true,
+        "kind": "file",
+        "owned": true,
+        "mode": "0700",
+        "empty": false
+      },
+      "log": {
+        "present": true,
+        "kind": "file",
+        "owned": true,
+        "mode": "0600",
+        "empty": true
+      },
+      "prelog": {
+        "present": true,
+        "kind": "file",
+        "owned": true,
+        "mode": "0600",
+        "empty": true
+      },
+      "receipt": {
+        "present": false
+      }
+    },
+    "pins": {
+      "stage1100": {
+        "ok": true
+      },
+      "checkpoint": {
+        "ok": true
+      },
+      "start1100": {
+        "ok": true
+      },
+      "check1100": {
+        "ok": true
+      },
+      "nodeFile": {
+        "ok": true
+      }
+    },
+    "privateDirectory": {
+      "ok": true
+    },
+    "git": {
+      "baseSource": {
+        "ok": true
+      },
+      "baseTree": {
+        "ok": true
+      },
+      "baseClean": {
+        "ok": true
+      },
+      "tag1101": {
+        "ok": true
+      },
+      "tree1101": {
+        "ok": true
+      }
+    },
+    "lockTransition": {
+      "ok": true
+    },
+    "dependencyLink": {
+      "present": true,
+      "kind": "symlink",
+      "owned": true,
+      "mode": "0777",
+      "empty": null
+    },
+    "dependencyRoot": {
+      "present": true,
+      "kind": "directory",
+      "owned": true,
+      "mode": "2700",
+      "empty": null
+    },
+    "inventory": {
+      "ok": true
+    },
+    "installed": {
+      "ok": true
+    },
+    "installedPackages": {
+      "mariadb": {
+        "ok": true
+      },
+      "nodemailer": {
+        "ok": true
+      },
+      "otpauth": {
+        "ok": true
+      },
+      "sharp": {
+        "ok": true
+      },
+      "web-push": {
+        "ok": true
+      }
+    },
+    "hiddenLockMetadata": {
+      "present": true,
+      "kind": "file",
+      "owned": true,
+      "mode": "0600",
+      "empty": false
+    },
+    "hiddenLock": {
+      "ok": true
+    }
+  }
+}

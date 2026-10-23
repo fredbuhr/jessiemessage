@@ -1,0 +1,56 @@
+{
+  "atUtc": "2026-10-23T19:52:34.335013+00:00",
+  "status": "operator_setgid_defect_reproduced_minimal_restrictive_fix_validated",
+  "helperSha256": "293f06004d79d9b32a891473c7514b74eda58e5798f083561540a0108c58806b",
+  "scope": "Real isolated937-file npm1100 dependency tree copied with actual helper under a parent directory mode2700, same restrictive umask077 as preparer. No repository or hosted mutation.",
+  "parentMode": "0o2700",
+  "unmodifiedHelper": {
+    "targetMode": "0o2700",
+    "copyReturnedSuccessfully": true,
+    "preparerPrivateDirectory": {
+      "accepted": false,
+      "exception": "StagingRefused",
+      "code": "private_directory"
+    },
+    "nodemailerRootMode": "0o2700"
+  },
+  "inMemoryMinimalFix": {
+    "lineAddedAfterTargetMkdir": "target.chmod(0o700)",
+    "targetMode": "0o700",
+    "copyReturnedSuccessfully": true,
+    "preparerPrivateDirectoryAccepted": true,
+    "nodemailerRootMode": "0o700",
+    "scopeOfChange": "Only normalize the newly created target root to exact0700 immediately after mkdir. Keep strict private_directory validator; do not chmod any active/source dependency directory. Clear inherited setgid before descendants are created."
+  },
+  "sourceInventoryPreserved": true,
+  "oldTreeSha256": "466c95d8e596e3a34b8f76723a2731f422c3d15bf5cb9ccdc9566592ec62fa6d",
+  "originalResult": {
+    "strategy": "private-copy-replace-locked-leaf",
+    "oldLockSha256": "0335cf45fc26270e490f57f0110c199448472d226564604c53737d4a264a291b",
+    "newLockSha256": "814a1327736c537457282511784eeeee6cb9aacff4736ed02d85f57988134b15",
+    "tarballIntegrity": "sha512-EsMnOR2oRv4LGnWvHgcVYkkQ4O2j8KO4WTw6l+PHR4sOXo8SAgIraxtEnGDmotjbhv0hDsu3IuDIFZm8iXwO4A==",
+    "oldTreeSha256": "466c95d8e596e3a34b8f76723a2731f422c3d15bf5cb9ccdc9566592ec62fa6d",
+    "newTreeSha256": "09b1e3eb84a8e7e0ca7a88b74bdf217473276afaace047d73c139275fdeb7d69"
+  },
+  "correctedResult": {
+    "strategy": "private-copy-replace-locked-leaf",
+    "oldLockSha256": "0335cf45fc26270e490f57f0110c199448472d226564604c53737d4a264a291b",
+    "newLockSha256": "814a1327736c537457282511784eeeee6cb9aacff4736ed02d85f57988134b15",
+    "tarballIntegrity": "sha512-EsMnOR2oRv4LGnWvHgcVYkkQ4O2j8KO4WTw6l+PHR4sOXo8SAgIraxtEnGDmotjbhv0hDsu3IuDIFZm8iXwO4A==",
+    "oldTreeSha256": "466c95d8e596e3a34b8f76723a2731f422c3d15bf5cb9ccdc9566592ec62fa6d",
+    "newTreeSha256": "8f622700ae2f6f8580ba459d13010fd851b8ee696f4935853672c0ee2842d23a"
+  },
+  "archive": {
+    "sha256": "05e89be54d52e646ef93f1842c5fa9c45345485e786d3b32db6afcaac61ecc04",
+    "lockedSha512Validated": true,
+    "savedForReuse": "/workspace/scratch/bb431be72395/dependency-real1101/nodemailer-10.1.4.tgz"
+  },
+  "implementationLines": {
+    "helperTargetMkdir": 223,
+    "preparerStrictMode": 102,
+    "preparerPostCopyGuard": 277
+  },
+  "causalAssessment": "A concrete operator defect is established. On a setgid filesystem, mkdir0700 inherits setgid and yields2700; copy succeeds but the preparer rejects the new root in its exact0700 guard after launchers/logs are created and before the staging receipt. This exactly matches the reported artifact shape. Hosted failing instruction is inferred from the diagnostic state until a specific exception code is observed.",
+  "hostNoMutation": true,
+  "repositoryNoMutation": true
+}

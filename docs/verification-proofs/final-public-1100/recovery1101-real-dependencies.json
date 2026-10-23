@@ -1,0 +1,39 @@
+{
+  "atUtc": "2026-10-23T19:57:48.186320+00:00",
+  "status": "pass_real_setgid_tree_readonly",
+  "prototypeSha256": "c5d4ad602a17eb3799d9b228c68e4f2f56105c794c01b0625273e47cd9b6c41f",
+  "pinnedHelperSha256": "293f06004d79d9b32a891473c7514b74eda58e5798f083561540a0108c58806b",
+  "call": "validate_dependencies(oldroot,newroot,old_lock,new_lock,old_bytes,new_bytes,official_archive,pinned_helper)",
+  "oldRoot": "/workspace/scratch/bb431be72395/dependency-real1101/baseline1100/node_modules",
+  "newRoot": "/workspace/scratch/bb431be72395/dependency-real1101/setgid-repro/original",
+  "targetModeBeforeAndAfter": "0o2700",
+  "leafEntries": 206,
+  "leafDirectoryModes": [
+    "0o2700"
+  ],
+  "leafFileModes": [
+    "0o600"
+  ],
+  "checksValidated": [
+    "Exact outside-leaf inventory",
+    "Official archive leaf paths, kinds and bytes",
+    "Leaf directory2700/file0600 modes",
+    "Canonical normalized hidden lock bytes",
+    "Installed versions1100/1101",
+    "No root alias, candidate hardlinks or unexpected file ownership",
+    "Old inventory unchanged during validation"
+  ],
+  "oldAndNewInventoriesUnchanged": true,
+  "receipt": {
+    "strategy": "private-copy-replace-locked-leaf",
+    "oldLockSha256": "0335cf45fc26270e490f57f0110c199448472d226564604c53737d4a264a291b",
+    "newLockSha256": "814a1327736c537457282511784eeeee6cb9aacff4736ed02d85f57988134b15",
+    "tarballIntegrity": "sha512-EsMnOR2oRv4LGnWvHgcVYkkQ4O2j8KO4WTw6l+PHR4sOXo8SAgIraxtEnGDmotjbhv0hDsu3IuDIFZm8iXwO4A==",
+    "oldTreeSha256": "466c95d8e596e3a34b8f76723a2731f422c3d15bf5cb9ccdc9566592ec62fa6d",
+    "newTreeSha256": "09b1e3eb84a8e7e0ca7a88b74bdf217473276afaace047d73c139275fdeb7d69"
+  },
+  "normalizationCalled": false,
+  "hostAccess": false,
+  "repositoryMutation": false,
+  "limits": "One targeted dependency-validation compatibility check only. Does not validate the complete recovery entrypoint or attest any hosted mutation."
+}
