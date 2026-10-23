@@ -1,7 +1,7 @@
 {
   "type": "experience190-progress",
   "version": 2,
-  "status": "persistent_maintenance_targeted_audit_complete_full_preflight_and_Manager_evidence_needed",
+  "status": "full_messaging_preflight_passed_awaiting_actual_Manager_fields_and_execution_error",
   "release": {
     "version": "1.9.0",
     "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
@@ -132,7 +132,9 @@
     "recordedStartup190": false,
     "emptyLogProof": "jm190-hosted-empty-runtime-log.json",
     "currentManagerState": "unobserved_after_latest_attempt",
-    "startupLogEmptyEvidenceTiming": "before_latest_attempt"
+    "startupLogEmptyEvidenceTiming": "before_latest_attempt",
+    "fullMessagingPreflightPassed": true,
+    "fullMessagingPreflightProof": "jm190-hosted-full-preflight.json"
   },
   "limits": [
     "Synthetic Chrome mobile/desktop and multiple browser sessions; no physical phone or two physical devices",
@@ -140,13 +142,13 @@
     "No production190 verification or new hosted backup trial; previous deferred work remains deferred"
   ],
   "nextAction": {
-    "only": "Read-only full messaging preflight once; user supplies JSON and actual Manager execution-directory/port/Build/Run plus latest execution error without retry",
+    "only": "User supplies actual saved Manager execution directory/port/Build/Run and current state/execution console screenshots, no restart or SSH",
     "instructions": "../operations-release190.md",
     "doNotReplayUpgrade": true,
     "doNotRerunPreparation": true,
-    "doNotRerunLocalCHECKs": true,
+    "doNotRerunPreflight": true,
     "doNotStartAgainBeforeEvidence": true,
-    "following": "Correct only demonstrated cause; bounded190 startup identity then final metadata writer"
+    "following": "Correct only observed cause, bounded190 startup identity then final metadata writer"
   },
   "historyProofs": [
     "jm190/pr-native-initial.json",
@@ -229,7 +231,8 @@
     "proof": "jm190-startup-targeted-audit.json",
     "report": "../AUDIT-DEMARRAGE-190.md",
     "fullPreflightPrepared": true,
-    "fullPreflightHostedExecuted": false,
-    "newCaptureShowsManagerState": false
+    "fullPreflightHostedExecuted": true,
+    "newCaptureShowsManagerState": false,
+    "fullPreflightHostedPassed": true
   }
 }

@@ -1,0 +1,82 @@
+{
+  "type": "jm190-hosted-full-messaging-preflight",
+  "reportedDate": "2026-10-23",
+  "evidenceKind": "USER_REPORTED_JSON",
+  "reportedResult": {
+    "status": "release190_full_preflight_passed",
+    "phases": {
+      "database": "passed",
+      "schema": "passed",
+      "photos": "passed",
+      "videos": "passed"
+    },
+    "databaseChecks": [
+      {
+        "name": "config",
+        "status": "pass"
+      },
+      {
+        "name": "connection",
+        "status": "pass"
+      },
+      {
+        "name": "identity",
+        "status": "pass"
+      },
+      {
+        "name": "engine",
+        "status": "pass"
+      },
+      {
+        "name": "transport",
+        "status": "pass"
+      },
+      {
+        "name": "privileges",
+        "status": "pass"
+      },
+      {
+        "name": "history",
+        "status": "pass"
+      },
+      {
+        "name": "schema_reads",
+        "status": "pass"
+      },
+      {
+        "name": "cleanup",
+        "status": "pass"
+      }
+    ],
+    "phaseCode": null,
+    "runtimeStarted": false,
+    "migrated": false,
+    "filesWritten": false
+  },
+  "identityContext": {
+    "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
+    "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+    "node": "v24.22.1",
+    "pinnedHelper": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
+    "mode": "check",
+    "environment": "clean SSH helper environment; Manager environment unobserved"
+  },
+  "review": {
+    "allFourPhasesPassed": true,
+    "allNineDatabaseChecksPassed": true,
+    "noReportedSideEffect": true,
+    "independentReviewers": [
+      "root",
+      "followup190"
+    ],
+    "commandEchoIsTruncatedButCompleteResultIsCoherent": true
+  },
+  "limits": [
+    "No private host access by agent",
+    "Does not prove current Manager execution directory, port, Build/Run or status",
+    "Does not instantiate server factories, bind HTTP listener or prove proxy routing",
+    "Older empty190 log is not a reading after latest startup attempt",
+    "No physical device or real feature test acquired"
+  ],
+  "nextAction": "User supplies screenshots of actual saved Manager directory/port/Build/Run and current status/execution console; no additional SSH, SQL, localCHECK, install or Run replay before observation."
+}

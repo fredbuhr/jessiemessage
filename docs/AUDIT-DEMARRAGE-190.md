@@ -22,12 +22,12 @@ La [FAQ2535](https://www.infomaniak.com/fr/support/faq/2535/modifier-la-configur
 
 Une [maintenance Node.js officielle](https://infomaniakstatus.com/fr/Jnqlo5Qrxr/) court depuis le22octobre avec une fin estimée au30octobre et une interruption annoncée de30secondes à5minutes par site. L’annonce ne prouve pas que le site239143 soit actuellement affecté et n’explique pas à elle seule un blocage durable. Ne pas attendre arbitrairement la fin générale de la maintenance, changer de Node ou contacter le support par défaut.
 
-## Reprise KISS
+## Résultat complet acquis et reprise KISS
 
-1. Faire une seule lecture complète du précontrôle de messagerie existant, avec source/Node épinglés et un garde refusant toute ouverture de serveur. [Commande exacte](operations-release190.md). Ce n’est pas un replay du CHECK local déjà réussi.
-2. Recueillir une capture des champs réellement enregistrés : dossier, port, Build et Run, ainsi que l’erreur de la console Exécution du Manager. Ne pas cliquer Run/Build pour la produire.
-3. Si une phase échoue, corriger ce seul défaut. Ne pas attribuer un manque de privilège sur la nouvelle table sans résultat `privileges`/`schema_reads` ; un grant partagé sur la base couvre les nouvelles tables.
-4. Si tout passe, examiner le lancement Manager/lanceur, son environnement, puis l’écoute et le proxy. Le précontrôle complet ne prouve pas l’instanciation du serveur ou son port effectif.
-5. Après correction démontrée, un démarrage190 borné, l’identité réelle puis le writer déjà qualifié restent la suite.
+Le [résultat utilisateur](verification-proofs/jm190-hosted-full-preflight.json) confirme les quatre phases et les neuf contrôles SQL en succès, sans démarrage, migration ni écriture. Le précontrôle complet n’est plus une étape à exécuter. Aucun manque de droit sur profile_preferences ou problème de schéma/stockage n’est détecté dans l’environnement SSH de ce contrôle.
 
-Aucun nouveau service, audit général, réinstallation, modification de droits, migration ou patch produit n’est justifié par la seule capture de maintenance. La récupération de ces résultats est une action personnelle nécessaire faute d’accès privé de l’agent ; aucun navigateur cloud ou secret n’est demandé.
+1. Recueillir les captures Manager des champs réellement enregistrés : dossier, port, Build et Run, puis état et console Exécution, sans cliquer Run/Build. Aucune autre commande SSH n’est nécessaire avant ce relevé.
+2. Examiner le lancement Manager/lanceur et son environnement ; un échec de création des services serveur, d’écoute HTTP ou de proxy reste possible après le précontrôle. Corriger le seul défaut démontré, sans toucher SQL ou dépendances par hypothèse.
+3. Après correction, un démarrage190 borné, l’identité réelle puis le writer déjà qualifié restent la suite.
+
+Aucun nouveau service, audit général, réinstallation, changement de droits, migration ou patch produit n’est justifié par la seule capture de maintenance. Les paramètres Manager restent inaccessibles à l’agent sans action personnelle du propriétaire ; aucun navigateur cloud ou secret n’est demandé.

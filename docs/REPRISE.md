@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**23octobre2026 — maintenance persistante après nouvelle tentative rapportée ; diagnostic complet requis.** SQL38 et CHECK locaux185/190 restent acquis. Le journal vide et l’ancien Build incorrect sont historiques ; le statut et les champs Manager actuels ne sont pas visibles dans la nouvelle capture. [Audit ciblé](AUDIT-DEMARRAGE-190.md). Aucun défaut produit précis encore établi. Prochaine action : précontrôle complet de messagerie en lecture seule et capture des paramètres/erreur Manager, sans nouveau démarrage, migration ou installation.
+**23octobre2026 — précontrôle complet190 réussi en SSH ; paramètres/erreur Manager à constater.** Les quatre phases database/schema/photos/videos et les neuf contrôles SQL passent selon le résultat utilisateur, sans démarrage ni écriture. SQL38 et les CHECK locaux185/190 restent acquis. La création du serveur, son écoute HTTP et le routage public ne sont pas testés par ce contrôle. Prochaine action : captures des champs dossier/port/Build/Run réellement enregistrés et de l’état/console Exécution du service239143. Aucun nouveau SSH, SQL, CHECK ou Run avant ce relevé. [Preuve](verification-proofs/jm190-hosted-full-preflight.json).
 
 ## Évolution 1.9.0 — codée, testée et publiée ; activation en attente
 
@@ -22,7 +22,9 @@ L’[interruption](verification-proofs/jm190-hosted-interruption.json) est réso
 
 **Nouveau blocage rapporté après la consigne de correction :** la capture montre toujours la maintenance Infomaniak, sans paramètres ou statut Node. [Audit](AUDIT-DEMARRAGE-190.md) : aucun défaut de propagation experience ou de dépendance établi ; les CHECK locaux acquis ne testent pas tous les préalables réels de messagerie. Certains échecs du child perdent leur code précis.
 
-**Prochaine action : une seule exécution du précontrôle complet existant en mode check**, source190/Node épinglés, sans écoute et avec garde startServer ; [commande](operations-release190.md). Rapporter son JSON et la capture des champs Manager enregistrés (dossier, port, Build/Run) avec dernière erreur Exécution, sans Run/Build supplémentaire. La maintenance de sécurité officielle annoncée sur Node est une possibilité générale, pas une preuve pour cet hôte. Le résultat exact décidera de la correction ; ne pas rejouer SQL ou CHECK local, changer les grants ou installer des dépendances à l’aveugle.
+**Précontrôle complet acquis**, database/schema/photos/videos `passed`, neuf contrôles SQL `pass`, sans démarrage, migration ou écriture. [Résultat et limites](verification-proofs/jm190-hosted-full-preflight.json). Aucun problème de droits/schéma/stockage n’est détecté par ce contrôle dans son contexte SSH ; l’environnement et le lancement Manager restent distincts.
+
+**Prochaine action unique : constater la configuration et l’erreur réelles du Manager**, sans nouvelle commande SSH ou démarrage. [Liens et consignes](operations-release190.md) : capture dossier d’exécution, port, Build et Run complets ; puis état et console Exécution. La capture de maintenance seule, l’ancien champ Build incorrect et l’ancien journal vide ne décrivent pas ce nouvel état. Après ces observations, corriger le seul défaut démontré et reprendre un démarrage borné.
 
 Le writer final est déjà qualifié9/9 sous Node24.22.1, [run39972263974](https://github.com/fredbuhr/jessiemessage/actions/runs/39972263974), opérateur `8690a8255e1297f288f7eae8ab25811bf63d2262`, SHA256 `40cc11b177de7199d07b7552d440fcf7990a0f8e5e334c885ef8fca93c7d93b8` ; [preuve](verification-proofs/jm190/writer-final-native.json). Sa qualification n’est pas une exécution hôte. L’enregistrement reste conditionné à l’identité190 réelle.
 
@@ -138,7 +140,7 @@ La [sauvegarde privée D01/D08](verification-proofs/jm182-hosted-privacy-notes.j
 
 Le service Node **239143**, nommé **recette.jessiemessage.com** dans le Manager, dessert aussi **jessiemessage.com**, avec **le même runtime et la même base**. Recette est une origine de compatibilité pour les anciens appareils/PWA/Push, jamais une cible de qualification destructive. Accès directs : [SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), [Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), [état du service](https://jessiemessage.com/admin/readiness), [tâches](https://jessiemessage.com/admin/tasks), [connexion admin directe](https://jessiemessage.com/admin/login).
 
-Les commandes ci-dessous sont **la cible correcte190, à appliquer après le diagnostic complet et la correction démontrée**. La capture montre actuellement le start dans Build et ne montre pas Run. Les deux CHECK sont acquis ; le démarrage190 réel reste incertain.
+Les commandes ci-dessous sont **la cible correcte190, à appliquer après le relevé Manager et la correction démontrée**. La capture montre actuellement le start dans Build et ne montre pas Run. Les deux CHECK sont acquis ; le démarrage190 réel reste incertain.
 
 | Champ Manager | Cible190 après les CHECK réussis |
 | --- | --- |
