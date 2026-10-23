@@ -1,0 +1,382 @@
+{
+  "status": "main_final_artifact_compared_no_blocking_visual_regression_observed",
+  "reviewer": "versions_reprise/second_visual_review",
+  "timestamp": "2026-10-23T00:44:06.036022+00:00",
+  "identity": {
+    "runId": 39879190936,
+    "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39879190936",
+    "runNumber": 741,
+    "runAttempt": 1,
+    "event": "push",
+    "branch": "main",
+    "head": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+    "artifactId": 12469678556,
+    "artifactName": "homepage-render",
+    "artifactCreatedAt": "2026-10-23T00:41:38Z",
+    "artifactAPIDigest": "sha256:c3b2760b3745b40e23a19dfce09918b562eb89a900231af01675d0ed41aad401",
+    "artifactAPIBytes": 3721998
+  },
+  "identityChecks": {
+    "pushMainRunHeadTreeVerifiedViaGitHubRunAPI": true,
+    "artifactWorkflowRunAndHeadMatched": true,
+    "mainTreeMatchesPR132TreeSuppliedByRoot": true,
+    "zipSha256AndSizeMatchArtifactAPIBeforeExtraction": true
+  },
+  "artifact": {
+    "zip": "/workspace/scratch/bb431be72395/ux184/main-final-homepage-render.zip",
+    "sha256": "sha256:c3b2760b3745b40e23a19dfce09918b562eb89a900231af01675d0ed41aad401",
+    "bytes": 3721998,
+    "downloadExitCode": 0,
+    "safeExtraction": "24unique flat PNG names match prior-main set; no traversal/slash/backslash/symlink; extracted total below20MiB; archive digest verified before extraction.",
+    "manifest": "/workspace/scratch/bb431be72395/ux184/main-final-screenshots-manifest.json",
+    "manifestSha256": "c813080767dd63f2886564c7e58388653a029f2f5c3b3b6a2c2728210704c49f"
+  },
+  "comparison": {
+    "baselineRunId": 39877314782,
+    "baselineHead": "a0a8a6a048654b1700b14738edfa99d3ee4cfc66",
+    "baselineManifest": "/workspace/scratch/bb431be72395/ux184/main-screenshots-manifest.json",
+    "baselineManifestSha256": "f496b345611da6c70e618ee0050619e074133ed0e1a7af7c25d1c1a700528c0e",
+    "baselineVisualReview": "/workspace/scratch/bb431be72395/ux184/visual-review-main.json",
+    "baselineVisualReviewSha256": "68c6576d4378219accfda39383b1e7688433bfc45c45799df22171fcb33dbb77",
+    "comparedFiles": 24,
+    "byteIdenticalFiles": 16,
+    "differentFiles": 8,
+    "allPNGDimensionsUnchanged": true,
+    "differences": [
+      {
+        "name": "admin-home-320-bottom.png",
+        "file": "/workspace/scratch/bb431be72395/ux184/main-final-screenshots/admin-home-320-bottom.png",
+        "bytes": 40978,
+        "sha256": "34ea60cb2e4dd475562b032a5c4749ab16eb7c5ee82d56106d3d1d5712f89b6a",
+        "baselineFile": "/workspace/scratch/bb431be72395/ux184/main-screenshots/admin-home-320-bottom.png",
+        "baselineSha256": "577aa79414852562ac9bc247dc496dfe6078df2424a61f659728e07d928d1ad2",
+        "byteIdentical": false,
+        "dimensions": [
+          [
+            320,
+            844
+          ],
+          [
+            320,
+            844
+          ]
+        ],
+        "differenceBBoxExclusive": [
+          316,
+          497,
+          320,
+          840
+        ],
+        "differentPixels": 1372,
+        "visuallyReviewed": true,
+        "observation": "Only the native right-edge scrollbar differs:1372pixels within bbox[316,497,320,840]. Every application-content pixel in x0–315 is identical.",
+        "timestampRegionExcludedForSmallPaintDelta": null,
+        "outsideTimestampPixels": 1372,
+        "outsideTimestampMaxChannelDelta": 98,
+        "applicationArea0to316PixelIdentical": true
+      },
+      {
+        "name": "chat-options-admin-1280-conversation.png",
+        "file": "/workspace/scratch/bb431be72395/ux184/main-final-screenshots/chat-options-admin-1280-conversation.png",
+        "bytes": 110890,
+        "sha256": "700bf7f4ac8e0c136af9e144bd54d0ee0972defc73cb12b193f210c3770eff76",
+        "baselineFile": "/workspace/scratch/bb431be72395/ux184/main-screenshots/chat-options-admin-1280-conversation.png",
+        "baselineSha256": "37e842687221be66c9a4f96a0d2762a1f5ad94234ce040b899db8badb0b00564",
+        "byteIdentical": false,
+        "dimensions": [
+          [
+            1280,
+            757
+          ],
+          [
+            1280,
+            757
+          ]
+        ],
+        "differenceBBoxExclusive": [
+          168,
+          272,
+          1249,
+          727
+        ],
+        "differentPixels": 3928,
+        "visuallyReviewed": true,
+        "observation": "Synthetic contact timestamp changed from23October00:10 to23October00:29 (92pixels). Other3836pixels are minor paint shade differences around the disabled Send control/borders, maximum RGB-channel delta2. No visible label or geometry change.",
+        "timestampRegionExcludedForSmallPaintDelta": [
+          100,
+          265,
+          190,
+          285
+        ],
+        "outsideTimestampPixels": 3836,
+        "outsideTimestampMaxChannelDelta": 2
+      },
+      {
+        "name": "chat-options-admin-1280-inbox.png",
+        "file": "/workspace/scratch/bb431be72395/ux184/main-final-screenshots/chat-options-admin-1280-inbox.png",
+        "bytes": 125770,
+        "sha256": "4f7a45ccae6fed0631a36abc604789b22bcd7e42cb04db9df2cefba55d1245a5",
+        "baselineFile": "/workspace/scratch/bb431be72395/ux184/main-screenshots/chat-options-admin-1280-inbox.png",
+        "baselineSha256": "8f33b1a10600037dced25cf98c682664335aba3a73bb3d7943554a60fa7f5ac1",
+        "byteIdentical": false,
+        "dimensions": [
+          [
+            1280,
+            757
+          ],
+          [
+            1280,
+            757
+          ]
+        ],
+        "differenceBBoxExclusive": [
+          168,
+          272,
+          183,
+          280
+        ],
+        "differentPixels": 92,
+        "visuallyReviewed": true,
+        "observation": "Only the synthetic contact timestamp changed from00:10 to00:29 (92pixels). All other pixels are identical.",
+        "timestampRegionExcludedForSmallPaintDelta": [
+          100,
+          265,
+          190,
+          285
+        ],
+        "outsideTimestampPixels": 0,
+        "outsideTimestampMaxChannelDelta": 0
+      },
+      {
+        "name": "chat-options-admin-1280-open.png",
+        "file": "/workspace/scratch/bb431be72395/ux184/main-final-screenshots/chat-options-admin-1280-open.png",
+        "bytes": 120416,
+        "sha256": "afb81586eac0022d8d45f3beb0a64662d88dd2d903c9a6d9ec93dddbd4551438",
+        "baselineFile": "/workspace/scratch/bb431be72395/ux184/main-screenshots/chat-options-admin-1280-open.png",
+        "baselineSha256": "388cb319984f67aaccb311ed0d30a52408bf5b6e8cd58604b2c58b1e69069b81",
+        "byteIdentical": false,
+        "dimensions": [
+          [
+            1280,
+            757
+          ],
+          [
+            1280,
+            757
+          ]
+        ],
+        "differenceBBoxExclusive": [
+          168,
+          272,
+          1249,
+          727
+        ],
+        "differentPixels": 3928,
+        "visuallyReviewed": true,
+        "observation": "Synthetic contact timestamp changed (92pixels). Other3836pixels differ by at most2RGB levels near the disabled Send control/borders. The complete Options panel crop is pixel-identical.",
+        "timestampRegionExcludedForSmallPaintDelta": [
+          100,
+          265,
+          190,
+          285
+        ],
+        "outsideTimestampPixels": 3836,
+        "outsideTimestampMaxChannelDelta": 2
+      },
+      {
+        "name": "chat-options-admin-320-inbox.png",
+        "file": "/workspace/scratch/bb431be72395/ux184/main-final-screenshots/chat-options-admin-320-inbox.png",
+        "bytes": 22439,
+        "sha256": "b2c07502a9fb4743eacb22ebb1e5e90686f9a724e91c608b185d78d90bf5c159",
+        "baselineFile": "/workspace/scratch/bb431be72395/ux184/main-screenshots/chat-options-admin-320-inbox.png",
+        "baselineSha256": "812648e36ec8f3057839b975ccb8cc716014f30dd6bd15b68343c8c701e94712",
+        "byteIdentical": false,
+        "dimensions": [
+          [
+            320,
+            844
+          ],
+          [
+            320,
+            844
+          ]
+        ],
+        "differenceBBoxExclusive": [
+          139,
+          242,
+          154,
+          250
+        ],
+        "differentPixels": 92,
+        "visuallyReviewed": true,
+        "observation": "Only the synthetic contact timestamp changed from00:10 to00:29 (92pixels). All other pixels are identical.",
+        "timestampRegionExcludedForSmallPaintDelta": [
+          75,
+          235,
+          160,
+          255
+        ],
+        "outsideTimestampPixels": 0,
+        "outsideTimestampMaxChannelDelta": 0
+      },
+      {
+        "name": "chat-options-client-1280-conversation.png",
+        "file": "/workspace/scratch/bb431be72395/ux184/main-final-screenshots/chat-options-client-1280-conversation.png",
+        "bytes": 187677,
+        "sha256": "d44602fcd3f588e8e47171576c39c02ad422c3419ac8c9eec0c81e5174f838f7",
+        "baselineFile": "/workspace/scratch/bb431be72395/ux184/main-screenshots/chat-options-client-1280-conversation.png",
+        "baselineSha256": "0310a7135e07da6a02acb1b90f96097f5dce20a9466153eeadb03f9eb2a182a9",
+        "byteIdentical": false,
+        "dimensions": [
+          [
+            1280,
+            757
+          ],
+          [
+            1280,
+            757
+          ]
+        ],
+        "differenceBBoxExclusive": [
+          1179,
+          115,
+          1180,
+          116
+        ],
+        "differentPixels": 1,
+        "visuallyReviewed": true,
+        "observation": "One pixel at the left border of the Options opener differs by6RGB levels; visible control geometry, labels and content are unchanged.",
+        "timestampRegionExcludedForSmallPaintDelta": null,
+        "outsideTimestampPixels": 1,
+        "outsideTimestampMaxChannelDelta": 6
+      },
+      {
+        "name": "chat-options-client-320-conversation.png",
+        "file": "/workspace/scratch/bb431be72395/ux184/main-final-screenshots/chat-options-client-320-conversation.png",
+        "bytes": 49435,
+        "sha256": "c70190c4d1b6cfdc46e65e87bf2d6670afb3da7473d8eaf3bdbc2dc13eab0daa",
+        "baselineFile": "/workspace/scratch/bb431be72395/ux184/main-screenshots/chat-options-client-320-conversation.png",
+        "baselineSha256": "b016258f6b5f11828dcddd51073d5aeebc2aeab7033aa5a35057a3b85f65a6f2",
+        "byteIdentical": false,
+        "dimensions": [
+          [
+            320,
+            844
+          ],
+          [
+            320,
+            844
+          ]
+        ],
+        "differenceBBoxExclusive": [
+          24,
+          403,
+          230,
+          408
+        ],
+        "differentPixels": 8,
+        "visuallyReviewed": true,
+        "observation": "Eight pixels at the lower rounded photo edges differ by at most1RGB level. No visible label, menu control or geometry change.",
+        "timestampRegionExcludedForSmallPaintDelta": null,
+        "outsideTimestampPixels": 8,
+        "outsideTimestampMaxChannelDelta": 1
+      },
+      {
+        "name": "chat-options-client-320-open.png",
+        "file": "/workspace/scratch/bb431be72395/ux184/main-final-screenshots/chat-options-client-320-open.png",
+        "bytes": 55553,
+        "sha256": "9664729aefd90bba20b2b91bcca98e0acdeac00b5c940de5f769de68974da4ad",
+        "baselineFile": "/workspace/scratch/bb431be72395/ux184/main-screenshots/chat-options-client-320-open.png",
+        "baselineSha256": "3d970d76df78f2b198e0fd4b990f82a16e4dae8dcd9b7450ca130c47c1e51800",
+        "byteIdentical": false,
+        "dimensions": [
+          [
+            320,
+            844
+          ],
+          [
+            320,
+            844
+          ]
+        ],
+        "differenceBBoxExclusive": [
+          24,
+          403,
+          230,
+          408
+        ],
+        "differentPixels": 8,
+        "visuallyReviewed": true,
+        "observation": "Eight pixels at the lower rounded photo edges below the Options panel differ by at most1RGB level. The complete Options panel crop is pixel-identical.",
+        "timestampRegionExcludedForSmallPaintDelta": null,
+        "outsideTimestampPixels": 8,
+        "outsideTimestampMaxChannelDelta": 1
+      }
+    ],
+    "optionsPanelPixelCrops": [
+      {
+        "name": "chat-options-admin-1280-open.png",
+        "bboxExclusive": [
+          932,
+          78,
+          1252,
+          410
+        ],
+        "pixelIdentical": true
+      },
+      {
+        "name": "chat-options-admin-320-open.png",
+        "bboxExclusive": [
+          12,
+          60,
+          308,
+          392
+        ],
+        "pixelIdentical": true
+      },
+      {
+        "name": "chat-options-client-1280-open.png",
+        "bboxExclusive": [
+          932,
+          78,
+          1252,
+          410
+        ],
+        "pixelIdentical": true
+      },
+      {
+        "name": "chat-options-client-320-open.png",
+        "bboxExclusive": [
+          12,
+          60,
+          308,
+          392
+        ],
+        "pixelIdentical": true
+      }
+    ]
+  },
+  "conclusion": "No blocking visible regression observed in final-main artifact. All four complete Options panel crops are pixel-identical to the prior main. Client/admin top-home and neutral-home PNGs are byte-identical, preserving the reviewed flags, brand and deduplicated administrator navigation. The sole changed home-bottom PNG differs only in the native scrollbar; all of its application-content pixels remain identical. Other differences are synthetic timestamp text and localized control/photo-edge paint shades.",
+  "nativeQualificationContext": {
+    "source": "Separate versions_reprise native-job/log report, not a duplicate job/log API retrieval by this reviewer.",
+    "browserConclusionReported": "success",
+    "passed": 231,
+    "tests": 231,
+    "details": "Reinforced task scenario included in native browser success. Complete five-job final-main qualification remains owned by root; other job conclusions are not inferred here."
+  },
+  "priorFailurePreserved": {
+    "file": "/workspace/scratch/bb431be72395/ux184/visual-review-main.json",
+    "sha256": "68c6576d4378219accfda39383b1e7688433bfc45c45799df22171fcb33dbb77",
+    "details": "Earlier main had Chrome230/231 with a task-list failure. That report is unchanged and is not relabelled as final success."
+  },
+  "openBlockingVisualFindings": [],
+  "limits": [
+    "All24PNG files compared; only the8different final-main PNGs were opened in this pass. Earlier targeted visual-review scope is inherited through exact hashes/comparison, not restated as a fresh inspection of every archived scene.",
+    "Neither the profile editor nor the task editor has a dedicated PNG. Their behavior, including the corrected busy controls, remains native assertion evidence; no editor screenshot or visual certification is invented.",
+    "The task fix changes application code outside the captured scenes. This comparison proves preservation of the supplied scenes, not visual coverage of that task-editor correction.",
+    "Small paint variations are measured precisely and are consistent with native rendering/antialias timing. Exact browser-internal causes were not independently established.",
+    "Artifact comparison is separate from required final job conclusions and hosted activation. Root monitors those phases.",
+    "No source/app/Git modification, CI rerun, new screenshot, browser session, real site/account or production operation."
+  ]
+}

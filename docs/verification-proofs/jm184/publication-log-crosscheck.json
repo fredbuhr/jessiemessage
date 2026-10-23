@@ -1,0 +1,91 @@
+{
+  "scope": "Independent read-only cross-check of ONLY the two already collected publication184 native logs. No API, network, tests, Git commands or source reads/edits.",
+  "logs": [
+    {
+      "name": "publication184-operator-tests.log",
+      "path": "/workspace/scratch/bb431be72395/ux184/logs/publication184-operator-tests.log",
+      "sha256": "5c11cf4008d83261aa8ddfa403d186f0579938bf4c955c6a01b317520a950c04",
+      "bytes": 47770,
+      "lines": 440,
+      "githubErrorAnnotationLines": []
+    },
+    {
+      "name": "publication184-publish.log",
+      "path": "/workspace/scratch/bb431be72395/ux184/logs/publication184-publish.log",
+      "sha256": "cbd581daaecb84a0f16df75052c59944eabb49e7d9c8a7bf6c9bf40b11342295",
+      "bytes": 22882,
+      "lines": 239,
+      "githubErrorAnnotationLines": []
+    }
+  ],
+  "operatorTests": {
+    "actualCheckout": "e7e6f11815007a53a9502672500476f6f87e9f25",
+    "actualCheckoutLogLine": 342,
+    "nodeRuntime": "v24.22.1",
+    "nodeRuntimeLogLine": 384,
+    "publisherSyntheticTests": {
+      "jsonLogLine": 392,
+      "tests": 38,
+      "passCount": 38,
+      "failCount": 0,
+      "checksCount": 38,
+      "sourcePinsQualified": false,
+      "networkCalls": 0,
+      "realMutations": 0,
+      "interpretation": "This38/38 JSON is synthetic operator-test evidence, separate from the real publication receipt."
+    },
+    "prepareUnittest": {
+      "tests": 22,
+      "ranLogLine": 421,
+      "durationSeconds": 12.153,
+      "status": "OK",
+      "okLogLine": 423,
+      "individualOkCount": 22
+    }
+  },
+  "publish": {
+    "actualCheckout": null,
+    "actualCheckoutReason": "No executed checkout step or git log trace. An actions/checkout string in echoed Python action-allowlist code is not a checkout execution; no checkout inferred from receipt/source pins.",
+    "nodeRuntime": "v24.22.1",
+    "nodeRuntimeLogLine": 47,
+    "actualReceiptLogLine": 237,
+    "actualReceipt": {
+      "status": "published_verified",
+      "tag": "v1.8.4",
+      "commit": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+      "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.4",
+      "ciRun": 39879190936,
+      "nodeVersion": "24.22.1",
+      "normalMigrations": 33,
+      "videoCandidateMigrations": 3,
+      "videoCreationEnabled": true,
+      "quickRepliesWritable": true,
+      "schemaMigrations": 36,
+      "migrationsChanged": false,
+      "rollback": {
+        "tag": "v1.7.2",
+        "commit": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+        "releaseId": 420600213
+      },
+      "previousLatest": {
+        "tag": "v1.8.3",
+        "id": 421266798
+      },
+      "latest": {
+        "tag": "v1.8.4",
+        "id": 421341347,
+        "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c"
+      },
+      "publicationMode": "created_and_latest",
+      "deploymentPerformed": false
+    },
+    "receiptEvidence": "Parsed actual JSON output line beginning with { after the timestamp, excluding echoed Python code."
+  },
+  "result": "Both Node runtimes match. Synthetic publisher38/38 and preparation22/OK verified. Actual published_verified receipt matches v1.8.4, expected source/tree/latest421341347, and deploymentPerformed=false.",
+  "limits": [
+    "Live GitHub release/tag/latest state was not independently fetched; receipt fields are native log evidence.",
+    "Publication is not evidence of hosted activation; the actual receipt explicitly says deploymentPerformed=false.",
+    "No future run or other file/job followed."
+  ]
+}

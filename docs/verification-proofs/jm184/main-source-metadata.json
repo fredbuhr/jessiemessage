@@ -1,0 +1,549 @@
+{
+  "apiUrls": {
+    "run": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/runs/39877314782",
+    "commit": "https://api.github.com/repos/fredbuhr/jessiemessage/git/commits/a0a8a6a048654b1700b14738edfa99d3ee4cfc66",
+    "jobs": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/runs/39877314782/jobs?filter=latest&per_page=100"
+  },
+  "snapshot": "relevant fields selected from full native API responses",
+  "observedAt": "2026-10-23T00:28:00.319Z",
+  "run": {
+    "id": 39877314782,
+    "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39877314782",
+    "name": "CI",
+    "run_number": 739,
+    "run_attempt": 1,
+    "event": "push",
+    "head_sha": "a0a8a6a048654b1700b14738edfa99d3ee4cfc66",
+    "head_branch": "main",
+    "status": "completed",
+    "conclusion": "failure",
+    "created_at": "2026-10-23T00:18:19Z",
+    "updated_at": "2026-10-23T00:25:49Z",
+    "path": ".github/workflows/ci.yml"
+  },
+  "head_commit": {
+    "id": "a0a8a6a048654b1700b14738edfa99d3ee4cfc66",
+    "tree_id": "4d64087c8c01413da0569995977cd7968b83717b",
+    "message": "Livrer les corrections de profil et navigation 1.8.4 (#131)\n\nProfil et sélecteur d’avatar traduits, drapeaux de langue accessibles, menu Options unique et liens administrateur dédoublonnés. Qualification PR exacte 39876426084 : cinq jobs réussis, tentative 1 ; captures synthétiques relues. Node 24.22.1, dépendances et SQL36 inchangés. Qualification main requise avant publication ; production 1.8.3 préservée.",
+    "timestamp": "2026-10-23T00:18:16Z",
+    "author": {
+      "name": "ZTIKIX",
+      "email": "49747120+fredbuhr@users.noreply.github.com"
+    },
+    "committer": {
+      "name": "GitHub",
+      "email": "noreply@github.com"
+    }
+  },
+  "commit": {
+    "sha": "a0a8a6a048654b1700b14738edfa99d3ee4cfc66",
+    "tree": {
+      "sha": "4d64087c8c01413da0569995977cd7968b83717b",
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/trees/4d64087c8c01413da0569995977cd7968b83717b"
+    },
+    "parents": [
+      {
+        "sha": "c786ea592e331780aaac16beea6ea546897c8ca4",
+        "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/commits/c786ea592e331780aaac16beea6ea546897c8ca4",
+        "html_url": "https://github.com/fredbuhr/jessiemessage/commit/c786ea592e331780aaac16beea6ea546897c8ca4"
+      },
+      {
+        "sha": "304923ad2be78ab3c6fe8f250ef814db36a9c886",
+        "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/commits/304923ad2be78ab3c6fe8f250ef814db36a9c886",
+        "html_url": "https://github.com/fredbuhr/jessiemessage/commit/304923ad2be78ab3c6fe8f250ef814db36a9c886"
+      }
+    ]
+  },
+  "jobs": [
+    {
+      "id": 120165944574,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-23T00:18:21Z",
+      "completed_at": "2026-10-23T00:19:49Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-23T00:18:24Z",
+          "completed_at": "2026-10-23T00:18:25Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-23T00:18:25Z",
+          "completed_at": "2026-10-23T00:18:39Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-23T00:18:39Z",
+          "completed_at": "2026-10-23T00:18:41Z"
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-23T00:18:41Z",
+          "completed_at": "2026-10-23T00:18:46Z"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-23T00:18:46Z",
+          "completed_at": "2026-10-23T00:18:47Z"
+        },
+        {
+          "name": "Create disposable DML-only runtime account",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-23T00:18:47Z",
+          "completed_at": "2026-10-23T00:18:47Z"
+        },
+        {
+          "name": "Rehearse authentication and independent messaging sessions over loopback HTTPS",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-23T00:18:47Z",
+          "completed_at": "2026-10-23T00:19:46Z"
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-23T00:19:46Z",
+          "completed_at": "2026-10-23T00:19:46Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-23T00:19:46Z",
+          "completed_at": "2026-10-23T00:19:46Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-10-23T00:19:46Z",
+          "completed_at": "2026-10-23T00:19:46Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-23T00:19:46Z",
+          "completed_at": "2026-10-23T00:19:46Z"
+        }
+      ]
+    },
+    {
+      "id": 120165944702,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-23T00:18:21Z",
+      "completed_at": "2026-10-23T00:25:49Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-23T00:18:22Z",
+          "completed_at": "2026-10-23T00:18:22Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-23T00:18:22Z",
+          "completed_at": "2026-10-23T00:18:36Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-23T00:18:36Z",
+          "completed_at": "2026-10-23T00:18:39Z"
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-23T00:18:39Z",
+          "completed_at": "2026-10-23T00:18:43Z"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-23T00:18:43Z",
+          "completed_at": "2026-10-23T00:18:45Z"
+        },
+        {
+          "name": "Install native MariaDB checkpoint clients",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-23T00:18:45Z",
+          "completed_at": "2026-10-23T00:18:55Z"
+        },
+        {
+          "name": "Create disposable runtime and offline schema inspection accounts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-23T00:18:55Z",
+          "completed_at": "2026-10-23T00:18:55Z"
+        },
+        {
+          "name": "Exercise migrations and constraints on disposable database",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-23T00:18:55Z",
+          "completed_at": "2026-10-23T00:25:47Z"
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-10-23T00:25:47Z",
+          "completed_at": "2026-10-23T00:25:47Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-23T00:25:47Z",
+          "completed_at": "2026-10-23T00:25:47Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-10-23T00:25:47Z",
+          "completed_at": "2026-10-23T00:25:47Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-10-23T00:25:47Z",
+          "completed_at": "2026-10-23T00:25:47Z"
+        }
+      ]
+    },
+    {
+      "id": 120165944724,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-23T00:18:21Z",
+      "completed_at": "2026-10-23T00:25:48Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-23T00:18:22Z",
+          "completed_at": "2026-10-23T00:18:23Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-23T00:18:23Z",
+          "completed_at": "2026-10-23T00:18:44Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-23T00:18:44Z",
+          "completed_at": "2026-10-23T00:18:46Z"
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-23T00:18:46Z",
+          "completed_at": "2026-10-23T00:18:51Z"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-23T00:18:51Z",
+          "completed_at": "2026-10-23T00:18:52Z"
+        },
+        {
+          "name": "Install native MariaDB checkpoint clients",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-23T00:18:52Z",
+          "completed_at": "2026-10-23T00:19:02Z"
+        },
+        {
+          "name": "Create disposable runtime and offline schema inspection accounts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-23T00:19:02Z",
+          "completed_at": "2026-10-23T00:19:02Z"
+        },
+        {
+          "name": "Exercise migrations and constraints on disposable database",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-23T00:19:02Z",
+          "completed_at": "2026-10-23T00:25:44Z"
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-10-23T00:25:44Z",
+          "completed_at": "2026-10-23T00:25:44Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-23T00:25:44Z",
+          "completed_at": "2026-10-23T00:25:44Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-10-23T00:25:44Z",
+          "completed_at": "2026-10-23T00:25:45Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-10-23T00:25:45Z",
+          "completed_at": "2026-10-23T00:25:45Z"
+        }
+      ]
+    },
+    {
+      "id": 120165944753,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-10-23T00:18:21Z",
+      "completed_at": "2026-10-23T00:23:21Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-23T00:18:22Z",
+          "completed_at": "2026-10-23T00:18:23Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-23T00:18:23Z",
+          "completed_at": "2026-10-23T00:18:25Z"
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-23T00:18:25Z",
+          "completed_at": "2026-10-23T00:18:29Z"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-23T00:18:29Z",
+          "completed_at": "2026-10-23T00:18:31Z"
+        },
+        {
+          "name": "Exercise real Chrome with synthetic local fixtures",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 5,
+          "started_at": "2026-10-23T00:18:31Z",
+          "completed_at": "2026-10-23T00:23:18Z"
+        },
+        {
+          "name": "Homepage rendering in French and English",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-23T00:23:18Z",
+          "completed_at": "2026-10-23T00:23:19Z"
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 11,
+          "started_at": "2026-10-23T00:23:19Z",
+          "completed_at": "2026-10-23T00:23:19Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-23T00:23:19Z",
+          "completed_at": "2026-10-23T00:23:19Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-23T00:23:19Z",
+          "completed_at": "2026-10-23T00:23:19Z"
+        }
+      ]
+    },
+    {
+      "id": 120165944853,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-23T00:18:22Z",
+      "completed_at": "2026-10-23T00:20:55Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-23T00:18:24Z",
+          "completed_at": "2026-10-23T00:18:26Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-23T00:18:26Z",
+          "completed_at": "2026-10-23T00:18:30Z"
+        },
+        {
+          "name": "Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-23T00:18:30Z",
+          "completed_at": "2026-10-23T00:18:39Z"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-23T00:18:39Z",
+          "completed_at": "2026-10-23T00:18:41Z"
+        },
+        {
+          "name": "Verify private Node preparation with synthetic files",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-23T00:18:41Z",
+          "completed_at": "2026-10-23T00:18:42Z"
+        },
+        {
+          "name": "Run tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-23T00:18:42Z",
+          "completed_at": "2026-10-23T00:20:32Z"
+        },
+        {
+          "name": "Build offline workbench",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-23T00:20:32Z",
+          "completed_at": "2026-10-23T00:20:48Z"
+        },
+        {
+          "name": "Downloadable preview (open HTML, no console)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-23T00:20:48Z",
+          "completed_at": "2026-10-23T00:20:49Z"
+        },
+        {
+          "name": "Post Use Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-23T00:20:49Z",
+          "completed_at": "2026-10-23T00:20:50Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-10-23T00:20:50Z",
+          "completed_at": "2026-10-23T00:20:50Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-10-23T00:20:50Z",
+          "completed_at": "2026-10-23T00:20:50Z"
+        }
+      ]
+    }
+  ]
+}

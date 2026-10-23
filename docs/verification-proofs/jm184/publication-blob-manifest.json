@@ -1,0 +1,24 @@
+[
+  {
+    "id": 120175457244,
+    "name": "operator-tests",
+    "path": "/workspace/scratch/bb431be72395/ux184/logs/publication184-operator-tests.log",
+    "sha256": "5c11cf4008d83261aa8ddfa403d186f0579938bf4c955c6a01b317520a950c04",
+    "gitBlobSha": "a0086cb99c07dd74890fb65fed07483b07e4cedb",
+    "gitHashObjectMatched": true,
+    "blobCreated": true,
+    "bytes": 47770,
+    "lines": 440
+  },
+  {
+    "id": 120175590364,
+    "name": "publish",
+    "path": "/workspace/scratch/bb431be72395/ux184/logs/publication184-publish.log",
+    "sha256": "cbd581daaecb84a0f16df75052c59944eabb49e7d9c8a7bf6c9bf40b11342295",
+    "gitBlobSha": "1a5b69b3a0b6a26b2acf55cc6756b4ba98187fc9",
+    "gitHashObjectMatched": true,
+    "blobCreated": true,
+    "bytes": 22882,
+    "lines": 239
+  }
+]

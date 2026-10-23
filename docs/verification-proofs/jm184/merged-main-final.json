@@ -1,0 +1,21 @@
+{
+  "type": "jm184-final-merged-main",
+  "pr": 132,
+  "qualifiedPrHead": "1967502a3a97fecc1e78e6f325da306d4672c940",
+  "qualifiedPrRun": 39878310421,
+  "mainSource": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+  "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+  "parents": [
+    "a0a8a6a048654b1700b14738edfa99d3ee4cfc66",
+    "1967502a3a97fecc1e78e6f325da306d4672c940"
+  ],
+  "expectedHeadMerge": true,
+  "merged": true,
+  "mainRun": 39879190936,
+  "mainQualification": "passed_5_of_5_attempt1",
+  "firstMainFailurePreserved": "main-native.json",
+  "productionVersion": "1.8.3",
+  "hostedActionPerformed": false,
+  "mainQualified": true,
+  "mainQualificationObservedAt": "2026-10-23T00:44:10Z"
+}

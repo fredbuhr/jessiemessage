@@ -1,10 +1,16 @@
 # Plan global de JessieMessage
 
-Révisé le 22 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
+Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Correctif interface1.8.4 — travail actuel
+## Correctif interface 1.8.4 — préparation hébergée restante
 
-[Périmètre](UX-184-20261023.md). Terminer les cinq corrections de traduction/navigation et leurs contrôles ciblés, contre-relire, qualifier le headPR stabilisé puis le main fusionné avant publication immuable. Préparation, CHECK, activation et métadonnées184 restent des phases séparées. Production183/Node24.22.1/SQL36 et checkpoint17f575… acquis et préservés. [État de travail](verification-proofs/jm184-progress.json). Aucun nouveau chantier de backup, PC, juridique, mail/Push réel ou SQL.
+Code, contre-revues, PR 132 et main **5/5**, captures synthétiques et publication **2/2** acquis. Les cinq corrections demandées et la course des tâches sont terminées dans la source publiée. [Bilan](UX-184-20261023.md), [état](verification-proofs/jm184-progress.json).
+
+1. Recueillir la préparation 184 et `PREPARATION_184_CHECK_OK` avec le reçu complet.
+2. Donner ensuite les instructions Manager exactes, puis vérifier l’identité réelle : version 1.8.4, commit publié et Node v24.22.1 ; heure de démarrage à recueillir.
+3. Épingler le vrai reçu et la release dans le writer, qualifier ses tests natifs puis enregistrer les seules métadonnées et recueillir le résultat final.
+
+La production et le checkpoint restent 1.8.3 tant que ces étapes ne sont pas acquises. SQL36 et configurations inchangés ; aucune reprise automatique des sauvegardes reportées, du PC, d’A10 ou des réserves A11/A12.
 
 ## Correctif messagerie1.8.3 — terminé
 

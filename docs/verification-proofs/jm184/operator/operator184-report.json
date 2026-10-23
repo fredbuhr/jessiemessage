@@ -1,0 +1,254 @@
+{
+  "format": "jessiemessage-release184-operator-preparation",
+  "version": 1,
+  "status": "qualified_main_pins_finalized_operator_native_qualification_pending",
+  "release": "1.8.4",
+  "productionBaseline": "1.8.3",
+  "directory": "/workspace/scratch/bb431be72395/operator184",
+  "manifest": "operator184-manifest.json",
+  "diff": "operator184-vs183.diff",
+  "guardReview": "diff-guards-review.json",
+  "sourceTreeCi184Qualified": true,
+  "publication184Performed": false,
+  "hosting184Performed": false,
+  "writer184Ready": false,
+  "pending": {
+    "writerStagingSha": "STAGING_PENDING",
+    "writerReleaseId": null
+  },
+  "tests": {
+    "prepare": {
+      "passed": 22,
+      "failed": 0,
+      "log": "prepare184-tests-final-pins.log"
+    },
+    "record": {
+      "passed": 26,
+      "failed": 0,
+      "log": "record184-tests-final-pins.log"
+    },
+    "publish": {
+      "passed": 38,
+      "failed": 0,
+      "log": "publish184-tests-final-pins.log",
+      "receipt": "publication184-final-pins-synthetic.json"
+    }
+  },
+  "execution": {
+    "runs": [
+      {
+        "name": "publish",
+        "command": [
+          "python3",
+          "ops/test-publish-qualified184.py",
+          "--output",
+          "publication184-final-pins-synthetic.json"
+        ],
+        "log": "publish184-tests-final-pins.log",
+        "exitCode": 0,
+        "elapsedSeconds": 0.511
+      },
+      {
+        "name": "record",
+        "command": [
+          "python3",
+          "ops/test_record_release184.py"
+        ],
+        "log": "record184-tests-final-pins.log",
+        "exitCode": 0,
+        "elapsedSeconds": 2.425
+      },
+      {
+        "name": "prepare",
+        "command": [
+          "python3",
+          "ops/test-prepare-release184.py"
+        ],
+        "log": "prepare184-tests-final-pins.log",
+        "exitCode": 0,
+        "elapsedSeconds": 32.887
+      }
+    ],
+    "scope": "isolated synthetic fixtures on finalized source/tree/CI literals; no actual operator or API execution"
+  },
+  "pythonVersion": "3.12.14",
+  "nativeNodeExecuted": false,
+  "nativeOperatorCiRun": false,
+  "initialCommandPackagingFailure": {
+    "logs": [
+      "prepare184-tests-initial.log",
+      "record184-tests-initial.log",
+      "publish184-tests-initial.log"
+    ],
+    "exitCodes": [
+      127,
+      127,
+      127
+    ],
+    "cause": "/usr/bin/time absent; each failed before starting Python/tests; kept separately. Python monotonic wrapper used for the actual single execution of each suite."
+  },
+  "files": [
+    {
+      "path": "ops/prepare-release184.py",
+      "sha256": "3fa75e684177e68cd68d8182f7dca3c10a466c153801a7314c1bf0c779df7b1c",
+      "bytes": 15593,
+      "lines": 290,
+      "baselinePath": "/workspace/scratch/bb431be72395/operator183/ops/prepare-release183.py",
+      "baselineSha256": "0b2c280f238b80eb80944623576a5932a9abf41778cb9f215a7036a529b85101",
+      "prototypeSha256": "3d2b2c4a7391c57bfec9385627ad4971615d751c987233ca34ca5bd4472b7c6a",
+      "changedSincePrototype": true
+    },
+    {
+      "path": "ops/test-prepare-release184.py",
+      "sha256": "33f0b7490d09e490baaae7e9715a7adfad0df909431c5d2442ca4017c68199ab",
+      "bytes": 32578,
+      "lines": 555,
+      "baselinePath": "/workspace/scratch/bb431be72395/operator183/ops/test-prepare-release183.py",
+      "baselineSha256": "b5c32dc7ff490b1a336a5876f56a7e8b63a1a6d0b1962a70c10d7a7cc3fd12a9",
+      "prototypeSha256": "33f0b7490d09e490baaae7e9715a7adfad0df909431c5d2442ca4017c68199ab",
+      "changedSincePrototype": false
+    },
+    {
+      "path": ".github/workflows/prepare-release184.yml",
+      "sha256": "bdfdc816779037e586529ba2acbb83982757e5241ae98b572dd655d63ff7715a",
+      "bytes": 1060,
+      "lines": 37,
+      "baselinePath": "/workspace/scratch/bb431be72395/operator183/.github/workflows/prepare-release183.yml",
+      "baselineSha256": "d044816d26c51f7c3c15ed49c92424a0af917d0a1c0ae835a22de9c65458a615",
+      "prototypeSha256": "bdfdc816779037e586529ba2acbb83982757e5241ae98b572dd655d63ff7715a",
+      "changedSincePrototype": false
+    },
+    {
+      "path": "ops/record-release184.py",
+      "sha256": "ce661f3fd3e17c6634fcc6771cb7b18437149da35df905b9e4e4187402596dfe",
+      "bytes": 29908,
+      "lines": 482,
+      "baselinePath": "/workspace/scratch/bb431be72395/operator183/ops/record-release183.py",
+      "baselineSha256": "1302195773a6568742db82aa0588a3741af299bea706f283a2a0a551f512fa3c",
+      "prototypeSha256": "fd9e218b0076bc04bf132cc4d72ffbc1287d39d88092da88421e23d53d113aac",
+      "changedSincePrototype": true
+    },
+    {
+      "path": "ops/test_record_release184.py",
+      "sha256": "aa443b51e1341e1ef8f5ab46770f9460f7326a61cfdf8d4677d59c9e251cf720",
+      "bytes": 45493,
+      "lines": 671,
+      "baselinePath": "/workspace/scratch/bb431be72395/operator183/ops/test_record_release183.py",
+      "baselineSha256": "999538acc10d7cd45e04a09a5b07b7bbba963e6c51d1ac2431405e071391291e",
+      "prototypeSha256": "aa443b51e1341e1ef8f5ab46770f9460f7326a61cfdf8d4677d59c9e251cf720",
+      "changedSincePrototype": false
+    },
+    {
+      "path": ".github/workflows/record-release184.yml",
+      "sha256": "e0a29031f0025985adc1f20b8fb4ae2e67d448cb23c1a1e6f76162e8806c09b5",
+      "bytes": 1135,
+      "lines": 38,
+      "baselinePath": "/workspace/scratch/bb431be72395/operator183/.github/workflows/record-release183.yml",
+      "baselineSha256": "dc20d11896e0af0bb0817ed62302868a953f09c1fa64918ef566d093c9c26c94",
+      "prototypeSha256": "e0a29031f0025985adc1f20b8fb4ae2e67d448cb23c1a1e6f76162e8806c09b5",
+      "changedSincePrototype": false
+    },
+    {
+      "path": ".github/workflows/publish-qualified184.yml",
+      "sha256": "99befd2e96bf754ac6d48e2cec47bfd26588af9c89f17202353f27c811651497",
+      "bytes": 14812,
+      "lines": 237,
+      "baselinePath": "/workspace/scratch/bb431be72395/operator183/.github/workflows/publish-qualified183.yml",
+      "baselineSha256": "ef61cef254456f6c3cd23af7656260d28fe9ae7eea442258a78a35eba4f97b18",
+      "prototypeSha256": "b70a043570577ab4aeb0c2558545b3926928d5dadc9dee28664cef9f3dd217ea",
+      "changedSincePrototype": true
+    },
+    {
+      "path": "ops/test-publish-qualified184.py",
+      "sha256": "58420073eb967f0c314f4d7d5ce0aa00db6c6f1023da1ee586638d53212b4af0",
+      "bytes": 19012,
+      "lines": 301,
+      "baselinePath": "/workspace/scratch/bb431be72395/operator183/ops/test-publish-qualified183.py",
+      "baselineSha256": "a825791b1cdfa0dd67642c24488cd82f7eaab9d4541d0134bcc4fbc258a0efbb",
+      "prototypeSha256": "58420073eb967f0c314f4d7d5ce0aa00db6c6f1023da1ee586638d53212b4af0",
+      "changedSincePrototype": false
+    }
+  ],
+  "scopeLimits": [
+    "Actual main qualification is root-observed; local synthetic operator suites do not qualify hosting, runtime activation or native operator CI.",
+    "No application file, real Git operation, API/network request, host, SQL, SMTP, Push, backup, PC, runtime start/restart or remote publication performed.",
+    "Writer receipt/release pins still block before private reads/network/writes.",
+    "Internal handoff-template.txt intentionally retains its4markers until published helper commit/hash and final user instruction are separately verified."
+  ],
+  "nextRequired": "Root publishes the reviewed exact8-file ASCII pack to ops/publish-v1.8.4 and observes actual native operator tests/publication. No user command or host operation issued by this task; writer remains blocked pending real releaseID and hosted staging receipt.",
+  "localFixtureCleanup": {
+    "directoriesRemoved": [
+      "prepare184-test-dtwe26hn",
+      "prepare184-test-5ks41atj",
+      "prepare184-test-9uy4t007",
+      "prepare184-test-cxrooohl",
+      "prepare184-test-kb_gd8jk",
+      "prepare184-test-nr5d18yr",
+      "prepare184-test-gyai3y12",
+      "prepare184-test-v2bwzq3l",
+      "prepare184-test-7zy9887p",
+      "prepare184-test-3b8wgv5o",
+      "prepare184-test-p9af5q86"
+    ],
+    "scope": "Only isolated prepare184-test-* fixture directories under operator184; no application or real private path.",
+    "reason": "Post-run fixtures still visible despite successful suite; removed without rerunning tests."
+  },
+  "independentReview": {
+    "prototype": {
+      "reviewer": "/root/delivery_review",
+      "result": "no_concrete_blocker",
+      "evidence": "independent-counter-review.json",
+      "reruns": false
+    },
+    "finalization": {
+      "reviewer": "/root",
+      "result": "passed",
+      "evidence": "root-finalization-review.json",
+      "method": "Reverse exactly seven qualified pin assignments, three descriptive headers and one release bullet; SHA256 must match all eight frozen pending sources. No other change accepted.",
+      "reruns": false
+    }
+  },
+  "prototypeReport": "operator184-report-prototype.json",
+  "mainQualification": {
+    "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+    "mainCiRunId": 39879190936,
+    "event": "push",
+    "branch": "main",
+    "attempt": 1,
+    "requiredJobs": 5,
+    "successfulJobs": 5,
+    "conclusion": "success",
+    "provenance": "Root supplied and independently API-verified actual main exact head/tree and all5jobs. This agent did not perform an API request."
+  },
+  "pins": {
+    "prepareReleaseSource": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "prepareReleaseTree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+    "writerSource": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "writerTree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+    "publisherTarget": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "publisherTree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+    "publisherCi": "39879190936"
+  },
+  "prototypeTests": {
+    "prepare": {
+      "passed": 22,
+      "failed": 0,
+      "log": "prepare184-tests-synthetic.log"
+    },
+    "record": {
+      "passed": 26,
+      "failed": 0,
+      "log": "record184-tests-synthetic.log"
+    },
+    "publish": {
+      "passed": 38,
+      "failed": 0,
+      "log": "publish184-tests-synthetic.log",
+      "receipt": "publication184-synthetic.json"
+    }
+  },
+  "finalPinsReport": "final-pins-report.json",
+  "finalizationDiff": "finalization-from-pending.diff",
+  "finalAsciiPack": "operator184-final-pack.json"
+}

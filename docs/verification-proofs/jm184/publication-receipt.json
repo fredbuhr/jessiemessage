@@ -1,0 +1,31 @@
+{
+  "status": "published_verified",
+  "tag": "v1.8.4",
+  "commit": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+  "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+  "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.4",
+  "ciRun": 39879190936,
+  "nodeVersion": "24.22.1",
+  "normalMigrations": 33,
+  "videoCandidateMigrations": 3,
+  "videoCreationEnabled": true,
+  "quickRepliesWritable": true,
+  "schemaMigrations": 36,
+  "migrationsChanged": false,
+  "rollback": {
+    "tag": "v1.7.2",
+    "commit": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+    "releaseId": 420600213
+  },
+  "previousLatest": {
+    "tag": "v1.8.3",
+    "id": 421266798
+  },
+  "latest": {
+    "tag": "v1.8.4",
+    "id": 421341347,
+    "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c"
+  },
+  "publicationMode": "created_and_latest",
+  "deploymentPerformed": false
+}

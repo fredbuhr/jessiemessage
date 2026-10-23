@@ -1,0 +1,20 @@
+{
+  "published": true,
+  "version": "1.8.4",
+  "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+  "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+  "tag": "v1.8.4",
+  "releaseId": 421341347,
+  "latest": "v1.8.4",
+  "latestId": 421341347,
+  "mainRun": 39879190936,
+  "mainJobs": 5,
+  "publicationRun": 39880194316,
+  "publicationJobs": 2,
+  "operator": "e7e6f11815007a53a9502672500476f6f87e9f25",
+  "operatorTree": "277c83d86bdcf4ff51591cb51ade0c82c879b732",
+  "prepareSha256": "3fa75e684177e68cd68d8182f7dca3c10a466c153801a7314c1bf0c779df7b1c",
+  "attempt": 1,
+  "deploymentPerformed": false,
+  "observedAt": "2026-10-23T00:49:34.170Z"
+}

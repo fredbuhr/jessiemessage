@@ -50,6 +50,176 @@
       "blob": "60980c90d8eb70cde618044a30f0af2f440a3beb",
       "sha256": "a8fd2037fc33024acedffb42d96414c203f50ff356cf9ed407683b0c3eb7bca0",
       "bytes": 560407
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/main184-auth.log",
+      "run": 39877314782,
+      "head": "a0a8a6a048654b1700b14738edfa99d3ee4cfc66",
+      "phase": "initial_main_failed",
+      "key": "auth",
+      "blob": "486546fb93d1359bc4633c27346874b3052b124c",
+      "sha256": "749f256927b810048a59a133bab4720fca46bc1cff28cb76126f4e4683dcd2de",
+      "bytes": 38273
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/main184-browser.log",
+      "run": 39877314782,
+      "head": "a0a8a6a048654b1700b14738edfa99d3ee4cfc66",
+      "phase": "initial_main_failed",
+      "key": "browser",
+      "blob": "9bb80a04f6a751f1a4c92c80a1a2db820b0ee840",
+      "sha256": "bd3ac09ea8805d327b848db7ab0e95365d0faacd7c5c2a9364a5d70ddcbadca0",
+      "bytes": 50073
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/main184-mariadb-10.11.log",
+      "run": 39877314782,
+      "head": "a0a8a6a048654b1700b14738edfa99d3ee4cfc66",
+      "phase": "initial_main_failed",
+      "key": "mariadb-10.11",
+      "blob": "471f5da6b4013d6cb701a100005372aa6f425558",
+      "sha256": "84fc940f549182699ae10688d86719484a46a4aa0183be1bd3b3a53b104f1f7c",
+      "bytes": 340129
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/main184-mariadb-11.4.log",
+      "run": 39877314782,
+      "head": "a0a8a6a048654b1700b14738edfa99d3ee4cfc66",
+      "phase": "initial_main_failed",
+      "key": "mariadb-11.4",
+      "blob": "0b61bdf366231774876ba9332bbe7bc602f718a8",
+      "sha256": "7350a603c4fd3d853928ab72d9677551abb8a32390f08cb58f82be1d80567579",
+      "bytes": 340503
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/main184-verify.log",
+      "run": 39877314782,
+      "head": "a0a8a6a048654b1700b14738edfa99d3ee4cfc66",
+      "phase": "initial_main_failed",
+      "key": "verify",
+      "blob": "ab0b8f4fe91a41537c08497aaedcc9c7b59527c0",
+      "sha256": "995fd026161d8207683d34a0aa66efd25449a3e69dc2ec430772d73951e4b034",
+      "bytes": 559755
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/pr132-mariadb-10.11.log",
+      "run": 39878310421,
+      "head": "1967502a3a97fecc1e78e6f325da306d4672c940",
+      "phase": "corrected_pr132",
+      "key": "mariadb-10.11",
+      "blob": "991d2cf161505cf81bc1db3c56af476f62c75fce",
+      "sha256": "3e2fbafac1b01c36d37e6803d32da94ce9aabe85926e705dd744ab8f79f6c403",
+      "bytes": 340919
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/pr132-browser.log",
+      "run": 39878310421,
+      "head": "1967502a3a97fecc1e78e6f325da306d4672c940",
+      "phase": "corrected_pr132",
+      "key": "browser",
+      "blob": "0347fa3486aec62ecd1cacd0182a3b0ccd49cdfa",
+      "sha256": "ba69a883f0a0d679d09d7ce47b705c914bad59028710b8c71fea3204b35cb105",
+      "bytes": 49915
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/pr132-mariadb-11.4.log",
+      "run": 39878310421,
+      "head": "1967502a3a97fecc1e78e6f325da306d4672c940",
+      "phase": "corrected_pr132",
+      "key": "mariadb-11.4",
+      "blob": "f5cfcb9379fd5d891623eccdea8a635ea205f9f0",
+      "sha256": "24b4ea0b65a22b731dea19833aaa4088f0e2d3976a1407b22fcb7aeb15f5f281",
+      "bytes": 340751
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/pr132-auth.log",
+      "run": 39878310421,
+      "head": "1967502a3a97fecc1e78e6f325da306d4672c940",
+      "phase": "corrected_pr132",
+      "key": "auth",
+      "blob": "a3805a0ce311533651c7e94b70d1a2ecb4fa131c",
+      "sha256": "f42f03cdcdc04c82205ae4942fe5a8812c1afb9e7997029f849fed43da000913",
+      "bytes": 38938
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/pr132-verify.log",
+      "run": 39878310421,
+      "head": "1967502a3a97fecc1e78e6f325da306d4672c940",
+      "phase": "corrected_pr132",
+      "key": "verify",
+      "blob": "c18cc46e35982f2b589394999c2d9094f8f3fc30",
+      "sha256": "4e12c3d7043c193f7db52b868537156ac902a21b793137fd78da278d7c771dcb",
+      "bytes": 560702
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/main184-final-verify.log",
+      "run": 39879190936,
+      "head": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "phase": "final_main",
+      "key": "main184-final-verify",
+      "blob": "f5f32ce6200cf1bb5166c5607b9eb6042c229fe3",
+      "sha256": "871d63aa7a6461028c198252e83e4f92a263fc1503930dbabe92cf18bbe6dddd",
+      "bytes": 559768
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/main184-final-browser.log",
+      "run": 39879190936,
+      "head": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "phase": "final_main",
+      "key": "main184-final-browser",
+      "blob": "cc6443ddf2a2f993e88ea530144076d378c6e794",
+      "sha256": "81886d07de12a74f96bd4c2e2a0d253b64be4a0b24c1620e8c8999a68ea412c9",
+      "bytes": 49134
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/main184-final-auth.log",
+      "run": 39879190936,
+      "head": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "phase": "final_main",
+      "key": "main184-final-auth",
+      "blob": "8d8269d545914ae1aef149db326c406a3da125da",
+      "sha256": "770f8ec6fe0480cf523112ed20f6ac32c021f6747b5ba9347aa3b283cc02a5e6",
+      "bytes": 38171
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/main184-final-mariadb-11.4.log",
+      "run": 39879190936,
+      "head": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "phase": "final_main",
+      "key": "main184-final-mariadb-11.4",
+      "blob": "873514ad16ba248f115aac267b3775b440c5e590",
+      "sha256": "b91d92eddf9e623cd4e949151e566e9cb8f65e977ab809c623e266399130ac0d",
+      "bytes": 340561
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/main184-final-mariadb-10.11.log",
+      "run": 39879190936,
+      "head": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "phase": "final_main",
+      "key": "main184-final-mariadb-10.11",
+      "blob": "c7b9e34b28653727f8d45d4800dda8928a3dbfff",
+      "sha256": "e65e94036a20c3e062cc2fd6ccff70e9c21db4ea7cca6f753a819e3311ec856b",
+      "bytes": 339675
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/publication184-operator-tests.log",
+      "run": 39880194316,
+      "head": "e7e6f11815007a53a9502672500476f6f87e9f25",
+      "phase": "publication",
+      "key": "publication184-operator-tests",
+      "blob": "a0086cb99c07dd74890fb65fed07483b07e4cedb",
+      "sha256": "5c11cf4008d83261aa8ddfa403d186f0579938bf4c955c6a01b317520a950c04",
+      "bytes": 47770
+    },
+    {
+      "path": "docs/verification-proofs/jm184/native/publication184-publish.log",
+      "run": 39880194316,
+      "head": "e7e6f11815007a53a9502672500476f6f87e9f25",
+      "phase": "publication",
+      "key": "publication184-publish",
+      "blob": "1a5b69b3a0b6a26b2acf55cc6756b4ba98187fc9",
+      "sha256": "cbd581daaecb84a0f16df75052c59944eabb49e7d9c8a7bf6c9bf40b11342295",
+      "bytes": 22882
     }
   ],
   "rawBytesPreserved": true

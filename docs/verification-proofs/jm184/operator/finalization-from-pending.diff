@@ -1,0 +1,82 @@
+--- prepared/ops/prepare-release184.py
++++ finalized/ops/prepare-release184.py
+@@ -2,8 +2,8 @@
+ """Stage the pinned 1.8.4 checkout and launchers from active 1.8.3; run neither.
+ 
+ Usage: python3 prepare-release184.py SOURCE184 TREE184
+-The release pins below deliberately block use until main CI identifies the exact
+-release. No SQL, configuration, key, checkpoint, Manager or runtime action occurs.
++The release pins below identify the exact main source qualified by CI.
++No SQL, configuration, key, checkpoint, Manager or runtime action occurs.
+ Existing partial output is preserved and refuses an automatic retry.
+ """
+ import hashlib
+@@ -19,8 +19,8 @@
+ BASE_CHECKOUT = Path('/srv/customer/jessiemessage-operator/production-183-48fd42b8')
+ BASE_SOURCE = '48fd42b808b2bc4d95d3f3ba21244c032d0a938f'
+ BASE_TREE = '1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58'
+-RELEASE_SOURCE = 'QUALIFICATION_PENDING'
+-RELEASE_TREE = 'QUALIFICATION_PENDING'
++RELEASE_SOURCE = '1a41e08abc87c3a29d9163fbf8cd2342eb04693c'
++RELEASE_TREE = 'e0964b50c03d3881d851f01f86f58777d22b2c10'
+ START_PIN = '84d22476c47377ed9e3810ff4dce55d0e2b9698c15acd2d50f9d3bf21019b7e1'
+ CHECK_PIN = '0eb137e82c17dea3e6f0dd26f9897246655d6c5fb4682604574c0b7b5d4c3c9e'
+ NODE_PIN = 'e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb'
+--- prepared/ops/record-release184.py
++++ finalized/ops/record-release184.py
+@@ -1,9 +1,9 @@
+ #!/usr/bin/env python3
+ """Record qualified 1.8.4 metadata after startup and public HTTP checks.
+ 
+-Source/tree, published release ID and hosted staging receipt remain pending until
+-independently qualified. Pending values refuse before private or network access.
+-Fixed source and private receipt pins after that qualification. No SQL, Manager, runtime start, key write,
++Source/tree are pinned to qualified main. Published release ID and hosted staging
++receipt remain pending; missing pins refuse before private or network access.
++No SQL, Manager, runtime start, key write,
+ archive or backup action. Only the existing checkpoint is replaced atomically.
+ Historical sections, staging receipts and prior active state are preserved.
+ """
+@@ -22,8 +22,8 @@
+ 
+ PRIVATE = Path('/srv/customer/jessiemessage-private')
+ OPERATOR = Path('/srv/customer/jessiemessage-operator')
+-SOURCE = 'QUALIFICATION_PENDING'
+-TREE = 'QUALIFICATION_PENDING'
++SOURCE = '1a41e08abc87c3a29d9163fbf8cd2342eb04693c'
++TREE = 'e0964b50c03d3881d851f01f86f58777d22b2c10'
+ ROLLBACK_SOURCE = '6b3319a77c307ed7d6b003fe33de36807c70c266'
+ ROLLBACK_TREE = '924d500375a69ae50bc63414b15df71271e2bf8a'
+ OLD_SOURCE = '48fd42b808b2bc4d95d3f3ba21244c032d0a938f'
+--- prepared/.github/workflows/publish-qualified184.yml
++++ finalized/.github/workflows/publish-qualified184.yml
+@@ -1,6 +1,6 @@
+ # Adapted from the qualified 1.8.3 publisher without any remote mutation here.
+-# Future main source/tree/CI remain pending: embedded publication refuses before
+-# its first process or API call until independently qualified pins replace them.
++# Main source/tree/CI are pinned to the exact clean5/5 qualification.
++# Embedded publication guards still run before the first mutation.
+ name: Publish qualified JessieMessage 1.8.4
+ 
+ on:
+@@ -58,9 +58,9 @@
+ 
+           repo = "fredbuhr/jessiemessage"
+           version = "1.8.4"
+-          target = "QUALIFICATION_PENDING"
+-          tree = "QUALIFICATION_PENDING"
+-          ci_text = "QUALIFICATION_PENDING"
++          target = "1a41e08abc87c3a29d9163fbf8cd2342eb04693c"
++          tree = "e0964b50c03d3881d851f01f86f58777d22b2c10"
++          ci_text = "39879190936"
+           baseline = "48fd42b808b2bc4d95d3f3ba21244c032d0a938f"
+           baseline_tree = "1070a2d4db52e92aa020e4cb8c6d4bacaaf06a58"
+           rollback_target = "6b3319a77c307ed7d6b003fe33de36807c70c266"
+@@ -171,6 +171,7 @@
+           details = ["Version publiée et qualifiée ; activation hébergée à effectuer séparément.",
+                      "- Profil : traductions et choix de langue harmonisés, avec des drapeaux lisibles.",
+                      "- Menus Options uniques dans la messagerie et navigation administrateur simplifiée.",
++                     "- Tâches privées : filtres bloqués jusqu’à la fin de l’enregistrement et de la mise à jour du résumé, pour éviter une course au changement de filtre.",
+                      "- Node.js 24.22.1 et SQL36 inchangés : aucune migration ni nouvelle clé/configuration privée. Le repli technique [v1.7.2](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.7.2) est conservé, source `" + rollback_target + "`.",
+                      "- Le test hébergé de sauvegarde reste reporté à la demande de l’utilisateur ; les réserves réseau, de croissance et d’appareils non essayés restent explicites."]
+           body = "\n".join(details + ["", "Commit : `" + target + "`.",

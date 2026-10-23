@@ -1,0 +1,55 @@
+{
+  "type": "jm184-root-operator-finalization-review",
+  "status": "passed",
+  "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+  "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+  "ciRun": 39879190936,
+  "qualificationObservedAt": "2026-10-23T00:44:10Z",
+  "mainJobs": 5,
+  "files": [
+    {
+      "path": "ops/prepare-release184.py",
+      "sha256": "3fa75e684177e68cd68d8182f7dca3c10a466c153801a7314c1bf0c779df7b1c",
+      "onlyAuthorizedPinCommentOrReleaseNoteChanges": true
+    },
+    {
+      "path": "ops/test-prepare-release184.py",
+      "sha256": "33f0b7490d09e490baaae7e9715a7adfad0df909431c5d2442ca4017c68199ab",
+      "onlyAuthorizedPinCommentOrReleaseNoteChanges": true
+    },
+    {
+      "path": ".github/workflows/prepare-release184.yml",
+      "sha256": "bdfdc816779037e586529ba2acbb83982757e5241ae98b572dd655d63ff7715a",
+      "onlyAuthorizedPinCommentOrReleaseNoteChanges": true
+    },
+    {
+      "path": "ops/record-release184.py",
+      "sha256": "ce661f3fd3e17c6634fcc6771cb7b18437149da35df905b9e4e4187402596dfe",
+      "onlyAuthorizedPinCommentOrReleaseNoteChanges": true
+    },
+    {
+      "path": "ops/test_record_release184.py",
+      "sha256": "aa443b51e1341e1ef8f5ab46770f9460f7326a61cfdf8d4677d59c9e251cf720",
+      "onlyAuthorizedPinCommentOrReleaseNoteChanges": true
+    },
+    {
+      "path": ".github/workflows/record-release184.yml",
+      "sha256": "e0a29031f0025985adc1f20b8fb4ae2e67d448cb23c1a1e6f76162e8806c09b5",
+      "onlyAuthorizedPinCommentOrReleaseNoteChanges": true
+    },
+    {
+      "path": ".github/workflows/publish-qualified184.yml",
+      "sha256": "99befd2e96bf754ac6d48e2cec47bfd26588af9c89f17202353f27c811651497",
+      "onlyAuthorizedPinCommentOrReleaseNoteChanges": true
+    },
+    {
+      "path": "ops/test-publish-qualified184.py",
+      "sha256": "58420073eb967f0c314f4d7d5ce0aa00db6c6f1023da1ee586638d53212b4af0",
+      "onlyAuthorizedPinCommentOrReleaseNoteChanges": true
+    }
+  ],
+  "method": "Reverse exactly seven qualified pin assignments, three descriptive headers and one release bullet; SHA256 must match all eight frozen pending sources. No other change accepted.",
+  "writerStillBlockedBeforePrivateOrNetworkIO": true,
+  "publicationPerformed": false,
+  "hostingPerformed": false
+}

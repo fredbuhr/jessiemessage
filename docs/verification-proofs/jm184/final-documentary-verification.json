@@ -1,0 +1,24 @@
+{
+  "type": "jm184-final-documentary-verification",
+  "status": "passed",
+  "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+  "sourceTree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+  "sourceManifestFiles": 37,
+  "sourceManifestHashesMatched": true,
+  "packageVersionMarkers": 3,
+  "packageVersion": "1.8.4",
+  "relative184LinksExist": true,
+  "handoffAstParsed": true,
+  "handoffNotExecuted": true,
+  "publishedHelperHashVerifiedByGitObject": true,
+  "mainJobs": 5,
+  "publicationJobs": 2,
+  "indexedNativeLogs": 22,
+  "whitespaceCheck": "passed excluding byte-exact logs and unified-diff evidence; context lines in verbatim .diff retain their required leading space",
+  "proofWhitespaceExclusions": [
+    "*.log",
+    "*.diff"
+  ],
+  "documentationOnly": true,
+  "hostingActionPerformed": false
+}

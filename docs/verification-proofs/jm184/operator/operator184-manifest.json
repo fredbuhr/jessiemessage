@@ -1,0 +1,85 @@
+{
+  "scope": "same8 operator files; exactly3 source-bearing files finalized after root verified actual main5/5",
+  "files": [
+    {
+      "path": "ops/prepare-release184.py",
+      "sha256": "3fa75e684177e68cd68d8182f7dca3c10a466c153801a7314c1bf0c779df7b1c",
+      "bytes": 15593,
+      "lines": 290,
+      "baselinePath": "/workspace/scratch/bb431be72395/operator183/ops/prepare-release183.py",
+      "baselineSha256": "0b2c280f238b80eb80944623576a5932a9abf41778cb9f215a7036a529b85101",
+      "prototypeSha256": "3d2b2c4a7391c57bfec9385627ad4971615d751c987233ca34ca5bd4472b7c6a",
+      "changedSincePrototype": true
+    },
+    {
+      "path": "ops/test-prepare-release184.py",
+      "sha256": "33f0b7490d09e490baaae7e9715a7adfad0df909431c5d2442ca4017c68199ab",
+      "bytes": 32578,
+      "lines": 555,
+      "baselinePath": "/workspace/scratch/bb431be72395/operator183/ops/test-prepare-release183.py",
+      "baselineSha256": "b5c32dc7ff490b1a336a5876f56a7e8b63a1a6d0b1962a70c10d7a7cc3fd12a9",
+      "prototypeSha256": "33f0b7490d09e490baaae7e9715a7adfad0df909431c5d2442ca4017c68199ab",
+      "changedSincePrototype": false
+    },
+    {
+      "path": ".github/workflows/prepare-release184.yml",
+      "sha256": "bdfdc816779037e586529ba2acbb83982757e5241ae98b572dd655d63ff7715a",
+      "bytes": 1060,
+      "lines": 37,
+      "baselinePath": "/workspace/scratch/bb431be72395/operator183/.github/workflows/prepare-release183.yml",
+      "baselineSha256": "d044816d26c51f7c3c15ed49c92424a0af917d0a1c0ae835a22de9c65458a615",
+      "prototypeSha256": "bdfdc816779037e586529ba2acbb83982757e5241ae98b572dd655d63ff7715a",
+      "changedSincePrototype": false
+    },
+    {
+      "path": "ops/record-release184.py",
+      "sha256": "ce661f3fd3e17c6634fcc6771cb7b18437149da35df905b9e4e4187402596dfe",
+      "bytes": 29908,
+      "lines": 482,
+      "baselinePath": "/workspace/scratch/bb431be72395/operator183/ops/record-release183.py",
+      "baselineSha256": "1302195773a6568742db82aa0588a3741af299bea706f283a2a0a551f512fa3c",
+      "prototypeSha256": "fd9e218b0076bc04bf132cc4d72ffbc1287d39d88092da88421e23d53d113aac",
+      "changedSincePrototype": true
+    },
+    {
+      "path": "ops/test_record_release184.py",
+      "sha256": "aa443b51e1341e1ef8f5ab46770f9460f7326a61cfdf8d4677d59c9e251cf720",
+      "bytes": 45493,
+      "lines": 671,
+      "baselinePath": "/workspace/scratch/bb431be72395/operator183/ops/test_record_release183.py",
+      "baselineSha256": "999538acc10d7cd45e04a09a5b07b7bbba963e6c51d1ac2431405e071391291e",
+      "prototypeSha256": "aa443b51e1341e1ef8f5ab46770f9460f7326a61cfdf8d4677d59c9e251cf720",
+      "changedSincePrototype": false
+    },
+    {
+      "path": ".github/workflows/record-release184.yml",
+      "sha256": "e0a29031f0025985adc1f20b8fb4ae2e67d448cb23c1a1e6f76162e8806c09b5",
+      "bytes": 1135,
+      "lines": 38,
+      "baselinePath": "/workspace/scratch/bb431be72395/operator183/.github/workflows/record-release183.yml",
+      "baselineSha256": "dc20d11896e0af0bb0817ed62302868a953f09c1fa64918ef566d093c9c26c94",
+      "prototypeSha256": "e0a29031f0025985adc1f20b8fb4ae2e67d448cb23c1a1e6f76162e8806c09b5",
+      "changedSincePrototype": false
+    },
+    {
+      "path": ".github/workflows/publish-qualified184.yml",
+      "sha256": "99befd2e96bf754ac6d48e2cec47bfd26588af9c89f17202353f27c811651497",
+      "bytes": 14812,
+      "lines": 237,
+      "baselinePath": "/workspace/scratch/bb431be72395/operator183/.github/workflows/publish-qualified183.yml",
+      "baselineSha256": "ef61cef254456f6c3cd23af7656260d28fe9ae7eea442258a78a35eba4f97b18",
+      "prototypeSha256": "b70a043570577ab4aeb0c2558545b3926928d5dadc9dee28664cef9f3dd217ea",
+      "changedSincePrototype": true
+    },
+    {
+      "path": "ops/test-publish-qualified184.py",
+      "sha256": "58420073eb967f0c314f4d7d5ce0aa00db6c6f1023da1ee586638d53212b4af0",
+      "bytes": 19012,
+      "lines": 301,
+      "baselinePath": "/workspace/scratch/bb431be72395/operator183/ops/test-publish-qualified183.py",
+      "baselineSha256": "a825791b1cdfa0dd67642c24488cd82f7eaab9d4541d0134bcc4fbc258a0efbb",
+      "prototypeSha256": "58420073eb967f0c314f4d7d5ce0aa00db6c6f1023da1ee586638d53212b4af0",
+      "changedSincePrototype": false
+    }
+  ]
+}

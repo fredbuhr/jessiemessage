@@ -1,0 +1,456 @@
+{
+  "status": "completed_success",
+  "repository": "fredbuhr/jessiemessage",
+  "runId": 39879190936,
+  "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39879190936",
+  "runAttempt": 1,
+  "event": "push",
+  "branch": "main",
+  "head": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+  "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+  "parents": [
+    "a0a8a6a048654b1700b14738edfa99d3ee4cfc66",
+    "1967502a3a97fecc1e78e6f325da306d4672c940"
+  ],
+  "expectedTree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+  "sameTreeAsQualifiedPr132": true,
+  "qualifiedPr132Report": "/workspace/scratch/bb431be72395/ux184/pr132-native.json",
+  "requiredJobs": 5,
+  "requiredJobsSucceeded": 5,
+  "jobs": [
+    {
+      "id": 120172162792,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T00:37:14Z",
+      "completedAt": "2026-10-23T00:39:33Z",
+      "nativeSummary": {
+        "tests": 3954,
+        "suites": 0,
+        "pass": 3906,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 48,
+        "todo": 0,
+        "duration_ms": 105118.70785
+      },
+      "nativeNode": "v24.22.1",
+      "actualCheckout": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/main184-final-verify.log",
+        "sha256": "871d63aa7a6461028c198252e83e4f92a263fc1503930dbabe92cf18bbe6dddd",
+        "gitBlobSha": "f5f32ce6200cf1bb5166c5607b9eb6042c229fe3",
+        "gitHashObjectMatched": true,
+        "blobCreated": true,
+        "bytes": 559768,
+        "lines": 4274
+      }
+    },
+    {
+      "id": 120172162954,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T00:37:15Z",
+      "completedAt": "2026-10-23T00:41:42Z",
+      "nativeSummary": {
+        "tests": 231,
+        "suites": 0,
+        "pass": 231,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 250740.077212
+      },
+      "nativeNode": "v24.22.1",
+      "actualCheckout": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/main184-final-browser.log",
+        "sha256": "81886d07de12a74f96bd4c2e2a0d253b64be4a0b24c1620e8c8999a68ea412c9",
+        "gitBlobSha": "cc6443ddf2a2f993e88ea530144076d378c6e794",
+        "gitHashObjectMatched": true,
+        "blobCreated": true,
+        "bytes": 49134,
+        "lines": 479
+      }
+    },
+    {
+      "id": 120172163020,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T00:37:14Z",
+      "completedAt": "2026-10-23T00:38:40Z",
+      "nativeSummary": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 58059.218222
+      },
+      "nativeNode": "v24.22.1",
+      "actualCheckout": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/main184-final-auth.log",
+        "sha256": "770f8ec6fe0480cf523112ed20f6ac32c021f6747b5ba9347aa3b283cc02a5e6",
+        "gitBlobSha": "8d8269d545914ae1aef149db326c406a3da125da",
+        "gitHashObjectMatched": true,
+        "blobCreated": true,
+        "bytes": 38171,
+        "lines": 401
+      }
+    },
+    {
+      "id": 120172163095,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T00:37:14Z",
+      "completedAt": "2026-10-23T00:44:01Z",
+      "nativeSummary": {
+        "tests": 576,
+        "suites": 0,
+        "pass": 576,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 362144.207023
+      },
+      "nativeNode": "v24.22.1",
+      "actualCheckout": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/main184-final-mariadb-11.4.log",
+        "sha256": "b91d92eddf9e623cd4e949151e566e9cb8f65e977ab809c623e266399130ac0d",
+        "gitBlobSha": "873514ad16ba248f115aac267b3775b440c5e590",
+        "gitHashObjectMatched": true,
+        "blobCreated": true,
+        "bytes": 340561,
+        "lines": 4229
+      }
+    },
+    {
+      "id": 120172163117,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T00:37:14Z",
+      "completedAt": "2026-10-23T00:43:09Z",
+      "nativeSummary": {
+        "tests": 576,
+        "suites": 0,
+        "pass": 576,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 244234.239484
+      },
+      "nativeNode": "v24.22.1",
+      "actualCheckout": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/main184-final-mariadb-10.11.log",
+        "sha256": "e65e94036a20c3e062cc2fd6ccff70e9c21db4ea7cca6f753a819e3311ec856b",
+        "gitBlobSha": "c7b9e34b28653727f8d45d4800dda8928a3dbfff",
+        "gitHashObjectMatched": true,
+        "blobCreated": true,
+        "bytes": 339675,
+        "lines": 4220
+      }
+    }
+  ],
+  "polls": [
+    {
+      "at": "2026-10-23T00:38:16.878Z",
+      "jobs": [
+        {
+          "id": 120172162792,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120172162954,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120172163020,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120172163095,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120172163117,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:39:22.416Z",
+      "jobs": [
+        {
+          "id": 120172162792,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120172162954,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120172163020,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172163095,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120172163117,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:40:18.366Z",
+      "jobs": [
+        {
+          "id": 120172162792,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172162954,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120172163020,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172163095,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120172163117,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:41:10.804Z",
+      "jobs": [
+        {
+          "id": 120172162792,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172162954,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120172163020,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172163095,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120172163117,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:41:56.344Z",
+      "jobs": [
+        {
+          "id": 120172162792,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172162954,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172163020,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172163095,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120172163117,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:43:05.650Z",
+      "jobs": [
+        {
+          "id": 120172162792,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172162954,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172163020,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172163095,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120172163117,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:43:51.201Z",
+      "jobs": [
+        {
+          "id": 120172162792,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172162954,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172163020,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172163095,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "id": 120172163117,
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:45:07.138Z",
+      "jobs": [
+        {
+          "id": 120172162792,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172162954,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172163020,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172163095,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120172163117,
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "previousFailedMainReport": "/workspace/scratch/bb431be72395/ux184/main-native.json",
+  "production": "1.8.3 unchanged;1.8.4 unpublished",
+  "sourceMetadata": "/workspace/scratch/bb431be72395/ux184/main-final-source-metadata.json",
+  "limits": [
+    "Complete decoded UTF-8 logs retain job pre/postamble and BOM; SHA256 is of those bytes, not of a log ZIP.",
+    "Job test totals overlap between suites; no invented unique aggregate.",
+    "Artifact metadata is from this collector's native browser log; separate visual owner inspected PNG contents. No duplicate artifact API/download by collector.",
+    "No application/test edit, suite execution, private host or production action by collector."
+  ],
+  "observedAt": "2026-10-23T00:42:23.171Z",
+  "artifact": {
+    "source": "complete native browser job log only",
+    "name": "homepage-render",
+    "id": 12469678556,
+    "digest": "sha256:c3b2760b3745b40e23a19dfce09918b562eb89a900231af01675d0ed41aad401",
+    "size_in_bytes": 3721998,
+    "uploadedFiles": 24,
+    "zipDownloaded": false
+  },
+  "conclusion": "success",
+  "runNumber": 741,
+  "headAndTreeVerifiedFromNativeRunApi": true,
+  "requiredJobsFailed": 0,
+  "actualCheckoutAllFiveJobLogs": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+  "nativeNode": "v24.22.1 verified in all five complete logs",
+  "remoteMutationsPerformed": [
+    {
+      "operation": "create_blob",
+      "count": 5,
+      "purpose": "Parent-authorized exact complete decoded UTF-8 job logs; all compared to git hash-object. No ref/commit/run mutation."
+    }
+  ],
+  "closingReadPolicy": "Four prior logs were neither re-read nor fetched again: saved metadata and tool-store content were reused. Only the last MariaDB11.4 log was newly collected and independently checked.",
+  "lastLogIndependentCrosscheck": {
+    "path": "/workspace/scratch/bb431be72395/ux184/main-final-last-log-crosscheck.json",
+    "sha256": "bcfbaaf7485274e12405ad07f3e7372153456398950fd304b8de7d8295140d17",
+    "scope": "MariaDB11.4 log only; no five-log independent review claimed."
+  },
+  "separateVisualReview": {
+    "owner": "/root/versions_reprise/second_visual_review",
+    "report": "/workspace/scratch/bb431be72395/ux184/visual-review-main-final.json",
+    "sha256ReportedByOwner": "d862134c05345b671c2b34b3f9f814110291933c5572e8a9adeee97d8b64caff"
+  },
+  "pollingPolicy": "At least30seconds between repeat job-state polls; no rerun/dispatch",
+  "runUpdatedAt": "2026-10-23T00:44:02Z",
+  "completedAt": "2026-10-23T00:46:43.845Z",
+  "nextAction": "Parent finalizes operator pins/publication for this exact qualified main; no activation inferred from CI."
+}

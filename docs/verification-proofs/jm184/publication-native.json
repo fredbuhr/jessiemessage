@@ -1,0 +1,198 @@
+{
+  "status": "completed_success_published_verified",
+  "repository": "fredbuhr/jessiemessage",
+  "runId": 39880194316,
+  "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/39880194316",
+  "runNumber": 1,
+  "runAttempt": 1,
+  "event": "push",
+  "branch": "ops/publish-v1.8.4",
+  "operatorHead": "e7e6f11815007a53a9502672500476f6f87e9f25",
+  "operatorTree": "277c83d86bdcf4ff51591cb51ade0c82c879b732",
+  "operatorParents": [
+    "1a41e08abc87c3a29d9163fbf8cd2342eb04693c"
+  ],
+  "applicationSource": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+  "applicationTree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+  "qualifiedApplicationRun": 39879190936,
+  "requiredJobs": 2,
+  "requiredJobsSucceeded": 2,
+  "jobs": [
+    {
+      "id": 120175457244,
+      "name": "operator-tests",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T00:47:25Z",
+      "completedAt": "2026-10-23T00:47:48Z",
+      "nativeNode": "v24.22.1",
+      "actualCheckout": "e7e6f11815007a53a9502672500476f6f87e9f25",
+      "checkoutPerformed": true,
+      "checkoutEvidence": "Native git log -1 prints exact operator commit.",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/publication184-operator-tests.log",
+        "sha256": "5c11cf4008d83261aa8ddfa403d186f0579938bf4c955c6a01b317520a950c04",
+        "gitBlobSha": "a0086cb99c07dd74890fb65fed07483b07e4cedb",
+        "gitHashObjectMatched": true,
+        "blobCreated": true,
+        "bytes": 47770,
+        "lines": 440
+      }
+    },
+    {
+      "id": 120175590364,
+      "name": "publish",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T00:47:50Z",
+      "completedAt": "2026-10-23T00:48:05Z",
+      "nativeNode": "v24.22.1",
+      "actualCheckout": null,
+      "checkoutPerformed": false,
+      "checkoutEvidence": "No checkout step in native job API or log; inline workflow publisher validates pinned application source through GitHub API.",
+      "log": {
+        "path": "/workspace/scratch/bb431be72395/ux184/logs/publication184-publish.log",
+        "sha256": "cbd581daaecb84a0f16df75052c59944eabb49e7d9c8a7bf6c9bf40b11342295",
+        "gitBlobSha": "1a5b69b3a0b6a26b2acf55cc6756b4ba98187fc9",
+        "gitHashObjectMatched": true,
+        "blobCreated": true,
+        "bytes": 22882,
+        "lines": 239
+      }
+    }
+  ],
+  "polls": [
+    {
+      "at": "2026-10-23T00:47:47.974Z",
+      "jobs": [
+        {
+          "id": 120175457244,
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "at": "2026-10-23T00:48:57.196Z",
+      "jobs": [
+        {
+          "id": 120175457244,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 120175590364,
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "sourceMetadata": "/workspace/scratch/bb431be72395/ux184/publication-source-metadata.json",
+  "production": "1.8.3 unchanged;no hosted action by this collector",
+  "limits": [
+    "Publisher has no checkout step or git-log trace; no operator checkout is invented for that job. Receipt and live APIs bind publication to the qualified application commit.",
+    "Operator validation comprises Python publication38/38 on synthetic API/source fixtures and Python unittest preparation22/22. Its fixture sourcePinsQualified:false is not a claim about real source qualification.",
+    "Full UTF-8 logs retain job pre/postamble, ANSI and BOM as returned; SHA256 describes saved bytes, not a ZIP.",
+    "Publication is verified separately from hosted deployment/activation. No hosted action, rerun, workflow dispatch or application edit by collector."
+  ],
+  "conclusion": "success",
+  "nativeNode": "v24.22.1 observed in both jobs",
+  "operatorValidation": {
+    "publication": {
+      "runtime": "python3",
+      "tests": 38,
+      "pass": 38,
+      "fail": 0,
+      "networkCalls": 0,
+      "realMutations": 0,
+      "fixtureSourceMode": "entirely synthetic API/source payloads; no Git checkout or future source inferred",
+      "shippedPins": {
+        "target": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+        "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+        "ci_text": "39879190936"
+      }
+    },
+    "preparation": {
+      "runtime": "python3 unittest",
+      "tests": 22,
+      "pass": 22,
+      "fail": 0,
+      "nativeStatus": "OK",
+      "nativeFooter": "Ran 22 tests in 12.153s"
+    }
+  },
+  "receipt": {
+    "status": "published_verified",
+    "tag": "v1.8.4",
+    "commit": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10",
+    "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.4",
+    "ciRun": 39879190936,
+    "nodeVersion": "24.22.1",
+    "normalMigrations": 33,
+    "videoCandidateMigrations": 3,
+    "videoCreationEnabled": true,
+    "quickRepliesWritable": true,
+    "schemaMigrations": 36,
+    "migrationsChanged": false,
+    "rollback": {
+      "tag": "v1.7.2",
+      "commit": "6b3319a77c307ed7d6b003fe33de36807c70c266",
+      "releaseId": 420600213
+    },
+    "previousLatest": {
+      "tag": "v1.8.3",
+      "id": 421266798
+    },
+    "latest": {
+      "tag": "v1.8.4",
+      "id": 421341347,
+      "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c"
+    },
+    "publicationMode": "created_and_latest",
+    "deploymentPerformed": false
+  },
+  "releaseId": 421341347,
+  "latestId": 421341347,
+  "apiVerification": {
+    "tag": {
+      "ref": "refs/tags/v1.8.4",
+      "type": "commit",
+      "commit": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c"
+    },
+    "release": {
+      "id": 421341347,
+      "tag": "v1.8.4",
+      "target": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "draft": false,
+      "prerelease": false,
+      "publishedAt": "2026-10-23T00:48:02Z",
+      "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.4"
+    },
+    "latest": {
+      "id": 421341347,
+      "tag": "v1.8.4",
+      "target": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.4"
+    },
+    "allMatchReceipt": true
+  },
+  "deployment": {
+    "performed": false,
+    "receiptDeploymentPerformed": false,
+    "hostedActionByCollector": false,
+    "activationVerified": false
+  },
+  "remoteMutationsPerformed": [
+    {
+      "operation": "create_blob",
+      "count": 2,
+      "purpose": "Parent-authorized complete decoded UTF-8 logs, both compared to git hash-object. No ref/tag/release/run mutation by collector."
+    }
+  ],
+  "pollingPolicy": "At least30seconds between repeated job-state polls; no rerun or retry mutation.",
+  "runUpdatedAt": "2026-10-23T00:48:05Z",
+  "completedAt": "2026-10-23T00:52:24.268Z",
+  "nextAction": "Publication proven. Parent completes documentary/operator handoff; no hosting activation inferred."
+}

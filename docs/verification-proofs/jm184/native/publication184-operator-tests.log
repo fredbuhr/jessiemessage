@@ -1,0 +1,440 @@
+﻿2026-10-23T00:47:25.7941184Z Current runner version: '2.338.0'
+2026-10-23T00:47:25.7978322Z ##[group]Runner Image Provisioner
+2026-10-23T00:47:25.7979914Z Hosted Compute Agent
+2026-10-23T00:47:25.7981031Z Version: 20261012.601
+2026-10-23T00:47:25.7982231Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+2026-10-23T00:47:25.7983844Z Build Date: 2026-10-12T17:48:21Z
+2026-10-23T00:47:25.7985200Z Worker ID: {6cfd25b9-9019-4776-8d6c-b7a44ebf8a3d}
+2026-10-23T00:47:25.7986593Z Region: eastus2
+2026-10-23T00:47:25.7987650Z Cloud: Azure
+2026-10-23T00:47:25.7988641Z ##[endgroup]
+2026-10-23T00:47:25.7991545Z ##[group]Operating System
+2026-10-23T00:47:25.7992805Z Ubuntu
+2026-10-23T00:47:25.7994094Z 24.04.5
+2026-10-23T00:47:25.7994994Z LTS
+2026-10-23T00:47:25.7996061Z ##[endgroup]
+2026-10-23T00:47:25.7997001Z ##[group]Runner Image
+2026-10-23T00:47:25.7998123Z Image: ubuntu-24.04
+2026-10-23T00:47:25.7999303Z Version: 20261012.334.1
+2026-10-23T00:47:25.8001590Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-23T00:47:25.8004772Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+2026-10-23T00:47:25.8007203Z ##[endgroup]
+2026-10-23T00:47:25.8009179Z ##[group]GITHUB_TOKEN Permissions
+2026-10-23T00:47:25.8012222Z Contents: read
+2026-10-23T00:47:25.8013475Z Metadata: read
+2026-10-23T00:47:25.8014406Z ##[endgroup]
+2026-10-23T00:47:25.8018058Z Secret source: Actions
+2026-10-23T00:47:25.8019569Z Cache mode: write
+2026-10-23T00:47:25.8021337Z Prepare workflow directory
+2026-10-23T00:47:25.8509153Z Prepare all required actions
+2026-10-23T00:47:25.8581756Z Getting action download info
+2026-10-23T00:47:26.0729802Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-23T00:47:26.1852220Z Download action repository 'actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+2026-10-23T00:47:26.5368590Z Complete job name: operator-tests
+2026-10-23T00:47:26.6287549Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-23T00:47:26.6288637Z with:
+2026-10-23T00:47:26.6289122Z   ref: e7e6f11815007a53a9502672500476f6f87e9f25
+2026-10-23T00:47:26.6289706Z   fetch-depth: 0
+2026-10-23T00:47:26.6290172Z   persist-credentials: false
+2026-10-23T00:47:26.6290763Z   repository: fredbuhr/jessiemessage
+2026-10-23T00:47:26.6295091Z   token: ***
+2026-10-23T00:47:26.6295588Z   ssh-strict: true
+2026-10-23T00:47:26.6296038Z   ssh-user: git
+2026-10-23T00:47:26.6296458Z   clean: true
+2026-10-23T00:47:26.6296911Z   sparse-checkout-cone-mode: true
+2026-10-23T00:47:26.6297496Z   fetch-tags: false
+2026-10-23T00:47:26.6297989Z   show-progress: true
+2026-10-23T00:47:26.6298429Z   lfs: false
+2026-10-23T00:47:26.6298845Z   submodules: false
+2026-10-23T00:47:26.6299297Z   set-safe-directory: true
+2026-10-23T00:47:26.6299800Z   allow-unsafe-pr-checkout: false
+2026-10-23T00:47:26.6300596Z ##[endgroup]
+2026-10-23T00:47:26.7329259Z Syncing repository: fredbuhr/jessiemessage
+2026-10-23T00:47:26.7331833Z ##[group]Getting Git version info
+2026-10-23T00:47:26.7333306Z Working directory is '/home/runner/work/jessiemessage/jessiemessage'
+2026-10-23T00:47:26.7335137Z [command]/usr/bin/git version
+2026-10-23T00:47:26.7427024Z git version 2.55.0
+2026-10-23T00:47:26.7456708Z ##[endgroup]
+2026-10-23T00:47:26.7469693Z Temporarily overriding HOME='/home/runner/work/_temp/ebdcb563-b1d9-49b2-a8d1-d90cc2d999dc' before making global git config changes
+2026-10-23T00:47:26.7472392Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-23T00:47:26.7476886Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/jessiemessage/jessiemessage
+2026-10-23T00:47:26.7536715Z Deleting the contents of '/home/runner/work/jessiemessage/jessiemessage'
+2026-10-23T00:47:26.7540344Z ##[group]Determining repository object format
+2026-10-23T00:47:26.7542005Z ##[endgroup]
+2026-10-23T00:47:26.7543792Z ##[group]Initializing the repository
+2026-10-23T00:47:26.7547185Z [command]/usr/bin/git init /home/runner/work/jessiemessage/jessiemessage
+2026-10-23T00:47:26.7709571Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-23T00:47:26.7711360Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-23T00:47:26.7713581Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-23T00:47:26.7714825Z hint: call:
+2026-10-23T00:47:26.7715941Z hint:
+2026-10-23T00:47:26.7716864Z hint: 	git config --global init.defaultBranch <name>
+2026-10-23T00:47:26.7717948Z hint:
+2026-10-23T00:47:26.7719046Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-23T00:47:26.7720585Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-23T00:47:26.7721790Z hint:
+2026-10-23T00:47:26.7724867Z hint: 	git branch -m <name>
+2026-10-23T00:47:26.7725749Z hint:
+2026-10-23T00:47:26.7726854Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-23T00:47:26.7728608Z Initialized empty Git repository in /home/runner/work/jessiemessage/jessiemessage/.git/
+2026-10-23T00:47:26.7731552Z [command]/usr/bin/git remote add origin https://github.com/fredbuhr/jessiemessage
+2026-10-23T00:47:26.7798464Z ##[endgroup]
+2026-10-23T00:47:26.7799929Z ##[group]Disabling automatic garbage collection
+2026-10-23T00:47:26.7802228Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-23T00:47:26.7856764Z ##[endgroup]
+2026-10-23T00:47:26.7858729Z ##[group]Setting up auth
+2026-10-23T00:47:26.7861909Z Removing SSH command configuration
+2026-10-23T00:47:26.7863842Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-23T00:47:26.7897202Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-23T00:47:26.8394408Z Removing HTTP extra header
+2026-10-23T00:47:26.8397018Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-23T00:47:26.8485796Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-23T00:47:26.8809532Z Removing includeIf entries pointing to credentials config files
+2026-10-23T00:47:26.8821256Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-23T00:47:26.8869309Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-23T00:47:26.9184613Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-89f53604-7f1e-4bd5-9ef6-f166568554cb.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-23T00:47:26.9248192Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path /home/runner/work/_temp/git-credentials-89f53604-7f1e-4bd5-9ef6-f166568554cb.config
+2026-10-23T00:47:26.9300532Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-89f53604-7f1e-4bd5-9ef6-f166568554cb.config
+2026-10-23T00:47:26.9347021Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-89f53604-7f1e-4bd5-9ef6-f166568554cb.config
+2026-10-23T00:47:26.9390276Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-89f53604-7f1e-4bd5-9ef6-f166568554cb.config
+2026-10-23T00:47:26.9428476Z ##[endgroup]
+2026-10-23T00:47:26.9429807Z ##[group]Fetching the repository
+2026-10-23T00:47:26.9437652Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-10-23T00:47:28.3765151Z From https://github.com/fredbuhr/jessiemessage
+2026-10-23T00:47:28.3768352Z  * [new branch]      compat/profile-schema-1.1.1 -> origin/compat/profile-schema-1.1.1
+2026-10-23T00:47:28.3771249Z  * [new branch]      docs/0701-verified-resume -> origin/docs/0701-verified-resume
+2026-10-23T00:47:28.3774782Z  * [new branch]      docs/operational-backup-065-verification -> origin/docs/operational-backup-065-verification
+2026-10-23T00:47:28.3777438Z  * [new branch]      docs/privacy-notice-refresh -> origin/docs/privacy-notice-refresh
+2026-10-23T00:47:28.3780082Z  * [new branch]      docs/witness-enrollment-070-activation -> origin/docs/witness-enrollment-070-activation
+2026-10-23T00:47:28.3782634Z  * [new branch]      feat/077-local-closures -> origin/feat/077-local-closures
+2026-10-23T00:47:28.3785405Z  * [new branch]      feat/078-manual-restore-operator -> origin/feat/078-manual-restore-operator
+2026-10-23T00:47:28.3787759Z  * [new branch]      feat/079-messaging-acceptance -> origin/feat/079-messaging-acceptance
+2026-10-23T00:47:28.3790010Z  * [new branch]      feat/access-renewal-pagination -> origin/feat/access-renewal-pagination
+2026-10-23T00:47:28.3792104Z  * [new branch]      feat/account-closure-064 -> origin/feat/account-closure-064
+2026-10-23T00:47:28.3794395Z  * [new branch]      feat/account-erasure-063 -> origin/feat/account-erasure-063
+2026-10-23T00:47:28.3796301Z  * [new branch]      feat/admin-auth         -> origin/feat/admin-auth
+2026-10-23T00:47:28.3798123Z  * [new branch]      feat/admin-comfort-057  -> origin/feat/admin-comfort-057
+2026-10-23T00:47:28.3800214Z  * [new branch]      feat/announcements-150  -> origin/feat/announcements-150
+2026-10-23T00:47:28.3803185Z  * [new branch]      feat/announcements-compat-141 -> origin/feat/announcements-compat-141
+2026-10-23T00:47:28.3805688Z  * [new branch]      feat/application-table-checkpoint -> origin/feat/application-table-checkpoint
+2026-10-23T00:47:28.3808457Z  * [new branch]      feat/audit-reprise-2026-10-15 -> origin/feat/audit-reprise-2026-10-15
+2026-10-23T00:47:28.3810770Z  * [new branch]      feat/authentication-rehearsal -> origin/feat/authentication-rehearsal
+2026-10-23T00:47:28.3816613Z  * [new branch]      feat/backup-clone-recovery -> origin/feat/backup-clone-recovery
+2026-10-23T00:47:28.3818592Z  * [new branch]      feat/backup-destinations-055 -> origin/feat/backup-destinations-055
+2026-10-23T00:47:28.3820937Z  * [new branch]      feat/backup-email-alerts -> origin/feat/backup-email-alerts
+2026-10-23T00:47:28.3822198Z  * [new branch]      feat/backup-verification-056 -> origin/feat/backup-verification-056
+2026-10-23T00:47:28.3823804Z  * [new branch]      feat/broadcast-compat-134 -> origin/feat/broadcast-compat-134
+2026-10-23T00:47:28.3825026Z  * [new branch]      feat/broadcast-direct-delivery -> origin/feat/broadcast-direct-delivery
+2026-10-23T00:47:28.3826196Z  * [new branch]      feat/broadcast-runtime-backup -> origin/feat/broadcast-runtime-backup
+2026-10-23T00:47:28.3827397Z  * [new branch]      feat/broadcast-scale-140 -> origin/feat/broadcast-scale-140
+2026-10-23T00:47:28.3828689Z  * [new branch]      feat/chat-accessibility -> origin/feat/chat-accessibility
+2026-10-23T00:47:28.3830365Z  * [new branch]      feat/chat-stable-history -> origin/feat/chat-stable-history
+2026-10-23T00:47:28.3832256Z  * [new branch]      feat/client-conversation-export-060 -> origin/feat/client-conversation-export-060
+2026-10-23T00:47:28.3834399Z  * [new branch]      feat/client-recovery    -> origin/feat/client-recovery
+2026-10-23T00:47:28.3835720Z  * [new branch]      feat/client-recovery-backup -> origin/feat/client-recovery-backup
+2026-10-23T00:47:28.3837434Z  * [new branch]      feat/closure-reconciliation-plan-074 -> origin/feat/closure-reconciliation-plan-074
+2026-10-23T00:47:28.3839092Z  * [new branch]      feat/closure-startup-barrier-071 -> origin/feat/closure-startup-barrier-071
+2026-10-23T00:47:28.3840644Z  * [new branch]      feat/closure-target-replay-075 -> origin/feat/closure-target-replay-075
+2026-10-23T00:47:28.3842716Z  * [new branch]      feat/conversation-export-058 -> origin/feat/conversation-export-058
+2026-10-23T00:47:28.3844420Z  * [new branch]      feat/crm-lifecycle      -> origin/feat/crm-lifecycle
+2026-10-23T00:47:28.3845595Z  * [new branch]      feat/crm-private-key    -> origin/feat/crm-private-key
+2026-10-23T00:47:28.3846762Z  * [new branch]      feat/crm-runtime-backup -> origin/feat/crm-runtime-backup
+2026-10-23T00:47:28.3847981Z  * [new branch]      feat/data-deletion-plan -> origin/feat/data-deletion-plan
+2026-10-23T00:47:28.3849368Z  * [new branch]      feat/data-privacy-preparation -> origin/feat/data-privacy-preparation
+2026-10-23T00:47:28.3850989Z  * [new branch]      feat/device-origin-transition -> origin/feat/device-origin-transition
+2026-10-23T00:47:28.3852468Z  * [new branch]      feat/device-transition-interface -> origin/feat/device-transition-interface
+2026-10-23T00:47:28.3854385Z  * [new branch]      feat/device-transition-language -> origin/feat/device-transition-language
+2026-10-23T00:47:28.3856008Z  * [new branch]      feat/device-transition-notification-retry -> origin/feat/device-transition-notification-retry
+2026-10-23T00:47:28.3857519Z  * [new branch]      feat/durable-admin-sessions -> origin/feat/durable-admin-sessions
+2026-10-23T00:47:28.3858765Z  * [new branch]      feat/emoji-inclusifs-1.3.0 -> origin/feat/emoji-inclusifs-1.3.0
+2026-10-23T00:47:28.3859997Z  * [new branch]      feat/erasure-continuity-066 -> origin/feat/erasure-continuity-066
+2026-10-23T00:47:28.3861192Z  * [new branch]      feat/first-hosted-start -> origin/feat/first-hosted-start
+2026-10-23T00:47:28.3862385Z  * [new branch]      feat/fondations-pwa     -> origin/feat/fondations-pwa
+2026-10-23T00:47:28.3863665Z  * [new branch]      feat/help-contact       -> origin/feat/help-contact
+2026-10-23T00:47:28.3864838Z  * [new branch]      feat/hosted-sql-preparation -> origin/feat/hosted-sql-preparation
+2026-10-23T00:47:28.3866255Z  * [new branch]      feat/hosting-inventory  -> origin/feat/hosting-inventory
+2026-10-23T00:47:28.3867491Z  * [new branch]      feat/infomaniak-runtime-profile -> origin/feat/infomaniak-runtime-profile
+2026-10-23T00:47:28.3868900Z  * [new branch]      feat/invitations-client-access -> origin/feat/invitations-client-access
+2026-10-23T00:47:28.3870129Z  * [new branch]      feat/mail-readiness     -> origin/feat/mail-readiness
+2026-10-23T00:47:28.3871363Z  * [new branch]      feat/managed-witness-origin-069 -> origin/feat/managed-witness-origin-069
+2026-10-23T00:47:28.3872730Z  * [new branch]      feat/manual-invitation-runtime -> origin/feat/manual-invitation-runtime
+2026-10-23T00:47:28.3874325Z  * [new branch]      feat/media-capacity-inventory -> origin/feat/media-capacity-inventory
+2026-10-23T00:47:28.3875614Z  * [new branch]      feat/message-notifications -> origin/feat/message-notifications
+2026-10-23T00:47:28.3876812Z  * [new branch]      feat/neutral-public-host -> origin/feat/neutral-public-host
+2026-10-23T00:47:28.3878409Z  * [new branch]      feat/observed-shared-database-scope -> origin/feat/observed-shared-database-scope
+2026-10-23T00:47:28.3879822Z  * [new branch]      feat/operational-backup-065 -> origin/feat/operational-backup-065
+2026-10-23T00:47:28.3881055Z  * [new branch]      feat/operations-readiness -> origin/feat/operations-readiness
+2026-10-23T00:47:28.3882223Z  * [new branch]      feat/operations-report  -> origin/feat/operations-report
+2026-10-23T00:47:28.3883704Z  * [new branch]      feat/pc-witness-067     -> origin/feat/pc-witness-067
+2026-10-23T00:47:28.3884841Z  * [new branch]      feat/pc-witness-067-verified -> origin/feat/pc-witness-067-verified
+2026-10-23T00:47:28.3886104Z  * [new branch]      feat/periodic-backup-monitor -> origin/feat/periodic-backup-monitor
+2026-10-23T00:47:28.3887477Z  * [new branch]      feat/preproduction-preflight -> origin/feat/preproduction-preflight
+2026-10-23T00:47:28.3888748Z  * [new branch]      feat/primary-origin-cutover -> origin/feat/primary-origin-cutover
+2026-10-23T00:47:28.3890612Z  * [new branch]      feat/primary-origin-preparation -> origin/feat/primary-origin-preparation
+2026-10-23T00:47:28.3891869Z  * [new branch]      feat/privacy-choices-062 -> origin/feat/privacy-choices-062
+2026-10-23T00:47:28.3893343Z  * [new branch]      feat/privacy-preparation-061 -> origin/feat/privacy-preparation-061
+2026-10-23T00:47:28.3894664Z  * [new branch]      feat/private-auth-preparation -> origin/feat/private-auth-preparation
+2026-10-23T00:47:28.3895941Z  * [new branch]      feat/private-crm        -> origin/feat/private-crm
+2026-10-23T00:47:28.3897014Z  * [new branch]      feat/private-data-export -> origin/feat/private-data-export
+2026-10-23T00:47:28.3898286Z  * [new branch]      feat/private-media      -> origin/feat/private-media
+2026-10-23T00:47:28.3899393Z  * [new branch]      feat/private-messaging  -> origin/feat/private-messaging
+2026-10-23T00:47:28.3901537Z  * [new branch]      feat/private-migration-config -> origin/feat/private-migration-config
+2026-10-23T00:47:28.3904098Z  * [new branch]      feat/private-photo-runtime -> origin/feat/private-photo-runtime
+2026-10-23T00:47:28.3906574Z  * [new branch]      feat/private-production-operations -> origin/feat/private-production-operations
+2026-10-23T00:47:28.3909104Z  * [new branch]      feat/private-runtime-provision -> origin/feat/private-runtime-provision
+2026-10-23T00:47:28.3911689Z  * [new branch]      feat/private-schema30-checkpoint -> origin/feat/private-schema30-checkpoint
+2026-10-23T00:47:28.3914513Z  * [new branch]      feat/private-secrets-backup -> origin/feat/private-secrets-backup
+2026-10-23T00:47:28.3916690Z  * [new branch]      feat/private-ui-languages -> origin/feat/private-ui-languages
+2026-10-23T00:47:28.3918621Z  * [new branch]      feat/private-ui-reliability -> origin/feat/private-ui-reliability
+2026-10-23T00:47:28.3920367Z  * [new branch]      feat/pwa-entry          -> origin/feat/pwa-entry
+2026-10-23T00:47:28.3922172Z  * [new branch]      feat/quick-replies-059-isolated -> origin/feat/quick-replies-059-isolated
+2026-10-23T00:47:28.3925094Z  * [new branch]      feat/recovery-only-parent-073 -> origin/feat/recovery-only-parent-073
+2026-10-23T00:47:28.3926635Z  * [new branch]      feat/recurring-private-checkpoints -> origin/feat/recurring-private-checkpoints
+2026-10-23T00:47:28.3928169Z  * [new branch]      feat/reprise-audit-backup-freshness -> origin/feat/reprise-audit-backup-freshness
+2026-10-23T00:47:28.3929633Z  * [new branch]      feat/runtime-grant-diagnostics -> origin/feat/runtime-grant-diagnostics
+2026-10-23T00:47:28.3931013Z  * [new branch]      feat/runtime-privilege-preflight -> origin/feat/runtime-privilege-preflight
+2026-10-23T00:47:28.3932261Z  * [new branch]      feat/schema-mariadb     -> origin/feat/schema-mariadb
+2026-10-23T00:47:28.3933608Z  * [new branch]      feat/server-availability -> origin/feat/server-availability
+2026-10-23T00:47:28.3935057Z  * [new branch]      feat/stable-release-054 -> origin/feat/stable-release-054
+2026-10-23T00:47:28.3936979Z  * [new branch]      feat/targeted-broadcasts -> origin/feat/targeted-broadcasts
+2026-10-23T00:47:28.3938469Z  * [new branch]      feat/tasks-compat-151   -> origin/feat/tasks-compat-151
+2026-10-23T00:47:28.3939555Z  * [new branch]      feat/tasks-reminders-160 -> origin/feat/tasks-reminders-160
+2026-10-23T00:47:28.3940661Z  * [new branch]      feat/video-messaging    -> origin/feat/video-messaging
+2026-10-23T00:47:28.3941720Z  * [new branch]      feat/video-transport-170 -> origin/feat/video-transport-170
+2026-10-23T00:47:28.3943188Z  * [new branch]      feat/witness-enrollment-070 -> origin/feat/witness-enrollment-070
+2026-10-23T00:47:28.3944373Z  * [new branch]      feat/witness-genesis-068 -> origin/feat/witness-genesis-068
+2026-10-23T00:47:28.3945768Z  * [new branch]      feat/witness-recovery-reconciliation-072 -> origin/feat/witness-recovery-reconciliation-072
+2026-10-23T00:47:28.3947480Z  * [new branch]      feature/private-read-receipts-1.1.0 -> origin/feature/private-read-receipts-1.1.0
+2026-10-23T00:47:28.3949098Z  * [new branch]      feature/profile-expressions-1.2.0 -> origin/feature/profile-expressions-1.2.0
+2026-10-23T00:47:28.3951705Z  * [new branch]      fix/076-simple-backups  -> origin/fix/076-simple-backups
+2026-10-23T00:47:28.3954250Z  * [new branch]      fix/admin-optional-response-status -> origin/fix/admin-optional-response-status
+2026-10-23T00:47:28.3956477Z  * [new branch]      fix/audit-182           -> origin/fix/audit-182
+2026-10-23T00:47:28.3958222Z  * [new branch]      fix/audit-lot1-security -> origin/fix/audit-lot1-security
+2026-10-23T00:47:28.3960249Z  * [new branch]      fix/audit-lot2-copies-081 -> origin/fix/audit-lot2-copies-081
+2026-10-23T00:47:28.3962553Z  * [new branch]      fix/audit-lot3-restore-082 -> origin/fix/audit-lot3-restore-082
+2026-10-23T00:47:28.3965055Z  * [new branch]      fix/audit-lot4-kiss-083 -> origin/fix/audit-lot4-kiss-083
+2026-10-23T00:47:28.3967030Z  * [new branch]      fix/backup-browser-cleanup-056 -> origin/fix/backup-browser-cleanup-056
+2026-10-23T00:47:28.3969163Z  * [new branch]      fix/backup-monitor-clock-0691 -> origin/fix/backup-monitor-clock-0691
+2026-10-23T00:47:28.3971044Z  * [new branch]      fix/chat-mobile-131     -> origin/fix/chat-mobile-131
+2026-10-23T00:47:28.3972820Z  * [new branch]      fix/chat-send-ack-085   -> origin/fix/chat-send-ack-085
+2026-10-23T00:47:28.3974581Z  * [new branch]      fix/checkpoint-inspection -> origin/fix/checkpoint-inspection
+2026-10-23T00:47:28.3975880Z  * [new branch]      fix/client-voice-message-details-132 -> origin/fix/client-voice-message-details-132
+2026-10-23T00:47:28.3977216Z  * [new branch]      fix/development-checkpoints -> origin/fix/development-checkpoints
+2026-10-23T00:47:28.3978314Z  * [new branch]      fix/interface-184       -> origin/fix/interface-184
+2026-10-23T00:47:28.3979538Z  * [new branch]      fix/interruption-reconciliation-0701 -> origin/fix/interruption-reconciliation-0701
+2026-10-23T00:47:28.3980788Z  * [new branch]      fix/messaging-183       -> origin/fix/messaging-183
+2026-10-23T00:47:28.3981993Z  * [new branch]      fix/notification-opening -> origin/fix/notification-opening
+2026-10-23T00:47:28.3984076Z  * [new branch]      fix/photo-message-details-133 -> origin/fix/photo-message-details-133
+2026-10-23T00:47:28.3985907Z  * [new branch]      fix/production-086      -> origin/fix/production-086
+2026-10-23T00:47:28.3986958Z  * [new branch]      fix/public-entry        -> origin/fix/public-entry
+2026-10-23T00:47:28.3988060Z  * [new branch]      fix/quick-replies-login-181 -> origin/fix/quick-replies-login-181
+2026-10-23T00:47:28.3989206Z  * [new branch]      fix/security-entry-171  -> origin/fix/security-entry-171
+2026-10-23T00:47:28.3990328Z  * [new branch]      fix/service-status-kiss-084 -> origin/fix/service-status-kiss-084
+2026-10-23T00:47:28.3991433Z  * [new branch]      fix/task-filter-184     -> origin/fix/task-filter-184
+2026-10-23T00:47:28.3992458Z  * [new branch]      fix/video-compat-172    -> origin/fix/video-compat-172
+2026-10-23T00:47:28.3994047Z  * [new branch]      fix/windows-existing-pc-update-0702 -> origin/fix/windows-existing-pc-update-0702
+2026-10-23T00:47:28.3995457Z  * [new branch]      fix/witness-origin-hosted-0692 -> origin/fix/witness-origin-hosted-0692
+2026-10-23T00:47:28.3996531Z  * [new branch]      main                    -> origin/main
+2026-10-23T00:47:28.3997666Z  * [new branch]      ops/align-release171-latest-20261022 -> origin/ops/align-release171-latest-20261022
+2026-10-23T00:47:28.3998906Z  * [new branch]      ops/audit182-peer       -> origin/ops/audit182-peer
+2026-10-23T00:47:28.4000394Z  * [new branch]      ops/closure-reconciliation-proof-074 -> origin/ops/closure-reconciliation-proof-074
+2026-10-23T00:47:28.4001800Z  * [new branch]      ops/isolated-restore-20261019 -> origin/ops/isolated-restore-20261019
+2026-10-23T00:47:28.4003380Z  * [new branch]      ops/private-service-monitor-051 -> origin/ops/private-service-monitor-051
+2026-10-23T00:47:28.4004677Z  * [new branch]      ops/publish-v1.1.1      -> origin/ops/publish-v1.1.1
+2026-10-23T00:47:28.4005662Z  * [new branch]      ops/publish-v1.2.0      -> origin/ops/publish-v1.2.0
+2026-10-23T00:47:28.4006968Z  * [new branch]      ops/publish-v1.3.0      -> origin/ops/publish-v1.3.0
+2026-10-23T00:47:28.4007977Z  * [new branch]      ops/publish-v1.3.1      -> origin/ops/publish-v1.3.1
+2026-10-23T00:47:28.4008912Z  * [new branch]      ops/publish-v1.3.2      -> origin/ops/publish-v1.3.2
+2026-10-23T00:47:28.4009899Z  * [new branch]      ops/publish-v1.3.3      -> origin/ops/publish-v1.3.3
+2026-10-23T00:47:28.4010895Z  * [new branch]      ops/publish-v1.3.4      -> origin/ops/publish-v1.3.4
+2026-10-23T00:47:28.4011883Z  * [new branch]      ops/publish-v1.4.0      -> origin/ops/publish-v1.4.0
+2026-10-23T00:47:28.4012809Z  * [new branch]      ops/publish-v1.4.1      -> origin/ops/publish-v1.4.1
+2026-10-23T00:47:28.4014057Z  * [new branch]      ops/publish-v1.5.0      -> origin/ops/publish-v1.5.0
+2026-10-23T00:47:28.4015001Z  * [new branch]      ops/publish-v1.5.1      -> origin/ops/publish-v1.5.1
+2026-10-23T00:47:28.4016114Z  * [new branch]      ops/publish-v1.6.0      -> origin/ops/publish-v1.6.0
+2026-10-23T00:47:28.4017138Z  * [new branch]      ops/publish-v1.7.0      -> origin/ops/publish-v1.7.0
+2026-10-23T00:47:28.4018118Z  * [new branch]      ops/publish-v1.7.1      -> origin/ops/publish-v1.7.1
+2026-10-23T00:47:28.4019039Z  * [new branch]      ops/publish-v1.7.2      -> origin/ops/publish-v1.7.2
+2026-10-23T00:47:28.4020174Z  * [new branch]      ops/publish-v1.8.0      -> origin/ops/publish-v1.8.0
+2026-10-23T00:47:28.4021181Z  * [new branch]      ops/publish-v1.8.1      -> origin/ops/publish-v1.8.1
+2026-10-23T00:47:28.4022172Z  * [new branch]      ops/publish-v1.8.2      -> origin/ops/publish-v1.8.2
+2026-10-23T00:47:28.4023415Z  * [new branch]      ops/publish-v1.8.3      -> origin/ops/publish-v1.8.3
+2026-10-23T00:47:28.4024423Z  * [new branch]      ops/publish-v1.8.4      -> origin/ops/publish-v1.8.4
+2026-10-23T00:47:28.4025420Z  * [new branch]      ops/record-v1.8.0       -> origin/ops/record-v1.8.0
+2026-10-23T00:47:28.4026577Z  * [new branch]      ops/record-v1.8.1       -> origin/ops/record-v1.8.1
+2026-10-23T00:47:28.4027531Z  * [new branch]      ops/record-v1.8.2       -> origin/ops/record-v1.8.2
+2026-10-23T00:47:28.4028447Z  * [new branch]      ops/record-v1.8.3       -> origin/ops/record-v1.8.3
+2026-10-23T00:47:28.4029463Z  * [new branch]      ops/redirect-accueil    -> origin/ops/redirect-accueil
+2026-10-23T00:47:28.4030477Z  * [new branch]      ops/release130-tools    -> origin/ops/release130-tools
+2026-10-23T00:47:28.4031496Z  * [new branch]      ops/release131-tools    -> origin/ops/release131-tools
+2026-10-23T00:47:28.4032530Z  * [new branch]      ops/release132-tools    -> origin/ops/release132-tools
+2026-10-23T00:47:28.4033775Z  * [new branch]      ops/release133-tools    -> origin/ops/release133-tools
+2026-10-23T00:47:28.4034786Z  * [new branch]      release/0.54.0          -> origin/release/0.54.0
+2026-10-23T00:47:28.4035676Z  * [new branch]      release/0.55.0          -> origin/release/0.55.0
+2026-10-23T00:47:28.4036655Z  * [new branch]      release/0.56.0          -> origin/release/0.56.0
+2026-10-23T00:47:28.4037615Z  * [new branch]      release/0.57.0          -> origin/release/0.57.0
+2026-10-23T00:47:28.4038512Z  * [new branch]      release/0.58.0          -> origin/release/0.58.0
+2026-10-23T00:47:28.4039385Z  * [new branch]      release/0.59.0          -> origin/release/0.59.0
+2026-10-23T00:47:28.4040254Z  * [new branch]      release/0.60.0          -> origin/release/0.60.0
+2026-10-23T00:47:28.4041176Z  * [new branch]      release/0.61.0          -> origin/release/0.61.0
+2026-10-23T00:47:28.4042114Z  * [new branch]      release/0.62.0          -> origin/release/0.62.0
+2026-10-23T00:47:28.4043263Z  * [new branch]      release/0.63.0          -> origin/release/0.63.0
+2026-10-23T00:47:28.4044174Z  * [new branch]      release/0.64.0          -> origin/release/0.64.0
+2026-10-23T00:47:28.4045043Z  * [new branch]      release/0.65.0          -> origin/release/0.65.0
+2026-10-23T00:47:28.4045965Z  * [new branch]      release/0.66.0          -> origin/release/0.66.0
+2026-10-23T00:47:28.4047070Z  * [new branch]      release/0.67.0          -> origin/release/0.67.0
+2026-10-23T00:47:28.4047991Z  * [new branch]      release/0.68.0          -> origin/release/0.68.0
+2026-10-23T00:47:28.4048919Z  * [new branch]      release/0.69.0          -> origin/release/0.69.0
+2026-10-23T00:47:28.4049785Z  * [new branch]      release/0.69.1          -> origin/release/0.69.1
+2026-10-23T00:47:28.4050757Z  * [new branch]      release/publish-v1.0.0  -> origin/release/publish-v1.0.0
+2026-10-23T00:47:28.4051846Z  * [new branch]      release/publish-v1.1.0  -> origin/release/publish-v1.1.0
+2026-10-23T00:47:28.4053108Z  * [new branch]      release/v1.0.0          -> origin/release/v1.0.0
+2026-10-23T00:47:28.4053956Z  * [new tag]         v1.0.0                  -> v1.0.0
+2026-10-23T00:47:28.4054652Z  * [new tag]         v1.1.0                  -> v1.1.0
+2026-10-23T00:47:28.4055340Z  * [new tag]         v1.1.1                  -> v1.1.1
+2026-10-23T00:47:28.4056036Z  * [new tag]         v1.2.0                  -> v1.2.0
+2026-10-23T00:47:28.4056745Z  * [new tag]         v1.3.0                  -> v1.3.0
+2026-10-23T00:47:28.4057419Z  * [new tag]         v1.3.1                  -> v1.3.1
+2026-10-23T00:47:28.4133975Z  * [new tag]         v1.3.2                  -> v1.3.2
+2026-10-23T00:47:28.4134896Z  * [new tag]         v1.3.3                  -> v1.3.3
+2026-10-23T00:47:28.4135676Z  * [new tag]         v1.3.4                  -> v1.3.4
+2026-10-23T00:47:28.4136421Z  * [new tag]         v1.4.0                  -> v1.4.0
+2026-10-23T00:47:28.4137125Z  * [new tag]         v1.4.1                  -> v1.4.1
+2026-10-23T00:47:28.4137900Z  * [new tag]         v1.5.0                  -> v1.5.0
+2026-10-23T00:47:28.4138630Z  * [new tag]         v1.5.1                  -> v1.5.1
+2026-10-23T00:47:28.4139345Z  * [new tag]         v1.6.0                  -> v1.6.0
+2026-10-23T00:47:28.4140102Z  * [new tag]         v1.7.0                  -> v1.7.0
+2026-10-23T00:47:28.4141083Z  * [new tag]         v1.7.1                  -> v1.7.1
+2026-10-23T00:47:28.4141877Z  * [new tag]         v1.7.2                  -> v1.7.2
+2026-10-23T00:47:28.4142564Z  * [new tag]         v1.8.0                  -> v1.8.0
+2026-10-23T00:47:28.4143660Z  * [new tag]         v1.8.1                  -> v1.8.1
+2026-10-23T00:47:28.4144432Z  * [new tag]         v1.8.2                  -> v1.8.2
+2026-10-23T00:47:28.4145196Z  * [new tag]         v1.8.3                  -> v1.8.3
+2026-10-23T00:47:28.4147309Z [command]/usr/bin/git rev-parse --verify --quiet e7e6f11815007a53a9502672500476f6f87e9f25^{object}
+2026-10-23T00:47:28.4148505Z e7e6f11815007a53a9502672500476f6f87e9f25
+2026-10-23T00:47:28.4150072Z ##[endgroup]
+2026-10-23T00:47:28.4150855Z ##[group]Determining the checkout info
+2026-10-23T00:47:28.4151864Z ##[endgroup]
+2026-10-23T00:47:28.4152389Z [command]/usr/bin/git sparse-checkout disable
+2026-10-23T00:47:28.4154166Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-23T00:47:28.4155991Z ##[group]Checking out the ref
+2026-10-23T00:47:28.4156919Z [command]/usr/bin/git checkout --progress --force e7e6f11815007a53a9502672500476f6f87e9f25
+2026-10-23T00:47:28.5455534Z Note: switching to 'e7e6f11815007a53a9502672500476f6f87e9f25'.
+2026-10-23T00:47:28.5456454Z 
+2026-10-23T00:47:28.5457011Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-23T00:47:28.5458389Z changes and commit them, and you can discard any commits you make in this
+2026-10-23T00:47:28.5459733Z state without impacting any branches by switching back to a branch.
+2026-10-23T00:47:28.5460526Z 
+2026-10-23T00:47:28.5461039Z If you want to create a new branch to retain commits you create, you may
+2026-10-23T00:47:28.5462285Z do so (now or later) by using -c with the switch command. Example:
+2026-10-23T00:47:28.5463389Z 
+2026-10-23T00:47:28.5463695Z   git switch -c <new-branch-name>
+2026-10-23T00:47:28.5464192Z 
+2026-10-23T00:47:28.5464482Z Or undo this operation with:
+2026-10-23T00:47:28.5464929Z 
+2026-10-23T00:47:28.5465590Z   git switch -
+2026-10-23T00:47:28.5465930Z 
+2026-10-23T00:47:28.5466700Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-23T00:47:28.5467861Z 
+2026-10-23T00:47:28.5469255Z HEAD is now at e7e6f11 Préparer et publier JessieMessage1.8.4 sur le main qualifié
+2026-10-23T00:47:28.5476481Z ##[endgroup]
+2026-10-23T00:47:28.5531518Z [command]/usr/bin/git log -1 --format=%H
+2026-10-23T00:47:28.5564044Z e7e6f11815007a53a9502672500476f6f87e9f25
+2026-10-23T00:47:28.5574789Z ##[group]Removing auth
+2026-10-23T00:47:28.5575784Z Removing SSH command configuration
+2026-10-23T00:47:28.5580067Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-23T00:47:28.5619544Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-23T00:47:28.5855227Z Removing HTTP extra header
+2026-10-23T00:47:28.5860533Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-23T00:47:28.5905196Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-23T00:47:28.6163663Z Removing includeIf entries pointing to credentials config files
+2026-10-23T00:47:28.6165939Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-23T00:47:28.6199409Z includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path
+2026-10-23T00:47:28.6201077Z includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path
+2026-10-23T00:47:28.6202631Z includeif.gitdir:/github/workspace/.git.path
+2026-10-23T00:47:28.6204189Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-23T00:47:28.6213251Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path
+2026-10-23T00:47:28.6243896Z /home/runner/work/_temp/git-credentials-89f53604-7f1e-4bd5-9ef6-f166568554cb.config
+2026-10-23T00:47:28.6256393Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-89f53604\-7f1e\-4bd5\-9ef6\-f166568554cb\.config
+2026-10-23T00:47:28.6295887Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path
+2026-10-23T00:47:28.6329289Z /home/runner/work/_temp/git-credentials-89f53604-7f1e-4bd5-9ef6-f166568554cb.config
+2026-10-23T00:47:28.6340385Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/jessiemessage/jessiemessage/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-89f53604\-7f1e\-4bd5\-9ef6\-f166568554cb\.config
+2026-10-23T00:47:28.6380722Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-23T00:47:28.6412077Z /github/runner_temp/git-credentials-89f53604-7f1e-4bd5-9ef6-f166568554cb.config
+2026-10-23T00:47:28.6421167Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-89f53604\-7f1e\-4bd5\-9ef6\-f166568554cb\.config
+2026-10-23T00:47:28.6460928Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-23T00:47:28.6487584Z /github/runner_temp/git-credentials-89f53604-7f1e-4bd5-9ef6-f166568554cb.config
+2026-10-23T00:47:28.6498360Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-89f53604\-7f1e\-4bd5\-9ef6\-f166568554cb\.config
+2026-10-23T00:47:28.6539261Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-23T00:47:28.6768902Z Removing credentials config '/home/runner/work/_temp/git-credentials-89f53604-7f1e-4bd5-9ef6-f166568554cb.config'
+2026-10-23T00:47:28.6777841Z ##[endgroup]
+2026-10-23T00:47:28.7137989Z ##[group]Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+2026-10-23T00:47:28.7139607Z with:
+2026-10-23T00:47:28.7140364Z   node-version: 24.22.1
+2026-10-23T00:47:28.7141323Z   package-manager-cache: false
+2026-10-23T00:47:28.7142330Z   check-latest: false
+2026-10-23T00:47:28.7153060Z   token: ***
+2026-10-23T00:47:28.7153868Z ##[endgroup]
+2026-10-23T00:47:28.8478789Z Attempting to download 24.22.1...
+2026-10-23T00:47:29.4241042Z Acquiring 24.22.1 - x64 from https://github.com/actions/node-versions/releases/download/24.22.1-39619001896/node-24.22.1-linux-x64.tar.gz
+2026-10-23T00:47:29.8938564Z Extracting ...
+2026-10-23T00:47:29.9126014Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/5e8f0521-af45-4a18-9868-04a8bc86ab12 -f /home/runner/work/_temp/aa276420-76c0-46cc-8427-9d6e36ac9340
+2026-10-23T00:47:31.1902650Z Adding to the cache ...
+2026-10-23T00:47:33.3250949Z ##[group]Environment details
+2026-10-23T00:47:33.5628500Z node: v24.22.1
+2026-10-23T00:47:33.5629081Z npm: 11.19.1
+2026-10-23T00:47:33.5629546Z yarn: 1.22.22
+2026-10-23T00:47:33.5630481Z ##[endgroup]
+2026-10-23T00:47:33.5841687Z ##[group]Run python3 ops/test-publish-qualified184.py
+2026-10-23T00:47:33.5842191Z [36;1mpython3 ops/test-publish-qualified184.py[0m
+2026-10-23T00:47:33.6142098Z shell: /usr/bin/bash -e {0}
+2026-10-23T00:47:33.6142545Z ##[endgroup]
+2026-10-23T00:47:33.9975700Z {"workflowPath": "/home/runner/work/jessiemessage/jessiemessage/.github/workflows/publish-qualified184.yml", "workflowSha256": "99befd2e96bf754ac6d48e2cec47bfd26588af9c89f17202353f27c811651497", "shippedPins": {"target": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c", "tree": "e0964b50c03d3881d851f01f86f58777d22b2c10", "ci_text": "39879190936"}, "fixturePins": {"target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "ci_text": "184001"}, "sourcePinsQualified": false, "fixtureSourceMode": "entirely synthetic API/source payloads; no Git checkout or future source inferred", "tests": 38, "passCount": 38, "failCount": 0, "networkCalls": 0, "realMutations": 0, "productionAccess": false, "checks": ["all pending pins refuse before any process or API call", "partial qualification missing target refuses before any process or API call", "partial qualification missing tree refuses before any process or API call", "partial qualification missing ci_text refuses before any process or API call", "successful immutable creation on pinned source advances latest in the same release write", "identical tag and release retry is read-only", "interrupted after exact tag with previous latest retries only the release", "existing release with previous latest is refused before mutations, no automatic metadata edit", "exact tag alone with unknown latest is refused before mutations", "existing release with divergent latest source is refused before mutations", "latest changed after tag creation refuses release creation without corrective mutation", "refuse ci-incomplete before mutations", "refuse ci-other-sha before mutations", "refuse ci-rerun before mutations", "refuse ci-missing-job before mutations", "refuse ci-failed-job before mutations", "refuse other-tree before mutations", "refuse baseline-tree-drift before mutations", "refuse video-gate-closed before mutations", "refuse quick-gate-closed before mutations", "refuse normal-ddl-changed before mutations", "refuse sql37 before mutations", "refuse candidate-missing before mutations", "refuse candidate-ddl-changed before mutations", "refuse package-version before mutations", "refuse old-node-pin before mutations", "refuse mutable-action-pin before mutations", "refuse untrusted-action before mutations", "refuse credentials-persisted before mutations", "refuse cache-enabled before mutations", "refuse latest-before before mutations", "refuse main-behind before mutations", "refuse rollback-tag-diverged before mutations", "refuse rollback-release-diverged before mutations", "refuse divergent tag before mutations", "refuse divergent release body before mutations", "refuse divergent release source before mutations", "detect an externally changed latest after publication without corrective mutation"]}
+2026-10-23T00:47:34.0186313Z ##[group]Run python3 ops/test-prepare-release184.py
+2026-10-23T00:47:34.0186800Z [36;1mpython3 ops/test-prepare-release184.py[0m
+2026-10-23T00:47:34.0252722Z shell: /usr/bin/bash -e {0}
+2026-10-23T00:47:34.0253275Z ##[endgroup]
+2026-10-23T00:47:34.1233745Z test_actual_release_pin_binding_precedes_all_file_and_process_access (__main__.ProductionPinsTests.test_actual_release_pin_binding_precedes_all_file_and_process_access) ... ok
+2026-10-23T00:47:34.1245526Z test_exact_release_pins_reach_only_first_precondition_before_and_after_finalization (__main__.ProductionPinsTests.test_exact_release_pins_reach_only_first_precondition_before_and_after_finalization) ... ok
+2026-10-23T00:47:34.1257577Z test_explicit_pending_variant_refuses_before_any_private_or_process_access (__main__.ProductionPinsTests.test_explicit_pending_variant_refuses_before_any_private_or_process_access) ... ok
+2026-10-23T00:47:34.1269924Z test_partial_qualification_refuses_before_any_private_or_process_access (__main__.ProductionPinsTests.test_partial_qualification_refuses_before_any_private_or_process_access) ... ok
+2026-10-23T00:47:34.1274710Z test_reviewed_production_constants (__main__.ProductionPinsTests.test_reviewed_production_constants) ... ok
+2026-10-23T00:47:37.0827029Z test_both_launcher_plans_are_checked_before_first_worktree (__main__.StagingTests.test_both_launcher_plans_are_checked_before_first_worktree) ... ok
+2026-10-23T00:47:38.6413938Z test_changed_normal_or_video_migrations_and_missing_video_migration_are_refused (__main__.StagingTests.test_changed_normal_or_video_migrations_and_missing_video_migration_are_refused) ... ok
+2026-10-23T00:47:38.9797107Z test_checkpoint_metadata_refuses_before_node_or_new_outputs (__main__.StagingTests.test_checkpoint_metadata_refuses_before_node_or_new_outputs) ... ok
+2026-10-23T00:47:39.5499246Z test_dependency_changes_and_tracked_node_modules_are_refused (__main__.StagingTests.test_dependency_changes_and_tracked_node_modules_are_refused) ... ok
+2026-10-23T00:47:39.6799093Z test_dirty_baseline_is_refused_before_node_invocation (__main__.StagingTests.test_dirty_baseline_is_refused_before_node_invocation) ... ok
+2026-10-23T00:47:40.2478387Z test_each_package_version_must_be_184 (__main__.StagingTests.test_each_package_version_must_be_184) ... ok
+2026-10-23T00:47:41.5886288Z test_existing_output_or_dangling_symlink_refuses_all_remaining_outputs (__main__.StagingTests.test_existing_output_or_dangling_symlink_refuses_all_remaining_outputs) ... ok
+2026-10-23T00:47:41.9415804Z test_existing_success_receipt_or_symlink_is_never_replaced (__main__.StagingTests.test_existing_success_receipt_or_symlink_is_never_replaced) ... ok
+2026-10-23T00:47:42.4179252Z test_file_metadata_guards_refuse_insecure_launcher_or_node (__main__.StagingTests.test_file_metadata_guards_refuse_insecure_launcher_or_node) ... ok
+2026-10-23T00:47:42.8806445Z test_launcher_or_node_pin_mismatch_refuses_staging (__main__.StagingTests.test_launcher_or_node_pin_mismatch_refuses_staging) ... ok
+2026-10-23T00:47:44.5766839Z test_pins_are_rechecked_after_launcher_validation_before_first_worktree (__main__.StagingTests.test_pins_are_rechecked_after_launcher_validation_before_first_worktree) ... ok
+2026-10-23T00:47:45.0598524Z test_post_gate_write_failure_preserves_partial_output_and_refuses_retry (__main__.StagingTests.test_post_gate_write_failure_preserves_partial_output_and_refuses_retry) ... ok
+2026-10-23T00:47:45.5400399Z test_stages_one_exact_release_preserving_all_existing_configuration_without_reading_it (__main__.StagingTests.test_stages_one_exact_release_preserving_all_existing_configuration_without_reading_it) ... ok
+2026-10-23T00:47:45.8572294Z test_unrelated_candidate_and_main_not_containing_candidate_are_refused (__main__.StagingTests.test_unrelated_candidate_and_main_not_containing_candidate_are_refused) ... ok
+2026-10-23T00:47:45.9894335Z test_wrong_argument_shapes_and_unpinned_source_tree_refuse_before_access (__main__.StagingTests.test_wrong_argument_shapes_and_unpinned_source_tree_refuse_before_access) ... ok
+2026-10-23T00:47:46.1182001Z test_wrong_node_version_refuses_staging (__main__.StagingTests.test_wrong_node_version_refuses_staging) ... ok
+2026-10-23T00:47:46.2702409Z test_wrong_release_tag_is_refused (__main__.StagingTests.test_wrong_release_tag_is_refused) ... ok
+2026-10-23T00:47:46.2703567Z 
+2026-10-23T00:47:46.2724099Z ----------------------------------------------------------------------
+2026-10-23T00:47:46.2733935Z Ran 22 tests in 12.153s
+2026-10-23T00:47:46.2734179Z 
+2026-10-23T00:47:46.2734306Z OK
+2026-10-23T00:47:46.3095841Z Post job cleanup.
+2026-10-23T00:47:46.4540357Z Post job cleanup.
+2026-10-23T00:47:46.5444092Z [command]/usr/bin/git version
+2026-10-23T00:47:46.5491383Z git version 2.55.0
+2026-10-23T00:47:46.5532496Z Temporarily overriding HOME='/home/runner/work/_temp/d67f6bab-8dfa-4419-a8a6-93dc99a3e25c' before making global git config changes
+2026-10-23T00:47:46.5534222Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-23T00:47:46.5539636Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/jessiemessage/jessiemessage
+2026-10-23T00:47:46.5576836Z Removing SSH command configuration
+2026-10-23T00:47:46.5584834Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-23T00:47:46.5621677Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-23T00:47:46.5891661Z Removing HTTP extra header
+2026-10-23T00:47:46.5897893Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-23T00:47:46.5955306Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-23T00:47:46.6249743Z Removing includeIf entries pointing to credentials config files
+2026-10-23T00:47:46.6267169Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-23T00:47:46.6325919Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-23T00:47:46.6817021Z Cleaning up orphan processes

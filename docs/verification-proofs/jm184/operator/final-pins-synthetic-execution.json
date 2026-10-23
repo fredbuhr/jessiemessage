@@ -1,0 +1,37 @@
+{
+  "runs": [
+    {
+      "name": "publish",
+      "command": [
+        "python3",
+        "ops/test-publish-qualified184.py",
+        "--output",
+        "publication184-final-pins-synthetic.json"
+      ],
+      "log": "publish184-tests-final-pins.log",
+      "exitCode": 0,
+      "elapsedSeconds": 0.511
+    },
+    {
+      "name": "record",
+      "command": [
+        "python3",
+        "ops/test_record_release184.py"
+      ],
+      "log": "record184-tests-final-pins.log",
+      "exitCode": 0,
+      "elapsedSeconds": 2.425
+    },
+    {
+      "name": "prepare",
+      "command": [
+        "python3",
+        "ops/test-prepare-release184.py"
+      ],
+      "log": "prepare184-tests-final-pins.log",
+      "exitCode": 0,
+      "elapsedSeconds": 32.887
+    }
+  ],
+  "scope": "isolated synthetic fixtures on finalized source/tree/CI literals; no actual operator or API execution"
+}

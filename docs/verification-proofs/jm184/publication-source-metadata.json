@@ -1,0 +1,211 @@
+{
+  "source": "Relevant fields from already-collected native GitHub APIs; no new lookup at close",
+  "run": {
+    "id": 39880194316,
+    "head_sha": "e7e6f11815007a53a9502672500476f6f87e9f25",
+    "head_commit": {
+      "id": "e7e6f11815007a53a9502672500476f6f87e9f25",
+      "tree_id": "277c83d86bdcf4ff51591cb51ade0c82c879b732",
+      "message": "Préparer et publier JessieMessage1.8.4 sur le main qualifié\n\nSource1a41e08abc87c3a29d9163fbf8cd2342eb04693c, arbre e0964b50c03d3881d851f01f86f58777d22b2c10, CI39879190936 exactement5/5 tentative1. Opérateurs relus,22préparation/38publication/26métadonnées synthétiques réussis ; qualification native opérateurs avant tag/release immuable. Actif183/checkpoint17f préservé, SQL36/Node24.22.1 inchangés. Writer bloqué avantIO jusqu’au vrai reçu de staging et releaseID.",
+      "timestamp": "2026-10-23T00:47:20Z",
+      "author": {
+        "name": "ZTIKIX",
+        "email": "49747120+fredbuhr@users.noreply.github.com"
+      },
+      "committer": {
+        "name": "ZTIKIX",
+        "email": "49747120+fredbuhr@users.noreply.github.com"
+      }
+    },
+    "run_attempt": 1,
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "path": ".github/workflows/publish-qualified184.yml"
+  },
+  "operatorCommit": {
+    "sha": "e7e6f11815007a53a9502672500476f6f87e9f25",
+    "node_id": "C_kwDOVJw7f9oAKGU3ZTZmMTE4MTUwMDdhNTNhOTUwMjY3MjUwMDQ3NmY2Zjg3ZTlmMjU",
+    "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/commits/e7e6f11815007a53a9502672500476f6f87e9f25",
+    "html_url": "https://github.com/fredbuhr/jessiemessage/commit/e7e6f11815007a53a9502672500476f6f87e9f25",
+    "author": {
+      "name": "ZTIKIX",
+      "email": "49747120+fredbuhr@users.noreply.github.com",
+      "date": "2026-10-23T00:47:20Z"
+    },
+    "committer": {
+      "name": "ZTIKIX",
+      "email": "49747120+fredbuhr@users.noreply.github.com",
+      "date": "2026-10-23T00:47:20Z"
+    },
+    "tree": {
+      "sha": "277c83d86bdcf4ff51591cb51ade0c82c879b732",
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/trees/277c83d86bdcf4ff51591cb51ade0c82c879b732"
+    },
+    "message": "Préparer et publier JessieMessage1.8.4 sur le main qualifié\n\nSource1a41e08abc87c3a29d9163fbf8cd2342eb04693c, arbre e0964b50c03d3881d851f01f86f58777d22b2c10, CI39879190936 exactement5/5 tentative1. Opérateurs relus,22préparation/38publication/26métadonnées synthétiques réussis ; qualification native opérateurs avant tag/release immuable. Actif183/checkpoint17f préservé, SQL36/Node24.22.1 inchangés. Writer bloqué avantIO jusqu’au vrai reçu de staging et releaseID.",
+    "parents": [
+      {
+        "sha": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+        "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/commits/1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+        "html_url": "https://github.com/fredbuhr/jessiemessage/commit/1a41e08abc87c3a29d9163fbf8cd2342eb04693c"
+      }
+    ],
+    "verification": {
+      "verified": false,
+      "reason": "unsigned",
+      "signature": null,
+      "payload": null,
+      "verified_at": null
+    }
+  },
+  "tag": {
+    "ref": "refs/tags/v1.8.4",
+    "node_id": "REF_kwDOVJw7f7ByZWZzL3RhZ3MvdjEuOC40",
+    "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/refs/tags/v1.8.4",
+    "object": {
+      "sha": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+      "type": "commit",
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/commits/1a41e08abc87c3a29d9163fbf8cd2342eb04693c"
+    }
+  },
+  "release": {
+    "id": 421341347,
+    "tag_name": "v1.8.4",
+    "target_commitish": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "draft": false,
+    "prerelease": false,
+    "published_at": "2026-10-23T00:48:02Z",
+    "html_url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.4"
+  },
+  "latest": {
+    "id": 421341347,
+    "tag_name": "v1.8.4",
+    "target_commitish": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "draft": false,
+    "prerelease": false,
+    "published_at": "2026-10-23T00:48:02Z",
+    "html_url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.8.4"
+  },
+  "jobs": [
+    {
+      "id": 120175457244,
+      "name": "operator-tests",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-23T00:47:25Z",
+          "completed_at": "2026-10-23T00:47:26Z"
+        },
+        {
+          "name": "Checkout exact operator commit",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-23T00:47:26Z",
+          "completed_at": "2026-10-23T00:47:28Z"
+        },
+        {
+          "name": "Use qualified Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-23T00:47:28Z",
+          "completed_at": "2026-10-23T00:47:33Z"
+        },
+        {
+          "name": "Test publication with simulated GitHub API",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-23T00:47:33Z",
+          "completed_at": "2026-10-23T00:47:34Z"
+        },
+        {
+          "name": "Test isolated patch release preparation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-23T00:47:34Z",
+          "completed_at": "2026-10-23T00:47:46Z"
+        },
+        {
+          "name": "Post Use qualified Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-10-23T00:47:46Z",
+          "completed_at": "2026-10-23T00:47:46Z"
+        },
+        {
+          "name": "Post Checkout exact operator commit",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-10-23T00:47:46Z",
+          "completed_at": "2026-10-23T00:47:46Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-10-23T00:47:46Z",
+          "completed_at": "2026-10-23T00:47:46Z"
+        }
+      ]
+    },
+    {
+      "id": 120175590364,
+      "name": "publish",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-23T00:47:50Z",
+          "completed_at": "2026-10-23T00:47:51Z"
+        },
+        {
+          "name": "Use qualified Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-23T00:47:51Z",
+          "completed_at": "2026-10-23T00:47:56Z"
+        },
+        {
+          "name": "Verify and publish the immutable qualified 1.8.4 correction",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-23T00:47:56Z",
+          "completed_at": "2026-10-23T00:48:03Z"
+        },
+        {
+          "name": "Post Use qualified Node.js 24.22.1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-23T00:48:03Z",
+          "completed_at": "2026-10-23T00:48:03Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-23T00:48:03Z",
+          "completed_at": "2026-10-23T00:48:03Z"
+        }
+      ]
+    }
+  ]
+}
