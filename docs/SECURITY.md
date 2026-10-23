@@ -1,4 +1,12 @@
-# Security and privacy launch gates
+# Sécurité — état courant et historique des lots
+
+**État courant au23octobre2026 :** la référence active et son checkpoint sont1.10.0, source51b0cf22…, SQL38, selon [REPRISE](REPRISE.md) et les reçus utilisateur. L’[audit final avant ouverture au public](AUDIT-PUBLIC-1100-20261023.md) est en cours ; une1.10.1 corrective est en qualification après reproduction de défauts de session et d’arrêt des préférences. La livraison technique acquise ne constitue ni un test d’intrusion exhaustif ni une attestation de conformité juridique.
+
+Les accès privés exigent invitation consommée, e-mail vérifié et admission explicite ; l’administration utilise MFA, cookies HttpOnly/Secure/SameSite et autorisations serveur. Les données sont chiffrées côté serveur, sans promesse de chiffrement de bout en bout. La copie du profil public est séparée et ne paraît qu’après publication admin explicite. Les sauvegardes sont manuelles depuis1.8.0 ; les essais hébergés reportés et les limites appareils/notifications restent visibles dans l’audit. La réserveA10 est hors chantier selon la décision utilisateur, sans conclusion juridique ; A11 et A12 gardent leurs limites documentées.
+
+## Historique — exigences et qualifications des anciens lots
+
+**Tout le contenu ci-dessous décrit ses étapes0.x d’origine.** Les anciens présents sur déploiement, consentement aux diffusions, copies automatiques ou PC ne décrivent pas l’état courant et ne rouvrent pas ces chantiers. Ils restent conservés pour comprendre les anciens contrats et preuves ; les actions actuelles sont uniquement dans REPRISE et la checklist prépublic.
 
 **Backup recovery 0.56:** the primary administrator can download an offline verification kit with fresh session/Origin/CSRF checks and a second server session proof before delivery. Only closed capture hashes, sizes, fingerprint and fixed source enter the ZIP; no credential or private key. Native Windows GPG uses the existing local key and Pinentry, streams decrypted bytes directly to SHA-256, validates the primary fingerprint and authenticated AES-256 protection, and creates no clear output file or network receipt. Owner-PC ciphertext copy receipts are acquired; personal decryption remains pending. [Current procedure and evidence](backup-verification-056.md).
 

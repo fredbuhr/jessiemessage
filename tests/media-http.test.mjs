@@ -494,13 +494,28 @@ test("clients cannot inject administrative reply tracking into ordinary or batch
   assert.equal(calls.filter(([name])=>name==="send").length,0);
 });
 
-test("gallery validates canonical date and identity order independently of message sequences",async t=>{
-  const {base,service}=await fixture(t);
-  const item=(messageId,seq,createdAt)=>({messageId,sequence:seq,sender:"peer",createdAt,media:asset("admin",true,{fullUrl:`${conversationPath()}/messages/${messageId}/full`,thumbnailUrl:`${conversationPath()}/messages/${messageId}/thumb`})});
-  for(const items of [[item("a".repeat(32),"1",now),item("b".repeat(32),"2",now-1)],[item("b".repeat(32),"1",now),item("a".repeat(32),"2",now)]]){
-    service.gallery=async()=>({items,nextBefore:null,hasMore:false});
-    assert.equal((await fetch(`${base}${conversationPath()}/gallery`,{headers:{Cookie:cookie("admin")}})).status,200);
+test("gallery validates date order and unique identities without inferring SQL microseconds from equal public milliseconds", async t => {
+  const { base, service } = await fixture(t);
+  for (const role of ["admin", "client"]) {
+    const item = (messageId, seq, createdAt) => ({ messageId, sequence: seq, sender: "peer", createdAt,
+      media: asset(role, true, { fullUrl: `${conversationPath(role)}/messages/${messageId}/full`, thumbnailUrl: `${conversationPath(role)}/messages/${messageId}/thumb` }) });
+    for (const items of [
+      [item("a".repeat(32), "1", now), item("b".repeat(32), "2", now - 1)],
+      [item("b".repeat(32), "1", now), item("a".repeat(32), "2", now)],
+      [item("a".repeat(32), "2", now), item("b".repeat(32), "1", now)],
+    ]) {
+      service.gallery = async () => ({ items, nextBefore: null, hasMore: false });
+      const response = await fetch(`${base}${conversationPath(role)}/gallery`, { headers: { Cookie: cookie(role) } });
+      assert.equal(response.status, 200);
+      assert.deepEqual((await response.json()).items.map(row => row.messageId), items.map(row => row.messageId));
+    }
+    for (const [items, reason] of [
+      [[item("a".repeat(32), "2", now - 1), item("b".repeat(32), "1", now)], "an actually increasing millisecond date remains invalid"],
+      [[item("a".repeat(32), "2", now), item("a".repeat(32), "1", now)], "duplicate message identities remain invalid"],
+      [[item("a".repeat(32), "2", now), item("b".repeat(32), "2", now)], "duplicate sequence identities remain invalid"],
+    ]) {
+      service.gallery = async () => ({ items, nextBefore: null, hasMore: false });
+      assert.equal((await fetch(`${base}${conversationPath(role)}/gallery`, { headers: { Cookie: cookie(role) } })).status, 503, reason);
+    }
   }
-  service.gallery=async()=>({items:[item("a".repeat(32),"2",now),item("b".repeat(32),"1",now)],nextBefore:null,hasMore:false});
-  assert.equal((await fetch(`${base}${conversationPath()}/gallery`,{headers:{Cookie:cookie("admin")}})).status,503,"equal-date IDs must be descending even if sequences descend");
 });

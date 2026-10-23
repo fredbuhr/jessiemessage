@@ -377,6 +377,38 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
       assert.equal(newer.items[0].sequence, canonical[0].sequence);
     });
 
+    await t.test("gallery cursors retain all six SQL timestamp decimals for both roles and equal-date message IDs", async () => {
+      for (const sender of ["admin", "client"]) {
+        const fixture = await pair(), image = (await register(fixture, sender)).asset, sent = [];
+        for (const fraction of ["123100", "123300", "123456", "123456"]) {
+          const message = (await send(fixture, sender, image.id)).message, createdAt = `2026-10-15 12:00:01.${fraction}`;
+          await connection.query("UPDATE messages SET created_at = ? WHERE id = ?", [createdAt, message.id]);
+          sent.push({ ...message, sqlCreatedAt: createdAt });
+        }
+        const canonical = sent.sort((a, b) => a.sqlCreatedAt === b.sqlCreatedAt ? Buffer.compare(b.id, a.id) : a.sqlCreatedAt < b.sqlCreatedAt ? 1 : -1);
+        for (const viewer of ["admin", "client"]) {
+          const current = request(fixture, viewer, { now: now + 2000 });
+          const first = await media.gallery({ ...current, limit: 2 });
+          assert.deepEqual(first.items.map(item => item.sequence), canonical.slice(0, 2).map(item => item.sequence));
+          const second = await media.gallery({ ...current, before: first.nextBefore, limit: 2 });
+          assert.deepEqual(second.items.map(item => item.sequence), canonical.slice(2).map(item => item.sequence));
+          assert.equal(second.hasMore, false); assert.equal(second.nextBefore, null);
+          const paged = []; let before = null;
+          for (let pageIndex = 0; pageIndex <= sent.length; pageIndex++) {
+            const page = await media.gallery({ ...current, before, limit: 1 });
+            paged.push(...page.items.map(item => item.sequence)); before = page.nextBefore;
+            if (before === null) break;
+          }
+          assert.equal(before, null);
+          assert.deepEqual(paged, canonical.map(item => item.sequence)); assert.equal(new Set(paged).size, 4);
+          for (let index = 1; index < canonical.length; index++) {
+            const newer = await media.gallery({ ...current, after: canonical[index].sequence, limit: 1 });
+            assert.deepEqual(newer.items.map(item => item.sequence), [canonical[index - 1].sequence]);
+          }
+        }
+      }
+    });
+
     await t.test("removing a consumed invitation blocks client media without fabricating an age proof", async () => {
       const fixture = await pair(), image = (await register(fixture)).asset, sent = await send(fixture, "client", image.id);
       assert.equal((await connection.query("SELECT age_assured_at FROM users WHERE id = ?", [fixture.client.id]))[0].age_assured_at, null);
@@ -719,4 +751,18 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
     if (pool) await pool.end();
     await reset(); await connection.end();
   }
+});
+
+test("gallery cursor SQL parameters preserve synthetic microseconds before and after the pivot without a database", async () => {
+  const createdAt = "2026-10-15 12:00:01.123456", boundaries = [];
+  const connection = { async query(sql, parameters) {
+    if (sql.startsWith("SELECT id,")) return [{ id: Buffer.alloc(16, 7), created_at: createdAt, cursor_created_at: createdAt }];
+    boundaries.push(parameters.slice(3, 5)); return [];
+  } };
+  const store = createMediaStore({ pool: { getConnection() {} }, chatStore: { withActor() {},
+    async withConversation(request, operation) { return operation(connection, { now: request.now }); } } });
+  for (const role of ["admin", "client"]) for (const direction of ["before", "after"]) {
+    await store.gallery({ role, tokenHash: Buffer.alloc(32), conversationId: Buffer.alloc(16), now: now + 2000, [direction]: "4", limit: 1 });
+  }
+  assert.deepEqual(boundaries, Array.from({ length: 4 }, () => [createdAt, createdAt]));
 });

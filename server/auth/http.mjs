@@ -227,7 +227,9 @@ export function createAuthHandler(service, { origin, clock = Date.now }) {
           return true;
         }
         const data = safeSession(session);
-        if (pathname === "/api/auth/session") reply(response, method, 200, data, { "Set-Cookie": sessionCookie(token, data.expiresAt, COOKIE_NAME, { role: "admin", now: clock() }) });
+        // Only explicit credential issuance writes cookies. An older response can
+        // arrive after a new login and must not restore its previous token.
+        if (pathname === "/api/auth/session") reply(response, method, 200, data);
         else if (pathname === "/api/auth/devices") {
           const query = new URL(request.url, origin).searchParams;
           if ([...query.keys()].some((key) => key !== "cursor") || query.getAll("cursor").length > 1) throw httpError(400, "invalid_request");
@@ -243,12 +245,14 @@ export function createAuthHandler(service, { origin, clock = Date.now }) {
           if (Object.keys(body).length) throw httpError(400, "invalid_request");
           if (deviceId) {
             const result = await service.revokeDevice(token, deviceId);
-            reply(response, method, 200, result, result.current ? { "Set-Cookie": clearCookie() } : {});
+            reply(response, method, 200, result);
             return true;
           }
           if (pathname === "/api/auth/logout-all") await service.logoutAll(token);
           else await service.logout(token);
-          reply(response, method, 200, { status: "signed_out" }, { "Set-Cookie": clearCookie() });
+          // SQL revocation ends this session; a delayed logout must preserve a
+          // cookie installed by a later login, including in another tab.
+          reply(response, method, 200, { status: "signed_out" });
         }
       } else {
         const [file, type] = publicFiles.get(pathname);

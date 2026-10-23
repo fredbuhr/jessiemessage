@@ -328,6 +328,9 @@ async function startFixtureServer() {
         if (feature === "media" && request.method === "GET") {
           if (suffix === `/conversations/${conversationId}/gallery`) {
             fixture.galleryRequests ??= []; fixture.galleryRequests.push(url.search);
+            if (fixture.photoNeighbor && (url.searchParams.has("before") || url.searchParams.has("after"))) {
+              sendJson(200, { items: [fixture.photoNeighbor], nextBefore: null, hasMore: false }); return;
+            }
             let items = fixture.photoSeries ? [galleryPhoto(role,3), galleryPhoto(role,1)] : [galleryPhoto(role,3)];
             if (url.searchParams.has("before")) items = items.filter(item => BigInt(item.sequence) < BigInt(url.searchParams.get("before")));
             if (url.searchParams.has("after")) items = items.filter(item => BigInt(item.sequence) > BigInt(url.searchParams.get("after"))).reverse();
@@ -337,7 +340,8 @@ async function startFixtureServer() {
             sendJson(200, { items, nextBefore: null, hasMore: false }); return;
           }
           if (suffix === "/assets") { sendJson(200, { assets: fixture.historyAcknowledgement ? [media(role)] : [], nextCursor: null, hasMore: false }); return; }
-          if ([`/conversations/${conversationId}/messages/${photoMessageId}/thumb`, `/conversations/${conversationId}/messages/${photoMessageId}/full`, ...(fixture.photoSeries ? [`/conversations/${conversationId}/messages/${id(201)}/full`, `/conversations/${conversationId}/messages/${id(201)}/thumb`] : [])].includes(suffix)) {
+          if ([`/conversations/${conversationId}/messages/${photoMessageId}/thumb`, `/conversations/${conversationId}/messages/${photoMessageId}/full`, ...(fixture.photoSeries ? [`/conversations/${conversationId}/messages/${id(201)}/full`, `/conversations/${conversationId}/messages/${id(201)}/thumb`] : []), ...(fixture.photoNeighbor ? [`/conversations/${conversationId}/messages/${fixture.photoNeighbor.messageId}/full`] : [])].includes(suffix)) {
+            if (suffix.endsWith("/full")) { fixture.photoNeighborReads ??= []; fixture.photoNeighborReads.push(suffix); }
             response.writeHead(200, { "Content-Type": "image/jpeg" }); response.end(jpeg); return;
           }
         }
@@ -1609,6 +1613,41 @@ test("Chrome 320px: profile preference draft resumes after same-owner verificati
       assert.equal(await page.execute("return document.querySelector('.preferences-search').value"), "");
       assert.equal(await page.execute("return document.querySelector('.preferences-selected').textContent"), "Aucune sélection.");
       assert.equal(fixture.preferenceRequests.length, 0); await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+
+
+test("Chrome photo neighbors use authorized server order within a millisecond while rejecting a reversed date or the same message", { timeout: 90000 }, async () => {
+  for (const role of ["client", "admin"]) {
+    resetFixture(); const page = await browser(role === "client" ? 320 : 1280);
+    try {
+      await loaded(page, role === "client" ? "/messages" : "/admin/messages"); if (role === "admin") await page.click(".contact"); await loadedPhoto(page);
+      const originalDate = fixture.now + 3000;
+      for (const direction of ["previous", "next"]) for (const outcome of ["same-millisecond", "reversed-date", "same-message"]) {
+        // True SQL microseconds are intentionally absent from the public DTO.
+        // IDs run opposite to the authorized chronology for this tie in ms.
+        const messageId = outcome === "same-message" ? photoMessageId : direction === "previous" ? id(999) : id(1);
+        const full = `/api/media/${role}/conversations/${conversationId}/messages/${messageId}/full`;
+        fixture.photoNeighbor = { messageId, sequence: direction === "previous" ? "1" : "5", sender: "peer",
+          createdAt: originalDate + (outcome !== "reversed-date" ? 0 : direction === "previous" ? 1 : -1),
+          media: { ...media(role), fullUrl: full, thumbnailUrl: full.replace(/full$/, "thumb") } };
+        await page.click("#messages .photo-open");
+        await waitUntil(() => page.execute("const image=document.querySelector('#lightbox-image img');return document.getElementById('lightbox').open&&!!image&&image.complete&&image.naturalWidth>0"), "original full photo ready");
+        const originalBlob = await page.execute("return document.querySelector('#lightbox-image img').src");
+        const reads = fixture.photoNeighborReads?.length ?? 0;
+        await page.click(direction === "previous" ? "#previous-photo" : "#next-photo");
+        if (outcome === "same-millisecond") {
+          await waitUntil(() => page.execute("const image=document.querySelector('#lightbox-image img');return !!image&&image.complete&&image.naturalWidth>0&&image.src!==arguments[0]&&!document.getElementById('next-photo').disabled", originalBlob), "different photo with equal public milliseconds accepted");
+          assert.ok(fixture.photoNeighborReads.slice(reads).includes(full.replace(`/api/media/${role}`, "")), "the viewer fetched the exact neighboring message's authorized full photo");
+        } else {
+          await waitUntil(() => page.execute("return document.getElementById('lightbox-status').textContent==='La photo n’a pas pu être chargée. Réessaie dans un moment.'&&!document.getElementById('next-photo').disabled"), "invalid neighboring metadata rejected without changing the displayed photo");
+          assert.equal(await page.execute("return document.querySelector('#lightbox-image img').src"), originalBlob);
+          assert.equal(fixture.photoNeighborReads.length, reads, "invalid neighbor does not initiate another original read");
+        }
+        await page.click("#close-lightbox");
+      }
+      await noJavascriptErrors(page);
     } finally { await page.close(); }
   }
 });

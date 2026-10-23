@@ -1,0 +1,13 @@
+# Correctif avant ouverture au public — 1.10.1
+
+Issu de l’[audit final de134points](AUDIT-PUBLIC-1100-20261023.md). La1.10.0 reste la référence active jusqu’au déploiement qualifié de ce correctif. Aucun nouveau module métier, migration SQL ou changement de catalogue.
+
+- **P1 — Préférences pendant arrêt :** une clé de service effacée pouvait encore être utilisée par une écriture en vol. Le service refuse le chiffrement tardif avant écriture, conserve sa clé pour les opérations déjà admises et permet un accusé sûr après commit positif, puis efface la clé en fin de drainage. Les lectures tardives sont refusées.
+- **P2 — Cookies de session :** les anciennes réponses de lecture, déconnexion ou révocation ne réécrivent plus le cookie installé par une connexion plus récente. Les sessions restent révoquées en SQL ; login et rotation explicite restent les seuls émetteurs. Le cookie navigateur dure180jours depuis son émission ; une lecture de session ne renouvelle plus cette échéance, tandis que la politique SQL reste inchangée.
+- **P3 — Dépendance e-mail :** Nodemailer10.1.4 est verrouillé. Les trois PoC mainteneurs sont corrigés dans cette version et restent rejetés par les entrées Jessie ; aucune exploitation de l’application n’a été démontrée.
+- **P3 conditionnel — Galerie :** le pivot conserve les six décimales SQL et les validateurs HTTP/visionneuse ne déduisent plus un ordre UUID de dates publiques réduites à la même milliseconde. Identifiants distincts, séquences, sens des dates distinctes, URLs et autorisations restent validés. Aucune donnée hébergée affectée établie ; aucune photo supprimée ou format public changé.
+- **P3 — Traduction :** le titre d’onglet du profil public suit le choixFR/EN.
+
+Reproductions et tests ciblés locaux : session7échecs avant/120réussis après, préférences13/13, SMTP42/42, HTTPphoto30/30, paramètresSQL6d1/1. Node local24.19.0 ; ces résultats ne remplacent pas la qualification native24.22.1. Tests Chrome et MariaDB natifs ajoutés pour les nouveaux cas ; PR/main complets à qualifier.
+
+Le schéma reste38, les migrations et catalogue691/25/934 restent identiques. Les nouvelles dépendances doivent être préparées dans un emplacement privé distinct : ne pas réutiliser le dossier de dépendances1100 inchangé. Les reçus historiques et le checkpoint1100 ne sont pas modifiés par le code source.

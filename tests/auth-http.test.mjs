@@ -231,7 +231,7 @@ test("logout checks origin, session and CSRF before revoking or accepting a body
     assert.equal(result.status, 200);
     assertHeaders(result);
     assert.deepEqual(await result.json(), { status: "signed_out" });
-    assert.match(result.headers.get("set-cookie"), /Max-Age=0; Secure; HttpOnly; SameSite=Strict/);
+    assert.equal(result.headers.get("set-cookie"), null);
     assert.deepEqual(calls.filter(([name]) => name === method), [[method, token]]);
   }
 });
@@ -355,15 +355,12 @@ test("bad service session output fails closed instead of setting a malformed coo
   assert.deepEqual(await response.json(), { error: "authentication_unavailable" });
 });
 
-test("administrator session reads renew the same secure opaque cookie up to 180 days", async (t) => {
+test("administrator session reads return renewed server expiry without changing cookies", async (t) => {
   const { base, session } = await fixture(t);
   session.expiresAt = Date.now() + 180 * 86400000;
   const response = await fetch(`${base}/api/auth/session`, { headers: { Cookie: cookie } });
   assert.equal(response.status, 200);
-  const renewed = response.headers.get("set-cookie");
-  assert.match(renewed, new RegExp(`^__Host-jessie_session=${token};`));
-  const seconds = Number(/Max-Age=(\d+)/.exec(renewed)[1]);
-  assert.ok(seconds >= 180 * 86400 - 2 && seconds <= 180 * 86400);
+  assert.equal(response.headers.get("set-cookie"), null);
   assert.deepEqual(Object.keys(await response.json()).sort(), ["csrf", "expiresAt", "user"]);
 });
 
@@ -389,7 +386,7 @@ test("device routes require authentication, exact origin, an empty JSON body and
   const removed = await post(base, path, {}, mutationHeaders({ Cookie: cookie, "X-CSRF-Token": csrf }));
   assert.equal(removed.status, 200);
   assert.deepEqual(await removed.json(), { status: "device_revoked", current: true });
-  assert.match(removed.headers.get("set-cookie"), /Max-Age=0/);
+  assert.equal(removed.headers.get("set-cookie"), null);
   assert.deepEqual(calls.find(([name]) => name === "revokeDevice"), ["revokeDevice", token, user.id]);
   assert.equal((await fetch(`${base}${path}`, { headers: { Cookie: cookie } })).status, 405);
 });

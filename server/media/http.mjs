@@ -280,7 +280,9 @@ export function createMediaHandler(service, { origin }) {
         let previous = null; const seen = new Set(), seenSequences = new Set();
         const items = result.items.map((value) => {
           if (!value || !id(value.messageId) || !sequence(value.sequence, true) || seen.has(value.messageId) || seenSequences.has(value.sequence)
-            || previous !== null && (value.createdAt > previous.createdAt || value.createdAt === previous.createdAt && value.messageId >= previous.messageId)
+            // SQL orders exact DATETIME(6), then ID. Equal public milliseconds
+            // do not establish equal SQL dates, so cannot imply an ID order.
+            || previous !== null && value.createdAt > previous.createdAt
             || !["me", "peer"].includes(value.sender) || !date(value.createdAt)
             || range.from !== undefined && value.createdAt < range.from || range.until !== undefined && value.createdAt >= range.until) throw unavailable();
           previous = value; seen.add(value.messageId); seenSequences.add(value.sequence);
