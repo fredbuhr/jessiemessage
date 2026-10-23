@@ -1,0 +1,113 @@
+{
+  "run": 39990302080,
+  "head": "f3c30fbf136e2595076e13b274fe4338169a1d70",
+  "tree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+  "allTwelveAccountedFor": true,
+  "method": "Compare final PNG bytes to all12 visually inspected initial images; inspect all6 changed final images.",
+  "images": [
+    {
+      "file": "final/experience-render/experience-admin-1280-client-preferences.png",
+      "sha256": "88cddce42d2aadf91b9ed2cb69e92f35375a12efd5bf06e0870558cafa59c4fc",
+      "identicalBytes": false,
+      "differenceBounds": [
+        25,
+        101,
+        283,
+        729
+      ]
+    },
+    {
+      "file": "final/experience-render/experience-admin-1280-profile.png",
+      "sha256": "890ab2aa01961652fa6cbaac761ada3d14285eed47700cd2fff5fd2ee3f009f2",
+      "identicalBytes": false,
+      "differenceBounds": [
+        21,
+        79,
+        830,
+        733
+      ]
+    },
+    {
+      "file": "final/experience-render/experience-admin-320-profile.png",
+      "sha256": "60f94f39f6bcd0a8480c42a0011224486d704b58f7dc90681ecdd8b04ea827f0",
+      "identicalBytes": true,
+      "differenceBounds": null
+    },
+    {
+      "file": "final/experience-render/experience-client-1280-profile.png",
+      "sha256": "99c03a07cc1ba620eaa2518cd54df70deeae42ca295f4077797558bbd3eac436",
+      "identicalBytes": false,
+      "differenceBounds": [
+        870,
+        622,
+        1229,
+        640
+      ]
+    },
+    {
+      "file": "final/experience-render/experience-client-320-profile.png",
+      "sha256": "a5fa4f787e9789425fdb999611880b3a09836b2f6b4a492aa3987b743fa3ee89",
+      "identicalBytes": false,
+      "differenceBounds": [
+        301,
+        163,
+        310,
+        436
+      ]
+    },
+    {
+      "file": "final/experience-render/experience-public-320-profile.png",
+      "sha256": "b9a54ad354ab7b7f5aaac6fe292bce6d1264fc45970e870b79d985636f909759",
+      "identicalBytes": true,
+      "differenceBounds": null
+    },
+    {
+      "file": "final/public-render/public-1280-en.png",
+      "sha256": "e0a7585449ca4ca54f2c238c66c8a83988b3bd93c40e9b96d5e8d5278935f6f7",
+      "identicalBytes": true,
+      "differenceBounds": null
+    },
+    {
+      "file": "final/public-render/public-1280-fr.png",
+      "sha256": "5538d0bd6058c8686b29025e7b680b16455646af2159144a985ff554de47ce61",
+      "identicalBytes": true,
+      "differenceBounds": null
+    },
+    {
+      "file": "final/public-render/public-320-en.png",
+      "sha256": "f53b017894f8719e7893c2aab1cf8abcd6ecec76293d45112d6cca30ccf7199a",
+      "identicalBytes": false,
+      "differenceBounds": [
+        316,
+        0,
+        320,
+        671
+      ]
+    },
+    {
+      "file": "final/public-render/public-320-fr.png",
+      "sha256": "305400117ebbf8119657da8a35981bf0b1247c0398e96fe77aebec4191c49d64",
+      "identicalBytes": true,
+      "differenceBounds": null
+    },
+    {
+      "file": "final/public-render/publication-1280-fr.png",
+      "sha256": "838c961bb367a1c70d59a5d07933fc19e2b5f64d43415c0a81c9f2262af1b132",
+      "identicalBytes": true,
+      "differenceBounds": null
+    },
+    {
+      "file": "final/public-render/publication-320-fr.png",
+      "sha256": "9c89cb0820465c5c4b0f127d5f6158171fa664a6c4f28758796486a73d002ac8",
+      "identicalBytes": false,
+      "differenceBounds": [
+        316,
+        0,
+        320,
+        822
+      ]
+    }
+  ],
+  "changedImageReview": "Four HTTPS images differ only in native scrollbar or blurred conversation/inbox background. Two public images differ only in4px right native scrollbar. No clipping, overlap or horizontal overflow in the foreground content.",
+  "blockingDefects": []
+}

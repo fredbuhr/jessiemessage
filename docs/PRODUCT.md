@@ -6,6 +6,8 @@ L’**[état courant dans REPRISE](REPRISE.md)** centralise version, déploiemen
 
 **La production active rapportée est1.8.4 / Node24.22.1 / SQL36**, source1a41e08abc87c3a29d9163fbf8cd2342eb04693c, relevéUI `23/10/2026 11:44:16`, checkpoint3b1781be… selon les [preuves utilisateur184](verification-proofs/jm184-hosted-metadata.json). La livraison184 est close ; aucune commande ancienne n’est à rejouer. [REPRISE](REPRISE.md) reste l’autorité pour l’état déployé.
 
+**Version1.10.0 publiée et qualifiée, non déployée :** profil public de Jessie avec publication/retrait explicites, conservation en mémoire du profil et des goûts/fantasmes pendant un changement temporaire de fenêtre, après vérification de la même session. Aucun changement SQL ou dépendance. [Périmètre et preuves](public-profile-1100.md).
+
 **Version1.9.0 déployée et finalisée :** préférences privées facultatives, vidéo réservée admin, galerie historique/date/message, dix photos en un parcours avec reprise, suivi « À répondre » et changement volontaire de mot de passe avec œil. [Périmètre et limites](experience190.md). Le repli technique185 sert uniquement à préserver les nouvelles données aprèsSQL38 ; il n’est pas l’application active.
 
 ## Fonctions disponibles

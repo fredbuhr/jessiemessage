@@ -2,13 +2,16 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Évolution 1.10.0 — profil public et sélection conservée
+## Évolution 1.10.0 — publiée, préparation hébergée en attente
 
-1. Implémenter et vérifier le profil public `/jessie`, sa publication/retrait admin explicite et le retour au profil après changement temporaire de fenêtre. Critères : aucune préférence client publique, aucun choix perdu pour le même compte, aucun envoi automatique à la reprise.
-2. Qualifier le diff stabilisé par les tests ciblés et CI PR/main, publier1.10.0 immuable sur la source validée. SQL38 inchangé ;190 conservée pour repli.
-3. Préparer le checkout exact et les commandes Manager, puis recueillir l’identité de démarrage avant l’enregistrement final. Aucun déploiement1100 acquis à ce stade.
+Code fusionné, PR et main qualifiés5/5 sousNode24.22.1. [Source et preuves](REPRISE.md).
 
-[Périmètre courant](public-profile-1100.md), [production et reprise](REPRISE.md). Les essais réels de téléphone restent distincts des tests synthétiques.
+Publication immuable acquise : release/latest422111737 sur la source exacte `51b0cf22e3adbad7ed26653e96706ba707aaf839`, opérateurs42/42 et workflow2/2.
+
+1. Préparer le checkout exact et le CHECK sans arrêter190 ; recueillir le reçu avant d’indiquer les champs Manager.
+2. Activer1100 via Manager, vérifier son identité réelle puis qualifier le writer sur le reçu et enregistrer les métadonnées. SQL38 inchangé ;190 et185 conservées. Aucune migration, sauvegarde ou manipulation PC à ajouter.
+
+[Périmètre](public-profile-1100.md). Les essais sur téléphone réel ne sont pas déduits des tests synthétiques. Aucun déploiement1100 acquis à ce stade.
 
 ## Évolution 1.9.0 — livraison terminée
 

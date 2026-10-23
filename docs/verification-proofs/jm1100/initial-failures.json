@@ -1,0 +1,81 @@
+{
+  "run": 39988863106,
+  "head": "710b2ec386eb88ab963a55b6f117b83a3438df56",
+  "tree": "43c323d1cf286d66c25277475d48d6186bd83175",
+  "node": "v24.22.1",
+  "status": "superseded_after_fixture_fixes",
+  "logs": [
+    {
+      "file": "verify.log",
+      "bytes": 578260,
+      "sha256": "a36ff13f708c1f0d0bd5da57f54a9e5fff6a8fb559a4c673edf0f2e3338dc960",
+      "totals": {
+        "tests": 4078,
+        "pass": 4026,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 52
+      }
+    },
+    {
+      "file": "browser.log",
+      "bytes": 56599,
+      "sha256": "931425d30fcd400184d67516fc57111b2570dcb58baa1db6fb4a1b73b5f0a6c3",
+      "totals": {
+        "tests": 256,
+        "pass": 255,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "file": "mariadb114-initial.log",
+      "bytes": 356845,
+      "sha256": "efefcecc1a5ea6e8c4cf5f755c0018286b1c8409a7ae61313974fc5198d39b0a",
+      "totals": {
+        "tests": 598,
+        "pass": 598,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "file": "mariadb1011-initial-cancelled.log",
+      "bytes": 356324,
+      "sha256": "42ff336722629deb9d90b6e291690a8b6069ba2e83a385fa6c68f4139679cbef",
+      "totals": {
+        "tests": 598,
+        "pass": 598,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "file": "https-initial.log",
+      "bytes": 40024,
+      "sha256": "1740b507d88fe49727de292afa0adf9ed94cbaddb385550f277e6f218231cbf7",
+      "totals": {}
+    }
+  ],
+  "findings": [
+    {
+      "kind": "test_readiness",
+      "file": "tests/browser/chat-accessibility.browser.mjs",
+      "line": 1610,
+      "expected": "Aucune s\u00e9lection.",
+      "actual": "",
+      "resolution": "Wait for visible preferences section, aria-busy false and enabled search after profile GET."
+    },
+    {
+      "kind": "fixture_cleanup",
+      "file": "tests/rehearsal/auth-fixture.mjs",
+      "line": 273,
+      "reason": "Owned operations cleanup allowlist did not include new public snapshot JSON; all seven experience subtests passed before finally cleanup failed.",
+      "resolution": "Add exact jessie-public-profile.json only in experience fixture; keep locks/unknown files rejected."
+    }
+  ],
+  "qualificationComplete": false
+}

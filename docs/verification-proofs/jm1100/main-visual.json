@@ -1,0 +1,108 @@
+{
+  "run": 39991790308,
+  "source": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+  "tree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+  "images": [
+    {
+      "file": "experience-render/experience-admin-1280-client-preferences.png",
+      "sha256": "399189ab95385ff100411d49af41c7cee7698af1b806df97d21e073de0b9063d",
+      "identicalToPrBytes": false,
+      "differenceBounds": [
+        24,
+        42,
+        937,
+        729
+      ]
+    },
+    {
+      "file": "experience-render/experience-admin-1280-profile.png",
+      "sha256": "43cccb2e01b129a693051414295b126fbcef48c4ff0bc230cc3f2628b26092a9",
+      "identicalToPrBytes": false,
+      "differenceBounds": [
+        21,
+        79,
+        315,
+        733
+      ]
+    },
+    {
+      "file": "experience-render/experience-admin-320-profile.png",
+      "sha256": "60f94f39f6bcd0a8480c42a0011224486d704b58f7dc90681ecdd8b04ea827f0",
+      "identicalToPrBytes": true,
+      "differenceBounds": null
+    },
+    {
+      "file": "experience-render/experience-client-1280-profile.png",
+      "sha256": "379298b995fa169b8c85d25bacd103443e8a21dade5342e8c6611fd8329ba31f",
+      "identicalToPrBytes": false,
+      "differenceBounds": [
+        870,
+        622,
+        1229,
+        640
+      ]
+    },
+    {
+      "file": "experience-render/experience-client-320-profile.png",
+      "sha256": "d392e0453ad8a84ece4cfc00d1e3646caae93ff62f5c76f805c19515d3c1bafc",
+      "identicalToPrBytes": false,
+      "differenceBounds": [
+        301,
+        163,
+        310,
+        436
+      ]
+    },
+    {
+      "file": "experience-render/experience-public-320-profile.png",
+      "sha256": "b9a54ad354ab7b7f5aaac6fe292bce6d1264fc45970e870b79d985636f909759",
+      "identicalToPrBytes": true,
+      "differenceBounds": null
+    },
+    {
+      "file": "public-render/public-1280-en.png",
+      "sha256": "e0a7585449ca4ca54f2c238c66c8a83988b3bd93c40e9b96d5e8d5278935f6f7",
+      "identicalToPrBytes": true,
+      "differenceBounds": null
+    },
+    {
+      "file": "public-render/public-1280-fr.png",
+      "sha256": "5538d0bd6058c8686b29025e7b680b16455646af2159144a985ff554de47ce61",
+      "identicalToPrBytes": true,
+      "differenceBounds": null
+    },
+    {
+      "file": "public-render/public-320-en.png",
+      "sha256": "f53b017894f8719e7893c2aab1cf8abcd6ecec76293d45112d6cca30ccf7199a",
+      "identicalToPrBytes": true,
+      "differenceBounds": null
+    },
+    {
+      "file": "public-render/public-320-fr.png",
+      "sha256": "305400117ebbf8119657da8a35981bf0b1247c0398e96fe77aebec4191c49d64",
+      "identicalToPrBytes": true,
+      "differenceBounds": null
+    },
+    {
+      "file": "public-render/publication-1280-fr.png",
+      "sha256": "838c961bb367a1c70d59a5d07933fc19e2b5f64d43415c0a81c9f2262af1b132",
+      "identicalToPrBytes": true,
+      "differenceBounds": null
+    },
+    {
+      "file": "public-render/publication-320-fr.png",
+      "sha256": "cf22b7ab200479ea2f5a37d36abe0fa529f67359ad418ff1bdd3b5542e42e78a",
+      "identicalToPrBytes": false,
+      "differenceBounds": [
+        316,
+        0,
+        320,
+        822
+      ]
+    }
+  ],
+  "allTwelveAccountedFor": true,
+  "method": "Byte-compare main12PNGs to reviewed final PR12PNGs; inspect all5 changed main images.",
+  "changedImageReview": "Four HTTPS images differ only in native scrollbars or blurred conversation/inbox background. Publication320 differs only in4px right native scrollbar. Public page FR/EN320/1280 images are byte-identical to finalPR. No clipping, overlap or horizontal overflow in foreground content.",
+  "blockingDefects": []
+}

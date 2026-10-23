@@ -1,0 +1,80 @@
+{
+  "branch": "ops/qualify-v1.10.0",
+  "commit": "8df66e6e9a852e866098d478e46e4a6bb5292f0b",
+  "tree": "30a9e70d818c56b14002443172463f403dc52263",
+  "entries": [
+    {
+      "path": "ops/prepare-release1100.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "08de8a24468907024627c2a2791b0072f9693123"
+    },
+    {
+      "path": "ops/test-prepare-release1100.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "21ab99e3ac29d9162818b07a6d16feb6bb70265e"
+    },
+    {
+      "path": "ops/record-release1100.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8854d53aca3d3b072ada9586411632fc2e770516"
+    },
+    {
+      "path": "ops/test-record-release1100.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3ff542e48b9266ba975fddf8a5289b47ce9a8209"
+    },
+    {
+      "path": "ops/publish-qualified1100.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b84efb698a5cde61e2357bb896fe357d77b83d17"
+    },
+    {
+      "path": "ops/test-publish-qualified1100.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a632c49fbc885e11d9c7f96b77303a5386af7309"
+    },
+    {
+      "path": ".github/workflows/qualify-operators1100.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "512785688db4585ad643b6010d43a08f37ac481f"
+    }
+  ],
+  "parent": "710b2ec386eb88ab963a55b6f117b83a3438df56",
+  "sourcePinsPending": true,
+  "publicationTriggered": false,
+  "branchReadbackVerified": true,
+  "runs": [
+    {
+      "id": 39989284000,
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "sha": "8df66e6e9a852e866098d478e46e4a6bb5292f0b",
+      "path": ".github/workflows/qualify-operators1100.yml",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39989284000"
+    }
+  ],
+  "job": {
+    "id": 120536541704,
+    "name": "operators",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "testsPassed": 42,
+  "tests": {
+    "preparation": 22,
+    "writer": 13,
+    "publication": 7
+  },
+  "node": "v24.22.1",
+  "logFile": "native-operators-39989284000.log",
+  "diffVerifiedExact7": true,
+  "logSha256": "47f406126a05b14a08780589f0643bc915db3c81b70583f81160e7f8fd427df2"
+}

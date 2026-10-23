@@ -1,0 +1,123 @@
+{
+  "run": 39990302080,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39990302080",
+  "workflow": ".github/workflows/ci.yml",
+  "event": "pull_request",
+  "attempt": 1,
+  "source": "f3c30fbf136e2595076e13b274fe4338169a1d70",
+  "tree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 120540752127,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 120540752489,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 120540752518,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 120540752562,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 120540752595,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "node": "v24.22.1",
+  "logs": [
+    {
+      "name": "verify",
+      "file": "verify.log",
+      "bytes": 578236,
+      "sha256": "9e62ec4bc3242bb13f221b8a7329b88d75d4d32ead05cdac8668441c63feeb32",
+      "node": "v24.22.1",
+      "totals": {
+        "tests": 4078,
+        "pass": 4026,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 52
+      }
+    },
+    {
+      "name": "browser",
+      "file": "browser.log",
+      "bytes": 55054,
+      "sha256": "b7805d731cf28370ce34afdcbfd0ab528547753f419816190aba2103ab275a31",
+      "node": "v24.22.1",
+      "totals": {
+        "tests": 256,
+        "pass": 256,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "name": "https",
+      "file": "https.log",
+      "bytes": 42359,
+      "sha256": "ac694479678de6fa58ffb95ec4856da9f5d66e195b67d574fd4a97d780377435",
+      "node": "v24.22.1",
+      "totals": {
+        "tests": 12,
+        "pass": 12,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "name": "mariadb1011",
+      "file": "mariadb1011.log",
+      "bytes": 356240,
+      "sha256": "06352c8a49e3e202b28f8f1b4b36dfa0ca18a0b587a4b72075a9bc551659b89d",
+      "node": "v24.22.1",
+      "totals": {
+        "tests": 598,
+        "pass": 598,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "name": "mariadb114",
+      "file": "mariadb114.log",
+      "bytes": 356495,
+      "sha256": "e9cbb71a180a4999f35f29dcbb9a7446657915720657ad3aa1695e0a340b3030",
+      "node": "v24.22.1",
+      "totals": {
+        "tests": 598,
+        "pass": 598,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "qualificationComplete": true,
+  "visualReview": "visual-review.json",
+  "priorAttempts": "../initial-summary.json and ../second/jobs.json",
+  "limitations": [
+    "General52omissions remain explicit; native browser/database jobs have0omissions.",
+    "Synthetic browser/SQL tests do not attest a physical phone or hosted deployment."
+  ]
+}

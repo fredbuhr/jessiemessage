@@ -1,6 +1,6 @@
-# Profil public de Jessie et retour au brouillon —1.10.0
+# Profil public de Jessie et retour au brouillon — 1.10.0
 
-Demande du23octobre2026. Production conservée1.9.0 jusqu’à activation qualifiée. Schéma38 et catalogue691/25/934 inchangés.
+Demande du 23 octobre 2026. Production conservée 1.9.0 jusqu’à activation qualifiée. Schéma 38 et catalogue 691/25/934 inchangés.
 
 ## Comportement
 
@@ -19,4 +19,4 @@ Cette copie publique reste hors du manifeste des sauvegardes historiques ; elle 
 
 Tests ciblés et tests navigateur synthétiques prévus : publication/retrait, CAS entre appareils, CSRF/client refusé, DTO public borné, révocation avant écriture, échappement du texte, FR/EN, petits/grands écrans, masquage/reprise du même compte, changement de session, chargement et enregistrement interrompus sans répétition automatique.
 
-À ce jalon : code sur branche, tests locaux sousNode24.19.0 distincts de la qualification native24.22.1 ; Chrome local absent, couverture navigateur à exécuter en CI. Aucune publication ou activation1100 n’est encore acquise.
+PR135 fusionnée sur `51b0cf22e3adbad7ed26653e96706ba707aaf839`, arbre `190024a2f30258554e4a18ff6ae18e2be08c8d7b`. CI PR39990302080 et main39991790308 chacune 5/5 sousNode 24.22.1 : Chrome 256/256, HTTPS 12/12, MariaDB 598/598 chacune, général 4 026 réussis et52 omissions sur 4 078. Les 12 rendus synthétiques main sont relus ; les écarts avec PR concernent des barres natives ou arrière-plans floutés. Les premières erreurs de fixtures sont conservées. La [publication39993020232](https://github.com/fredbuhr/jessiemessage/actions/runs/39993020232) est réussie 2/2, opérateurs 42/42, release/latest 422111737 sur la source exacte. Aucune préparation, CHECK ou activation hébergée 1100 acquise ; [prochaine action](operations-release1100.md).

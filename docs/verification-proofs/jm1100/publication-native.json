@@ -1,0 +1,56 @@
+{
+  "publicationAuthorizedByRoot": true,
+  "mainCI": "39991790308",
+  "mainCIAll5SuccessReportedByRoot": true,
+  "branch": "ops/publish-v1.10.0",
+  "operator": "6836e25df78e6b7c7f2f0b53650ca16efd4dc3ea",
+  "tree": "f6560304e30ad9973d8a2139966f261c7ed54ce5",
+  "runs": [
+    {
+      "id": 39993020232,
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "sha": "6836e25df78e6b7c7f2f0b53650ca16efd4dc3ea",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39993020232"
+    }
+  ],
+  "hostingTouched": false,
+  "publication": {
+    "id": 422111737,
+    "tag": "v1.10.0",
+    "source": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+    "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.10.0",
+    "tagObjectType": "commit",
+    "tagSource": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+    "latestId": 422111737,
+    "latestTag": "v1.10.0",
+    "draft": false,
+    "prerelease": false
+  },
+  "native": {
+    "node": "v24.22.1",
+    "prepare": 22,
+    "writer": 13,
+    "publisher": 7,
+    "total": 42
+  },
+  "jobs": [
+    {
+      "id": 120549316856,
+      "name": "operator-tests",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 120549519509,
+      "name": "publish",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "preparerSha256": "927ab81fd80c79d03badd2f83ecfa7125f572301833768e9088adefc39939a28",
+  "preparerPath": "ops/prepare-release1100.py",
+  "mainTree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+  "mainSource": "51b0cf22e3adbad7ed26653e96706ba707aaf839"
+}
