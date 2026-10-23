@@ -1,0 +1,34 @@
+name: Qualify JessieMessage 1.9.0 operators without publication
+
+on:
+  push:
+    branches: ["ops/release190-tools"]
+    paths: ["ops/*190*.py", ".github/workflows/qualify-operators190.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: operators190-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  operators:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact operator commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Use qualified Node.js 24.22.1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+          package-manager-cache: false
+      - run: python3 ops/test-prepare-release190.py
+      - run: python3 ops/test-migrate-release190.py
+      - run: python3 ops/test-record-release190.py
+      - run: python3 ops/test-publish-qualified190.py
