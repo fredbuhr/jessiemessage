@@ -35,8 +35,8 @@ test("real MariaDB preferences: owner-only encrypted selections, cross-device CA
       else await connection.query("INSERT INTO client_session_state (session_id, last_seen_at, credential_version) VALUES (?, ?, 1)", [value.sessionId, created]);
       byToken.set(value.token, value); return value;
     }
-    const admin = await user("admin"), foreignAdmin = await user("admin"), client = await user("client"), other = await user("client"), conversation = id();
-    await connection.query("INSERT INTO conversations (id, admin_id, client_id, created_at) VALUES (?, ?, ?, ?)", [conversation, admin.id, client.id, created]);
+    const admin = await user("admin"), foreignAdmin = await user("admin"), client = await user("client"), other = await user("client"), conversation = id(), otherConversation = id();
+    await connection.query("INSERT INTO conversations (id, admin_id, client_id, created_at) VALUES (?, ?, ?, ?), (?, ?, ?, ?)", [conversation, admin.id, client.id, created, otherConversation, admin.id, other.id, created]);
     const store = createPreferencesStore({ pool, chatStore: createChatStore(pool) });
     service = createPreferencesService({ store, key: Buffer.alloc(32, 19), clock: () => now,
       chatService: { async actor(role, token) { const actor = byToken.get(token); if (!actor || actor.role !== role) throw { code: "CHAT_UNAUTHORIZED" }; return { user: { id: actor.id.toString("hex"), role }, csrf: token }; } },

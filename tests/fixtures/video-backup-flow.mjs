@@ -10,6 +10,7 @@ import sharp from "sharp";
 import { databaseOptions, connectDatabase } from "../../server/db/connection.mjs";
 import { createdMigrationTables, applyMigrations } from "../../server/db/migrations.mjs";
 import { loadVideoMigrations } from "../../server/video/migrations.mjs";
+import { loadExperienceMigrations } from "../../server/experience/migrations.mjs";
 import { createRuntimePool } from "../../server/db/runtime.mjs";
 import { createApplicationInspectionPool } from "../../server/backup/application-scope.mjs";
 import { createBroadcastStore } from "../../server/broadcast/store.mjs";
@@ -23,6 +24,9 @@ import { normalizeImage } from "../../server/media/image.mjs";
 import { createVideoStorage, VIDEO_BLOCK_BYTES, videoStoredBytes } from "../../server/video/storage.mjs";
 import { createVideoStore } from "../../server/video/store.mjs";
 import { createVideoMessageStore } from "../../server/video/message-store.mjs";
+import { createReplyTracking } from "../../server/tasks/reply.mjs";
+import { sealPreferences } from "../../server/preferences/crypto.mjs";
+import { preferencesIndex, PREFERENCES_CATALOGUE_VERSION } from "../../server/preferences/validation.mjs";
 import { makeTotpSecret, sealTotpSecret } from "../../server/auth/crypto.mjs";
 import { encryptMessageBody, messageFingerprint, videoMessageFingerprint } from "../../server/chat/crypto.mjs";
 import { createErasureJournal } from "../../server/data/erasure-journal.mjs";
@@ -72,7 +76,8 @@ function localSqlClient(executable, args, options) {
 
 /** Disposable native fixture. The only transport substitution is loopback SQL
  * without TLS; capture, SQL parser/import, crypto, files and tar remain real. */
-export async function videoBackupFixture(t) {
+export async function videoBackupFixture(t, { experience = false } = {}) {
+  assert.equal(typeof experience, "boolean");
   const options = databaseOptions();
   assert.ok(["127.0.0.1", "::1", "localhost"].includes(options.host));
   assert.match(options.database, /^jessiemessage_test(?:_[a-z0-9]+)*$/);
@@ -81,8 +86,8 @@ export async function videoBackupFixture(t) {
   assert.ok(process.env.JESSIEMESSAGE_RUNTIME_DB_USER && process.env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD);
   assert.match(process.env.JESSIEMESSAGE_SHARED_PREFLIGHT_DB_USER ?? "", /^jessiemessage_shared_test(?:_[a-z0-9]+)*$/);
   const targetEnv = { ...process.env, JESSIEMESSAGE_DB_NAME: targetDatabase, JESSIEMESSAGE_APPLICATION_DATABASE: targetDatabase, JESSIEMESSAGE_MIGRATION_DATABASE: targetDatabase };
-  const migrations = await loadVideoMigrations(), tables = createdMigrationTables(migrations), physical = [...tables, "schema_migrations"];
-  assert.equal(migrations.length, 36); assert.equal(tables.length, 35); assert.equal(physical.length, 36);
+  const migrations = await (experience ? loadExperienceMigrations : loadVideoMigrations)(), tables = createdMigrationTables(migrations), physical = [...tables, "schema_migrations"];
+  assert.equal(migrations.length, experience ? 38 : 36); assert.equal(tables.length, experience ? 36 : 35); assert.equal(physical.length, experience ? 37 : 36);
   const allowed = [...tables, "schema_migrations", "migration_probe"];
   const sourceConnection = await connectDatabase(), targetConnection = await connectDatabase(targetEnv);
   const qualified = (database, table) => {
@@ -123,9 +128,9 @@ export async function videoBackupFixture(t) {
   const videoStorage = await createVideoStorage({ root: dirs.sourceVideo, key: keys.videoKey, pathMode: "linux-dirfd" });
   source = { database: options.database, rootPath: dirs.sourceMedia, videoRootPath: dirs.sourceVideo, pool: sourcePool, inspectionPool: sourceInspector, storage, videoStorage };
   const mediaCapacity = { ...limits, rootFingerprint: await storage.fingerprint() }, videoCapacity = { ...limits, rootFingerprint: await videoStorage.fingerprint() };
-  const chat = createChatStore(sourcePool, { clock }), media = createMediaStore({ pool: sourcePool, chatStore: chat, capacity: mediaCapacity });
+  const chat = createChatStore(sourcePool, { clock, ...(experience ? { replyTracking: createReplyTracking({ key: keys.crmKey }) } : {}) }), media = createMediaStore({ pool: sourcePool, chatStore: chat, capacity: mediaCapacity });
   await createMediaCapacityStore({ pool: sourcePool, capacity: mediaCapacity }).initialize({ now, offline: true });
-  const videos = createVideoStore({ pool: sourcePool, chatStore: chat, capacity: videoCapacity }); await videos.initialize({ now, offline: true });
+  const videos = createVideoStore({ pool: sourcePool, chatStore: chat, capacity: videoCapacity, experience }); await videos.initialize({ now, offline: true });
   const videoMessages = createVideoMessageStore({ pool: sourcePool, chatStore: chat, videoStore: videos });
   const actor = user => ({ role: user.role, tokenHash: user.tokenHash, now });
   async function addUser(role) {
@@ -178,6 +183,20 @@ export async function videoBackupFixture(t) {
   for (const conversation of conversations) { await send(admin, conversation, photo, "photo"); await send(admin, conversation, sharedVideo, "video"); }
   for (let index = 0; index < clients.length; index++) await send(clients[index], conversations[index], clientVideos[index], "video");
   await send(clients[0], conversations[0], clientPhoto, "photo");
+  const preferenceSelections = [];
+  if (experience) {
+    const choices = [...preferencesIndex.keys()].slice(0, 6);
+    for (const [index, owner] of [admin, ...clients].entries()) {
+      const value = { catalogueVersion: PREFERENCES_CATALOGUE_VERSION, selectedIds: choices.slice(index * 2, index * 2 + 2) },
+        encrypted = sealPreferences(value, keys.crmKey, hex(owner.id), "1");
+      await sourceConnection.query("INSERT INTO profile_preferences (user_id, version, selection_encrypted, created_at, updated_at) VALUES (?, 1, ?, ?, ?)", [owner.id, encrypted, created, created]);
+      preferenceSelections.push({ owner, value, encrypted });
+    }
+    const request = { ...actor(admin), now: now + 4000, conversationId: conversations[1] },
+      reply = (await chat.readMessages({ ...request, limit: 50 })).conversation.reply;
+    const handled = await chat.markReply({ ...request, input: { action: "handled", through: reply.through, expectedVersion: reply.version } });
+    await chat.markReply({ ...request, input: { action: "needed", through: handled.through, expectedVersion: handled.version } });
+  }
   // A retained pending v3 campaign proves that capture and later account
   // closure authenticate typed references without abusing the photo FK.
   const broadcasts = createBroadcastStore(sourcePool, { chatStore: chat, key: keys.messageKey, videoEnabled: true,
@@ -215,7 +234,7 @@ export async function videoBackupFixture(t) {
   } finally { quickRepliesStore.close(); }
   const quickRepliesCiphertext = await readFile(path.join(dirs.sourceOperations, quickRepliesName));
   assert.equal(quickRepliesCiphertext.includes(Buffer.from(quickRepliesInitial.replies[0].body)), false);
-  const f = { root, dirs, keys, options, targetDatabase, targetEnv, limits, now, clock, environment, sourceEnvironment, sourceConnection, targetConnection,
+  const f = { root, dirs, keys, options, targetDatabase, targetEnv, limits, now, clock, environment, sourceEnvironment, sourceConnection, targetConnection, experience, preferenceSelections,
     source, admin, clients, conversations, photo, clientPhoto, sharedVideo, clientVideos, pending, messages, broadcastCampaignId, broadcastPayload, binding, legacyBinding,
     quickReplies: { owner: quickRepliesOwner, filename: quickRepliesName, initial: quickRepliesInitial, ciphertext: quickRepliesCiphertext },
     get target() { return target; } };
@@ -261,7 +280,7 @@ export async function videoBackupFixture(t) {
       } catch (error) { t.diagnostic(`Video backup capture: ${label} failed`); throw error; }
     };
     const report = await captureMain(["capture-application", "--offline", "--private-directory", dirs.privateDirectory,
-      "--private-path-mode", "linux-dirfd", "--destination-private-directory", dirs.checkpoint, "--profile", BASE_PROFILE, "--operations-directory", dirs.sourceOperations], {
+      "--private-path-mode", "linux-dirfd", "--destination-private-directory", dirs.checkpoint, "--profile", BASE_PROFILE, "--operations-directory", dirs.sourceOperations, ...(experience ? ["--experience", "1"] : [])], {
       inheritedEnv: environment, execArgv: [], outputStream: { write() {} },
       loadEnvironment: phase("private configuration", loadRuntimeVideoEnvironment), inspectTools: phase("native tools", inspectCheckpointTools),
       inspectApplicationIdentity: phase("application identity", (env, parameters) => inspectApplicationCheckpointIdentity(local(env), parameters)),
@@ -304,12 +323,12 @@ export async function videoBackupFixture(t) {
   // assert that fact and classify the real disposable schema. Only these two
   // TLS-only operator inspectors are replaced; the wrappers, exact application
   // inspection/history, crypto, two native dumps and signed snapshot are real.
-  async function inspectLoopbackClone(connection, database, selection = { video: true }) {
-    assert.equal(database, targetDatabase); assert.equal(selection.video, true);
+  async function inspectLoopbackClone(connection, database, selection = { video: true, ...(experience ? { experience: true } : {}) }) {
+    assert.equal(database, targetDatabase); assert.equal(selection.video, true); assert.equal(selection.experience === true, experience);
     const identity = await connection.query("SELECT DATABASE() AS name"), transport = await connection.query("SHOW SESSION STATUS LIKE 'Ssl_cipher'");
     assert.equal(identity.length, 1); assert.equal(identity[0].name, targetDatabase);
     assert.equal(transport.length, 1); assert.equal(transport[0].Variable_name, "Ssl_cipher"); assert.equal(transport[0].Value, "");
-    const rows = await connection.query("SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT 37", [database]);
+    const rows = await connection.query(`SELECT TABLE_NAME AS name, TABLE_TYPE AS kind, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME LIMIT ${physical.length + 1}`, [database]);
     const state = !rows.length ? "empty" : rows.length === physical.length
       && rows.every(row => row.kind === "BASE TABLE" && row.engine === "InnoDB")
       && JSON.stringify(rows.map(row => row.name).sort()) === JSON.stringify([...physical].sort()) ? "application-schema" : "partial";
@@ -330,7 +349,7 @@ export async function videoBackupFixture(t) {
     operator.resumes++;
     const result = await resumeApplicationCheckpoint({ command: "resume", privateDirectory: dirs.privateDirectory, privatePathMode: "linux-dirfd",
       checkpointDirectory: dirs.checkpoint, database: targetDatabase, confirmation: targetDatabase, user: options.user,
-      profile: BASE_PROFILE, sqlSha256: f.receipt.sql.uncompressedSha256 },
+      profile: BASE_PROFILE, sqlSha256: f.receipt.sql.uncompressedSha256, ...(experience ? { experience: true } : {}) },
     { inheritedEnv: environment, execArgv: [], readSecret: async () => options.password, connect: connectLoopback,
       inspect: inspectLoopbackClone, importOperation: importOperator, verifyOperation: verifyOperator });
     assert.equal(await databaseHash(targetDatabase), baseline.sql); await f.assertSourceUnchanged(); return result;
@@ -346,13 +365,13 @@ export async function videoBackupFixture(t) {
       withPrivateDirectory(dirs.targetVideo, target => resumeCheckpointVideo(source, target, f.receipt.video, { signal }))));
     return { photos, videos };
   });
-  f.backup = (command, extra = {}) => measure(`backup-${command}`, () => backupMain([command, "--offline", "--manifest", path.join(dirs.checkpoint, "manifest.json"), "--profile", VIDEO_BACKUP_PROFILE], targetEnv, {
+  f.backup = (command, extra = {}) => measure(`backup-${command}`, () => backupMain([command, "--offline", "--manifest", path.join(dirs.checkpoint, "manifest.json"), "--profile", VIDEO_BACKUP_PROFILE, ...(experience ? ["--experience", "1"] : [])], targetEnv, {
     configure() { const copies = Object.fromEntries(Object.entries(keys).map(([name, key]) => [name, Buffer.from(key)]));
       return { databaseName: targetDatabase, media: { enabled: true, root: dirs.targetMedia, key: copies.mediaKey, capacity: { ...limits }, minimumFreeBytes: 0 },
         video: { root: dirs.targetVideo, capacity: { ...limits }, minimumFreeBytes: 0n }, keys: copies }; },
     clock, outputStream: { write() {} }, ...extra,
   }));
-  f.snapshot = (selected = f.target) => captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: selected.pool, inspectionPool: selected.inspectionPool, coverage: "application-tables", video: true }) });
+  f.snapshot = (selected = f.target) => captureBackupSnapshot({ store: createBackupSnapshotStore({ pool: selected.pool, inspectionPool: selected.inspectionPool, coverage: "application-tables", video: true, experience }) });
   f.interruptVideoCopy = async () => {
     const names = new Set(f.receipt.video.files.map(file => file.name)), cancellation = new AbortController(), original = fs.promises.open;
     let retained, injected = false;

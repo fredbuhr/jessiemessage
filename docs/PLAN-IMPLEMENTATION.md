@@ -11,7 +11,7 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 3. Photos : navigation paginée/date/message d’origine, puis file limitée de dix photos avec aperçu et reprise idempotente des seuls échecs.
 4. Suivi : tâche réservée « À répondre », watermark conditionnel protégeant les entrants simultanés, reprise historique déterminable ; qualification transversale, publication et déploiement selon le mécanisme existant.
 
-Les quatre lots et corrections de revue sont codés. Suite complète locale : 3806 réussis, 243 omissions explicites, aucun échec ; construction réussie. Restent la qualification native complète et la revue des captures, puis la fusion de la source exacte, la publication et les opérations de livraison gardées. Production1.8.4/SQL36 inchangée. Aucune nouvelle infrastructure, reprise automatique des sauvegardes reportées ou action sur les comptes réels.
+Les quatre lots et corrections de revue sont codés. Suite complète locale : 3806 réussis, 243 omissions explicites, aucun échec ; construction réussie. Premier passage natifPR133 : général4004réussis/51omissions, autres jobs en échec dont causes corrigées. Restent la qualification de la révision corrigée avec lifecycleSQL38, la qualification/fusion préalable du repli185(PR134), le raccord190, la revue des captures, puis la fusion de la source exacte, la publication et les opérations de livraison gardées. Production1.8.4/SQL36 inchangée. Aucune nouvelle infrastructure, reprise automatique des sauvegardes reportées ou action sur les comptes réels.
 
 ## Correctif interface 1.8.4 — terminé
 

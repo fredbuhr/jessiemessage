@@ -1,6 +1,6 @@
 {
   "type": "experience190-progress",
-  "status": "coded_local_full_passed_native_qualification_pending",
+  "status": "first_native_failures_corrected_revision2_ready",
   "branch": "feat/private-experience-190",
   "baselineMain": "904ab4301bbda71e047d5b3b5dad41d45149c1cf",
   "activeVersion": "1.8.4",
@@ -53,12 +53,12 @@
     }
   ],
   "actualHostMutationsPerformed": false,
-  "nextAction": "Qualify the next exact branch SHA in native PR CI (Node24.22.1, Chrome, HTTPS, MariaDB10.11/11.4); inspect native render artifacts. Production184 untouched.",
+  "nextAction": "Qualify corrected PR133 head including native SQL38 lifecycle; qualify PR134/main185 rollback first, then reconcile190 with185 and qualify exact merged main. No hosted action yet.",
   "candidateSchemaMigrations": 38,
   "candidatePhysicalTables": 37,
   "localNode": "v24.19.0",
   "nativeNodeRequired": "v24.22.1",
-  "pr": null,
+  "pr": 133,
   "nativeQualified": false,
   "published": false,
   "deployed": false,
@@ -77,9 +77,10 @@
     "video": "240passed;12skipped;historical_client_video_fixtures_preserved",
     "checkpointCompatibility": "210passed;6skipped;SQL38_existing_pipeline_only",
     "backupCoreCompatibility": "7new+91legacy+28CLI passed; nativeSQL38capture_pending",
-    "photosFinalDelta": "106lifecycle_and_photo_batch_passed;2new_old_segment_retry_and_load_failure_regressions"
+    "photosFinalDelta": "106lifecycle_and_photo_batch_passed;2new_old_segment_retry_and_load_failure_regressions",
+    "preferencesFinalDelta": "25passed; new real transaction mock conflict/replay/foreign-error/session-revocation regressions"
   },
-  "lastPublishedDevelopmentCommit": "30353c07fb3780c23e578175fb1a44e04df74e43",
+  "lastPublishedDevelopmentCommit": "0e76d1576b7d4e5cc68af9cb0dd7c60fcd48d08d",
   "localFullSuite": {
     "tests": 4049,
     "passed": 3806,
@@ -99,6 +100,26 @@
     "Reply watermark bounded by actually loaded/read peer sequence",
     "Password callback re-proves new cookie owner/CSRF after atomic rotation",
     "Announcements store explicitly accepts authenticated SQL38 plan",
-    "Photo batch returns to latest segment before uploading while preserving original immutable reply watermark"
-  ]
+    "Photo batch returns to latest segment before uploading while preserving original immutable reply watermark",
+    "Preferences transaction preserves typed CAS conflict after rollback; no forged driver error accepted",
+    "Browser and SQL fixtures use existing admin-only video paths or explicitly seed historical client media",
+    "Primary-only recovery endpoints remain distinct from public shared password validation module"
+  ],
+  "nativeAttempts": [
+    {
+      "source": "0e76d1576b7d4e5cc68af9cb0dd7c60fcd48d08d",
+      "run": 39954872379,
+      "status": "failure",
+      "proof": "jm190/pr-native-initial.json"
+    }
+  ],
+  "rollbackCandidate": {
+    "version": "1.8.5",
+    "pr": 134,
+    "source": "1f6c2c4d5bb0c286d8a6f1f8066f008a965eea08",
+    "tree": "a28a96c09eb7e8dc24a32e4eea86503391007a31",
+    "nativeQualified": false,
+    "deployed": false
+  },
+  "nativeLifecycleCoverage": "Added explicit SQL38 capture/import/crypto/closure with 3private owners and reply state; local skipped, native pending."
 }

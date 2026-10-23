@@ -16,7 +16,7 @@ async function attest(page, fixture) {
 }
 async function json(page, role, path, body = null, authenticated = true) {
   return page.executeAsync(`const role=arguments[0],path=arguments[1],body=arguments[2],auth=arguments[3],done=arguments[arguments.length-1];
-    (async()=>{let headers={};if(body!==null){headers['Content-Type']='application/json';if(auth){const session=await fetch(role==='admin'?'/api/auth/session':'/api/access/session',{cache:'no-store'});if(session.status!==200)return{status:session.status};headers['X-CSRF-Token']=(await session.json()).csrf;}}
+    (async()=>{let headers={};if(body!==null){headers['Content-Type']='application/json';if(auth){const session=await fetch(role==='admin'?'/api/auth/session':'/api/access/session',{cache:'no-store'});if(session.status!==200)return{status:session.status};headers['X-CSRF-Token']=(await session.json()).csrf;}else{headers['X-Jessie-Request']='1';}}
       const response=await fetch(path,{method:body===null?'GET':'POST',credentials:'same-origin',cache:'no-store',headers,...(body===null?{}:{body:JSON.stringify(body)})});
       return{status:response.status,data:await response.json()};})().then(done,()=>done({status:0}));`, role, path, body, authenticated);
 }
@@ -47,10 +47,13 @@ async function login(page, fixture, role, { credentials = null, password = null,
   }
   await ready(page, role);
 }
-async function openProfile(page) {
+async function openMenu(page) {
   const opener = await page.execute("return ['open-conversation-menu','open-account-menu'].find(id=>{const node=document.getElementById(id);return node&&!node.hidden&&!node.disabled&&node.getClientRects().length})");
   assert.ok(opener); await page.click(`#${opener}`);
   await waitUntil(() => page.execute("return document.getElementById('chat-menu').hidden===false"), "profile menu opened");
+}
+async function openProfile(page) {
+  await openMenu(page);
   await page.click("#open-profile");
   await waitUntil(() => page.execute("return !!document.querySelector('.profile-dialog')?.open&&!document.querySelector('.profile-pseudonym').disabled&&!!document.querySelector('.preferences-search')&&!document.querySelector('.preferences-search').disabled"), "real profile and private preferences loaded", 20000);
 }
@@ -159,7 +162,9 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
       await openProfile(adminDevice); await captureProfile(adminDevice, "admin", 320); await adminDevice.click(".profile-close");
       assert.deepEqual((await json(admin, "admin", `/api/profile/admin/conversations/${conversation}/preferences`)).data.selectedIds, [firstChoice]);
       assert.equal((await json(admin, "admin", `/api/profile/admin/conversations/${conversation}/preferences`, { expectedVersion: stored.data.version, catalogueVersion, selectedIds: [] })).status, 405);
-      await admin.click(".crm-fiche-button");
+      // Fiche shares the conversation options menu; closing the own-profile
+      // dialog does not reopen that menu automatically.
+      await openMenu(admin); await admin.click(".crm-fiche-button");
       await waitUntil(() => admin.execute("return !!document.querySelector('.crm-dialog')?.open&&!document.querySelector('.crm-client-preferences').hidden"), "authorized admin client-profile preferences entry");
       await admin.click(".crm-client-preferences summary");
       await waitUntil(() => admin.execute("return document.querySelector('.crm-client-preferences .preferences-selected .preference-choice')?.textContent===arguments[0]", catalogue.categories[0].preferences[0].fr), "client preferences are rendered read-only in the actual CRM profile");
@@ -197,7 +202,8 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
     await t.test("clearing client choices affects only that profile and remains cleared on the other current device", async () => {
       await openProfile(client); await client.click(".preferences-actions button:nth-child(2)"); await client.click(".preferences-actions button:first-child");
       await waitUntil(() => client.execute("return document.querySelector('.preferences-status').textContent==='Préférences enregistrées.'"), "clear confirmed by real server"); await client.click(".profile-close");
-      assert.deepEqual((await json(clientDevice, "client", "/api/profile/client/preferences")).data.selectedIds, []);
+      const cleared = await json(clientDevice, "client", "/api/profile/client/preferences");
+      assert.equal(cleared.status, 200, "the reconnected client device can read its cleared preferences"); assert.deepEqual(cleared.data.selectedIds, []);
       assert.deepEqual((await json(adminDevice, "admin", "/api/profile/admin/preferences")).data.selectedIds, [secondChoice]);
       assert.equal((await imageReadable(client, mediaPath)).status, 200);
     });

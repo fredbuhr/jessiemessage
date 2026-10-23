@@ -342,13 +342,22 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
     });
 
     await t.test("library keyset pages and descending gallery cursors stay bounded and retain decimal sequences", async () => {
-      const fixture = await pair(), imageIds = [];
-      for (let index = 0; index < 4; index++) { const image = (await register(fixture)).asset; imageIds.push(image.id.toString("hex")); await send(fixture, "client", image.id); }
+      const fixture = await pair(), imageIds = [], sent = [];
+      for (let index = 0; index < 4; index++) { const image = (await register(fixture)).asset; imageIds.push(image.id.toString("hex")); sent.push((await send(fixture, "client", image.id)).message); }
       const first = await media.listAssets({ ...actor(fixture), limit: 2 }); assert.equal(first.hasMore, true);
       const second = await media.listAssets({ ...actor(fixture), afterId: first.nextCursor, limit: 2 }); assert.equal(second.hasMore, false); assert.equal(second.nextCursor, null);
       assert.deepEqual([...first.assets, ...second.assets].map((item) => item.id.toString("hex")), imageIds.sort());
-      const gallery = await media.gallery({ ...request(fixture), limit: 2 }); assert.deepEqual(gallery.items.map((item) => item.sequence), ["4", "3"]); assert.equal(gallery.nextBefore, "3");
-      const older = await media.gallery({ ...request(fixture), before: gallery.nextBefore, limit: 2 }); assert.deepEqual(older.items.map((item) => item.sequence), ["2", "1"]); assert.equal(older.nextBefore, null);
+      // These messages share an exact timestamp: the canonical tiebreak is
+      // the message id, while cursors retain full decimal sequence identities.
+      const canonical = sent.sort((a,b) => Buffer.compare(b.id,a.id));
+      const gallery = await media.gallery({ ...request(fixture), limit: 2 });
+      assert.deepEqual(gallery.items.map(item => item.messageId.toString("hex")), canonical.slice(0,2).map(item => item.id.toString("hex")));
+      assert.deepEqual(gallery.items.map(item => item.sequence), canonical.slice(0,2).map(item => item.sequence));
+      assert.equal(gallery.nextBefore, canonical[1].sequence);
+      const older = await media.gallery({ ...request(fixture), before: gallery.nextBefore, limit: 2 });
+      assert.deepEqual(older.items.map(item => item.messageId.toString("hex")), canonical.slice(2).map(item => item.id.toString("hex")));
+      assert.deepEqual(older.items.map(item => item.sequence), canonical.slice(2).map(item => item.sequence)); assert.equal(older.nextBefore, null);
+      assert.equal(new Set([...gallery.items,...older.items].map(item => item.messageId.toString("hex"))).size, 4);
       for (const before of ["01", "-1", "18446744073709551616", 1, "1\n"]) await assert.rejects(media.gallery({ ...request(fixture), before }), code("MEDIA_INPUT"));
       for (const limit of [0, 101, 1.5]) await assert.rejects(media.listAssets({ ...actor(fixture), limit }), code("MEDIA_INPUT"));
     });
@@ -358,10 +367,14 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
       await connection.query("UPDATE messages SET sequence_no = 9007199254740993 WHERE id = ?", [first.message.id]);
       const second = await send(fixture, "client", image.id);
       assert.equal(second.message.sequence, "9007199254740994");
+      const canonical = [{...first.message, sequence: "9007199254740993"}, second.message].sort((a,b) => Buffer.compare(b.id,a.id));
       const latest = await media.gallery({ ...request(fixture), limit: 1 });
-      assert.equal(latest.items[0].sequence, "9007199254740994"); assert.equal(latest.nextBefore, "9007199254740994");
+      assert.equal(latest.items[0].sequence, canonical[0].sequence); assert.equal(latest.nextBefore, canonical[0].sequence);
       const older = await media.gallery({ ...request(fixture), before: latest.nextBefore, limit: 1 });
-      assert.equal(older.items[0].sequence, "9007199254740993"); assert.equal(older.hasMore, false);
+      assert.equal(older.items[0].sequence, canonical[1].sequence); assert.equal(older.hasMore, false);
+      assert.deepEqual([latest.items[0].sequence,older.items[0].sequence].sort(), ["9007199254740993","9007199254740994"]);
+      const newer = await media.gallery({ ...request(fixture), after: older.items[0].sequence, limit: 1 });
+      assert.equal(newer.items[0].sequence, canonical[0].sequence);
     });
 
     await t.test("removing a consumed invitation blocks client media without fabricating an age proof", async () => {

@@ -1,4 +1,4 @@
-import { failPreferences, ownerId, preferenceVersion, MAX_PREFERENCES_ENVELOPE_BYTES } from "./validation.mjs";
+import { PreferencesError, failPreferences, ownerId, preferenceVersion, MAX_PREFERENCES_ENVELOPE_BYTES } from "./validation.mjs";
 const bytes = value => { if (!Buffer.isBuffer(value) || value.length !== 16) failPreferences(); return value; };
 const sqlDate = value => new Date(value).toISOString().replace("T", " ").replace("Z", "000");
 function request(value) {
@@ -12,6 +12,21 @@ function rowValue(row, owner) {
 }
 export function createPreferencesStore({ pool, chatStore }) {
   if (typeof pool?.getConnection !== "function" || typeof chatStore?.withActor !== "function" || typeof chatStore?.withConversation !== "function") throw new TypeError("A private preferences store is required.");
+  async function withAuthority(method, options, operation) {
+    let ownFailure;
+    try {
+      return await chatStore[method](options, async (connection, context) => {
+        try { return await operation(connection, context); }
+        catch (error) {
+          // Chat owns rollback and sanitizes foreign callback exceptions.
+          // Recover only our typed domain failure after that rollback; a
+          // driver object with a matching code cannot become a conflict.
+          if (error instanceof PreferencesError) ownFailure = error;
+          throw error;
+        }
+      });
+    } catch (error) { if (ownFailure) throw ownFailure; throw error; }
+  }
   async function selected(connection, owner) {
     const rows = await connection.query("SELECT user_id, version, selection_encrypted FROM profile_preferences WHERE user_id = ? FOR UPDATE", [owner]);
     if (rows.length > 1) failPreferences();
@@ -32,11 +47,11 @@ export function createPreferencesStore({ pool, chatStore }) {
     },
     async read(options) {
       request(options);
-      return chatStore.withActor(options, (connection, context) => selected(connection, context.actor.id));
+      return withAuthority("withActor", options, (connection, context) => selected(connection, context.actor.id));
     },
     async peer(options) {
       request(options); if (options.role !== "admin") failPreferences("PREFERENCES_FORBIDDEN"); bytes(options.conversationId);
-      return chatStore.withConversation(options, (connection, context) => {
+      return withAuthority("withConversation", options, (connection, context) => {
         if (context.actor.role !== "admin") failPreferences("PREFERENCES_FORBIDDEN");
         return selected(connection, context.client.id);
       });
@@ -44,7 +59,7 @@ export function createPreferencesStore({ pool, chatStore }) {
     async save(options) {
       request(options);
       if (!preferenceVersion(options.expectedVersion) || options.expectedVersion === "4294967295" || typeof options.encrypt !== "function" || typeof options.same !== "function") failPreferences("PREFERENCES_INPUT");
-      return chatStore.withActor(options, async (connection, context) => {
+      return withAuthority("withActor", options, async (connection, context) => {
         const owner = ownerId(bytes(context.actor.id).toString("hex")), current = await selected(connection, context.actor.id);
         if (current.version !== options.expectedVersion) {
           if (BigInt(current.version) === BigInt(options.expectedVersion) + 1n && await options.same(current)) return current;

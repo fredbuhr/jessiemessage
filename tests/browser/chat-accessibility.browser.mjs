@@ -75,7 +75,8 @@ window.addEventListener("unhandledrejection", event => { window.__browserErrors.
 window.addEventListener("securitypolicyviolation", event => { window.__browserErrors.push("CSP: " + event.violatedDirective); });
 `;
 const fileNames = ["conversation-download.js", "quick-replies.js", "crm.js", "crm-model.js", "crm.css", "private-archive.js", "notification-link.js", "access.html", "access.js", "access.css", "admin-login.html", "admin-login.js", "admin-login.css", "admin-navigation.css", "i18n-access.js", "i18n-admin.js", "notifications.js", "notifications.css", "sw.js", "chat.html", "chat.js", "chat-model.js", "chat-drafts.js", "session-clock.js", "image-preparation.js", "photo-batch.js", "chat.css", "i18n.js", "help-link.js", "i18n.css", "i18n-chat.js", "i18n-tools.js",
-  "emoji-catalog.js", "emoji.css", "profile.js", "profile.css", "i18n-profile.js", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
+  "emoji-catalog.js", "emoji.css", "profile.js", "profile.css", "i18n-profile.js",
+  "password-change.js", "recover-model.js", "password-fields.js", "password-fields.css", "preferences.js", "preferences-model.js", "preferences.css", "i18n-preferences.js", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css",
   "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png", "brand/icon-128.png",
   "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
 const contentTypes = { ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8",
@@ -1467,7 +1468,8 @@ test("Chrome photo viewer crosses unloaded history, preserves scroll and finds a
       await page.click("#messages .photo-open");
       await waitUntil(()=>page.execute("return document.getElementById('lightbox').open && !!document.querySelector('#lightbox-image img')"),"photo opens");
       if (role === "client") {
-        const rect = await page.execute("const r=document.getElementById('lightbox-image').getBoundingClientRect();return {x:Math.round(r.x+30),y:Math.round(r.y+r.height/2),endX:Math.round(r.right-30)}");
+        // Start within the image surface, away from Chrome's edge-back gesture.
+        const rect = await page.execute("const r=document.getElementById('lightbox-image').getBoundingClientRect();return {x:Math.round(r.x+r.width*.25),y:Math.round(r.y+r.height/2),endX:Math.round(r.x+r.width*.75)}");
         await page.swipe(rect.x,rect.y,rect.endX,rect.y);
       } else await page.click("#previous-photo");
       await waitUntil(()=>page.execute("return document.getElementById('lightbox-status').textContent.includes('2020')"),"older photo outside loaded messages");
@@ -1490,6 +1492,7 @@ test("Chrome multiple photos preview before one send and retry only a failed ite
     resetFixture();fixture.photoBatch=true;fixture.failBatchOnce=true;const page=await browser(360);
     try {
       await loaded(page,role === "client" ? "/messages" : "/admin/messages");if(role === "admin")await page.click(".contact");
+      await loadedPhoto(page); // The inbox can be ready before the selected conversation is loaded.
       await page.execute(`const data=new DataTransfer();const bytes=Uint8Array.from(atob(arguments[0]),c=>c.charCodeAt(0));for(let i=0;i<5;i++)data.items.add(new File([bytes], 'fixture-'+i+'.jpg',{type:'image/jpeg'}));const input=document.getElementById('image-file');input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}));`,jpeg.toString("base64"));
       await waitUntil(()=>page.execute("return document.querySelectorAll('.photo-batch-item').length===5"),"five previews");
       assert.equal(fixture.batchUploads??0,0);assert.equal(fixture.sent.length,0);
