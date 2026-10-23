@@ -1,0 +1,94 @@
+{
+  "atUtc": "2026-10-23T20:41:17.783599+00:00",
+  "type": "final-deployment-coverage1101",
+  "editedFiles": [
+    "docs/AUDIT-PUBLIC-1100-20261023.md",
+    "docs/verification-proofs/final-public-1100/checklist.json"
+  ],
+  "coverage": {
+    "items": 134,
+    "unique": 134,
+    "addressed": 134,
+    "historicalFindings": 22,
+    "newFindings": 6,
+    "changedDeliveryStatusItems": [
+      "REL-01",
+      "REL-02",
+      "REL-03",
+      "REL-05",
+      "REL-06",
+      "REL-07",
+      "REL-08",
+      "REL-10",
+      "AUTH-05",
+      "AUTH-06",
+      "AUTH-10",
+      "SEC-04",
+      "SEC-09",
+      "SEC-11",
+      "MED-09",
+      "BUS-11",
+      "UI-07",
+      "UI-09",
+      "OPS-04",
+      "GATE-01",
+      "GATE-05",
+      "GATE-07",
+      "GATE-08"
+    ],
+    "allOriginalDomainReviewsUnchanged": true,
+    "allOriginalEvidenceRecordsPreserved": true,
+    "baselineApplication1100Unchanged": true,
+    "historical77HttpReadsUnchanged": true,
+    "historicalSigned191ReferenceCountUnchanged": true
+  },
+  "currentApplication": {
+    "version": "1.10.1",
+    "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+    "tree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+    "node": "v24.22.1",
+    "schemaMigrations": 38,
+    "tablesReported": 37,
+    "tableCountScope": "37 qualified physical tables including1 ledger, not37 business tables plus ledger; no fresh independent physical SQL inventory.",
+    "startedAt": 1792787440361,
+    "startedAtParis": "2026-10-23T22:30:40.361+02:00",
+    "checkpointSha256": "6a4ab751f1a89433502df3db898da0ab65aef0e80fc99c38df29978359c02e90",
+    "evidenceClass": "USER_REPORTED",
+    "evidence": "hosted-metadata1101.json"
+  },
+  "decision": "GO_technical_for_public_opening_in_audited_scope_with_documented_limits",
+  "deploymentComplete": true,
+  "writer": {
+    "run": 40018506473,
+    "operator": "ac101b4bfbfa3a7f765752cb2adc74287846145e",
+    "tests": 16,
+    "passed": 16,
+    "rerunByThisTask": false
+  },
+  "references": {
+    "currentDirectCount": 219,
+    "allResolve": true,
+    "missing": [],
+    "markdownLocalLinks": 20,
+    "markdownMissing": [],
+    "newClosureReferencedFiles": [
+      "hosted-metadata1101.json",
+      "writer1101-final-native.json",
+      "final-receipt-review.json",
+      "final-http1101.json"
+    ]
+  },
+  "limitsPreserved": [
+    "Physical devices, Firefox/Safari and operating-system/closed-app Push behavior are not comprehensively qualified.",
+    "The hosted manual backup creation/completion/download exercise remains deferred by the user.",
+    "A10 remains outside scope; no legal conformity conclusion.",
+    "A11 and A12 remain explicit unresolved limits; no production capacity or total-host-loss recovery guarantee.",
+    "Public Jessie snapshot publication remains an explicit admin choice; no private client preferences were published by this closure."
+  ],
+  "noNewHostInspectionOrSqlInventory": true,
+  "noRerunTestsOrBroadAudit": true,
+  "sha256": {
+    "docs/verification-proofs/final-public-1100/checklist.json": "746762f5fe952d7a06cb90de7009f87ce9003f97eed3f8d1c74a95747bb1e0e6",
+    "docs/AUDIT-PUBLIC-1100-20261023.md": "6592888357d4078542b8f1803f1c8d9e87b86304aa80d04a2737973f487e9aea"
+  }
+}

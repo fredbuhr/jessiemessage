@@ -1,0 +1,32 @@
+{
+  "atUtc": "2026-10-23T20:39:55.445232+00:00",
+  "scope": "Final anonymous GET after successful hosted metadata receipt. No authentication or user data, profile body deliberately not collected; tool proxy may mediate TLS.",
+  "results": [
+    {
+      "name": "health",
+      "url": "https://jessiemessage.com/api/health",
+      "status": 200,
+      "setsCookie": false,
+      "cacheControl": "no-store",
+      "body": {
+        "status": "ok"
+      }
+    },
+    {
+      "name": "ready",
+      "url": "https://jessiemessage.com/api/ready",
+      "status": 200,
+      "setsCookie": false,
+      "cacheControl": "no-store",
+      "body": {
+        "status": "ready"
+      }
+    },
+    {
+      "name": "publicProfile",
+      "url": "https://jessiemessage.com/api/public/jessie",
+      "status": 404,
+      "bodyNotCollected": true
+    }
+  ]
+}

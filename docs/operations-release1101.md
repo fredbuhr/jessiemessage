@@ -1,12 +1,18 @@
-# Livraison1.10.1 — activation acquise, enregistrement final attendu
+# Livraison1.10.1 — terminée
 
-La version est qualifiée sur PR et sur main, cinq jobs chacun sousNode24.22.1. Source exacte `9eb99f1f68ab4beb5484894249afa8f413cc5dd6`, arbre `2a09d9d5d6698a04605e9a4b4faa551536cfca13`. [Release/latest422216628](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.10.1), [publication40008910211](https://github.com/fredbuhr/jessiemessage/actions/runs/40008910211)2/2 et46 tests opérateur réussis. [Preuve](verification-proofs/final-public-1100/ci/publication-40008910211/publication-native.json). **L’[identité active1.10.1](verification-proofs/final-public-1100/hosted-identity1101.json) est rapportée par l’utilisateur**, source exacte9eb99f1f68ab4beb5484894249afa8f413cc5dd6, Nodev24.22.1, texte Paris `23/10/2026 22:30:40` ; epoch en millisecondes non relevée. **Le checkpoint reste le dernier état confirmé1.10.0/SQL38**, en attente de l’enregistrement final1101.
+**Application, checkpoint et latest1.10.1 alignés selon le [reçu final utilisateur](verification-proofs/final-public-1100/hosted-metadata1101.json) :** `release1101_metadata_recorded`, source `9eb99f1f68ab4beb5484894249afa8f413cc5dd6`, arbre `2a09d9d5d6698a04605e9a4b4faa551536cfca13`, Nodev24.22.1, SQL38/37 tables physiques et `publicReady:true`. Démarrage `1792787440361`, soit **23/10/2026 22:30:40.361 à Paris**, conforme au texte d’identité utilisateur précédent. Checkpoint1101 SHA256 `6a4ab751f1a89433502df3db898da0ab65aef0e80fc99c38df29978359c02e90`.
 
-## Enregistrement final — prochaine action
+La source est qualifiée sur PR et main, cinq jobs chacun sousNode24.22.1. [Release/latest422216628](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.10.1), publication40008910211 réussie2/2 et46 tests opérateur natifs. Le writer final qualifié16/16 est désormais exécuté selon le reçu, sans redémarrage supplémentaire. Historiques1100/190/184, autres blocs et état actif antérieur préservés ; repli185 compatibleSQL38 qualifié, jamais démarré.
 
-Le writer final est épinglé sur le vrai reçu de préparation `aa2d9240ded66106ee919ad1baa8949559be816edc93bc6998954359bccc2b1a` et la release422216628. Opérateur `ac101b4bfbfa3a7f765752cb2adc74287846145e`, arbre `7a09dc8d72c6393c3f69adf0154cdb1df7e1658a`, SHA256writer `638a3b7019654e840f403acc14f8384ec15ce255aea423cbc33b621240efda75`, helper inchangé293f0600…. [Qualification native40018506473](verification-proofs/final-public-1100/writer1101-final-native.json)1/1 et16/16 sousNode24.22.1 acquise, tentative1. Le diff du draft contient seulement les deux pins. Le CHECK et l’identité démarrée1.10.1 sont acquis séparément. Son exécution n’est pas encore rapportée ; la commande exacte ci-dessous est prête. Il contrôlera identité, HTTP publics, dépendances et publication avant d’aligner les seules métadonnées privées, sans redémarrage. Attendre le reçu final avant de conclure sur le checkpoint et l’ouverture au public. Ne rejouer ni Manager, CHECK ou récupération.
+**Aucune opération technique restante.** Toutes les commandes ci-dessous sont historiques, à ne pas rejouer : préparation, inspection, récupération, CHECK, activation Manager et writer. Aucune CI du code inchangé à relancer.
 
-Dans le [terminalSSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), exécuter une fois ce bloc. Il vérifie les deux outils immuables avant toute exécution, place uniquement leurs sources publiques dans un dossier temporaire privé puis exécute le writer avec son chemin correct. Aucun nouveau démarrage, SQL, envoi, sauvegarde ou manipulation PC.
+**GO technique pour l’ouverture dans le périmètre qualifié.** Les essais sur appareils physiques, Safari/Firefox et Push système non exercés, la sauvegarde hébergée reportée et les réservesA10/A11/A12 restent explicites. Le profil public est masqué par défaut ; l’admin choisit son contenu et sa publication. Aucune publication du profil par l’agent.
+
+## Historique — enregistrement final effectué, à ne pas rejouer
+
+Le writer final est épinglé sur le reçu de préparation `aa2d9240ded66106ee919ad1baa8949559be816edc93bc6998954359bccc2b1a` et la release422216628. Opérateur `ac101b4bfbfa3a7f765752cb2adc74287846145e`, arbre `7a09dc8d72c6393c3f69adf0154cdb1df7e1658a`, SHA256writer `638a3b7019654e840f403acc14f8384ec15ce255aea423cbc33b621240efda75`, helper inchangé293f0600…. [Qualification native40018506473](verification-proofs/final-public-1100/writer1101-final-native.json)1/1 et16/16 sousNode24.22.1, tentative1, puis exécution acquise selon le [reçu final](verification-proofs/final-public-1100/hosted-metadata1101.json). Il a vérifié identité, HTTP publics, dépendances et publication avant d’aligner les seules métadonnées privées, sans redémarrage.
+
+Le bloc suivant a été exécuté ; il reste conservé comme historique uniquement. **Ne pas le rejouer.**
 
 ```bash
 env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD1101'
@@ -35,16 +41,16 @@ with tempfile.TemporaryDirectory(prefix='jm1101-enregistrement-') as directory:
 PY_RECORD1101
 ```
 
-Transmettre le JSON complet. Le statut attendu est `release1101_metadata_recorded` ou `release1101_metadata_already_recorded`, avec `publicReady:true` et un nouveau checkpoint concordant. Si le statut est non confirmé ou si la connexion est interrompue, conserver les traces et lire l’état avant toute reprise ; ne pas répéter la commande pour découvrir son résultat.
+Le JSON final reçu porte le statut `release1101_metadata_recorded`, `publicReady:true` et le checkpoint concordant `6a4ab751f1a89433502df3db898da0ab65aef0e80fc99c38df29978359c02e90`. Il clôt l’enregistrement ; aucune répétition de commande n’est attendue.
 
-Les [GET anonymes postactivation](verification-proofs/final-public-1100/post-activation1101-http.json) répondent200 pour accueil/health/ready, sans Set-Cookie ; health=ok et ready=ready. Ils attestent la disponibilité observée, pas l’alignement des métadonnées. Le writer vérifie séparément HTTP depuis l’hôte, publication exacte et empreinte de l’accueil actif avant son écriture.
+Les [GET anonymes postactivation](verification-proofs/final-public-1100/post-activation1101-http.json) répondent200 pour accueil/health/ready, sans Set-Cookie ; health=ok et ready=ready. Ils attestent la disponibilité observée, pas l’alignement des métadonnées. Le writer a vérifié séparément HTTP depuis l’hôte, publication exacte et empreinte de l’accueil actif avant son écriture, selon le reçu final.
 
 
-Le checkpoint1100, ses historiques, autres blocs et le repli185 compatibleSQL38 sont préservés. Les versions184/172 restent interdites surSQL38. Aucun retour de migration n’est ajouté.
+L’ancien état1100, ses historiques, autres blocs et le repli185 compatibleSQL38 sont préservés selon le reçu final1101. Les versions184/172 restent interdites surSQL38. Aucun retour de migration n’est ajouté.
 
 ## Historique — activation Manager effectuée, à ne pas rejouer
 
-Le [CHECK1101 est acquis selon le résultat utilisateur](verification-proofs/final-public-1100/hosted-check1101.json) : `CHECK1101_EXIT=0`, puis `CHECK_1101_OK`. Préparation, inspection, récupération et CHECK ne sont pas à rejouer. **L’activation est acquise selon l’[identité utilisateur](verification-proofs/final-public-1100/hosted-identity1101.json)**, version1.10.1/source9eb99f1f68ab4beb5484894249afa8f413cc5dd6/Nodev24.22.1, texte Paris `23/10/2026 22:30:40`. Le writer reste à exécuter ; ne pas redémarrer de nouveau.
+Le [CHECK1101 est acquis selon le résultat utilisateur](verification-proofs/final-public-1100/hosted-check1101.json) : `CHECK1101_EXIT=0`, puis `CHECK_1101_OK`. Préparation, inspection, récupération et CHECK ne sont pas à rejouer. **L’activation est acquise selon l’[identité utilisateur](verification-proofs/final-public-1100/hosted-identity1101.json)**, version1.10.1/source9eb99f1f68ab4beb5484894249afa8f413cc5dd6/Nodev24.22.1, texte Paris `23/10/2026 22:30:40`. Le writer a depuis été exécuté selon son reçu final ; ne pas redémarrer de nouveau.
 
 Les valeurs ci-dessous étaient consignées pour cette activation dans le [Run/Build Manager](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), service Node239143 nommé **recette.jessiemessage.com**, qui dessert aussi le domaine principal. Le site PHP accueil n’est pas ce service.
 
@@ -56,13 +62,13 @@ Avant ce redémarrage, la consigne était de réserver un moment sans édition d
 | Commande de build, en bas | `bash /srv/customer/jessiemessage-private/check-primary-release1101-9eb99f1f.sh` |
 | Port |3000, conservé |
 
-Le CHECK exécuté par le champ Build pendant cette activation est attendu ; ne pas relancer son bootstrap SSH.
+Le CHECK du champ Build fait partie du parcours d’activation ; ne pas relancer son bootstrap SSH.
 
 Enregistrer et déclencher une seule activation selon le parcours Manager, puis relever dans [État du service](https://jessiemessage.com/admin/readiness) : version1.10.1, commit complet9eb99f1f68ab4beb5484894249afa8f413cc5dd6, Nodev24.22.1 et date de démarrage. Ne pas inverser les champs Exécution et Build.
 
 ## Historique — CHECK1101 réussi, à ne pas rejouer
 
-La [récupération et la préparation sont rapportées par le reçu utilisateur](verification-proofs/final-public-1100/hosted-preparation1101.json), SHA256 `aa2d9240ded66106ee919ad1baa8949559be816edc93bc6998954359bccc2b1a`. Le candidat exact est préparé ; le statut du reçu reste non qualifié et non démarré. Le [CHECK séparé](verification-proofs/final-public-1100/hosted-check1101.json) est désormais acquis selon l’utilisateur : `CHECK1101_EXIT=0`, puis `CHECK_1101_OK`. Activation acquise séparément selon l’identité utilisateur ; enregistrement final non acquis. La préparation initiale, l’inspection et la récupération ci-dessous sont historiques et ne doivent pas être rejouées.
+La [récupération et la préparation sont rapportées par le reçu utilisateur](verification-proofs/final-public-1100/hosted-preparation1101.json), SHA256 `aa2d9240ded66106ee919ad1baa8949559be816edc93bc6998954359bccc2b1a`. Le candidat exact est préparé ; le statut du reçu reste non qualifié et non démarré. Le [CHECK séparé](verification-proofs/final-public-1100/hosted-check1101.json) est désormais acquis selon l’utilisateur : `CHECK1101_EXIT=0`, puis `CHECK_1101_OK`. Activation acquise séparément selon l’identité utilisateur, puis enregistrement final acquis par son reçu propre. La préparation initiale, l’inspection et la récupération ci-dessous sont historiques et ne doivent pas être rejouées.
 
 Le bloc suivant a été exécuté avec succès et reste conservé comme historique. Ne pas le rejouer :
 
@@ -81,7 +87,7 @@ print('CHECK_1101_OK')
 PY_CHECK1101
 ```
 
-Ce bootstrap capture les sorties du CHECK sans afficher les journaux bruts et borne son attente à180secondes. Le CHECK ne démarre pas le service. Le succès `CHECK1101_EXIT=0` puis `CHECK_1101_OK` a été rapporté séparément du reçu de préparation. L’activation Manager a depuis été rapportée ; le CHECK ne doit pas être répété. L’enregistrement final reste la prochaine action.
+Ce bootstrap capture les sorties du CHECK sans afficher les journaux bruts et borne son attente à180secondes. Le CHECK ne démarre pas le service. Le succès `CHECK1101_EXIT=0` puis `CHECK_1101_OK` a été rapporté séparément du reçu de préparation. L’activation Manager a depuis été rapportée ; le CHECK ne doit pas être répété. L’enregistrement final a depuis été réalisé ; aucune action technique restante.
 
 ## Historique — récupération bornée exécutée, à ne pas rejouer
 
@@ -125,7 +131,7 @@ exec(compile(code,'<inspection1101>','exec'),{'__name__':'__main__'})
 PY_INSPECT1101
 ```
 
-Ce résultat a été reçu et analysé, puis la récupération bornée a été qualifiée et exécutée. Diagnostic, préparation initiale et récupération ne sont pas à rejouer. Le CHECK séparé a depuis réussi ; l’activation et l’identité réelle1.10.1 ont depuis été rapportées. Le writer attend sa commande exacte et son reçu final.
+Ce résultat a été reçu et analysé, puis la récupération bornée a été qualifiée et exécutée. Diagnostic, préparation initiale et récupération ne sont pas à rejouer. Le CHECK séparé a depuis réussi ; l’activation et l’identité réelle1.10.1 ont depuis été rapportées. Le writer a depuis été exécuté et son reçu final est acquis.
 
 ## Historique — préparation et CHECK tentés, à ne pas rejouer
 
@@ -193,6 +199,6 @@ Lors de cette tentative initiale, le résultat attendu était un JSON de prépar
 
 ## Mise à disposition au public
 
-La1.10.1 est démarrée selon l’identité utilisateur ; l’enregistrement final concordant reste attendu avant décision d’ouverture. Aucun GO final ni alignement du checkpoint n’est déduit de cette seule identité. [Checklist et limites](AUDIT-PUBLIC-1100-20261023.md).
+La1.10.1 est démarrée et son checkpoint aligné selon le reçu final concordant. GO technique pour l’ouverture dans le périmètre qualifié ; les limites déclarées restent conservées. [Checklist et limites](AUDIT-PUBLIC-1100-20261023.md).
 
 Le profil partageable [jessiemessage.com/jessie](https://jessiemessage.com/jessie) est masqué par défaut. L’admin choisit explicitement son contenu dans **Mon profil → Mon profil public**, puis clique sur Publier. Les préférences privées ne sont pas publiées automatiquement. Une vérification sur son téléphone peut compléter les preuves des parcours modifiés : retour du brouillon après changement de fenêtre, fermeture/réouverture de galerie et page publique choisie. Elle ne remplace pas les limites Safari/Firefox/Push ou sauvegarde hébergée reportée.

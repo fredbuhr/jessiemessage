@@ -1,0 +1,92 @@
+{
+  "format": "jessiemessage1101-final-receipt-independent-review",
+  "at": "2026-10-23T20:40:06.582817+00:00",
+  "status": "consistent_delivery_closed_by_user_reported_final_writer_receipt",
+  "checks": [
+    {
+      "check": "final_status_and_exact_release_identity",
+      "passed": true
+    },
+    {
+      "check": "writer_bytes_and_all_final_pins",
+      "passed": true
+    },
+    {
+      "check": "helper_bytes_match_immutable_pin",
+      "passed": true
+    },
+    {
+      "check": "native16_proof_log_and_gzip_integrity",
+      "passed": true
+    },
+    {
+      "check": "startup_epoch_matches_ui_to_second",
+      "passed": true
+    },
+    {
+      "check": "metadata_only_no_restart_public_ready_sql38",
+      "passed": true
+    },
+    {
+      "check": "rollback185_qualified_and_incompatible_restarts_forbidden",
+      "passed": true
+    },
+    {
+      "check": "all_prior_blocks_and_histories_preserved",
+      "passed": true
+    },
+    {
+      "check": "new_checkpoint_digest_matches_user_receipt",
+      "passed": true
+    }
+  ],
+  "newFindings": [],
+  "newOperationsRequired": false,
+  "receiptFile": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/hosted-metadata1101.json",
+  "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+  "tree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+  "writerOperator": "ac101b4bfbfa3a7f765752cb2adc74287846145e",
+  "writerNativeRun": 40018506473,
+  "startup": {
+    "epochMs": 1792787440361,
+    "utc": "2026-10-23T20:30:40.361+00:00",
+    "europeParis": "2026-10-23T22:30:40.361+02:00",
+    "uiDisplay": "23/10/2026 22:30:40",
+    "matchesUiToSecond": true,
+    "epochProvenance": "writer startup-log receipt, not reconstructed from UI"
+  },
+  "checkpointSha256": "6a4ab751f1a89433502df3db898da0ab65aef0e80fc99c38df29978359c02e90",
+  "scopePreserved": {
+    "schemaMigrations": 38,
+    "physicalTablesTotalIncludingLedger": 37,
+    "rollback": "1.8.5 qualified and not activated by this writer",
+    "restart184Allowed": false,
+    "restart172Allowed": false,
+    "histories1100_190_184": true,
+    "priorActive": true,
+    "otherBlocks": true,
+    "noRestart": true
+  },
+  "evidenceHashes": {
+    "writerSha256": "638a3b7019654e840f403acc14f8384ec15ce255aea423cbc33b621240efda75",
+    "nativeLogSha256": "07ac7097a1094edae371dcba12e94e6946353d6f91243e3642a41f0f932a1270",
+    "hostedReceiptProofFileSha256": "9ca5255cbd8ee0caeceae75e0ba8a7dc443930fe87428645300e9715dc1092ca"
+  },
+  "documentationReadOnlySnapshot": {
+    "guide": "docs/operations-release1101.md",
+    "reprise": "docs/REPRISE.md",
+    "state": "read while root documentation closure is in progress; stale awaiting-writer text observed but not edited by this agent"
+  },
+  "limits": [
+    "Final hosted execution, readiness and private checkpoint hash are USER_REPORTED through the pinned writer receipt; no direct private host, process/socket or fresh SQL inventory inspection by this agent.",
+    "Private checkpoint bytes are absent locally, so the final checkpoint digest is consistency-checked against the receipt, not independently recomputed.",
+    "Native qualification evidence is synthetic; no device/Push/real send/delete or postponed backup/restore/PC test is inferred."
+  ],
+  "actionsPerformed": [
+    "local read-only source/receipt/log/hash comparisons",
+    "pure epoch conversion",
+    "one scratch review report write"
+  ],
+  "ciOrTestsRerun": false,
+  "remoteOrHostAction": false
+}

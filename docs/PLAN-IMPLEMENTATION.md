@@ -2,7 +2,7 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Audit prépublic terminé ; activation1.10.1 acquise, enregistrement final attendu
+## Audit prépublic et livraison1.10.1 — terminés
 
 Les134 points, la seconde revue de couverture, les six correctifs, les qualifications PR/main5/5 et la publication1.10.1 sont acquis. [Rapport et preuves](AUDIT-PUBLIC-1100-20261023.md), [état actuel](REPRISE.md). Aucun nouveau correctif ni CI du code inchangé n’est à relancer.
 
@@ -10,11 +10,11 @@ La tentative initiale [non confirmée](verification-proofs/final-public-1100/hos
 
 **CHECK acquis selon le [résultat utilisateur](verification-proofs/final-public-1100/hosted-check1101.json) :** `CHECK1101_EXIT=0`, puis `CHECK_1101_OK`. Ne pas le rejouer.
 
-**Activation acquise selon l’[identité utilisateur](verification-proofs/final-public-1100/hosted-identity1101.json) :** version1.10.1, source9eb99f1f68ab4beb5484894249afa8f413cc5dd6, Nodev24.22.1, texte Paris `23/10/2026 22:30:40`. Epoch en millisecondes non relevée. Ne pas redémarrer de nouveau.
+**Livraison1.10.1 finalisée selon le [reçu utilisateur](verification-proofs/final-public-1100/hosted-metadata1101.json) :** `release1101_metadata_recorded`, version1.10.1/source9eb99f1f68ab4beb5484894249afa8f413cc5dd6/arbre2a09d9d5d6698a04605e9a4b4faa551536cfca13/Nodev24.22.1, SQL38/37 tables physiques, `publicReady:true`. Démarrage1792787440361, soit **23/10/2026 22:30:40.361 à Paris**. Checkpoint aligné1.10.1, SHA256 `6a4ab751f1a89433502df3db898da0ab65aef0e80fc99c38df29978359c02e90` ; historiques1100/190/184, autres blocs et état antérieur préservés, repli185 qualifié et jamais démarré.
 
-**Prochaine action unique :** [enregistrement final1101](operations-release1101.md#enregistrement-final--prochaine-action) avec le [writer épinglé et qualifié16/16](verification-proofs/final-public-1100/writer1101-final-native.json), opérateurac101b4b…. Le bootstrap exact à deux outils épinglés est prêt dans ce guide ; attendre son reçu final. Ni son exécution, ni l’alignement du checkpoint, ni la décision d’ouverture ne sont acquis.
+**Aucune prochaine action technique de livraison.** Le [writer épinglé et qualifié16/16](verification-proofs/final-public-1100/writer1101-final-native.json), opérateurac101b4b…, est exécuté selon ce reçu. Ne rejouer ni préparation, inspection, récupération, CHECK, activation ou writer, ni les CI vertes du même code.
 
-Le checkpoint reste le dernier état confirmé1.10.0/SQL38 jusqu’à cet enregistrement. Préparation, inspection, récupération, CHECK et activation ne sont pas à rejouer. Les points physiques non exercés et la sauvegarde hébergée reportée restent des limites déclarées ; aucun envoi ni effacement de compte réel n’est ajouté.
+**GO technique pour l’ouverture dans le périmètre qualifié.** Appareils physiques, Safari/Firefox et Push système non exercés, sauvegarde hébergée reportée et réservesA10/A11/A12 restent des limites explicites. Le profil public est masqué par défaut et sa publication appartient au choix admin ; l’agent ne le publie pas. Aucun envoi, effacement ou manipulation PC réel ajouté.
 
 ## Évolution 1.10.0 — livraison terminée
 
@@ -148,7 +148,7 @@ La récupération autonome après perte totale de l’hôte, le témoin frais à
 
 Conserver des checkpoints Git reprenables et la preuve de chaque opération distante, tout en poursuivant plusieurs sous-tâches cohérentes d’un même livrable sans demander une nouvelle permission générale. Ne pas relancer les mêmes audits et suites vertes sans changement, échec ou préoccupation nouvelle. Regrouper les contrôles quand leurs dépendances le permettent ; ne jamais promouvoir une omission ou un test unitaire en essai réel sur téléphone, hébergement ou compte client.
 
-**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Les quatre lots de correction sont livrés ; aucun lot technique ne reste ouvert pour1.8.2, et les réserves conservent leur portée sans ouvrir automatiquement un travail. Conserver un checkpoint publié après chaque résultat cohérent : branche/commit/arbre, contrôles acquis, limites et prochaine action unique. Après interruption, lire le résultat durable avant toute nouvelle mutation. La livraison active rapportée1.10.0, sa publication et son checkpoint privé sont alignés selon le reçu final utilisateur ; ses preuves natives et hébergées restent distinctes des cas non essayés. La sauvegarde hébergée reste volontairement reportée. Les contrats et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) sont conservés sans réétiquetage.
+**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Les quatre lots de correction sont livrés ; aucun lot technique ne reste ouvert pour1.8.2, et les réserves conservent leur portée sans ouvrir automatiquement un travail. Conserver un checkpoint publié après chaque résultat cohérent : branche/commit/arbre, contrôles acquis, limites et prochaine action unique. Après interruption, lire le résultat durable avant toute nouvelle mutation. La livraison active rapportée1.10.1, sa publication et son checkpoint privé sont alignés selon le reçu final utilisateur ; ses preuves natives et hébergées restent distinctes des cas non essayés. La sauvegarde hébergée reste volontairement reportée. Les contrats et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) sont conservés sans réétiquetage.
 
 ## Livraisons closes
 

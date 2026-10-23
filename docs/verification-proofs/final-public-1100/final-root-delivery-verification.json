@@ -1,0 +1,30 @@
+{
+  "status": "final_root_coverage_and_receipt_verified",
+  "atUtc": "2026-10-23T20:42:39.685426+00:00",
+  "items": 134,
+  "uniqueIds": 134,
+  "all134Addressed": true,
+  "domains": 11,
+  "identifiersPreserved": true,
+  "checksUnchanged": true,
+  "baselineApplicationPreserved": true,
+  "originalEvidencePreserved": true,
+  "originalLimitsPreserved": true,
+  "uniqueDirectPathReferences": 121,
+  "missingPathReferences": [],
+  "activeSourceAndCheckpointMatchFinalReceipt": true,
+  "deploymentComplete": true,
+  "decision": "GO_technical_for_public_opening_in_audited_scope_with_documented_limits",
+  "noTestsOrCIRerun": true,
+  "noAdditionalRealSendsErasureOrBackupExercise": true,
+  "currentItemEvidencePathOccurrences": 79,
+  "allOtherOriginalItemFieldsUnchanged": true,
+  "auditMarkdownLocalLinks": 20,
+  "missingAuditMarkdownLocalLinks": [],
+  "allCurrentDirectEvidenceReferences": {
+    "occurrences": 219,
+    "uniqueTargets": 34,
+    "scope": "items[*].evidence[*].path and report; repeated references count as occurrences",
+    "missing": []
+  }
+}

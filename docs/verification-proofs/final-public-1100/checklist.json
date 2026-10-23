@@ -13,15 +13,15 @@
     "checkpointSha256": "3d60ceb7da3dc61c9ca198ba40a898f6f9ab054650030c7a1632f019ecc73e53"
   },
   "scope": "Full final pre-public audit explicitly requested; use existing exact-source native evidence, targeted reproductions for concrete new concerns, moderate anonymous HTTP reads. No real sends/erasures/restore/backup test, no cloud browser.",
-  "status": "audit_all134_addressed_code_qualified_published_hosted_activation_pending",
-  "decision": "NO_GO_on_current1100_until_corrective1101_verified_active_and_recorded",
+  "status": "audit_all134_addressed_code_qualified_published_deployed_recorded1101_user_reported",
+  "decision": "GO_technical_for_public_opening_in_audited_scope_with_documented_limits",
   "items": [
     {
       "id": "REL-01",
       "domain": "Version et livraison",
       "owner": "root",
       "check": "Version package et deux champs racine du lock concordants",
-      "status": "verified1101_manifest_and_lock",
+      "status": "verified1101_manifest_lock_and_hosted_receipt",
       "evidence": [
         {
           "path": "../jm1100/version-audit.json"
@@ -31,18 +31,43 @@
         },
         {
           "path": "ci/main-40007620555/summary.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [],
       "addressed": true,
-      "result": "Version1.10.1 conforme dans package et les deux racines du lock ; baseline1100 reste installée jusqu’à activation."
+      "result": "Version1.10.1 conforme dans package et les deux racines du lock ; la même version est démarrée et enregistrée selon le reçu final utilisateur.",
+      "preDeploymentReview": {
+        "status": "verified1101_manifest_and_lock",
+        "result": "Version1.10.1 conforme dans package et les deux racines du lock ; baseline1100 reste installée jusqu’à activation.",
+        "evidence": [
+          {
+            "path": "../jm1100/version-audit.json"
+          },
+          {
+            "path": "candidate-preservation.json"
+          },
+          {
+            "path": "ci/main-40007620555/summary.json"
+          }
+        ],
+        "limits": []
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
+      }
     },
     {
       "id": "REL-02",
       "domain": "Version et livraison",
       "owner": "root",
       "check": "Source et arbre actifs exacts, distincts des commits documentaires",
-      "status": "qualified_main1101_active1100_user_reported",
+      "status": "active1101_source_tree_USER_REPORTED",
       "evidence": [
         {
           "path": "../jm1100/version-audit.json"
@@ -57,29 +82,81 @@
         },
         {
           "path": "ci/main-40007620555/summary.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [],
       "addressed": true,
-      "result": "Source qualifiée9eb99f1f… / tree2a09d9d5… distincte des commits opérateur/documentaires ; activation1101 non attestée."
+      "result": "Source active9eb99f1f68ab4beb5484894249afa8f413cc5dd6, arbre2a09d9d5d6698a04605e9a4b4faa551536cfca13 et Nodev24.22.1 selon le reçu final ; commits opérateur/documentaires distincts.",
+      "preDeploymentReview": {
+        "status": "qualified_main1101_active1100_user_reported",
+        "result": "Source qualifiée9eb99f1f… / tree2a09d9d5… distincte des commits opérateur/documentaires ; activation1101 non attestée.",
+        "evidence": [
+          {
+            "path": "../jm1100/version-audit.json"
+          },
+          {
+            "compare": "51b0cf22e3adbad7ed26653e96706ba707aaf839...6781a46ae8ee08334695c44e5c47dca960d64c42",
+            "changedFiles": 29,
+            "productionChanges": 0
+          },
+          {
+            "path": "ci/pr136-final-40006334125/summary.json"
+          },
+          {
+            "path": "ci/main-40007620555/summary.json"
+          }
+        ],
+        "limits": []
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
+      }
     },
     {
       "id": "REL-03",
       "domain": "Version et livraison",
       "owner": "root",
       "check": "Tag et release latest immuables sur la source qualifiée",
-      "status": "published1101_immutable_tag_latest_verified",
+      "status": "published_and_hosted1101_aligned_USER_REPORTED",
       "evidence": [
         {
           "path": "../jm1100/publication-native.json"
         },
         {
           "path": "ci/publication-40008910211/publication-native.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [],
       "addressed": true,
-      "result": "Tag/release/latest422216628 sur la source9eb99f1f… ; historiques non déplacés."
+      "result": "Tag/release/latest422216628 sur la source9eb99f1f… ; reçu final1101 concordant, sans déplacement des historiques.",
+      "preDeploymentReview": {
+        "status": "published1101_immutable_tag_latest_verified",
+        "result": "Tag/release/latest422216628 sur la source9eb99f1f… ; historiques non déplacés.",
+        "evidence": [
+          {
+            "path": "../jm1100/publication-native.json"
+          },
+          {
+            "path": "ci/publication-40008910211/publication-native.json"
+          }
+        ],
+        "limits": []
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
+      }
     },
     {
       "id": "REL-04",
@@ -125,7 +202,7 @@
       "domain": "Version et livraison",
       "owner": "root",
       "check": "Node24 officiel épinglé et dépendances verrouillées",
-      "status": "qualified_node_locked_dependencies_and_operator",
+      "status": "qualified_node_locked_dependencies_hosted1101_USER_REPORTED",
       "evidence": [
         {
           "path": "../jm1100/version-audit.json"
@@ -141,51 +218,126 @@
         },
         {
           "path": "candidate-preservation.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
+        },
+        {
+          "path": "writer1101-final-native.json"
         }
       ],
       "limits": [],
       "addressed": true,
-      "result": "Node24.22.1 natif ; Nodemailer10.1.4 et archive officielle SHA512 vérifiés ; autres58 entrées verrouillées préservées hors racine et Nodemailer."
+      "result": "Nodev24.22.1 rapporté actif ; Nodemailer10.1.4 et archive officielle SHA512 qualifiés, copie privée de dépendances vérifiée par le writer. Les58 autres entrées verrouillées restent préservées.",
+      "preDeploymentReview": {
+        "status": "qualified_node_locked_dependencies_and_operator",
+        "result": "Node24.22.1 natif ; Nodemailer10.1.4 et archive officielle SHA512 vérifiés ; autres58 entrées verrouillées préservées hors racine et Nodemailer.",
+        "evidence": [
+          {
+            "path": "../jm1100/version-audit.json"
+          },
+          {
+            "report": "dependencies.json"
+          },
+          {
+            "path": "ci/main-40007620555/summary.json"
+          },
+          {
+            "path": "ci/publication-40008910211/publication-native.json"
+          },
+          {
+            "path": "candidate-preservation.json"
+          }
+        ],
+        "limits": []
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
+      }
     },
     {
       "id": "REL-06",
       "domain": "Version et livraison",
       "owner": "root",
       "check": "SQL38 et migrations immuables, aucun auto-upgrade",
-      "status": "verified_immutable_source",
+      "status": "immutable_sql38_and_final_receipt_USER_REPORTED",
       "evidence": [
         {
           "report": "operations.json",
           "item": "OPS-03"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [
         "36tablesmétier+registre=37physiquesdanssource ; pasnouvelinventairehôte."
       ],
       "addressed": true,
-      "result": "38fichiersSQLidentiques etcatalogueinchangé ;33base+3vidéo+2expérience. Aucun auto-upgrade."
+      "result": "38 fichiers SQL inchangés :33base+3vidéo+2expérience ; reçu final conforme à SQL38 et37 tables qualifiées, dont le registre. Aucun nouvel inventaire physique SQL ni migration n’est déduit.",
+      "preDeploymentReview": {
+        "status": "verified_immutable_source",
+        "result": "38fichiersSQLidentiques etcatalogueinchangé ;33base+3vidéo+2expérience. Aucun auto-upgrade.",
+        "evidence": [
+          {
+            "report": "operations.json",
+            "item": "OPS-03"
+          }
+        ],
+        "limits": [
+          "36tablesmétier+registre=37physiquesdanssource ; pasnouvelinventairehôte."
+        ]
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
+      }
     },
     {
       "id": "REL-07",
       "domain": "Version et livraison",
       "owner": "root",
       "check": "Checkpoint privé aligné et anciens blocs préservés",
-      "status": "verified_user_reported",
+      "status": "checkpoint1101_aligned_preserved_USER_REPORTED",
       "evidence": [
         {
           "path": "../jm1100-hosted-metadata.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [],
       "addressed": true,
-      "result": "Baselineapplication/publication/checkpoint1100alignés ; empreinte3d60ceb7… ;historiques/anciensblocspréservés. Unenouvellelivraison1101exigeradenouveauxreçus."
+      "result": "Application/publication/checkpoint1101 alignés selon le reçu final utilisateur ; SHA2566a4ab751f1a89433502df3db898da0ab65aef0e80fc99c38df29978359c02e90. Historiques1100/190/184, état antérieur et autres blocs préservés.",
+      "preDeploymentReview": {
+        "status": "verified_user_reported",
+        "result": "Baselineapplication/publication/checkpoint1100alignés ; empreinte3d60ceb7… ;historiques/anciensblocspréservés. Unenouvellelivraison1101exigeradenouveauxreçus.",
+        "evidence": [
+          {
+            "path": "../jm1100-hosted-metadata.json"
+          }
+        ],
+        "limits": []
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
+      }
     },
     {
       "id": "REL-08",
       "domain": "Version et livraison",
       "owner": "root",
       "check": "Repli185 compatible, précontrôlé, jamais démarré",
-      "status": "verified_user_reported",
+      "status": "rollback185_qualified_preserved_USER_REPORTED",
       "evidence": [
         {
           "path": "../jm1100-hosted-metadata.json"
@@ -193,13 +345,38 @@
         {
           "report": "operations.json",
           "item": "OPS-17"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [
         "Aucunexercicederepliréelpendantcet audit."
       ],
       "addressed": true,
-      "result": "Repli185compatibleSQL38précontrôlé,jamaisdémarré,préservé ;184/172interdits."
+      "result": "Repli185 compatibleSQL38 qualifié et préservé selon le reçu final, jamais démarré ;184/172 restent interdits. Aucun exercice réel de repli ajouté.",
+      "preDeploymentReview": {
+        "status": "verified_user_reported",
+        "result": "Repli185compatibleSQL38précontrôlé,jamaisdémarré,préservé ;184/172interdits.",
+        "evidence": [
+          {
+            "path": "../jm1100-hosted-metadata.json"
+          },
+          {
+            "report": "operations.json",
+            "item": "OPS-17"
+          }
+        ],
+        "limits": [
+          "Aucunexercicederepliréelpendantcet audit."
+        ]
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
+      }
     },
     {
       "id": "REL-09",
@@ -223,7 +400,7 @@
       "domain": "Version et livraison",
       "owner": "root",
       "check": "Guides et procédures actuels sans commande acquise à rejouer",
-      "status": "current_guides_updated",
+      "status": "delivery1101_closed_no_command_to_replay",
       "evidence": [
         {
           "path": "../../SECURITY.md"
@@ -236,11 +413,39 @@
         },
         {
           "path": "../../operations-release1101.md"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [],
       "addressed": true,
-      "result": "REPRISE/PLAN/README/MONITORING et guide1101 distinguent active1100,publiée1101 et prochaine préparation ; aucune ancienne commande à rejouer."
+      "result": "Livraison1101 close selon les reçus successifs. Préparation, récupération, CHECK, activation et writer sont acquis dans leur portée ; aucune commande acquise à rejouer.",
+      "preDeploymentReview": {
+        "status": "current_guides_updated",
+        "result": "REPRISE/PLAN/README/MONITORING et guide1101 distinguent active1100,publiée1101 et prochaine préparation ; aucune ancienne commande à rejouer.",
+        "evidence": [
+          {
+            "path": "../../SECURITY.md"
+          },
+          {
+            "path": "../../REPRISE.md"
+          },
+          {
+            "path": "../../PLAN-IMPLEMENTATION.md"
+          },
+          {
+            "path": "../../operations-release1101.md"
+          }
+        ],
+        "limits": []
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
+      }
     },
     {
       "id": "AUTH-01",
@@ -372,7 +577,7 @@
       "domain": "Accès et comptes",
       "owner": "review1100",
       "check": "Sessions admin/appareils indépendants et persistance",
-      "status": "corrected_native_qualified_published_hosted_activation_pending",
+      "status": "corrected_native_qualified_deployed_recorded_USER_REPORTED",
       "evidence": [
         {
           "report": "security.json",
@@ -380,6 +585,9 @@
         },
         {
           "path": "ci/main-40007620555/summary.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [
@@ -410,6 +618,27 @@
         "PR": 40006334125,
         "main": 40007620555,
         "note": "Domain review snapshot is preserved; current qualification is this update. Hosted activation is not claimed."
+      },
+      "preDeploymentReview": {
+        "status": "corrected_native_qualified_published_hosted_activation_pending",
+        "evidence": [
+          {
+            "report": "security.json",
+            "item": "AUTH-05"
+          },
+          {
+            "path": "ci/main-40007620555/summary.json"
+          }
+        ],
+        "limits": [
+          "Corrective browser cookie lifetime is180days from login/credential rotation; GET no longer slides browser cookie. Runtime1.10.0 still has F-01 until corrective deployment."
+        ]
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
       }
     },
     {
@@ -417,7 +646,7 @@
       "domain": "Accès et comptes",
       "owner": "review1100",
       "check": "Déconnexion simple, globale et révocation appareil",
-      "status": "corrected_native_qualified_published_hosted_activation_pending",
+      "status": "corrected_native_qualified_deployed_recorded_USER_REPORTED",
       "evidence": [
         {
           "report": "security.json",
@@ -425,6 +654,9 @@
         },
         {
           "path": "ci/main-40007620555/summary.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [
@@ -455,6 +687,27 @@
         "PR": 40006334125,
         "main": 40007620555,
         "note": "Domain review snapshot is preserved; current qualification is this update. Hosted activation is not claimed."
+      },
+      "preDeploymentReview": {
+        "status": "corrected_native_qualified_published_hosted_activation_pending",
+        "evidence": [
+          {
+            "report": "security.json",
+            "item": "AUTH-06"
+          },
+          {
+            "path": "ci/main-40007620555/summary.json"
+          }
+        ],
+        "limits": [
+          "Revoked token can remain as an inert HttpOnly cookie until next login/browser expiry; authorization refuses it."
+        ]
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
       }
     },
     {
@@ -563,7 +816,7 @@
       "domain": "Accès et comptes",
       "owner": "review1100",
       "check": "Tokens et cookies, rotation et réponses anciennes concurrentes",
-      "status": "corrected_native_qualified_published_hosted_activation_pending",
+      "status": "corrected_native_qualified_deployed_recorded_USER_REPORTED",
       "evidence": [
         {
           "report": "security.json",
@@ -571,6 +824,9 @@
         },
         {
           "path": "ci/main-40007620555/summary.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [
@@ -603,6 +859,27 @@
         "PR": 40006334125,
         "main": 40007620555,
         "note": "Domain review snapshot is preserved; current qualification is this update. Hosted activation is not claimed."
+      },
+      "preDeploymentReview": {
+        "status": "corrected_native_qualified_published_hosted_activation_pending",
+        "evidence": [
+          {
+            "report": "security.json",
+            "item": "AUTH-10"
+          },
+          {
+            "path": "ci/main-40007620555/summary.json"
+          }
+        ],
+        "limits": [
+          "7before failures,120after targeted passes; Chrome regression added and syntax checked, native execution awaited. Concurrent explicit credential issuance still follows browser last-response-wins; no cross-tab global login sequencing claim."
+        ]
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
       }
     },
     {
@@ -775,7 +1052,7 @@
       "domain": "Sécurité et confidentialité",
       "owner": "review1100",
       "check": "Cookies Secure/HttpOnly/SameSite et stockage local privé borné",
-      "status": "corrected_native_qualified_published_hosted_activation_pending",
+      "status": "corrected_native_qualified_deployed_recorded_USER_REPORTED",
       "evidence": [
         {
           "report": "security.json",
@@ -783,6 +1060,9 @@
         },
         {
           "path": "ci/main-40007620555/summary.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [
@@ -811,6 +1091,27 @@
         "PR": 40006334125,
         "main": 40007620555,
         "note": "Domain review snapshot is preserved; current qualification is this update. Hosted activation is not claimed."
+      },
+      "preDeploymentReview": {
+        "status": "corrected_native_qualified_published_hosted_activation_pending",
+        "evidence": [
+          {
+            "report": "security.json",
+            "item": "SEC-04"
+          },
+          {
+            "path": "ci/main-40007620555/summary.json"
+          }
+        ],
+        "limits": [
+          "Browser cookie180days from login/rotation; SQL expiry still slides. Revoked cookies remain inert until replacement/expiry. Ordinary drafts expire24hours; uncertain sends keep their immutable request identity until explicit resolution/tab end. Physical shared-device privacy remains user responsibility."
+        ]
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
       }
     },
     {
@@ -956,7 +1257,7 @@
       "domain": "Sécurité et confidentialité",
       "owner": "review1100",
       "check": "Données chiffrées/contextes, clés hors checkout et non E2E",
-      "status": "corrected_native_qualified_published_hosted_activation_pending",
+      "status": "corrected_native_qualified_deployed_recorded_USER_REPORTED",
       "evidence": [
         {
           "report": "security.json",
@@ -964,6 +1265,9 @@
         },
         {
           "path": "ci/main-40007620555/summary.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [
@@ -991,6 +1295,27 @@
         "PR": 40006334125,
         "main": 40007620555,
         "note": "Domain review snapshot is preserved; current qualification is this update. Hosted activation is not claimed."
+      },
+      "preDeploymentReview": {
+        "status": "corrected_native_qualified_published_hosted_activation_pending",
+        "evidence": [
+          {
+            "report": "security.json",
+            "item": "SEC-09"
+          },
+          {
+            "path": "ci/main-40007620555/summary.json"
+          }
+        ],
+        "limits": [
+          "BUS-PREF-01 key-zeroization shutdown race is owned and corrected by business agent, not closed by this report; exact native qualification/deployment required. Public snapshot is deliberately readable and independently published. No private runtime key contents inspected."
+        ]
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
       }
     },
     {
@@ -1029,7 +1354,7 @@
       "domain": "Sécurité et confidentialité",
       "owner": "review1100",
       "check": "Dépendances directes et transitives: avis de sécurité actuels",
-      "status": "corrected_native_qualified_published_hosted_activation_pending",
+      "status": "corrected_native_qualified_deployed_recorded_USER_REPORTED",
       "evidence": [
         {
           "report": "security.json",
@@ -1037,6 +1362,9 @@
         },
         {
           "path": "ci/main-40007620555/summary.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [
@@ -1070,6 +1398,27 @@
         "PR": 40006334125,
         "main": 40007620555,
         "note": "Domain review snapshot is preserved; current qualification is this update. Hosted activation is not claimed."
+      },
+      "preDeploymentReview": {
+        "status": "corrected_native_qualified_published_hosted_activation_pending",
+        "evidence": [
+          {
+            "report": "security.json",
+            "item": "SEC-11"
+          },
+          {
+            "path": "ci/main-40007620555/summary.json"
+          }
+        ],
+        "limits": [
+          "F-02 is dependency hardening, not a demonstrated Jessie recipient leak. Exact59 non-root lock entries have HTTPS registry sources and SHA512 integrity; npm ci succeeded. Not every transitive maintainer advisory page was retrievable;0registry reports never means absence of vulnerabilities. OS/provider and unknown future advisories remain outside scope."
+        ]
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
       }
     },
     {
@@ -2456,7 +2805,7 @@
       "domain": "Photos vidéos et galeries",
       "owner": "business_preservation",
       "check": "Galerie historique/date/message et média ancien non chargé",
-      "status": "corrected_native_qualified_published_hosted_activation_pending",
+      "status": "corrected_native_qualified_deployed_recorded_USER_REPORTED",
       "evidence": [
         {
           "report": "business.json",
@@ -2468,6 +2817,9 @@
         },
         {
           "path": "ci/main-40007620555/summary.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [
@@ -2532,6 +2884,31 @@
         "PR": 40006334125,
         "main": 40007620555,
         "note": "Domain review snapshot is preserved; current qualification is this update. Hosted activation is not claimed."
+      },
+      "preDeploymentReview": {
+        "status": "corrected_native_qualified_published_hosted_activation_pending",
+        "evidence": [
+          {
+            "report": "business.json",
+            "item": "MED-09"
+          },
+          {
+            "report": "gallery-diagnosis.json",
+            "finding": "F-06"
+          },
+          {
+            "path": "ci/main-40007620555/summary.json"
+          }
+        ],
+        "limits": [
+          "Native Chrome viewport/touch assertions; physical Safari/Android and an alternate-timezone/DST gallery trial remain unacquired."
+        ]
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
       }
     },
     {
@@ -4285,7 +4662,7 @@
       "domain": "Outils de travail",
       "owner": "business_preservation",
       "check": "Préférences privées: propriétaires/vues autorisées/CAS/chiffrement",
-      "status": "corrected_native_qualified_published_hosted_activation_pending",
+      "status": "corrected_native_qualified_deployed_recorded_USER_REPORTED",
       "evidence": [
         {
           "report": "business.json",
@@ -4293,6 +4670,9 @@
         },
         {
           "path": "ci/main-40007620555/summary.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [
@@ -4356,6 +4736,27 @@
         "PR": 40006334125,
         "main": 40007620555,
         "note": "Domain review snapshot is preserved; current qualification is this update. Hosted activation is not claimed."
+      },
+      "preDeploymentReview": {
+        "status": "corrected_native_qualified_published_hosted_activation_pending",
+        "evidence": [
+          {
+            "report": "business.json",
+            "item": "BUS-11"
+          },
+          {
+            "path": "ci/main-40007620555/summary.json"
+          }
+        ],
+        "limits": [
+          "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+        ]
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
       }
     },
     {
@@ -4780,7 +5181,7 @@
       "domain": "Interface et accessibilité",
       "owner": "preferences_draft",
       "check": "FR/EN complet pour fonctions et commandes exposées",
-      "status": "corrected_native_qualified_published_hosted_activation_pending",
+      "status": "corrected_native_qualified_deployed_recorded_USER_REPORTED",
       "evidence": [
         {
           "report": "frontend.json",
@@ -4788,6 +5189,9 @@
         },
         {
           "path": "ci/main-40007620555/summary.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [
@@ -4818,6 +5222,27 @@
         "PR": 40006334125,
         "main": 40007620555,
         "note": "Domain review snapshot is preserved; current qualification is this update. Hosted activation is not claimed."
+      },
+      "preDeploymentReview": {
+        "status": "corrected_native_qualified_published_hosted_activation_pending",
+        "evidence": [
+          {
+            "report": "frontend.json",
+            "item": "UI-07"
+          },
+          {
+            "path": "ci/main-40007620555/summary.json"
+          }
+        ],
+        "limits": [
+          "Le titre français était un défautP3 de1.10.0. Correctif local1.10.1 demandé par root, reproduction DOM réussie; nouvelle CI native et déploiement non déduits. Le texte personnel de bio reste volontairement littéral."
+        ]
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
       }
     },
     {
@@ -4854,7 +5279,7 @@
       "domain": "Interface et accessibilité",
       "owner": "preferences_draft",
       "check": "Empilement menus/dialogues/scroll sans blocage",
-      "status": "corrected_native_qualified_published_hosted_activation_pending",
+      "status": "corrected_native_qualified_deployed_recorded_USER_REPORTED",
       "evidence": [
         {
           "report": "frontend.json",
@@ -4866,6 +5291,9 @@
         },
         {
           "path": "ci/main-40007620555/summary.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [
@@ -4895,6 +5323,31 @@
         "PR": 40006334125,
         "main": 40007620555,
         "note": "Domain review snapshot is preserved; current qualification is this update. Hosted activation is not claimed."
+      },
+      "preDeploymentReview": {
+        "status": "corrected_native_qualified_published_hosted_activation_pending",
+        "evidence": [
+          {
+            "report": "frontend.json",
+            "item": "UI-09"
+          },
+          {
+            "report": "gallery-diagnosis.json",
+            "finding": "F-06"
+          },
+          {
+            "path": "ci/main-40007620555/summary.json"
+          }
+        ],
+        "limits": [
+          "FE-P3-02 conditional historical microseconds guard corrected locally together with SQLprecision patch; nativeChromeCI pending."
+        ]
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
       }
     },
     {
@@ -5395,7 +5848,7 @@
       "domain": "Exploitation et données",
       "owner": "release_operator",
       "check": "Arrêt gracieux, drainage et délais workers/HTTP/SQL",
-      "status": "corrected_native_qualified_published_hosted_activation_pending",
+      "status": "corrected_native_qualified_deployed_recorded_USER_REPORTED",
       "evidence": [
         {
           "report": "operations.json",
@@ -5403,6 +5856,9 @@
         },
         {
           "path": "ci/main-40007620555/summary.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [
@@ -5489,6 +5945,27 @@
         "PR": 40006334125,
         "main": 40007620555,
         "note": "Domain review snapshot is preserved; current qualification is this update. Hosted activation is not claimed."
+      },
+      "preDeploymentReview": {
+        "status": "corrected_native_qualified_published_hosted_activation_pending",
+        "evidence": [
+          {
+            "report": "operations.json",
+            "item": "OPS-04"
+          },
+          {
+            "path": "ci/main-40007620555/summary.json"
+          }
+        ],
+        "limits": [
+          "Arrêt réel Infomaniak non déclenché pendant cet audit. Une échéance peut laisser une opération incertaine: reprise gardée, pas retry aveugle."
+        ]
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
       }
     },
     {
@@ -6217,7 +6694,12 @@
       ],
       "limits": [],
       "addressed": true,
-      "result": "Health200/ok,ready200/ready,JSONminimalno-store,sanscookie."
+      "result": "Health200/ok,ready200/ready,JSONminimalno-store,sanscookie.",
+      "currentObservation1101": {
+        "evidence": "final-http1101.json",
+        "scope": "Separate post-receipt anonymous GET; original result/public-http.json remain baseline1100 observations.",
+        "result": "Health200/ok and ready200/ready, no-store and noSetCookie. No private process/SQL inspection inferred."
+      }
     },
     {
       "id": "LIVE-02",
@@ -6360,7 +6842,12 @@
         "Avantpartagelapublicationdesinformationsestunchoixadminexpliciteque l’agentnefaitpas."
       ],
       "addressed": true,
-      "result": "GET/api/public/jessie404masqué,sanschampprivé ;/jessie200etétatindisponibleattendu."
+      "result": "GET/api/public/jessie404masqué,sanschampprivé ;/jessie200etétatindisponibleattendu.",
+      "currentObservation1101": {
+        "evidence": "final-http1101.json",
+        "scope": "Separate post-receipt anonymous GET, not a rerun of the77 baseline checks.",
+        "result": "Public profile API404; response body deliberately not collected. Publishing remains an explicit admin choice."
+      }
     },
     {
       "id": "LIVE-10",
@@ -6414,15 +6901,34 @@
       "domain": "Contrôle de couverture et décision",
       "owner": "root",
       "check": "Inventaire tous fichiers suivis, code actif égal à release",
-      "status": "verified_inventory",
+      "status": "baseline_inventory_preserved_active1101_USER_REPORTED",
       "evidence": [
         {
           "path": "source-inventory.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [],
       "addressed": true,
-      "result": "1547fichierssuivisbaseline,358public/server,426tests ;fichierssource/correctifetcommitsdocumentairesdistingués."
+      "result": "Inventaire historique1547 fichiers,358public/server et426tests conservé. Source1101 qualifiée distincte des commits documentaires et concordante avec le reçu final actif ; aucun nouvel inventaire exhaustif revendiqué.",
+      "preDeploymentReview": {
+        "status": "verified_inventory",
+        "result": "1547fichierssuivisbaseline,358public/server,426tests ;fichierssource/correctifetcommitsdocumentairesdistingués.",
+        "evidence": [
+          {
+            "path": "source-inventory.json"
+          }
+        ],
+        "limits": []
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
+      }
     },
     {
       "id": "GATE-02",
@@ -6509,7 +7015,7 @@
       "domain": "Contrôle de couverture et décision",
       "owner": "root",
       "check": "Blocages corrigés et qualifiés ou refus d’ouverture motivé",
-      "status": "qualified_published_corrective_activation_required",
+      "status": "six_fixes_qualified_active_recorded_USER_REPORTED",
       "evidence": [
         {
           "PR": 136,
@@ -6539,11 +7045,59 @@
         },
         {
           "path": "ci/publication-40008910211/publication-native.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
+        },
+        {
+          "path": "writer1101-final-native.json"
         }
       ],
       "limits": [],
       "addressed": true,
-      "result": "Les six correctifs sont qualifiés PR/main et publiés ; F05 reste applicable à1100 jusqu’à activation vérifiée1101. Le writer final attend le vrai reçu."
+      "result": "Six correctifs qualifiés PR/main puis source1101 démarrée et enregistrée selon le reçu final. Le blocage F-05 sur le processus1100 est levé pour cette source active ; aucun essai réel supplémentaire de perte de clé n’est revendiqué.",
+      "preDeploymentReview": {
+        "status": "qualified_published_corrective_activation_required",
+        "result": "Les six correctifs sont qualifiés PR/main et publiés ; F05 reste applicable à1100 jusqu’à activation vérifiée1101. Le writer final attend le vrai reçu.",
+        "evidence": [
+          {
+            "PR": 136,
+            "head": "0ca0dd2efa3151d5b5f8004d5c67d4ea9e24f584",
+            "tree": "42bf8ed6e9f91b6c289a6b10fe61b2abb93c8da7",
+            "run": 40002896036
+          },
+          {
+            "version": "1.10.1",
+            "head": "d6ff12668ed87ac952c06bfee240c58e58afeae9",
+            "tree": "13783822bc0870686e6fd48dfcc62a1e6a51ea2c",
+            "PR": 136,
+            "run": 40004246747
+          },
+          {
+            "version": "1.10.1",
+            "head": "cd81f915a36e5fd39cba2fd9819d760588d47041",
+            "tree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+            "PR": 136,
+            "run": 40006334125
+          },
+          {
+            "path": "ci/pr136-final-40006334125/summary.json"
+          },
+          {
+            "path": "ci/main-40007620555/summary.json"
+          },
+          {
+            "path": "ci/publication-40008910211/publication-native.json"
+          }
+        ],
+        "limits": []
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
+      }
     },
     {
       "id": "GATE-06",
@@ -6580,7 +7134,7 @@
       "domain": "Contrôle de couverture et décision",
       "owner": "root",
       "check": "Checklist seconde passe: aucun item en attente/oublié",
-      "status": "final_coverage_second_pass_complete",
+      "status": "final_coverage_and_hosted_closure_complete",
       "evidence": [
         {
           "path": "coverage-second-pass.json"
@@ -6593,29 +7147,88 @@
         },
         {
           "path": "root-final-verification.json"
+        },
+        {
+          "path": "hosted-metadata1101.json"
         }
       ],
       "limits": [],
       "addressed": true,
-      "result": "134/134 points traités et revérifiés,22 anciens constats et6 nouveaux suivis ; qualification source acquise. Livraison hébergée reste explicitement incomplète."
+      "result": "134/134 points uniques traités,22 anciens constats et6 nouveaux suivis ; signature historique191 références conservée. Livraison1101 ensuite close par reçu final distinct, sans convertir les limites en tests réussis.",
+      "preDeploymentReview": {
+        "status": "final_coverage_second_pass_complete",
+        "result": "134/134 points traités et revérifiés,22 anciens constats et6 nouveaux suivis ; qualification source acquise. Livraison hébergée reste explicitement incomplète.",
+        "evidence": [
+          {
+            "path": "coverage-second-pass.json"
+          },
+          {
+            "path": "coverage-corrections.json"
+          },
+          {
+            "path": "final-coverage-review.json"
+          },
+          {
+            "path": "root-final-verification.json"
+          }
+        ],
+        "limits": []
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
+      }
     },
     {
       "id": "GATE-08",
       "domain": "Contrôle de couverture et décision",
       "owner": "root",
       "check": "Rapport final avec GO/GO conditionnel/NO GO et actions prioritaires",
-      "status": "NO_GO_until_corrective_hosted_activation",
+      "status": "GO_technical_audited_scope_with_documented_limits",
       "evidence": [
         {
           "path": "../../AUDIT-PUBLIC-1100-20261023.md"
         },
         {
           "path": "../../operations-release1101.md"
+        },
+        {
+          "path": "hosted-metadata1101.json"
+        },
+        {
+          "path": "writer1101-final-native.json"
+        },
+        {
+          "path": "final-receipt-review.json"
+        },
+        {
+          "path": "final-http1101.json"
         }
       ],
       "limits": [],
       "addressed": true,
-      "result": "Audit terminé côté code, ouverture refusée sur1100 ; préparation/CHECK, identité1101 puis writer final concordant requis."
+      "result": "GO technique dans le périmètre audité après qualification, publication, activation et reçu final1101 concordants. Limites physiques/Firefox/Safari/Push, sauvegarde reportée, A10 hors scope et réserves A11/A12 maintenues.",
+      "preDeploymentReview": {
+        "status": "NO_GO_until_corrective_hosted_activation",
+        "result": "Audit terminé côté code, ouverture refusée sur1100 ; préparation/CHECK, identité1101 puis writer final concordant requis.",
+        "evidence": [
+          {
+            "path": "../../AUDIT-PUBLIC-1100-20261023.md"
+          },
+          {
+            "path": "../../operations-release1101.md"
+          }
+        ],
+        "limits": []
+      },
+      "deploymentUpdate": {
+        "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+        "evidence": "hosted-metadata1101.json",
+        "evidenceClass": "USER_REPORTED",
+        "note": "Current hosted closure only. Prior domainReview/qualificationUpdate/preDeploymentReview snapshots remain historical; no new physical functional test is claimed."
+      }
     }
   ],
   "correctiveVersion": "1.10.1",
@@ -6624,19 +7237,21 @@
       "id": "F-01",
       "severity": "P2",
       "title": "Ancienne réponse session200 réinstalle un cookie périmé",
-      "status": "corrected_qualified_published_not_yet_confirmed_active",
+      "status": "corrected_qualified_published_deployed_and_recorded_USER_REPORTED",
       "domainReport": "security.json",
       "qualification": [
         "ci/pr136-final-40006334125/summary.json",
         "ci/main-40007620555/summary.json"
       ],
-      "fixedSource": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6"
+      "fixedSource": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+      "preDeploymentStatus": "corrected_qualified_published_not_yet_confirmed_active",
+      "deploymentEvidence": "hosted-metadata1101.json"
     },
     {
       "id": "F-02",
       "severity": "P3",
       "title": "Nodemailer10.1.1 affecté par avis mainteneurs, entrées Jessie filtrées",
-      "status": "corrected_qualified_published_not_yet_confirmed_active",
+      "status": "corrected_qualified_published_deployed_and_recorded_USER_REPORTED",
       "primarySources": [
         "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-8c8m-p3m8-cjg8",
         "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-m943-m63m-w62w",
@@ -6646,47 +7261,55 @@
         "ci/pr136-final-40006334125/summary.json",
         "ci/main-40007620555/summary.json"
       ],
-      "fixedSource": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6"
+      "fixedSource": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+      "preDeploymentStatus": "corrected_qualified_published_not_yet_confirmed_active",
+      "deploymentEvidence": "hosted-metadata1101.json"
     },
     {
       "id": "F-03",
       "severity": "P3_conditional",
       "title": "Pivot galerie DATETIME6 réduit à3décimales",
-      "status": "corrected_qualified_published_not_yet_confirmed_active",
+      "status": "corrected_qualified_published_deployed_and_recorded_USER_REPORTED",
       "qualification": [
         "ci/pr136-final-40006334125/summary.json",
         "ci/main-40007620555/summary.json"
       ],
-      "fixedSource": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6"
+      "fixedSource": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+      "preDeploymentStatus": "corrected_qualified_published_not_yet_confirmed_active",
+      "deploymentEvidence": "hosted-metadata1101.json"
     },
     {
       "id": "F-04",
       "severity": "P3",
       "title": "Titre onglet profil public reste français en anglais",
-      "status": "corrected_qualified_published_not_yet_confirmed_active",
+      "status": "corrected_qualified_published_deployed_and_recorded_USER_REPORTED",
       "qualification": [
         "ci/pr136-final-40006334125/summary.json",
         "ci/main-40007620555/summary.json"
       ],
-      "fixedSource": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6"
+      "fixedSource": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+      "preDeploymentStatus": "corrected_qualified_published_not_yet_confirmed_active",
+      "deploymentEvidence": "hosted-metadata1101.json"
     },
     {
       "id": "F-05",
       "severity": "P1",
       "title": "Clé de préférences effacée avant une écriture en vol pendant arrêt",
-      "status": "corrected_qualified_published_not_yet_confirmed_active",
+      "status": "corrected_qualified_published_deployed_and_recorded_USER_REPORTED",
       "reproduction": "real_service_synthetic_store_zero_key_ciphertext",
       "qualification": [
         "ci/pr136-final-40006334125/summary.json",
         "ci/main-40007620555/summary.json"
       ],
-      "fixedSource": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6"
+      "fixedSource": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+      "preDeploymentStatus": "corrected_qualified_published_not_yet_confirmed_active",
+      "deploymentEvidence": "hosted-metadata1101.json"
     },
     {
       "id": "F-06",
       "severity": "P3",
       "title": "Événement close différé referme un dialogue déjà rouvert",
-      "status": "corrected_qualified_published_not_yet_confirmed_active",
+      "status": "corrected_qualified_published_deployed_and_recorded_USER_REPORTED",
       "reproduction": "actual_application_functions_synthetic_legal_event_order",
       "proof": "gallery-close-reopen-repro.json",
       "primarySource": "https://html.spec.whatwg.org/multipage/interactive-elements.html#close-the-dialog",
@@ -6696,10 +7319,12 @@
         "ci/main-40007620555/summary.json"
       ],
       "fixedSource": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
-      "nativeCoverage": "Three dedicated Chrome regressions: lightbox,CRM,closure confirmation. Fourth media-dialog guard reviewed with existing media flows, no dedicated same-task close/reopen test claimed."
+      "nativeCoverage": "Three dedicated Chrome regressions: lightbox,CRM,closure confirmation. Fourth media-dialog guard reviewed with existing media flows, no dedicated same-task close/reopen test claimed.",
+      "preDeploymentStatus": "corrected_qualified_published_not_yet_confirmed_active",
+      "deploymentEvidence": "hosted-metadata1101.json"
     }
   ],
-  "updatedAt": "2026-10-23T18:26:35.065553+00:00",
+  "updatedAt": "2026-10-23T20:41:17.783599+00:00",
   "candidate": {
     "version": "1.10.1",
     "head": "cd81f915a36e5fd39cba2fd9819d760588d47041",
@@ -6720,8 +7345,8 @@
     "historicalFindings": 22,
     "traceabilityIssuesRemaining": 0,
     "independentReview": "coverage-second-pass.json",
-    "technicalClosurePending": true,
-    "supplementalFinding": "F-06 verified across four affected listeners; fixes and real Chrome regressions added, final native pending",
+    "technicalClosurePending": false,
+    "supplementalFinding": "F-06 four guards reviewed, three dedicated Chrome regressions qualified; corrected source1101 is active and recorded according to the final user receipt. No new physical scenario is implied.",
     "complete": true,
     "finalReview": "final-coverage-review.json",
     "missingItems": 0,
@@ -6743,11 +7368,97 @@
     "publicationRun": 40008910211,
     "operatorCommit": "e5dbfc124a8169a551285d4feb15b827edf07e58",
     "operatorNativeTests": 46,
-    "writerFinalNativePending": 16,
-    "deployed": false
+    "writerFinalNativePending": 0,
+    "deployed": true,
+    "deployedEvidence": "hosted-metadata1101.json",
+    "writerFinalNativeTests": 16,
+    "writerFinalNativeRun": 40018506473,
+    "writerOperatorCommit": "ac101b4bfbfa3a7f765752cb2adc74287846145e",
+    "writerQualification": "writer1101-final-native.json",
+    "metadataRecorded": true
   },
   "auditCodeComplete": true,
-  "deploymentComplete": false,
-  "secondPassScope": "Audit coverage and qualified source, distinct from hosted activation",
-  "auditComplete": true
+  "deploymentComplete": true,
+  "secondPassScope": "Audit coverage complete; hosted deployment subsequently closed by the user-reported pinned writer receipt, distinct from untested physical scenarios.",
+  "auditComplete": true,
+  "applicationSemantics": "Historical audited baseline at the initial134-point review. Current active application and final deployment evidence are recorded separately in currentApplication and deploymentClosure1101.",
+  "currentApplication": {
+    "version": "1.10.1",
+    "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+    "tree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+    "node": "v24.22.1",
+    "schemaMigrations": 38,
+    "tablesReported": 37,
+    "tableCountScope": "37 qualified physical tables including1 ledger, not37 business tables plus ledger; no fresh independent physical SQL inventory.",
+    "startedAt": 1792787440361,
+    "startedAtParis": "2026-10-23T22:30:40.361+02:00",
+    "checkpointSha256": "6a4ab751f1a89433502df3db898da0ab65aef0e80fc99c38df29978359c02e90",
+    "evidenceClass": "USER_REPORTED",
+    "evidence": "hosted-metadata1101.json"
+  },
+  "preDeploymentDecision": {
+    "status": "audit_all134_addressed_code_qualified_published_hosted_activation_pending",
+    "decision": "NO_GO_on_current1100_until_corrective1101_verified_active_and_recorded",
+    "deploymentComplete": false,
+    "qualifiedCorrection": {
+      "version": "1.10.1",
+      "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+      "tree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+      "PR": 136,
+      "prRun": 40006334125,
+      "mainRun": 40007620555,
+      "nativeJobsEach": 5,
+      "releaseId": 422216628,
+      "tag": "v1.10.1",
+      "publicationRun": 40008910211,
+      "operatorCommit": "e5dbfc124a8169a551285d4feb15b827edf07e58",
+      "operatorNativeTests": 46,
+      "writerFinalNativePending": 16,
+      "deployed": false
+    },
+    "coverageSecondPass": {
+      "uniqueIds": 134,
+      "missing": 0,
+      "overlap": 0,
+      "historicalFindings": 22,
+      "traceabilityIssuesRemaining": 0,
+      "independentReview": "coverage-second-pass.json",
+      "technicalClosurePending": true,
+      "supplementalFinding": "F-06 verified across four affected listeners; fixes and real Chrome regressions added, final native pending",
+      "complete": true,
+      "finalReview": "final-coverage-review.json",
+      "missingItems": 0,
+      "unresolvedTraceabilityIssues": 0,
+      "finalDirectEvidenceReferencesResolved": 191,
+      "finalReviewAddendum": "final-coverage-review-addendum.json"
+    },
+    "scope": "Historical review before hosted1101 closure; signed191 references and baseline1100 observations are preserved."
+  },
+  "deploymentClosure1101": {
+    "atUtc": "2026-10-23T20:41:17.783599+00:00",
+    "evidenceClass": "USER_REPORTED",
+    "receipt": "hosted-metadata1101.json",
+    "writerQualification": "writer1101-final-native.json",
+    "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+    "tree": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+    "status": "release1101_metadata_recorded",
+    "publicReady": true,
+    "checkpointSha256": "6a4ab751f1a89433502df3db898da0ab65aef0e80fc99c38df29978359c02e90",
+    "metadataOnly": true,
+    "noRestart": true,
+    "priorActiveAndHistoricalBlocksPreserved": true,
+    "rollback185Qualified": true,
+    "decision": "GO technique dans le périmètre audité, avec les limites documentées.",
+    "noFreshPhysicalSqlInventory": true,
+    "historicalObservations": "The original134 reviews,77 anonymous baseline1100 HTTP readings and191-reference signed coverage remain historical. This closure is supported by preparation/CHECK/startup/final-writer evidence, not a rerun of all functional scenarios.",
+    "residualLimits": [
+      "Physical devices, Firefox/Safari and operating-system/closed-app Push behavior are not comprehensively qualified.",
+      "The hosted manual backup creation/completion/download exercise remains deferred by the user.",
+      "A10 remains outside scope; no legal conformity conclusion.",
+      "A11 and A12 remain explicit unresolved limits; no production capacity or total-host-loss recovery guarantee.",
+      "Public Jessie snapshot publication remains an explicit admin choice; no private client preferences were published by this closure."
+    ],
+    "independentReceiptReview": "final-receipt-review.json",
+    "finalAnonymousHttp": "final-http1101.json"
+  }
 }
