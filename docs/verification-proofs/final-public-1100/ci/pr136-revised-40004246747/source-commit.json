@@ -1,0 +1,36 @@
+{
+  "sha": "d6ff12668ed87ac952c06bfee240c58e58afeae9",
+  "node_id": "C_kwDOVJw7f9oAKGQ2ZmYxMjY2OGVkODdhYzk1MmMwNmJmZWUyNDBjNThlNThhZmVhZTk",
+  "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/commits/d6ff12668ed87ac952c06bfee240c58e58afeae9",
+  "html_url": "https://github.com/fredbuhr/jessiemessage/commit/d6ff12668ed87ac952c06bfee240c58e58afeae9",
+  "author": {
+    "name": "ZTIKIX",
+    "email": "49747120+fredbuhr@users.noreply.github.com",
+    "date": "2026-10-23T18:33:15Z"
+  },
+  "committer": {
+    "name": "ZTIKIX",
+    "email": "49747120+fredbuhr@users.noreply.github.com",
+    "date": "2026-10-23T18:33:15Z"
+  },
+  "tree": {
+    "sha": "13783822bc0870686e6fd48dfcc62a1e6a51ea2c",
+    "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/trees/13783822bc0870686e6fd48dfcc62a1e6a51ea2c"
+  },
+  "message": "test: align native session assertions and await preference form readiness",
+  "parents": [
+    {
+      "sha": "0ca0dd2efa3151d5b5f8004d5c67d4ea9e24f584",
+      "url": "https://api.github.com/repos/fredbuhr/jessiemessage/git/commits/0ca0dd2efa3151d5b5f8004d5c67d4ea9e24f584",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/commit/0ca0dd2efa3151d5b5f8004d5c67d4ea9e24f584"
+    }
+  ],
+  "verification": {
+    "verified": false,
+    "reason": "unsigned",
+    "signature": null,
+    "payload": null,
+    "verified_at": null
+  }
+}
+

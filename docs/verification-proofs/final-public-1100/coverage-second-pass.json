@@ -1,0 +1,377 @@
+{
+  "formatVersion": 1,
+  "type": "independent-public-audit-coverage-second-pass",
+  "recordedAtUtc": "2026-10-23T18:31:22.429712+00:00",
+  "reviewer": "version_audit",
+  "scope": "Review of coverage, evidence traceability, status honesty and declared limits only. No new application-code audit, no suite execution, no repo mutation, no remote action.",
+  "inputFingerprints": [
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/checklist.json",
+      "sha256": "efb1eabf1ad3e1f30e0ee8d945ac4b5e28aac06a7ee6835f0544ef6131452e49"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/security.json",
+      "sha256": "ddaad6f3aaae0471bd4cd40d5a2b2a75c38b6d3087c56fbd68321e2e95cbe955"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/auth.json",
+      "sha256": "0a5ea16a3b2365cc1b1f8a07a9c48478f7ac32504f85c99d26bd15a3859450b0"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business.json",
+      "sha256": "53feaddb272664105beaaf500c52093ae10dc005a50b74cb2cda826afd39256b"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/frontend.json",
+      "sha256": "45f3adac520859f7b1559ff300a4b080d39c4bc57656ef3c2e019b2c38a6de77"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/operations.json",
+      "sha256": "9a627f3af6c5618944b3111a045e28893080fc0c97ea61dab00ea67b8a67103f"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/public-http.json",
+      "sha256": "9fc0ba9dd110fcc1680493c65f18e5f564e7fd5b6e91217c88d05d066cf38319"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/historical-findings-map.json",
+      "sha256": "4fd0e0d4f6ce60a34dd2ab710bb04c138ac38cf3da7135f6e94946cd067cef4a"
+    },
+    {
+      "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/source-inventory.json",
+      "sha256": "f2d5d1c72f3f60e8798a7b26addda9321b9a4af1c4bdd738f246579c7047edae"
+    }
+  ],
+  "snapshotStatus": {
+    "applicationVersion": "1.10.0",
+    "activeSource": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+    "candidate": {
+      "version": "1.10.1",
+      "head": "0ca0dd2efa3151d5b5f8004d5c67d4ea9e24f584",
+      "tree": "42bf8ed6e9f91b6c289a6b10fe61b2abb93c8da7",
+      "PR": 136,
+      "run": 40002896036
+    },
+    "masterStatus": "all134_addressed_first_pass_corrections_in_native_qualification",
+    "masterDecision": "not_yet_validated_blocking_fix_native_and_deployment_pending",
+    "secondPassCompleteInMaster": false,
+    "parentReportedQualificationContext": "Corrective1.10.1 PR136 in native qualification; four stale test assertions being corrected while application implementation stable; this child does not independently verify live CI."
+  },
+  "coverage": {
+    "masterItems": 134,
+    "masterUniqueIds": 134,
+    "allAddressed": true,
+    "ownerCounts": {
+      "root": 30,
+      "review1100": 26,
+      "business_preservation": 41,
+      "preferences_draft": 20,
+      "release_operator": 17
+    },
+    "securityAndAuth": 26,
+    "authNestedSubset": 12,
+    "authSubsetCoveredBySecurity": true,
+    "business": 41,
+    "frontend": 20,
+    "operations": 17,
+    "root": 30,
+    "mainDomainUnion": 104,
+    "domainOverlap": 0,
+    "rootOverlap": [],
+    "unmappedMasterIds": [],
+    "domainIdsAbsentFromMaster": [],
+    "historyExpected": 22,
+    "historyRecorded": 22,
+    "historyMissing": [],
+    "historyUnexpected": [],
+    "structuralCoverageVerified": true
+  },
+  "evidenceChecks": {
+    "allDomainChecklistItemsHaveEvidence": true,
+    "rootGate07And08EvidenceEmptyAsExpectedPending": {
+      "GATE-07": "pending_second_pass_after_native",
+      "GATE-08": "pending_decision"
+    },
+    "publicRequestCount": 77,
+    "publicStatusCounts": {
+      "200": 61,
+      "404": 5,
+      "303": 2,
+      "401": 6,
+      "301": 1,
+      "308": 2
+    },
+    "publicBoundedAll": true,
+    "resourceHashesCompared": 56,
+    "allComparedResourceHashesMatchReleasedBaseline": true,
+    "absoluteLocalEvidenceReferencesChecked": 24,
+    "absoluteLocalEvidenceReferencesExisting": 24,
+    "brokenMasterRelativePaths": [
+      {
+        "item": "REL-10",
+        "path": "../../../SECURITY.md",
+        "correctRelativePath": "../../SECURITY.md"
+      },
+      {
+        "item": "REL-10",
+        "path": "../../../REPRISE.md",
+        "correctRelativePath": "../../REPRISE.md"
+      },
+      {
+        "item": "REL-10",
+        "path": "../../../PLAN-IMPLEMENTATION.md",
+        "correctRelativePath": "../../PLAN-IMPLEMENTATION.md"
+      },
+      {
+        "item": "GATE-03",
+        "path": "../../../AUDIT-FINAL-20261022.md",
+        "correctRelativePath": "../../AUDIT-FINAL-20261022.md"
+      },
+      {
+        "item": "GATE-03",
+        "path": "../../../AUDIT-2-20261022.md",
+        "correctRelativePath": "../../AUDIT-2-20261022.md"
+      }
+    ],
+    "childReportTraceability": {
+      "reference": "business.json.childReport=business-crm.json",
+      "existsInAuditRepoDirectory": false,
+      "existsInScratch": true,
+      "scratchPath": "/workspace/scratch/bb431be72395/final-public-audit1100/business-crm.json",
+      "assessment": "Coverage content is already integrated into business41 checklist/readDepth; label archival location or include child file if a self-contained evidence bundle is intended."
+    }
+  },
+  "readDepthHonesty": {
+    "assessment": "Explicit full/partial/focused/structural distinctions found; no assertion that all1547tracked files were manually read in full.",
+    "auth": {
+      "full": 42,
+      "partial": 22
+    },
+    "securityOwn": {
+      "full": 34,
+      "partial": 18
+    },
+    "securityDelegatedAuth": "Same64auth files, not64 additional unique reads.",
+    "business": {
+      "principalFull": 68,
+      "fullLines": 10768,
+      "testsFull": 9,
+      "testsPartial": 2,
+      "testTitlesAndRecordedLogsOnly": 18,
+      "supportingExcerpts": 4
+    },
+    "frontend": {
+      "staticInventory": 105,
+      "javascript": 61,
+      "html": 17,
+      "css": 27,
+      "semanticFull": 20,
+      "focusedFlows": 11,
+      "otherDepth": "structural patterns and existing qualification"
+    },
+    "operations": "Focused operational entry points and security-critical sections; no line-by-line every historical backup/witness module or test claim.",
+    "sourceInventory": "1547 tracked baseline files,358 production files,426 tests is inventory coverage, not semantic full-read coverage."
+  },
+  "importantOpeningLimits": [
+    {
+      "topic": "Hosted restore and backup",
+      "items": [
+        "OPS-10",
+        "OPS-11",
+        "MED-11",
+        "MED-12"
+      ],
+      "assessment": "Synthetic/native proof distinguished from no hosted restore/full-host-loss guarantee. Hosted backup user-deferred; do not reopen."
+    },
+    {
+      "topic": "Physical OS Push/PWA/background and app switching",
+      "items": [
+        "PWA-04",
+        "PWA-05",
+        "PWA-06",
+        "CHAT-08",
+        "CHAT-09",
+        "CHAT-10"
+      ],
+      "assessment": "Explicitly unverified. Native Chrome/HTTPS is not promoted to real OS Push or memory-eviction proof."
+    },
+    {
+      "topic": "Firefox/Safari/WebKit and real devices",
+      "items": [
+        "UI-13",
+        "PWA-06"
+      ],
+      "assessment": "Documented test gap; no cross-browser success claimed. No physical or new browser session performed by this child."
+    },
+    {
+      "topic": "Managed egress TLS versus origin certificate",
+      "items": [
+        "LIVE-05"
+      ],
+      "assessment": "OpenAI proxy certificate/TLS1.3 and proxy expiry explicitly separated from unverified origin chain/expiry/renewal."
+    },
+    {
+      "topic": "Network interruption, quotas, throughput and proxy peer",
+      "items": [
+        "CHAT-03",
+        "CHAT-07",
+        "SEC-08",
+        "SEC-13",
+        "OPS-07",
+        "OPS-08",
+        "LIVE-12"
+      ],
+      "assessment": "Synthetic lost ACK distinguished from actual radio/OS loss; A11 conditional shared peer and A12 growth retained; no capacity claim from77bounded reads."
+    },
+    {
+      "topic": "Legal, PC and automatic backups",
+      "assessment": "Remain existing deferred/out-of-scope choices; this coverage review does not reopen them."
+    }
+  ],
+  "findings": [
+    {
+      "id": "COV-01",
+      "severity": "evidence-traceability",
+      "blockingFinalCoverageSignoff": true,
+      "runtimeDefect": false,
+      "detail": "Five master evidence links use../../../where../../is required to resolve documents underdocs. Source content exists; fix paths before marking final audit bundle complete.",
+      "references": [
+        {
+          "item": "REL-10",
+          "path": "../../../SECURITY.md",
+          "correctRelativePath": "../../SECURITY.md"
+        },
+        {
+          "item": "REL-10",
+          "path": "../../../REPRISE.md",
+          "correctRelativePath": "../../REPRISE.md"
+        },
+        {
+          "item": "REL-10",
+          "path": "../../../PLAN-IMPLEMENTATION.md",
+          "correctRelativePath": "../../PLAN-IMPLEMENTATION.md"
+        },
+        {
+          "item": "GATE-03",
+          "path": "../../../AUDIT-FINAL-20261022.md",
+          "correctRelativePath": "../../AUDIT-FINAL-20261022.md"
+        },
+        {
+          "item": "GATE-03",
+          "path": "../../../AUDIT-2-20261022.md",
+          "correctRelativePath": "../../AUDIT-2-20261022.md"
+        }
+      ]
+    },
+    {
+      "id": "COV-02",
+      "severity": "minor-evidence-bundle-clarity",
+      "blockingFinalCoverageSignoff": false,
+      "runtimeDefect": false,
+      "detail": "business-crm.json reference resolves in scratch but not committed report directory; integrated41-point report still covers it."
+    }
+  ],
+  "decision": {
+    "structuralCoveragePass": true,
+    "noNewMissingDomainOrUnlabelledCriticalGapIdentified": true,
+    "statusHonestyPass": true,
+    "finalCoverageCleared": false,
+    "publicOpeningApprovedByThisReview": false,
+    "pendingBeforeFinalCoverageCanBeCleared": [
+      "Correct five document evidence paths or explicitly mark their base.",
+      "Obtain successful native PR/main results for final exact1.10.1 candidate and preserve original failed/stale-assertion evidence.",
+      "Verify exact-source corrective publication/deployment and required hosted identity/checkpoint receipts; active1.10.0 remains affected by F-05 until then.",
+      "Update GATE-05, GATE-07, GATE-08 and master secondPassComplete only from those actual results; retain physical/restore/TLS/network limits."
+    ],
+    "safeStatement": "All134 audit items are addressed in coverage; this is not134tests passed, a complete all-lines audit or final readiness approval."
+  },
+  "actionsPerformed": {
+    "repoChanges": false,
+    "newTests": false,
+    "remoteCalls": false,
+    "scratchReportOnly": true
+  },
+  "addenda": [
+    {
+      "recordedAtUtc": "2026-10-23T18:32:55.221048+00:00",
+      "type": "coverage-traceability-corrections-verified",
+      "scope": "Read-only verification of corrected current checklist links and archived evidence bundle; scratch addendum only.",
+      "pathCorrectionsVerified": [
+        {
+          "item": "REL-10",
+          "old": "../../../SECURITY.md",
+          "new": "../../SECURITY.md",
+          "presentInCurrentChecklist": true,
+          "resolvedTargetExists": true
+        },
+        {
+          "item": "REL-10",
+          "old": "../../../REPRISE.md",
+          "new": "../../REPRISE.md",
+          "presentInCurrentChecklist": true,
+          "resolvedTargetExists": true
+        },
+        {
+          "item": "REL-10",
+          "old": "../../../PLAN-IMPLEMENTATION.md",
+          "new": "../../PLAN-IMPLEMENTATION.md",
+          "presentInCurrentChecklist": true,
+          "resolvedTargetExists": true
+        },
+        {
+          "item": "GATE-03",
+          "old": "../../../AUDIT-FINAL-20261022.md",
+          "new": "../../AUDIT-FINAL-20261022.md",
+          "presentInCurrentChecklist": true,
+          "resolvedTargetExists": true
+        },
+        {
+          "item": "GATE-03",
+          "old": "../../../AUDIT-2-20261022.md",
+          "new": "../../AUDIT-2-20261022.md",
+          "presentInCurrentChecklist": true,
+          "resolvedTargetExists": true
+        }
+      ],
+      "allFiveLinksCorrectedAndResolved": true,
+      "businessChildReportArchived": true,
+      "businessChildReportMatchesScratchBytes": true,
+      "priorSecondPassReportArchived": true,
+      "priorSecondPassArchiveMatchesPreAddendumScratch": true,
+      "coverageCorrectionsRecord": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/coverage-corrections.json",
+      "resolvedFindings": [
+        "COV-01",
+        "COV-02"
+      ],
+      "remainingCoverageTraceabilityBlockers": [],
+      "supersedes": "Original snapshot findings and original first pendingBeforeFinalCoverageCanBeCleared action are now resolved; original snapshot is retained as history.",
+      "currentMasterDecision": "not_yet_validated_blocking_fix_native_and_deployment_pending",
+      "currentMasterSecondPassComplete": false,
+      "nativeContextParentReported": "First five native jobs finished with stale cookie assertions and one precise Chrome guard assertion; test-only revision now being qualified. This child did not inspect CI or rerun any suite.",
+      "finalCoverageCleared": false,
+      "publicOpeningApproved": false,
+      "remainingGate": "Successful native PR/main on final exact corrective1.10.1 source, exact-source publication/deployment and hosted identity/checkpoint receipts remain required before final coverage/readiness decision.",
+      "repoChanges": false,
+      "testsRun": false,
+      "remoteCalls": false,
+      "inputFingerprints": [
+        {
+          "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/checklist.json",
+          "sha256": "37a4f167fc36d6cfde4e29c369632c1272c6621b3b510e1c1b936dbfdcb9c4c0"
+        },
+        {
+          "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/business-crm.json",
+          "sha256": "e477c5b926912f542010a418913eae323f03e9bc41888a7fa5edbb0d5d0fdefe"
+        },
+        {
+          "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/coverage-corrections.json",
+          "sha256": "5d681c966a9f0171292048801b9bea0bb0e7dec50f7f62a54662051ba24519f8"
+        },
+        {
+          "path": "/workspace/scratch/bb431be72395/jessiemessage/docs/verification-proofs/final-public-1100/coverage-second-pass.json",
+          "sha256": "879fbb23d44843d0a1e788116151c37ecdd24392b4f59613b062d5b3a970ac78"
+        }
+      ]
+    }
+  ]
+}

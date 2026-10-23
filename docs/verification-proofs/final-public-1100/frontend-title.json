@@ -1,0 +1,31 @@
+{
+  "type": "targeted_synthetic_dom_reproduction_and_fix",
+  "runtime": "Node v24.19.0",
+  "before": {
+    "lang": "en",
+    "title": "Jessie — Découvrir mon univers",
+    "heading": "My world"
+  },
+  "after": [
+    {
+      "lang": "fr",
+      "title": "Jessie — Découvrir mon univers"
+    },
+    {
+      "lang": "en",
+      "title": "Jessie — Discover my world"
+    },
+    {
+      "lang": "fr",
+      "title": "Jessie — Découvrir mon univers"
+    }
+  ],
+  "repoCodeFixFiles": [
+    "public/public-profile.html",
+    "public/i18n-public-profile.js",
+    "tests/browser/public-profile.browser.mjs"
+  ],
+  "nativeBrowserQualification": "pending_for_new_fix",
+  "networkCalls": 0,
+  "realAccountActions": 0
+}

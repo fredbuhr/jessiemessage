@@ -1,0 +1,206 @@
+{
+  "run": 40004246747,
+  "source": "d6ff12668ed87ac952c06bfee240c58e58afeae9",
+  "tree": "13783822bc0870686e6fd48dfcc62a1e6a51ea2c",
+  "images": [
+    {
+      "width": 1280,
+      "height": 757,
+      "sha256": "e0a7585449ca4ca54f2c238c66c8a83988b3bd93c40e9b96d5e8d5278935f6f7",
+      "identicalToInitialPrBytes": true,
+      "differenceBounds": null,
+      "artifactEntry": "public-1280-en.png",
+      "nativeArtifactId": 12523597897,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/artifacts/12523597897",
+      "localImageArchived": false
+    },
+    {
+      "width": 1280,
+      "height": 757,
+      "sha256": "5538d0bd6058c8686b29025e7b680b16455646af2159144a985ff554de47ce61",
+      "identicalToInitialPrBytes": true,
+      "differenceBounds": null,
+      "artifactEntry": "public-1280-fr.png",
+      "nativeArtifactId": 12523597897,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/artifacts/12523597897",
+      "localImageArchived": false
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "sha256": "f53b017894f8719e7893c2aab1cf8abcd6ecec76293d45112d6cca30ccf7199a",
+      "identicalToInitialPrBytes": true,
+      "differenceBounds": null,
+      "artifactEntry": "public-320-en.png",
+      "nativeArtifactId": 12523597897,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/artifacts/12523597897",
+      "localImageArchived": false
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "sha256": "305400117ebbf8119657da8a35981bf0b1247c0398e96fe77aebec4191c49d64",
+      "identicalToInitialPrBytes": true,
+      "differenceBounds": null,
+      "artifactEntry": "public-320-fr.png",
+      "nativeArtifactId": 12523597897,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/artifacts/12523597897",
+      "localImageArchived": false
+    },
+    {
+      "width": 1280,
+      "height": 757,
+      "sha256": "838c961bb367a1c70d59a5d07933fc19e2b5f64d43415c0a81c9f2262af1b132",
+      "identicalToInitialPrBytes": true,
+      "differenceBounds": null,
+      "artifactEntry": "publication-1280-fr.png",
+      "nativeArtifactId": 12523597897,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/artifacts/12523597897",
+      "localImageArchived": false
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "sha256": "a1a2f2bbf6c10ccf55d5f980a7291048a778ba2fef74baf552b159b849e828df",
+      "identicalToInitialPrBytes": false,
+      "differenceBounds": [
+        316,
+        0,
+        320,
+        822
+      ],
+      "artifactEntry": "publication-320-fr.png",
+      "nativeArtifactId": 12523597897,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/artifacts/12523597897",
+      "localImageArchived": false
+    },
+    {
+      "width": 1280,
+      "height": 757,
+      "sha256": "80a3bad06020c07a0365362f5aa70aaa80cc829cac8ead93bfd266fd691bd6b1",
+      "identicalToInitialPrBytes": false,
+      "differenceBounds": [
+        161,
+        603,
+        185,
+        715
+      ],
+      "artifactEntry": "experience-admin-1280-client-preferences.png",
+      "nativeArtifactId": 12522614498,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/artifacts/12522614498",
+      "localImageArchived": false
+    },
+    {
+      "width": 1280,
+      "height": 757,
+      "sha256": "8646e127c6767e4c824b44c47079d19994f391abf080d259f2d5c2b3cd7ce71e",
+      "identicalToInitialPrBytes": false,
+      "differenceBounds": [
+        21,
+        79,
+        294,
+        733
+      ],
+      "artifactEntry": "experience-admin-1280-profile.png",
+      "nativeArtifactId": 12522614498,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/artifacts/12522614498",
+      "localImageArchived": false
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "sha256": "60f94f39f6bcd0a8480c42a0011224486d704b58f7dc90681ecdd8b04ea827f0",
+      "identicalToInitialPrBytes": true,
+      "differenceBounds": null,
+      "artifactEntry": "experience-admin-320-profile.png",
+      "nativeArtifactId": 12522614498,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/artifacts/12522614498",
+      "localImageArchived": false
+    },
+    {
+      "width": 1280,
+      "height": 757,
+      "sha256": "d08e44aa1798df759ec270c40b3760c6f44c261ad823d131a245665a2e8b832c",
+      "identicalToInitialPrBytes": false,
+      "differenceBounds": [
+        870,
+        183,
+        1231,
+        641
+      ],
+      "artifactEntry": "experience-client-1280-profile.png",
+      "nativeArtifactId": 12522614498,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/artifacts/12522614498",
+      "localImageArchived": false
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "sha256": "f29f800ad2389382e64f54e5015a8cfe212912f1552a57752d3ce88c2f4d0986",
+      "identicalToInitialPrBytes": false,
+      "differenceBounds": [
+        301,
+        80,
+        310,
+        436
+      ],
+      "artifactEntry": "experience-client-320-profile.png",
+      "nativeArtifactId": 12522614498,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/artifacts/12522614498",
+      "localImageArchived": false
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "sha256": "b9a54ad354ab7b7f5aaac6fe292bce6d1264fc45970e870b79d985636f909759",
+      "identicalToInitialPrBytes": true,
+      "differenceBounds": null,
+      "artifactEntry": "experience-public-320-profile.png",
+      "nativeArtifactId": 12522614498,
+      "nativeArtifactUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/artifacts/12522614498",
+      "localImageArchived": false
+    }
+  ],
+  "allTwelveAccountedFor": true,
+  "method": "All12 PNGs byte-compared to initial PR136 images already independently inspected. Five public/page images byte-identical; changed publication320 viewed original and differs only at4px native rightscrollbar. Six revisedHTTPS originals independently inspected byauth_flows; sevenof12 overall byte-identical. BothZIPsha256 matchGitHubartifactdigests.",
+  "blockingVisualDefects": [],
+  "publicTitleEvidence": "Native public-profile test passed including document.titleFR/EN assertions; browser.log.gz. Browser chrome title lies outside PNG.",
+  "galleryEvidence": "New neighbor behavioral test failed originalfullphotoreadiness in thisrun. No dedicated newgalleryfailurePNG/DOMprobe was emitted, so these profile/publication screenshots do not diagnose it.",
+  "limits": [
+    "Static synthetic renderings; no physicaldevice or hiddencontent guarantee.",
+    "FailedCI is not qualified by screenshotreview."
+  ],
+  "nativeArtifacts": [
+    {
+      "id": 12523597897,
+      "name": "public-profile-render",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/artifacts/12523597897",
+      "zipSha256": "sha256:a55b7f40a7be0cbc91229e3752c78b2b10c13bb8f48aa55fa2cbd55c84666cb4",
+      "bytes": 888180,
+      "expiresAt": "2026-10-30T18:38:50Z"
+    },
+    {
+      "id": 12522614498,
+      "name": "experience-https-render",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40004246747/artifacts/12522614498",
+      "zipSha256": "sha256:97913a00dd2a4556eab8940b9771fedeff0a1cdbdb7b0c856eede636876ab20e",
+      "bytes": 527907,
+      "expiresAt": "2026-10-30T18:35:25Z"
+    }
+  ],
+  "storageLimit": "PNG and ZIP files are not committed in this compact archive. Hashes, native artifact links and review remain; GitHub retention expires7days after upload. Scratch originals were preserved.",
+  "independentExperienceReview": {
+    "reviewer": "/root/review1100/auth_flows",
+    "run": 40004246747,
+    "source": "d6ff12668ed87ac952c06bfee240c58e58afeae9",
+    "tree": "13783822bc0870686e6fd48dfcc62a1e6a51ea2c",
+    "method": "All six revised HTTPS PNGs individually opened at original resolution by independent reviewer; compared visually with initial counterparts already inspected.",
+    "blockingVisualDefects": [],
+    "result": "No concrete functional clipping, overlap or horizontal overflow. Foreground content and line wraps remain coherent; bottom edges correspond to scrollable modal viewports.",
+    "limits": [
+      "Static PNGs only; not interactions, offscreen content or browser-tab title.",
+      "No browser, network, test or file edit by independent reviewer."
+    ]
+  },
+  "initialImageReview": "../pr136-initial-40002896036/visual-review.json"
+}

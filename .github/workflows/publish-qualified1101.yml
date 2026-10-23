@@ -1,0 +1,98 @@
+name: Publish qualified JessieMessage 1.10.1
+
+on:
+  push:
+    branches: ["ops/publish-v1.10.1"]
+    paths: [".github/workflows/publish-qualified1101.yml"]
+
+permissions: {}
+
+concurrency:
+  group: publish-jessiemessage-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  operator-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact operator commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Use qualified Node.js 24.22.1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+          package-manager-cache: false
+      - name: Record exact native Node version
+        run: node --version
+      - name: Read public TLS certificate with standard hostname and chain verification
+        run: |
+          python3 - <<'PYCODE'
+          import json, socket, ssl
+          host = 'jessiemessage.com'
+          context = ssl.create_default_context()
+          def text(value):
+              return ''.join(char if ord(char) >= 32 and ord(char) != 127 else '?' for char in str(value))[:512]
+          def name(value):
+              return [[{'attribute': text(attribute), 'value': text(item)} for attribute, item in group[:8]] for group in value[:32]]
+          try:
+              with socket.create_connection((host, 443), timeout=10) as connection:
+                  with context.wrap_socket(connection, server_hostname=host) as tls:
+                      certificate = tls.getpeercert()
+                      print(json.dumps(dict(check='LIVE-05', status='standard_tls_validation_passed', host=host, port=443,
+                          transport='direct_socket_sni_without_http_proxy', hostnameVerified=context.check_hostname,
+                          chainVerified=context.verify_mode == ssl.CERT_REQUIRED, protocol=tls.version(),
+                          subject=name(certificate.get('subject', ())), issuer=name(certificate.get('issuer', ())),
+                          notBefore=text(certificate.get('notBefore', '')), notAfter=text(certificate.get('notAfter', '')))))
+          except Exception as error:
+              print(json.dumps(dict(check='LIVE-05', status='public_tls_not_confirmed', host=host, error=type(error).__name__)))
+              raise SystemExit(1)
+          PYCODE
+      - name: Test isolated release preparation
+        run: python3 ops/test-prepare-release1101.py
+      - name: Test immutable dependency copy and hostile archives
+        run: python3 ops/test-release1101-dependencies.py
+      - name: Verify locked official Nodemailer archive without installation
+        run: |
+          python3 - <<'PYCODE'
+          import hashlib, importlib.util, json
+          from pathlib import Path
+          path = Path('ops/release1101-dependencies.py')
+          spec = importlib.util.spec_from_file_location('dependencies1101_native', path)
+          module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+          content = module.download_archive()
+          files = module.archive_files(content)
+          print(json.dumps(dict(status='locked_official_nodemailer_verified', version=module.VERSION,
+              integrity=module.INTEGRITY, bytes=len(content), archiveSha256=hashlib.sha256(content).hexdigest(),
+              members=len(files), scriptsExecuted=False)))
+          PYCODE
+      - name: Test publication against a simulated API
+        run: python3 ops/test-publish-qualified1101.py
+  publish:
+    needs: operator-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Checkout exact operator commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Use qualified Node.js 24.22.1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+          package-manager-cache: false
+      - name: Publish immutable qualified1101 as latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 ops/publish-qualified1101.py

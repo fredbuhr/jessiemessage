@@ -1,0 +1,261 @@
+{
+  "run": 40002896036,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40002896036",
+  "workflow": ".github/workflows/ci.yml",
+  "event": "pull_request",
+  "branch": "fix/pre-public-1101",
+  "attempt": 1,
+  "source": "0ca0dd2efa3151d5b5f8004d5c67d4ea9e24f584",
+  "tree": "42bf8ed6e9f91b6c289a6b10fe61b2abb93c8da7",
+  "mergeCommit": "3c4dadf9f68ebef94704e23a50a1772c32e64705",
+  "mergeTree": "42bf8ed6e9f91b6c289a6b10fe61b2abb93c8da7",
+  "sourceTreeMatchesMergeTree": true,
+  "status": "completed",
+  "conclusion": "failure",
+  "collectedAtUtc": "2026-10-23T18:32:50.653941+00:00",
+  "jobs": [
+    {
+      "id": 120583311714,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "failure",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40002896036/job/120583311714"
+    },
+    {
+      "id": 120583312044,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "failure",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40002896036/job/120583312044"
+    },
+    {
+      "id": 120583312073,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "failure",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40002896036/job/120583312073"
+    },
+    {
+      "id": 120583312118,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "failure",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40002896036/job/120583312118"
+    },
+    {
+      "id": 120583312327,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "failure",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40002896036/job/120583312327"
+    }
+  ],
+  "logs": [
+    {
+      "name": "verify",
+      "jobId": 120583311714,
+      "bytes": 577374,
+      "sha256": "c0834b5a0d075616ba925d336799042f92dfe04a99dd73c25ae32f50b11ea228",
+      "node": "v24.22.1",
+      "checkedOutMergeCommitPresent": true,
+      "totals": {
+        "tests": 4089,
+        "pass": 4036,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 52,
+        "todo": 0
+      },
+      "localLogArchive": "verify.log.gz",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40002896036/job/120583311714",
+      "logStorage": "gzip archive; sha256/bytes describe original complete decoded UTF-8 log",
+      "compressedSha256": "7ccc03f288021546dc8fcff42702af90763556c0a5efd0e359f721edc246c660",
+      "compressedBytes": 167536,
+      "gzipMtime": 0
+    },
+    {
+      "name": "mariadb1011",
+      "jobId": 120583312044,
+      "bytes": 358499,
+      "sha256": "9d93a61fcab52eb274b1e588893fe839b13625c0bb047ebe77be78d30ab963f9",
+      "node": "v24.22.1",
+      "checkedOutMergeCommitPresent": true,
+      "totals": {
+        "tests": 600,
+        "pass": 598,
+        "fail": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "localLogArchive": "mariadb1011.log.gz",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40002896036/job/120583312044",
+      "logStorage": "gzip archive; sha256/bytes describe original complete decoded UTF-8 log",
+      "compressedSha256": "abc74b0ff665d4e4a9c2d79655a1ccc1e32010f625baa53bfd257a11db50020c",
+      "compressedBytes": 66935,
+      "gzipMtime": 0
+    },
+    {
+      "name": "mariadb114",
+      "jobId": 120583312073,
+      "bytes": 359113,
+      "sha256": "4e5f174c3f2fc51f45794533db2d32f631c0537570162d9156ef7c99104a66c9",
+      "node": "v24.22.1",
+      "checkedOutMergeCommitPresent": true,
+      "totals": {
+        "tests": 600,
+        "pass": 598,
+        "fail": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "localLogArchive": "mariadb114.log.gz",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40002896036/job/120583312073",
+      "logStorage": "gzip archive; sha256/bytes describe original complete decoded UTF-8 log",
+      "compressedSha256": "9af7e1e427730deda6ae0418a7825273138b096d03c22b71809a9b3c474ba897",
+      "compressedBytes": 67888,
+      "gzipMtime": 0
+    },
+    {
+      "name": "https",
+      "jobId": 120583312118,
+      "bytes": 44862,
+      "sha256": "0e647cc15f2383d2dc1eb9f52d009792f81c3e3a3590cb01fe3b9a1373790d8a",
+      "node": "v24.22.1",
+      "checkedOutMergeCommitPresent": true,
+      "totals": {
+        "tests": 11,
+        "pass": 9,
+        "fail": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "localLogArchive": "https.log.gz",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40002896036/job/120583312118",
+      "logStorage": "gzip archive; sha256/bytes describe original complete decoded UTF-8 log",
+      "compressedSha256": "a015d48d31c93d3be54631b3eff262ef08863664ebe5aaaf5edc2d15c0b103c0",
+      "compressedBytes": 11061,
+      "gzipMtime": 0
+    },
+    {
+      "name": "browser",
+      "jobId": 120583312327,
+      "bytes": 56451,
+      "sha256": "1be660b7672c08616dd5870dddec5b34a90830db76fe7a7bab3230063f44e3c2",
+      "node": "v24.22.1",
+      "checkedOutMergeCommitPresent": true,
+      "totals": {
+        "tests": 257,
+        "pass": 256,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "localLogArchive": "browser.log.gz",
+      "nativeJobUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40002896036/job/120583312327",
+      "logStorage": "gzip archive; sha256/bytes describe original complete decoded UTF-8 log",
+      "compressedSha256": "3b975363b899022f7428d7aab9256915d1a08b9a8a9945d653df971bd67d72f8",
+      "compressedBytes": 15294,
+      "gzipMtime": 0
+    }
+  ],
+  "node": "v24.22.1",
+  "qualificationComplete": false,
+  "initialRunDurablyFinished": true,
+  "newCodeDefectEstablished": false,
+  "failures": [
+    {
+      "jobs": [
+        "verify"
+      ],
+      "cause": "Old GET/session expectation requires Set-Cookie; contract F-01 intentionally removed this write.",
+      "file": "tests/primary-transition-runtime.test.mjs",
+      "line": 286,
+      "error": "TypeError: Cannot read properties of undefined (reading 0)"
+    },
+    {
+      "jobs": [
+        "mariadb1011",
+        "mariadb114"
+      ],
+      "cause": "Same obsolete GET/session expectation in dual-origin native SQL test. One subtest and parent reportedfailed in each job.",
+      "file": "tests/device-transition-runtime.integration.test.mjs",
+      "line": 121,
+      "error": "TypeError: Cannot read properties of undefined (reading 0)"
+    },
+    {
+      "jobs": [
+        "https"
+      ],
+      "cause": "Cookie objects compared by strict reference even though fields are equal.",
+      "file": "tests/rehearsal/authentication.rehearsal.mjs",
+      "line": 181,
+      "error": "AssertionError: logout preserves the cookie value so a late response cannot erase a newer login"
+    },
+    {
+      "jobs": [
+        "https"
+      ],
+      "cause": "Old logout expectation requires native cookie absence, while SQL now revokes inert cookie without clearing it.",
+      "file": "tests/rehearsal/messaging.rehearsal.mjs",
+      "line": 254,
+      "error": "AssertionError: true !== false"
+    },
+    {
+      "jobs": [
+        "browser"
+      ],
+      "cause": "Initial preference readiness wait observes enabled search before its section is visible and loading has finished.",
+      "file": "tests/browser/chat-accessibility.browser.mjs",
+      "line": 1598,
+      "error": "WebDriver element clear HTTP400; wait narrowed to visible section, aria-busy=false, enabledsearch."
+    }
+  ],
+  "testOnlyCorrections": {
+    "authorization": "Root explicitly authorized exactlyfive testfiles; no appsource changes, commit, push or rerun by thisagent.",
+    "files": [
+      "tests/primary-transition-runtime.test.mjs",
+      "tests/device-transition-runtime.integration.test.mjs",
+      "tests/rehearsal/authentication.rehearsal.mjs",
+      "tests/rehearsal/messaging.rehearsal.mjs",
+      "tests/browser/chat-accessibility.browser.mjs"
+    ],
+    "localTargetedBefore": {
+      "tests": 1,
+      "fail": 1,
+      "file": "test-alignment-before.tap"
+    },
+    "localTargetedAfter": {
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0,
+      "file": "test-alignment-after.tap"
+    },
+    "localNode": "v24.19.0",
+    "syntaxAllFive": "passed",
+    "diffCheck": "passed",
+    "cookieExpectationInventory": "381 sites scanned. Full intermediate inventory retained only in scratch; no non-existent repository file reference."
+  },
+  "passingNewNativeAssertions": [
+    "real Chrome: late refused and successful responses preserve newer native admin/client cookies",
+    "real Chrome public Jessie profile: public snapshot only, safe text, FR/EN and mobile width; unpublish is unavailable",
+    "Chrome photo neighbors use authorized server order within a millisecond while rejecting a reversed date or the same message"
+  ],
+  "visualReview": "visual-review.json",
+  "limitations": [
+    "InitialCI is failed; no opening qualification. Exact test-only corrective head must pass allfive freshnative jobs.",
+    "No native Chrome/SQL suite was rerun locally; no realuser data, externalmail or live destructiveaction."
+  ],
+  "durableArchive": {
+    "relativeDirectory": "ci/pr136-initial-40002896036",
+    "manifest": "log-archive-manifest.json",
+    "originalLogsPreservedUnchanged": true,
+    "nativeJobs": "jobs-native-links.json",
+    "screenshotsArchivedLocally": false,
+    "artifactMetadata": "artifacts.json"
+  }
+}

@@ -1,0 +1,3616 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-final-business-backend-audit",
+  "recordedAtUtc": "2026-10-23T18:20:52.061671+00:00",
+  "targetOpening": "2026-10-23T22:00:00+02:00",
+  "source": {
+    "active1100Source": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+    "qualified1100Tree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+    "localHeadAtAuditStart": "6dfd1cca8c31fd83181c8754b664912a295eaaef",
+    "localEquivalentAppSource": "ab70dba",
+    "workingTreeNowContainsAuthorizedCorrectiveEdits": true,
+    "doNotAttachOldCIToNewPatch": true,
+    "activeHostedBytesNotRead": true
+  },
+  "status": "implementation_audit_complete_backend_corrections_local_green_new_native_qualification_pending",
+  "outcome": {
+    "newFindings": 2,
+    "P1": 1,
+    "P3Conditional": 1,
+    "confirmedAccidentalBusinessFeatureRemoval": false,
+    "openingDecisionForThisLot": "Do not treat active1.10.0 as cleared while P1 is unresolved; locally corrected code requires its own native qualification and exact-source deployment.",
+    "scope": "Entire principal backend paths for chat/media/profile/preferences and CRM/broadcasts/announcements/tasks/replies, not limited to1.9→1.10 diff.",
+    "noUnqualifiedGuarantee": "Recorded assertions and code review establish their scoped behavior; cannot prove every environment or absence of all bugs."
+  },
+  "checklist": [
+    {
+      "id": "CHAT-01",
+      "check": "Texte et Unicode/émojis, limites et envoi explicite",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "private-chat",
+          "sourcePatterns": [
+            "server/chat/*",
+            "public/chat*"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 1778,
+              "title": "real HTTP private chat, ciphertext, receipts, deletion and live authorization (synthetic disposable database only)",
+              "result": "pass"
+            },
+            {
+              "log": "https.log",
+              "line": 301,
+              "title": "real Chrome + MariaDB: independent client sessions, live text and JPEG, memory draft and exact notification after new login",
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "functionalMatrixId": "emoji",
+          "sourcePatterns": [
+            "public/emoji*",
+            "public/chat.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "browser.log",
+              "line": 232,
+              "title": "Chrome 320px: keyboard emoji panel inserts at the selection without photos or automatic sending, and Escape restores focus",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "CHAT-02",
+      "check": "Historique/pagination ordre stable et chargements concurrents",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "private-chat",
+          "sourcePatterns": [
+            "server/chat/*",
+            "public/chat*"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 1778,
+              "title": "real HTTP private chat, ciphertext, receipts, deletion and live authorization (synthetic disposable database only)",
+              "result": "pass"
+            },
+            {
+              "log": "https.log",
+              "line": 301,
+              "title": "real Chrome + MariaDB: independent client sessions, live text and JPEG, memory draft and exact notification after new login",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "CHAT-03",
+      "check": "Idempotence des envois et reprise explicite après réponse perdue",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "text-draft",
+          "sourcePatterns": [
+            "public/chat-drafts.js",
+            "public/chat.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "browser.log",
+              "line": 273,
+              "title": "Chrome: real same-tab reload restores only the authorized text draft and a changed session purges it",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 219,
+              "title": "Chrome: suspended text and explicit recipient return only after session proof, and another account purges them",
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "functionalMatrixId": "multi-photo",
+          "sourcePatterns": [
+            "public/photo-batch.js",
+            "public/chat.js",
+            "server/media/*",
+            "server/chat/store.mjs"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "browser.log",
+              "line": 278,
+              "title": "Chrome multiple photos preview before one send and retry only a failed item",
+              "result": "pass"
+            },
+            {
+              "log": "https.log",
+              "line": 293,
+              "title": "five real photo drafts survive one lost committed batch acknowledgement without new uploads or duplicate SQL messages",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed.",
+        "Lost ACK is injected after a real SQL commit; no physical radio/OS interruption or media recovery after closing/reloading the page is claimed."
+      ]
+    },
+    {
+      "id": "CHAT-04",
+      "check": "Permissions recalculées au moment de l’écriture/livraison",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "private-chat",
+          "sourcePatterns": [
+            "server/chat/*",
+            "public/chat*"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 1778,
+              "title": "real HTTP private chat, ciphertext, receipts, deletion and live authorization (synthetic disposable database only)",
+              "result": "pass"
+            },
+            {
+              "log": "https.log",
+              "line": 301,
+              "title": "real Chrome + MariaDB: independent client sessions, live text and JPEG, memory draft and exact notification after new login",
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "functionalMatrixId": "photos",
+          "sourcePatterns": [
+            "server/media/*",
+            "public/image-preparation.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 2785,
+              "title": "real HTTP private media uses normalized encrypted files and current delivery authorization (synthetic disposable fixtures only)",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 373,
+              "title": "phone photo preparation really resizes twenty MP, preserves alpha and applies EXIF orientation",
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "functionalMatrixId": "video",
+          "sourcePatterns": [
+            "server/video/*",
+            "public/chat.js",
+            "server/release-features.mjs"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "https.log",
+              "line": 308,
+              "title": "real HTTPS SQL36 runtime: admin-only H264 upload, client refusal, two-role decode/seek, idempotent replay and gallery",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 458,
+              "title": "client video history stays playable but direct picker events cannot create a draft (320px fr)",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "CHAT-05",
+      "check": "Lecture privée Jessie et badges multiappareils",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "read-receipts",
+          "sourcePatterns": [
+            "server/chat/*",
+            "public/chat.js",
+            "public/chat-model.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "browser.log",
+              "line": 228,
+              "title": "Chrome: only Jessie sees a read receipt after a metadata-only poll, with stable focus and French / English labels",
+              "result": "pass"
+            },
+            {
+              "log": "https.log",
+              "line": 294,
+              "title": "real reply controls keep reads pending and synchronize manual handling, reopening and one observed individual reply",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "CHAT-06",
+      "check": "Brouillon texte après rechargement autorisé du même onglet",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "text-draft",
+          "sourcePatterns": [
+            "public/chat-drafts.js",
+            "public/chat.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "browser.log",
+              "line": 273,
+              "title": "Chrome: real same-tab reload restores only the authorized text draft and a changed session purges it",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 219,
+              "title": "Chrome: suspended text and explicit recipient return only after session proof, and another account purges them",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "CHAT-07",
+      "check": "Fichiers/identifiants médias jamais restaurés comme nouveau texte",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "text-draft",
+          "sourcePatterns": [
+            "public/chat-drafts.js",
+            "public/chat.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "browser.log",
+              "line": 273,
+              "title": "Chrome: real same-tab reload restores only the authorized text draft and a changed session purges it",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 219,
+              "title": "Chrome: suspended text and explicit recipient return only after session proof, and another account purges them",
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "functionalMatrixId": "multi-photo",
+          "sourcePatterns": [
+            "public/photo-batch.js",
+            "public/chat.js",
+            "server/media/*",
+            "server/chat/store.mjs"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "browser.log",
+              "line": 278,
+              "title": "Chrome multiple photos preview before one send and retry only a failed item",
+              "result": "pass"
+            },
+            {
+              "log": "https.log",
+              "line": 293,
+              "title": "five real photo drafts survive one lost committed batch acknowledgement without new uploads or duplicate SQL messages",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed.",
+        "Lost ACK is injected after a real SQL commit; no physical radio/OS interruption or media recovery after closing/reloading the page is claimed."
+      ]
+    },
+    {
+      "id": "CHAT-08",
+      "check": "Session remplacée: purge des réponses et brouillons anciens",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "text-draft",
+          "sourcePatterns": [
+            "public/chat-drafts.js",
+            "public/chat.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "browser.log",
+              "line": 273,
+              "title": "Chrome: real same-tab reload restores only the authorized text draft and a changed session purges it",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 219,
+              "title": "Chrome: suspended text and explicit recipient return only after session proof, and another account purges them",
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "functionalMatrixId": "resume-profile",
+          "sourcePatterns": [
+            "public/preferences.js",
+            "public/profile.js",
+            "public/chat.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "browser.log",
+              "line": 280,
+              "title": "Chrome 320px: profile preference draft resumes after same-owner verification and is discarded for a replaced session",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 408,
+              "title": "real Chrome preferences: temporary hiding retains unsaved choices and search without an automatic write",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 409,
+              "title": "real Chrome preferences: hiding during an uncertain save keeps the draft and never retries that save",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 410,
+              "title": "real Chrome preferences: an initial load interrupted by temporary hiding resumes by GET only",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed.",
+        "Behavior intentionally changes legacy hide-discard assertion to satisfy reported bug. In-memory same-page recovery only; page reload/closure is not recovered. Physical application switching/OS eviction unverified."
+      ]
+    },
+    {
+      "id": "CHAT-09",
+      "check": "Suspension/retour et interruptions réseau sans écriture automatique",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "resume-profile",
+          "sourcePatterns": [
+            "public/preferences.js",
+            "public/profile.js",
+            "public/chat.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "browser.log",
+              "line": 280,
+              "title": "Chrome 320px: profile preference draft resumes after same-owner verification and is discarded for a replaced session",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 408,
+              "title": "real Chrome preferences: temporary hiding retains unsaved choices and search without an automatic write",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 409,
+              "title": "real Chrome preferences: hiding during an uncertain save keeps the draft and never retries that save",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 410,
+              "title": "real Chrome preferences: an initial load interrupted by temporary hiding resumes by GET only",
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "functionalMatrixId": "text-draft",
+          "sourcePatterns": [
+            "public/chat-drafts.js",
+            "public/chat.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "browser.log",
+              "line": 273,
+              "title": "Chrome: real same-tab reload restores only the authorized text draft and a changed session purges it",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 219,
+              "title": "Chrome: suspended text and explicit recipient return only after session proof, and another account purges them",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Behavior intentionally changes legacy hide-discard assertion to satisfy reported bug. In-memory same-page recovery only; page reload/closure is not recovered. Physical application switching/OS eviction unverified.",
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "CHAT-10",
+      "check": "Ciblage notification et retour au message après authentification",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "notifications",
+          "sourcePatterns": [
+            "server/notifications/*",
+            "public/notifications*",
+            "public/notification-link.js",
+            "public/sw.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 3190,
+              "title": "real MariaDB private notification transactions (synthetic disposable database only)",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 244,
+              "title": "Chrome: a notification reaches its exact old message for each role, directly or after required login",
+              "result": "pass"
+            },
+            {
+              "log": "https.log",
+              "line": 301,
+              "title": "real Chrome + MariaDB: independent client sessions, live text and JPEG, memory draft and exact notification after new login",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Synthetic Chrome/native SQL assertions do not prove real Push delivery by OS/browser while backgrounded or on an actual phone."
+      ]
+    },
+    {
+      "id": "CHAT-11",
+      "check": "Suppression message et objets chiffrés: isolation des pairs",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "private-chat",
+          "sourcePatterns": [
+            "server/chat/*",
+            "public/chat*"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 1778,
+              "title": "real HTTP private chat, ciphertext, receipts, deletion and live authorization (synthetic disposable database only)",
+              "result": "pass"
+            },
+            {
+              "log": "https.log",
+              "line": 301,
+              "title": "real Chrome + MariaDB: independent client sessions, live text and JPEG, memory draft and exact notification after new login",
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "functionalMatrixId": "closures",
+          "sourcePatterns": [
+            "server/data/*",
+            "server/backup/*closure*",
+            "server/video/erasure*",
+            "public/closures*"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 845,
+              "title": "durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)",
+              "result": "pass"
+            },
+            {
+              "log": "mariadb114.log",
+              "line": 2492,
+              "title": "local closures drain the real managed process and preserve durable SQL/photo absence without a PC (disposable MariaDB only)",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 192,
+              "title": "real Chrome: closure preview, separate confirmation and status at mobile and desktop widths in FR/EN",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed.",
+        "Synthetic disposable fixtures only; no real-account deletion or hosted restore performed."
+      ]
+    },
+    {
+      "id": "CHAT-12",
+      "check": "Sessions simultanées et conflits sans écrasement silencieux",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "private-preferences",
+          "sourcePatterns": [
+            "server/preferences/*",
+            "public/preferences*",
+            "server/experience/*"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 3264,
+              "title": "real MariaDB preferences: owner-only encrypted selections, cross-device CAS, authorised peer view and safe clearing",
+              "result": "pass"
+            },
+            {
+              "log": "https.log",
+              "line": 291,
+              "title": "own choices are optional, bilingual-searchable, encrypted and synchronized; other clients cannot read them",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 407,
+              "title": "real Chrome preferences: concurrent device changes preserve a draft until explicit resolution; admin peer view is read-only",
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "functionalMatrixId": "profile-avatar",
+          "sourcePatterns": [
+            "server/profile/*",
+            "server/chat/profile-avatar.mjs",
+            "public/profile.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "https.log",
+              "line": 300,
+              "title": "real HTTPS/SQL profiles: both roles persist names and avatars, foreign reads fail and removed URLs cannot resurrect",
+              "result": "pass"
+            },
+            {
+              "log": "mariadb1011.log",
+              "line": 3417,
+              "title": "real MariaDB own profiles, bounded private avatars and simultaneous updates (synthetic disposable database only)",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "MED-01",
+      "check": "Photos: formats/magic bytes, normalisation et métadonnées",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "photos",
+          "sourcePatterns": [
+            "server/media/*",
+            "public/image-preparation.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 2785,
+              "title": "real HTTP private media uses normalized encrypted files and current delivery authorization (synthetic disposable fixtures only)",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 373,
+              "title": "phone photo preparation really resizes twenty MP, preserves alpha and applies EXIF orientation",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "MED-02",
+      "check": "Images très grandes/bombes, mémoire et décodage bornés",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "photos",
+          "sourcePatterns": [
+            "server/media/*",
+            "public/image-preparation.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 2785,
+              "title": "real HTTP private media uses normalized encrypted files and current delivery authorization (synthetic disposable fixtures only)",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 373,
+              "title": "phone photo preparation really resizes twenty MP, preserves alpha and applies EXIF orientation",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "MED-03",
+      "check": "Transfert privé, chiffrement, réservations et échecs avant commit",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "photos",
+          "sourcePatterns": [
+            "server/media/*",
+            "public/image-preparation.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 2785,
+              "title": "real HTTP private media uses normalized encrypted files and current delivery authorization (synthetic disposable fixtures only)",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 373,
+              "title": "phone photo preparation really resizes twenty MP, preserves alpha and applies EXIF orientation",
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "functionalMatrixId": "video",
+          "sourcePatterns": [
+            "server/video/*",
+            "public/chat.js",
+            "server/release-features.mjs"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "https.log",
+              "line": 308,
+              "title": "real HTTPS SQL36 runtime: admin-only H264 upload, client refusal, two-role decode/seek, idempotent replay and gallery",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 458,
+              "title": "client video history stays playable but direct picker events cannot create a draft (320px fr)",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "MED-04",
+      "check": "Vidéo admin seule, refus de création par client",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "video",
+          "sourcePatterns": [
+            "server/video/*",
+            "public/chat.js",
+            "server/release-features.mjs"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "https.log",
+              "line": 308,
+              "title": "real HTTPS SQL36 runtime: admin-only H264 upload, client refusal, two-role decode/seek, idempotent replay and gallery",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 458,
+              "title": "client video history stays playable but direct picker events cannot create a draft (320px fr)",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "MED-05",
+      "check": "Vidéo100MiB, signatures/codecs et capacités réelles",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "video",
+          "sourcePatterns": [
+            "server/video/*",
+            "public/chat.js",
+            "server/release-features.mjs"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "https.log",
+              "line": 308,
+              "title": "real HTTPS SQL36 runtime: admin-only H264 upload, client refusal, two-role decode/seek, idempotent replay and gallery",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 458,
+              "title": "client video history stays playable but direct picker events cannot create a draft (320px fr)",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "MED-06",
+      "check": "Lecture vidéo Range/seek et authentification avant livraison",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "video",
+          "sourcePatterns": [
+            "server/video/*",
+            "public/chat.js",
+            "server/release-features.mjs"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "https.log",
+              "line": 308,
+              "title": "real HTTPS SQL36 runtime: admin-only H264 upload, client refusal, two-role decode/seek, idempotent replay and gallery",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 458,
+              "title": "client video history stays playable but direct picker events cannot create a draft (320px fr)",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "MED-07",
+      "check": "Aperçu photo/vidéo et action Envoyer explicite",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "multi-photo",
+          "sourcePatterns": [
+            "public/photo-batch.js",
+            "public/chat.js",
+            "server/media/*",
+            "server/chat/store.mjs"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "browser.log",
+              "line": 278,
+              "title": "Chrome multiple photos preview before one send and retry only a failed item",
+              "result": "pass"
+            },
+            {
+              "log": "https.log",
+              "line": 293,
+              "title": "five real photo drafts survive one lost committed batch acknowledgement without new uploads or duplicate SQL messages",
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "functionalMatrixId": "video",
+          "sourcePatterns": [
+            "server/video/*",
+            "public/chat.js",
+            "server/release-features.mjs"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "https.log",
+              "line": 308,
+              "title": "real HTTPS SQL36 runtime: admin-only H264 upload, client refusal, two-role decode/seek, idempotent replay and gallery",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 458,
+              "title": "client video history stays playable but direct picker events cannot create a draft (320px fr)",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Lost ACK is injected after a real SQL commit; no physical radio/OS interruption or media recovery after closing/reloading the page is claimed.",
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "MED-08",
+      "check": "Photos multiples: limite10, ordre et reprise des seuls échecs",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "multi-photo",
+          "sourcePatterns": [
+            "public/photo-batch.js",
+            "public/chat.js",
+            "server/media/*",
+            "server/chat/store.mjs"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "browser.log",
+              "line": 278,
+              "title": "Chrome multiple photos preview before one send and retry only a failed item",
+              "result": "pass"
+            },
+            {
+              "log": "https.log",
+              "line": 293,
+              "title": "five real photo drafts survive one lost committed batch acknowledgement without new uploads or duplicate SQL messages",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Lost ACK is injected after a real SQL commit; no physical radio/OS interruption or media recovery after closing/reloading the page is claimed."
+      ]
+    },
+    {
+      "id": "MED-09",
+      "check": "Galerie historique/date/message et média ancien non chargé",
+      "status": "P3_conditional_backend_fix_local_green_frontend_and_native_pending",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "gallery",
+          "sourcePatterns": [
+            "public/chat.js",
+            "public/chat.css",
+            "public/chat-model.js",
+            "server/media/*"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "browser.log",
+              "line": 277,
+              "title": "Chrome photo viewer crosses unloaded history, preserves scroll and finds an old month/message",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 279,
+              "title": "Chrome photo viewer keeps native pinch zoom and unrestricted pan permission while zoomed",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Native Chrome viewport/touch assertions; physical Safari/Android and an alternate-timezone/DST gallery trial remain unacquired."
+      ],
+      "findingIds": [
+        "BUS-GAL-01",
+        "F-03"
+      ],
+      "newEvidence": [
+        "gallery-microsecond-repro.json",
+        "gallery-before-fix.log",
+        "gallery-after-fix.log",
+        "gallery-http-before-fix.log",
+        "gallery-http-after-fix.log"
+      ],
+      "remaining": "SQL and HTTP corrected; native store and real HTTP/SQL microsecond cases added but not run locally. Frontend neighbor validation/test is owned by preferences_draft; corrective full source needs native qualification."
+    },
+    {
+      "id": "MED-10",
+      "check": "Budgets lecture/export/ZIP distincts et données multi-clients isolées",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "client-export",
+          "sourcePatterns": [
+            "server/chat/*export*",
+            "server/chat/zip-stream.mjs",
+            "server/data/export.mjs",
+            "public/conversation-download.js",
+            "public/private-archive.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 3990,
+              "title": "real HTTP conversation ZIP streams isolate video deliveries and authenticate GCM before a valid ZIP footer",
+              "result": "pass"
+            },
+            {
+              "log": "mariadb114.log",
+              "line": 4029,
+              "title": "real read-only MariaDB client video exports stream authenticated files without changing SQL or source capacity",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "MED-11",
+      "check": "Quotas stockage communs compatibles sauvegarde/restauration",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "photos",
+          "sourcePatterns": [
+            "server/media/*",
+            "public/image-preparation.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 2785,
+              "title": "real HTTP private media uses normalized encrypted files and current delivery authorization (synthetic disposable fixtures only)",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 373,
+              "title": "phone photo preparation really resizes twenty MP, preserves alpha and applies EXIF orientation",
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "functionalMatrixId": "video",
+          "sourcePatterns": [
+            "server/video/*",
+            "public/chat.js",
+            "server/release-features.mjs"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "https.log",
+              "line": 308,
+              "title": "real HTTPS SQL36 runtime: admin-only H264 upload, client refusal, two-role decode/seek, idempotent replay and gallery",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 458,
+              "title": "client video history stays playable but direct picker events cannot create a draft (320px fr)",
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "functionalMatrixId": "manual-backup",
+          "sourcePatterns": [
+            "server/backup/*",
+            "public/manual-backups*",
+            "public/backups*"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 1295,
+              "title": "offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only)",
+              "result": "pass"
+            },
+            {
+              "log": "mariadb114.log",
+              "line": 3864,
+              "title": "native SQL36 video backup captures two encrypted roots, resumes a separate clone and preserves old closure receipts",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 381,
+              "title": "real Chrome: manual backup creation and encrypted download are explicit, translated and keyboard accessible at three widths",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed.",
+        "No new hosted backup/restore test: user deferred it. New optional public snapshot is outside historical backup manifest and can be republished; this documented new-feature limit removes no inherited backup item."
+      ]
+    },
+    {
+      "id": "MED-12",
+      "check": "Objets orphelins/refusés: nettoyage et protections de référence",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "photos",
+          "sourcePatterns": [
+            "server/media/*",
+            "public/image-preparation.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 2785,
+              "title": "real HTTP private media uses normalized encrypted files and current delivery authorization (synthetic disposable fixtures only)",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 373,
+              "title": "phone photo preparation really resizes twenty MP, preserves alpha and applies EXIF orientation",
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "functionalMatrixId": "closures",
+          "sourcePatterns": [
+            "server/data/*",
+            "server/backup/*closure*",
+            "server/video/erasure*",
+            "public/closures*"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 845,
+              "title": "durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only)",
+              "result": "pass"
+            },
+            {
+              "log": "mariadb114.log",
+              "line": 2492,
+              "title": "local closures drain the real managed process and preserve durable SQL/photo absence without a PC (disposable MariaDB only)",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 192,
+              "title": "real Chrome: closure preview, separate confirmation and status at mobile and desktop widths in FR/EN",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed.",
+        "Synthetic disposable fixtures only; no real-account deletion or hosted restore performed."
+      ]
+    },
+    {
+      "id": "MED-13",
+      "check": "Médias expirés/supprimés/révoqués non ressuscités",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "photos",
+          "sourcePatterns": [
+            "server/media/*",
+            "public/image-preparation.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 2785,
+              "title": "real HTTP private media uses normalized encrypted files and current delivery authorization (synthetic disposable fixtures only)",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 373,
+              "title": "phone photo preparation really resizes twenty MP, preserves alpha and applies EXIF orientation",
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "functionalMatrixId": "video",
+          "sourcePatterns": [
+            "server/video/*",
+            "public/chat.js",
+            "server/release-features.mjs"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "https.log",
+              "line": 308,
+              "title": "real HTTPS SQL36 runtime: admin-only H264 upload, client refusal, two-role decode/seek, idempotent replay and gallery",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 458,
+              "title": "client video history stays playable but direct picker events cannot create a draft (320px fr)",
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "functionalMatrixId": "profile-avatar",
+          "sourcePatterns": [
+            "server/profile/*",
+            "server/chat/profile-avatar.mjs",
+            "public/profile.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "https.log",
+              "line": 300,
+              "title": "real HTTPS/SQL profiles: both roles persist names and avatars, foreign reads fail and removed URLs cannot resurrect",
+              "result": "pass"
+            },
+            {
+              "log": "mariadb1011.log",
+              "line": 3417,
+              "title": "real MariaDB own profiles, bounded private avatars and simultaneous updates (synthetic disposable database only)",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "MED-14",
+      "check": "Limites natives codecs/mobiles et lecture réelle non présumée",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "video",
+          "sourcePatterns": [
+            "server/video/*",
+            "public/chat.js",
+            "server/release-features.mjs"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "https.log",
+              "line": 308,
+              "title": "real HTTPS SQL36 runtime: admin-only H264 upload, client refusal, two-role decode/seek, idempotent replay and gallery",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 458,
+              "title": "client video history stays playable but direct picker events cannot create a draft (320px fr)",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "BUS-01",
+      "check": "Fiches clients, notes/surnoms/chiffrement et conflits",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "childReport": "business-crm.json",
+          "childChecklistId": "BUS-CRM-01",
+          "sourceFiles": [
+            "server/crm/http.mjs",
+            "server/crm/service.mjs",
+            "server/crm/store.mjs",
+            "server/chat/store.mjs"
+          ],
+          "nativeAssertions": [
+            {
+              "title": "labels and profiles require the current administrator session, MFA and assignment",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 2058,
+                  "successLine": "2026-10-23T17:04:49.5205404Z     ok 2 - labels and profiles require the current administrator session, MFA and assignment"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 2060,
+                  "successLine": "2026-10-23T17:06:12.9980340Z     ok 2 - labels and profiles require the current administrator session, MFA and assignment"
+                }
+              ]
+            },
+            {
+              "title": "shared chat and client responses contain no administrator-only CRM data",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 2003,
+                  "successLine": "2026-10-23T17:04:48.7854942Z     ok 8 - shared chat and client responses contain no administrator-only CRM data"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 2005,
+                  "successLine": "2026-10-23T17:06:11.8611997Z     ok 8 - shared chat and client responses contain no administrator-only CRM data"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "childReport": "business-crm.json",
+          "childChecklistId": "BUS-CRM-03",
+          "sourceFiles": [
+            "server/crm/service.mjs",
+            "server/crm/store.mjs",
+            "server/crm/crypto.mjs"
+          ],
+          "nativeAssertions": [
+            {
+              "title": "two concurrent tabs cannot silently overwrite a profile or its encrypted notes",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 2100,
+                  "successLine": "2026-10-23T17:04:49.7836666Z     ok 9 - two concurrent tabs cannot silently overwrite a profile or its encrypted notes"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 2102,
+                  "successLine": "2026-10-23T17:06:13.5269026Z     ok 9 - two concurrent tabs cannot silently overwrite a profile or its encrypted notes"
+                }
+              ]
+            },
+            {
+              "title": "a failed membership insert rolls back profile, revision and previous bindings",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 2130,
+                  "successLine": "2026-10-23T17:04:49.8804006Z     ok 14 - a failed membership insert rolls back profile, revision and previous bindings"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 2132,
+                  "successLine": "2026-10-23T17:06:13.6954318Z     ok 14 - a failed membership insert rolls back profile, revision and previous bindings"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "limits": []
+    },
+    {
+      "id": "BUS-02",
+      "check": "Tags/groupes privés, filtres et recherche clients",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "childReport": "business-crm.json",
+          "childChecklistId": "BUS-CRM-02",
+          "sourceFiles": [
+            "server/crm/validation.mjs",
+            "server/crm/store.mjs",
+            "server/crm/crypto.mjs"
+          ],
+          "nativeAssertions": [
+            {
+              "title": "concurrent normalized-name creation deduplicates privately and tag/group names remain distinct",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 2064,
+                  "successLine": "2026-10-23T17:04:49.5398021Z     ok 3 - concurrent normalized-name creation deduplicates privately and tag/group names remain distinct"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 2066,
+                  "successLine": "2026-10-23T17:06:13.0281398Z     ok 3 - concurrent normalized-name creation deduplicates privately and tag/group names remain distinct"
+                }
+              ]
+            },
+            {
+              "title": "label deletion waiting for a profile save uses the current SQL authorization time and preserves encrypted notes",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 2112,
+                  "successLine": "2026-10-23T17:04:49.8397237Z     ok 11 - label deletion waiting for a profile save uses the current SQL authorization time and preserves encrypted notes"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 2114,
+                  "successLine": "2026-10-23T17:06:13.6187943Z     ok 11 - label deletion waiting for a profile save uses the current SQL authorization time and preserves encrypted notes"
+                }
+              ]
+            },
+            {
+              "title": "profile or affected-profile overflow aborts the whole mutation",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 2124,
+                  "successLine": "2026-10-23T17:04:49.8649367Z     ok 13 - profile or affected-profile overflow aborts the whole mutation"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 2126,
+                  "successLine": "2026-10-23T17:06:13.6685211Z     ok 13 - profile or affected-profile overflow aborts the whole mutation"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "childReport": "business-crm.json",
+          "childChecklistId": "BUS-CRM-04",
+          "sourceFiles": [
+            "server/crm/store.mjs",
+            "server/crm/validation.mjs"
+          ],
+          "nativeAssertions": [
+            {
+              "title": "inbox searches pseudonym, private alias and email literally without exposing notes or email",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 2136,
+                  "successLine": "2026-10-23T17:04:49.9057333Z     ok 15 - inbox searches pseudonym, private alias and email literally without exposing notes or email"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 2138,
+                  "successLine": "2026-10-23T17:06:13.7396891Z     ok 15 - inbox searches pseudonym, private alias and email literally without exposing notes or email"
+                }
+              ]
+            },
+            {
+              "title": "tag/group filters combine with AND and reject wrong-kind or foreign filter IDs",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 2142,
+                  "successLine": "2026-10-23T17:04:49.9345406Z     ok 16 - tag/group filters combine with AND and reject wrong-kind or foreign filter IDs"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 2144,
+                  "successLine": "2026-10-23T17:06:13.7918790Z     ok 16 - tag/group filters combine with AND and reject wrong-kind or foreign filter IDs"
+                }
+              ]
+            },
+            {
+              "title": "live expiry/revocation filters preserve administrative history editing without granting message send",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 2154,
+                  "successLine": "2026-10-23T17:04:50.0254613Z     ok 18 - live expiry/revocation filters preserve administrative history editing without granting message send"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 2156,
+                  "successLine": "2026-10-23T17:06:13.9659460Z     ok 18 - live expiry/revocation filters preserve administrative history editing without granting message send"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "childReport": "business-crm.json",
+          "childChecklistId": "BUS-CRM-05",
+          "sourceFiles": [
+            "server/crm/store.mjs",
+            "server/crm/service.mjs",
+            "server/crm/http.mjs"
+          ],
+          "nativeAssertions": [
+            {
+              "title": "contact keyset pages are stable, assigned-only and carry batched labels without sensitive projections",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 2160,
+                  "successLine": "2026-10-23T17:04:50.0604649Z     ok 19 - contact keyset pages are stable, assigned-only and carry batched labels without sensitive projections"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 2162,
+                  "successLine": "2026-10-23T17:06:14.0286387Z     ok 19 - contact keyset pages are stable, assigned-only and carry batched labels without sensitive projections"
+                }
+              ]
+            },
+            {
+              "title": "real Chrome: shared administrator CRM drafts, conflicts and paused label requests",
+              "expectedJobs": [
+                "browser"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "browser",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log",
+                  "line": 288,
+                  "successLine": "2026-10-23T17:07:41.5515607Z ✔ real Chrome: shared administrator CRM drafts, conflicts and paused label requests (21091.851259ms)"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "limits": []
+    },
+    {
+      "id": "BUS-03",
+      "check": "Diffusions tous/résultats/sélection, nombre final confirmé",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "childReport": "business-crm.json",
+          "childChecklistId": "BUS-DIFF-01",
+          "sourceFiles": [
+            "server/broadcast/audience.mjs",
+            "server/broadcast/crypto.mjs",
+            "server/broadcast/service.mjs",
+            "server/broadcast/store.mjs"
+          ],
+          "nativeAssertions": [
+            {
+              "title": "a changed audience after preview cannot silently create a narrower or broader campaign",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 1500,
+                  "successLine": "2026-10-23T17:03:47.5003064Z     ok 2 - a changed audience after preview cannot silently create a narrower or broader campaign"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 1502,
+                  "successLine": "2026-10-23T17:04:13.0570931Z     ok 2 - a changed audience after preview cannot silently create a narrower or broader campaign"
+                }
+              ]
+            },
+            {
+              "title": "capture page two failure rolls back all rows and the same request can then commit",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 1506,
+                  "successLine": "2026-10-23T17:03:47.7428492Z     ok 3 - capture page two failure rolls back all rows and the same request can then commit"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 1508,
+                  "successLine": "2026-10-23T17:04:13.4781114Z     ok 3 - capture page two failure rolls back all rows and the same request can then commit"
+                }
+              ]
+            },
+            {
+              "title": "a lost confirmation retry after token expiry returns the frozen campaign and compatibility can inspect it",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 1513,
+                  "successLine": "2026-10-23T17:03:47.9341819Z     ok 4 - a lost confirmation retry after token expiry returns the frozen campaign and compatibility can inspect it"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 1515,
+                  "successLine": "2026-10-23T17:04:13.8723879Z     ok 4 - a lost confirmation retry after token expiry returns the frozen campaign and compatibility can inspect it"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "limits": []
+    },
+    {
+      "id": "BUS-04",
+      "check": "Livraisons individuelles, audience privée et quotas",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "childReport": "business-crm.json",
+          "childChecklistId": "BUS-DIFF-03",
+          "sourceFiles": [
+            "server/broadcast/store.mjs",
+            "server/broadcast/worker.mjs",
+            "server/broadcast/service.mjs",
+            "server/broadcast/http.mjs"
+          ],
+          "nativeAssertions": [
+            {
+              "title": "current client gates, assignment, closed conversation and seven-day expiry are rechecked",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 1651,
+                  "successLine": "2026-10-23T17:04:07.3619740Z     ok 20 - current client gates, assignment, closed conversation and seven-day expiry are rechecked"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 1653,
+                  "successLine": "2026-10-23T17:04:54.6536366Z     ok 20 - current client gates, assignment, closed conversation and seven-day expiry are rechecked"
+                }
+              ]
+            },
+            {
+              "title": "cancellation invalidates outstanding leases and preserves already delivered messages",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 1657,
+                  "successLine": "2026-10-23T17:04:07.3811328Z     ok 21 - cancellation invalidates outstanding leases and preserves already delivered messages"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 1659,
+                  "successLine": "2026-10-23T17:04:54.6951329Z     ok 21 - cancellation invalidates outstanding leases and preserves already delivered messages"
+                }
+              ]
+            },
+            {
+              "title": "media ownership, deletion, repeat acknowledgement and disabled media are enforced again at delivery",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 1669,
+                  "successLine": "2026-10-23T17:04:07.4559905Z     ok 23 - media ownership, deletion, repeat acknowledgement and disabled media are enforced again at delivery"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 1671,
+                  "successLine": "2026-10-23T17:04:54.8443349Z     ok 23 - media ownership, deletion, repeat acknowledgement and disabled media are enforced again at delivery"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "childReport": "business-crm.json",
+          "childChecklistId": "BUS-DIFF-04",
+          "sourceFiles": [
+            "server/broadcast/http.mjs",
+            "server/broadcast/service.mjs",
+            "server/broadcast/store.mjs",
+            "server/broadcast/worker.mjs"
+          ],
+          "nativeAssertions": [
+            {
+              "title": "the worker creates separate ordinary chat messages without exposing the audience or campaign metadata",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 1439,
+                  "successLine": "2026-10-23T17:03:46.1637399Z     ok 6 - the worker creates separate ordinary chat messages without exposing the audience or campaign metadata"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 1441,
+                  "successLine": "2026-10-23T17:04:10.8348620Z     ok 6 - the worker creates separate ordinary chat messages without exposing the audience or campaign metadata"
+                }
+              ]
+            },
+            {
+              "title": "preview counts 2,500 while returning at most 50, filters select 175, and compatibility mode rejects new creation",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 1494,
+                  "successLine": "2026-10-23T17:03:47.3033988Z     ok 1 - preview counts 2,500 while returning at most 50, filters select 175, and compatibility mode rejects new creation"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 1496,
+                  "successLine": "2026-10-23T17:04:12.7643071Z     ok 1 - preview counts 2,500 while returning at most 50, filters select 175, and compatibility mode rejects new creation"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "limits": []
+    },
+    {
+      "id": "BUS-05",
+      "check": "Diffusions: reprise après fond/session et déduplication",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "childReport": "business-crm.json",
+          "childChecklistId": "BUS-DIFF-02",
+          "sourceFiles": [
+            "server/broadcast/store.mjs",
+            "server/broadcast/worker.mjs",
+            "server/broadcast/crypto.mjs"
+          ],
+          "nativeAssertions": [
+            {
+              "title": "concurrent workers claim once and atomic delivery creates one ordinary message and event",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 1573,
+                  "successLine": "2026-10-23T17:04:07.1536709Z     ok 7 - concurrent workers claim once and atomic delivery creates one ordinary message and event"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 1575,
+                  "successLine": "2026-10-23T17:04:54.2395697Z     ok 7 - concurrent workers claim once and atomic delivery creates one ordinary message and event"
+                }
+              ]
+            },
+            {
+              "title": "an expiry reached inside the ordinary append rolls back message, event and recipient together",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 1639,
+                  "successLine": "2026-10-23T17:04:07.2894523Z     ok 18 - an expiry reached inside the ordinary append rolls back message, event and recipient together"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 1641,
+                  "successLine": "2026-10-23T17:04:54.5103954Z     ok 18 - an expiry reached inside the ordinary append rolls back message, event and recipient together"
+                }
+              ]
+            },
+            {
+              "title": "real MariaDB: 2,500-client audience is bounded, atomic, retryable and resumes without duplicate messages",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 1530,
+                  "successLine": "2026-10-23T17:04:06.6546781Z ok 12 - real MariaDB: 2,500-client audience is bounded, atomic, retryable and resumes without duplicate messages"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 1532,
+                  "successLine": "2026-10-23T17:04:53.4323331Z ok 12 - real MariaDB: 2,500-client audience is bounded, atomic, retryable and resumes without duplicate messages"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "limits": []
+    },
+    {
+      "id": "BUS-06",
+      "check": "Annonces: dates, fuseaux, navigation et brouillons",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "childReport": "business-crm.json",
+          "childChecklistId": "BUS-ANN-01",
+          "sourceFiles": [
+            "server/announcements/service.mjs",
+            "server/announcements/store.mjs",
+            "server/announcements/validation.mjs",
+            "server/announcements/http.mjs",
+            "server/announcements/crypto.mjs"
+          ],
+          "nativeAssertions": [
+            {
+              "title": "the persisted banner appears only in its time window and never crosses the owner",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 944,
+                  "successLine": "2026-10-23T17:03:29.7785170Z     ok 2 - the persisted banner appears only in its time window and never crosses the owner"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 946,
+                  "successLine": "2026-10-23T17:03:44.3145547Z     ok 2 - the persisted banner appears only in its time window and never crosses the owner"
+                }
+              ]
+            },
+            {
+              "title": "access is revalidated and altered encrypted announcements are refused",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 986,
+                  "successLine": "2026-10-23T17:03:30.0171691Z     ok 9 - access is revalidated and altered encrypted announcements are refused"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 988,
+                  "successLine": "2026-10-23T17:03:44.7840499Z     ok 9 - access is revalidated and altered encrypted announcements are refused"
+                }
+              ]
+            },
+            {
+              "title": "Chrome mobile FR/EN: schedule, review the complete audience and publish one announcement without overflow",
+              "expectedJobs": [
+                "browser"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "browser",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log",
+                  "line": 199,
+                  "successLine": "2026-10-23T17:03:27.7097078Z ✔ Chrome mobile FR/EN: schedule, review the complete audience and publish one announcement without overflow (26062.392765ms)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "childReport": "business-crm.json",
+          "childChecklistId": "BUS-ANN-02",
+          "sourceFiles": [
+            "server/announcements/store.mjs",
+            "server/broadcast/store.mjs"
+          ],
+          "nativeAssertions": [
+            {
+              "title": "simultaneous devices serialize one revision and stale requests cannot replace it",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 950,
+                  "successLine": "2026-10-23T17:03:29.7908926Z     ok 3 - simultaneous devices serialize one revision and stale requests cannot replace it"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 952,
+                  "successLine": "2026-10-23T17:03:44.3372327Z     ok 3 - simultaneous devices serialize one revision and stale requests cannot replace it"
+                }
+              ]
+            },
+            {
+              "title": "a failed recipient insertion rolls back both announcement and optional campaign",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 956,
+                  "successLine": "2026-10-23T17:03:29.8159026Z     ok 4 - a failed recipient insertion rolls back both announcement and optional campaign"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 958,
+                  "successLine": "2026-10-23T17:03:44.3855804Z     ok 4 - a failed recipient insertion rolls back both announcement and optional campaign"
+                }
+              ]
+            },
+            {
+              "title": "replacement rolls back alert cancellation on failure and removal skips untransferred alerts only",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 968,
+                  "successLine": "2026-10-23T17:03:29.9140678Z     ok 6 - replacement rolls back alert cancellation on failure and removal skips untransferred alerts only"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 970,
+                  "successLine": "2026-10-23T17:03:44.5837876Z     ok 6 - replacement rolls back alert cancellation on failure and removal skips untransferred alerts only"
+                }
+              ]
+            },
+            {
+              "title": "a restart after expiry sends no obsolete message or alert",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 974,
+                  "successLine": "2026-10-23T17:03:29.9373269Z     ok 7 - a restart after expiry sends no obsolete message or alert"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 976,
+                  "successLine": "2026-10-23T17:03:44.6315084Z     ok 7 - a restart after expiry sends no obsolete message or alert"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "limits": []
+    },
+    {
+      "id": "BUS-07",
+      "check": "Tâches privées: échéances/report/terminer/réouvrir",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "childReport": "business-crm.json",
+          "childChecklistId": "BUS-TASK-01",
+          "sourceFiles": [
+            "server/tasks/service.mjs",
+            "server/tasks/store.mjs",
+            "server/tasks/crypto.mjs",
+            "server/tasks/validation.mjs",
+            "server/tasks/http.mjs"
+          ],
+          "nativeAssertions": [
+            {
+              "title": "multiple encrypted tasks survive a runtime restart and an acknowledged retry is not duplicated",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 3758,
+                  "successLine": "2026-10-23T17:06:00.9741622Z     ok 2 - multiple encrypted tasks survive a runtime restart and an acknowledged retry is not duplicated"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 3760,
+                  "successLine": "2026-10-23T17:08:15.7353769Z     ok 2 - multiple encrypted tasks survive a runtime restart and an acknowledged retry is not duplicated"
+                }
+              ]
+            },
+            {
+              "title": "two devices cannot overwrite one revision, and a failed write rolls back completely",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 3782,
+                  "successLine": "2026-10-23T17:06:01.0589448Z     ok 6 - two devices cannot overwrite one revision, and a failed write rolls back completely"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 3784,
+                  "successLine": "2026-10-23T17:08:15.8982163Z     ok 6 - two devices cannot overwrite one revision, and a failed write rolls back completely"
+                }
+              ]
+            },
+            {
+              "title": "changed ciphertext or scheduling metadata is rejected, including sub-millisecond SQL aliases",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 3788,
+                  "successLine": "2026-10-23T17:06:01.0696326Z     ok 7 - changed ciphertext or scheduling metadata is rejected, including sub-millisecond SQL aliases"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 3790,
+                  "successLine": "2026-10-23T17:08:15.9193131Z     ok 7 - changed ciphertext or scheduling metadata is rejected, including sub-millisecond SQL aliases"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "childReport": "business-crm.json",
+          "childChecklistId": "BUS-TASK-02",
+          "sourceFiles": [
+            "server/tasks/store.mjs",
+            "server/tasks/service.mjs",
+            "server/tasks/http.mjs"
+          ],
+          "nativeAssertions": [
+            {
+              "title": "deadline boundary, completion, reopening and postponement update only the selected task",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 3770,
+                  "successLine": "2026-10-23T17:06:01.0271187Z     ok 4 - deadline boundary, completion, reopening and postponement update only the selected task"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 3772,
+                  "successLine": "2026-10-23T17:08:15.8324463Z     ok 4 - deadline boundary, completion, reopening and postponement update only the selected task"
+                }
+              ]
+            },
+            {
+              "title": "pagination is bounded and monotonic across clients without leaking another owner",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 3776,
+                  "successLine": "2026-10-23T17:06:01.0359438Z     ok 5 - pagination is bounded and monotonic across clients without leaking another owner"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 3778,
+                  "successLine": "2026-10-23T17:08:15.8550508Z     ok 5 - pagination is bounded and monotonic across clients without leaking another owner"
+                }
+              ]
+            },
+            {
+              "title": "Chrome: the common task view spans clients and paginates without truncating the private work list",
+              "expectedJobs": [
+                "browser"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "browser",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log",
+                  "line": 449,
+                  "successLine": "2026-10-23T17:07:41.5662253Z ✔ Chrome: the common task view spans clients and paginates without truncating the private work list (1749.055874ms)"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "limits": []
+    },
+    {
+      "id": "BUS-08",
+      "check": "À répondre: message entrant/réponse/diffusion/concurrence",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "childReport": "business-crm.json",
+          "childChecklistId": "BUS-REPLY-01",
+          "sourceFiles": [
+            "server/tasks/reply.mjs",
+            "server/tasks/store.mjs",
+            "server/crm/store.mjs",
+            "server/chat/store.mjs"
+          ],
+          "nativeAssertions": [
+            {
+              "title": "real SQL reply task tracks incoming, concurrent replies, broadcasts, historical requests and two sessions",
+              "expectedJobs": [
+                "mariadb1011",
+                "mariadb114"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "mariadb1011",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb1011.log",
+                  "line": 3509,
+                  "successLine": "2026-10-23T17:05:55.8652476Z ok 39 - real SQL reply task tracks incoming, concurrent replies, broadcasts, historical requests and two sessions"
+                },
+                {
+                  "job": "mariadb114",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/mariadb114.log",
+                  "line": 3511,
+                  "successLine": "2026-10-23T17:08:06.9662012Z ok 39 - real SQL reply task tracks incoming, concurrent replies, broadcasts, historical requests and two sessions"
+                }
+              ]
+            },
+            {
+              "title": "manual reopen is shared; a response drafted before it cannot silently dismiss it",
+              "expectedJobs": [
+                "verify"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "verify",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/verify.log",
+                  "line": 3395,
+                  "successLine": "2026-10-23T17:03:43.4691209Z ✔ manual reopen is shared; a response drafted before it cannot silently dismiss it (2.920689ms)"
+                }
+              ]
+            },
+            {
+              "title": "native Chrome follow-up actions preserve read state, prevent double clicks, show conflicts and clear on owner handoff",
+              "expectedJobs": [
+                "browser"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "browser",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log",
+                  "line": 348,
+                  "successLine": "2026-10-23T17:07:41.5569840Z ✔ native Chrome follow-up actions preserve read state, prevent double clicks, show conflicts and clear on owner handoff (2965.402256ms)"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "limits": []
+    },
+    {
+      "id": "BUS-09",
+      "check": "Réponses fixes et personnelles partagées, limites/langues/CAS",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "childReport": "business-crm.json",
+          "childChecklistId": "BUS-QR-01",
+          "sourceFiles": [
+            "server/quick-replies/validation.mjs",
+            "server/quick-replies/files.mjs",
+            "server/quick-replies/service.mjs",
+            "server/quick-replies/http.mjs",
+            "server/files/private-json.mjs"
+          ],
+          "nativeAssertions": [
+            {
+              "title": "exact ACK retries do not increment revision; empty catalogues retain their version without ABA",
+              "expectedJobs": [
+                "verify"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "verify",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/verify.log",
+                  "line": 2687,
+                  "successLine": "2026-10-23T17:03:26.8661445Z ✔ exact ACK retries do not increment revision; empty catalogues retain their version without ABA (22.860646ms)"
+                }
+              ]
+            },
+            {
+              "title": "competing writers cannot replace an acknowledged catalogue and existing locks are preserved",
+              "expectedJobs": [
+                "verify"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "verify",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/verify.log",
+                  "line": 2688,
+                  "successLine": "2026-10-23T17:03:26.8663408Z ✔ competing writers cannot replace an acknowledged catalogue and existing locks are preserved (22.719157ms)"
+                }
+              ]
+            },
+            {
+              "title": "expiry during file work prevents publication and the final write authorization",
+              "expectedJobs": [
+                "verify"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "verify",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/verify.log",
+                  "line": 2703,
+                  "successLine": "2026-10-23T17:03:26.9774002Z ✔ expiry during file work prevents publication and the final write authorization (2.105213ms)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "childReport": "business-crm.json",
+          "childChecklistId": "BUS-QR-02",
+          "sourceFiles": [
+            "public/quick-replies.js",
+            "public/chat.js"
+          ],
+          "nativeAssertions": [
+            {
+              "title": "personal quick replies join the preset list, edit, insert without sending and delete across independent administrator sessions",
+              "expectedJobs": [
+                "verify"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "verify",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/verify.log",
+                  "line": 1318,
+                  "successLine": "2026-10-23T17:03:07.4781760Z ✔ personal quick replies join the preset list, edit, insert without sending and delete across independent administrator sessions (35.587617ms)"
+                }
+              ]
+            },
+            {
+              "title": "an uncertain personal reply save requires explicit reload and never automatically repeats a POST",
+              "expectedJobs": [
+                "verify"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "verify",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/verify.log",
+                  "line": 1321,
+                  "successLine": "2026-10-23T17:03:07.5615633Z ✔ an uncertain personal reply save requires explicit reload and never automatically repeats a POST (51.724669ms)"
+                }
+              ]
+            },
+            {
+              "title": "Chrome 320px fr: quick replies preserve the draft and send only after editing and explicit submission",
+              "expectedJobs": [
+                "browser"
+              ],
+              "allExpectedJobsObserved": true,
+              "matches": [
+                {
+                  "job": "browser",
+                  "path": "/workspace/scratch/bb431be72395/qualify1100/main/browser.log",
+                  "line": 264,
+                  "successLine": "2026-10-23T17:06:56.9633402Z ✔ Chrome 320px fr: quick replies preserve the draft and send only after editing and explicit submission (1528.733667ms)"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "limits": []
+    },
+    {
+      "id": "BUS-10",
+      "check": "Profil privé: nom/avatar et gestion des conflits",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "profile-avatar",
+          "sourcePatterns": [
+            "server/profile/*",
+            "server/chat/profile-avatar.mjs",
+            "public/profile.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "https.log",
+              "line": 300,
+              "title": "real HTTPS/SQL profiles: both roles persist names and avatars, foreign reads fail and removed URLs cannot resurrect",
+              "result": "pass"
+            },
+            {
+              "log": "mariadb1011.log",
+              "line": 3417,
+              "title": "real MariaDB own profiles, bounded private avatars and simultaneous updates (synthetic disposable database only)",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "BUS-11",
+      "check": "Préférences privées: propriétaires/vues autorisées/CAS/chiffrement",
+      "status": "P1_local_fix_targeted_passed_native_pending",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "private-preferences",
+          "sourcePatterns": [
+            "server/preferences/*",
+            "public/preferences*",
+            "server/experience/*"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 3264,
+              "title": "real MariaDB preferences: owner-only encrypted selections, cross-device CAS, authorised peer view and safe clearing",
+              "result": "pass"
+            },
+            {
+              "log": "https.log",
+              "line": 291,
+              "title": "own choices are optional, bilingual-searchable, encrypted and synchronized; other clients cannot read them",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 407,
+              "title": "real Chrome preferences: concurrent device changes preserve a draft until explicit resolution; admin peer view is read-only",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ],
+      "findingIds": [
+        "BUS-PREF-01",
+        "F-05"
+      ],
+      "newEvidence": [
+        "preferences-shutdown-race-repro.json",
+        "preferences-shutdown-before-fix.log",
+        "preferences-shutdown-after-fix.log"
+      ]
+    },
+    {
+      "id": "BUS-12",
+      "check": "Catalogue691/25/934 et recherche FR/EN intacts",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "private-preferences",
+          "sourcePatterns": [
+            "server/preferences/*",
+            "public/preferences*",
+            "server/experience/*"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "mariadb1011.log",
+              "line": 3264,
+              "title": "real MariaDB preferences: owner-only encrypted selections, cross-device CAS, authorised peer view and safe clearing",
+              "result": "pass"
+            },
+            {
+              "log": "https.log",
+              "line": 291,
+              "title": "own choices are optional, bilingual-searchable, encrypted and synchronized; other clients cannot read them",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 407,
+              "title": "real Chrome preferences: concurrent device changes preserve a draft until explicit resolution; admin peer view is read-only",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Recorded assertions use synthetic owned accounts/fixtures; no physical-phone or hosted functional trial performed."
+      ]
+    },
+    {
+      "id": "BUS-13",
+      "check": "Profil public: masqué par défaut et copie admin explicite",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "public-profile",
+          "sourcePatterns": [
+            "server/profile/http.mjs",
+            "server/index.mjs",
+            "public/chat.html",
+            "public/profile.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "https.log",
+              "line": 292,
+              "title": "public Jessie profile is an explicit admin snapshot; temporary hiding preserves the private draft after actual session proof",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 427,
+              "title": "real Chrome public Jessie profile: public snapshot only, safe text, FR/EN and mobile width; unpublish is unavailable",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "New feature, no baseline capability to lose. Snapshot unavailable until explicit publish; excluded from historical backups as documented. No hosted public route trial performed.",
+        "Public-profile main implementation reviewed in prior exact-tree scoped review and in separate current frontend/security review; this backend lot does not claim a second complete independent review of all public-profile modules."
+      ]
+    },
+    {
+      "id": "BUS-14",
+      "check": "Publication/retrait: clients refusés, version/conflit, pas données clients",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "public-profile",
+          "sourcePatterns": [
+            "server/profile/http.mjs",
+            "server/index.mjs",
+            "public/chat.html",
+            "public/profile.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "https.log",
+              "line": 292,
+              "title": "public Jessie profile is an explicit admin snapshot; temporary hiding preserves the private draft after actual session proof",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 427,
+              "title": "real Chrome public Jessie profile: public snapshot only, safe text, FR/EN and mobile width; unpublish is unavailable",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "New feature, no baseline capability to lose. Snapshot unavailable until explicit publish; excluded from historical backups as documented. No hosted public route trial performed.",
+        "Public-profile main implementation reviewed in prior exact-tree scoped review and in separate current frontend/security review; this backend lot does not claim a second complete independent review of all public-profile modules."
+      ]
+    },
+    {
+      "id": "BUS-15",
+      "check": "Brouillon goûts/profil: retour même compte, purge fermeture/reload",
+      "status": "reviewed_with_existing_native_assertions",
+      "readDepth": "Complete principal backend implementation; UI-only behavior linked to recorded Chrome assertions and frontend review.",
+      "evidence": [
+        {
+          "functionalMatrixId": "resume-profile",
+          "sourcePatterns": [
+            "public/preferences.js",
+            "public/profile.js",
+            "public/chat.js"
+          ],
+          "nativeSuccesses": [
+            {
+              "log": "browser.log",
+              "line": 280,
+              "title": "Chrome 320px: profile preference draft resumes after same-owner verification and is discarded for a replaced session",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 408,
+              "title": "real Chrome preferences: temporary hiding retains unsaved choices and search without an automatic write",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 409,
+              "title": "real Chrome preferences: hiding during an uncertain save keeps the draft and never retries that save",
+              "result": "pass"
+            },
+            {
+              "log": "browser.log",
+              "line": 410,
+              "title": "real Chrome preferences: an initial load interrupted by temporary hiding resumes by GET only",
+              "result": "pass"
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "Behavior intentionally changes legacy hide-discard assertion to satisfy reported bug. In-memory same-page recovery only; page reload/closure is not recovered. Physical application switching/OS eviction unverified."
+      ]
+    }
+  ],
+  "masterChecklistCoverage": {
+    "coveredIds": [
+      "CHAT-01",
+      "CHAT-02",
+      "CHAT-03",
+      "CHAT-04",
+      "CHAT-05",
+      "CHAT-06",
+      "CHAT-07",
+      "CHAT-08",
+      "CHAT-09",
+      "CHAT-10",
+      "CHAT-11",
+      "CHAT-12",
+      "MED-01",
+      "MED-02",
+      "MED-03",
+      "MED-04",
+      "MED-05",
+      "MED-06",
+      "MED-07",
+      "MED-08",
+      "MED-09",
+      "MED-10",
+      "MED-11",
+      "MED-12",
+      "MED-13",
+      "MED-14",
+      "BUS-01",
+      "BUS-02",
+      "BUS-03",
+      "BUS-04",
+      "BUS-05",
+      "BUS-06",
+      "BUS-07",
+      "BUS-08",
+      "BUS-09",
+      "BUS-10",
+      "BUS-11",
+      "BUS-12",
+      "BUS-13",
+      "BUS-14",
+      "BUS-15"
+    ],
+    "count": 41,
+    "sourceMaster": "docs/verification-proofs/final-public-1100/checklist.json",
+    "applyFindings": {
+      "MED-09": [
+        "F-03"
+      ],
+      "BUS-11": [
+        "F-05"
+      ]
+    }
+  },
+  "readDepth": {
+    "principalFiles": [
+      {
+        "path": "server/chat/service.mjs",
+        "readDepth": "full",
+        "lines": 255,
+        "sha256ReviewedWorkingTree": "e80677b2c95dc23e9bebd0ff11f809297c75ef9f339b268033f30bd359543e1f",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/chat/store.mjs",
+        "readDepth": "full",
+        "lines": 610,
+        "sha256ReviewedWorkingTree": "bc5e02197ab8f119a05a784241ae165ea5c78600151e6a3dd2b579ee3473097a",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/chat/http.mjs",
+        "readDepth": "full",
+        "lines": 314,
+        "sha256ReviewedWorkingTree": "c5c3a1bdf3a13691b4bee1c452057b704bd82085f5f9c694482543a3d30868dc",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/chat/crypto.mjs",
+        "readDepth": "full",
+        "lines": 141,
+        "sha256ReviewedWorkingTree": "5cbfae0ce05aae6cba0fb7fc1bf8f7180dcbbd6d74fd8f8668765d562b7f8a28",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/chat/client-export-http.mjs",
+        "readDepth": "full",
+        "lines": 59,
+        "sha256ReviewedWorkingTree": "3d3a3d7e6777882d8036f15cddca990ed867b0f485b71d2e6a843af548155d04",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/chat/conversation-export.mjs",
+        "readDepth": "full",
+        "lines": 138,
+        "sha256ReviewedWorkingTree": "b1223413e4fce1f3155004037b563a89ce7477b5cb2a9f1e383855023dd6296d",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/chat/streaming-conversation-export.mjs",
+        "readDepth": "full",
+        "lines": 203,
+        "sha256ReviewedWorkingTree": "a375abbf0fbd79aa69de472988ef226d0efe7055eece26075f3baa9a7ad727e3",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/chat/zip-stream.mjs",
+        "readDepth": "full",
+        "lines": 167,
+        "sha256ReviewedWorkingTree": "d62e9d03f0c01b389ff57cbb9192728c65f623b00dba97a84326c56638f2a8c7",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/chat/archive-transfer.mjs",
+        "readDepth": "full",
+        "lines": 123,
+        "sha256ReviewedWorkingTree": "e85432692592cd13c328b742aa0a97a23505bd14da4628d934da7d1eb0c1234c",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/preferences/service.mjs",
+        "readDepth": "full",
+        "lines": 66,
+        "sha256ReviewedWorkingTree": "a7971d2043cef3139fabd406d42dcaf9fcbb5df9d3d920ef80a51da361f19216",
+        "matchesQualified1100": false
+      },
+      {
+        "path": "server/preferences/store.mjs",
+        "readDepth": "full",
+        "lines": 76,
+        "sha256ReviewedWorkingTree": "92bb813440c8261b106817fd0ee412960f0763dbfa8fadaf12af9eb149c99029",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/preferences/http.mjs",
+        "readDepth": "full",
+        "lines": 46,
+        "sha256ReviewedWorkingTree": "87b7cdefc7859169f60d991d018f60729d59d75d186da1e868b2a2ef30156495",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/preferences/validation.mjs",
+        "readDepth": "full",
+        "lines": 21,
+        "sha256ReviewedWorkingTree": "21f2110bc8b5132b66dfadf65ae428c80ee50d3146b37fc7c178395a0dab026a",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/preferences/crypto.mjs",
+        "readDepth": "full",
+        "lines": 47,
+        "sha256ReviewedWorkingTree": "f26c0565dddd220877087d9c02051d1e866af5f7a912091b9b5d38b35291748c",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/profile/service.mjs",
+        "readDepth": "full",
+        "lines": 101,
+        "sha256ReviewedWorkingTree": "b3115c6004b8da674d8d396ebf0226ae5ec9f34def5cadde2fc295445958c7b8",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/profile/store.mjs",
+        "readDepth": "full",
+        "lines": 147,
+        "sha256ReviewedWorkingTree": "a4a427e86213b00f2a50a0ff73961b583f581b783e6dd10367421648a84910cf",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/profile/http.mjs",
+        "readDepth": "full",
+        "lines": 104,
+        "sha256ReviewedWorkingTree": "4e79d06cfaddbe3aaed11784f97f664e4a3084820b61f91af027cbacced81665",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/profile/validation.mjs",
+        "readDepth": "full",
+        "lines": 17,
+        "sha256ReviewedWorkingTree": "feef40a5465dd161c353ea0fefaa86cba328e69e1c873b123a24ab869500b9fb",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/media/service.mjs",
+        "readDepth": "full",
+        "lines": 242,
+        "sha256ReviewedWorkingTree": "f362eb912671e4e1d463ce27ce352fc27e03f7bf08cbbc768f09a350ec80b653",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/media/store.mjs",
+        "readDepth": "full",
+        "lines": 362,
+        "sha256ReviewedWorkingTree": "9553fa4599d1bca443e72c34b171166edaace8c8375b486f49735b0fc84768b0",
+        "matchesQualified1100": false
+      },
+      {
+        "path": "server/media/http.mjs",
+        "readDepth": "full",
+        "lines": 336,
+        "sha256ReviewedWorkingTree": "31676e445c9ef4be2897e2d73d2108a94e243b277a97768af58f1d474163a07c",
+        "matchesQualified1100": false
+      },
+      {
+        "path": "server/media/storage.mjs",
+        "readDepth": "full",
+        "lines": 431,
+        "sha256ReviewedWorkingTree": "51d7a90d82a86e56a39272cb8f50d1e8d7f2b52ef3a242e1cc7b76ae29c4f6b2",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/media/image.mjs",
+        "readDepth": "full",
+        "lines": 130,
+        "sha256ReviewedWorkingTree": "4617c8ec3892464eb040b1b3995e9d3551d8d500c40e4500e235b24d02ed0b6f",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/media/image-worker.mjs",
+        "readDepth": "full",
+        "lines": 87,
+        "sha256ReviewedWorkingTree": "01dfeefed6a063d4677511d4f263f63821ac6e27bd784c5fa45c1718245c57de",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/media/capacity-store.mjs",
+        "readDepth": "full",
+        "lines": 150,
+        "sha256ReviewedWorkingTree": "5b8e7441e0e17bf51f317ca6a089d1ad1111d027d81dc912c2e757a429199c58",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/media/backup-admission.mjs",
+        "readDepth": "full",
+        "lines": 45,
+        "sha256ReviewedWorkingTree": "d6131d17afd9a8178caffe32e818b47a9c08d916aa31bdf188641458ab8d1d32",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/media/backup-limits.mjs",
+        "readDepth": "full",
+        "lines": 7,
+        "sha256ReviewedWorkingTree": "ddb8825e3f9ffea62e7a043225af2c0fc35c6a4742799516c04073615e0ee1e7",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/media/config.mjs",
+        "readDepth": "full",
+        "lines": 37,
+        "sha256ReviewedWorkingTree": "8dc06df5403a17aa6ddf4789e444689b32181a91e2c6784c5b48275b3dbabe84",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/media/dto.mjs",
+        "readDepth": "full",
+        "lines": 8,
+        "sha256ReviewedWorkingTree": "2c7d1500db2fd13b5e3baf66a3d68d514a636903231a5b7fa5d62a6560581ee7",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/video/service.mjs",
+        "readDepth": "full",
+        "lines": 363,
+        "sha256ReviewedWorkingTree": "c8301e46ea69193ad1a9bd797394a66c05a09bc4190c8ed836452c034625569c",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/video/store.mjs",
+        "readDepth": "full",
+        "lines": 421,
+        "sha256ReviewedWorkingTree": "18e5b0d05ca2a07b24efd000f101aa5bdd2a34e0ca4bc5cab0557d593dc35f1d",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/video/http.mjs",
+        "readDepth": "full",
+        "lines": 360,
+        "sha256ReviewedWorkingTree": "dee606d908cc05f9ceea3458846aa7878a8260f89043e8cdf71bcd26c84633db",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/video/message-store.mjs",
+        "readDepth": "full",
+        "lines": 225,
+        "sha256ReviewedWorkingTree": "2f18545116a0ceceab762abaff6c14617efce8b651ecbc79430e18f3f2160065",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/video/storage.mjs",
+        "readDepth": "full",
+        "lines": 394,
+        "sha256ReviewedWorkingTree": "4bfbf95c51e01b079abce4dc304d5537249c0486fd33390a25fbbe026ff01e16",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/video/mp4.mjs",
+        "readDepth": "full",
+        "lines": 45,
+        "sha256ReviewedWorkingTree": "f540bf12efd2387f22f60f956f8766dd16c8ba44ad7dd308e5a1f22d109c426d",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/lifecycle.mjs",
+        "readDepth": "full",
+        "lines": 67,
+        "sha256ReviewedWorkingTree": "739165655c6a2e0f0d556bec06b599ffe823ad22bb57371f5b16951785342b9d",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/db/connection.mjs",
+        "readDepth": "full",
+        "lines": 43,
+        "sha256ReviewedWorkingTree": "83e32600df6013a9b5d5689b89583323d1d6224b505b1fdf04eedf2bd166eed1",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "public/photo-batch.js",
+        "readDepth": "full",
+        "lines": 76,
+        "sha256ReviewedWorkingTree": "b2d04f338261fd1041cbd336dab2784e08ac833a8b63d1e7d91d405002e15650",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "public/chat-drafts.js",
+        "readDepth": "full",
+        "lines": 132,
+        "sha256ReviewedWorkingTree": "3fe95029a315d302b5a25cfab246eca5b999085329ff2fb76cc5711cc3c33fd8",
+        "matchesQualified1100": true
+      },
+      {
+        "path": "server/crm/config.mjs",
+        "readDepth": "full",
+        "lines": 27,
+        "sha256": "016fe028c614a21c9592c97195b37257acf323d1b3adc9c24adf9db7bb6fce01",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/crm/crypto.mjs",
+        "readDepth": "full",
+        "lines": 94,
+        "sha256": "e2d644e29d223fd96ef5fdde7bed477f4e74497a89f24ea0b66409a39578fb5a",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/crm/http.mjs",
+        "readDepth": "full",
+        "lines": 287,
+        "sha256": "2760991ee9a10b33f571c00be46241b76e67b8784756431f62bae500d2287fed",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/crm/service.mjs",
+        "readDepth": "full",
+        "lines": 174,
+        "sha256": "e478cee5590c9867ba1f2912d0a17cc45e25886df3e5ed22875493184bbc69af",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/crm/store.mjs",
+        "readDepth": "full",
+        "lines": 354,
+        "sha256": "27416221f07b330a4b190cf4f1326ac0128df6a4ca58fbff96a2e3eab3fa81c0",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/crm/validation.mjs",
+        "readDepth": "full",
+        "lines": 82,
+        "sha256": "25209c78de6d1255dbfbbc0e436ad41227dbd5a48b27c560c7c9475215eb68b9",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/broadcast/audience.mjs",
+        "readDepth": "full",
+        "lines": 53,
+        "sha256": "ebdbe2c9cc5c5eb9d08a293cb7ad3c4b117992f387958be168b617ccfd32dbae",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/broadcast/config.mjs",
+        "readDepth": "full",
+        "lines": 14,
+        "sha256": "430d074e00659cf0d79f815422e92f28313f248b20214d32799db02249b88e6c",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/broadcast/crypto.mjs",
+        "readDepth": "full",
+        "lines": 151,
+        "sha256": "00345da4da15ba8092f16cf8eca75ef7a1abc94c84c5f066e0a435a20f506ebf",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/broadcast/http.mjs",
+        "readDepth": "full",
+        "lines": 309,
+        "sha256": "7b7ab056196252be45b5eaba1e944ad1b89380a295908320372eda3d3e343d3f",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/broadcast/service.mjs",
+        "readDepth": "full",
+        "lines": 270,
+        "sha256": "521bb7eadd9dc9f6a9ab1c618c0df0fa5d8a0ee5a206afee449358b362b352e7",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/broadcast/store.mjs",
+        "readDepth": "full",
+        "lines": 706,
+        "sha256": "b153e1ea0bde7567ace659af375390427fd618c9126f46513c01cb3fc1ef4863",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/broadcast/validation.mjs",
+        "readDepth": "full",
+        "lines": 158,
+        "sha256": "0641b534ca64c7789d29ae422852eb9a7e4eb06ba38385ebd9f5c871f443e869",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/broadcast/worker.mjs",
+        "readDepth": "full",
+        "lines": 130,
+        "sha256": "b28e368ee9ea2dd64342758ded90f420f0b767467165db6c27a8b137335dc3a6",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/announcements/crypto.mjs",
+        "readDepth": "full",
+        "lines": 42,
+        "sha256": "cf9efc4a7c459b1976409dabb69fdd88473067154e8e6c0c2aee617d0135017c",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/announcements/http.mjs",
+        "readDepth": "full",
+        "lines": 95,
+        "sha256": "c1ab341c3a0a374e503b0ea5b45f07a03d51c2aeb3c438a4a1fcf0894aef7d47",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/announcements/service.mjs",
+        "readDepth": "full",
+        "lines": 86,
+        "sha256": "2283464d80b4edcdc2dc52a8a35069976a936911999efd7d6fac2f3f82ac3db6",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/announcements/store.mjs",
+        "readDepth": "full",
+        "lines": 215,
+        "sha256": "9ce3e893a60043c02ed06b3e3e28631b23d488655d385506b9f312a94c007fc5",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/announcements/validation.mjs",
+        "readDepth": "full",
+        "lines": 49,
+        "sha256": "5070ea97a50fcb104a9317ad217f185295d26707eb34fca08c4424a66c2f6554",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/tasks/crypto.mjs",
+        "readDepth": "full",
+        "lines": 39,
+        "sha256": "8e4caf88079130443b7d34fdc2b06217c8c028fd7fe6b939d41ef7f36d8c1a80",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/tasks/http.mjs",
+        "readDepth": "full",
+        "lines": 97,
+        "sha256": "32199423b0ab0d4d9ff332bf4256f2d885aa4e734eec13a3213a7e90c6e65bdf",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/tasks/reply.mjs",
+        "readDepth": "full",
+        "lines": 101,
+        "sha256": "549a32f55f8355feacb4d496a15e2d691a304094b192c6890493a665ddb96f29",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/tasks/service.mjs",
+        "readDepth": "full",
+        "lines": 117,
+        "sha256": "1832793c2dec39c80c7b31a6c6c2ff3649b9b9ec4204665c58838fdd7d3ecc9e",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/tasks/store.mjs",
+        "readDepth": "full",
+        "lines": 192,
+        "sha256": "f646a0ad5801fd650c9dd09bf54931b1837fa48150ccfb0792a51c8af54d790b",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/tasks/validation.mjs",
+        "readDepth": "full",
+        "lines": 44,
+        "sha256": "54073b1e9a6e9953ecd4a9ef2ac4051c2b7b2f31307af9eda981c7e77dacb456",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/quick-replies/files.mjs",
+        "readDepth": "full",
+        "lines": 102,
+        "sha256": "ede192036c7dec9fe42db68e3a09b099e98c29fb157f4812cd2141c2335a003e",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/quick-replies/http.mjs",
+        "readDepth": "full",
+        "lines": 48,
+        "sha256": "b4c74a8063bf0f380d3bf64428805e76aa224ee307c2497cf1744981fa3bc792",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/quick-replies/service.mjs",
+        "readDepth": "full",
+        "lines": 80,
+        "sha256": "b4e107c53b9121aae8c1a3277ac0af257724f3ed2e3b8b4b16a9a60167b3df02",
+        "matchesQualifiedAppTreeBytes": true
+      },
+      {
+        "path": "server/quick-replies/validation.mjs",
+        "readDepth": "full",
+        "lines": 56,
+        "sha256": "cdfb988fa6df1b2ab992d4aa8b79190c13ae6fa00a5a35ff50748936021f0dd5",
+        "matchesQualifiedAppTreeBytes": true
+      }
+    ],
+    "principalUniqueFileCount": 68,
+    "principalReadLines": 10768,
+    "supportingExcerpts": [
+      {
+        "path": "server/index.mjs",
+        "ranges": [
+          "380-420",
+          "580-614",
+          "640-710"
+        ],
+        "purpose": "Shutdown diagnostics and preferences/profile/video wiring"
+      },
+      {
+        "path": "tests/media-store.integration.test.mjs",
+        "ranges": [
+          "1-100",
+          "330-425",
+          "671-735",
+          "new targeted adapter test at file end"
+        ],
+        "purpose": "Native synthetic fixture, gallery tuple assertions, safe isolated microsecond fixture"
+      },
+      {
+        "path": "tests/media-http.test.mjs",
+        "ranges": [
+          "1-115",
+          "445-525",
+          "rewritten last gallery ordering test"
+        ],
+        "purpose": "Role protocol fixture, response DTO guards, precise positive/negative millisecond projection tests"
+      },
+      {
+        "path": "tests/media-flow.integration.test.mjs",
+        "ranges": [
+          "40-240",
+          "365-500",
+          "new microsecond actual HTTP/SQL block"
+        ],
+        "purpose": "Owned loopback disposable SQL/HTTP fixture and gallery chronology/restoration"
+      }
+    ],
+    "testsReadFull": [
+      "tests/preferences.test.mjs",
+      "tests/preferences-store.test.mjs",
+      "tests/personal-quick-replies-files.test.mjs",
+      "tests/personal-quick-replies-service.test.mjs",
+      "tests/reply-tracking.test.mjs",
+      "tests/reply-flow.integration.test.mjs",
+      "tests/tasks-flow.integration.test.mjs",
+      "tests/announcements-flow.integration.test.mjs",
+      "tests/broadcast-scale.integration.test.mjs"
+    ],
+    "testsReadPartial": [
+      {
+        "path": "tests/crm-store.integration.test.mjs",
+        "ranges": [
+          "92-354"
+        ]
+      },
+      {
+        "path": "tests/broadcast-store.integration.test.mjs",
+        "ranges": [
+          "150-365"
+        ]
+      }
+    ],
+    "testsTitlesAndRecordedLogsOnly": [
+      "tests/crm-flow.integration.test.mjs",
+      "tests/crm-service.test.mjs",
+      "tests/broadcast-flow.integration.test.mjs",
+      "tests/broadcast-worker.test.mjs",
+      "tests/broadcast-lifecycle.test.mjs",
+      "tests/broadcast-chat.integration.test.mjs",
+      "tests/tasks-service.test.mjs",
+      "tests/tasks-http.test.mjs",
+      "tests/announcements-service.test.mjs",
+      "tests/announcements-http.test.mjs",
+      "tests/personal-quick-replies-http.test.mjs",
+      "tests/browser/crm-collaboration.browser.mjs",
+      "tests/browser/followup.browser.mjs",
+      "tests/browser/tasks.browser.mjs",
+      "tests/browser/announcements.browser.mjs",
+      "tests/browser/broadcast-scale.browser.mjs",
+      "tests/chat-lifecycle.test.mjs",
+      "tests/browser/chat-accessibility.browser.mjs"
+    ],
+    "priorExactTreeReview": "version-audit1100/function-preservation.json and runtime_diff narrow production diff (public profile boundary/lifecycle review)",
+    "notClaimedFullRead": [
+      "public/chat.js entire UI module (separate frontend owner); here only photo/draft models and navigation guard discussed",
+      "media/video offline inventory and erasure operators beyond principal app routes (separate lifecycle/data review)"
+    ]
+  },
+  "nativeEvidence": {
+    "run": 39991790308,
+    "source": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+    "tree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+    "node": "v24.22.1",
+    "allFiveOriginalJobsPassed": true,
+    "logs": [
+      {
+        "name": "verify",
+        "file": "verify.log",
+        "bytes": 577490,
+        "sha256": "fc82d12474329dc54e3958a869746536c8f8c42e092ca3be19096ca430942136",
+        "node": "v24.22.1",
+        "totals": {
+          "tests": 4078,
+          "pass": 4026,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 52
+        },
+        "sha256Verified": true,
+        "byteCountVerified": true,
+        "totalsExtractedFromFullLog": {
+          "tests": 4078,
+          "pass": 4026,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 52
+        },
+        "totalsVerified": true
+      },
+      {
+        "name": "browser",
+        "file": "browser.log",
+        "bytes": 54266,
+        "sha256": "b1878199736cd51176936ddb7d4b6874a55d87ee4824df16af355377d5346521",
+        "node": "v24.22.1",
+        "totals": {
+          "tests": 256,
+          "pass": 256,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "sha256Verified": true,
+        "byteCountVerified": true,
+        "totalsExtractedFromFullLog": {
+          "tests": 256,
+          "pass": 256,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "totalsVerified": true
+      },
+      {
+        "name": "https",
+        "file": "https.log",
+        "bytes": 41640,
+        "sha256": "0524bdaac3162e28bded29ef807f298f69991251776cdf9c7098939e88412b0e",
+        "node": "v24.22.1",
+        "totals": {
+          "tests": 12,
+          "pass": 12,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "sha256Verified": true,
+        "byteCountVerified": true,
+        "totalsExtractedFromFullLog": {
+          "tests": 12,
+          "pass": 12,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "totalsVerified": true
+      },
+      {
+        "name": "mariadb1011",
+        "file": "mariadb1011.log",
+        "bytes": 355080,
+        "sha256": "d8daec3989acaa142eaad92d5404e6d35e68a77082f688c3bad802bf10cfe40e",
+        "node": "v24.22.1",
+        "totals": {
+          "tests": 598,
+          "pass": 598,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "sha256Verified": true,
+        "byteCountVerified": true,
+        "totalsExtractedFromFullLog": {
+          "tests": 598,
+          "pass": 598,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "totalsVerified": true
+      },
+      {
+        "name": "mariadb114",
+        "file": "mariadb114.log",
+        "bytes": 355835,
+        "sha256": "6ebbf9a72eb33a6522373489f6f8e085d68191625a1d42f67500b7362c9d84c7",
+        "node": "v24.22.1",
+        "totals": {
+          "tests": 598,
+          "pass": 598,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "sha256Verified": true,
+        "byteCountVerified": true,
+        "totalsExtractedFromFullLog": {
+          "tests": 598,
+          "pass": 598,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "totalsVerified": true
+      }
+    ],
+    "skips": "General52omissions explicit;4native jobs0omissions. These successes did not cover the newly reproduced shutdown/microsecond issues.",
+    "newCorrectiveCodeQualification": "pending; old green logs cannot qualify modified source"
+  },
+  "findings": [
+    {
+      "id": "BUS-PREF-01",
+      "masterId": "F-05",
+      "severity": "P1",
+      "title": "Preferences shutdown can persist encryption under the erased all-zero key",
+      "baselineAffectedSource": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+      "introducedWith": "Preferences service present since1.9.0; not a1.10-only feature removal.",
+      "path": [
+        "server/lifecycle.mjs:46 invokes diagnostics.close before request drain",
+        "server/index.mjs:399 diagnostics closes preferencesService",
+        "server/preferences/service.mjs close zeros key while save awaits store.save",
+        "server/preferences/store.mjs save invokes supplied encrypt callback after awaiting authorized row lock"
+      ],
+      "reproduction": "preferences-shutdown-race-repro.json",
+      "baselineObserved": {
+        "saveReturnedSuccess": true,
+        "configuredKeyDecrypts": false,
+        "zeroKeyDecrypts": true
+      },
+      "fixFiles": [
+        "server/preferences/service.mjs",
+        "tests/preferences-store.test.mjs"
+      ],
+      "fix": "Reject new work immediately at close. Retain original key while already-admitted operations finish. Recheck closed in trusted encrypt callback before SQL write so real chat transaction rolls back. Reject late read DTOs; positively acknowledged committed writes can finish DTO using original retained key. Zero key after last admitted operation.",
+      "localEvidence": {
+        "before": "preferences-shutdown-before-fix.log:2failures/3newtests",
+        "after": "preferences-shutdown-after-fix.log:13passed/13,0fail,0skip",
+        "runtime": "Nodev24.19.0 local; not the required nativev24.22.1 qualification"
+      },
+      "independentCounterReview": "runtime_diff found P1 change consistent; no concern identified.",
+      "status": "implemented_local_targeted_green_native_qualification_and_deployment_pending",
+      "blockPublicOpeningUntilCorrectedRelease": true
+    },
+    {
+      "id": "BUS-GAL-01",
+      "masterId": "F-03",
+      "severity": "P3_conditional",
+      "title": "Gallery SQL DATETIME(6) tuple is truncated to milliseconds in cursor and order validation",
+      "trigger": "Legacy/synthetic messages with non-millisecond SQL fractions such as .123456 and .123300 in the same millisecond; current app writers supply millisecond instants.",
+      "baselineAffectedSource": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+      "productionAffectedDataEstablished": false,
+      "impact": "Skipped/repeated neighbor or503/rejected lightbox navigation; no media file loss or permission bypass.",
+      "reproduction": "gallery-microsecond-repro.json",
+      "baselineObserved": {
+        "actualBoundary": ".123000",
+        "expectedBoundary": ".123456",
+        "olderPhotoOmitted": true,
+        "afterCanReturnSamePivot": true
+      },
+      "fixFilesSoFar": [
+        "server/media/store.mjs",
+        "tests/media-store.integration.test.mjs",
+        "server/media/http.mjs",
+        "tests/media-http.test.mjs",
+        "tests/media-flow.integration.test.mjs"
+      ],
+      "localEvidence": {
+        "before": "gallery-before-fix.log:1failed targeted adapter test",
+        "after": "gallery-after-fix.log:1passed targeted adapter test",
+        "runtime": "Nodev24.19.0 local; no disposable native SQL test run in this audit",
+        "httpBefore": "gallery-http-before-fix.log:1failed targeted HTTP adapter test",
+        "httpAfter": "gallery-http-after-fix.log:30passed/30,0fail,0skip"
+      },
+      "nativeTestAdded": "Both sender roles and reader roles; exact six-decimal dates, ID ties, pages1/2, uniqueness, previous/next SQL neighbor. Complete actual HTTP service/SQL fixture now tests .123456/.123300 with contrary IDs for admin and client, while restoring original dates in finally.",
+      "independentCounterReview": "runtime_diff final review found no blocker in SQL/store/HTTP/native-fixture changes: exact SQL tuple6d+ID retained; public-ms dates and unique IDs/sequences/URLs/scopes/cursors still guarded; positive/negative tests cover both roles; native HTTP/SQL dates restored in finally. SQL native test remains unexecuted locally; frontend separately owned.",
+      "status": "backend_implemented_local_targeted_green_frontend_and_native_pending",
+      "fix": "Keep the exact SQL six-decimal cursor tuple and its stable ID tie. HTTP retains decreasing public dates and unique IDs/sequences; it no longer infers exact SQL date equality from equal projected milliseconds. No API/cursor/migration change. Matching frontend neighbor fix is separately owned by preferences_draft."
+    }
+  ],
+  "localProofs": [
+    {
+      "file": "preferences-shutdown-race-repro.json",
+      "sha256": "0a8a9d3bbdedad75960c633ff130b5d46c30028c0cd17f8d7d48824ff342528f",
+      "bytes": 948
+    },
+    {
+      "file": "preferences-shutdown-before-fix.log",
+      "sha256": "a7bbacf7ff904e2ce51c28ef7f6e0369a7cac2ff07f9bddd82cd5b1b02fccf84",
+      "bytes": 2273
+    },
+    {
+      "file": "preferences-shutdown-after-fix.log",
+      "sha256": "eefd53630f0cd8e8d1e222e582ac419da55496038aa6352941f245d25d1e86e4",
+      "bytes": 1643
+    },
+    {
+      "file": "gallery-microsecond-repro.json",
+      "sha256": "68987ee2038a3f797179ef47879ab5d4b71f1e8e076385a39ca7efd8d5e67236",
+      "bytes": 2820
+    },
+    {
+      "file": "gallery-before-fix.log",
+      "sha256": "29ef3a8d0c15f2f6c127255dd10d064f32cb1e276c25b69c51732ee2086be03d",
+      "bytes": 2164
+    },
+    {
+      "file": "gallery-after-fix.log",
+      "sha256": "35ebc1c9ea8d98de5baf86cebac1b99676752f759542c96e53f197425d2e1319",
+      "bytes": 240
+    },
+    {
+      "file": "gallery-http-before-fix.log",
+      "sha256": "6aea5807429e2cd19051f9a9688e2b243be0a049e29f740db90216f4b6ca1a0b",
+      "bytes": 1037
+    },
+    {
+      "file": "gallery-http-after-fix.log",
+      "sha256": "f1a3298ab3fe4087b44727a3216b06b77fc6f56da0eedbf8447e492ec204fdc0",
+      "bytes": 3278
+    }
+  ],
+  "businessLimits": {
+    "chat": "Text4096UTF-16units/16384UTF8bytes; personal30sends/min and shared300; read480/minadmin,120/minclient,2400shared. SQL sequence uint64, pages100max. Unknown sends retry explicitly with exact immutable key.",
+    "photos": "10MiB input,16MP/8192-side server decoder; normalized2048px, thumbnail480px;3uploads process-wide,1peraccount;8binary HTTPreads. Uploadbody30s/decoder10s.",
+    "videos": "100MiB MP4 prefix admission only, not a codec decoder; encrypted256KiB authenticated blocks and Range.2uploads global/1owner,4reads global/2owner;5uploads/minowner20shared;30s inactivity/300s maxtransfer. Codec support remains device-dependent.",
+    "sharedMediaEnvelope": "1GiB encrypted held photo+video envelope,100000manifestrecords; photo allocations reserve2records. Held/uncertain objects remain charged intentionally; current hosted occupancy not read.",
+    "exports": "10000messages,8MiB document/text bound,32MiB retained photos,256MiB streaming ZIP,300s,30s cooldown and single shared exporter transfer slot. This is a portable conversation archive, not whole-site backup or rights dossier.",
+    "crmTasksAndCampaigns": "See business-crm.json exact caps, immutable audience2500-fixture and CAS/lease evidence. Synthetic workload is not shared-hosting throughput proof.",
+    "preferences": "Whole catalogue691/25/934 exact SHA256, owner/revision-bound encryption, optional values,20saves/minowner100shared; actual catalogue selection bounds enforced by validation.",
+    "newPublicSnapshot": "Explicit admin publication only; public copy outside historical backup manifest can be republished. No legacy private client data is added to public DTO."
+  },
+  "limits": [
+    "No real customer send, delete or account action; no hosting/remote/browser calls.",
+    "Only isolated new concern reproductions and tests justified by the7authorized backend corrective files were run; existing full green suites were not repeated.",
+    "Physical mobile app switching, OS eviction/radio loss, Push receipt, password managers and alternate-timezone/DST gallery execution remain unverified.",
+    "Hosted throughput, full functional hosted regression and current media/quota occupancy were not measured.",
+    "Hosted manual backup/restore trial remains user-deferred and was not reopened.",
+    "Authorization/privacy of a request is checked before a media open under SQL locks; a previously authorized in-flight transfer is not a claim of retroactive erasure of bytes already received.",
+    "Corrective branch/PR/CI/release and deployment are owned by root; no commit or remote action by this audit agent."
+  ],
+  "childReport": "business-crm.json",
+  "repositoryFilesEditedByThisAgent": [
+    "server/preferences/service.mjs",
+    "tests/preferences-store.test.mjs",
+    "server/media/store.mjs",
+    "tests/media-store.integration.test.mjs",
+    "server/media/http.mjs",
+    "tests/media-http.test.mjs",
+    "tests/media-flow.integration.test.mjs"
+  ],
+  "counterReview": {
+    "reviewer": "runtime_diff",
+    "P1": "consistent; no concern identified",
+    "P3Backend": "no blocker found after final complete HTTP/SQL correction",
+    "newTestExecutionByCounterReviewer": false,
+    "sourceQualificationPending": true
+  }
+}

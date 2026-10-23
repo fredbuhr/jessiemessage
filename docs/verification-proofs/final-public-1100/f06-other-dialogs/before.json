@@ -1,0 +1,40 @@
+{
+  "phase": "before",
+  "node": "v24.19.0",
+  "actualCrmFunctionsAndHandlerSha256": "22f1a8023dcc0362413c53131e8f3c86c1003374ba4c15c92a27ca20cdc4d0e2",
+  "actualClosureResetAndHandlersSha256": "c97633fbac064b8d61836d9337b924d3a3068e623feedc07447ecc425b6c6706",
+  "crm": {
+    "reopened": {
+      "open": true,
+      "notes": "unsaved synthetic draft",
+      "queuedOldClose": 1
+    },
+    "afterOldClose": {
+      "open": false,
+      "notes": "",
+      "profileOpen": false,
+      "closes": 2,
+      "invalidations": 3
+    },
+    "draftStillRetained": "unsaved synthetic draft"
+  },
+  "closures": {
+    "reopened": {
+      "open": true,
+      "value": "FERMER",
+      "checked": true,
+      "queuedOldClose": 1
+    },
+    "afterOldClose": {
+      "open": false,
+      "value": "",
+      "checked": false,
+      "enabled": false,
+      "name": ""
+    }
+  },
+  "limitation": "Actual source functions and event callbacks evaluated in a VM with minimal DOM stubs. Native close queue ordering is explicitly simulated, not browser-qualified. Added Chrome regressions use real buttons and observe the queued trusted close event.",
+  "network": false,
+  "post": false,
+  "realAccounts": false
+}
