@@ -1,0 +1,70 @@
+{
+  "atUtc": "2026-10-23T19:38:26.844732+00:00",
+  "scope": "Isolated real npm installation compatibility check after a generic hosted preparation failure. No hosting access or cause attribution.",
+  "helperSha256": "293f06004d79d9b32a891473c7514b74eda58e5798f083561540a0108c58806b",
+  "environment": {
+    "npm": "11.9.0",
+    "node": "v24.19.0",
+    "hostedVersionsNotInferred": true
+  },
+  "baseline": {
+    "source": "ab70dba (tree-equivalent to deployed1100 source51b0cf22)",
+    "npmCiExit": 0,
+    "npmCiFlags": [
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund"
+    ],
+    "stdout": "\nadded 38 packages in 8s\n",
+    "stdoutSha256": "3696135cda591f7254dfdab564c11db660673a00a50d8c9c216f75051cbc52e4",
+    "stderrSha256": "45342ca54fc3787657ce6eb4dbe6d4510cbf68d24318d44416c0176ab31ebf4b"
+  },
+  "checks": {
+    "current1101": {
+      "inventory": "pass",
+      "inventorySha256": "9b09e801310d5eb21a318fa5f4d9a5c226e6f0d9c5bcd1eecc7e25ab73641b0c",
+      "files": 937,
+      "bytes": 61146979,
+      "verifyInstalled": "pass",
+      "hiddenRecords": 38,
+      "hiddenRecordDifferences": []
+    },
+    "fresh1100": {
+      "inventory": "pass",
+      "inventorySha256": "466c95d8e596e3a34b8f76723a2731f422c3d15bf5cb9ccdc9566592ec62fa6d",
+      "files": 937,
+      "bytes": 61102213,
+      "verifyInstalled": "pass",
+      "hiddenRecords": 38,
+      "hiddenRecordDifferences": []
+    },
+    "lockTransition": "pass",
+    "normalizedFreshHiddenLock": {
+      "status": "pass",
+      "sha256": "4463f4df294c260e9364f2ca5e743b6fdd06209c17cedff1e60da480d39ecb36"
+    },
+    "copyDependenciesRealTree": {
+      "status": "pass",
+      "result": {
+        "strategy": "private-copy-replace-locked-leaf",
+        "oldLockSha256": "0335cf45fc26270e490f57f0110c199448472d226564604c53737d4a264a291b",
+        "newLockSha256": "814a1327736c537457282511784eeeee6cb9aacff4736ed02d85f57988134b15",
+        "tarballIntegrity": "sha512-EsMnOR2oRv4LGnWvHgcVYkkQ4O2j8KO4WTw6l+PHR4sOXo8SAgIraxtEnGDmotjbhv0hDsu3IuDIFZm8iXwO4A==",
+        "oldTreeSha256": "466c95d8e596e3a34b8f76723a2731f422c3d15bf5cb9ccdc9566592ec62fa6d",
+        "newTreeSha256": "9b08cd57fec5696aaf0e0cc09c7a964ff29bb0c36d74fc6b82eb1f6e2acdb341"
+      }
+    }
+  },
+  "archive": {
+    "bytes": 383417,
+    "sha256": "05e89be54d52e646ef93f1842c5fa9c45345485e786d3b32db6afcaac61ecc04",
+    "sha512LockedVerified": true,
+    "scriptsExecuted": false
+  },
+  "conclusion": "No concrete compatibility failure reproduced. Real npm11.9.0 generated hidden locks match root lock records, and the complete private-copy/replace transition succeeds on a freshly installed1.10.0 baseline. A different hosted npm history, ownership, permissions, filesystem state, disk space or interrupted stage remains unexamined until the read-only diagnostic receipt.",
+  "limits": [
+    "This local Node24.19.0/npm11.9.0 installation is not the hosted runtime or npm history.",
+    "The target and npm cache are isolated under dependency-real1101; the repository node_modules was read only.",
+    "No host diagnosis, Manager action, private checkpoint or SQL changes."
+  ]
+}

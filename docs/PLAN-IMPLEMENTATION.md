@@ -2,15 +2,15 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Audit prépublic terminé ; livraison1.10.1 à activer
+## Audit prépublic terminé ; préparation1.10.1 non confirmée
 
 Les134 points, la seconde revue de couverture, les six correctifs, les qualifications PR/main5/5 et la publication1.10.1 sont acquis. [Rapport et preuves](AUDIT-PUBLIC-1100-20261023.md), [état actuel](REPRISE.md). Aucun nouveau correctif ni CI du code inchangé n’est à relancer.
 
-1. Recevoir le JSON de préparation et `PREPARATION_1101_CHECK_OK` depuis la [commandeSSH qualifiée](operations-release1101.md).
-2. Valider ces preuves, puis activer les champs Manager1101 et recevoir l’identité réelle1.10.1/source9eb99f1f…/Node24.22.1.
-3. Épingler le writer sur le vrai reçu et la release422216628 ; qualifier ses16 natifs, puis recevoir son enregistrement final avant le GO d’ouverture.
+La tentative a renvoyé `PREPARATION1101_NON_CONFIRMEE`, sans JSON ni `PREPARATION_1101_CHECK_OK`. Phase et cause inconnues : le bootstrap masque l’exception sous ce message générique ; l’écho terminal altéré ne démontre pas la cause. [Signalement utilisateur](verification-proofs/final-public-1100/hosted-preparation1101-not-confirmed.json).
 
-La1.10.0 reste active jusqu’à ces reçus. F-05 empêche son ouverture au public en l’état. Les points physiques non exercés et la sauvegarde hébergée reportée restent des limites déclarées ; aucun envoi ni effacement de compte réel n’est ajouté.
+**Prochaine action unique :** [diagnostic en lecture seule de l’état durable](operations-release1101.md#diagnostic-en-lecture-seule--prochaine-action), avec `ops/inspect-staging1101.py` désormais publié et [qualifié6/6](verification-proofs/final-public-1100/inspector1101-native.json), opérateur immuable3b78d417… ; la commande épinglée figure dans le guide, son résultat hébergé reste à recevoir. L’ancienne commande de préparation est historique, à ne pas rejouer. Ne relancer ni préparation, ni CHECK ; ne modifier aucun champ Manager et ne démarrer aucun writer. Le diagnostic déterminera la reprise, avant validation de vrais reçus puis activation et enregistrement final1101.
+
+La1.10.0 reste la dernière identité active attestée et le dernier checkpoint confirmé. Les GET publics health/ready200 après l’échec ne prouvent pas l’activation1101. F-05 empêche l’ouverture au public en l’état. Les points physiques non exercés et la sauvegarde hébergée reportée restent des limites déclarées ; aucun envoi ni effacement de compte réel n’est ajouté.
 
 ## Évolution 1.10.0 — livraison terminée
 

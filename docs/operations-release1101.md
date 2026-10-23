@@ -1,10 +1,31 @@
-# Livraison1.10.1 — publiée, préparation hébergée attendue
+# Livraison1.10.1 — publiée, préparation hébergée non confirmée
 
-La version est qualifiée sur PR et sur main, cinq jobs chacun sousNode24.22.1. Source exacte `9eb99f1f68ab4beb5484894249afa8f413cc5dd6`, arbre `2a09d9d5d6698a04605e9a4b4faa551536cfca13`. [Release/latest422216628](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.10.1), [publication40008910211](https://github.com/fredbuhr/jessiemessage/actions/runs/40008910211)2/2 et46 tests opérateur réussis. [Preuve](verification-proofs/final-public-1100/ci/publication-40008910211/publication-native.json). **L’application et le checkpoint restent1.10.0 jusqu’aux reçus suivants.**
+La version est qualifiée sur PR et sur main, cinq jobs chacun sousNode24.22.1. Source exacte `9eb99f1f68ab4beb5484894249afa8f413cc5dd6`, arbre `2a09d9d5d6698a04605e9a4b4faa551536cfca13`. [Release/latest422216628](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.10.1), [publication40008910211](https://github.com/fredbuhr/jessiemessage/actions/runs/40008910211)2/2 et46 tests opérateur réussis. [Preuve](verification-proofs/final-public-1100/ci/publication-40008910211/publication-native.json). **La dernière identité active attestée et le dernier checkpoint confirmé restent1.10.0.**
 
-## Préparation et CHECK — prochaine action
+## Diagnostic en lecture seule — prochaine action
 
-Dans le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), exécuter une fois le bloc ci-dessous. Il vérifie deux outils immuables par SHA256, prépare un nouveau checkout et ses dépendances privées distinctes, puis lance uniquement le CHECK. Il conserve configuration, clés, SQL38 et checkpoint actifs.
+L’utilisateur a rapporté `PREPARATION1101_NON_CONFIRMEE : conserver les traces, ne pas relancer.`, sans JSON de préparation ni marqueur `PREPARATION_1101_CHECK_OK`. [Preuve du signalement](verification-proofs/final-public-1100/hosted-preparation1101-not-confirmed.json). La phase atteinte est inconnue : le bootstrap a remplacé l’exception de `stage` par ce message générique. L’écho terminal altéré ne démontre pas la cause et l’absence de JSON ne démontre pas l’absence d’écritures. Les GET publics `/api/health` et `/api/ready` ont répondu200 après l’échec, sans attester une nouvelle identité applicative.
+
+**Prochaine action unique : inspecter l’état durable en lecture seule.** L’inspecteur `ops/inspect-staging1101.py` est publié sur l’opérateur immuable `3b78d417b29dd28a231401edfe48913e19146026`, arbre `244c193f56a8b38581598eced0c66187fd5e2a54`, SHA256 `c12465912c57a242a088b5340fab26a617f6079a5d27232561aa90dd96446a6f`. Sa [qualification native40013315612](verification-proofs/final-public-1100/inspector1101-native.json), tentative1, est réussie1/1 avec6/6 tests. Il ne prépare ni checkout, ni dépendances, ne lance ni CHECK, runtime ou SQL et n’écrit aucun fichier privé. Son exécution hébergée n’est pas encore attestée.
+
+Dans le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), exécuter uniquement ce diagnostic puis conserver et transmettre son résultat JSON :
+
+```bash
+env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_INSPECT1101'
+import hashlib,re,urllib.request
+operator='3b78d417b29dd28a231401edfe48913e19146026'; expected='c12465912c57a242a088b5340fab26a617f6079a5d27232561aa90dd96446a6f'
+if not re.fullmatch('[a-f0-9]{40}',operator): raise SystemExit('PIN_INSPECTION_MANQUANT')
+code=urllib.request.urlopen('https://raw.githubusercontent.com/fredbuhr/jessiemessage/'+operator+'/ops/inspect-staging1101.py',timeout=20).read(262145)
+if len(code)>262144 or hashlib.sha256(code).hexdigest()!=expected: raise SystemExit('OUTIL_INSPECTION_A_VERIFIER')
+exec(compile(code,'<inspection1101>','exec'),{'__name__':'__main__'})
+PY_INSPECT1101
+```
+
+Attendre l’analyse de ce résultat avant toute reprise. Ne relancer ni préparation, ni CHECK, ne modifier aucun champ Manager et ne démarrer aucun writer. Les traces existantes restent à conserver ; aucune cause n’est encore établie.
+
+## Historique — préparation et CHECK tentés, à ne pas rejouer
+
+Le bloc ci-dessous est conservé uniquement pour expliquer la tentative et son message d’échec. **Ce n’est plus une consigne à exécuter.** Il vérifiait deux outils immuables par SHA256, préparait un nouveau checkout et ses dépendances privées distinctes, puis devait lancer le CHECK ; leur réalisation n’est pas attestée par le signalement reçu.
 
 ```bash
 env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_PREPARE1101'
@@ -64,9 +85,11 @@ with tempfile.TemporaryDirectory(prefix='jm1101-preparation-') as directory:
 PY_PREPARE1101
 ```
 
-Attendre le JSON de préparation et le marqueur séparé `PREPARATION_1101_CHECK_OK`, puis les faire relire avant l’activation. Les champs `precheckPassed:false` et les journaux vides du reçu décrivent son état avant CHECK ; seul le marqueur séparé confirme sa réussite. Après échec ou interruption, préserver les traces et inspecter l’état durable avant toute reprise ; ne pas répéter la commande pour découvrir son résultat.
+Le résultat attendu était un JSON de préparation puis le marqueur séparé `PREPARATION_1101_CHECK_OK` ; aucun n’a été rapporté. Les champs `precheckPassed:false` et les journaux vides d’un éventuel reçu décrivent son état avant CHECK ; seul le marqueur séparé en confirmerait la réussite. Préserver les traces et inspecter l’état durable avant toute reprise ; ne pas répéter cette commande pour découvrir son résultat.
 
-## Activation — après validation de la préparation
+## Activation — suspendue jusqu’au diagnostic et aux preuves de préparation
+
+**Ne pas appliquer les champs ou l’action Manager ci-dessous dans l’état courant.** Ces indications restent conservées pour une étape ultérieure, qui dépendra du diagnostic et de preuves valides de préparation et de CHECK.
 
 Ouvrir le [Run/Build Manager](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), service Node239143 nommé **recette.jessiemessage.com**, qui dessert aussi le domaine principal. Le site PHP accueil n’est pas ce service.
 

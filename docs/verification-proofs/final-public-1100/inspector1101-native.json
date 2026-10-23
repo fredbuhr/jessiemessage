@@ -1,0 +1,33 @@
+{
+  "status": "read_only_inspector_native_qualified",
+  "operator": "3b78d417b29dd28a231401edfe48913e19146026",
+  "tree": "244c193f56a8b38581598eced0c66187fd5e2a54",
+  "branch": "ops/inspect-v1.10.1",
+  "runId": 40013315612,
+  "runAttempt": 1,
+  "conclusion": "success",
+  "completedAtUtc": "2026-10-23T19:41:08Z",
+  "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/40013315612",
+  "jobId": 120618926689,
+  "tests": 6,
+  "passes": 6,
+  "failures": 0,
+  "omissions": 0,
+  "toolchain": "Node.js v24.22.1; inspector is Python3",
+  "inspectorSha256": "c12465912c57a242a088b5340fab26a617f6079a5d27232561aa90dd96446a6f",
+  "readOnlyReview": {
+    "privateFileWrites": false,
+    "stageOrCheck": false,
+    "runtimeOrSQL": false,
+    "gitWhitelist": "9 fixed read commands, --no-optional-locks, hooks/fsmonitor disabled",
+    "output": "Neutral codes, booleans and file metadata; no private content"
+  },
+  "hostedExecutionConfirmed": false,
+  "causeOfHostedPreparationFailure": "unknown",
+  "log": {
+    "file": "inspector1101-job120618926689.log.gz",
+    "sha256": "486081c91ebb234ffabd464e6e0e1a3c69b0249a39e14ff3d445a3223f08ae59",
+    "uncompressedSha256": "e3a3b3cb828dc52a41241f8e0f339c81775d9c84562358fe6f745ca5edc15a89",
+    "roundTripVerified": true
+  }
+}

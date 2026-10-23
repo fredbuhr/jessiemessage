@@ -1,0 +1,16 @@
+{
+  "status": "USER_REPORTED_preparation1101_not_confirmed",
+  "recordedAtUtc": "2026-10-23T19:35:42.573374+00:00",
+  "operator": "e5dbfc124a8169a551285d4feb15b827edf07e58",
+  "source": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+  "reportedMessage": "PREPARATION1101_NON_CONFIRMEE : conserver les traces, ne pas relancer.",
+  "stagingJsonReported": false,
+  "checkOkReported": false,
+  "phase": "unknown",
+  "cause": "not_yet_established_bootstrap_suppressed_exception",
+  "terminalEchoGarbled": true,
+  "garbledEchoNotEstablishedCause": true,
+  "noStageOrCHECKRerun": true,
+  "nextAction": "read_only_diagnosis_before_recovery",
+  "activeReleaseLastAttested": "1.10.0"
+}
