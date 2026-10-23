@@ -1,7 +1,7 @@
 {
   "type": "experience190-progress",
   "version": 2,
-  "status": "activation190_not_confirmed_ManagerBuild_contains_start_diagnostic_log_required",
+  "status": "empty190_log_confirmed_correct_ManagerBuildRun_then_start_once",
   "release": {
     "version": "1.9.0",
     "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
@@ -58,10 +58,13 @@
   "activeHosted": {
     "version": "1.8.4",
     "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
-    "schema": 36,
+    "schema": 38,
     "node": "v24.22.1",
     "checkpointSha256": "3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212",
-    "evidence": "USER_REPORTED184; no private host inspection or mutation"
+    "evidence": "USER_REPORTED184 historical identity; currentSQL38 and stopped Manager state have separate proofs, no private host access",
+    "schemaAtLastConfirmedRuntime": 36,
+    "runtimeCurrentlyActive": false,
+    "state": "stopped_in_capture_last184_identity_only"
   },
   "qualification": {
     "pr": 133,
@@ -109,7 +112,7 @@
     "published": true,
     "releaseId": 421892280,
     "latest": false,
-    "hostedPrechecked": false
+    "hostedPrechecked": true
   },
   "hosted": {
     "sourcesPrepared": true,
@@ -124,7 +127,10 @@
     "schema38StatusRead": true,
     "schema38ReceiptAcquired": true,
     "precheckProof": "jm190-hosted-prechecks.json",
-    "activationProblemProof": "jm190-hosted-activation-problem.json"
+    "activationProblemProof": "jm190-hosted-activation-problem.json",
+    "startupLogEmptyReported": true,
+    "recordedStartup190": false,
+    "emptyLogProof": "jm190-hosted-empty-runtime-log.json"
   },
   "limits": [
     "Synthetic Chrome mobile/desktop and multiple browser sessions; no physical phone or two physical devices",
@@ -132,15 +138,14 @@
     "No production190 verification or new hosted backup trial; previous deferred work remains deferred"
   ],
   "nextAction": {
-    "only": "Read jm190 startup log in strict read-only mode; no Run/Build or migration; visible Build is incorrectly start and Run is unobserved",
-    "operator": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
-    "migratorSha256": "3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2",
+    "only": "Correct Manager Build=check190/Run=start190, save, start once if still stopped, report actual readiness identity",
     "instructions": "../operations-release190.md",
-    "SQLAccount": "fb4hmr_jm_mig",
-    "keepServiceStopped": true,
+    "Build": "bash /srv/customer/jessiemessage-private/check-primary-release190-5dda0dd4.sh",
+    "Run": "bash /srv/customer/jessiemessage-private/start-primary-release190-5dda0dd4.sh",
     "doNotReplayUpgrade": true,
     "doNotRerunPreparation": true,
-    "following": "After actual log evidence: correct both Manager fields and determine bounded190 restart path, then identity and writer"
+    "doNotRerunManualCHECKs": true,
+    "following": "After actual190 identity: execute already-qualified final metadata writer"
   },
   "historyProofs": [
     "jm190/pr-native-initial.json",

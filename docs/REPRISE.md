@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**23 octobre 2026 — SQL38 et CHECK185/190 acquis ; activation190 en échec apparent dans Manager.** La capture montre Node239143 arrêté, un avertissement d’exécution et le script start190 dans le champ Build, qui devrait contenir check190. Run n’est pas visible. Aucun démarrage190 réel n’est confirmé ni exclu ; le journal doit être lu avant toute nouvelle tentative. [Observation](verification-proofs/jm190-hosted-activation-problem.json). Ne cliquer ni Run ni Build pour l’instant ; aucune migration ou préparation à rejouer.
+**23 octobre 2026 — SQL38 et CHECK185/190 acquis ; journal190 vide, activation restante.** Le diagnostic utilisateur rapporte0octet et0 démarrage enregistré, empreinte vide exacte. La capture précédente montrait Node arrêté et start190 placé dans Build. Corriger maintenant les champs **Build=check190 / Run=start190**, enregistrer, démarrer une seule fois si toujours arrêté, puis relever l’identité réelle. Aucun SSH, SQL, CHECK ou CI à répéter. [Diagnostic et limites](verification-proofs/jm190-hosted-empty-runtime-log.json).
 
 ## Évolution 1.9.0 — codée, testée et publiée ; activation en attente
 
@@ -18,7 +18,9 @@ L’[interruption](verification-proofs/jm190-hosted-interruption.json) est réso
 
 **CHECK185 et190 acquis selon les résultats utilisateur** : chacun `passed`, `runtimeStarted:false`, journal SHA256 `6aac70a7b9626362009117094981574277cdbb8f3bde674096b067f5518b8712`, correspondant exactement au reçu protocolaire182octets. [Preuve et limites](verification-proofs/jm190-hosted-prechecks.json).185 est précontrôlée jamais démarrée ;190 est précontrôlée mais son identité démarrée reste inconnue.
 
-**Prochaine action unique : lire le journal190 en lecture seule avant toute nouvelle tentative.** [Commande filtrée et marche à suivre](operations-release190.md). Le script start dans Build a pu commencer un démarrage ; l’absence de détail dans la console Manager ne l’exclut pas. Préserver le journal, ne pas le vider pour obtenir un writer vert. Après le résultat, corriger Build=check190/Run=start190 et déterminer la reprise adaptée. L’identité190, ses HTTP et l’enregistrement final restent non acquis.
+**Diagnostic190 acquis : journal vide**,0octet,0ligne,0 `application_started`, SHA256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`. [Preuve](verification-proofs/jm190-hosted-empty-runtime-log.json). Aucun démarrage ni erreur n’y est enregistré ; aucune absence générale de processus n’est déduite.
+
+**Prochaine action : corriger les deux champs Manager puis démarrer190 une seule fois si encore arrêté.** [Liens et valeurs exactes](operations-release190.md) : Build doit lancer check190, Run doit lancer start190. Après enregistrement, ne pas provoquer un second lancement si le service a déjà démarré. Relever version1.9.0, commit5dda0dd4453d34a0be839d2a1402301dea835381, Nodev24.22.1 et date de démarrage dans État du service. L’identité190, ses HTTP et l’enregistrement final restent non acquis.
 
 Le writer final est déjà qualifié9/9 sous Node24.22.1, [run39972263974](https://github.com/fredbuhr/jessiemessage/actions/runs/39972263974), opérateur `8690a8255e1297f288f7eae8ab25811bf63d2262`, SHA256 `40cc11b177de7199d07b7552d440fcf7990a0f8e5e334c885ef8fca93c7d93b8` ; [preuve](verification-proofs/jm190/writer-final-native.json). Sa qualification n’est pas une exécution hôte. L’enregistrement reste conditionné à l’identité190 réelle.
 
@@ -134,7 +136,7 @@ La [sauvegarde privée D01/D08](verification-proofs/jm182-hosted-privacy-notes.j
 
 Le service Node **239143**, nommé **recette.jessiemessage.com** dans le Manager, dessert aussi **jessiemessage.com**, avec **le même runtime et la même base**. Recette est une origine de compatibilité pour les anciens appareils/PWA/Push, jamais une cible de qualification destructive. Accès directs : [SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), [Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), [état du service](https://jessiemessage.com/admin/readiness), [tâches](https://jessiemessage.com/admin/tasks), [connexion admin directe](https://jessiemessage.com/admin/login).
 
-Les commandes ci-dessous sont **la cible correcte190, à appliquer après le diagnostic du journal**. La capture montre actuellement le start dans Build et ne montre pas Run. Les deux CHECK sont acquis ; le démarrage190 réel reste incertain.
+Les commandes ci-dessous sont **la cible correcte190, à appliquer maintenant après le diagnostic du journal vide**. La capture montre actuellement le start dans Build et ne montre pas Run. Les deux CHECK sont acquis ; le démarrage190 réel reste incertain.
 
 | Champ Manager | Cible190 après les CHECK réussis |
 | --- | --- |

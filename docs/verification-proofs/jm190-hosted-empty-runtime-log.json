@@ -1,0 +1,42 @@
+{
+  "type": "jm190-hosted-empty-runtime-log",
+  "reportedDate": "2026-10-23",
+  "evidenceKind": "USER_REPORTED_DIAGNOSTIC_JSON",
+  "reportedResult": {
+    "status": "release190_log_inspected",
+    "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0,
+    "lineCount": 0,
+    "startupRecordCount": 0,
+    "startupIdentities": [],
+    "malformedStartupRecords": 0,
+    "operationalCodes": {},
+    "knownMessages": {},
+    "otherLines": 0,
+    "inspectionReadOnly": true,
+    "runtimeStartedByInspection": false
+  },
+  "consistency": {
+    "sha256MatchesEmptyBytes": true,
+    "zeroCountsCoherent": true,
+    "independentReviewers": [
+      "root",
+      "followup190"
+    ]
+  },
+  "interpretation": {
+    "onlyProves": "No startup or error trace exists in the inspected190 runtime log at the reported read.",
+    "doesNotProve": "Absence of every other process, exact Manager Run field or a unique root cause of the earlier execution warning.",
+    "managerStoppedProof": "jm190-hosted-activation-problem.json",
+    "bothCHECKsRemainAcquired": true,
+    "noNewSSHSQLOrCIRequired": true,
+    "noConfirmedRuntime190Identity": true,
+    "noMetadata190Recorded": true,
+    "agentPrivateHostAccess": false
+  },
+  "nextAction": {
+    "only": "Correct exact190 Manager Build=check and Run=start, save, start once if still stopped, report actual readiness identity.",
+    "Build": "bash /srv/customer/jessiemessage-private/check-primary-release190-5dda0dd4.sh",
+    "Run": "bash /srv/customer/jessiemessage-private/start-primary-release190-5dda0dd4.sh"
+  }
+}
