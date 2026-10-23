@@ -92,6 +92,38 @@ test("real Chrome: cancel, hide and BFCache clear names and confirmation without
   } finally { try { await page?.close(); } finally { try { await source.close(); } finally { await driver.close(); } } }
 });
 
+test("real Chrome: a queued close cannot erase a reopened account closure confirmation", { timeout: 60000 }, async () => {
+  const driver = await startWebDriver(), source = await fixture(); let page;
+  try {
+    page = await driver.browser({ origin: source.origin, width: 375 }); await page.navigate(`/admin/closures?client=${clientId}`); await ready(page);
+    await page.click("#prepare");
+    assert.deepEqual(await page.execute(`
+      const dialog = document.getElementById('confirm-dialog');
+      window.__closureOldClose = null;
+      dialog.addEventListener('close', event => { window.__closureOldClose = { trusted: event.isTrusted }; }, { once: true });
+      document.getElementById('cancel').click();
+      document.getElementById('prepare').click();
+      document.getElementById('confirmation').value = 'FERMER';
+      document.getElementById('confirmation').dispatchEvent(new Event('input', { bubbles: true }));
+      document.getElementById('acknowledge').click();
+      return { open: dialog.open, closeObserved: window.__closureOldClose !== null, enabled: !document.getElementById('confirm').disabled };
+    `), { open: true, closeObserved: false, enabled: true }, "real cancel and prepare handlers run in the same task");
+    await waitUntil(() => page.execute("return window.__closureOldClose !== null"), "old native closure close observed");
+    assert.deepEqual(await page.execute(`return {
+      trusted: window.__closureOldClose.trusted,
+      open: document.getElementById('confirm-dialog').open,
+      confirmation: document.getElementById('confirmation').value,
+      acknowledged: document.getElementById('acknowledge').checked,
+      enabled: !document.getElementById('confirm').disabled,
+      name: document.getElementById('confirm-name').textContent
+    }`), { trusted: true, open: true, confirmation: "FERMER", acknowledged: true, enabled: true, name: "Compte à fermer : Client fictif" });
+    assert.equal(posts(source).length, 0, "reopening confirmation never submits a closure");
+    await page.key("\uE00C");
+    await waitUntil(() => page.execute("return !document.getElementById('confirm-dialog').open && !document.getElementById('confirmation').value && !document.getElementById('acknowledge').checked && !document.getElementById('confirm-name').textContent"), "Escape still clears closure confirmation");
+    assert.equal(posts(source).length, 0);
+  } finally { try { await page?.close(); } finally { try { await source.close(); } finally { await driver.close(); } } }
+});
+
 test("real Chrome: a replacement proof before confirmation cancels the old action", { timeout: 60000 }, async () => {
   const driver = await startWebDriver(), source = await fixture(); let page;
   try {

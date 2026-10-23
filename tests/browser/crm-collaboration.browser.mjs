@@ -89,6 +89,34 @@ async function openPage(driver, source, language, width) {
   } catch (error) { await page.close(); throw error; }
 }
 
+test("real Chrome: a queued CRM close cannot dismiss the reopened profile or clear its draft", { timeout: 60000 }, async () => {
+  const driver = await startWebDriver(), source = await fixture(); let page;
+  const draft = "Brouillon privé conservé après réouverture";
+  try {
+    page = await openPage(driver, source, "fr", 375); await page.click(".crm-fiche-button");
+    await waitUntil(() => page.execute("return !document.querySelector('.crm-profile-form fieldset').hidden"), "profile loaded before close race");
+    await page.type(profileSelector, draft);
+    assert.deepEqual(await page.execute(`
+      const dialog = document.querySelector('.crm-profile-form').closest('dialog');
+      window.__crmOldClose = null;
+      dialog.addEventListener('close', event => { window.__crmOldClose = { trusted: event.isTrusted }; }, { once: true });
+      dialog.querySelector('.dialog-head button').click();
+      document.querySelector('.crm-fiche-button').click();
+      return { open: dialog.open, closeObserved: window.__crmOldClose !== null };
+    `), { open: true, closeObserved: false }, "both real button handlers run before the queued native close");
+    await waitUntil(() => page.execute("return window.__crmOldClose !== null"), "old native CRM close observed");
+    assert.equal(await page.execute("return window.__crmOldClose.trusted"), true);
+    assert.equal(await page.execute("return document.querySelector('.crm-profile-form').closest('dialog').open"), true);
+    await waitUntil(() => page.execute("return !document.querySelector('.crm-profile-form fieldset').hidden"), "reopened profile remains loaded");
+    assert.equal(await page.execute("return document.querySelector(arguments[0]).value", profileSelector), draft);
+    assert.equal(await page.execute("return window.crmFixture.hasUnsavedWork()"), true);
+    assert.equal(source.writes.length, 0, "close and reopen never save implicitly");
+    await page.key("\uE00C");
+    await waitUntil(() => page.execute("return !document.querySelector('.crm-profile-form').closest('dialog').open && document.activeElement?.matches('.crm-fiche-button')"), "Escape still closes and restores focus");
+    assert.equal(source.writes.length, 0); assert.deepEqual(await page.execute("return window.__errors"), []);
+  } finally { try { await page?.close(); } finally { try { await source.close(); } finally { await driver.close(); } } }
+});
+
 test("real Chrome: shared administrator CRM drafts, conflicts and paused label requests", { timeout: 180000 }, async t => {
   const driver = await startWebDriver();
   try {

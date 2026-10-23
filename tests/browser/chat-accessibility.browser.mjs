@@ -1618,13 +1618,39 @@ test("Chrome 320px: profile preference draft resumes after same-owner verificati
 });
 
 
-test("Chrome photo neighbors use authorized server order within a millisecond while rejecting a reversed date or the same message", { timeout: 90000 }, async () => {
+test("Chrome photo viewer ignores a previous close event after reopening and still cleans up native closes", { timeout: 45000 }, async () => {
   for (const role of ["client", "admin"]) {
     resetFixture(); const page = await browser(role === "client" ? 320 : 1280);
     try {
       await loaded(page, role === "client" ? "/messages" : "/admin/messages"); if (role === "admin") await page.click(".contact"); await loadedPhoto(page);
+      await page.click("#messages .photo-open");
+      await waitUntil(() => page.execute("const image=document.querySelector('#lightbox-image img');return document.getElementById('lightbox').matches(':modal')&&!!image&&image.complete&&image.naturalWidth>0"), "original full photo decoded before reopening");
+      // close() queues its native event. Both clicks occur in the same task,
+      // so that old event must not tear down the newly opened modal.
+      await page.execute("window.__photoReopenCloseObserved=false;document.getElementById('lightbox').addEventListener('close',()=>{window.__photoReopenCloseObserved=true},{once:true});document.getElementById('close-lightbox').click();document.querySelector('#messages .photo-open').click()");
+      await waitUntil(() => page.execute("const image=document.querySelector('#lightbox-image img');return window.__photoReopenCloseObserved&&document.getElementById('lightbox').matches(':modal')&&!!image&&image.complete&&image.naturalWidth>0"), "reopened photo survives the previous native close event");
+      const escaped = await page.execute("return document.querySelector('#lightbox-image img').src");
+      await page.key("\uE00C");
+      await waitUntil(() => page.execute("return !document.getElementById('lightbox').open&&!document.querySelector('#lightbox-image img')&&window.__revokedBlobUrls.includes(arguments[0])", escaped), "Escape closes the current modal and revokes its full photo");
+      await page.click("#messages .photo-open");
+      await waitUntil(() => page.execute("const image=document.querySelector('#lightbox-image img');return document.getElementById('lightbox').matches(':modal')&&!!image&&image.complete&&image.naturalWidth>0"), "photo decoded before native close");
+      const nativeClosed = await page.execute("return document.querySelector('#lightbox-image img').src");
+      await page.execute("document.getElementById('lightbox').close()");
+      await waitUntil(() => page.execute("return !document.getElementById('lightbox').open&&!document.querySelector('#lightbox-image img')&&window.__revokedBlobUrls.includes(arguments[0])", nativeClosed), "native close cleans up the current full photo");
+      await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+
+test("Chrome photo neighbors use authorized server order within a millisecond while rejecting a reversed date or the same message", { timeout: 90000 }, async () => {
+  for (const role of ["client", "admin"]) {
+    resetFixture(); const page = await browser(role === "client" ? 320 : 1280);
+    let caseContext = { role, stage: "initial-load" };
+    try {
+      await loaded(page, role === "client" ? "/messages" : "/admin/messages"); if (role === "admin") await page.click(".contact"); await loadedPhoto(page);
       const originalDate = fixture.now + 3000;
       for (const direction of ["previous", "next"]) for (const outcome of ["same-millisecond", "reversed-date", "same-message"]) {
+        caseContext = { role, direction, outcome, stage: "original-photo" };
         // True SQL microseconds are intentionally absent from the public DTO.
         // IDs run opposite to the authorized chronology for this tie in ms.
         const messageId = outcome === "same-message" ? photoMessageId : direction === "previous" ? id(999) : id(1);
@@ -1636,6 +1662,7 @@ test("Chrome photo neighbors use authorized server order within a millisecond wh
         await waitUntil(() => page.execute("const image=document.querySelector('#lightbox-image img');return document.getElementById('lightbox').open&&!!image&&image.complete&&image.naturalWidth>0"), "original full photo ready");
         const originalBlob = await page.execute("return document.querySelector('#lightbox-image img').src");
         const reads = fixture.photoNeighborReads?.length ?? 0;
+        caseContext.stage = "neighbor-photo";
         await page.click(direction === "previous" ? "#previous-photo" : "#next-photo");
         if (outcome === "same-millisecond") {
           await waitUntil(() => page.execute("const image=document.querySelector('#lightbox-image img');return !!image&&image.complete&&image.naturalWidth>0&&image.src!==arguments[0]&&!document.getElementById('next-photo').disabled", originalBlob), "different photo with equal public milliseconds accepted");
@@ -1648,6 +1675,14 @@ test("Chrome photo neighbors use authorized server order within a millisecond wh
         await page.click("#close-lightbox");
       }
       await noJavascriptErrors(page);
+    } catch (error) {
+      try {
+        const diagnostic = await page.execute("const dialog=document.getElementById('lightbox'),image=document.querySelector('#lightbox-image img');return {open:dialog.open,modal:dialog.matches(':modal'),image:image?{src:image.getAttribute('src'),complete:image.complete,naturalWidth:image.naturalWidth}:null,status:document.getElementById('lightbox-status').textContent,previousDisabled:document.getElementById('previous-photo').disabled,nextDisabled:document.getElementById('next-photo').disabled,errors:window.__browserErrors}");
+        console.error("photo_neighbor_diagnostic " + JSON.stringify({ ...caseContext, ...diagnostic, galleryRequests: fixture.galleryRequests ?? [], fullReads: fixture.photoNeighborReads ?? [] }));
+        const directory = new URL("../../artifacts/homepage/", import.meta.url); await mkdir(directory, { recursive: true });
+        await writeFile(new URL(`debug1101-photo-neighbor-${role}.png`, directory), Buffer.from(await page.screenshot(), "base64"));
+      } catch {}
+      throw error;
     } finally { await page.close(); }
   }
 });

@@ -2235,8 +2235,8 @@ el("lightbox-image").addEventListener("touchend", event => {
   if (Math.abs(x) > 60 && Math.abs(x) > Math.abs(y) * 2) void navigatePhoto(x > 0 ? "previous" : "next");
 }, { passive: true });
 el("close-lightbox").addEventListener("click", () => closeLightbox());
-el("media-dialog").addEventListener("close", () => { if (panel) closeMedia(); });
-el("lightbox").addEventListener("close", () => { if (lightboxItem) closeLightbox(); });
+el("media-dialog").addEventListener("close", () => { if (panel && !el("media-dialog").open) closeMedia(); });
+el("lightbox").addEventListener("close", () => { if (lightboxItem && !el("lightbox").open) closeLightbox(); });
 el("more-media").addEventListener("click", () => { void loadMediaPage(true); });
 el("older-messages").addEventListener("click", () => { void loadOlder(); });
 el("newer-messages")?.addEventListener("click", () => { void loadNewer(); });
