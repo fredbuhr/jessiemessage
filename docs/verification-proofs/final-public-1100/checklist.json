@@ -1,0 +1,1284 @@
+{
+  "formatVersion": 1,
+  "type": "jessiemessage-final-public-checklist",
+  "date": "2026-10-23",
+  "targetOpening": "2026-10-23T22:00:00+02:00",
+  "createdAt": "2026-10-23T18:05:52.820728+00:00",
+  "application": {
+    "version": "1.10.0",
+    "source": "51b0cf22e3adbad7ed26653e96706ba707aaf839",
+    "tree": "190024a2f30258554e4a18ff6ae18e2be08c8d7b",
+    "node": "v24.22.1",
+    "schema": 38,
+    "checkpointSha256": "3d60ceb7da3dc61c9ca198ba40a898f6f9ab054650030c7a1632f019ecc73e53"
+  },
+  "scope": "Full final pre-public audit explicitly requested; use existing exact-source native evidence, targeted reproductions for concrete new concerns, moderate anonymous HTTP reads. No real sends/erasures/restore/backup test, no cloud browser.",
+  "status": "in_progress",
+  "decision": "opening_not_validated_pending_blocking_fixes_and_final_coverage",
+  "items": [
+    {
+      "id": "REL-01",
+      "domain": "Version et livraison",
+      "owner": "root",
+      "check": "Version package et deux champs racine du lock concordants",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "REL-02",
+      "domain": "Version et livraison",
+      "owner": "root",
+      "check": "Source et arbre actifs exacts, distincts des commits documentaires",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "REL-03",
+      "domain": "Version et livraison",
+      "owner": "root",
+      "check": "Tag et release latest immuables sur la source qualifiée",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "REL-04",
+      "domain": "Version et livraison",
+      "owner": "root",
+      "check": "CI PR et main sur les SHA exacts, omissions explicites",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "REL-05",
+      "domain": "Version et livraison",
+      "owner": "root",
+      "check": "Node24 officiel épinglé et dépendances verrouillées",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "REL-06",
+      "domain": "Version et livraison",
+      "owner": "root",
+      "check": "SQL38 et migrations immuables, aucun auto-upgrade",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "REL-07",
+      "domain": "Version et livraison",
+      "owner": "root",
+      "check": "Checkpoint privé aligné et anciens blocs préservés",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "REL-08",
+      "domain": "Version et livraison",
+      "owner": "root",
+      "check": "Repli185 compatible, précontrôlé, jamais démarré",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "REL-09",
+      "domain": "Version et livraison",
+      "owner": "root",
+      "check": "Domaines principal/www/accueil/recette et origine partagée",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "REL-10",
+      "domain": "Version et livraison",
+      "owner": "root",
+      "check": "Guides et procédures actuels sans commande acquise à rejouer",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "AUTH-01",
+      "domain": "Accès et comptes",
+      "owner": "review1100",
+      "check": "Invitation valide, expiration, usage unique et admission",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "AUTH-02",
+      "domain": "Accès et comptes",
+      "owner": "review1100",
+      "check": "Vérification e-mail avant activation client",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "AUTH-03",
+      "domain": "Accès et comptes",
+      "owner": "review1100",
+      "check": "Connexion admin avec MFA et anti-rejeu",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "AUTH-04",
+      "domain": "Accès et comptes",
+      "owner": "review1100",
+      "check": "Connexion client, erreurs neutres et tentatives bornées",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "AUTH-05",
+      "domain": "Accès et comptes",
+      "owner": "review1100",
+      "check": "Sessions admin/appareils indépendants et persistance",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "AUTH-06",
+      "domain": "Accès et comptes",
+      "owner": "review1100",
+      "check": "Déconnexion simple, globale et révocation appareil",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "AUTH-07",
+      "domain": "Accès et comptes",
+      "owner": "review1100",
+      "check": "Renouvellement/expiration accès et horloges après attente SQL",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "AUTH-08",
+      "domain": "Accès et comptes",
+      "owner": "review1100",
+      "check": "Mot de passe client et révocation anciens appareils/liens",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "AUTH-09",
+      "domain": "Accès et comptes",
+      "owner": "review1100",
+      "check": "Récupération mot de passe avec TTL et usage unique",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "AUTH-10",
+      "domain": "Accès et comptes",
+      "owner": "review1100",
+      "check": "Tokens et cookies, rotation et réponses anciennes concurrentes",
+      "status": "finding_open",
+      "evidence": [],
+      "limits": [],
+      "findingIds": [
+        "F-01"
+      ]
+    },
+    {
+      "id": "AUTH-11",
+      "domain": "Accès et comptes",
+      "owner": "review1100",
+      "check": "Retour depuis autre site ou PWA vers session existante",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "AUTH-12",
+      "domain": "Accès et comptes",
+      "owner": "review1100",
+      "check": "Rejet clients suspendus/révoqués/fermés à chaque action",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "SEC-01",
+      "domain": "Sécurité et confidentialité",
+      "owner": "review1100",
+      "check": "Autorisation serveur systématique et isolation entre clients",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "SEC-02",
+      "domain": "Sécurité et confidentialité",
+      "owner": "review1100",
+      "check": "Client ne découvre ni autres clients ni groupes/diffusion",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "SEC-03",
+      "domain": "Sécurité et confidentialité",
+      "owner": "review1100",
+      "check": "CSRF, Origin, Fetch Metadata et requêtes forgées",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "SEC-04",
+      "domain": "Sécurité et confidentialité",
+      "owner": "review1100",
+      "check": "Cookies Secure/HttpOnly/SameSite et stockage local privé borné",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "SEC-05",
+      "domain": "Sécurité et confidentialité",
+      "owner": "review1100",
+      "check": "CSP, échappement XSS, liens et rendu de texte non fiable",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "SEC-06",
+      "domain": "Sécurité et confidentialité",
+      "owner": "review1100",
+      "check": "Injection SQL, validation types/tailles/identifiants/paramètres",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "SEC-07",
+      "domain": "Sécurité et confidentialité",
+      "owner": "review1100",
+      "check": "Fichiers chemins/symlinks/traversée/lecture arbitraire",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "SEC-08",
+      "domain": "Sécurité et confidentialité",
+      "owner": "review1100",
+      "check": "Budgets admission/rate limit/concurrence/slow requests",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "SEC-09",
+      "domain": "Sécurité et confidentialité",
+      "owner": "review1100",
+      "check": "Données chiffrées/contextes, clés hors checkout et non E2E",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "SEC-10",
+      "domain": "Sécurité et confidentialité",
+      "owner": "review1100",
+      "check": "Pas de secrets/contenus clients dans logs/Git/artefacts",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "SEC-11",
+      "domain": "Sécurité et confidentialité",
+      "owner": "review1100",
+      "check": "Dépendances directes et transitives: avis de sécurité actuels",
+      "status": "finding_open",
+      "evidence": [],
+      "limits": [],
+      "findingIds": [
+        "F-02"
+      ]
+    },
+    {
+      "id": "SEC-12",
+      "domain": "Sécurité et confidentialité",
+      "owner": "review1100",
+      "check": "Retours d’erreur neutres, absence de trace et d’énumération",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "SEC-13",
+      "domain": "Sécurité et confidentialité",
+      "owner": "review1100",
+      "check": "Quota réseau derrière frontal: réserve A11 sans confiance ajoutée",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "SEC-14",
+      "domain": "Sécurité et confidentialité",
+      "owner": "review1100",
+      "check": "Information produit/confidentialité: réserve A10 et périmètre exact",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "CHAT-01",
+      "domain": "Messagerie et continuité",
+      "owner": "business_preservation",
+      "check": "Texte et Unicode/émojis, limites et envoi explicite",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "CHAT-02",
+      "domain": "Messagerie et continuité",
+      "owner": "business_preservation",
+      "check": "Historique/pagination ordre stable et chargements concurrents",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "CHAT-03",
+      "domain": "Messagerie et continuité",
+      "owner": "business_preservation",
+      "check": "Idempotence des envois et reprise explicite après réponse perdue",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "CHAT-04",
+      "domain": "Messagerie et continuité",
+      "owner": "business_preservation",
+      "check": "Permissions recalculées au moment de l’écriture/livraison",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "CHAT-05",
+      "domain": "Messagerie et continuité",
+      "owner": "business_preservation",
+      "check": "Lecture privée Jessie et badges multiappareils",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "CHAT-06",
+      "domain": "Messagerie et continuité",
+      "owner": "business_preservation",
+      "check": "Brouillon texte après rechargement autorisé du même onglet",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "CHAT-07",
+      "domain": "Messagerie et continuité",
+      "owner": "business_preservation",
+      "check": "Fichiers/identifiants médias jamais restaurés comme nouveau texte",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "CHAT-08",
+      "domain": "Messagerie et continuité",
+      "owner": "business_preservation",
+      "check": "Session remplacée: purge des réponses et brouillons anciens",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "CHAT-09",
+      "domain": "Messagerie et continuité",
+      "owner": "business_preservation",
+      "check": "Suspension/retour et interruptions réseau sans écriture automatique",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "CHAT-10",
+      "domain": "Messagerie et continuité",
+      "owner": "business_preservation",
+      "check": "Ciblage notification et retour au message après authentification",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "CHAT-11",
+      "domain": "Messagerie et continuité",
+      "owner": "business_preservation",
+      "check": "Suppression message et objets chiffrés: isolation des pairs",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "CHAT-12",
+      "domain": "Messagerie et continuité",
+      "owner": "business_preservation",
+      "check": "Sessions simultanées et conflits sans écrasement silencieux",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "MED-01",
+      "domain": "Photos vidéos et galeries",
+      "owner": "business_preservation",
+      "check": "Photos: formats/magic bytes, normalisation et métadonnées",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "MED-02",
+      "domain": "Photos vidéos et galeries",
+      "owner": "business_preservation",
+      "check": "Images très grandes/bombes, mémoire et décodage bornés",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "MED-03",
+      "domain": "Photos vidéos et galeries",
+      "owner": "business_preservation",
+      "check": "Transfert privé, chiffrement, réservations et échecs avant commit",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "MED-04",
+      "domain": "Photos vidéos et galeries",
+      "owner": "business_preservation",
+      "check": "Vidéo admin seule, refus de création par client",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "MED-05",
+      "domain": "Photos vidéos et galeries",
+      "owner": "business_preservation",
+      "check": "Vidéo100MiB, signatures/codecs et capacités réelles",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "MED-06",
+      "domain": "Photos vidéos et galeries",
+      "owner": "business_preservation",
+      "check": "Lecture vidéo Range/seek et authentification avant livraison",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "MED-07",
+      "domain": "Photos vidéos et galeries",
+      "owner": "business_preservation",
+      "check": "Aperçu photo/vidéo et action Envoyer explicite",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "MED-08",
+      "domain": "Photos vidéos et galeries",
+      "owner": "business_preservation",
+      "check": "Photos multiples: limite10, ordre et reprise des seuls échecs",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "MED-09",
+      "domain": "Photos vidéos et galeries",
+      "owner": "business_preservation",
+      "check": "Galerie historique/date/message et média ancien non chargé",
+      "status": "finding_open",
+      "evidence": [],
+      "limits": [],
+      "findingIds": [
+        "F-03"
+      ]
+    },
+    {
+      "id": "MED-10",
+      "domain": "Photos vidéos et galeries",
+      "owner": "business_preservation",
+      "check": "Budgets lecture/export/ZIP distincts et données multi-clients isolées",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "MED-11",
+      "domain": "Photos vidéos et galeries",
+      "owner": "business_preservation",
+      "check": "Quotas stockage communs compatibles sauvegarde/restauration",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "MED-12",
+      "domain": "Photos vidéos et galeries",
+      "owner": "business_preservation",
+      "check": "Objets orphelins/refusés: nettoyage et protections de référence",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "MED-13",
+      "domain": "Photos vidéos et galeries",
+      "owner": "business_preservation",
+      "check": "Médias expirés/supprimés/révoqués non ressuscités",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "MED-14",
+      "domain": "Photos vidéos et galeries",
+      "owner": "business_preservation",
+      "check": "Limites natives codecs/mobiles et lecture réelle non présumée",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "BUS-01",
+      "domain": "Outils de travail",
+      "owner": "business_preservation",
+      "check": "Fiches clients, notes/surnoms/chiffrement et conflits",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "BUS-02",
+      "domain": "Outils de travail",
+      "owner": "business_preservation",
+      "check": "Tags/groupes privés, filtres et recherche clients",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "BUS-03",
+      "domain": "Outils de travail",
+      "owner": "business_preservation",
+      "check": "Diffusions tous/résultats/sélection, nombre final confirmé",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "BUS-04",
+      "domain": "Outils de travail",
+      "owner": "business_preservation",
+      "check": "Livraisons individuelles, audience privée et quotas",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "BUS-05",
+      "domain": "Outils de travail",
+      "owner": "business_preservation",
+      "check": "Diffusions: reprise après fond/session et déduplication",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "BUS-06",
+      "domain": "Outils de travail",
+      "owner": "business_preservation",
+      "check": "Annonces: dates, fuseaux, navigation et brouillons",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "BUS-07",
+      "domain": "Outils de travail",
+      "owner": "business_preservation",
+      "check": "Tâches privées: échéances/report/terminer/réouvrir",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "BUS-08",
+      "domain": "Outils de travail",
+      "owner": "business_preservation",
+      "check": "À répondre: message entrant/réponse/diffusion/concurrence",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "BUS-09",
+      "domain": "Outils de travail",
+      "owner": "business_preservation",
+      "check": "Réponses fixes et personnelles partagées, limites/langues/CAS",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "BUS-10",
+      "domain": "Outils de travail",
+      "owner": "business_preservation",
+      "check": "Profil privé: nom/avatar et gestion des conflits",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "BUS-11",
+      "domain": "Outils de travail",
+      "owner": "business_preservation",
+      "check": "Préférences privées: propriétaires/vues autorisées/CAS/chiffrement",
+      "status": "finding_open",
+      "evidence": [],
+      "limits": [],
+      "findingIds": [
+        "F-05"
+      ]
+    },
+    {
+      "id": "BUS-12",
+      "domain": "Outils de travail",
+      "owner": "business_preservation",
+      "check": "Catalogue691/25/934 et recherche FR/EN intacts",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "BUS-13",
+      "domain": "Outils de travail",
+      "owner": "business_preservation",
+      "check": "Profil public: masqué par défaut et copie admin explicite",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "BUS-14",
+      "domain": "Outils de travail",
+      "owner": "business_preservation",
+      "check": "Publication/retrait: clients refusés, version/conflit, pas données clients",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "BUS-15",
+      "domain": "Outils de travail",
+      "owner": "business_preservation",
+      "check": "Brouillon goûts/profil: retour même compte, purge fermeture/reload",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "UI-01",
+      "domain": "Interface et accessibilité",
+      "owner": "preferences_draft",
+      "check": "Navigation client/admin directe, liens et destinations",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "UI-02",
+      "domain": "Interface et accessibilité",
+      "owner": "preferences_draft",
+      "check": "Écrans mobile320px et bureau1280px sans débordement",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "UI-03",
+      "domain": "Interface et accessibilité",
+      "owner": "preferences_draft",
+      "check": "Clavier mobile/zone de saisie/safe area: preuve et limites",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "UI-04",
+      "domain": "Interface et accessibilité",
+      "owner": "preferences_draft",
+      "check": "Navigation clavier, focus, dialogue, Escape, labels ARIA",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "UI-05",
+      "domain": "Interface et accessibilité",
+      "owner": "preferences_draft",
+      "check": "Contrastes/états/boutons et cibles tactiles",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "UI-06",
+      "domain": "Interface et accessibilité",
+      "owner": "preferences_draft",
+      "check": "Chargement/vide/erreur/403/404/429/503 et reprise compréhensible",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "UI-07",
+      "domain": "Interface et accessibilité",
+      "owner": "preferences_draft",
+      "check": "FR/EN complet pour fonctions et commandes exposées",
+      "status": "finding_open",
+      "evidence": [],
+      "limits": [],
+      "findingIds": [
+        "F-04"
+      ]
+    },
+    {
+      "id": "UI-08",
+      "domain": "Interface et accessibilité",
+      "owner": "preferences_draft",
+      "check": "Changement de langue préserve saisie, focus et champs",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "UI-09",
+      "domain": "Interface et accessibilité",
+      "owner": "preferences_draft",
+      "check": "Empilement menus/dialogues/scroll sans blocage",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "UI-10",
+      "domain": "Interface et accessibilité",
+      "owner": "preferences_draft",
+      "check": "Annulation/navigation/déconnexion: pas de perte silencieuse ou envoi",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "UI-11",
+      "domain": "Interface et accessibilité",
+      "owner": "preferences_draft",
+      "check": "Noms/messages longs et données hostiles rendus comme texte",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "UI-12",
+      "domain": "Interface et accessibilité",
+      "owner": "preferences_draft",
+      "check": "Captures synthétiques relues et distinction appareils réels",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "UI-13",
+      "domain": "Interface et accessibilité",
+      "owner": "preferences_draft",
+      "check": "Compatibilité Chrome/Firefox/Safari: réellement exercée ou limite",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "UI-14",
+      "domain": "Interface et accessibilité",
+      "owner": "preferences_draft",
+      "check": "Textes client simples, aucun détail opérateur dans parcours produit",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "PWA-01",
+      "domain": "Installation et notifications",
+      "owner": "preferences_draft",
+      "check": "Manifeste, icônes, scope/start_url et installation",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "PWA-02",
+      "domain": "Installation et notifications",
+      "owner": "preferences_draft",
+      "check": "HTTPS et service worker borné au même site",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "PWA-03",
+      "domain": "Installation et notifications",
+      "owner": "preferences_draft",
+      "check": "Aucun cache de contenu privé ni mode hors-ligne trompeur",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "PWA-04",
+      "domain": "Installation et notifications",
+      "owner": "preferences_draft",
+      "check": "Push neutre et choix explicite par appareil",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "PWA-05",
+      "domain": "Installation et notifications",
+      "owner": "preferences_draft",
+      "check": "Clic push vers message, ancien onglet et nouvelle fenêtre",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "PWA-06",
+      "domain": "Installation et notifications",
+      "owner": "preferences_draft",
+      "check": "Notifications OS/app fermée/iOS: preuve réelle ou limite",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "OPS-01",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "Configuration privée stricte, permissions et secrets séparés",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "OPS-02",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "Identités SQL runtime/migration et privilèges minimum applicables",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "OPS-03",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "TLS base, transactions, index et migrations/checksums",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "OPS-04",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "Arrêt gracieux, drainage et délais workers/HTTP/SQL",
+      "status": "finding_open",
+      "evidence": [],
+      "limits": [],
+      "findingIds": [
+        "F-05"
+      ]
+    },
+    {
+      "id": "OPS-05",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "SMTP file: retries, TTL, erreurs et pas de fuite",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "OPS-06",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "Push file: quotas/retries/révocation et suppression",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "OPS-07",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "Backpressure/pools/polling et capacité mesurée sur fixtures",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "OPS-08",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "Seuils de croissance A12: pagination/fermeture/campagnes",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "OPS-09",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "Stockage/disque/chiffrement/médias et limites admission",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "OPS-10",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "Sauvegarde manuelle: code/contrats/qualifications, test hébergé reporté",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "OPS-11",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "Restauration isolée, clés nécessaires et portée des garanties",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "OPS-12",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "Nouveau snapshot public hors sauvegarde: limite republiable",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "OPS-13",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "Suppression de compte, export et conservation jusqu’à fermeture",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "OPS-14",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "Historiques/autorités/quarantaines/anciens formats protégés",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "OPS-15",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "Sonde disponibilité et alerte: cadence/échecs/limites connues",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "OPS-16",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "Logs bornés/diagnostic neutre et absence de données privées",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "OPS-17",
+      "domain": "Exploitation et données",
+      "owner": "release_operator",
+      "check": "Plan de repli sans migration inverse ou relance incompatible",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "LIVE-01",
+      "domain": "Lectures HTTP anonymes",
+      "owner": "root",
+      "check": "Health et readiness courants, status/JSON/cache/cookie",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "LIVE-02",
+      "domain": "Lectures HTTP anonymes",
+      "owner": "root",
+      "check": "Pages entrée/admin-login/help/jessie et ressources exposées",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "LIVE-03",
+      "domain": "Lectures HTTP anonymes",
+      "owner": "root",
+      "check": "Protection anonyme API privées et pages administrateur",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "LIVE-04",
+      "domain": "Lectures HTTP anonymes",
+      "owner": "root",
+      "check": "CSP/nosniff/referrer/frame/CORP/permissions/cache en ligne",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "LIVE-05",
+      "domain": "Lectures HTTP anonymes",
+      "owner": "root",
+      "check": "TLS certificat valide/nom/protocole et expiration",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "LIVE-06",
+      "domain": "Lectures HTTP anonymes",
+      "owner": "root",
+      "check": "Redirections HTTP/HTTPS et www/accueil, chemin/query conservés",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "LIVE-07",
+      "domain": "Lectures HTTP anonymes",
+      "owner": "root",
+      "check": "Recette ancien domaine: origine compatible, jamais cible isolée",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "LIVE-08",
+      "domain": "Lectures HTTP anonymes",
+      "owner": "root",
+      "check": "PWAmanifest/icônes/SW en ligne et type MIME",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "LIVE-09",
+      "domain": "Lectures HTTP anonymes",
+      "owner": "root",
+      "check": "API profil public: copie publiée ou404 propre, aucune préférence client",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "LIVE-10",
+      "domain": "Lectures HTTP anonymes",
+      "owner": "root",
+      "check": "404 et fichiers sensibles connus non servis",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "LIVE-11",
+      "domain": "Lectures HTTP anonymes",
+      "owner": "root",
+      "check": "Empreintes ressources publiques égales à source active",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "LIVE-12",
+      "domain": "Lectures HTTP anonymes",
+      "owner": "root",
+      "check": "Latence/tailles bornées: observation sans promesse de débit",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "GATE-01",
+      "domain": "Contrôle de couverture et décision",
+      "owner": "root",
+      "check": "Inventaire tous fichiers suivis, code actif égal à release",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "GATE-02",
+      "domain": "Contrôle de couverture et décision",
+      "owner": "root",
+      "check": "Chaque domaine a responsable/rapport/preuves et niveau de lecture",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "GATE-03",
+      "domain": "Contrôle de couverture et décision",
+      "owner": "root",
+      "check": "Anciens défauts A01-A16/B01-B05/I01 reclassés après corrections",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "GATE-04",
+      "domain": "Contrôle de couverture et décision",
+      "owner": "root",
+      "check": "Chaque constat nouveau a reproduction ou statut hypothèse explicite",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "GATE-05",
+      "domain": "Contrôle de couverture et décision",
+      "owner": "root",
+      "check": "Blocages corrigés et qualifiés ou refus d’ouverture motivé",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "GATE-06",
+      "domain": "Contrôle de couverture et décision",
+      "owner": "root",
+      "check": "Points inconnus/physiques/reportés gardés visibles sans faux succès",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "GATE-07",
+      "domain": "Contrôle de couverture et décision",
+      "owner": "root",
+      "check": "Checklist seconde passe: aucun item en attente/oublié",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    },
+    {
+      "id": "GATE-08",
+      "domain": "Contrôle de couverture et décision",
+      "owner": "root",
+      "check": "Rapport final avec GO/GO conditionnel/NO GO et actions prioritaires",
+      "status": "pending",
+      "evidence": [],
+      "limits": []
+    }
+  ],
+  "correctiveVersion": "1.10.1",
+  "findings": [
+    {
+      "id": "F-01",
+      "severity": "P2",
+      "title": "Ancienne réponse session200 réinstalle un cookie périmé",
+      "status": "confirmed_fix_in_progress",
+      "domainReport": "security.json"
+    },
+    {
+      "id": "F-02",
+      "severity": "P3",
+      "title": "Nodemailer10.1.1 affecté par avis mainteneurs, entrées Jessie filtrées",
+      "status": "hardening_pin10.1.4_in_progress",
+      "primarySources": [
+        "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-8c8m-p3m8-cjg8",
+        "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-m943-m63m-w62w",
+        "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-85x2-q946-cp5h"
+      ]
+    },
+    {
+      "id": "F-03",
+      "severity": "P3_conditional",
+      "title": "Pivot galerie DATETIME6 réduit à3décimales",
+      "status": "confirmed_query_edge_fix_in_progress_no_hosted_data_affected_established"
+    },
+    {
+      "id": "F-04",
+      "severity": "P3",
+      "title": "Titre onglet profil public reste français en anglais",
+      "status": "fix_implemented_native_pending"
+    },
+    {
+      "id": "F-05",
+      "severity": "P1",
+      "title": "Clé de préférences effacée avant une écriture en vol pendant arrêt",
+      "status": "confirmed_fix_in_progress",
+      "reproduction": "real_service_synthetic_store_zero_key_ciphertext"
+    }
+  ]
+}

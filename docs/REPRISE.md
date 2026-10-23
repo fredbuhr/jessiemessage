@@ -2,6 +2,10 @@
 
 **23 octobre 2026 — livraison1.10.0 close : application, publication/latest et checkpoint privé alignés.** Le [reçu final utilisateur](verification-proofs/jm1100-hosted-metadata.json) confirme `release1100_metadata_recorded`, `publicReady:true`, SQL38 inchangé et métadonnées seules, sans redémarrage. Source51b0cf22…, Nodev24.22.1, démarrage exact à Paris `23/10/2026 19:43:39.589`. L’[audit du versionnage et de conservation métier](version-audit-1100.md) est terminé. Aucune commande de livraison restante ; ne rejouer ni préparation, CHECK, activation ou writer.
 
+## Audit final avant ouverture au public — en cours
+
+Nouvelle demande explicite : ouverture envisagée le23octobre vers22hParis, audit complet et seconde vérification de couverture. [Checklist de134points et rapport](AUDIT-PUBLIC-1100-20261023.md), [état structuré](verification-proofs/final-public-1100/checklist.json). Référence active1.10.0 inchangée. Une1.10.1 corrective est en préparation après reproduction d’une course de cookie200(P2) et d’une écriture de préférences avec clé effacée pendant arrêt(P1), avec durcissement Nodemailer10.1.4 et petits correctifs galerie/titreEN. **Aucune validation d’ouverture au public acquise à ce stade.** Ne pas réactiver les anciennes commandes ; prochaine action technique : terminer les correctifs ciblés, qualifier leur source PR/main, puis livraison exacte. Aucun envoi/effacement de compte réel ni nouvel essai de sauvegarde/PC reporté.
+
 ## Évolution 1.10.0 — déployée et finalisée
 
 Profil public `/jessie` et conservation des choix lors d’un changement temporaire de fenêtre/application : **codés, fusionnés et qualifiés**, source `51b0cf22e3adbad7ed26653e96706ba707aaf839`, arbre `190024a2f30258554e4a18ff6ae18e2be08c8d7b`. [PR135](https://github.com/fredbuhr/jessiemessage/pull/135), CI PR39990302080 et main39991790308 chacune **5/5** sousNode24.22.1. Chrome256/256, HTTPS12/12, MariaDB598/598 chacune ; général4026réussis et52omissions explicites sur4078. [Preuve main](verification-proofs/jm1100/main-native.json), [12rendus main relus](verification-proofs/jm1100/main-visual.json), [périmètre](public-profile-1100.md).

@@ -2,6 +2,15 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
+## Audit prépublic et correctif1.10.1 — en cours
+
+1. Traiter les134points de la [checklist](AUDIT-PUBLIC-1100-20261023.md), preuves de source/native/HTTP et limites réelles distinctes.
+2. Corriger les défauts reproduits : session200 ancienne, clé de préférences en vol à l’arrêt ; durcir Nodemailer10.1.4, précision galerie et titreEN. Régressions ciblées avant qualification.
+3. Qualifier source corrective PR/main5/5, puis publier/déployer le commit exact selon reçus successifs.
+4. Recroiser checklist, inventaire et rapports pour une décision explicite avant22h. Aucun succès implicite pour un test non exercé.
+
+Application1.10.0 actuellement active et checkpoint aligné restent la référence jusqu’au reçu de la nouvelle source. L’audit n’autorise aucun envoi ni effacement réel ; sauvegarde hébergée/PC reportés restent des limites visibles.
+
 ## Évolution 1.10.0 — livraison terminée
 
 Code fusionné, PR et main qualifiés5/5 sousNode24.22.1. [Source et preuves](REPRISE.md).
