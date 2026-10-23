@@ -128,8 +128,8 @@
   ],
   "nextAction": {
     "only": "Personal hosted SQL status command, while application remains running",
-    "operator": "ba7d4cdaa63db1afc0922578b09c29152605a7c9",
-    "migratorSha256": "6515976d94f544fefb163959a9be9e25dbf6dbde2e4486840495fe6b3ed221dd",
+    "operator": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
+    "migratorSha256": "3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2",
     "instructions": "../operations-release190.md",
     "doNotRerunPreparation": true,
     "noCheckBeforeSQL38": true,
@@ -140,7 +140,8 @@
     "jm190/pr-native-revision2.json",
     "jm190/pr-native-authfixture.json",
     "jm190/targeted-browser-final.json",
-    "jm190/pr-native-final.json"
+    "jm190/pr-native-final.json",
+    "jm190/migrator-tty-initial.json"
   ],
   "staging": {
     "evidence": "USER_REPORTED",
@@ -151,11 +152,12 @@
     "proof": "jm190-hosted-preparation.json"
   },
   "migrator": {
-    "operator": "ba7d4cdaa63db1afc0922578b09c29152605a7c9",
-    "sha256": "6515976d94f544fefb163959a9be9e25dbf6dbde2e4486840495fe6b3ed221dd",
-    "run": 39965300066,
-    "testsPassed": 8,
+    "operator": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
+    "sha256": "3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2",
+    "run": 39966310677,
+    "testsPassed": 9,
     "nativeNode": "v24.22.1",
-    "proof": "jm190/migrator-staged-native.json"
+    "proof": "jm190/migrator-tty-native.json",
+    "realControllingTerminalTested": true
   }
 }

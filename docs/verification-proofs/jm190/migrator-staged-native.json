@@ -38,5 +38,8 @@
     "bytes": 43040,
     "sha256": "a1d4bb1176fec21dfbde8a8ca0a2b18f364b164c68c87dff3b8a971bfeba5140"
   },
-  "independentReview": "Two-file remote/local blob comparison verified; runtime differs only in staging hash, guards retained."
+  "independentReview": "Two-file remote/local blob comparison verified; runtime differs only in staging hash, guards retained.",
+  "supersededBy": "migrator-tty-native.json",
+  "hostCommandReady": false,
+  "limitationDiscovered": "Only mocked terminal IO in these8 tests; real terminal opening failed locally before credentials. Correction qualified9/9 separately."
 }

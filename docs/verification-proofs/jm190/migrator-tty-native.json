@@ -1,0 +1,52 @@
+{
+  "type": "jm190-migrator-real-tty-native-qualification",
+  "source": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
+  "tree": "32d878f879bcd4af49b4ec0fe45ebcc2dd135bb1",
+  "migratorSha256": "3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2",
+  "stagingReceiptSha256": "3a4788b4a31cac3d55f09950e3b98f99a700e0f0dd8af21f83a6135bd01d8cd0",
+  "run": {
+    "id": 39966310677,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/39966310677",
+    "source": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
+    "attempt": 1,
+    "event": "push",
+    "branch": "ops/release190-tools",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "job": {
+    "id": 120456975144,
+    "name": "operators",
+    "source": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
+    "attempt": 1,
+    "conclusion": "success"
+  },
+  "nativeNode": "v24.22.1",
+  "tests": {
+    "passed": 9,
+    "failed": 0,
+    "scope": "8 migration policy/guard/marker tests plus real controllingPTY/realNode stdin test with synthetic credentials and no SQL"
+  },
+  "terminal": {
+    "realControllingPTY": true,
+    "promptsObserved": true,
+    "echoDisabledForPassword": true,
+    "echoRestored": true,
+    "secretAbsentFromArgvEnvironmentTranscript": true,
+    "statusWritesNoMarkerOrReceipt": true
+  },
+  "independentReview": "followup190: terminal correction verified, no SQL, pin or marker logic changed.",
+  "priorFailureProof": "migrator-tty-initial.json",
+  "hosted": {
+    "sqlStatusRead": false,
+    "migrated": false,
+    "prechecked": false,
+    "started": false,
+    "hostMutations": false
+  },
+  "nextAction": "Personal status command only while application remains running; no SQL upgrade yet.",
+  "log": {
+    "bytes": 43274,
+    "sha256": "5783bf8d486f1beb38a73d43e788c7ffd531595d7b1a40f5d8350b38229ed815"
+  }
+}

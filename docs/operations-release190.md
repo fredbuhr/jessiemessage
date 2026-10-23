@@ -2,7 +2,7 @@
 
 État hébergé confirmé auparavant : **1.8.4 / SQL36 / Node24.22.1**. Les sources190 et185 sont désormais préparées selon le [reçu utilisateur vérifié](verification-proofs/jm190-hosted-preparation.json), sans migration ni démarrage. Empreinte190 `3a4788b4a31cac3d55f09950e3b98f99a700e0f0dd8af21f83a6135bd01d8cd0` recalculée ; référence du reçu185 `8b3cb7d8b40d26ce16fa3b453a2f1fda265021a5b9f4584ec5533905f87ca11e` rapportée. Aucun statut SQL actuel ou CHECK acquis.
 
-**Prochaine action : lire le statut SQL, sans arrêter l’application.** Le migrateur est épinglé à ce reçu réel et qualifié **8/8**, [run39965300066](https://github.com/fredbuhr/jessiemessage/actions/runs/39965300066), tentative1 sous Node24.22.1. [Preuve](verification-proofs/jm190/migrator-staged-native.json). Il demande le compte SQL de migration existant et son mot de passe sur le terminal, avec saisie masquée. Ne transmettre aucun secret dans la discussion.
+**Prochaine action : lire le statut SQL, sans arrêter l’application.** Le migrateur est épinglé à ce reçu réel et qualifié **9/9**, [run39966310677](https://github.com/fredbuhr/jessiemessage/actions/runs/39966310677), tentative1 sous Node24.22.1. [Preuve](verification-proofs/jm190/migrator-tty-native.json). Le vrai test PTY vérifie aussi le masquage et la restauration de l’écho. Il demande le compte SQL de migration existant et son mot de passe sur le terminal, avec saisie masquée. Ne transmettre aucun secret dans la discussion.
 
 Dans le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal) :
 
@@ -10,9 +10,9 @@ Dans le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446
 env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_STATUS190'
 import hashlib, sys, urllib.request
 
-url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/ba7d4cdaa63db1afc0922578b09c29152605a7c9/ops/migrate-release190.py'
+url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/fbbe445bc37c90509d2af30c1ba7dc630927a40e/ops/migrate-release190.py'
 code = urllib.request.urlopen(url, timeout=30).read()
-if hashlib.sha256(code).hexdigest() != '6515976d94f544fefb163959a9be9e25dbf6dbde2e4486840495fe6b3ed221dd':
+if hashlib.sha256(code).hexdigest() != '3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2':
     raise SystemExit('Empreinte incorrecte : arrêt.')
 sys.argv = ['migrate-release190.py', 'status']
 exec(compile(code, '<statut190>', 'exec'), {'__name__': '__main__'})

@@ -1,0 +1,25 @@
+{
+  "type": "jm190-migrator-real-tty-initial-failure",
+  "source": "ba7d4cdaa63db1afc0922578b09c29152605a7c9",
+  "priorNativeRun": 39965300066,
+  "priorTestsPassed": 8,
+  "limitation": "Old tests mocked terminal opening, so8 passed without exercising the real non-seekable controlling terminal.",
+  "reproduction": {
+    "environment": "local Linux controllingPTY, no host connection or SQL",
+    "setup": "pty.openpty; child os.setsid then fcntl.ioctl(0,termios.TIOCSCTTY,0)",
+    "operation": "open('/dev/tty','r+',encoding='utf-8')",
+    "observed": "UnsupportedOperation File or stream is not seekable."
+  },
+  "correction": {
+    "source": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
+    "tree": "32d878f879bcd4af49b4ec0fe45ebcc2dd135bb1",
+    "migratorSha256": "3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2",
+    "change": "Open raw io.FileIO wrapped in TextIOWrapper; preserve getpass and refusal of echoing fallback. SQL, pins and marker logic unchanged.",
+    "regression": "Real controllingPTY and Node subprocess with synthetic credentials verifies prompts, disabled/restored ECHO, stdin-only secret and no status writes.",
+    "localTestsPassed": 9,
+    "independentReview": "followup190 confirmed code delta, terminal behavior and unchanged SQL guards; no rerun by reviewer"
+  },
+  "hostSQLCalls": 0,
+  "hostMutations": false,
+  "preparationRemainsAcquired": true
+}

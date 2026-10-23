@@ -6,7 +6,7 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 Les quatre lots et les six fonctions du [cahier](specs/cahier-20261023.md) sont codés, fusionnés, qualifiésPR/main5/5 et publiés. Source190 `5dda0dd4453d34a0be839d2a1402301dea835381`, release/latest421892314 ; repliSQL38 compatible185 publié non latest. [État et preuves](verification-proofs/experience190-progress.json), [procédure exacte](operations-release190.md).
 
-1. Lire le statutSQL avec le migrateur épinglé au reçu190 réel et qualifié8/8 (run39965300066). Préparation190/185 acquise, sans CHECK/migration/démarrage : ne pas la rejouer.
+1. Lire le statutSQL avec le migrateur épinglé au reçu190 réel et qualifié9/9 (run39966310677). Préparation190/185 acquise, sans CHECK/migration/démarrage : ne pas la rejouer.
 2. Après statut réel, arrêt personnelManager, migration gardée36→38 et preuve38 appliquées/0 en attente.
 3. CHECK185 et190 séparés, puis activation190 et relevé d’identité exact. Ne pas démarrer184 ou172 sur38.185 n’est pas à démarrer pour la qualifier comme repli.
 4. Épingler et qualifier le writer avec les reçus réels et la release421892314 ; enregistrer l’identité et vérifier le checkpoint final, sans redémarrage.
