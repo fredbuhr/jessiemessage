@@ -111,7 +111,7 @@ export function createAnnouncementsStore({ pool, chatStore, broadcastStore, key,
         connection = await pool.getConnection();
         const database = (await connection.query("SELECT DATABASE() AS name"))[0]?.name;
         const migrations = await loadStoreMigrations(options), history = await migrationStatus(connection, { database, migrations });
-        if (migrations.length !== (options.video === true ? 36 : 33) || history.length !== migrations.length || history.some(row => row.state !== "applied")) fail();
+        if (migrations.length !== (options.experience === true ? 38 : options.video === true ? 36 : 33) || history.length !== migrations.length || history.some(row => row.state !== "applied")) fail();
         const table = (await connection.query("SELECT ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'announcements'", [database]))[0];
         if (table?.engine !== "InnoDB") fail();
         const columns = await connection.query(`SELECT COLUMN_NAME AS name, DATA_TYPE AS type, IS_NULLABLE AS nullable,

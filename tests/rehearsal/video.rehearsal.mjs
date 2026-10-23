@@ -120,11 +120,11 @@ async function qualifyCompatibility(t, fixture, client, admin, secondAdmin, base
   for (const [page, role] of [[client, "client"], [admin, "admin"]]) {
     const capability = await json(page, role, `/api/chat/${role}/capabilities`);
     assert.equal(capability.status, 200); assert.equal(capability.data.video.enabled, true); assert.equal(capability.data.video.creationEnabled, false);
-    assert.deepEqual(await rejectedUpload(page, role, base64), { status: 403, data: { error: "feature_read_only" } });
+    assert.deepEqual(await rejectedUpload(page, role, base64), { status: 403, data: { error: role === "admin" ? "feature_read_only" : "video_admin_only" } });
     const source = seeded.seeded.find(value => value.role === role);
     const deniedSend = await json(page, role, `/api/video/${role}/conversations/${seeded.conversationId}/messages`, {
       clientMessageId: role === "client" ? "1".repeat(32) : "2".repeat(32), videoId: source.asset.id, caption: "Refused new video message" });
-    assert.deepEqual(deniedSend, { status: 403, data: { error: "feature_read_only" } });
+    assert.deepEqual(deniedSend, { status: 403, data: { error: role === "admin" ? "feature_read_only" : "video_admin_only" } });
     await visible(page, source.caption); await decodeAndSeek(page, source.caption);
     await page.click("#open-composer-tools");
     assert.equal(await page.execute("const n=document.getElementById('pick-video');return n.hidden||n.disabled"), true);
@@ -158,10 +158,10 @@ async function qualifyCompatibility(t, fixture, client, admin, secondAdmin, base
   assert.equal(await fixture.videoFileCount(), 2);
   const removed = await json(client, "client", `/api/chat/client/conversations/${seeded.conversationId}/messages/${clientMessage.id}/delete`, {});
   assert.equal(removed.status, 200); assert.equal((await range(client, clientMessage.video.contentUrl)).status, 404);
-  t.diagnostic("Compatibility SQL36: seeded before boot through real direct services; seed sessions revoked; configured primary application refuses new uploads/messages/campaigns/personal-reply mutation, preserves existing H264 decode/Range/gallery/two-role ZIP, exact campaign acknowledgement and stored catalogue. A separately owned real v3 worker delivers the pre-existing campaign; configured background producers stay stopped.");
+  t.diagnostic("Compatibility SQL36: historical client rows seeded explicitly before boot, admin rows through real direct services; seed sessions revoked; configured primary application refuses new uploads/messages/campaigns/personal-reply mutation, preserves existing H264 decode/Range/gallery/two-role ZIP, exact campaign acknowledgement and stored catalogue. A separately owned real v3 worker delivers the pre-existing campaign; configured background producers stay stopped.");
 }
 
-test(VIDEO_CREATION_ENABLED ? "real HTTPS SQL36 runtime: both roles upload H264, decode/seek, replay idempotently, browse gallery and revoke content"
+test(VIDEO_CREATION_ENABLED ? "real HTTPS SQL36 runtime: admin-only H264 upload, client refusal, two-role decode/seek, idempotent replay and gallery"
   : "compatibility HTTPS SQL36 runtime: refuses creation and preserves existing video, campaign, catalogue and ZIP", { timeout: 240000 }, async t => {
   const base64 = (await readFile(new URL("../fixtures/video-decodable.mp4.base64", import.meta.url), "utf8")).trim();
   const bytes = Buffer.from(base64, "base64");
@@ -197,18 +197,27 @@ test(VIDEO_CREATION_ENABLED ? "real HTTPS SQL36 runtime: both roles upload H264,
     assert.deepEqual((await json(admin, "admin", endpoint)).data, emptyReplies.data, "deleting the last phrase preserves the durable revision");
     const conversation = await json(client, "client", "/api/chat/client/conversation");
     assert.equal(conversation.status, 200); const id = conversation.data.id;
-    const caption = "Synthetic client H264 caption", reply = "Synthetic Jessie H264 reply", draft = "Unsent private draft";
-    await admin.type("#message-body", draft);
-    await selectVideo(client, base64); await client.type("#message-body", caption); await client.click("#send");
+    const caption = "Synthetic Jessie first H264 caption", reply = "Synthetic Jessie H264 reply", draft = "Unsent private draft";
+    await client.type("#message-body", draft);
+    await client.click("#open-composer-tools");
+    assert.equal(await client.execute("const n=document.getElementById('pick-video');return n.hidden||n.disabled"), true);
+    await client.click("#close-composer-tools");
+    assert.deepEqual(await rejectedUpload(client, "client", base64), { status: 403, data: { error: "video_admin_only" } });
+    assert.equal(await fixture.videoFileCount(), 0, "client rejection created no durable video");
+    await selectVideo(admin, base64); await admin.type("#message-body", caption); await admin.click("#send");
     await visible(client, caption); await visible(admin, caption);
-    assert.equal(await admin.execute("return document.getElementById('message-body').value"), draft);
+    assert.equal(await client.execute("return document.getElementById('message-body').value"), draft);
     await decodeAndSeek(client, caption); await decodeAndSeek(admin, caption);
     const history = await json(client, "client", `/api/chat/client/conversations/${id}/messages`);
     assert.equal(history.status, 200); const message = history.data.messages.find(value => value.body === caption);
     assert.ok(message?.video); assert.equal(message.video.bytes, 12536);
     const partial = await range(client, message.video.contentUrl);
     assert.deepEqual(partial, { status: 206, range: "bytes 0-127/12536", type: "video/mp4", cache: "no-store", bytes: 128 });
-    const replay = await json(client, "client", `/api/video/client/conversations/${id}/messages`, { clientMessageId: message.clientMessageId, videoId: message.video.id, caption });
+    const refusedReuse = await json(client, "client", `/api/video/client/conversations/${id}/messages`, { clientMessageId: "a".repeat(32), videoId: message.video.id, caption });
+    assert.deepEqual(refusedReuse, { status: 403, data: { error: "video_admin_only" } });
+    const ownHistory = await json(admin, "admin", `/api/chat/admin/conversations/${id}/messages`);
+    const ownMessage = ownHistory.data.messages.find(value => value.id === message.id); assert.ok(ownMessage?.clientMessageId);
+    const replay = await json(admin, "admin", `/api/video/admin/conversations/${id}/messages`, { clientMessageId: ownMessage.clientMessageId, videoId: message.video.id, caption });
     assert.equal(replay.status, 200); assert.equal(replay.data.message.id, message.id);
     await admin.type("#message-body", ""); await selectVideo(admin, base64); await admin.type("#message-body", reply); await admin.click("#send");
     await visible(admin, reply); await visible(client, reply); await decodeAndSeek(client, reply);
@@ -219,11 +228,13 @@ test(VIDEO_CREATION_ENABLED ? "real HTTPS SQL36 runtime: both roles upload H264,
     await waitUntil(() => client.execute("return document.getElementById('video-gallery').open&&document.querySelectorAll('#video-grid video').length===2"), "private gallery reads both persisted videos");
     await client.click("#close-video-gallery");
     assert.equal(await client.execute("return document.querySelectorAll('#video-grid video[src]').length"), 0);
-    const removed = await json(client, "client", `/api/chat/client/conversations/${id}/messages/${message.id}/delete`, {});
+    const forbiddenDelete = await json(client, "client", `/api/chat/client/conversations/${id}/messages/${message.id}/delete`, {});
+    assert.equal(forbiddenDelete.status, 404);
+    const removed = await json(admin, "admin", `/api/chat/admin/conversations/${id}/messages/${message.id}/delete`, {});
     assert.equal(removed.status, 200);
     assert.equal((await range(client, message.video.contentUrl)).status, 404, "a deleted message cannot fetch its former content");
     await waitUntil(() => admin.execute("return document.querySelectorAll('#messages .video-message video').length===1"), "peer polling removes the revoked video", 20000);
-    t.diagnostic("Real SQL36/configured index, independent MFA/client cookies, personal reply CRUD across two admin sessions with conflict/exact replay and client denial, 375/390/1280px, raw upload, stored ciphertext, native H264 decode and seek, Range206, same-key replay, two-role captions, gallery and deletion denial passed on owned loopback only.");
+    t.diagnostic("Real SQL36/configured index, independent MFA/client cookies, personal reply CRUD across two admin sessions with conflict/exact replay and client denial, 375/390/1280px, raw upload, stored ciphertext, native H264 decode and seek, Range206, same-key admin replay, client upload/reuse refusal, two-role reads, gallery and deletion denial passed on owned loopback only.");
   } finally {
     try { for (const page of pages) await page.close(); }
     finally { try { await fixture?.stop(); } finally { await driver.close(); } }

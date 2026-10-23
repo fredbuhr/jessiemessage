@@ -16,6 +16,7 @@ globalThis.JessieI18n?.register({
   "La conversation dépasse la limite de téléchargement. Essaie sans les photos ou vidéos si elles sont incluses.": "The conversation exceeds the download limit. Try without photos or videos if included.",
   "Vidéos précédentes": "Earlier videos",
   "Ajouter une vidéo": "Add a video",
+  "L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos.": "Only Jessie can send videos. You can send photos.",
   "Choisir une vidéo MP4": "Choose an MP4 video",
   "Progression de l’envoi vidéo": "Video upload progress",
   "Retirer la vidéo": "Remove video",

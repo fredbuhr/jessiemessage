@@ -1,0 +1,5974 @@
+{
+  "meta": {
+    "nom": "JessieMessage — Mes goûts & fantasmes",
+    "version": "2026-10-23-recherche-1",
+    "langues": [
+      "fr",
+      "en"
+    ],
+    "public": "Adultes (18+) uniquement",
+    "utilisation": "Rubrique facultative du profil personnel des clients et des administrateurs. Aucun usage commercial, aucun ciblage, aucune segmentation, aucune statistique commerciale.",
+    "visibilite": "Préférences privées : accessibles uniquement à leur titulaire et aux administrateurs autorisés.",
+    "choix": "Une seule famille positive J’aime / Mes fantasmes, sans choix négatif Je n’aime pas.",
+    "portee": "Vocabulaire de pratiques/attirances/scenarios consentis entre adultes, destiné à des choix facultatifs de profil.",
+    "regles_affichage": "Un seul libellé FR et un seul libellé EN par bouton ; synonymes invisibles pour la recherche ; pas de doublons volontaires dans une même catégorie.",
+    "sources_ressources": [
+      "https://fr.stripchat.com/tags/girls",
+      "https://help.pornhub.news/hc/en-us/articles/4419863257747-How-to-Format-Videos",
+      "https://help.grindr.com/hc/en-us/articles/4483168490131-My-Tags-Glossary",
+      "https://support.joyclub.com/hc/fr/articles/360021316840-Termes-et-abr%C3%A9viations-courants-et-ce-qu-ils-signifient",
+      "https://www.joyclub.com/fr/magazin/swinger/",
+      "https://feeld.co/glossary?show=Desires",
+      "https://fetlife.com/kinktionary/sexual-activities-gchon",
+      "https://fetlife.com/kinktionary/kink-activities-b2s8w",
+      "https://www.wyylde.com/",
+      "https://www.nouslib.com/"
+    ],
+    "precision": "Compilation et normalisation éditoriale originale à partir de plusieurs référentiels, et non reproduction intégrale ou vérification individuelle de chaque entrée. Les variantes régionales évoluent.",
+    "statistiques": {
+      "categories": 25,
+      "preferences": 691,
+      "synonymes": 934
+    }
+  },
+  "categories": [
+    {
+      "id": "c01",
+      "universe": "Personnes & attirances",
+      "name_fr": "Attirances et orientations",
+      "order": 1,
+      "preferences": [
+        {
+          "id": "pref_c01_hetero-heterosexuel",
+          "fr": "Hétéro / Hétérosexuel",
+          "en": "Straight / Heterosexual",
+          "aliases": [
+            "hétéro",
+            "hetero",
+            "straight"
+          ]
+        },
+        {
+          "id": "pref_c01_gay-homosexuel",
+          "fr": "Gay / Homosexuel",
+          "en": "Gay / Homosexual",
+          "aliases": [
+            "homo",
+            "gay porn",
+            "homosexualité"
+          ]
+        },
+        {
+          "id": "pref_c01_lesbien-lesbienne",
+          "fr": "Lesbien / Lesbienne",
+          "en": "Lesbian",
+          "aliases": [
+            "lesbiennes",
+            "sexe lesbien"
+          ]
+        },
+        {
+          "id": "pref_c01_bi-bisexuel",
+          "fr": "Bi / Bisexuel",
+          "en": "Bi / Bisexual",
+          "aliases": [
+            "bisexuelle",
+            "bisexualité",
+            "bisex"
+          ]
+        },
+        {
+          "id": "pref_c01_bi-curieux-bi-curieuse",
+          "fr": "Bi-curieux / Bi-curieuse",
+          "en": "Bi-curious",
+          "aliases": [
+            "bicurious",
+            "curiosité bi"
+          ]
+        },
+        {
+          "id": "pref_c01_pansexuel",
+          "fr": "Pansexuel",
+          "en": "Pansexual",
+          "aliases": [
+            "pansexualité",
+            "pan"
+          ]
+        },
+        {
+          "id": "pref_c01_queer",
+          "fr": "Queer",
+          "en": "Queer",
+          "aliases": []
+        },
+        {
+          "id": "pref_c01_homoflexible",
+          "fr": "Homoflexible",
+          "en": "Homoflexible",
+          "aliases": [
+            "homoflexibilité"
+          ]
+        },
+        {
+          "id": "pref_c01_heteroflexible",
+          "fr": "Hétéroflexible",
+          "en": "Heteroflexible",
+          "aliases": []
+        },
+        {
+          "id": "pref_c01_asexuel-ace",
+          "fr": "Asexuel / Ace",
+          "en": "Asexual / Ace",
+          "aliases": [
+            "asexualité",
+            "asexual"
+          ]
+        },
+        {
+          "id": "pref_c01_demisexuel",
+          "fr": "Demisexuel",
+          "en": "Demisexual",
+          "aliases": [
+            "demisexualité"
+          ]
+        },
+        {
+          "id": "pref_c01_attirance-pour-les-hommes",
+          "fr": "Attirance pour les hommes",
+          "en": "Attracted to men",
+          "aliases": [
+            "hommes",
+            "men"
+          ]
+        },
+        {
+          "id": "pref_c01_attirance-pour-les-femmes",
+          "fr": "Attirance pour les femmes",
+          "en": "Attracted to women",
+          "aliases": [
+            "femmes",
+            "women"
+          ]
+        },
+        {
+          "id": "pref_c01_attirance-pour-les-personnes-trans",
+          "fr": "Attirance pour les personnes trans",
+          "en": "Attracted to trans people",
+          "aliases": [
+            "trans",
+            "transgender"
+          ]
+        },
+        {
+          "id": "pref_c01_attirance-pour-les-personnes-non-binaires",
+          "fr": "Attirance pour les personnes non binaires",
+          "en": "Attracted to non-binary people",
+          "aliases": [
+            "non binaire",
+            "enby"
+          ]
+        },
+        {
+          "id": "pref_c01_attirance-pour-les-personnes-androgynes",
+          "fr": "Attirance pour les personnes androgynes",
+          "en": "Attracted to androgynous people",
+          "aliases": [
+            "androgyne",
+            "androgyny"
+          ]
+        },
+        {
+          "id": "pref_c01_attirance-pour-la-feminite",
+          "fr": "Attirance pour la féminité",
+          "en": "Attraction to femininity",
+          "aliases": [
+            "gynesexual",
+            "gynésexuel"
+          ]
+        },
+        {
+          "id": "pref_c01_attirance-pour-la-masculinite",
+          "fr": "Attirance pour la masculinité",
+          "en": "Attraction to masculinity",
+          "aliases": [
+            "androsexual",
+            "androsexuel"
+          ]
+        },
+        {
+          "id": "pref_c01_attirance-pour-les-personnes-plus-agees",
+          "fr": "Attirance pour les personnes plus âgées",
+          "en": "Attraction to older adults",
+          "aliases": [
+            "mature",
+            "senior"
+          ]
+        },
+        {
+          "id": "pref_c01_attirance-pour-les-personnes-du-meme-age",
+          "fr": "Attirance pour les personnes du même âge",
+          "en": "Attraction to peers",
+          "aliases": [
+            "same age"
+          ]
+        },
+        {
+          "id": "pref_c01_attirance-pour-les-couples",
+          "fr": "Attirance pour les couples",
+          "en": "Attraction to couples",
+          "aliases": [
+            "couple",
+            "couples"
+          ]
+        },
+        {
+          "id": "pref_c01_attirance-pour-les-groupes",
+          "fr": "Attirance pour les groupes",
+          "en": "Attraction to groups",
+          "aliases": [
+            "groupes",
+            "groups"
+          ]
+        },
+        {
+          "id": "pref_c01_relations-entre-hommes",
+          "fr": "Relations entre hommes",
+          "en": "Male-male encounters",
+          "aliases": [
+            "M/M",
+            "H/H",
+            "M4M"
+          ]
+        },
+        {
+          "id": "pref_c01_relations-entre-femmes",
+          "fr": "Relations entre femmes",
+          "en": "Female-female encounters",
+          "aliases": [
+            "F/F",
+            "F4F",
+            "W/W"
+          ]
+        },
+        {
+          "id": "pref_c01_couples-mixtes-interracial",
+          "fr": "Couples mixtes / interracial",
+          "en": "Interracial couples",
+          "aliases": [
+            "interracial",
+            "couples métissés"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c02",
+      "universe": "Personnes & attirances",
+      "name_fr": "Apparence, morphologie et styles",
+      "order": 2,
+      "preferences": [
+        {
+          "id": "pref_c02_milf",
+          "fr": "MILF",
+          "en": "MILF",
+          "aliases": [
+            "mère séduisante adulte"
+          ]
+        },
+        {
+          "id": "pref_c02_pawg-terme-porno",
+          "fr": "PAWG (terme porno)",
+          "en": "PAWG",
+          "aliases": [
+            "phat ass white girl"
+          ]
+        },
+        {
+          "id": "pref_c02_dilf",
+          "fr": "DILF",
+          "en": "DILF",
+          "aliases": [
+            "père séduisant adulte"
+          ]
+        },
+        {
+          "id": "pref_c02_cougar",
+          "fr": "Cougar",
+          "en": "Cougar",
+          "aliases": [
+            "femme mûre"
+          ]
+        },
+        {
+          "id": "pref_c02_mature",
+          "fr": "Mature",
+          "en": "Mature",
+          "aliases": [
+            "matures"
+          ]
+        },
+        {
+          "id": "pref_c02_senior-seduisant-silver-fox",
+          "fr": "Senior séduisant / Silver fox",
+          "en": "Silver fox",
+          "aliases": [
+            "silver daddy"
+          ]
+        },
+        {
+          "id": "pref_c02_bbw-femme-ronde",
+          "fr": "BBW / Femme ronde",
+          "en": "BBW / Curvy woman",
+          "aliases": [
+            "big beautiful woman",
+            "ronde",
+            "plus size"
+          ]
+        },
+        {
+          "id": "pref_c02_bhm-homme-corpulent",
+          "fr": "BHM / Homme corpulent",
+          "en": "BHM / Big handsome man",
+          "aliases": [
+            "big handsome man",
+            "bear"
+          ]
+        },
+        {
+          "id": "pref_c02_curvy-silhouette-pulpeuse",
+          "fr": "Curvy / Silhouette pulpeuse",
+          "en": "Curvy",
+          "aliases": [
+            "pulpeuse",
+            "voluptueuse"
+          ]
+        },
+        {
+          "id": "pref_c02_mince-slim",
+          "fr": "Mince / Slim",
+          "en": "Slim",
+          "aliases": [
+            "mince",
+            "slender"
+          ]
+        },
+        {
+          "id": "pref_c02_athletique-sportif",
+          "fr": "Athlétique / Sportif",
+          "en": "Athletic",
+          "aliases": [
+            "sportif",
+            "sportive",
+            "fit"
+          ]
+        },
+        {
+          "id": "pref_c02_muscle-musclee",
+          "fr": "Musclé / Musclée",
+          "en": "Muscular",
+          "aliases": [
+            "muscles"
+          ]
+        },
+        {
+          "id": "pref_c02_petite-taille-petite",
+          "fr": "Petite taille / Petite",
+          "en": "Petite",
+          "aliases": [
+            "petite silhouette"
+          ]
+        },
+        {
+          "id": "pref_c02_grande-taille",
+          "fr": "Grande taille",
+          "en": "Tall",
+          "aliases": [
+            "grand",
+            "grande",
+            "very tall"
+          ]
+        },
+        {
+          "id": "pref_c02_poitrine-genereuse-big-tits",
+          "fr": "Poitrine généreuse / Big tits",
+          "en": "Big breasts",
+          "aliases": [
+            "gros seins",
+            "big boobs",
+            "big tits"
+          ]
+        },
+        {
+          "id": "pref_c02_petite-poitrine-small-tits",
+          "fr": "Petite poitrine / Small tits",
+          "en": "Small breasts",
+          "aliases": [
+            "petits seins",
+            "small boobs"
+          ]
+        },
+        {
+          "id": "pref_c02_gros-tetons",
+          "fr": "Gros tétons",
+          "en": "Large nipples",
+          "aliases": [
+            "big nipples",
+            "tétons"
+          ]
+        },
+        {
+          "id": "pref_c02_grandes-fesses-big-ass",
+          "fr": "Grandes fesses / Big ass",
+          "en": "Big ass",
+          "aliases": [
+            "gros cul",
+            "big booty",
+            "big butt"
+          ]
+        },
+        {
+          "id": "pref_c02_fesses-rondes-bubble-butt",
+          "fr": "Fesses rondes / Bubble butt",
+          "en": "Bubble butt",
+          "aliases": [
+            "bubblebutt"
+          ]
+        },
+        {
+          "id": "pref_c02_gros-penis-big-cock",
+          "fr": "Gros pénis / Big cock",
+          "en": "Big penis",
+          "aliases": [
+            "big dick",
+            "grosse bite"
+          ]
+        },
+        {
+          "id": "pref_c02_petit-penis-small-penis",
+          "fr": "Petit pénis / Small penis",
+          "en": "Small penis",
+          "aliases": [
+            "petite bite",
+            "small cock"
+          ]
+        },
+        {
+          "id": "pref_c02_penis-circoncis",
+          "fr": "Pénis circoncis",
+          "en": "Circumcised penis",
+          "aliases": [
+            "cut",
+            "circoncis"
+          ]
+        },
+        {
+          "id": "pref_c02_penis-non-circoncis",
+          "fr": "Pénis non circoncis",
+          "en": "Uncircumcised penis",
+          "aliases": [
+            "uncut",
+            "non circoncis"
+          ]
+        },
+        {
+          "id": "pref_c02_pilosite-naturelle-hairy",
+          "fr": "Pilosité naturelle / Hairy",
+          "en": "Body hair / Hairy",
+          "aliases": [
+            "poilu",
+            "poilue",
+            "hairy"
+          ]
+        },
+        {
+          "id": "pref_c02_intimite-rasee-shaved",
+          "fr": "Intimité rasée / Shaved",
+          "en": "Shaved intimate area",
+          "aliases": [
+            "rasée",
+            "rasé",
+            "shaved"
+          ]
+        },
+        {
+          "id": "pref_c02_tatouages",
+          "fr": "Tatouages",
+          "en": "Tattoos",
+          "aliases": [
+            "tattoo",
+            "tatouage"
+          ]
+        },
+        {
+          "id": "pref_c02_piercings",
+          "fr": "Piercings",
+          "en": "Piercings",
+          "aliases": [
+            "piercing"
+          ]
+        },
+        {
+          "id": "pref_c02_cheveux-longs",
+          "fr": "Cheveux longs",
+          "en": "Long hair",
+          "aliases": [
+            "longs cheveux",
+            "longhair"
+          ]
+        },
+        {
+          "id": "pref_c02_crane-rase",
+          "fr": "Crâne rasé",
+          "en": "Shaved head",
+          "aliases": [
+            "bald",
+            "chauve"
+          ]
+        },
+        {
+          "id": "pref_c02_barbe",
+          "fr": "Barbe",
+          "en": "Beard",
+          "aliases": [
+            "barbu",
+            "bearded"
+          ]
+        },
+        {
+          "id": "pref_c02_lunettes",
+          "fr": "Lunettes",
+          "en": "Glasses",
+          "aliases": [
+            "eyeglasses"
+          ]
+        },
+        {
+          "id": "pref_c02_femme-masculine-tomboy",
+          "fr": "Femme masculine / Tomboy",
+          "en": "Tomboy",
+          "aliases": []
+        },
+        {
+          "id": "pref_c02_homme-feminin-femboy",
+          "fr": "Homme féminin / Femboy",
+          "en": "Femboy",
+          "aliases": [
+            "feminine man"
+          ]
+        },
+        {
+          "id": "pref_c02_gothique-goth",
+          "fr": "Gothique / Goth",
+          "en": "Goth",
+          "aliases": [
+            "gothique"
+          ]
+        },
+        {
+          "id": "pref_c02_pin-up-retro",
+          "fr": "Pin-up / Rétro",
+          "en": "Pin-up / Retro",
+          "aliases": [
+            "pinup",
+            "vintage"
+          ]
+        },
+        {
+          "id": "pref_c02_cameltoe",
+          "fr": "Cameltoe",
+          "en": "Cameltoe",
+          "aliases": [
+            "camel toe"
+          ]
+        },
+        {
+          "id": "pref_c02_naturel-amateur",
+          "fr": "Naturel / Amateur",
+          "en": "Natural / Amateur look",
+          "aliases": [
+            "amateur look",
+            "au naturel"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c03",
+      "universe": "Personnes & attirances",
+      "name_fr": "Origines et représentations",
+      "order": 3,
+      "preferences": [
+        {
+          "id": "pref_c03_personnes-noires-black-ebony",
+          "fr": "Personnes noires / Black / Ebony",
+          "en": "Black / Ebony",
+          "aliases": [
+            "ebony",
+            "black"
+          ]
+        },
+        {
+          "id": "pref_c03_personnes-asiatiques-asian",
+          "fr": "Personnes asiatiques / Asian",
+          "en": "Asian adults",
+          "aliases": [
+            "asian"
+          ]
+        },
+        {
+          "id": "pref_c03_personnes-latines-latina-latino",
+          "fr": "Personnes latines / Latina / Latino",
+          "en": "Latina / Latino",
+          "aliases": [
+            "latina",
+            "latino"
+          ]
+        },
+        {
+          "id": "pref_c03_personnes-arabes",
+          "fr": "Personnes arabes",
+          "en": "Arab adults",
+          "aliases": [
+            "arab",
+            "arabe"
+          ]
+        },
+        {
+          "id": "pref_c03_personnes-metisses-mixed",
+          "fr": "Personnes métisses / Mixed",
+          "en": "Mixed-heritage adults",
+          "aliases": [
+            "mixed race",
+            "métis"
+          ]
+        },
+        {
+          "id": "pref_c03_personnes-sud-asiatiques",
+          "fr": "Personnes sud-asiatiques",
+          "en": "South Asian adults",
+          "aliases": [
+            "indian",
+            "south asian"
+          ]
+        },
+        {
+          "id": "pref_c03_personnes-japonaises",
+          "fr": "Personnes japonaises",
+          "en": "Japanese adults",
+          "aliases": [
+            "japanese"
+          ]
+        },
+        {
+          "id": "pref_c03_personnes-coreennes",
+          "fr": "Personnes coréennes",
+          "en": "Korean adults",
+          "aliases": [
+            "korean"
+          ]
+        },
+        {
+          "id": "pref_c03_personnes-bresiliennes",
+          "fr": "Personnes brésiliennes",
+          "en": "Brazilian adults",
+          "aliases": [
+            "brazilian"
+          ]
+        },
+        {
+          "id": "pref_c03_personnes-francaises",
+          "fr": "Personnes françaises",
+          "en": "French adults",
+          "aliases": [
+            "french"
+          ]
+        },
+        {
+          "id": "pref_c03_personnes-d-europe-de-l-est",
+          "fr": "Personnes d'Europe de l'Est",
+          "en": "Eastern European adults",
+          "aliases": [
+            "eastern european"
+          ]
+        },
+        {
+          "id": "pref_c03_bbc-terme-pornographique",
+          "fr": "BBC (terme pornographique)",
+          "en": "BBC (porn term)",
+          "aliases": [
+            "big black cock",
+            "BBC"
+          ]
+        },
+        {
+          "id": "pref_c03_bwc-terme-pornographique",
+          "fr": "BWC (terme pornographique)",
+          "en": "BWC (porn term)",
+          "aliases": [
+            "big white cock",
+            "BWC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c04",
+      "universe": "Pratiques sexuelles",
+      "name_fr": "Romance et sensualité",
+      "order": 4,
+      "preferences": [
+        {
+          "id": "pref_c04_baisers",
+          "fr": "Baisers",
+          "en": "Kissing",
+          "aliases": [
+            "bisous",
+            "kiss"
+          ]
+        },
+        {
+          "id": "pref_c04_baiser-avec-la-langue",
+          "fr": "Baiser avec la langue",
+          "en": "French kissing",
+          "aliases": [
+            "french kiss",
+            "galoche"
+          ]
+        },
+        {
+          "id": "pref_c04_calins",
+          "fr": "Câlins",
+          "en": "Cuddling",
+          "aliases": [
+            "cuddle",
+            "hug"
+          ]
+        },
+        {
+          "id": "pref_c04_tendresse",
+          "fr": "Tendresse",
+          "en": "Tenderness",
+          "aliases": [
+            "tender",
+            "affection"
+          ]
+        },
+        {
+          "id": "pref_c04_romantisme",
+          "fr": "Romantisme",
+          "en": "Romance",
+          "aliases": [
+            "romantique",
+            "romantic"
+          ]
+        },
+        {
+          "id": "pref_c04_seduction",
+          "fr": "Séduction",
+          "en": "Seduction",
+          "aliases": [
+            "flirt",
+            "flirting"
+          ]
+        },
+        {
+          "id": "pref_c04_flirt-jeux-de-regards",
+          "fr": "Flirt / Jeux de regards",
+          "en": "Flirting / Eye contact",
+          "aliases": [
+            "eye contact",
+            "regards"
+          ]
+        },
+        {
+          "id": "pref_c04_compliments-sensuels",
+          "fr": "Compliments sensuels",
+          "en": "Sensual compliments",
+          "aliases": [
+            "compliments",
+            "praise"
+          ]
+        },
+        {
+          "id": "pref_c04_massage-sensuel",
+          "fr": "Massage sensuel",
+          "en": "Sensual massage",
+          "aliases": [
+            "massage érotique",
+            "massage"
+          ]
+        },
+        {
+          "id": "pref_c04_massage-a-l-huile",
+          "fr": "Massage à l'huile",
+          "en": "Oil massage",
+          "aliases": [
+            "massage huileux"
+          ]
+        },
+        {
+          "id": "pref_c04_massage-tantrique",
+          "fr": "Massage tantrique",
+          "en": "Tantric massage",
+          "aliases": [
+            "tantra",
+            "tantric"
+          ]
+        },
+        {
+          "id": "pref_c04_caresses",
+          "fr": "Caresses",
+          "en": "Caressing",
+          "aliases": [
+            "touching",
+            "caresse"
+          ]
+        },
+        {
+          "id": "pref_c04_caresses-du-corps-entier",
+          "fr": "Caresses du corps entier",
+          "en": "Full-body caressing",
+          "aliases": [
+            "body caressing"
+          ]
+        },
+        {
+          "id": "pref_c04_preliminaires-longs",
+          "fr": "Préliminaires longs",
+          "en": "Long foreplay",
+          "aliases": [
+            "foreplay",
+            "long préliminaires"
+          ]
+        },
+        {
+          "id": "pref_c04_slow-sex-sexe-lent",
+          "fr": "Slow sex / Sexe lent",
+          "en": "Slow sex",
+          "aliases": [
+            "sexe doux",
+            "slowsex"
+          ]
+        },
+        {
+          "id": "pref_c04_sexe-passionne",
+          "fr": "Sexe passionné",
+          "en": "Passionate sex",
+          "aliases": [
+            "passion"
+          ]
+        },
+        {
+          "id": "pref_c04_sexe-tendre",
+          "fr": "Sexe tendre",
+          "en": "Gentle sex",
+          "aliases": [
+            "soft sex"
+          ]
+        },
+        {
+          "id": "pref_c04_sexe-intense",
+          "fr": "Sexe intense",
+          "en": "Intense sex",
+          "aliases": [
+            "intense"
+          ]
+        },
+        {
+          "id": "pref_c04_sexe-spontane",
+          "fr": "Sexe spontané",
+          "en": "Spontaneous sex",
+          "aliases": [
+            "spontanéité"
+          ]
+        },
+        {
+          "id": "pref_c04_morning-sex-reveil-coquin",
+          "fr": "Morning sex / Réveil coquin",
+          "en": "Morning sex",
+          "aliases": [
+            "sexe au réveil"
+          ]
+        },
+        {
+          "id": "pref_c04_quickie-coup-rapide",
+          "fr": "Quickie / Coup rapide",
+          "en": "Quickie",
+          "aliases": [
+            "sexe rapide"
+          ]
+        },
+        {
+          "id": "pref_c04_apres-calins-aftercare",
+          "fr": "Après-câlins / Aftercare",
+          "en": "Aftercare",
+          "aliases": [
+            "after sex cuddles"
+          ]
+        },
+        {
+          "id": "pref_c04_dormir-enlaces",
+          "fr": "Dormir enlacés",
+          "en": "Sleeping together / Spooning",
+          "aliases": [
+            "spooning câlin"
+          ]
+        },
+        {
+          "id": "pref_c04_girlfriend-experience-gfe",
+          "fr": "Girlfriend Experience / GFE",
+          "en": "Girlfriend Experience",
+          "aliases": [
+            "GFE",
+            "petite amie virtuelle"
+          ]
+        },
+        {
+          "id": "pref_c04_boyfriend-experience-bfe",
+          "fr": "Boyfriend Experience / BFE",
+          "en": "Boyfriend Experience",
+          "aliases": [
+            "BFE",
+            "petit ami virtuel"
+          ]
+        },
+        {
+          "id": "pref_c04_sexe-brut-rough-sex-consenti",
+          "fr": "Sexe brut / Rough sex consenti",
+          "en": "Consensual rough sex",
+          "aliases": [
+            "rough sex",
+            "hard sex"
+          ]
+        },
+        {
+          "id": "pref_c04_sexe-classique-vanilla",
+          "fr": "Sexe classique / Vanilla",
+          "en": "Vanilla sex",
+          "aliases": [
+            "vanilla",
+            "vanille"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c05",
+      "universe": "Pratiques sexuelles",
+      "name_fr": "Masturbation et stimulation",
+      "order": 5,
+      "preferences": [
+        {
+          "id": "pref_c05_masturbation-branlette",
+          "fr": "Masturbation / Branlette",
+          "en": "Masturbation",
+          "aliases": [
+            "branlette",
+            "jerk off",
+            "wank"
+          ]
+        },
+        {
+          "id": "pref_c05_masturbation-feminine",
+          "fr": "Masturbation féminine",
+          "en": "Female masturbation",
+          "aliases": [
+            "female solo",
+            "solo girl"
+          ]
+        },
+        {
+          "id": "pref_c05_masturbation-masculine",
+          "fr": "Masturbation masculine",
+          "en": "Male masturbation",
+          "aliases": [
+            "male solo",
+            "solo guy"
+          ]
+        },
+        {
+          "id": "pref_c05_masturbation-mutuelle",
+          "fr": "Masturbation mutuelle",
+          "en": "Mutual masturbation",
+          "aliases": [
+            "mutual play",
+            "handjobs mutuels"
+          ]
+        },
+        {
+          "id": "pref_c05_se-masturber-devant-quelqu-un",
+          "fr": "Se masturber devant quelqu'un",
+          "en": "Masturbating for someone",
+          "aliases": [
+            "solo show",
+            "masturbation exhib"
+          ]
+        },
+        {
+          "id": "pref_c05_regarder-quelqu-un-se-masturber",
+          "fr": "Regarder quelqu'un se masturber",
+          "en": "Watching masturbation",
+          "aliases": [
+            "watching solo"
+          ]
+        },
+        {
+          "id": "pref_c05_doigtage-fingering",
+          "fr": "Doigtage / Fingering",
+          "en": "Fingering",
+          "aliases": [
+            "doigts",
+            "digital stimulation"
+          ]
+        },
+        {
+          "id": "pref_c05_doigtage-mutuel",
+          "fr": "Doigtage mutuel",
+          "en": "Mutual fingering",
+          "aliases": []
+        },
+        {
+          "id": "pref_c05_branlette-espagnole-tittyfuck",
+          "fr": "Branlette espagnole / Tittyfuck",
+          "en": "Tittyfuck / Breast sex",
+          "aliases": [
+            "titty fuck",
+            "boobjob",
+            "branlette entre les seins"
+          ]
+        },
+        {
+          "id": "pref_c05_branlette-a-la-main-handjob",
+          "fr": "Branlette à la main / Handjob",
+          "en": "Handjob",
+          "aliases": [
+            "HJ",
+            "stimulation manuelle du pénis"
+          ]
+        },
+        {
+          "id": "pref_c05_frottements-dry-humping",
+          "fr": "Frottements / Dry humping",
+          "en": "Dry humping",
+          "aliases": [
+            "frottage",
+            "frottements habillés"
+          ]
+        },
+        {
+          "id": "pref_c05_footjob-branlette-avec-les-pieds",
+          "fr": "Footjob / Branlette avec les pieds",
+          "en": "Footjob",
+          "aliases": [
+            "foot job",
+            "stimulation pieds"
+          ]
+        },
+        {
+          "id": "pref_c05_thighjob-entre-les-cuisses",
+          "fr": "Thighjob / Entre les cuisses",
+          "en": "Thighjob",
+          "aliases": [
+            "intercrural sex",
+            "entre-cuisses"
+          ]
+        },
+        {
+          "id": "pref_c05_stimulation-du-clitoris",
+          "fr": "Stimulation du clitoris",
+          "en": "Clitoral stimulation",
+          "aliases": [
+            "clit play"
+          ]
+        },
+        {
+          "id": "pref_c05_stimulation-des-tetons",
+          "fr": "Stimulation des tétons",
+          "en": "Nipple stimulation",
+          "aliases": [
+            "nipple play",
+            "mamelons"
+          ]
+        },
+        {
+          "id": "pref_c05_stimulation-du-point-g",
+          "fr": "Stimulation du point G",
+          "en": "G-spot stimulation",
+          "aliases": [
+            "point G",
+            "g spot"
+          ]
+        },
+        {
+          "id": "pref_c05_stimulation-du-perinee",
+          "fr": "Stimulation du périnée",
+          "en": "Perineum stimulation",
+          "aliases": [
+            "perineal play"
+          ]
+        },
+        {
+          "id": "pref_c05_edging-controle-de-l-excitation",
+          "fr": "Edging / Contrôle de l'excitation",
+          "en": "Edging",
+          "aliases": [
+            "edge",
+            "retarder orgasme"
+          ]
+        },
+        {
+          "id": "pref_c05_deni-d-orgasme",
+          "fr": "Déni d'orgasme",
+          "en": "Orgasm denial",
+          "aliases": [
+            "denial",
+            "no orgasm"
+          ]
+        },
+        {
+          "id": "pref_c05_orgasme-impose-jeu-consensuel",
+          "fr": "Orgasme imposé (jeu consensuel)",
+          "en": "Forced orgasm play",
+          "aliases": [
+            "orgasm control",
+            "orgasme commandé"
+          ]
+        },
+        {
+          "id": "pref_c05_orgasme-ruine",
+          "fr": "Orgasme ruiné",
+          "en": "Ruined orgasm",
+          "aliases": [
+            "ruined climax"
+          ]
+        },
+        {
+          "id": "pref_c05_orgasmes-multiples",
+          "fr": "Orgasmes multiples",
+          "en": "Multiple orgasms",
+          "aliases": [
+            "multi orgasm"
+          ]
+        },
+        {
+          "id": "pref_c05_stimulation-simultanee",
+          "fr": "Stimulation simultanée",
+          "en": "Simultaneous stimulation",
+          "aliases": [
+            "double stimulation"
+          ]
+        },
+        {
+          "id": "pref_c05_orgasme-sur-commande",
+          "fr": "Orgasme sur commande",
+          "en": "Orgasm on command",
+          "aliases": [
+            "cum on command",
+            "CoC"
+          ]
+        },
+        {
+          "id": "pref_c05_gooning-masturbation-prolongee",
+          "fr": "Gooning (masturbation prolongée)",
+          "en": "Gooning",
+          "aliases": [
+            "gooner"
+          ]
+        },
+        {
+          "id": "pref_c05_autostimulation-sans-partenaire",
+          "fr": "Autostimulation sans partenaire",
+          "en": "Solo play",
+          "aliases": [
+            "solo",
+            "onanisme"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c06",
+      "universe": "Pratiques sexuelles",
+      "name_fr": "Sexe oral",
+      "order": 6,
+      "preferences": [
+        {
+          "id": "pref_c06_fellation-blowjob",
+          "fr": "Fellation / Blowjob",
+          "en": "Blowjob / Fellatio",
+          "aliases": [
+            "pipe",
+            "BJ",
+            "suce"
+          ]
+        },
+        {
+          "id": "pref_c06_fellation-douce",
+          "fr": "Fellation douce",
+          "en": "Gentle blowjob",
+          "aliases": [
+            "soft blowjob"
+          ]
+        },
+        {
+          "id": "pref_c06_fellation-intense",
+          "fr": "Fellation intense",
+          "en": "Intense blowjob",
+          "aliases": [
+            "hard blowjob"
+          ]
+        },
+        {
+          "id": "pref_c06_gorge-profonde-deepthroat",
+          "fr": "Gorge profonde / Deepthroat",
+          "en": "Deepthroat",
+          "aliases": [
+            "deep throat",
+            "gorge profonde"
+          ]
+        },
+        {
+          "id": "pref_c06_gagging-jeu-oral-consenti",
+          "fr": "Gagging (jeu oral consenti)",
+          "en": "Gagging",
+          "aliases": [
+            "gag"
+          ]
+        },
+        {
+          "id": "pref_c06_facefucking-jeu-oral-consenti",
+          "fr": "Facefucking (jeu oral consenti)",
+          "en": "Facefucking",
+          "aliases": [
+            "face fuck",
+            "throat play"
+          ]
+        },
+        {
+          "id": "pref_c06_fellation-a-deux-double-blowjob",
+          "fr": "Fellation à deux / Double blowjob",
+          "en": "Double blowjob",
+          "aliases": [
+            "double BJ",
+            "2 girls BJ"
+          ]
+        },
+        {
+          "id": "pref_c06_fellation-mutuelle",
+          "fr": "Fellation mutuelle",
+          "en": "Mutual oral",
+          "aliases": [
+            "mutual blowjob"
+          ]
+        },
+        {
+          "id": "pref_c06_fellation-en-voiture-road-head",
+          "fr": "Fellation en voiture / Road head",
+          "en": "Road head",
+          "aliases": [
+            "roadhead",
+            "car blowjob"
+          ]
+        },
+        {
+          "id": "pref_c06_cunnilingus-cunni",
+          "fr": "Cunnilingus / Cunni",
+          "en": "Cunnilingus",
+          "aliases": [
+            "cunni",
+            "licking pussy",
+            "pussy licking"
+          ]
+        },
+        {
+          "id": "pref_c06_cunnilingus-recu",
+          "fr": "Cunnilingus reçu",
+          "en": "Receiving cunnilingus",
+          "aliases": [
+            "recevoir un cunni"
+          ]
+        },
+        {
+          "id": "pref_c06_cunnilingus-donne",
+          "fr": "Cunnilingus donné",
+          "en": "Giving cunnilingus",
+          "aliases": [
+            "faire un cunni"
+          ]
+        },
+        {
+          "id": "pref_c06_anulingus-rimming",
+          "fr": "Anulingus / Rimming",
+          "en": "Rimming / Anilingus",
+          "aliases": [
+            "anilingus",
+            "anulingus",
+            "rimjob",
+            "feuille de rose"
+          ]
+        },
+        {
+          "id": "pref_c06_69",
+          "fr": "69",
+          "en": "69",
+          "aliases": [
+            "soixante-neuf",
+            "position 69"
+          ]
+        },
+        {
+          "id": "pref_c06_69-lesbien",
+          "fr": "69 lesbien",
+          "en": "Lesbian 69",
+          "aliases": [
+            "69 féminin"
+          ]
+        },
+        {
+          "id": "pref_c06_69-entre-hommes",
+          "fr": "69 entre hommes",
+          "en": "Gay 69",
+          "aliases": [
+            "69 masculin"
+          ]
+        },
+        {
+          "id": "pref_c06_facesitting-queening",
+          "fr": "Facesitting / Queening",
+          "en": "Facesitting",
+          "aliases": [
+            "ass sitting",
+            "s'asseoir sur le visage"
+          ]
+        },
+        {
+          "id": "pref_c06_facesitting-inverse",
+          "fr": "Facesitting inversé",
+          "en": "Reverse facesitting",
+          "aliases": [
+            "reverse queening"
+          ]
+        },
+        {
+          "id": "pref_c06_teabagging",
+          "fr": "Teabagging",
+          "en": "Teabagging",
+          "aliases": [
+            "teabag",
+            "testicules sur le visage"
+          ]
+        },
+        {
+          "id": "pref_c06_langue-sur-le-corps",
+          "fr": "Langue sur le corps",
+          "en": "Body licking",
+          "aliases": [
+            "léchage",
+            "licking body"
+          ]
+        },
+        {
+          "id": "pref_c06_lechage-des-seins",
+          "fr": "Léchage des seins",
+          "en": "Breast licking",
+          "aliases": [
+            "lick nipples"
+          ]
+        },
+        {
+          "id": "pref_c06_lechage-des-pieds",
+          "fr": "Léchage des pieds",
+          "en": "Foot licking",
+          "aliases": [
+            "licking feet"
+          ]
+        },
+        {
+          "id": "pref_c06_lechage-des-aisselles",
+          "fr": "Léchage des aisselles",
+          "en": "Armpit licking",
+          "aliases": [
+            "licking pits"
+          ]
+        },
+        {
+          "id": "pref_c06_avaler-le-sperme",
+          "fr": "Avaler le sperme",
+          "en": "Cum swallowing",
+          "aliases": [
+            "swallow",
+            "avalage"
+          ]
+        },
+        {
+          "id": "pref_c06_du-cul-a-la-bouche-a2m",
+          "fr": "Du cul à la bouche / A2M",
+          "en": "Ass to mouth / ATM",
+          "aliases": [
+            "ATM",
+            "A2M",
+            "anal to mouth"
+          ]
+        },
+        {
+          "id": "pref_c06_felching-terme-porno",
+          "fr": "Felching (terme porno)",
+          "en": "Felching",
+          "aliases": []
+        },
+        {
+          "id": "pref_c06_jeu-oral-guide",
+          "fr": "Jeu oral guidé",
+          "en": "Guided oral play",
+          "aliases": [
+            "oral instructions"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c07",
+      "universe": "Pratiques sexuelles",
+      "name_fr": "Pénétration, positions et frottements",
+      "order": 7,
+      "preferences": [
+        {
+          "id": "pref_c07_sexe-vaginal",
+          "fr": "Sexe vaginal",
+          "en": "Vaginal sex",
+          "aliases": [
+            "vaginal",
+            "penetration vaginale"
+          ]
+        },
+        {
+          "id": "pref_c07_penetration-profonde",
+          "fr": "Pénétration profonde",
+          "en": "Deep penetration",
+          "aliases": [
+            "deep sex"
+          ]
+        },
+        {
+          "id": "pref_c07_double-penetration-dp",
+          "fr": "Double pénétration / DP",
+          "en": "Double penetration",
+          "aliases": [
+            "DP",
+            "double pen"
+          ]
+        },
+        {
+          "id": "pref_c07_triple-penetration-tp",
+          "fr": "Triple pénétration / TP",
+          "en": "Triple penetration",
+          "aliases": [
+            "TP",
+            "triple pen"
+          ]
+        },
+        {
+          "id": "pref_c07_missionnaire",
+          "fr": "Missionnaire",
+          "en": "Missionary",
+          "aliases": []
+        },
+        {
+          "id": "pref_c07_levrette-doggy-style",
+          "fr": "Levrette / Doggy style",
+          "en": "Doggy style",
+          "aliases": [
+            "doggy",
+            "doggystyle",
+            "levrette"
+          ]
+        },
+        {
+          "id": "pref_c07_amazone-cowgirl",
+          "fr": "Amazone / Cowgirl",
+          "en": "Cowgirl",
+          "aliases": [
+            "riding",
+            "woman on top"
+          ]
+        },
+        {
+          "id": "pref_c07_amazone-inversee-reverse-cowgirl",
+          "fr": "Amazone inversée / Reverse cowgirl",
+          "en": "Reverse cowgirl",
+          "aliases": [
+            "reverse riding"
+          ]
+        },
+        {
+          "id": "pref_c07_cuillere-spooning",
+          "fr": "Cuillère / Spooning",
+          "en": "Spooning position",
+          "aliases": [
+            "spooning sex",
+            "position cuillère"
+          ]
+        },
+        {
+          "id": "pref_c07_face-a-face",
+          "fr": "Face à face",
+          "en": "Face-to-face sex",
+          "aliases": [
+            "face to face"
+          ]
+        },
+        {
+          "id": "pref_c07_debout",
+          "fr": "Debout",
+          "en": "Standing sex",
+          "aliases": [
+            "standing position"
+          ]
+        },
+        {
+          "id": "pref_c07_assis-sur-les-genoux",
+          "fr": "Assis / Sur les genoux",
+          "en": "Seated sex",
+          "aliases": [
+            "seated",
+            "lap sex"
+          ]
+        },
+        {
+          "id": "pref_c07_lotus",
+          "fr": "Lotus",
+          "en": "Lotus position",
+          "aliases": [
+            "lotus sex"
+          ]
+        },
+        {
+          "id": "pref_c07_brouette",
+          "fr": "Brouette",
+          "en": "Wheelbarrow position",
+          "aliases": [
+            "wheelbarrow"
+          ]
+        },
+        {
+          "id": "pref_c07_position-papillon",
+          "fr": "Position papillon",
+          "en": "Butterfly position",
+          "aliases": [
+            "butterfly sex"
+          ]
+        },
+        {
+          "id": "pref_c07_prone-bone-a-plat-ventre",
+          "fr": "Prone bone / À plat ventre",
+          "en": "Prone bone",
+          "aliases": [
+            "pronebone",
+            "allongé ventre"
+          ]
+        },
+        {
+          "id": "pref_c07_sur-le-cote",
+          "fr": "Sur le côté",
+          "en": "Sideways sex",
+          "aliases": [
+            "sideways position"
+          ]
+        },
+        {
+          "id": "pref_c07_ciseaux-tribadisme",
+          "fr": "Ciseaux / Tribadisme",
+          "en": "Scissoring / Tribbing",
+          "aliases": [
+            "scissoring",
+            "tribadisme",
+            "tribbing"
+          ]
+        },
+        {
+          "id": "pref_c07_frottement-entre-penis-frot",
+          "fr": "Frottement entre pénis / Frot",
+          "en": "Frot / Frotting",
+          "aliases": [
+            "frottage entre hommes",
+            "frot"
+          ]
+        },
+        {
+          "id": "pref_c07_intercrural-entre-cuisses",
+          "fr": "Intercrural / Entre-cuisses",
+          "en": "Intercrural sex",
+          "aliases": [
+            "thigh sex",
+            "intercrural"
+          ]
+        },
+        {
+          "id": "pref_c07_caresses-sans-penetration",
+          "fr": "Caresses sans pénétration",
+          "en": "Non-penetrative sex",
+          "aliases": [
+            "outercourse"
+          ]
+        },
+        {
+          "id": "pref_c07_sexe-habille-clothed-sex",
+          "fr": "Sexe habillé / Clothed sex",
+          "en": "Clothed sex",
+          "aliases": [
+            "clothed play"
+          ]
+        },
+        {
+          "id": "pref_c07_penetration-avec-gode-ceinture",
+          "fr": "Pénétration avec gode-ceinture",
+          "en": "Strap-on penetration",
+          "aliases": [
+            "strap on",
+            "strap-on"
+          ]
+        },
+        {
+          "id": "pref_c07_pegging",
+          "fr": "Pegging",
+          "en": "Pegging",
+          "aliases": [
+            "femme pénétrant homme"
+          ]
+        },
+        {
+          "id": "pref_c07_sexe-oral-et-penetration-simultanes",
+          "fr": "Sexe oral et pénétration simultanés",
+          "en": "Oral and penetrative play",
+          "aliases": [
+            "simultané oral"
+          ]
+        },
+        {
+          "id": "pref_c07_sexe-entre-femmes-tribbing",
+          "fr": "Sexe entre femmes / Tribbing",
+          "en": "Woman-woman rubbing",
+          "aliases": [
+            "tribadisme féminin"
+          ]
+        },
+        {
+          "id": "pref_c07_frottement-corps-a-corps",
+          "fr": "Frottement corps à corps",
+          "en": "Body-to-body rubbing",
+          "aliases": [
+            "body rubbing"
+          ]
+        },
+        {
+          "id": "pref_c07_frottement-anal-externe",
+          "fr": "Frottement anal externe",
+          "en": "External anal play",
+          "aliases": [
+            "anal rubbing"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c08",
+      "universe": "Pratiques sexuelles",
+      "name_fr": "Anal et prostate",
+      "order": 8,
+      "preferences": [
+        {
+          "id": "pref_c08_sexe-anal-sodomie",
+          "fr": "Sexe anal / Sodomie",
+          "en": "Anal sex",
+          "aliases": [
+            "anal",
+            "sodomie"
+          ]
+        },
+        {
+          "id": "pref_c08_sans-preservatif-bareback",
+          "fr": "Sans préservatif / Bareback",
+          "en": "Bareback sex",
+          "aliases": [
+            "bareback",
+            "BB"
+          ]
+        },
+        {
+          "id": "pref_c08_avec-preservatif",
+          "fr": "Avec préservatif",
+          "en": "Condom sex",
+          "aliases": [
+            "safer sex",
+            "condom"
+          ]
+        },
+        {
+          "id": "pref_c08_penetration-anale-recue",
+          "fr": "Pénétration anale reçue",
+          "en": "Receiving anal sex",
+          "aliases": [
+            "bottom anal",
+            "anal passif"
+          ]
+        },
+        {
+          "id": "pref_c08_penetration-anale-donnee",
+          "fr": "Pénétration anale donnée",
+          "en": "Giving anal sex",
+          "aliases": [
+            "top anal",
+            "anal actif"
+          ]
+        },
+        {
+          "id": "pref_c08_doigtage-anal",
+          "fr": "Doigtage anal",
+          "en": "Anal fingering",
+          "aliases": [
+            "anal finger"
+          ]
+        },
+        {
+          "id": "pref_c08_stimulation-anale-externe",
+          "fr": "Stimulation anale externe",
+          "en": "External anal stimulation",
+          "aliases": [
+            "external anal"
+          ]
+        },
+        {
+          "id": "pref_c08_gode-anal",
+          "fr": "Gode anal",
+          "en": "Anal dildo",
+          "aliases": [
+            "anal toy",
+            "dildo anal"
+          ]
+        },
+        {
+          "id": "pref_c08_vibromasseur-anal",
+          "fr": "Vibromasseur anal",
+          "en": "Anal vibrator",
+          "aliases": []
+        },
+        {
+          "id": "pref_c08_double-penetration-anale",
+          "fr": "Double pénétration anale",
+          "en": "Double anal penetration",
+          "aliases": [
+            "DAP",
+            "double anal"
+          ]
+        },
+        {
+          "id": "pref_c08_fisting-anal",
+          "fr": "Fisting anal",
+          "en": "Anal fisting",
+          "aliases": [
+            "fist anal",
+            "fistfucking anal"
+          ]
+        },
+        {
+          "id": "pref_c08_fisting-vaginal",
+          "fr": "Fisting vaginal",
+          "en": "Vaginal fisting",
+          "aliases": [
+            "fist vaginal",
+            "fistfucking vaginal"
+          ]
+        },
+        {
+          "id": "pref_c08_stretching-anal-jeu",
+          "fr": "Stretching anal (jeu)",
+          "en": "Anal stretching",
+          "aliases": [
+            "anal stretch"
+          ]
+        },
+        {
+          "id": "pref_c08_gape-fantasme-anal",
+          "fr": "Gape (fantasme anal)",
+          "en": "Anal gape",
+          "aliases": [
+            "gaping",
+            "gape"
+          ]
+        },
+        {
+          "id": "pref_c08_gode-ceinture-anal-pegging",
+          "fr": "Gode-ceinture anal / Pegging",
+          "en": "Anal strap-on",
+          "aliases": [
+            "strap on anal"
+          ]
+        },
+        {
+          "id": "pref_c08_massage-de-la-prostate",
+          "fr": "Massage de la prostate",
+          "en": "Prostate massage",
+          "aliases": [
+            "prostate play"
+          ]
+        },
+        {
+          "id": "pref_c08_stimulation-de-la-prostate",
+          "fr": "Stimulation de la prostate",
+          "en": "Prostate stimulation",
+          "aliases": [
+            "P-spot",
+            "P spot"
+          ]
+        },
+        {
+          "id": "pref_c08_orgasme-prostatique",
+          "fr": "Orgasme prostatique",
+          "en": "Prostate orgasm",
+          "aliases": [
+            "p orgasm"
+          ]
+        },
+        {
+          "id": "pref_c08_milking-prostatique",
+          "fr": "Milking prostatique",
+          "en": "Prostate milking",
+          "aliases": []
+        },
+        {
+          "id": "pref_c08_anulingus-rimming-anal",
+          "fr": "Anulingus / Rimming anal",
+          "en": "Anal rimming",
+          "aliases": [
+            "rimjob anal"
+          ]
+        },
+        {
+          "id": "pref_c08_anal-avec-sextoy-connecte",
+          "fr": "Anal avec sextoy connecté",
+          "en": "Connected anal toy play",
+          "aliases": [
+            "lovense anal"
+          ]
+        },
+        {
+          "id": "pref_c08_plaisir-anal-sans-penetration",
+          "fr": "Plaisir anal sans pénétration",
+          "en": "Non-penetrative anal play",
+          "aliases": [
+            "anal externe"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c09",
+      "universe": "Pratiques sexuelles",
+      "name_fr": "Éjaculation et fluides",
+      "order": 9,
+      "preferences": [
+        {
+          "id": "pref_c09_ejaculation-cumshot",
+          "fr": "Éjaculation / Cumshot",
+          "en": "Cumshot",
+          "aliases": [
+            "cum",
+            "éjaculation"
+          ]
+        },
+        {
+          "id": "pref_c09_ejaculation-faciale-facial",
+          "fr": "Éjaculation faciale / Facial",
+          "en": "Facial",
+          "aliases": [
+            "facial cumshot"
+          ]
+        },
+        {
+          "id": "pref_c09_ejaculation-sur-le-corps",
+          "fr": "Éjaculation sur le corps",
+          "en": "Body cumshot",
+          "aliases": [
+            "body shot"
+          ]
+        },
+        {
+          "id": "pref_c09_ejaculation-sur-les-seins",
+          "fr": "Éjaculation sur les seins",
+          "en": "Cum on breasts",
+          "aliases": [
+            "boob cumshot"
+          ]
+        },
+        {
+          "id": "pref_c09_ejaculation-sur-les-fesses",
+          "fr": "Éjaculation sur les fesses",
+          "en": "Cum on ass",
+          "aliases": [
+            "ass cumshot"
+          ]
+        },
+        {
+          "id": "pref_c09_ejaculation-dans-la-bouche",
+          "fr": "Éjaculation dans la bouche",
+          "en": "Cum in mouth",
+          "aliases": [
+            "oral finish"
+          ]
+        },
+        {
+          "id": "pref_c09_ejaculation-a-l-interieur-creampie",
+          "fr": "Éjaculation à l'intérieur / Creampie",
+          "en": "Creampie",
+          "aliases": [
+            "cream pie"
+          ]
+        },
+        {
+          "id": "pref_c09_ejaculation-feminine-squirt",
+          "fr": "Éjaculation féminine / Squirt",
+          "en": "Squirting",
+          "aliases": [
+            "squirt"
+          ]
+        },
+        {
+          "id": "pref_c09_ejaculation-abondante",
+          "fr": "Éjaculation abondante",
+          "en": "Large cumshot",
+          "aliases": [
+            "big load"
+          ]
+        },
+        {
+          "id": "pref_c09_multiples-ejaculations",
+          "fr": "Multiples éjaculations",
+          "en": "Multiple ejaculations",
+          "aliases": [
+            "multiple cumshots"
+          ]
+        },
+        {
+          "id": "pref_c09_bukkake",
+          "fr": "Bukkake",
+          "en": "Bukkake",
+          "aliases": []
+        },
+        {
+          "id": "pref_c09_breeding-fantasy-fantasme-de-fecondation",
+          "fr": "Breeding fantasy / Fantasme de fécondation",
+          "en": "Breeding fantasy",
+          "aliases": [
+            "breeding kink",
+            "breeding"
+          ]
+        },
+        {
+          "id": "pref_c09_snowballing",
+          "fr": "Snowballing",
+          "en": "Snowballing",
+          "aliases": [
+            "snowball"
+          ]
+        },
+        {
+          "id": "pref_c09_jeux-de-salive-spit-play",
+          "fr": "Jeux de salive / Spit play",
+          "en": "Spit play",
+          "aliases": [
+            "spitting",
+            "salive"
+          ]
+        },
+        {
+          "id": "pref_c09_echange-de-salive-baisers-mouilles",
+          "fr": "Échange de salive / Baisers mouillés",
+          "en": "Saliva exchange",
+          "aliases": [
+            "wet kisses"
+          ]
+        },
+        {
+          "id": "pref_c09_sperme-cum-play",
+          "fr": "Sperme / Cum play",
+          "en": "Semen play",
+          "aliases": [
+            "cum play",
+            "sperme"
+          ]
+        },
+        {
+          "id": "pref_c09_degustation-du-sperme",
+          "fr": "Dégustation du sperme",
+          "en": "Semen tasting",
+          "aliases": [
+            "cum tasting"
+          ]
+        },
+        {
+          "id": "pref_c09_facial-collectif",
+          "fr": "Facial collectif",
+          "en": "Group facial",
+          "aliases": [
+            "multiple facial"
+          ]
+        },
+        {
+          "id": "pref_c09_jeux-d-urine-urophilie",
+          "fr": "Jeux d'urine / Urophilie",
+          "en": "Urine play / Watersports",
+          "aliases": [
+            "piss play",
+            "watersports",
+            "urophilie"
+          ]
+        },
+        {
+          "id": "pref_c09_golden-shower",
+          "fr": "Golden shower",
+          "en": "Golden shower",
+          "aliases": [
+            "douche dorée"
+          ]
+        },
+        {
+          "id": "pref_c09_omorashi-envie-d-uriner",
+          "fr": "Omorashi (envie d'uriner)",
+          "en": "Omorashi",
+          "aliases": [
+            "piss desperation",
+            "desperation play"
+          ]
+        },
+        {
+          "id": "pref_c09_scat-scatophilie",
+          "fr": "Scat / Scatophilie",
+          "en": "Scat play",
+          "aliases": [
+            "scat",
+            "caviar",
+            "coprophilie"
+          ]
+        },
+        {
+          "id": "pref_c09_jeux-de-pets-flatulence",
+          "fr": "Jeux de pets / Flatulence",
+          "en": "Fart fetish",
+          "aliases": [
+            "flatulence",
+            "farting"
+          ]
+        },
+        {
+          "id": "pref_c09_lactation-lait-maternel",
+          "fr": "Lactation / Lait maternel",
+          "en": "Lactation play",
+          "aliases": [
+            "lactation",
+            "breast milk"
+          ]
+        },
+        {
+          "id": "pref_c09_jeux-autour-des-regles",
+          "fr": "Jeux autour des règles",
+          "en": "Menstrual fetish",
+          "aliases": [
+            "period play",
+            "menstruation fetish"
+          ]
+        },
+        {
+          "id": "pref_c09_sploshing-nourriture-sur-le-corps",
+          "fr": "Sploshing / Nourriture sur le corps",
+          "en": "Sploshing",
+          "aliases": [
+            "food play"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c10",
+      "universe": "Sexualité à plusieurs",
+      "name_fr": "Duos, trios et groupes",
+      "order": 10,
+      "preferences": [
+        {
+          "id": "pref_c10_plan-a-trois-triolisme",
+          "fr": "Plan à trois / Triolisme",
+          "en": "Threesome",
+          "aliases": [
+            "trio",
+            "plan à 3",
+            "3some"
+          ]
+        },
+        {
+          "id": "pref_c10_hhf-deux-hommes-et-une-femme",
+          "fr": "HHF / Deux hommes et une femme",
+          "en": "MMF / MFM threesome",
+          "aliases": [
+            "HHF",
+            "MMF",
+            "MFM",
+            "2 hommes 1 femme"
+          ]
+        },
+        {
+          "id": "pref_c10_ffh-deux-femmes-et-un-homme",
+          "fr": "FFH / Deux femmes et un homme",
+          "en": "FFM / FMF threesome",
+          "aliases": [
+            "FFH",
+            "FFM",
+            "FMF",
+            "2 femmes 1 homme"
+          ]
+        },
+        {
+          "id": "pref_c10_fff-trois-femmes",
+          "fr": "FFF / Trois femmes",
+          "en": "FFF threesome",
+          "aliases": [
+            "FFF",
+            "WWW",
+            "3 femmes"
+          ]
+        },
+        {
+          "id": "pref_c10_hhh-trois-hommes",
+          "fr": "HHH / Trois hommes",
+          "en": "MMM threesome",
+          "aliases": [
+            "HHH",
+            "MMM",
+            "3 hommes"
+          ]
+        },
+        {
+          "id": "pref_c10_mmf-hommes-bi-en-trio",
+          "fr": "MMF / Hommes bi en trio",
+          "en": "MMF with male-male contact",
+          "aliases": [
+            "MMF bi",
+            "bisexual threesome"
+          ]
+        },
+        {
+          "id": "pref_c10_mfm-trio-centre-sur-la-femme",
+          "fr": "MFM / Trio centré sur la femme",
+          "en": "MFM threesome",
+          "aliases": [
+            "MFM straight",
+            "two men one woman"
+          ]
+        },
+        {
+          "id": "pref_c10_ffm-femmes-bi-en-trio",
+          "fr": "FFM / Femmes bi en trio",
+          "en": "FFM with female-female contact",
+          "aliases": [
+            "FFM bi",
+            "bisexual FFM"
+          ]
+        },
+        {
+          "id": "pref_c10_fmf-trio-centre-sur-l-homme",
+          "fr": "FMF / Trio centré sur l'homme",
+          "en": "FMF threesome",
+          "aliases": [
+            "FMF straight",
+            "two women one man"
+          ]
+        },
+        {
+          "id": "pref_c10_trio-mixte-avec-personne-trans",
+          "fr": "Trio mixte avec personne trans",
+          "en": "Trans-inclusive threesome",
+          "aliases": [
+            "trio trans"
+          ]
+        },
+        {
+          "id": "pref_c10_plan-a-quatre-foursome",
+          "fr": "Plan à quatre / Foursome",
+          "en": "Foursome",
+          "aliases": [
+            "plan à 4",
+            "4some"
+          ]
+        },
+        {
+          "id": "pref_c10_hhff-deux-couples",
+          "fr": "HHFF / Deux couples",
+          "en": "MMFF / Two couples",
+          "aliases": [
+            "HHFF",
+            "MMFF",
+            "2 couples"
+          ]
+        },
+        {
+          "id": "pref_c10_ffff-quatre-femmes",
+          "fr": "FFFF / Quatre femmes",
+          "en": "FFFF / Four women",
+          "aliases": [
+            "FFFF"
+          ]
+        },
+        {
+          "id": "pref_c10_hhhh-quatre-hommes",
+          "fr": "HHHH / Quatre hommes",
+          "en": "MMMM / Four men",
+          "aliases": [
+            "HHHH"
+          ]
+        },
+        {
+          "id": "pref_c10_partouze-orgie",
+          "fr": "Partouze / Orgie",
+          "en": "Orgy",
+          "aliases": [
+            "partouze",
+            "orgie"
+          ]
+        },
+        {
+          "id": "pref_c10_sexe-en-groupe",
+          "fr": "Sexe en groupe",
+          "en": "Group sex",
+          "aliases": [
+            "group play",
+            "groupe"
+          ]
+        },
+        {
+          "id": "pref_c10_gangbang",
+          "fr": "Gangbang",
+          "en": "Gangbang",
+          "aliases": [
+            "gang bang"
+          ]
+        },
+        {
+          "id": "pref_c10_gangbang-inverse",
+          "fr": "Gangbang inversé",
+          "en": "Reverse gangbang",
+          "aliases": [
+            "reverse GB",
+            "plusieurs femmes un homme"
+          ]
+        },
+        {
+          "id": "pref_c10_blowbang",
+          "fr": "Blowbang",
+          "en": "Blowbang",
+          "aliases": [
+            "multiple oral partners"
+          ]
+        },
+        {
+          "id": "pref_c10_spit-roast-trio",
+          "fr": "Spit roast (trio)",
+          "en": "Spit roast",
+          "aliases": [
+            "spitroast"
+          ]
+        },
+        {
+          "id": "pref_c10_bukkake-en-groupe",
+          "fr": "Bukkake en groupe",
+          "en": "Group bukkake",
+          "aliases": []
+        },
+        {
+          "id": "pref_c10_train-passage-successif",
+          "fr": "Train / Passage successif",
+          "en": "Running a train",
+          "aliases": [
+            "train gangbang"
+          ]
+        },
+        {
+          "id": "pref_c10_masturbation-collective",
+          "fr": "Masturbation collective",
+          "en": "Group masturbation",
+          "aliases": [
+            "circle jerk"
+          ]
+        },
+        {
+          "id": "pref_c10_sextoys-a-plusieurs",
+          "fr": "Sextoys à plusieurs",
+          "en": "Group toy play",
+          "aliases": [
+            "group sex toys"
+          ]
+        },
+        {
+          "id": "pref_c10_rapports-simultanes",
+          "fr": "Rapports simultanés",
+          "en": "Simultaneous group sex",
+          "aliases": [
+            "simultaneous play"
+          ]
+        },
+        {
+          "id": "pref_c10_couples-avec-troisieme-partenaire",
+          "fr": "Couples avec troisième partenaire",
+          "en": "Couple with a third",
+          "aliases": [
+            "third person",
+            "unicorn scenario"
+          ]
+        },
+        {
+          "id": "pref_c10_rencontre-bi-a-plusieurs",
+          "fr": "Rencontre bi à plusieurs",
+          "en": "Bisexual group sex",
+          "aliases": [
+            "bi group"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c11",
+      "universe": "Sexualité à plusieurs",
+      "name_fr": "Libertinage et configurations relationnelles",
+      "order": 11,
+      "preferences": [
+        {
+          "id": "pref_c11_libertinage",
+          "fr": "Libertinage",
+          "en": "Swinging lifestyle",
+          "aliases": [
+            "libertin",
+            "libertine"
+          ]
+        },
+        {
+          "id": "pref_c11_echangisme",
+          "fr": "Échangisme",
+          "en": "Partner swapping",
+          "aliases": [
+            "swinging",
+            "échangiste"
+          ]
+        },
+        {
+          "id": "pref_c11_echangisme-soft-soft-swap",
+          "fr": "Échangisme soft / Soft swap",
+          "en": "Soft swap",
+          "aliases": [
+            "échange soft"
+          ]
+        },
+        {
+          "id": "pref_c11_echangisme-complet-full-swap",
+          "fr": "Échangisme complet / Full swap",
+          "en": "Full swap",
+          "aliases": [
+            "échange complet"
+          ]
+        },
+        {
+          "id": "pref_c11_melangisme",
+          "fr": "Mélangisme",
+          "en": "Soft swinging / Mélangisme",
+          "aliases": [
+            "mélangiste"
+          ]
+        },
+        {
+          "id": "pref_c11_cote-a-cotisme",
+          "fr": "Côte-à-côtisme",
+          "en": "Same-room sex / Soft swinging",
+          "aliases": [
+            "cote-a-cotisme",
+            "côte à côte"
+          ]
+        },
+        {
+          "id": "pref_c11_candaulisme",
+          "fr": "Candaulisme",
+          "en": "Candaulism",
+          "aliases": [
+            "candauliste"
+          ]
+        },
+        {
+          "id": "pref_c11_cuckold",
+          "fr": "Cuckold",
+          "en": "Cuckold",
+          "aliases": [
+            "cocu consentant",
+            "cuckolding"
+          ]
+        },
+        {
+          "id": "pref_c11_cuckquean",
+          "fr": "Cuckquean",
+          "en": "Cuckquean",
+          "aliases": [
+            "cuckqueaning"
+          ]
+        },
+        {
+          "id": "pref_c11_hotwife",
+          "fr": "Hotwife",
+          "en": "Hotwife",
+          "aliases": [
+            "hot wife"
+          ]
+        },
+        {
+          "id": "pref_c11_hothusband",
+          "fr": "Hothusband",
+          "en": "Hothusband",
+          "aliases": [
+            "hot husband"
+          ]
+        },
+        {
+          "id": "pref_c11_stag-vixen",
+          "fr": "Stag & Vixen",
+          "en": "Stag and vixen",
+          "aliases": [
+            "stag",
+            "vixen"
+          ]
+        },
+        {
+          "id": "pref_c11_bull-partenaire-invite",
+          "fr": "Bull (partenaire invité)",
+          "en": "Bull (guest lover)",
+          "aliases": [
+            "bull libertin"
+          ]
+        },
+        {
+          "id": "pref_c11_unicorn-licorne",
+          "fr": "Unicorn / Licorne",
+          "en": "Unicorn",
+          "aliases": [
+            "licorne libertine"
+          ]
+        },
+        {
+          "id": "pref_c11_couples-echangistes",
+          "fr": "Couples échangistes",
+          "en": "Swinger couples",
+          "aliases": [
+            "swingers"
+          ]
+        },
+        {
+          "id": "pref_c11_soiree-libertine",
+          "fr": "Soirée libertine",
+          "en": "Swingers party",
+          "aliases": [
+            "libertine party"
+          ]
+        },
+        {
+          "id": "pref_c11_club-echangiste",
+          "fr": "Club échangiste",
+          "en": "Swingers club",
+          "aliases": [
+            "club libertin"
+          ]
+        },
+        {
+          "id": "pref_c11_sauna-libertin",
+          "fr": "Sauna libertin",
+          "en": "Swingers sauna",
+          "aliases": [
+            "sauna club"
+          ]
+        },
+        {
+          "id": "pref_c11_rencontre-entre-couples",
+          "fr": "Rencontre entre couples",
+          "en": "Couple swap meet",
+          "aliases": [
+            "couples only"
+          ]
+        },
+        {
+          "id": "pref_c11_relation-ouverte",
+          "fr": "Relation ouverte",
+          "en": "Open relationship",
+          "aliases": [
+            "open couple",
+            "couple ouvert"
+          ]
+        },
+        {
+          "id": "pref_c11_non-monogamie-consentie-enm",
+          "fr": "Non-monogamie consentie / ENM",
+          "en": "Ethical non-monogamy",
+          "aliases": [
+            "ENM",
+            "CNM"
+          ]
+        },
+        {
+          "id": "pref_c11_polyamour",
+          "fr": "Polyamour",
+          "en": "Polyamory",
+          "aliases": [
+            "poly",
+            "polyamoureux"
+          ]
+        },
+        {
+          "id": "pref_c11_relation-a-plusieurs-polyfidelity",
+          "fr": "Relation à plusieurs / Polyfidelity",
+          "en": "Polyfidelity",
+          "aliases": [
+            "relation plurielle"
+          ]
+        },
+        {
+          "id": "pref_c11_adulteres-fictifs-scenarises",
+          "fr": "Adultères fictifs / Scénarisés",
+          "en": "Staged cheating fantasy",
+          "aliases": [
+            "fake cheating",
+            "infidélité scénarisée"
+          ]
+        },
+        {
+          "id": "pref_c11_plan-d-un-soir-sans-lendemain",
+          "fr": "Plan d'un soir / Sans lendemain",
+          "en": "One-night stand",
+          "aliases": [
+            "ONS",
+            "no strings attached"
+          ]
+        },
+        {
+          "id": "pref_c11_amis-avec-avantages-sex-friends",
+          "fr": "Amis avec avantages / Sex friends",
+          "en": "Friends with benefits",
+          "aliases": [
+            "FWB",
+            "sex friends"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c12",
+      "universe": "Sexualité à plusieurs",
+      "name_fr": "Voyeurisme et exhibition consensuels",
+      "order": 12,
+      "preferences": [
+        {
+          "id": "pref_c12_voyeurisme-consenti",
+          "fr": "Voyeurisme consenti",
+          "en": "Consensual voyeurism",
+          "aliases": [
+            "voyeur",
+            "watching"
+          ]
+        },
+        {
+          "id": "pref_c12_exhibitionnisme-consenti",
+          "fr": "Exhibitionnisme consenti",
+          "en": "Consensual exhibitionism",
+          "aliases": [
+            "exhib",
+            "exhibition"
+          ]
+        },
+        {
+          "id": "pref_c12_etre-regarde-pendant-un-rapport",
+          "fr": "Être regardé pendant un rapport",
+          "en": "Being watched during sex",
+          "aliases": [
+            "watched sex"
+          ]
+        },
+        {
+          "id": "pref_c12_regarder-un-couple",
+          "fr": "Regarder un couple",
+          "en": "Watching a couple",
+          "aliases": [
+            "couple watching"
+          ]
+        },
+        {
+          "id": "pref_c12_regarder-un-groupe",
+          "fr": "Regarder un groupe",
+          "en": "Watching group sex",
+          "aliases": [
+            "watching group"
+          ]
+        },
+        {
+          "id": "pref_c12_exhib-en-webcam",
+          "fr": "Exhib en webcam",
+          "en": "Webcam exhibition",
+          "aliases": [
+            "webcam exhib"
+          ]
+        },
+        {
+          "id": "pref_c12_exhibition-a-distance-video",
+          "fr": "Exhibition à distance / Vidéo",
+          "en": "Remote exhibition",
+          "aliases": [
+            "video exhibition"
+          ]
+        },
+        {
+          "id": "pref_c12_camera-cachee-simulee-entre-adultes-consentants",
+          "fr": "Caméra cachée simulée entre adultes consentants",
+          "en": "Staged hidden-camera fantasy",
+          "aliases": [
+            "fake hidden cam",
+            "staged voyeur"
+          ]
+        },
+        {
+          "id": "pref_c12_glory-hole-prive",
+          "fr": "Glory hole privé",
+          "en": "Private gloryhole",
+          "aliases": [
+            "gloryhole",
+            "glory hole",
+            "GH"
+          ]
+        },
+        {
+          "id": "pref_c12_anonymat-entre-adultes",
+          "fr": "Anonymat entre adultes",
+          "en": "Anonymous adult encounters",
+          "aliases": [
+            "anon",
+            "anonymous"
+          ]
+        },
+        {
+          "id": "pref_c12_sexe-dans-une-piece-avec-d-autres",
+          "fr": "Sexe dans une pièce avec d'autres",
+          "en": "Same-room sex",
+          "aliases": [
+            "same room"
+          ]
+        },
+        {
+          "id": "pref_c12_naturisme-nudisme",
+          "fr": "Naturisme / Nudisme",
+          "en": "Naturism / Nudism",
+          "aliases": [
+            "nudiste",
+            "nude"
+          ]
+        },
+        {
+          "id": "pref_c12_se-deshabiller-devant-quelqu-un",
+          "fr": "Se déshabiller devant quelqu'un",
+          "en": "Undressing for someone",
+          "aliases": [
+            "undress show"
+          ]
+        },
+        {
+          "id": "pref_c12_striptease-prive",
+          "fr": "Striptease privé",
+          "en": "Private striptease",
+          "aliases": [
+            "strip tease"
+          ]
+        },
+        {
+          "id": "pref_c12_porter-une-tenue-transparente",
+          "fr": "Porter une tenue transparente",
+          "en": "See-through clothing",
+          "aliases": [
+            "transparent outfit"
+          ]
+        },
+        {
+          "id": "pref_c12_jeux-habille-nu",
+          "fr": "Jeux habillé / nu",
+          "en": "Clothed/naked play",
+          "aliases": [
+            "CMNM",
+            "CFNF"
+          ]
+        },
+        {
+          "id": "pref_c12_dogging-en-lieu-autorise",
+          "fr": "Dogging en lieu autorisé",
+          "en": "Consensual dogging",
+          "aliases": [
+            "dogging"
+          ]
+        },
+        {
+          "id": "pref_c12_photographie-erotique-consentie",
+          "fr": "Photographie érotique consentie",
+          "en": "Consensual erotic photography",
+          "aliases": [
+            "erotic photos"
+          ]
+        },
+        {
+          "id": "pref_c12_filmer-ses-propres-ebats",
+          "fr": "Filmer ses propres ébats",
+          "en": "Filming consensual intimacy",
+          "aliases": [
+            "home video"
+          ]
+        },
+        {
+          "id": "pref_c12_upskirting-scenarise-et-consenti",
+          "fr": "Upskirting scénarisé et consenti",
+          "en": "Staged consensual upskirting",
+          "aliases": [
+            "fake upskirt",
+            "upskirting staged"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c13",
+      "universe": "BDSM et jeux de pouvoir",
+      "name_fr": "Rôles, dynamiques et psychologie",
+      "order": 13,
+      "preferences": [
+        {
+          "id": "pref_c13_bdsm",
+          "fr": "BDSM",
+          "en": "BDSM",
+          "aliases": [
+            "bondage domination sadomasochisme"
+          ]
+        },
+        {
+          "id": "pref_c13_domination-dom",
+          "fr": "Domination / Dom",
+          "en": "Domination / Dom",
+          "aliases": [
+            "dominant",
+            "dominatrice"
+          ]
+        },
+        {
+          "id": "pref_c13_soumission-sub",
+          "fr": "Soumission / Sub",
+          "en": "Submission / Sub",
+          "aliases": [
+            "soumis",
+            "soumise",
+            "submissive"
+          ]
+        },
+        {
+          "id": "pref_c13_switch-domination-et-soumission",
+          "fr": "Switch (domination et soumission)",
+          "en": "Switch",
+          "aliases": [
+            "switcher"
+          ]
+        },
+        {
+          "id": "pref_c13_femdom-domination-feminine",
+          "fr": "Femdom / Domination féminine",
+          "en": "Femdom",
+          "aliases": [
+            "domme",
+            "dominatrice"
+          ]
+        },
+        {
+          "id": "pref_c13_maledom-domination-masculine",
+          "fr": "Maledom / Domination masculine",
+          "en": "Maledom",
+          "aliases": [
+            "male dom",
+            "domination homme"
+          ]
+        },
+        {
+          "id": "pref_c13_maitre-master",
+          "fr": "Maître / Master",
+          "en": "Master",
+          "aliases": [
+            "maître"
+          ]
+        },
+        {
+          "id": "pref_c13_maitresse-mistress",
+          "fr": "Maîtresse / Mistress",
+          "en": "Mistress",
+          "aliases": [
+            "maîtresse BDSM"
+          ]
+        },
+        {
+          "id": "pref_c13_esclave-slave-jeu-consensuel",
+          "fr": "Esclave / Slave (jeu consensuel)",
+          "en": "Slave roleplay",
+          "aliases": [
+            "esclave BDSM",
+            "slave"
+          ]
+        },
+        {
+          "id": "pref_c13_top-role-actif-bdsm",
+          "fr": "Top (rôle actif BDSM)",
+          "en": "BDSM top",
+          "aliases": [
+            "top BDSM"
+          ]
+        },
+        {
+          "id": "pref_c13_bottom-role-receptif-bdsm",
+          "fr": "Bottom (rôle réceptif BDSM)",
+          "en": "BDSM bottom",
+          "aliases": [
+            "bottom BDSM"
+          ]
+        },
+        {
+          "id": "pref_c13_power-bottom",
+          "fr": "Power bottom",
+          "en": "Power bottom",
+          "aliases": [
+            "powerbottom"
+          ]
+        },
+        {
+          "id": "pref_c13_service-obeissance",
+          "fr": "Service / Obéissance",
+          "en": "Service submission",
+          "aliases": [
+            "service sub"
+          ]
+        },
+        {
+          "id": "pref_c13_brat-soumis-provocateur",
+          "fr": "Brat / Soumis provocateur",
+          "en": "Brat",
+          "aliases": [
+            "bratty sub"
+          ]
+        },
+        {
+          "id": "pref_c13_brat-tamer",
+          "fr": "Brat tamer",
+          "en": "Brat tamer",
+          "aliases": [
+            "brat taming"
+          ]
+        },
+        {
+          "id": "pref_c13_daddy-dom-role-entre-adultes",
+          "fr": "Daddy Dom (rôle entre adultes)",
+          "en": "Daddy Dom",
+          "aliases": []
+        },
+        {
+          "id": "pref_c13_mommy-dom-role-entre-adultes",
+          "fr": "Mommy Dom (rôle entre adultes)",
+          "en": "Mommy Dom",
+          "aliases": []
+        },
+        {
+          "id": "pref_c13_relation-dirigee-par-une-femme-flr",
+          "fr": "Relation dirigée par une femme / FLR",
+          "en": "Female-led relationship",
+          "aliases": [
+            "FLR",
+            "female led relationship"
+          ]
+        },
+        {
+          "id": "pref_c13_echange-total-de-pouvoir-tpe",
+          "fr": "Échange total de pouvoir / TPE",
+          "en": "Total power exchange",
+          "aliases": [
+            "TPE"
+          ]
+        },
+        {
+          "id": "pref_c13_dynamique-bdsm-24-7",
+          "fr": "Dynamique BDSM 24/7",
+          "en": "24/7 BDSM dynamic",
+          "aliases": [
+            "24/7 BDSM"
+          ]
+        },
+        {
+          "id": "pref_c13_gentle-dom-domination-douce",
+          "fr": "Gentle dom / Domination douce",
+          "en": "Gentle dom",
+          "aliases": [
+            "soft dom"
+          ]
+        },
+        {
+          "id": "pref_c13_rough-dom-domination-ferme",
+          "fr": "Rough dom / Domination ferme",
+          "en": "Rough dom",
+          "aliases": [
+            "hard dom"
+          ]
+        },
+        {
+          "id": "pref_c13_praise-kink-eloges",
+          "fr": "Praise kink / Éloges",
+          "en": "Praise kink",
+          "aliases": [
+            "praise",
+            "compliments dominants"
+          ]
+        },
+        {
+          "id": "pref_c13_humiliation-consentie",
+          "fr": "Humiliation consentie",
+          "en": "Consensual humiliation",
+          "aliases": [
+            "humiliation",
+            "degradation"
+          ]
+        },
+        {
+          "id": "pref_c13_degradation-verbale-scenarisee",
+          "fr": "Dégradation verbale scénarisée",
+          "en": "Verbal degradation play",
+          "aliases": [
+            "verbal degradation"
+          ]
+        },
+        {
+          "id": "pref_c13_dirty-talk-paroles-crues",
+          "fr": "Dirty talk / Paroles crues",
+          "en": "Dirty talk",
+          "aliases": [
+            "paroles coquines",
+            "dirtytalk"
+          ]
+        },
+        {
+          "id": "pref_c13_ordres-et-consignes",
+          "fr": "Ordres et consignes",
+          "en": "Commands and orders",
+          "aliases": [
+            "orders"
+          ]
+        },
+        {
+          "id": "pref_c13_jeu-de-recompense-punition",
+          "fr": "Jeu de récompense / Punition",
+          "en": "Reward / punishment roleplay",
+          "aliases": [
+            "punishment",
+            "discipline"
+          ]
+        },
+        {
+          "id": "pref_c13_adoration-du-corps-body-worship",
+          "fr": "Adoration du corps / Body worship",
+          "en": "Body worship",
+          "aliases": [
+            "worship"
+          ]
+        },
+        {
+          "id": "pref_c13_adoration-de-l-homme-male-worship",
+          "fr": "Adoration de l'homme / Male worship",
+          "en": "Male worship",
+          "aliases": [
+            "cock worship"
+          ]
+        },
+        {
+          "id": "pref_c13_adoration-de-la-femme-female-worship",
+          "fr": "Adoration de la femme / Female worship",
+          "en": "Female worship",
+          "aliases": [
+            "pussy worship"
+          ]
+        },
+        {
+          "id": "pref_c13_objectification-consensuelle",
+          "fr": "Objectification consensuelle",
+          "en": "Consensual objectification",
+          "aliases": [
+            "objectification"
+          ]
+        },
+        {
+          "id": "pref_c13_controle-de-l-orgasme",
+          "fr": "Contrôle de l'orgasme",
+          "en": "Orgasm control",
+          "aliases": []
+        },
+        {
+          "id": "pref_c13_controle-a-distance",
+          "fr": "Contrôle à distance",
+          "en": "Remote control kink",
+          "aliases": [
+            "remote dom"
+          ]
+        },
+        {
+          "id": "pref_c13_chastete-imposee-jeu",
+          "fr": "Chasteté imposée (jeu)",
+          "en": "Chastity control",
+          "aliases": [
+            "keyholder"
+          ]
+        },
+        {
+          "id": "pref_c13_femdom-a-distance",
+          "fr": "Femdom à distance",
+          "en": "Online femdom",
+          "aliases": [
+            "remote femdom"
+          ]
+        },
+        {
+          "id": "pref_c13_findom-domination-financiere-fantasme",
+          "fr": "Findom / Domination financière (fantasme)",
+          "en": "Financial domination",
+          "aliases": [
+            "findom",
+            "paypig"
+          ]
+        },
+        {
+          "id": "pref_c13_cnc-non-consentement-simule-et-negocie",
+          "fr": "CNC / Non-consentement simulé et négocié",
+          "en": "Consensual non-consent roleplay",
+          "aliases": [
+            "CNC",
+            "consensual non consent"
+          ]
+        },
+        {
+          "id": "pref_c13_primal-play-roles-humains",
+          "fr": "Primal play (rôles humains)",
+          "en": "Primal play",
+          "aliases": [
+            "hunter prey",
+            "primal"
+          ]
+        },
+        {
+          "id": "pref_c13_hypnose-erotique-consentie",
+          "fr": "Hypnose érotique consentie",
+          "en": "Consensual erotic hypnosis",
+          "aliases": [
+            "erotic hypnosis",
+            "hypnokink"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c14",
+      "universe": "BDSM et jeux de pouvoir",
+      "name_fr": "Bondage, contraintes et accessoires",
+      "order": 14,
+      "preferences": [
+        {
+          "id": "pref_c14_bondage",
+          "fr": "Bondage",
+          "en": "Bondage",
+          "aliases": [
+            "attaché",
+            "entravé"
+          ]
+        },
+        {
+          "id": "pref_c14_rope-bondage-cordes",
+          "fr": "Rope bondage / Cordes",
+          "en": "Rope bondage",
+          "aliases": [
+            "cordes",
+            "rope play"
+          ]
+        },
+        {
+          "id": "pref_c14_shibari-kinbaku",
+          "fr": "Shibari / Kinbaku",
+          "en": "Shibari / Kinbaku",
+          "aliases": [
+            "shibari",
+            "kinbaku"
+          ]
+        },
+        {
+          "id": "pref_c14_autobondage",
+          "fr": "Autobondage",
+          "en": "Self-bondage",
+          "aliases": [
+            "self bondage"
+          ]
+        },
+        {
+          "id": "pref_c14_bondage-au-lit",
+          "fr": "Bondage au lit",
+          "en": "Bed bondage",
+          "aliases": [
+            "bed restraints"
+          ]
+        },
+        {
+          "id": "pref_c14_menottes",
+          "fr": "Menottes",
+          "en": "Handcuffs",
+          "aliases": [
+            "cuffs",
+            "menottes BDSM"
+          ]
+        },
+        {
+          "id": "pref_c14_bracelets-de-cheville",
+          "fr": "Bracelets de cheville",
+          "en": "Ankle cuffs",
+          "aliases": [
+            "ankle restraints"
+          ]
+        },
+        {
+          "id": "pref_c14_collier-bdsm",
+          "fr": "Collier BDSM",
+          "en": "BDSM collar",
+          "aliases": [
+            "collar",
+            "collier cuir"
+          ]
+        },
+        {
+          "id": "pref_c14_laisse",
+          "fr": "Laisse",
+          "en": "Leash play",
+          "aliases": [
+            "leash",
+            "laisse BDSM"
+          ]
+        },
+        {
+          "id": "pref_c14_harnais-bdsm",
+          "fr": "Harnais BDSM",
+          "en": "BDSM harness",
+          "aliases": [
+            "harness"
+          ]
+        },
+        {
+          "id": "pref_c14_barre-d-ecartement",
+          "fr": "Barre d'écartement",
+          "en": "Spreader bar",
+          "aliases": [
+            "spreader"
+          ]
+        },
+        {
+          "id": "pref_c14_baillon-ball-gag",
+          "fr": "Bâillon / Ball gag",
+          "en": "Ball gag",
+          "aliases": [
+            "gag",
+            "bâillon boule"
+          ]
+        },
+        {
+          "id": "pref_c14_mors-bit-gag",
+          "fr": "Mors / Bit gag",
+          "en": "Bit gag",
+          "aliases": []
+        },
+        {
+          "id": "pref_c14_bandeau-sur-les-yeux",
+          "fr": "Bandeau sur les yeux",
+          "en": "Blindfold",
+          "aliases": [
+            "eyes covered",
+            "blind fold"
+          ]
+        },
+        {
+          "id": "pref_c14_masque-integral-hood",
+          "fr": "Masque intégral / Hood",
+          "en": "Hood",
+          "aliases": [
+            "masque bondage"
+          ]
+        },
+        {
+          "id": "pref_c14_privation-sensorielle",
+          "fr": "Privation sensorielle",
+          "en": "Sensory deprivation",
+          "aliases": [
+            "sensoriel"
+          ]
+        },
+        {
+          "id": "pref_c14_cage-bdsm",
+          "fr": "Cage BDSM",
+          "en": "BDSM cage",
+          "aliases": [
+            "cage"
+          ]
+        },
+        {
+          "id": "pref_c14_cage-de-chastete",
+          "fr": "Cage de chasteté",
+          "en": "Chastity cage",
+          "aliases": [
+            "cock cage",
+            "chastity device"
+          ]
+        },
+        {
+          "id": "pref_c14_ceinture-de-chastete",
+          "fr": "Ceinture de chasteté",
+          "en": "Chastity belt",
+          "aliases": []
+        },
+        {
+          "id": "pref_c14_cles-de-chastete-keyholding",
+          "fr": "Clés de chasteté / Keyholding",
+          "en": "Keyholding",
+          "aliases": [
+            "key holder"
+          ]
+        },
+        {
+          "id": "pref_c14_mummification-bondage",
+          "fr": "Mummification (bondage)",
+          "en": "Mummification bondage",
+          "aliases": [
+            "mummification"
+          ]
+        },
+        {
+          "id": "pref_c14_suspension-shibari",
+          "fr": "Suspension shibari",
+          "en": "Rope suspension",
+          "aliases": [
+            "suspension bondage"
+          ]
+        },
+        {
+          "id": "pref_c14_mobilier-bdsm",
+          "fr": "Mobilier BDSM",
+          "en": "BDSM furniture",
+          "aliases": [
+            "bondage furniture"
+          ]
+        },
+        {
+          "id": "pref_c14_croix-de-saint-andre",
+          "fr": "Croix de Saint-André",
+          "en": "St Andrew's cross",
+          "aliases": [
+            "st andrew cross"
+          ]
+        },
+        {
+          "id": "pref_c14_pilori-bdsm",
+          "fr": "Pilori BDSM",
+          "en": "BDSM stocks",
+          "aliases": [
+            "stocks BDSM"
+          ]
+        },
+        {
+          "id": "pref_c14_lit-de-bondage",
+          "fr": "Lit de bondage",
+          "en": "Bondage bed",
+          "aliases": []
+        },
+        {
+          "id": "pref_c14_entraves-cuisses-et-poignets",
+          "fr": "Entraves cuisses et poignets",
+          "en": "Wrist and thigh restraints",
+          "aliases": [
+            "wrist restraints"
+          ]
+        },
+        {
+          "id": "pref_c14_zentai-combinaison-integrale",
+          "fr": "Zentai / Combinaison intégrale",
+          "en": "Zentai",
+          "aliases": [
+            "full bodysuit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c15",
+      "universe": "BDSM et jeux de pouvoir",
+      "name_fr": "Impact, sensations et discipline",
+      "order": 15,
+      "preferences": [
+        {
+          "id": "pref_c15_fessee-spanking",
+          "fr": "Fessée / Spanking",
+          "en": "Spanking",
+          "aliases": [
+            "fessée",
+            "spank"
+          ]
+        },
+        {
+          "id": "pref_c15_spanking-otk-sur-les-genoux",
+          "fr": "Spanking OTK / Sur les genoux",
+          "en": "Over-the-knee spanking",
+          "aliases": [
+            "OTK spanking"
+          ]
+        },
+        {
+          "id": "pref_c15_flogger-martinet",
+          "fr": "Flogger / Martinet",
+          "en": "Flogging",
+          "aliases": [
+            "flogger",
+            "martinet"
+          ]
+        },
+        {
+          "id": "pref_c15_cravache",
+          "fr": "Cravache",
+          "en": "Riding crop",
+          "aliases": [
+            "crop"
+          ]
+        },
+        {
+          "id": "pref_c15_paddle-palette",
+          "fr": "Paddle / Palette",
+          "en": "Paddling",
+          "aliases": [
+            "paddle"
+          ]
+        },
+        {
+          "id": "pref_c15_fouet-whipping",
+          "fr": "Fouet / Whipping",
+          "en": "Whipping",
+          "aliases": [
+            "whip"
+          ]
+        },
+        {
+          "id": "pref_c15_fessee-a-la-main",
+          "fr": "Fessée à la main",
+          "en": "Hand spanking",
+          "aliases": [
+            "hand spank"
+          ]
+        },
+        {
+          "id": "pref_c15_jeux-de-tetons",
+          "fr": "Jeux de tétons",
+          "en": "Nipple play",
+          "aliases": [
+            "nipple teasing"
+          ]
+        },
+        {
+          "id": "pref_c15_pincements",
+          "fr": "Pincements",
+          "en": "Pinching",
+          "aliases": [
+            "pinches"
+          ]
+        },
+        {
+          "id": "pref_c15_morsures-consenties",
+          "fr": "Morsures consenties",
+          "en": "Consensual biting",
+          "aliases": [
+            "biting"
+          ]
+        },
+        {
+          "id": "pref_c15_tirage-de-cheveux-consenti",
+          "fr": "Tirage de cheveux consenti",
+          "en": "Consensual hair pulling",
+          "aliases": [
+            "hairpulling"
+          ]
+        },
+        {
+          "id": "pref_c15_chatouilles-erotiques",
+          "fr": "Chatouilles érotiques",
+          "en": "Erotic tickling",
+          "aliases": [
+            "tickling"
+          ]
+        },
+        {
+          "id": "pref_c15_plumes-caresses-legeres",
+          "fr": "Plumes / Caresses légères",
+          "en": "Feather play",
+          "aliases": [
+            "feathers"
+          ]
+        },
+        {
+          "id": "pref_c15_glace-jeux-de-froid",
+          "fr": "Glace / Jeux de froid",
+          "en": "Ice play",
+          "aliases": [
+            "cold play"
+          ]
+        },
+        {
+          "id": "pref_c15_cire-tiede-wax-play",
+          "fr": "Cire tiède / Wax play",
+          "en": "Wax play",
+          "aliases": [
+            "candle wax"
+          ]
+        },
+        {
+          "id": "pref_c15_contrastes-chaud-froid",
+          "fr": "Contrastes chaud-froid",
+          "en": "Temperature play",
+          "aliases": [
+            "hot and cold"
+          ]
+        },
+        {
+          "id": "pref_c15_jeux-de-sensations",
+          "fr": "Jeux de sensations",
+          "en": "Sensation play",
+          "aliases": [
+            "sensory play"
+          ]
+        },
+        {
+          "id": "pref_c15_electrostimulation-erotique",
+          "fr": "Électrostimulation érotique",
+          "en": "Erotic electrostimulation",
+          "aliases": [
+            "e-stim",
+            "electro play"
+          ]
+        },
+        {
+          "id": "pref_c15_cbt-jeux-testiculaires",
+          "fr": "CBT / Jeux testiculaires",
+          "en": "Cock and ball play / CBT",
+          "aliases": [
+            "CBT",
+            "cock ball torture"
+          ]
+        },
+        {
+          "id": "pref_c15_ballbusting-jeu-negocie",
+          "fr": "Ballbusting (jeu négocié)",
+          "en": "Ballbusting",
+          "aliases": [
+            "ball busting"
+          ]
+        },
+        {
+          "id": "pref_c15_trampling-jeu-de-pression",
+          "fr": "Trampling (jeu de pression)",
+          "en": "Trampling",
+          "aliases": [
+            "trample"
+          ]
+        },
+        {
+          "id": "pref_c15_lutte-erotique-wrestling",
+          "fr": "Lutte érotique / Wrestling",
+          "en": "Erotic wrestling",
+          "aliases": [
+            "mixed wrestling",
+            "wrestling"
+          ]
+        },
+        {
+          "id": "pref_c15_jeux-de-resistance-scenarises",
+          "fr": "Jeux de résistance scénarisés",
+          "en": "Consensual resistance play",
+          "aliases": [
+            "struggle play"
+          ]
+        },
+        {
+          "id": "pref_c15_jeux-de-peur-simules-et-consentis",
+          "fr": "Jeux de peur simulés et consentis",
+          "en": "Consensual fear play",
+          "aliases": [
+            "fear play"
+          ]
+        },
+        {
+          "id": "pref_c15_jeux-d-aiguilles-needle-play",
+          "fr": "Jeux d'aiguilles / Needle play",
+          "en": "Needle play",
+          "aliases": [
+            "needleplay"
+          ]
+        },
+        {
+          "id": "pref_c15_jeux-de-sang-blood-play",
+          "fr": "Jeux de sang / Blood play",
+          "en": "Blood play",
+          "aliases": [
+            "bloodplay"
+          ]
+        },
+        {
+          "id": "pref_c15_jeux-de-feu-fire-play",
+          "fr": "Jeux de feu / Fire play",
+          "en": "Fire play",
+          "aliases": [
+            "fireplay"
+          ]
+        },
+        {
+          "id": "pref_c15_jeux-de-respiration-breath-play",
+          "fr": "Jeux de respiration / Breath play",
+          "en": "Breath play",
+          "aliases": [
+            "breathplay"
+          ]
+        },
+        {
+          "id": "pref_c15_impact-play",
+          "fr": "Impact play",
+          "en": "Impact play",
+          "aliases": [
+            "jeux d'impact"
+          ]
+        },
+        {
+          "id": "pref_c15_aftercare-bdsm",
+          "fr": "Aftercare BDSM",
+          "en": "BDSM aftercare",
+          "aliases": []
+        },
+        {
+          "id": "pref_c15_sensation-post-orgasme",
+          "fr": "Sensation post-orgasme",
+          "en": "Post-orgasm sensation play",
+          "aliases": [
+            "post orgasm play"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c16",
+      "universe": "Fantasmes et scénarios",
+      "name_fr": "Rôles entre adultes",
+      "order": 16,
+      "preferences": [
+        {
+          "id": "pref_c16_jeux-de-role-roleplay",
+          "fr": "Jeux de rôle / Roleplay",
+          "en": "Roleplay",
+          "aliases": [
+            "jeu de rôle",
+            "RP"
+          ]
+        },
+        {
+          "id": "pref_c16_medecin-et-patient-adultes",
+          "fr": "Médecin et patient adultes",
+          "en": "Doctor/patient roleplay",
+          "aliases": [
+            "medical play",
+            "docteur patient"
+          ]
+        },
+        {
+          "id": "pref_c16_infirmier-ou-infirmiere-jeu",
+          "fr": "Infirmier ou infirmière (jeu)",
+          "en": "Nurse roleplay",
+          "aliases": [
+            "nurse fantasy"
+          ]
+        },
+        {
+          "id": "pref_c16_patron-et-employe-adultes",
+          "fr": "Patron et employé adultes",
+          "en": "Boss/employee roleplay",
+          "aliases": [
+            "office boss"
+          ]
+        },
+        {
+          "id": "pref_c16_secretaire-et-patron-adultes",
+          "fr": "Secrétaire et patron adultes",
+          "en": "Secretary/boss roleplay",
+          "aliases": [
+            "secretary boss"
+          ]
+        },
+        {
+          "id": "pref_c16_entretien-d-embauche-fictif",
+          "fr": "Entretien d'embauche fictif",
+          "en": "Job interview roleplay",
+          "aliases": [
+            "casting job"
+          ]
+        },
+        {
+          "id": "pref_c16_policier-et-suspect-adultes",
+          "fr": "Policier et suspect adultes",
+          "en": "Police/suspect roleplay",
+          "aliases": [
+            "police roleplay"
+          ]
+        },
+        {
+          "id": "pref_c16_detenu-et-gardien-fictifs",
+          "fr": "Détenu et gardien fictifs",
+          "en": "Prisoner/guard roleplay",
+          "aliases": [
+            "prison roleplay"
+          ]
+        },
+        {
+          "id": "pref_c16_masseur-et-client-adultes",
+          "fr": "Masseur et client adultes",
+          "en": "Massage therapist/client roleplay",
+          "aliases": [
+            "masseur masseuse"
+          ]
+        },
+        {
+          "id": "pref_c16_voisins-adultes",
+          "fr": "Voisins adultes",
+          "en": "Neighbour roleplay",
+          "aliases": [
+            "voisin voisine"
+          ]
+        },
+        {
+          "id": "pref_c16_amis-qui-se-seduisent",
+          "fr": "Amis qui se séduisent",
+          "en": "Friends-to-lovers roleplay",
+          "aliases": [
+            "amis séductions"
+          ]
+        },
+        {
+          "id": "pref_c16_inconnus-adultes",
+          "fr": "Inconnus adultes",
+          "en": "Strangers roleplay",
+          "aliases": [
+            "stranger fantasy"
+          ]
+        },
+        {
+          "id": "pref_c16_rendez-vous-arrange",
+          "fr": "Rendez-vous arrangé",
+          "en": "Blind date roleplay",
+          "aliases": [
+            "blind date"
+          ]
+        },
+        {
+          "id": "pref_c16_rendez-vous-secret",
+          "fr": "Rendez-vous secret",
+          "en": "Secret rendezvous fantasy",
+          "aliases": [
+            "secret date"
+          ]
+        },
+        {
+          "id": "pref_c16_uniformes-professionnels-adultes",
+          "fr": "Uniformes professionnels adultes",
+          "en": "Adult professional uniforms",
+          "aliases": [
+            "uniform fetish"
+          ]
+        },
+        {
+          "id": "pref_c16_hotesse-de-l-air-pilote-adultes",
+          "fr": "Hôtesse de l'air / Pilote adultes",
+          "en": "Flight attendant / Pilot roleplay",
+          "aliases": [
+            "flight attendant"
+          ]
+        },
+        {
+          "id": "pref_c16_serveuse-barman-adultes",
+          "fr": "Serveuse / Barman adultes",
+          "en": "Waiter/bartender roleplay",
+          "aliases": [
+            "bartender"
+          ]
+        },
+        {
+          "id": "pref_c16_chef-cuisinier-cliente-adulte",
+          "fr": "Chef cuisinier / Cliente adulte",
+          "en": "Chef/customer roleplay",
+          "aliases": [
+            "chef roleplay"
+          ]
+        },
+        {
+          "id": "pref_c16_photographe-modele-adulte",
+          "fr": "Photographe / Modèle adulte",
+          "en": "Photographer/model roleplay",
+          "aliases": [
+            "photographer model"
+          ]
+        },
+        {
+          "id": "pref_c16_faux-casting-entre-adultes",
+          "fr": "Faux casting entre adultes",
+          "en": "Staged casting fantasy",
+          "aliases": [
+            "casting staged"
+          ]
+        },
+        {
+          "id": "pref_c16_jeu-de-seduction-dans-un-bar",
+          "fr": "Jeu de séduction dans un bar",
+          "en": "Bar seduction roleplay",
+          "aliases": [
+            "bar fantasy"
+          ]
+        },
+        {
+          "id": "pref_c16_rencontre-a-l-hotel",
+          "fr": "Rencontre à l'hôtel",
+          "en": "Hotel encounter fantasy",
+          "aliases": [
+            "hotel roleplay"
+          ]
+        },
+        {
+          "id": "pref_c16_super-heros-adultes",
+          "fr": "Super-héros adultes",
+          "en": "Adult superhero cosplay",
+          "aliases": [
+            "superhero"
+          ]
+        },
+        {
+          "id": "pref_c16_vampire-fantastique-adulte",
+          "fr": "Vampire fantastique adulte",
+          "en": "Adult vampire fantasy",
+          "aliases": [
+            "vampire"
+          ]
+        },
+        {
+          "id": "pref_c16_demon-succube-fictif-adulte",
+          "fr": "Démon / Succube fictif adulte",
+          "en": "Adult succubus / demon fantasy",
+          "aliases": [
+            "succubus"
+          ]
+        },
+        {
+          "id": "pref_c16_cosplay-fantasy-medieval-adulte",
+          "fr": "Cosplay fantasy médiéval adulte",
+          "en": "Adult fantasy cosplay",
+          "aliases": [
+            "medieval fantasy"
+          ]
+        },
+        {
+          "id": "pref_c16_enlevement-fictif-negocie-entre-adultes",
+          "fr": "Enlèvement fictif négocié entre adultes",
+          "en": "Consensual staged abduction fantasy",
+          "aliases": [
+            "abduction play"
+          ]
+        },
+        {
+          "id": "pref_c16_transformation-metamorphose-fictive",
+          "fr": "Transformation / Métamorphose fictive",
+          "en": "Fantasy transformation roleplay",
+          "aliases": [
+            "transformation play"
+          ]
+        },
+        {
+          "id": "pref_c16_dollification-jeu-de-poupee",
+          "fr": "Dollification / Jeu de poupée",
+          "en": "Dollification",
+          "aliases": [
+            "doll play"
+          ]
+        },
+        {
+          "id": "pref_c16_pet-play-entre-adultes-sans-animaux",
+          "fr": "Pet play entre adultes (sans animaux)",
+          "en": "Human pet play",
+          "aliases": [
+            "petplay"
+          ]
+        },
+        {
+          "id": "pref_c16_puppy-play-humains-deguises",
+          "fr": "Puppy play (humains déguisés)",
+          "en": "Puppy play",
+          "aliases": [
+            "pupplay",
+            "pup play"
+          ]
+        },
+        {
+          "id": "pref_c16_pony-play-humains-deguises",
+          "fr": "Pony play (humains déguisés)",
+          "en": "Pony play",
+          "aliases": [
+            "ponyplay"
+          ]
+        },
+        {
+          "id": "pref_c16_furry-cosplay-anthropomorphe-adulte",
+          "fr": "Furry / Cosplay anthropomorphe adulte",
+          "en": "Adult furry roleplay",
+          "aliases": [
+            "fursuit",
+            "furry"
+          ]
+        },
+        {
+          "id": "pref_c16_jeu-d-ecart-d-age-entre-adultes",
+          "fr": "Jeu d'écart d'âge entre adultes",
+          "en": "Adult age-gap roleplay",
+          "aliases": [
+            "age gap fantasy"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c17",
+      "universe": "Fantasmes et scénarios",
+      "name_fr": "Présentation, féminisation et identités de scène",
+      "order": 17,
+      "preferences": [
+        {
+          "id": "pref_c17_crossdressing-travestissement",
+          "fr": "Crossdressing / Travestissement",
+          "en": "Crossdressing",
+          "aliases": [
+            "crossdress",
+            "travesti"
+          ]
+        },
+        {
+          "id": "pref_c17_feminisation-consensuelle",
+          "fr": "Féminisation consensuelle",
+          "en": "Consensual feminization",
+          "aliases": [
+            "feminization",
+            "feminisation"
+          ]
+        },
+        {
+          "id": "pref_c17_masculinisation-scenarisee",
+          "fr": "Masculinisation scénarisée",
+          "en": "Masculinization roleplay",
+          "aliases": [
+            "masculinization"
+          ]
+        },
+        {
+          "id": "pref_c17_sissy-feminisation-erotique",
+          "fr": "Sissy / Féminisation érotique",
+          "en": "Sissy play",
+          "aliases": [
+            "sissy",
+            "sissification"
+          ]
+        },
+        {
+          "id": "pref_c17_femboy-esthetique-feminine",
+          "fr": "Femboy (esthétique féminine)",
+          "en": "Femboy aesthetic",
+          "aliases": [
+            "femboy look"
+          ]
+        },
+        {
+          "id": "pref_c17_drag-queen-univers-scenique",
+          "fr": "Drag queen (univers scénique)",
+          "en": "Drag queen performance",
+          "aliases": [
+            "drag queen"
+          ]
+        },
+        {
+          "id": "pref_c17_drag-king-univers-scenique",
+          "fr": "Drag king (univers scénique)",
+          "en": "Drag king performance",
+          "aliases": [
+            "drag king"
+          ]
+        },
+        {
+          "id": "pref_c17_bimbofication-jeu",
+          "fr": "Bimbofication (jeu)",
+          "en": "Bimbofication",
+          "aliases": [
+            "bimbo"
+          ]
+        },
+        {
+          "id": "pref_c17_sissygasm-terme-de-scene",
+          "fr": "Sissygasm (terme de scène)",
+          "en": "Sissygasm",
+          "aliases": []
+        },
+        {
+          "id": "pref_c17_make-up-maquillage",
+          "fr": "Make-up / Maquillage",
+          "en": "Makeup fetish",
+          "aliases": [
+            "maquillage"
+          ]
+        },
+        {
+          "id": "pref_c17_perruques-changement-de-look",
+          "fr": "Perruques / Changement de look",
+          "en": "Wigs / Makeover",
+          "aliases": [
+            "wig"
+          ]
+        },
+        {
+          "id": "pref_c17_uniforme-de-soubrette-adulte",
+          "fr": "Uniforme de soubrette adulte",
+          "en": "Adult maid outfit",
+          "aliases": [
+            "maid",
+            "soubrette"
+          ]
+        },
+        {
+          "id": "pref_c17_tenues-masculines-sur-une-femme",
+          "fr": "Tenues masculines sur une femme",
+          "en": "Women in menswear",
+          "aliases": [
+            "masc styling"
+          ]
+        },
+        {
+          "id": "pref_c17_tenues-feminines-sur-un-homme",
+          "fr": "Tenues féminines sur un homme",
+          "en": "Men in womenswear",
+          "aliases": [
+            "feminine styling"
+          ]
+        },
+        {
+          "id": "pref_c17_role-reversal-inversion-des-roles",
+          "fr": "Role reversal / Inversion des rôles",
+          "en": "Role reversal",
+          "aliases": [
+            "role swap"
+          ]
+        },
+        {
+          "id": "pref_c17_domination-par-femme-femdom",
+          "fr": "Domination par femme / Femdom",
+          "en": "Female domination",
+          "aliases": [
+            "femdom"
+          ]
+        },
+        {
+          "id": "pref_c17_soumission-masculine",
+          "fr": "Soumission masculine",
+          "en": "Male submission",
+          "aliases": [
+            "male sub"
+          ]
+        },
+        {
+          "id": "pref_c17_soumission-feminine",
+          "fr": "Soumission féminine",
+          "en": "Female submission",
+          "aliases": [
+            "female sub"
+          ]
+        },
+        {
+          "id": "pref_c17_look-androgyne",
+          "fr": "Look androgyne",
+          "en": "Androgynous style",
+          "aliases": [
+            "androgyny"
+          ]
+        },
+        {
+          "id": "pref_c17_cosplay-de-personnages-adultes",
+          "fr": "Cosplay de personnages adultes",
+          "en": "Adult-character cosplay",
+          "aliases": [
+            "cosplay adulte"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c18",
+      "universe": "Objets, matières et sensations",
+      "name_fr": "Sextoys et accessoires",
+      "order": 18,
+      "preferences": [
+        {
+          "id": "pref_c18_sextoy-jouet-intime",
+          "fr": "Sextoy / Jouet intime",
+          "en": "Sex toy",
+          "aliases": [
+            "sextoy",
+            "sex toys"
+          ]
+        },
+        {
+          "id": "pref_c18_dildo-godemichet",
+          "fr": "Dildo / Godemichet",
+          "en": "Dildo",
+          "aliases": [
+            "gode",
+            "godemichet"
+          ]
+        },
+        {
+          "id": "pref_c18_double-dildo",
+          "fr": "Double dildo",
+          "en": "Double-ended dildo",
+          "aliases": [
+            "double gode"
+          ]
+        },
+        {
+          "id": "pref_c18_vibromasseur",
+          "fr": "Vibromasseur",
+          "en": "Vibrator",
+          "aliases": [
+            "vibe",
+            "vibro"
+          ]
+        },
+        {
+          "id": "pref_c18_vibromasseur-rabbit",
+          "fr": "Vibromasseur rabbit",
+          "en": "Rabbit vibrator",
+          "aliases": [
+            "rabbit"
+          ]
+        },
+        {
+          "id": "pref_c18_wand-masseur-vibrant",
+          "fr": "Wand / Masseur vibrant",
+          "en": "Wand vibrator",
+          "aliases": [
+            "magic wand"
+          ]
+        },
+        {
+          "id": "pref_c18_stimulateur-clitoridien",
+          "fr": "Stimulateur clitoridien",
+          "en": "Clitoral stimulator",
+          "aliases": [
+            "clit toy"
+          ]
+        },
+        {
+          "id": "pref_c18_stimulateur-a-air-pulse",
+          "fr": "Stimulateur à air pulsé",
+          "en": "Air-pulse stimulator",
+          "aliases": [
+            "air pulse"
+          ]
+        },
+        {
+          "id": "pref_c18_gode-ceinture-strap-on",
+          "fr": "Gode-ceinture / Strap-on",
+          "en": "Strap-on dildo",
+          "aliases": [
+            "strap on",
+            "strapon"
+          ]
+        },
+        {
+          "id": "pref_c18_plug-anal-butt-plug",
+          "fr": "Plug anal / Butt plug",
+          "en": "Butt plug",
+          "aliases": [
+            "plug",
+            "buttplug"
+          ]
+        },
+        {
+          "id": "pref_c18_chapelet-anal",
+          "fr": "Chapelet anal",
+          "en": "Anal beads",
+          "aliases": []
+        },
+        {
+          "id": "pref_c18_stimulateur-prostatique",
+          "fr": "Stimulateur prostatique",
+          "en": "Prostate massager",
+          "aliases": [
+            "P-spot toy"
+          ]
+        },
+        {
+          "id": "pref_c18_anneau-penien-cock-ring",
+          "fr": "Anneau pénien / Cock ring",
+          "en": "Cock ring",
+          "aliases": [
+            "penis ring"
+          ]
+        },
+        {
+          "id": "pref_c18_masturbateur-masculin",
+          "fr": "Masturbateur masculin",
+          "en": "Male masturbator",
+          "aliases": [
+            "stroker"
+          ]
+        },
+        {
+          "id": "pref_c18_fleshlight-masturbateur",
+          "fr": "Fleshlight (masturbateur)",
+          "en": "Fleshlight",
+          "aliases": []
+        },
+        {
+          "id": "pref_c18_uf-masturbateur-egg",
+          "fr": "Œuf masturbateur / Egg",
+          "en": "Masturbation egg",
+          "aliases": [
+            "egg toy"
+          ]
+        },
+        {
+          "id": "pref_c18_poupee-sexuelle-adulte",
+          "fr": "Poupée sexuelle adulte",
+          "en": "Adult sex doll",
+          "aliases": [
+            "sex doll"
+          ]
+        },
+        {
+          "id": "pref_c18_gode-realiste",
+          "fr": "Gode réaliste",
+          "en": "Realistic dildo",
+          "aliases": []
+        },
+        {
+          "id": "pref_c18_sextoy-geant-oversize",
+          "fr": "Sextoy géant / Oversize",
+          "en": "Oversize sex toy",
+          "aliases": [
+            "big dildo",
+            "oversized toy"
+          ]
+        },
+        {
+          "id": "pref_c18_sextoy-en-verre",
+          "fr": "Sextoy en verre",
+          "en": "Glass sex toy",
+          "aliases": [
+            "glass dildo"
+          ]
+        },
+        {
+          "id": "pref_c18_sextoy-en-acier",
+          "fr": "Sextoy en acier",
+          "en": "Steel sex toy",
+          "aliases": [
+            "steel dildo"
+          ]
+        },
+        {
+          "id": "pref_c18_sextoy-gonflable",
+          "fr": "Sextoy gonflable",
+          "en": "Inflatable sex toy",
+          "aliases": [
+            "inflatable toy"
+          ]
+        },
+        {
+          "id": "pref_c18_penis-en-silicone",
+          "fr": "Pénis en silicone",
+          "en": "Silicone dildo",
+          "aliases": [
+            "silicone toy"
+          ]
+        },
+        {
+          "id": "pref_c18_pince-a-tetons",
+          "fr": "Pince à tétons",
+          "en": "Nipple clamps",
+          "aliases": []
+        },
+        {
+          "id": "pref_c18_ventouses-suction-toys",
+          "fr": "Ventouses / Suction toys",
+          "en": "Suction toys",
+          "aliases": [
+            "suction cups"
+          ]
+        },
+        {
+          "id": "pref_c18_pompe-a-penis",
+          "fr": "Pompe à pénis",
+          "en": "Penis pump",
+          "aliases": [
+            "cock pump"
+          ]
+        },
+        {
+          "id": "pref_c18_pompe-clitoridienne",
+          "fr": "Pompe clitoridienne",
+          "en": "Clitoral pump",
+          "aliases": [
+            "clit pump"
+          ]
+        },
+        {
+          "id": "pref_c18_machine-a-penetration-fuck-machine",
+          "fr": "Machine à pénétration / Fuck machine",
+          "en": "Sex machine",
+          "aliases": [
+            "fuck machine",
+            "machine à baise"
+          ]
+        },
+        {
+          "id": "pref_c18_coussin-de-positionnement",
+          "fr": "Coussin de positionnement",
+          "en": "Sex positioning pillow",
+          "aliases": [
+            "sex wedge"
+          ]
+        },
+        {
+          "id": "pref_c18_balancoire-sexuelle",
+          "fr": "Balançoire sexuelle",
+          "en": "Sex swing",
+          "aliases": [
+            "sex sling"
+          ]
+        },
+        {
+          "id": "pref_c18_miroir-de-chambre",
+          "fr": "Miroir de chambre",
+          "en": "Bedroom mirror",
+          "aliases": [
+            "mirror sex"
+          ]
+        },
+        {
+          "id": "pref_c18_lubrifiant",
+          "fr": "Lubrifiant",
+          "en": "Lubricant",
+          "aliases": [
+            "lube"
+          ]
+        },
+        {
+          "id": "pref_c18_huile-de-massage",
+          "fr": "Huile de massage",
+          "en": "Massage oil",
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "id": "c19",
+      "universe": "Objets, matières et sensations",
+      "name_fr": "Sextoys connectés, webcam et contrôle",
+      "order": 19,
+      "preferences": [
+        {
+          "id": "pref_c19_lovense",
+          "fr": "Lovense",
+          "en": "Lovense",
+          "aliases": [
+            "lovense toy"
+          ]
+        },
+        {
+          "id": "pref_c19_lovense-lush",
+          "fr": "Lovense Lush",
+          "en": "Lovense Lush",
+          "aliases": [
+            "lush"
+          ]
+        },
+        {
+          "id": "pref_c19_lovense-hush",
+          "fr": "Lovense Hush",
+          "en": "Lovense Hush",
+          "aliases": [
+            "hush"
+          ]
+        },
+        {
+          "id": "pref_c19_lovense-domi",
+          "fr": "Lovense Domi",
+          "en": "Lovense Domi",
+          "aliases": [
+            "domi"
+          ]
+        },
+        {
+          "id": "pref_c19_lovense-nora",
+          "fr": "Lovense Nora",
+          "en": "Lovense Nora",
+          "aliases": [
+            "nora"
+          ]
+        },
+        {
+          "id": "pref_c19_lovense-max",
+          "fr": "Lovense Max",
+          "en": "Lovense Max",
+          "aliases": []
+        },
+        {
+          "id": "pref_c19_kiiroo",
+          "fr": "Kiiroo",
+          "en": "Kiiroo",
+          "aliases": []
+        },
+        {
+          "id": "pref_c19_the-handy",
+          "fr": "The Handy",
+          "en": "The Handy",
+          "aliases": [
+            "handy"
+          ]
+        },
+        {
+          "id": "pref_c19_sextoy-connecte",
+          "fr": "Sextoy connecté",
+          "en": "Connected sex toy",
+          "aliases": [
+            "smart sex toy"
+          ]
+        },
+        {
+          "id": "pref_c19_sextoy-telecommande",
+          "fr": "Sextoy télécommandé",
+          "en": "Remote-controlled toy",
+          "aliases": [
+            "remote toy"
+          ]
+        },
+        {
+          "id": "pref_c19_sextoy-interactif-en-direct",
+          "fr": "Sextoy interactif en direct",
+          "en": "Interactive live toy",
+          "aliases": [
+            "interactive vibrator"
+          ]
+        },
+        {
+          "id": "pref_c19_controle-a-distance-jouets",
+          "fr": "Contrôle à distance (jouets)",
+          "en": "Remote toy control",
+          "aliases": [
+            "remote control"
+          ]
+        },
+        {
+          "id": "pref_c19_vibrations-a-distance",
+          "fr": "Vibrations à distance",
+          "en": "Remote vibrations",
+          "aliases": [
+            "remote vibration"
+          ]
+        },
+        {
+          "id": "pref_c19_couple-a-distance-long-distance-toys",
+          "fr": "Couple à distance / Long-distance toys",
+          "en": "Long-distance toy play",
+          "aliases": [
+            "LDR toys"
+          ]
+        },
+        {
+          "id": "pref_c19_synchronisation-video-et-jouet",
+          "fr": "Synchronisation vidéo et jouet",
+          "en": "Synced video and toy",
+          "aliases": [
+            "interactive video toy"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c20",
+      "universe": "Objets, matières et sensations",
+      "name_fr": "Fétichismes du corps",
+      "order": 20,
+      "preferences": [
+        {
+          "id": "pref_c20_fetichisme-des-pieds",
+          "fr": "Fétichisme des pieds",
+          "en": "Foot fetish",
+          "aliases": [
+            "pieds",
+            "feet"
+          ]
+        },
+        {
+          "id": "pref_c20_plantes-des-pieds",
+          "fr": "Plantes des pieds",
+          "en": "Soles of feet",
+          "aliases": [
+            "soles",
+            "plantes"
+          ]
+        },
+        {
+          "id": "pref_c20_orteils",
+          "fr": "Orteils",
+          "en": "Toes",
+          "aliases": [
+            "toe fetish"
+          ]
+        },
+        {
+          "id": "pref_c20_pieds-en-talons",
+          "fr": "Pieds en talons",
+          "en": "Feet in heels",
+          "aliases": [
+            "heels and feet"
+          ]
+        },
+        {
+          "id": "pref_c20_pieds-nus",
+          "fr": "Pieds nus",
+          "en": "Bare feet",
+          "aliases": [
+            "barefeet"
+          ]
+        },
+        {
+          "id": "pref_c20_pieds-dans-des-bas",
+          "fr": "Pieds dans des bas",
+          "en": "Stocking feet",
+          "aliases": [
+            "feet stockings"
+          ]
+        },
+        {
+          "id": "pref_c20_pieds-moites",
+          "fr": "Pieds moites",
+          "en": "Sweaty feet",
+          "aliases": []
+        },
+        {
+          "id": "pref_c20_adoration-des-pieds",
+          "fr": "Adoration des pieds",
+          "en": "Foot worship",
+          "aliases": [
+            "worship feet"
+          ]
+        },
+        {
+          "id": "pref_c20_fetichisme-des-mains",
+          "fr": "Fétichisme des mains",
+          "en": "Hand fetish",
+          "aliases": [
+            "hands"
+          ]
+        },
+        {
+          "id": "pref_c20_ongles-manucure",
+          "fr": "Ongles / Manucure",
+          "en": "Nail fetish",
+          "aliases": [
+            "nails",
+            "manicure"
+          ]
+        },
+        {
+          "id": "pref_c20_aisselles",
+          "fr": "Aisselles",
+          "en": "Armpit fetish",
+          "aliases": [
+            "pits",
+            "armpits"
+          ]
+        },
+        {
+          "id": "pref_c20_odeurs-corporelles",
+          "fr": "Odeurs corporelles",
+          "en": "Body scent fetish",
+          "aliases": [
+            "musk",
+            "body odor"
+          ]
+        },
+        {
+          "id": "pref_c20_transpiration",
+          "fr": "Transpiration",
+          "en": "Sweat fetish",
+          "aliases": [
+            "sweat"
+          ]
+        },
+        {
+          "id": "pref_c20_cheveux",
+          "fr": "Cheveux",
+          "en": "Hair fetish",
+          "aliases": [
+            "hair"
+          ]
+        },
+        {
+          "id": "pref_c20_cheveux-tires-consenti",
+          "fr": "Cheveux tirés (consenti)",
+          "en": "Hair pulling play",
+          "aliases": [
+            "hair pulling"
+          ]
+        },
+        {
+          "id": "pref_c20_bouche-levres",
+          "fr": "Bouche / Lèvres",
+          "en": "Lips fetish",
+          "aliases": [
+            "lips",
+            "mouth"
+          ]
+        },
+        {
+          "id": "pref_c20_langue",
+          "fr": "Langue",
+          "en": "Tongue fetish",
+          "aliases": [
+            "tongue"
+          ]
+        },
+        {
+          "id": "pref_c20_poitrine",
+          "fr": "Poitrine",
+          "en": "Breast fetish",
+          "aliases": [
+            "boobs",
+            "tits"
+          ]
+        },
+        {
+          "id": "pref_c20_tetons",
+          "fr": "Tétons",
+          "en": "Nipple fetish",
+          "aliases": [
+            "nipples"
+          ]
+        },
+        {
+          "id": "pref_c20_fesses",
+          "fr": "Fesses",
+          "en": "Butt fetish",
+          "aliases": [
+            "ass fetish",
+            "booty"
+          ]
+        },
+        {
+          "id": "pref_c20_cuisses",
+          "fr": "Cuisses",
+          "en": "Thigh fetish",
+          "aliases": [
+            "thighs"
+          ]
+        },
+        {
+          "id": "pref_c20_jambes",
+          "fr": "Jambes",
+          "en": "Leg fetish",
+          "aliases": [
+            "legs"
+          ]
+        },
+        {
+          "id": "pref_c20_ventre",
+          "fr": "Ventre",
+          "en": "Belly fetish",
+          "aliases": [
+            "belly"
+          ]
+        },
+        {
+          "id": "pref_c20_nombril",
+          "fr": "Nombril",
+          "en": "Navel fetish",
+          "aliases": [
+            "belly button"
+          ]
+        },
+        {
+          "id": "pref_c20_dos",
+          "fr": "Dos",
+          "en": "Back fetish",
+          "aliases": [
+            "back"
+          ]
+        },
+        {
+          "id": "pref_c20_muscles",
+          "fr": "Muscles",
+          "en": "Muscle worship",
+          "aliases": [
+            "muscle fetish"
+          ]
+        },
+        {
+          "id": "pref_c20_penis",
+          "fr": "Pénis",
+          "en": "Penis worship",
+          "aliases": [
+            "cock worship"
+          ]
+        },
+        {
+          "id": "pref_c20_vulve",
+          "fr": "Vulve",
+          "en": "Vulva worship",
+          "aliases": [
+            "pussy worship"
+          ]
+        },
+        {
+          "id": "pref_c20_testicules",
+          "fr": "Testicules",
+          "en": "Testicle fetish",
+          "aliases": [
+            "balls"
+          ]
+        },
+        {
+          "id": "pref_c20_perinee",
+          "fr": "Périnée",
+          "en": "Perineum interest",
+          "aliases": [
+            "perineum"
+          ]
+        },
+        {
+          "id": "pref_c20_barbe-et-moustache",
+          "fr": "Barbe et moustache",
+          "en": "Facial hair fetish",
+          "aliases": [
+            "beard fetish"
+          ]
+        },
+        {
+          "id": "pref_c20_pilosite-pubienne",
+          "fr": "Pilosité pubienne",
+          "en": "Pubic hair fetish",
+          "aliases": [
+            "bush",
+            "pubic hair"
+          ]
+        },
+        {
+          "id": "pref_c20_rasage-intime-shaving",
+          "fr": "Rasage intime / Shaving",
+          "en": "Intimate shaving",
+          "aliases": [
+            "shaving kink"
+          ]
+        },
+        {
+          "id": "pref_c20_tatouages-erotiques",
+          "fr": "Tatouages érotiques",
+          "en": "Tattoo fetish",
+          "aliases": [
+            "tattoos fetish"
+          ]
+        },
+        {
+          "id": "pref_c20_piercings-intimes",
+          "fr": "Piercings intimes",
+          "en": "Intimate piercings",
+          "aliases": [
+            "genital piercing"
+          ]
+        },
+        {
+          "id": "pref_c20_grossesse-adulte",
+          "fr": "Grossesse adulte",
+          "en": "Pregnancy fetish",
+          "aliases": [
+            "pregnant adult"
+          ]
+        },
+        {
+          "id": "pref_c20_lactation-fantasme",
+          "fr": "Lactation (fantasme)",
+          "en": "Lactation fetish",
+          "aliases": [
+            "breast milk kink"
+          ]
+        },
+        {
+          "id": "pref_c20_pieds-chausses",
+          "fr": "Pieds chaussés",
+          "en": "Shoe-on foot fetish",
+          "aliases": [
+            "shoe play"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c21",
+      "universe": "Objets, matières et sensations",
+      "name_fr": "Vêtements, chaussures et matières",
+      "order": 21,
+      "preferences": [
+        {
+          "id": "pref_c21_lingerie",
+          "fr": "Lingerie",
+          "en": "Lingerie",
+          "aliases": []
+        },
+        {
+          "id": "pref_c21_string-tanga",
+          "fr": "String / Tanga",
+          "en": "Thong",
+          "aliases": [
+            "g-string",
+            "string"
+          ]
+        },
+        {
+          "id": "pref_c21_culotte-panties",
+          "fr": "Culotte / Panties",
+          "en": "Panties",
+          "aliases": [
+            "culotte"
+          ]
+        },
+        {
+          "id": "pref_c21_boxer-sous-vetements-masculins",
+          "fr": "Boxer / Sous-vêtements masculins",
+          "en": "Boxers / Men's underwear",
+          "aliases": [
+            "men underwear"
+          ]
+        },
+        {
+          "id": "pref_c21_sous-vetements-portes",
+          "fr": "Sous-vêtements portés",
+          "en": "Worn underwear",
+          "aliases": [
+            "used panties",
+            "used underwear"
+          ]
+        },
+        {
+          "id": "pref_c21_bas-stockings",
+          "fr": "Bas / Stockings",
+          "en": "Stockings",
+          "aliases": [
+            "bas nylon"
+          ]
+        },
+        {
+          "id": "pref_c21_bas-resille-fishnets",
+          "fr": "Bas résille / Fishnets",
+          "en": "Fishnet stockings",
+          "aliases": [
+            "fishnet"
+          ]
+        },
+        {
+          "id": "pref_c21_collants-pantyhose",
+          "fr": "Collants / Pantyhose",
+          "en": "Pantyhose",
+          "aliases": [
+            "tights",
+            "collants"
+          ]
+        },
+        {
+          "id": "pref_c21_nylon",
+          "fr": "Nylon",
+          "en": "Nylon",
+          "aliases": [
+            "nylon fetish"
+          ]
+        },
+        {
+          "id": "pref_c21_latex",
+          "fr": "Latex",
+          "en": "Latex",
+          "aliases": [
+            "latex fetish"
+          ]
+        },
+        {
+          "id": "pref_c21_cuir",
+          "fr": "Cuir",
+          "en": "Leather",
+          "aliases": [
+            "leather fetish"
+          ]
+        },
+        {
+          "id": "pref_c21_vinyle-pvc",
+          "fr": "Vinyle / PVC",
+          "en": "Vinyl / PVC",
+          "aliases": [
+            "vinyl",
+            "PVC"
+          ]
+        },
+        {
+          "id": "pref_c21_caoutchouc-rubber",
+          "fr": "Caoutchouc / Rubber",
+          "en": "Rubber",
+          "aliases": [
+            "rubber fetish"
+          ]
+        },
+        {
+          "id": "pref_c21_lycra-spandex",
+          "fr": "Lycra / Spandex",
+          "en": "Lycra / Spandex",
+          "aliases": [
+            "spandex",
+            "lycra"
+          ]
+        },
+        {
+          "id": "pref_c21_combinaison-moulante",
+          "fr": "Combinaison moulante",
+          "en": "Bodysuit",
+          "aliases": [
+            "catsuit"
+          ]
+        },
+        {
+          "id": "pref_c21_corset",
+          "fr": "Corset",
+          "en": "Corset",
+          "aliases": []
+        },
+        {
+          "id": "pref_c21_porte-jarretelles",
+          "fr": "Porte-jarretelles",
+          "en": "Garter belt",
+          "aliases": [
+            "garter"
+          ]
+        },
+        {
+          "id": "pref_c21_talons-hauts-high-heels",
+          "fr": "Talons hauts / High heels",
+          "en": "High heels",
+          "aliases": [
+            "heels",
+            "talons"
+          ]
+        },
+        {
+          "id": "pref_c21_bottes-boots",
+          "fr": "Bottes / Boots",
+          "en": "Boots",
+          "aliases": [
+            "bottes"
+          ]
+        },
+        {
+          "id": "pref_c21_escarpins",
+          "fr": "Escarpins",
+          "en": "Pumps / High heels",
+          "aliases": []
+        },
+        {
+          "id": "pref_c21_baskets-sneakers",
+          "fr": "Baskets / Sneakers",
+          "en": "Sneakers",
+          "aliases": [
+            "sneaker fetish"
+          ]
+        },
+        {
+          "id": "pref_c21_chaussettes",
+          "fr": "Chaussettes",
+          "en": "Socks",
+          "aliases": [
+            "sock fetish"
+          ]
+        },
+        {
+          "id": "pref_c21_gants",
+          "fr": "Gants",
+          "en": "Gloves",
+          "aliases": [
+            "gloves fetish"
+          ]
+        },
+        {
+          "id": "pref_c21_jeans",
+          "fr": "Jeans",
+          "en": "Jeans",
+          "aliases": [
+            "denim"
+          ]
+        },
+        {
+          "id": "pref_c21_tenue-sportive-sportswear",
+          "fr": "Tenue sportive / Sportswear",
+          "en": "Sportswear",
+          "aliases": [
+            "sports gear"
+          ]
+        },
+        {
+          "id": "pref_c21_uniforme-adulte",
+          "fr": "Uniforme adulte",
+          "en": "Adult uniform",
+          "aliases": [
+            "uniform fetish"
+          ]
+        },
+        {
+          "id": "pref_c21_chemise-costume",
+          "fr": "Chemise / Costume",
+          "en": "Shirt / Suit",
+          "aliases": [
+            "suit fetish"
+          ]
+        },
+        {
+          "id": "pref_c21_robe",
+          "fr": "Robe",
+          "en": "Dress",
+          "aliases": [
+            "dress fetish"
+          ]
+        },
+        {
+          "id": "pref_c21_mini-jupe",
+          "fr": "Mini-jupe",
+          "en": "Mini skirt",
+          "aliases": [
+            "miniskirt"
+          ]
+        },
+        {
+          "id": "pref_c21_maillot-de-bain",
+          "fr": "Maillot de bain",
+          "en": "Swimwear",
+          "aliases": [
+            "bikini",
+            "maillot"
+          ]
+        },
+        {
+          "id": "pref_c21_lingerie-transparente",
+          "fr": "Lingerie transparente",
+          "en": "Sheer lingerie",
+          "aliases": [
+            "see through lingerie"
+          ]
+        },
+        {
+          "id": "pref_c21_vetement-mouille-wetlook",
+          "fr": "Vêtement mouillé / Wetlook",
+          "en": "Wetlook",
+          "aliases": [
+            "wet clothing"
+          ]
+        },
+        {
+          "id": "pref_c21_vetement-moulant",
+          "fr": "Vêtement moulant",
+          "en": "Tight clothing",
+          "aliases": [
+            "skintight"
+          ]
+        },
+        {
+          "id": "pref_c21_cagoule-masque",
+          "fr": "Cagoule / Masque",
+          "en": "Hood / Mask",
+          "aliases": [
+            "mask kink"
+          ]
+        },
+        {
+          "id": "pref_c21_collier-et-harnais",
+          "fr": "Collier et harnais",
+          "en": "Collar and harness",
+          "aliases": [
+            "collar harness"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c22",
+      "universe": "Objets, matières et sensations",
+      "name_fr": "Fétiches sensoriels et spécifiques",
+      "order": 22,
+      "preferences": [
+        {
+          "id": "pref_c22_fetichisme-olfactif",
+          "fr": "Fétichisme olfactif",
+          "en": "Scent fetish",
+          "aliases": [
+            "smell fetish",
+            "odeurs"
+          ]
+        },
+        {
+          "id": "pref_c22_parfum",
+          "fr": "Parfum",
+          "en": "Perfume fetish",
+          "aliases": [
+            "fragrance"
+          ]
+        },
+        {
+          "id": "pref_c22_asmr-erotique",
+          "fr": "ASMR érotique",
+          "en": "Erotic ASMR",
+          "aliases": [
+            "ASMR"
+          ]
+        },
+        {
+          "id": "pref_c22_chuchotements",
+          "fr": "Chuchotements",
+          "en": "Whispering",
+          "aliases": [
+            "whispers"
+          ]
+        },
+        {
+          "id": "pref_c22_voix-grave-sensuelle",
+          "fr": "Voix grave / Sensuelle",
+          "en": "Sensual voice",
+          "aliases": [
+            "voice kink"
+          ]
+        },
+        {
+          "id": "pref_c22_respiration-sons",
+          "fr": "Respiration / Sons",
+          "en": "Breath sounds",
+          "aliases": [
+            "breathing sounds"
+          ]
+        },
+        {
+          "id": "pref_c22_bruits-de-baisers",
+          "fr": "Bruits de baisers",
+          "en": "Kissing sounds",
+          "aliases": [
+            "kissing audio"
+          ]
+        },
+        {
+          "id": "pref_c22_sons-de-plaisir-moans",
+          "fr": "Sons de plaisir / Moans",
+          "en": "Moaning",
+          "aliases": [
+            "moans",
+            "gémissements"
+          ]
+        },
+        {
+          "id": "pref_c22_baisers-mouilles",
+          "fr": "Baisers mouillés",
+          "en": "Wet kissing",
+          "aliases": [
+            "wet kiss"
+          ]
+        },
+        {
+          "id": "pref_c22_salive-spit",
+          "fr": "Salive / Spit",
+          "en": "Saliva / Spit fetish",
+          "aliases": [
+            "spit play"
+          ]
+        },
+        {
+          "id": "pref_c22_jeux-avec-la-nourriture",
+          "fr": "Jeux avec la nourriture",
+          "en": "Food play",
+          "aliases": [
+            "food fetish"
+          ]
+        },
+        {
+          "id": "pref_c22_chocolat-sur-la-peau",
+          "fr": "Chocolat sur la peau",
+          "en": "Chocolate body play",
+          "aliases": [
+            "chocolate fetish"
+          ]
+        },
+        {
+          "id": "pref_c22_chantilly-creme",
+          "fr": "Chantilly / Crème",
+          "en": "Whipped cream play",
+          "aliases": [
+            "cream play"
+          ]
+        },
+        {
+          "id": "pref_c22_fruits-nourriture-erotique",
+          "fr": "Fruits / Nourriture érotique",
+          "en": "Fruit / Food sensual play",
+          "aliases": [
+            "fruit play"
+          ]
+        },
+        {
+          "id": "pref_c22_gateaux-cake-sitting",
+          "fr": "Gâteaux / Cake sitting",
+          "en": "Cake sitting",
+          "aliases": [
+            "cake fetish"
+          ]
+        },
+        {
+          "id": "pref_c22_ballons-balloon-fetish",
+          "fr": "Ballons / Balloon fetish",
+          "en": "Balloon fetish",
+          "aliases": [
+            "ballooning"
+          ]
+        },
+        {
+          "id": "pref_c22_objets-gonflables",
+          "fr": "Objets gonflables",
+          "en": "Inflatables fetish",
+          "aliases": [
+            "inflatable fetish"
+          ]
+        },
+        {
+          "id": "pref_c22_wet-and-messy-wam",
+          "fr": "Wet and messy / WAM",
+          "en": "Wet and messy",
+          "aliases": [
+            "WAM",
+            "messy play"
+          ]
+        },
+        {
+          "id": "pref_c22_body-painting-peinture-corporelle",
+          "fr": "Body painting / Peinture corporelle",
+          "en": "Body painting",
+          "aliases": [
+            "bodypaint"
+          ]
+        },
+        {
+          "id": "pref_c22_jeux-d-eau",
+          "fr": "Jeux d'eau",
+          "en": "Water play",
+          "aliases": [
+            "water sensory"
+          ]
+        },
+        {
+          "id": "pref_c22_mousse-bain-moussant",
+          "fr": "Mousse / Bain moussant",
+          "en": "Foam / Bubble bath play",
+          "aliases": [
+            "foam bath"
+          ]
+        },
+        {
+          "id": "pref_c22_bain-d-huile",
+          "fr": "Bain d'huile",
+          "en": "Oil bath / Oil play",
+          "aliases": [
+            "oil fetish"
+          ]
+        },
+        {
+          "id": "pref_c22_chatouilles-tickling",
+          "fr": "Chatouilles / Tickling",
+          "en": "Tickling",
+          "aliases": [
+            "tickle fetish"
+          ]
+        },
+        {
+          "id": "pref_c22_massage-des-pieds",
+          "fr": "Massage des pieds",
+          "en": "Foot massage",
+          "aliases": [
+            "massage pieds"
+          ]
+        },
+        {
+          "id": "pref_c22_pratique-de-la-respiration-guidee",
+          "fr": "Pratique de la respiration guidée",
+          "en": "Guided breathing (non-restrictive)",
+          "aliases": [
+            "breath guidance"
+          ]
+        },
+        {
+          "id": "pref_c22_fetichisme-des-lunettes",
+          "fr": "Fétichisme des lunettes",
+          "en": "Glasses fetish",
+          "aliases": [
+            "glasses kink"
+          ]
+        },
+        {
+          "id": "pref_c22_cosplay-furry-entre-humains",
+          "fr": "Cosplay furry entre humains",
+          "en": "Fursuit fetish",
+          "aliases": [
+            "adult furry"
+          ]
+        },
+        {
+          "id": "pref_c22_vetements-de-poupee",
+          "fr": "Vêtements de poupée",
+          "en": "Doll clothing fetish",
+          "aliases": [
+            "doll clothes"
+          ]
+        },
+        {
+          "id": "pref_c22_fetichisme-des-couches-pour-adultes",
+          "fr": "Fétichisme des couches pour adultes",
+          "en": "Adult diaper fetish",
+          "aliases": [
+            "adult diapers",
+            "ABDL"
+          ]
+        },
+        {
+          "id": "pref_c22_jeu-de-proprete-scenarise-entre-adultes",
+          "fr": "Jeu de propreté scénarisé entre adultes",
+          "en": "Adult hygiene roleplay",
+          "aliases": [
+            "adult hygiene play"
+          ]
+        },
+        {
+          "id": "pref_c22_statues-mannequins-fictifs",
+          "fr": "Statues / Mannequins fictifs",
+          "en": "Statue / Mannequin fantasy",
+          "aliases": [
+            "agalmatophilia"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c23",
+      "universe": "Fantasmes et scénarios",
+      "name_fr": "Lieux, ambiance et contexte",
+      "order": 23,
+      "preferences": [
+        {
+          "id": "pref_c23_chambre-lit",
+          "fr": "Chambre / Lit",
+          "en": "Bedroom / Bed",
+          "aliases": [
+            "bedroom"
+          ]
+        },
+        {
+          "id": "pref_c23_hotel-love-room",
+          "fr": "Hôtel / Love room",
+          "en": "Hotel / Love room",
+          "aliases": [
+            "love room"
+          ]
+        },
+        {
+          "id": "pref_c23_douche",
+          "fr": "Douche",
+          "en": "Shower sex",
+          "aliases": [
+            "shower"
+          ]
+        },
+        {
+          "id": "pref_c23_baignoire",
+          "fr": "Baignoire",
+          "en": "Bathtub sex",
+          "aliases": [
+            "bath sex"
+          ]
+        },
+        {
+          "id": "pref_c23_jacuzzi-prive",
+          "fr": "Jacuzzi privé",
+          "en": "Private hot tub",
+          "aliases": [
+            "jacuzzi"
+          ]
+        },
+        {
+          "id": "pref_c23_sauna-prive",
+          "fr": "Sauna privé",
+          "en": "Private sauna",
+          "aliases": []
+        },
+        {
+          "id": "pref_c23_piscine-privee",
+          "fr": "Piscine privée",
+          "en": "Private pool",
+          "aliases": [
+            "pool sex"
+          ]
+        },
+        {
+          "id": "pref_c23_cuisine",
+          "fr": "Cuisine",
+          "en": "Kitchen setting",
+          "aliases": [
+            "kitchen"
+          ]
+        },
+        {
+          "id": "pref_c23_salon-canape",
+          "fr": "Salon / Canapé",
+          "en": "Living room / Sofa",
+          "aliases": [
+            "sofa",
+            "couch"
+          ]
+        },
+        {
+          "id": "pref_c23_bureau-prive",
+          "fr": "Bureau privé",
+          "en": "Private office",
+          "aliases": [
+            "office fantasy"
+          ]
+        },
+        {
+          "id": "pref_c23_voiture-carplay",
+          "fr": "Voiture / Carplay",
+          "en": "Car sex",
+          "aliases": [
+            "carplay",
+            "plan voiture"
+          ]
+        },
+        {
+          "id": "pref_c23_camping-car-van",
+          "fr": "Camping-car / Van",
+          "en": "Camper van fantasy",
+          "aliases": [
+            "vanlife",
+            "campervan"
+          ]
+        },
+        {
+          "id": "pref_c23_bateau-prive-yacht",
+          "fr": "Bateau privé / Yacht",
+          "en": "Private boat / Yacht",
+          "aliases": [
+            "boat",
+            "bateau"
+          ]
+        },
+        {
+          "id": "pref_c23_cabane-isolee",
+          "fr": "Cabane isolée",
+          "en": "Private cabin",
+          "aliases": [
+            "cabin"
+          ]
+        },
+        {
+          "id": "pref_c23_nature-dans-un-espace-prive",
+          "fr": "Nature dans un espace privé",
+          "en": "Private outdoor sex",
+          "aliases": [
+            "outdoor",
+            "plein air"
+          ]
+        },
+        {
+          "id": "pref_c23_jardin-prive",
+          "fr": "Jardin privé",
+          "en": "Private garden",
+          "aliases": [
+            "garden"
+          ]
+        },
+        {
+          "id": "pref_c23_plage-privee-ou-autorisee",
+          "fr": "Plage privée ou autorisée",
+          "en": "Private or permitted beach",
+          "aliases": [
+            "beach"
+          ]
+        },
+        {
+          "id": "pref_c23_foret-privee",
+          "fr": "Forêt privée",
+          "en": "Private forest",
+          "aliases": [
+            "woods"
+          ]
+        },
+        {
+          "id": "pref_c23_tente-camping",
+          "fr": "Tente / Camping",
+          "en": "Tent / Camping",
+          "aliases": [
+            "camping"
+          ]
+        },
+        {
+          "id": "pref_c23_ambiance-romantique",
+          "fr": "Ambiance romantique",
+          "en": "Romantic setting",
+          "aliases": [
+            "romantic"
+          ]
+        },
+        {
+          "id": "pref_c23_lumiere-tamisee",
+          "fr": "Lumière tamisée",
+          "en": "Dim lighting",
+          "aliases": [
+            "low light"
+          ]
+        },
+        {
+          "id": "pref_c23_bougies",
+          "fr": "Bougies",
+          "en": "Candlelight setting",
+          "aliases": [
+            "candle light"
+          ]
+        },
+        {
+          "id": "pref_c23_miroir",
+          "fr": "Miroir",
+          "en": "Mirror setting",
+          "aliases": [
+            "mirror"
+          ]
+        },
+        {
+          "id": "pref_c23_musique-sensuelle",
+          "fr": "Musique sensuelle",
+          "en": "Sensual music",
+          "aliases": [
+            "sexy music"
+          ]
+        },
+        {
+          "id": "pref_c23_jeux-devant-un-public-consentant",
+          "fr": "Jeux devant un public consentant",
+          "en": "Consensual audience play",
+          "aliases": [
+            "audience"
+          ]
+        },
+        {
+          "id": "pref_c23_studio-photo-prive",
+          "fr": "Studio photo privé",
+          "en": "Private photo studio",
+          "aliases": [
+            "studio"
+          ]
+        },
+        {
+          "id": "pref_c23_loge-dressing-prive",
+          "fr": "Loge / Dressing privé",
+          "en": "Private dressing room",
+          "aliases": [
+            "dressing room"
+          ]
+        },
+        {
+          "id": "pref_c23_club-libertin",
+          "fr": "Club libertin",
+          "en": "Swingers club setting",
+          "aliases": [
+            "libertine club"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c24",
+      "universe": "Fantasmes et scénarios",
+      "name_fr": "Formats, vidéos et univers adultes",
+      "order": 24,
+      "preferences": [
+        {
+          "id": "pref_c24_sexting-messages-coquins",
+          "fr": "Sexting / Messages coquins",
+          "en": "Sexting",
+          "aliases": [
+            "sextos",
+            "messages sexy"
+          ]
+        },
+        {
+          "id": "pref_c24_dirty-talk-ecrit",
+          "fr": "Dirty talk écrit",
+          "en": "Written dirty talk",
+          "aliases": [
+            "dirty texting"
+          ]
+        },
+        {
+          "id": "pref_c24_audio-erotique",
+          "fr": "Audio érotique",
+          "en": "Erotic audio",
+          "aliases": [
+            "audio sexy"
+          ]
+        },
+        {
+          "id": "pref_c24_notes-vocales-sensuelles",
+          "fr": "Notes vocales sensuelles",
+          "en": "Sensual voice messages",
+          "aliases": [
+            "voice notes"
+          ]
+        },
+        {
+          "id": "pref_c24_live-webcam",
+          "fr": "Live webcam",
+          "en": "Live webcam",
+          "aliases": [
+            "live cam"
+          ]
+        },
+        {
+          "id": "pref_c24_cam2cam-video-mutuelle",
+          "fr": "Cam2Cam / Vidéo mutuelle",
+          "en": "Cam2Cam",
+          "aliases": [
+            "C2C",
+            "visio"
+          ]
+        },
+        {
+          "id": "pref_c24_masturbation-guidee-joi",
+          "fr": "Masturbation guidée / JOI",
+          "en": "Jerk Off Instructions / JOI",
+          "aliases": [
+            "JOI",
+            "jerk off instructions"
+          ]
+        },
+        {
+          "id": "pref_c24_cei-consignes-liees-a-l-ejaculation",
+          "fr": "CEI / Consignes liées à l'éjaculation",
+          "en": "Cum Eating Instructions / CEI",
+          "aliases": [
+            "CEI"
+          ]
+        },
+        {
+          "id": "pref_c24_evaluation-de-penis-cock-rating",
+          "fr": "Évaluation de pénis / Cock rating",
+          "en": "Cock rating",
+          "aliases": [
+            "dick rating",
+            "évaluation de bites"
+          ]
+        },
+        {
+          "id": "pref_c24_evaluation-des-seins",
+          "fr": "Évaluation des seins",
+          "en": "Breast rating",
+          "aliases": [
+            "boob rating"
+          ]
+        },
+        {
+          "id": "pref_c24_photo-coquine",
+          "fr": "Photo coquine",
+          "en": "Sexy photo",
+          "aliases": [
+            "sexy pics"
+          ]
+        },
+        {
+          "id": "pref_c24_photo-de-pieds",
+          "fr": "Photo de pieds",
+          "en": "Feet pics",
+          "aliases": [
+            "foot pics"
+          ]
+        },
+        {
+          "id": "pref_c24_video-amateur",
+          "fr": "Vidéo amateur",
+          "en": "Amateur video",
+          "aliases": [
+            "amateur"
+          ]
+        },
+        {
+          "id": "pref_c24_porno-japonais-jav-adulte",
+          "fr": "Porno japonais / JAV adulte",
+          "en": "Japanese adult video / JAV",
+          "aliases": [
+            "JAV",
+            "japanese porn"
+          ]
+        },
+        {
+          "id": "pref_c24_erotisme-destine-aux-femmes",
+          "fr": "Érotisme destiné aux femmes",
+          "en": "Erotica for women",
+          "aliases": [
+            "porn for women",
+            "female gaze"
+          ]
+        },
+        {
+          "id": "pref_c24_homemade-fait-maison",
+          "fr": "Homemade / Fait maison",
+          "en": "Homemade",
+          "aliases": [
+            "homemade video"
+          ]
+        },
+        {
+          "id": "pref_c24_couple-amateur",
+          "fr": "Couple amateur",
+          "en": "Amateur couple",
+          "aliases": [
+            "real couple"
+          ]
+        },
+        {
+          "id": "pref_c24_pov-point-de-vue",
+          "fr": "POV / Point de vue",
+          "en": "POV",
+          "aliases": [
+            "point of view"
+          ]
+        },
+        {
+          "id": "pref_c24_video-immersive",
+          "fr": "Vidéo immersive",
+          "en": "Immersive video",
+          "aliases": [
+            "immersive porn"
+          ]
+        },
+        {
+          "id": "pref_c24_video-en-realite-virtuelle-vr",
+          "fr": "Vidéo en réalité virtuelle / VR",
+          "en": "VR video",
+          "aliases": [
+            "VR",
+            "virtual reality"
+          ]
+        },
+        {
+          "id": "pref_c24_video-3d-adulte",
+          "fr": "Vidéo 3D adulte",
+          "en": "Adult 3D animation",
+          "aliases": [
+            "3D adult"
+          ]
+        },
+        {
+          "id": "pref_c24_hentai-adulte",
+          "fr": "Hentai adulte",
+          "en": "Adult hentai",
+          "aliases": [
+            "hentai"
+          ]
+        },
+        {
+          "id": "pref_c24_anime-erotique-adulte",
+          "fr": "Anime érotique adulte",
+          "en": "Adult erotic anime",
+          "aliases": [
+            "anime porn"
+          ]
+        },
+        {
+          "id": "pref_c24_manga-erotique-adulte",
+          "fr": "Manga érotique adulte",
+          "en": "Adult erotic manga",
+          "aliases": [
+            "manga hentai"
+          ]
+        },
+        {
+          "id": "pref_c24_animation-erotique-adulte",
+          "fr": "Animation érotique adulte",
+          "en": "Adult erotic animation",
+          "aliases": [
+            "animated adult"
+          ]
+        },
+        {
+          "id": "pref_c24_cosplay-erotique-adulte",
+          "fr": "Cosplay érotique adulte",
+          "en": "Adult erotic cosplay",
+          "aliases": [
+            "cosplay XXX"
+          ]
+        },
+        {
+          "id": "pref_c24_jeux-video-erotiques-pour-adultes",
+          "fr": "Jeux vidéo érotiques pour adultes",
+          "en": "Adult erotic games",
+          "aliases": [
+            "adult games"
+          ]
+        },
+        {
+          "id": "pref_c24_vtuber-adulte",
+          "fr": "VTuber adulte",
+          "en": "Adult VTuber",
+          "aliases": [
+            "VTuber"
+          ]
+        },
+        {
+          "id": "pref_c24_ahegao-expression-de-manga",
+          "fr": "Ahegao (expression de manga)",
+          "en": "Ahegao",
+          "aliases": []
+        },
+        {
+          "id": "pref_c24_tentacules-fictifs-en-animation-adulte",
+          "fr": "Tentacules fictifs en animation adulte",
+          "en": "Fictional tentacles in adult animation",
+          "aliases": [
+            "tentacle hentai"
+          ]
+        },
+        {
+          "id": "pref_c24_parodie-porno-entre-adultes",
+          "fr": "Parodie porno entre adultes",
+          "en": "Adult porn parody",
+          "aliases": [
+            "porn parody"
+          ]
+        },
+        {
+          "id": "pref_c24_scene-scenarisee-fiction",
+          "fr": "Scène scénarisée / Fiction",
+          "en": "Staged adult scene",
+          "aliases": [
+            "scripted scene"
+          ]
+        },
+        {
+          "id": "pref_c24_compilations",
+          "fr": "Compilations",
+          "en": "Compilations",
+          "aliases": [
+            "compilation"
+          ]
+        },
+        {
+          "id": "pref_c24_video-en-couple",
+          "fr": "Vidéo en couple",
+          "en": "Couple video",
+          "aliases": [
+            "couples porn"
+          ]
+        },
+        {
+          "id": "pref_c24_slow-motion-ralenti",
+          "fr": "Slow motion / Ralenti",
+          "en": "Slow motion",
+          "aliases": [
+            "slowmo"
+          ]
+        },
+        {
+          "id": "pref_c24_gros-plan-close-up",
+          "fr": "Gros plan / Close-up",
+          "en": "Close-up",
+          "aliases": [
+            "closeup"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c25",
+      "universe": "Fantasmes et scénarios",
+      "name_fr": "Codes et préférences de la scène gay",
+      "order": 25,
+      "preferences": [
+        {
+          "id": "pref_c25_top-role-sexuel-actif",
+          "fr": "Top (rôle sexuel actif)",
+          "en": "Top (sexual position)",
+          "aliases": [
+            "top gay",
+            "actif"
+          ]
+        },
+        {
+          "id": "pref_c25_bottom-role-sexuel-receptif",
+          "fr": "Bottom (rôle sexuel réceptif)",
+          "en": "Bottom (sexual position)",
+          "aliases": [
+            "bottom gay",
+            "passif"
+          ]
+        },
+        {
+          "id": "pref_c25_versatile-vers",
+          "fr": "Versatile / Vers",
+          "en": "Versatile",
+          "aliases": [
+            "vers",
+            "polyvalent"
+          ]
+        },
+        {
+          "id": "pref_c25_side-sans-penetration",
+          "fr": "Side (sans pénétration)",
+          "en": "Side",
+          "aliases": [
+            "gay side"
+          ]
+        },
+        {
+          "id": "pref_c25_bear-ours",
+          "fr": "Bear / Ours",
+          "en": "Bear",
+          "aliases": [
+            "ours"
+          ]
+        },
+        {
+          "id": "pref_c25_cub-ourson-adulte",
+          "fr": "Cub / Ourson adulte",
+          "en": "Cub",
+          "aliases": [
+            "bear cub",
+            "ourson"
+          ]
+        },
+        {
+          "id": "pref_c25_otter-loutre",
+          "fr": "Otter / Loutre",
+          "en": "Otter",
+          "aliases": []
+        },
+        {
+          "id": "pref_c25_twink-adulte",
+          "fr": "Twink (adulte)",
+          "en": "Adult twink",
+          "aliases": [
+            "twink"
+          ]
+        },
+        {
+          "id": "pref_c25_jock",
+          "fr": "Jock",
+          "en": "Jock",
+          "aliases": [
+            "sportif gay"
+          ]
+        },
+        {
+          "id": "pref_c25_leather-culture-cuir",
+          "fr": "Leather / Culture cuir",
+          "en": "Leather culture",
+          "aliases": [
+            "leatherman"
+          ]
+        },
+        {
+          "id": "pref_c25_pup-puppy-play-humain",
+          "fr": "Pup / Puppy play humain",
+          "en": "Pup play",
+          "aliases": [
+            "pup"
+          ]
+        },
+        {
+          "id": "pref_c25_cruising-dans-lieu-autorise",
+          "fr": "Cruising dans lieu autorisé",
+          "en": "Consensual cruising",
+          "aliases": [
+            "cruising"
+          ]
+        },
+        {
+          "id": "pref_c25_docking",
+          "fr": "Docking",
+          "en": "Docking",
+          "aliases": []
+        },
+        {
+          "id": "pref_c25_oral-mutuel-entre-hommes",
+          "fr": "Oral mutuel entre hommes",
+          "en": "Mutual male oral",
+          "aliases": [
+            "gay 69"
+          ]
+        },
+        {
+          "id": "pref_c25_branlette-collective-circle-jerk",
+          "fr": "Branlette collective / Circle jerk",
+          "en": "Circle jerk",
+          "aliases": [
+            "group JO"
+          ]
+        },
+        {
+          "id": "pref_c25_glory-hole-gay-prive",
+          "fr": "Glory hole gay privé",
+          "en": "Private gay gloryhole",
+          "aliases": [
+            "gay GH"
+          ]
+        },
+        {
+          "id": "pref_c25_fetiche-harnais",
+          "fr": "Fétiche harnais",
+          "en": "Harness fetish",
+          "aliases": [
+            "harness"
+          ]
+        },
+        {
+          "id": "pref_c25_anon-anonyme-entre-adultes",
+          "fr": "Anon / Anonyme entre adultes",
+          "en": "Anonymous adult play",
+          "aliases": [
+            "anon"
+          ]
+        }
+      ]
+    }
+  ]
+}

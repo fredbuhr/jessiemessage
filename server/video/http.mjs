@@ -94,6 +94,7 @@ function mappedError(error) {
     return { status: error.httpStatus, code: error.publicCode };
   }
   if (["CHAT_UNAUTHORIZED", "AUTH_INVALID", "VIDEO_UNAUTHORIZED"].includes(error?.code)) return { status: 401, code: "authentication_required" };
+  if (error?.code === "VIDEO_ADMIN_ONLY" || error?.httpStatus === 403 && error.publicCode === "video_admin_only") return { status: 403, code: "video_admin_only" };
   if (["VIDEO_READ_ONLY", "CHAT_READ_ONLY"].includes(error?.code) || error?.httpStatus === 403 && error.publicCode === "feature_read_only") return { status: 403, code: "feature_read_only" };
   if (["CHAT_FORBIDDEN", "ACCESS_FORBIDDEN", "ACCESS_EXPIRED", "ACCESS_PREREQUISITES"].includes(error?.code)) return { status: 403, code: "request_rejected" };
   if (["VIDEO_NOT_FOUND", "MEDIA_NOT_FOUND", "CHAT_NOT_FOUND"].includes(error?.code)) return { status: 404, code: "not_found" };
@@ -240,6 +241,9 @@ export function createVideoHandler(service, { origin, uploadTimeoutMs = 300000, 
       if (!actor) throw Object.assign(new Error("Authentication required."), { code: "VIDEO_UNAUTHORIZED" });
       safeActor(actor, role);
       if (mutation && !sameText(request.headers["x-csrf-token"], actor.csrf)) throw httpError(403, "csrf_failed");
+      // Read and cleanup remain valid for historical client-owned videos.
+      // Deny creation before admission, body parsing, or any storage work.
+      if (role !== "admin" && (upload || route.kind === "send")) throw httpError(403, "video_admin_only");
       if (mutation && !creationEnabled) throw httpError(403, "feature_read_only");
       if (library) {
         const result = await service.listOwned(role, token, options);
@@ -263,8 +267,11 @@ export function createVideoHandler(service, { origin, uploadTimeoutMs = 300000, 
         reply(response, method, 200, { deleted: true });
       } else if (route.kind === "send") {
         const body = await readJson(request, { maxBytes: 8192 });
-        if (Object.keys(body).length !== 3 || !["clientMessageId", "videoId", "caption"].every((name) => Object.hasOwn(body, name))
-          || !identifier(body.clientMessageId) || !identifier(body.videoId) || typeof body.caption !== "string" || body.caption.length > 1000) throw invalid();
+        if (![3, 4, 5].includes(Object.keys(body).length) || Object.keys(body).some(name => !["clientMessageId", "videoId", "caption", "replyThrough", "replyVersion"].includes(name))
+          || !["clientMessageId", "videoId", "caption"].every((name) => Object.hasOwn(body, name))
+          || !identifier(body.clientMessageId) || !identifier(body.videoId) || typeof body.caption !== "string" || body.caption.length > 1000
+          || Object.hasOwn(body, "replyThrough") && !sequence(body.replyThrough)
+          || Object.hasOwn(body, "replyVersion") && (!Object.hasOwn(body, "replyThrough") || !sequence(body.replyVersion) || BigInt(body.replyVersion) > 4294967295n)) throw invalid();
         if (body.caption !== "") validateMessageBody(body.caption);
         const result = await service.send(role, token, route.conversationId, body);
         if (!result || typeof result.duplicate !== "boolean") throw unavailable();

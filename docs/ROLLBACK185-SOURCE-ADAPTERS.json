@@ -1,0 +1,196 @@
+{
+  "base": "904ab4301bbda71e047d5b3b5dad41d45149c1cf",
+  "copiedAdapters": [
+    {
+      "file": "scripts/backup.mjs",
+      "sha256": "df05d33d451af002492f0abd073a7d0f1ae385b1bb43891d70624a27d65c2a57",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "scripts/import-application-checkpoint.mjs",
+      "sha256": "5d5c75456cee3dbc98cac5f5cad964280440c89d394813aa126654dfce2dc2f1",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "scripts/manual-restore.mjs",
+      "sha256": "f23ce0bd2e2e9ae57b7defb53eb53966cafc1af88e47c3341aae53046faaa4c7",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "scripts/private-checkpoint.mjs",
+      "sha256": "cf38a08773fd0ba4b50e7f24416f2e9e8957dea6b1586643e330eded663b3de5",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "scripts/private-messaging-child.mjs",
+      "sha256": "7c104de38e8f62c8239dffb9c19c39b0b76060cd79de5426c064e28e9802f5c0",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "scripts/resume-application-checkpoint.mjs",
+      "sha256": "7a4633eb4ed1c1838e01e36fe46a6b45d71989a7a801c21a4cca3c2e912b5207",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "scripts/start-private-messaging.mjs",
+      "sha256": "61b5664690db0c1ee1552c0d7de126abf09504daed28db3902f33d2b466bcfe7",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "scripts/verify-private-checkpoint.mjs",
+      "sha256": "8869d04ca41cbfcfcc8a368e436de40a209a8b17129a3e2b0a1161231f31ca2e",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "scripts/verify-text-clone.mjs",
+      "sha256": "39eb2714b689318f62c3ab631fa3859458c133e3df58bc255aaa52dbb4dc813e",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/backup/application-scope.mjs",
+      "sha256": "f0e021ce10152c3daf323bd484929a83bccf133f4219bc50b17b3f9bfb88d689",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/backup/checkpoint-receipt.mjs",
+      "sha256": "a856c7f16ce9f917601e4efcb07012f362efd15439597026f497d7b75f896d5a",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/backup/crypto-store.mjs",
+      "sha256": "ffbbbd7f2f241cc0dd64f26681e03df4222c96854af6ff54dc8a47ff9e9733e6",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/backup/local-closure-parent.mjs",
+      "sha256": "351028608be9fbcb751a37d33897dca006ebd1ceab8dc577284a9ee03f5007cd",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/backup/managed-runtime.mjs",
+      "sha256": "12194c564e4255b6b50c71c59b0ba999d3f59b6b08e8c0c00204c22a59dbe4df",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/backup/manifest.mjs",
+      "sha256": "495d571388e06331089286237f93b719e31a4f609bf7b7e49a6d2694563b96b9",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/backup/manual-restore.mjs",
+      "sha256": "0253d080e48ded61861ace69f6c890551a80f9cd2d6e72cb36259f7bfd8a4389",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/backup/recurring-supervisor.mjs",
+      "sha256": "cd777cf9196904d53744fec7ee93277c47fe3cba1134392ea7ceadf0c6263dda",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/backup/snapshot.mjs",
+      "sha256": "04c5cca43194d27faf905923eb1da42f6d3569b08d690a4f5b20f31e419cf917",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/backup/verify.mjs",
+      "sha256": "6858d9961fbe8b1da28fab5d202beda85ca910fee62f05b400481de3a6b0fdaa",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/config/runtime-media-storage.mjs",
+      "sha256": "b445d7ef5b617e14e44d71107ca7a47e5f4612e44c9044ccf28f428e7b71210e",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/config/runtime-video-storage.mjs",
+      "sha256": "4923c021e31696958acdca519092c45a411d7a961965efb6ed3b2385b15c5c1b",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/data/erasure-schema.mjs",
+      "sha256": "1638dfd5b2ed8ecce8ac84b05bc148f031a15acc5c93805ab7854bb11213d4c3",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/data/erasure-store.mjs",
+      "sha256": "5a432786e107b4028d884373e25e41153e2ece4d768fbed28547b5699e1bb457",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/db/migrations.mjs",
+      "sha256": "926f70ec5eae1ebb5564ed96d18eb097d002973d534c6292908c2a7d9e468af0",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/db/store-migrations.mjs",
+      "sha256": "a018b6aada2669fc8c99d9aab36c06fb1d4e069eb1d92a817c47309911d983b8",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/experience/migrations.mjs",
+      "sha256": "985ec9bfe6fdd40fa4fc84a3ab083599b5d9e8c6df0ec62e1202b67e16749db2",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/experience/migrations/0037_profile_preferences.sql",
+      "sha256": "8526e30ca134c50cd835990acf90fa57651ddca15ed62957232c7fce54dce2f1",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/experience/migrations/0038_reply_tracking.sql",
+      "sha256": "e75f63ecc5e33271343e873aa3e8554c0c9cb22d7f1810768aa2c1488fec0b54",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/preferences/crypto.mjs",
+      "sha256": "f26c0565dddd220877087d9c02051d1e866af5f7a912091b9b5d38b35291748c",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/preferences/validation.mjs",
+      "sha256": "21f2110bc8b5132b66dfadf65ae428c80ee50d3146b37fc7c178395a0dab026a",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "public/preferences-model.js",
+      "sha256": "fb25a0e4f4fd74e19fde42737d66050ca6c575fec42e6e7531972757197531d6",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "public/preferences-catalogue.json",
+      "sha256": "5ce26f14f15fb9c3447b07777aa5c8d17a6e823e8099dbb37959fc48f00f93cb",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/preflight/database.mjs",
+      "sha256": "2abdde67578493ade8e09cf27dfe6d9db50f06511868ef0e4a802af3b3d3c1e0",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/video/erasure-store.mjs",
+      "sha256": "1694df55f140b17d0f5f24ceee71f5b38fffd62a90e75ed96cd59e516cf0aedd",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/video/http.mjs",
+      "sha256": "dee606d908cc05f9ceea3458846aa7878a8260f89043e8cdf71bcd26c84633db",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/video/message-store.mjs",
+      "sha256": "2f18545116a0ceceab762abaff6c14617efce8b651ecbc79430e18f3f2160065",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/video/service.mjs",
+      "sha256": "c8301e46ea69193ad1a9bd797394a66c05a09bc4190c8ed836452c034625569c",
+      "origin": "190-working-source-20261023"
+    },
+    {
+      "file": "server/video/store.mjs",
+      "sha256": "18e5b0d05ca2a07b24efd000f101aa5bdd2a34e0ca4bc5cab0557d593dc35f1d",
+      "origin": "190-working-source-20261023"
+    }
+  ],
+  "status": "candidate_not_native_qualified"
+}

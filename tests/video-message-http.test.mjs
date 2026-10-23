@@ -62,9 +62,9 @@ test("read-only video HTTP checks auth and CSRF before refusing body parsing whi
   const f = await fixture(t, {}, { creationEnabled: false });
   for (const role of ["admin", "client"]) {
     const refused = await post(f, sendPath(role), "not JSON", headers(role));
-    assert.equal(refused.status, 403); assert.deepEqual(await refused.json(), { error: "feature_read_only" });
+    assert.equal(refused.status, 403); assert.deepEqual(await refused.json(), { error: role === "admin" ? "feature_read_only" : "video_admin_only" });
     const upload = await fetch(f.base + `/api/video/${role}/assets`, { method: "POST", headers: headers(role, { "Content-Type": "video/mp4" }), body: video });
-    assert.equal(upload.status, 403); assert.deepEqual(await upload.json(), { error: "feature_read_only" });
+    assert.equal(upload.status, 403); assert.deepEqual(await upload.json(), { error: role === "admin" ? "feature_read_only" : "video_admin_only" });
     const range = await fetch(f.base + contentPath(role), { headers: headers(role, { Range: "bytes=0-4" }) });
     assert.equal(range.status, 206); assert.deepEqual(Buffer.from(await range.arrayBuffer()), video.subarray(0, 5));
     assert.equal((await fetch(f.base + `${basePath(role)}/gallery`, { headers: headers(role) })).status, 200);
@@ -88,9 +88,9 @@ test("video message routes require the complete optional family and remain absen
   assert.equal((await fetch(disabled.base + ownerPath(), { headers: { Cookie: cookie() } })).status, 200);
 });
 
-test("both roles send literal or empty captions and responses expose only message-bound video metadata", async (t) => {
+test("admins send literal or empty captions and responses expose only message-bound video metadata", async (t) => {
   const f = await fixture(t);
-  for (const role of ["admin", "client"]) for (const caption of ["", "Bonjour 👋 <b>texte</b>"]) {
+  for (const role of ["admin"]) for (const caption of ["", "Bonjour 👋 <b>texte</b>"]) {
     const response = await post(f, sendPath(role), body(caption), headers(role)); assert.equal(response.status, 201); privateResponse(response);
     const result = await response.json(); noPrivateFields(result); assert.equal(result.message.body, caption);
     assert.deepEqual(result.message.video, { id: aid, bytes: video.length, mime: "video/mp4", contentUrl: contentPath(role) });
@@ -286,4 +286,24 @@ test("video library routing requires the complete optional service and validates
   assert.equal(value.assets[0].cleanupPending, true); assert.equal(value.assets[0].contentUrl, null);
   const invalid = await fixture(t, { ...methods, async listOwned() { return { assets: [], nextCursor: aid, hasMore: true }; } });
   assert.equal((await fetch(invalid.base + "/api/video/admin/assets", { headers: headers() })).status, 503);
+});
+
+
+test("authenticated client video sends reject malformed and reused payloads before body parsing or publication", async t => {
+  const f = await fixture(t);
+  for (const payload of ["not JSON", body(), { ...body(), videoId: "f".repeat(32) }]) {
+    const response = await post(f, sendPath("client"), payload, headers("client"));
+    assert.equal(response.status, 403); assert.deepEqual(await response.json(), { error: "video_admin_only" });
+  }
+  assert.equal(f.calls.some(([kind]) => kind === "send"), false);
+  const watermark = { ...body(), replyThrough: "9007199254740993" };
+  assert.equal((await post(f, sendPath(), watermark)).status, 201);
+  assert.deepEqual(f.calls.at(-1)[3], watermark);
+  const versioned = { ...watermark, replyVersion: "4294967295" };
+  assert.equal((await post(f, sendPath(), versioned)).status, 201);
+  assert.deepEqual(f.calls.at(-1)[3], versioned);
+  for (const extra of [{ replyVersion: "0" }, { replyThrough: "0", replyVersion: "4294967296" }, { replyThrough: "0", replyVersion: "01" }])
+    assert.equal((await post(f, sendPath(), { ...body(), ...extra })).status, 400);
+  for (const replyThrough of [1, "01", "18446744073709551616", null])
+    assert.equal((await post(f, sendPath(), { ...body(), replyThrough })).status, 400);
 });

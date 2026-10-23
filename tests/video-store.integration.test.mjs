@@ -16,6 +16,7 @@ import { createVideoStore } from "../server/video/store.mjs";
 import { loadVideoMigrations } from "../server/video/migrations.mjs";
 import { createVideoService } from "../server/video/service.mjs";
 import { createVideoStorage, VIDEO_BLOCK_BYTES, videoStoredBytes } from "../server/video/storage.mjs";
+import { seedLegacyClientVideoAsset } from "./helpers/legacy-video-seed.mjs";
 import { consumeSyntheticInvitation } from "./fixtures/manual-admission.mjs";
 import { mp4Source, collectVideo } from "./helpers/video-transport-fixture.mjs";
 
@@ -109,7 +110,7 @@ test("real MariaDB dormant video catalog reserves, commits and reconciles durabl
     assert.equal((await loadMigrations()).length, 33, "candidate qualification never promotes the normal loader");
 
     await t.test("offline initialization is explicit, idempotent and bound to root and both quotas", async () => {
-      const { capacity, store } = await fresh({ initialize: false }), owner = (await pair()).client, value = asset();
+      const { capacity, store } = await fresh({ initialize: false }), owner = (await pair()).admin, value = asset();
       assert.equal(await store.assertSchema(), true); assert.equal((await store.status()).ready, false);
       await assert.rejects(store.reserve({ ...actor(owner), asset: value }), code("VIDEO_CAPACITY_UNAVAILABLE"));
       await assert.rejects(store.initialize({ now, offline: false }), code("VIDEO_INPUT"));
@@ -150,7 +151,7 @@ test("real MariaDB dormant video catalog reserves, commits and reconciles durabl
     });
 
     await t.test("owned library pagination isolates accounts and retains cleanup intents only", async () => {
-      const { store } = await fresh(), owner = (await pair()).client, other = (await pair()).client;
+      const { store } = await fresh(), owner = (await pair()).admin, other = (await pair()).admin;
       const values = Array.from({ length: 5 }, () => asset(100));
       for (const [index, value] of values.entries()) {
         const account = index === 4 ? other : owner;
@@ -177,14 +178,14 @@ test("real MariaDB dormant video catalog reserves, commits and reconciles durabl
     });
 
     await t.test("SQL itself enforces encrypted-byte accounting, state, role, digest and ownership", async () => {
-      const { store } = await fresh(), owner = (await pair()).client, value = asset(); await store.reserve({ ...actor(owner), asset: value });
+      const { store } = await fresh(), owner = (await pair()).admin, value = asset(); await store.reserve({ ...actor(owner), asset: value });
       for (const [statement, parameters] of [
         ["UPDATE video_assets SET stored_bytes = stored_bytes + 1 WHERE id = ?", [value.id]],
         ["UPDATE video_assets SET mime = 'image/jpeg' WHERE id = ?", [value.id]],
         ["UPDATE video_assets SET reserve_token_hash = ? WHERE id = ?", [Buffer.alloc(31), value.id]],
         ["UPDATE video_assets SET state = 'committed' WHERE id = ?", [value.id]],
         ["UPDATE video_assets SET content_digest = ? WHERE id = ?", [digest(), value.id]],
-        ["UPDATE video_assets SET owner_role = 'admin' WHERE id = ?", [value.id]],
+        ["UPDATE video_assets SET owner_role = 'client' WHERE id = ?", [value.id]],
         ["UPDATE video_assets SET owner_id = ? WHERE id = ?", [id(), value.id]],
         ["UPDATE video_storage_state SET held_bytes = total_bytes + 1 WHERE id = 1", []],
         ["UPDATE video_storage_state SET root_fingerprint = ? WHERE id = 1", [Buffer.alloc(31)]],
@@ -195,7 +196,7 @@ test("real MariaDB dormant video catalog reserves, commits and reconciles durabl
     });
 
     await t.test("a corrupted durable counter fails every mutation without weakening SQL limits", async () => {
-      const { store } = await fresh(), owner = (await pair()).client, value = asset(901);
+      const { store } = await fresh(), owner = (await pair()).admin, value = asset(901);
       await store.reserve({ ...actor(owner), asset: value });
       // This remains inside the SQL CHECK range; only reconciliation with
       // actual outstanding allocations can identify the extra charged byte.
@@ -211,7 +212,7 @@ test("real MariaDB dormant video catalog reserves, commits and reconciles durabl
     });
 
     await t.test("reserve, commit and release are exact retries, and committed objects cannot be released", async () => {
-      const { store, capacity } = await fresh(), owner = (await pair()).client, value = asset(), request = { ...actor(owner), asset: value };
+      const { store, capacity } = await fresh(), owner = (await pair()).admin, value = asset(), request = { ...actor(owner), asset: value };
       const first = await store.reserve(request), retry = await store.reserve(request);
       assert.deepEqual(retry, first); assert.ok(first.reservation.ownerId.equals(owner.id));
       assert.equal((await catalog(capacity).status()).heldBytes, value.storedBytes);
@@ -232,7 +233,10 @@ test("real MariaDB dormant video catalog reserves, commits and reconciles durabl
 
     await t.test("current SQL owner, role, session, access and creator gates cannot be bypassed", async () => {
       const { store } = await fresh(), fixture = await pair(), stranger = await pair(fixture.admin), value = committed(asset());
-      await store.reserve({ ...actor(fixture.client), asset: value }); await store.commit({ ...actor(fixture.client), asset: value });
+      await assert.rejects(store.reserve({ ...actor(fixture.client), asset: value }), code("VIDEO_ADMIN_ONLY"));
+      await assert.rejects(store.commit({ ...actor(fixture.client), asset: value }), code("VIDEO_ADMIN_ONLY"));
+      assert.equal((await store.status()).heldBytes, 0);
+      await seedLegacyClientVideoAsset({ connection, owner: fixture.client, now, asset: value });
       await assert.rejects(store.getOwned({ ...actor(stranger.client), assetId: value.id }), code("VIDEO_NOT_FOUND"));
       await assert.rejects(store.getOwned({ ...actor(fixture.admin), assetId: value.id }), code("VIDEO_NOT_FOUND"));
       await assert.rejects(store.getOwned({ ...actor(fixture.client, { role: "admin" }), assetId: value.id }), code("CHAT_FORBIDDEN", "CHAT_UNAUTHORIZED"));
@@ -251,13 +255,13 @@ test("real MariaDB dormant video catalog reserves, commits and reconciles durabl
     });
 
     await t.test("cleanup after revocation is bound to the original reservation and never authorizes a read", async () => {
-      const { store, capacity } = await fresh(), owner = (await pair()).client, other = (await pair()).client, value = asset(519);
+      const { store, capacity } = await fresh(), owner = (await pair()).admin, other = (await pair()).admin, value = asset(519);
       await store.reserve({ ...actor(owner), asset: value }); const differentSession = await session(owner);
       await connection.query("UPDATE sessions SET revoked_at = ? WHERE id = ?", [sql(now), owner.sessionId]);
       await connection.query("UPDATE users SET status = 'suspended' WHERE id = ?", [owner.id]);
       await assert.rejects(store.getOwned({ ...actor(owner), assetId: value.id }), code("CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN"));
       await assert.rejects(store.commit({ ...actor(owner), asset: committed(value) }), code("CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN"));
-      for (const changes of [{ tokenHash: other.tokenHash }, { tokenHash: differentSession.tokenHash }, { storageKey: digest() }, { assetId: id() }, { role: "admin" }]) {
+      for (const changes of [{ tokenHash: other.tokenHash }, { tokenHash: differentSession.tokenHash }, { storageKey: digest() }, { assetId: id() }, { role: "client" }]) {
         await assert.rejects(release(store, owner, value, changes), code("VIDEO_NOT_FOUND"));
         assert.equal((await store.status()).heldBytes, value.storedBytes);
       }
@@ -267,7 +271,7 @@ test("real MariaDB dormant video catalog reserves, commits and reconciles durabl
     });
 
     await t.test("exact owner and global quotas serialize simultaneous reservations without oversubscription", async () => {
-      const charge = videoStoredBytes(1000), one = (await pair()).client, two = (await pair()).client;
+      const charge = videoStoredBytes(1000), one = (await pair()).admin, two = (await pair()).admin;
       const { store, capacity } = await fresh({ ownerBytes: charge, totalBytes: charge * 2 });
       const contenders = [asset(1000), asset(1000)];
       const ownerResults = await Promise.allSettled(contenders.map((value) => store.reserve({ ...actor(one), asset: value })));
@@ -275,7 +279,7 @@ test("real MariaDB dormant video catalog reserves, commits and reconciles durabl
       assert.equal(ownerResults.filter((r) => r.status === "rejected" && r.reason.code === "VIDEO_STORAGE_LIMIT").length, 1);
       assert.equal((await catalog(capacity).status()).heldBytes, charge);
       await store.reserve({ ...actor(two), asset: asset(1000) }); assert.equal((await store.status()).heldBytes, charge * 2);
-      await assert.rejects(store.reserve({ ...actor((await pair()).client), asset: asset(1) }), code("VIDEO_STORAGE_LIMIT"));
+      await assert.rejects(store.reserve({ ...actor((await pair()).admin), asset: asset(1) }), code("VIDEO_STORAGE_LIMIT"));
       const global = await fresh({ ownerBytes: charge, totalBytes: charge });
       const results = await Promise.allSettled([global.store.reserve({ ...actor(one), asset: asset(1000) }), global.store.reserve({ ...actor(two), asset: asset(1000) })]);
       assert.equal(results.filter((r) => r.status === "fulfilled").length, 1);
@@ -285,7 +289,7 @@ test("real MariaDB dormant video catalog reserves, commits and reconciles durabl
     });
 
     await t.test("lost acknowledgements after actual reserve and commit transactions survive store recreation", async () => {
-      const { store, capacity } = await fresh(), owner = (await pair()).client, value = asset(789);
+      const { store, capacity } = await fresh(), owner = (await pair()).admin, value = asset(789);
       const interruptedPool = lostAcknowledgementPool(), interrupted = catalog(capacity, interruptedPool); interruptedPool.arm();
       await assert.rejects(interrupted.reserve({ ...actor(owner), asset: value }), code("VIDEO_DATABASE_OPERATION", "CHAT_DATABASE_OPERATION"));
       assert.equal(interruptedPool.losses, 1); const reloaded = catalog(capacity);
@@ -323,12 +327,12 @@ test("real MariaDB dormant video catalog reserves, commits and reconciles durabl
       } };
       const service = await createVideoService({ store: catalog(capacity, interruptedPool), storage, chatService, authStore, key, minimumFreeBytes: 0, clock });
       const bytes = VIDEO_BLOCK_BYTES * 2 + 57;
-      interruptedPool.arm(); await assert.rejects(service.admitUpload("client", fixture.client.token, { bytes, mime: "video/mp4" }), (error) => error.code === "VIDEO_UNAVAILABLE");
+      interruptedPool.arm(); await assert.rejects(service.admitUpload("admin", fixture.admin.token, { bytes, mime: "video/mp4" }), (error) => error.code === "VIDEO_UNAVAILABLE");
       assert.deepEqual(await readdir(root), []); assert.equal((await catalog(capacity).status()).heldBytes, videoStoredBytes(bytes));
       const pending = (await connection.query("SELECT id, storage_key FROM video_assets WHERE state = 'reserved'"))[0];
-      await release(catalog(capacity), fixture.client, { id: pending.id, storageKey: pending.storage_key });
-      const ticket = await service.admitUpload("client", fixture.client.token, { bytes, mime: "video/mp4" }); interruptedPool.arm();
-      await assert.rejects(service.upload("client", fixture.client.token, ticket, mp4Source(bytes)), (error) => error.code === "VIDEO_UNAVAILABLE");
+      await release(catalog(capacity), fixture.admin, { id: pending.id, storageKey: pending.storage_key });
+      const ticket = await service.admitUpload("admin", fixture.admin.token, { bytes, mime: "video/mp4" }); interruptedPool.arm();
+      await assert.rejects(service.upload("admin", fixture.admin.token, ticket, mp4Source(bytes)), (error) => error.code === "VIDEO_UNAVAILABLE");
       const row = (await connection.query("SELECT id, storage_key, content_digest, state FROM video_assets WHERE state = 'committed'"))[0];
       assert.equal(row.state, "committed"); assert.equal((await catalog(capacity).status()).heldBytes, videoStoredBytes(bytes));
       assert.equal((await catalog(capacity).status()).pendingBytes, 0); assert.equal((await readdir(root)).length, 1);
@@ -338,10 +342,10 @@ test("real MariaDB dormant video catalog reserves, commits and reconciles durabl
       const expectedDigest = createHash("sha256"); for await (const chunk of mp4Source(bytes)) expectedDigest.update(chunk);
       assert.deepEqual(row.content_digest, expectedDigest.digest(), "native metadata binds the actual streamed plaintext digest");
       const restarted = await createVideoService({ store: catalog(capacity), storage: await createVideoStorage({ root, key }), chatService, authStore, key, minimumFreeBytes: 0, clock });
-      const handle = await restarted.open("client", fixture.client.token, hex(row.id));
+      const handle = await restarted.open("admin", fixture.admin.token, hex(row.id));
       assert.deepEqual(await collectVideo(handle.stream({ start: VIDEO_BLOCK_BYTES - 3, end: VIDEO_BLOCK_BYTES + 12 })), Buffer.alloc(16, 0x5a)); await handle.close();
       await assert.rejects(restarted.open("client", stranger.client.token, hex(row.id)), (error) => error.code === "VIDEO_NOT_FOUND");
-      await assert.rejects(release(catalog(capacity), fixture.client, { id: row.id, storageKey: row.storage_key }), code("VIDEO_INPUT", "VIDEO_NOT_FOUND"));
+      await assert.rejects(release(catalog(capacity), fixture.admin, { id: row.id, storageKey: row.storage_key }), code("VIDEO_INPUT", "VIDEO_NOT_FOUND"));
       assert.equal((await readdir(root)).length, 1); assert.equal(interruptedPool.losses, 2);
     });
   } finally {

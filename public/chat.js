@@ -739,6 +739,7 @@ function renderImageDraft(state) {
   } else ui.text(el("image-preview"), "Photo prête");
 }
 function videoErrorText(error) {
+  if (error.code === "video_admin_only") return "L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos.";
   if (error.status === 409 && error.code === "video_in_use") return "Cette vidéo ne peut pas être supprimée : elle est utilisée dans un message, ou une diffusion est en cours.";
   if (error.status === 507) return "Le stockage des vidéos a atteint sa limite.";
   if ([400, 411, 413, 415].includes(error.status)) return "Vidéo refusée. Choisis une vidéo MP4 de 100 Mo maximum et une légende de 1 000 caractères maximum.";
@@ -841,6 +842,7 @@ function renderVideoDraft(state) {
 }
 function chooseVideo() {
   const state = currentState(), file = el("video-file").files?.[0]; el("video-file").value = "";
+  if (role !== "admin") { notice("L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos.", true); return; }
   if (!state || !file || !videoCreationEnabled || state.pending || sendBusy || !state.conversation?.canSend) return;
   if (file.type !== "video/mp4" || !Number.isSafeInteger(file.size) || file.size < 1 || file.size > 104857600) {
     notice("Choisis une vidéo MP4 de 100 Mo maximum.", true); return;
@@ -1604,7 +1606,7 @@ async function sendImage(retry = false) {
   } finally { if (fresh(ticket)) { sendBusy = false; renderMeta(state); } }
 }
 async function sendVideo(retry = false) {
-  const state = currentState(); if (!state || sendBusy || !videoCreationEnabled || !state.conversation?.canSend) return;
+  const state = currentState(); if (role !== "admin" || !state || sendBusy || !videoCreationEnabled || !state.conversation?.canSend) return;
   const ticket = snapshot(state), caption = retry ? state.pending?.caption : el("message-body").value;
   if (!validCaption(caption)) { notice("Ajoute une légende de 1 000 caractères maximum, ou laisse le champ vide.", true); return; }
   if (!retry && (!state.videoDraft?.ready || state.videoDraft.invalid)) return;
@@ -1964,7 +1966,7 @@ el("message-body").addEventListener("input", () => { const state = currentState(
 el("retry-send").addEventListener("click", () => { void sendWithFocus(true, el("retry-send")); });
 el("pick-image").addEventListener("click", () => { if (!el("pick-image").disabled) { closeComposerTools(); el("image-file").click(); focusVisible(el("open-composer-tools")); } });
 el("image-file").addEventListener("change", chooseFile);
-el("pick-video").addEventListener("click", () => { if (videoCreationEnabled && !el("pick-video").disabled) { closeComposerTools(); el("video-file").click(); focusVisible(el("open-composer-tools")); } });
+el("pick-video").addEventListener("click", () => { if (role === "admin" && videoCreationEnabled && !el("pick-video").disabled) { closeComposerTools(); el("video-file").click(); focusVisible(el("open-composer-tools")); } });
 el("video-file").addEventListener("change", chooseVideo);
 el("cancel-video").addEventListener("click", () => {
   const state = currentState(); if (!state) return;
@@ -2124,7 +2126,7 @@ async function start({ session = null } = {}) {
       const capability = await request(`${chatBase}/capabilities`, { account: true });
       if (capability.enabled !== true) throw Object.assign(new Error("chat_disabled"), { status: 404 });
       videoEnabled = capability.video?.enabled === true && capability.video.maxBytes === 104857600 && capability.video.mime === "video/mp4";
-      videoCreationEnabled = videoEnabled && capability.video.creationEnabled !== false;
+      videoCreationEnabled = role === "admin" && videoEnabled && capability.video.creationEnabled !== false;
       profileCapability = capability.profile?.enabled === true ? capability.profile : null;
       announcementCapability = capability.announcements?.enabled === true ? capability.announcements : null;
       tasksCapability = role === "admin" && capability.tasks?.enabled === true;

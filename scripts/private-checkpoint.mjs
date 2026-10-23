@@ -10,6 +10,7 @@ import { loadRuntimeNotificationsEnvironment, copyRuntimeNotificationsEnvironmen
 import { loadRuntimeCrmEnvironment, copyRuntimeCrmEnvironment } from "../server/config/runtime-crm.mjs";
 import { loadRuntimeBroadcastEnvironment, copyRuntimeBroadcastEnvironment } from "../server/config/runtime-broadcast.mjs";
 import { loadRuntimeVideoEnvironment, copyRuntimeVideoEnvironment } from "../server/config/runtime-video.mjs";
+import { loadExperienceMigrations } from "../server/experience/migrations.mjs";
 import { loadVideoMigrations } from "../server/video/migrations.mjs";
 import { copyCheckpointVideo, verifyCheckpointVideo } from "../server/backup/video-checkpoint-files.mjs";
 import { CHECKPOINT_RUNTIME_PROFILES, checkpointBackupProfile, checkpointReceiptVersion } from "../server/backup/profiles.mjs";
@@ -20,7 +21,7 @@ import { readManifest, verifyBackupManifest } from "../server/backup/manifest.mj
 import { assertBackupSnapshot } from "../server/backup/snapshot.mjs";
 import { assertBackupInspection, createBackupInspectionPool } from "../server/backup/inspection.mjs";
 import { diagnoseBackupInspection } from "../server/backup/inspection-diagnostics.mjs";
-import { APPLICATION_COVERAGE, VIDEO_APPLICATION_COVERAGE, validateApplicationCoverage, validateVideoApplicationCoverage, createApplicationInspectionPool, assertApplicationTableInspection, assertVideoApplicationTableInspection } from "../server/backup/application-scope.mjs";
+import { APPLICATION_COVERAGE, VIDEO_APPLICATION_COVERAGE, EXPERIENCE_APPLICATION_COVERAGE, validateApplicationCoverage, validateVideoSnapshotCoverage, createApplicationInspectionPool, assertApplicationTableInspection, assertVideoApplicationTableInspection, assertExperienceApplicationTableInspection } from "../server/backup/application-scope.mjs";
 import { createdMigrationTables, inspectHistory, loadMigrations } from "../server/db/migrations.mjs";
 import { copyCheckpointMedia, verifyCheckpointMedia } from "../server/backup/checkpoint-files.mjs";
 import { hashCheckpointFile, writeCheckpointReceipt } from "../server/backup/checkpoint-receipt.mjs";
@@ -49,8 +50,8 @@ export function parseArguments(args) {
   const application = args[0].endsWith("-application");
   const offline = args[1] === "--offline", offset = offline ? 2 : 1;
   const expectedLength = offset + (application ? 6 : 8);
-  if (["capture", "capture-application"].includes(args[0]) !== offline || ![expectedLength, expectedLength + 2, expectedLength + 4].includes(args.length)) fail("PRIVATE_CHECKPOINT_USAGE");
-  const names = new Map([["--private-directory", "privateDirectory"], ["--private-path-mode", "privatePathMode"], ["--destination-private-directory", "destination"], ["--inspection-user", "inspectionUser"], ["--profile", "profile"], ["--operations-directory", "operationsDirectory"]]);
+  if (["capture", "capture-application"].includes(args[0]) !== offline || ![expectedLength, expectedLength + 2, expectedLength + 4, expectedLength + 6].includes(args.length)) fail("PRIVATE_CHECKPOINT_USAGE");
+  const names = new Map([["--private-directory", "privateDirectory"], ["--private-path-mode", "privatePathMode"], ["--destination-private-directory", "destination"], ["--inspection-user", "inspectionUser"], ["--profile", "profile"], ["--operations-directory", "operationsDirectory"], ["--experience", "experience"]]);
   const value = { command: args[0], offline, ...(application ? { inspectionUser: null } : {}) };
   for (let index = offset; index < args.length; index += 2) {
     const name = names.get(args[index]), content = args[index + 1];
@@ -61,21 +62,24 @@ export function parseArguments(args) {
     || value.privatePathMode !== "linux-dirfd" || !application && !/^[A-Za-z0-9_]{1,80}$/.test(value.inspectionUser)
     || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(basename(value.destination))
     || Object.hasOwn(value, "profile") && (!CHECKPOINT_RUNTIME_PROFILES.includes(value.profile) || !checkpointBackupProfile(value.profile, application))
+    || Object.hasOwn(value, "experience") && (value.experience !== "1" || !application || value.profile !== "photos-notify-recovery-crm-broadcast-video")
     || Object.hasOwn(value, "operationsDirectory") && (!path(value.operationsDirectory) || inside(value.operationsDirectory, REPOSITORY)
       || !["photos-notify-recovery-crm-broadcast", "photos-notify-recovery-crm-broadcast-video"].includes(value.profile) || inside(value.operationsDirectory, value.destination))) fail("PRIVATE_CHECKPOINT_USAGE");
-  return Object.fromEntries([...FIELDS, ...["profile", "operationsDirectory"].filter(name => Object.hasOwn(value, name))].map(name => [name, value[name]]));
+  if (Object.hasOwn(value, "experience")) value.experience = true;
+  return Object.fromEntries([...FIELDS, ...["profile", "operationsDirectory", "experience"].filter(name => Object.hasOwn(value, name))].map(name => [name, value[name]]));
 }
 function options(value) {
-  const fields = [...FIELDS, ...["profile", "operationsDirectory"].filter(name => value && Object.hasOwn(value, name))];
+  const fields = [...FIELDS, ...["profile", "operationsDirectory", "experience"].filter(name => value && Object.hasOwn(value, name))];
   if (!value || Object.getPrototypeOf(value) !== Object.prototype || Object.getOwnPropertySymbols(value).length
     || Object.getOwnPropertyNames(value).sort().join(",") !== fields.sort().join(",")
     || fields.some(name => !Object.hasOwn(Object.getOwnPropertyDescriptor(value, name) ?? {}, "value"))
-    || typeof value.offline !== "boolean") fail("PRIVATE_CHECKPOINT_USAGE");
+    || typeof value.offline !== "boolean" || Object.hasOwn(value, "experience") && value.experience !== true) fail("PRIVATE_CHECKPOINT_USAGE");
   return parseArguments([value.command, ...(value.offline ? ["--offline"] : []), "--private-directory", value.privateDirectory,
     "--private-path-mode", value.privatePathMode, "--destination-private-directory", value.destination,
     ...(value.inspectionUser === null ? [] : ["--inspection-user", value.inspectionUser]),
     ...(Object.hasOwn(value, "profile") ? ["--profile", value.profile] : []),
-    ...(Object.hasOwn(value, "operationsDirectory") ? ["--operations-directory", value.operationsDirectory] : [])]);
+    ...(Object.hasOwn(value, "operationsDirectory") ? ["--operations-directory", value.operationsDirectory] : []),
+    ...(value.experience ? ["--experience", "1"] : [])]);
 }
 export async function inspectCheckpointTools() {
   await inspectDumpClient();
@@ -113,14 +117,14 @@ export async function inspectCheckpointIdentity(env, { signal } = {}) {
     active(signal);
   } finally { try { await connection?.release(); } finally { await pool?.end(); } }
 }
-export async function inspectApplicationCheckpointIdentity(env, { signal, video = false } = {}) {
+export async function inspectApplicationCheckpointIdentity(env, { signal, video = false, experience = false } = {}) {
   let pool, connection;
   try {
     active(signal); pool = await createApplicationInspectionPool(env); connection = await pool.getConnection();
-    if (typeof video !== "boolean") fail("PRIVATE_CHECKPOINT_CONFIGURATION");
-    await (video ? assertVideoApplicationTableInspection : assertApplicationTableInspection)(connection, env.JESSIEMESSAGE_DB_NAME);
-    const migrations = await (video ? loadVideoMigrations : loadMigrations)(), count = video ? 36 : 33;
-    const ledger = await connection.query(`SELECT version, name, checksum, state, attempts FROM schema_migrations ORDER BY version LIMIT ${count}`);
+    if (typeof video !== "boolean" || typeof experience !== "boolean" || experience && !video) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
+    await (experience ? assertExperienceApplicationTableInspection : video ? assertVideoApplicationTableInspection : assertApplicationTableInspection)(connection, env.JESSIEMESSAGE_DB_NAME);
+    const migrations = await (experience ? loadExperienceMigrations : video ? loadVideoMigrations : loadMigrations)(), count = experience ? 38 : video ? 36 : 33;
+    const ledger = await connection.query(`SELECT version, name, checksum, state, attempts FROM schema_migrations ORDER BY version LIMIT ${experience ? count + 1 : count}`);
     if (migrations.length !== count || ledger.length !== count || inspectHistory(migrations, ledger).some(row => row.state !== "applied")) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
     active(signal);
   } finally { try { await connection?.release(); } finally { await pool?.end(); } }
@@ -245,7 +249,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
     const selected = options(value); active(signal);
     const application = selected.command.endsWith("-application"), selectedProfile = checkpointBackupProfile(selected.profile, application);
     const { recovery, crm, broadcast, video, name: backupProfile, manifestProfile: profile, manifestVersion } = selectedProfile;
-    const tableCount = video ? 36 : 33, applicationCoverage = video ? VIDEO_APPLICATION_COVERAGE : APPLICATION_COVERAGE;
+    const experience = selected.experience === true, tableCount = experience ? 37 : video ? 36 : 33, migrationCount = experience ? 38 : tableCount, applicationCoverage = experience ? EXPERIENCE_APPLICATION_COVERAGE : video ? VIDEO_APPLICATION_COVERAGE : APPLICATION_COVERAGE;
     const operational = Object.hasOwn(selected, "operationsDirectory"), receiptVersion = checkpointReceiptVersion(selectedProfile, operational);
     loadEnvironment ??= video ? loadRuntimeVideoEnvironment : broadcast ? loadRuntimeBroadcastEnvironment : crm ? loadRuntimeCrmEnvironment : loadRuntimeNotificationsEnvironment;
     let parameters; try { parameters = privateAuthenticationProcessOptions(inheritedEnv, execArgv); } catch { fail("PRIVATE_CHECKPOINT_ENVIRONMENT"); }
@@ -264,7 +268,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
     await inspectTools(); active(signal);
     return await scopeOperation(dirname(selected.destination), async parent => {
       await absent(parent, basename(selected.destination));
-      if (["check", "check-application"].includes(selected.command)) return { status: application ? "application_precheck_passed" : "ready_for_input", profile, schema: tableCount,
+      if (["check", "check-application"].includes(selected.command)) return { status: application ? "application_precheck_passed" : "ready_for_input", profile, schema: migrationCount, ...(experience ? { tables: tableCount, migrations: migrationCount } : {}),
         ...(application ? { coverage: applicationCoverage, passwordInputRequired: false } : {}),
         databaseConnected: false, checkpointSaved: false, started: false, migrationPerformed: false };
       try { password = application ? env.JESSIEMESSAGE_RUNTIME_DB_PASSWORD : await readSecret(inputStream); if (typeof password !== "string" || !password || !password.isWellFormed()
@@ -277,8 +281,8 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         return { status: "inspection_diagnosed", profile, databaseConnected: true, diagnosis,
           checkpointSaved: false, captureAllowed: false, started: false, migrationPerformed: false };
       }
-      await (application ? inspectApplicationIdentity : inspectIdentity)(env, { signal, ...(video ? { video: true } : {}) }); active(signal);
-      if (["inspect", "inspect-application"].includes(selected.command)) return { status: application ? "application_inspection_verified" : "inspection_verified", profile, tables: tableCount, migrations: tableCount,
+      await (application ? inspectApplicationIdentity : inspectIdentity)(env, { signal, ...(video ? { video: true } : {}), ...(experience ? { experience: true } : {}) }); active(signal);
+      if (["inspect", "inspect-application"].includes(selected.command)) return { status: application ? "application_inspection_verified" : "inspection_verified", profile, tables: tableCount, migrations: migrationCount,
         ...(application ? { coverage: applicationCoverage, passwordInputRequired: false } : {}),
         databaseConnected: true, ...(application ? { applicationTablesVerified: true } : { inspectionPrivilegesVerified: true }), checkpointSaved: false, started: false, migrationPerformed: false };
       keys = Object.fromEntries([["totpKey", "MFA"], ["mailKey", "MAIL"], ["messageKey", "MESSAGE"], ["mediaKey", "MEDIA"], ["notificationKey", "NOTIFICATIONS"], ...(crm ? [["crmKey", "CRM"]] : []), ...(video ? [["videoKey", "VIDEO"]] : [])]
@@ -288,13 +292,13 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         directoryIdentity(await scope.assertReady(), destinationIdentity);
         const prepareAt = async name => {
           active(signal);
-          const result = await prepare(["prepare", "--offline", "--manifest", `${selected.destination}/${name}`, "--profile", backupProfile], env,
+          const result = await prepare(["prepare", "--offline", "--manifest", `${selected.destination}/${name}`, "--profile", backupProfile, ...(experience ? ["--experience", "1"] : [])], env,
             { signal, outputStream: { write() {} } });
           if (result?.command !== "prepare" || result.verified !== true || result.prepared !== true || result.restored !== false) fail("PRIVATE_CHECKPOINT_BACKUP");
           const manifest = await getManifest(`${selected.destination}/${name}`), payload = await verifyManifest({ manifest, keys });
           if (manifest.version !== manifestVersion || manifest.profile !== profile || payload?.snapshot?.counts?.tables !== tableCount
             || application && payload.snapshot.version !== (video ? 3 : 2)) fail("PRIVATE_CHECKPOINT_BACKUP");
-          if (application && (video ? validateVideoApplicationCoverage : validateApplicationCoverage)(payload.snapshot.coverage).tables !== tableCount) fail("PRIVATE_CHECKPOINT_BACKUP");
+          if (application && (video ? validateVideoSnapshotCoverage : validateApplicationCoverage)(payload.snapshot.coverage).tables !== tableCount) fail("PRIVATE_CHECKPOINT_BACKUP");
           return payload;
         };
         const before = await prepareAt("manifest.json");
@@ -304,7 +308,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         let output;
         const configuration = { host: env.JESSIEMESSAGE_DB_HOST, port: env.JESSIEMESSAGE_DB_PORT };
         const target = { user: application ? env.JESSIEMESSAGE_RUNTIME_DB_USER : selected.inspectionUser, database: env.JESSIEMESSAGE_DB_NAME };
-        const tableOptions = application ? { tables: [...createdMigrationTables(await (video ? loadVideoMigrations : loadMigrations)()), "schema_migrations"].sort(), ...(video ? { video: true } : {}) } : {};
+        const tableOptions = application ? { tables: [...createdMigrationTables(await (experience ? loadExperienceMigrations : video ? loadVideoMigrations : loadMigrations)()), "schema_migrations"].sort(), ...(video ? { video: true } : {}), ...(experience ? { experience: true } : {}) } : {};
         let sql;
         try {
           output = await exclusive(scope, "database.sql");
@@ -343,7 +347,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         const now = clock(); if (!Number.isSafeInteger(now) || now < 0 || now > 253402300799999) fail("PRIVATE_CHECKPOINT_CONFIGURATION");
         const receipt = { format: "jessiemessage-private-checkpoint", version: receiptVersion, profile,
           ...(application ? { coverage: applicationCoverage } : {}), createdAt: now,
-          schema: { tables: tableCount, migrations: tableCount }, sql: { file: "database.sql.gz", ...compressed, uncompressedBytes: saved.bytes, uncompressedSha256: saved.sha256 },
+          schema: { tables: tableCount, migrations: migrationCount }, sql: { file: "database.sql.gz", ...compressed, uncompressedBytes: saved.bytes, uncompressedSha256: saved.sha256 },
           manifest: { file: "manifest.json", sha256: manifest.sha256 }, media: inventory, ...(video ? { video: videoInventory } : {}) };
         if (operational) {
           if (operationalStateHash(await captureOperations()) !== operationalStateHash(operationsBefore)) fail("PRIVATE_CHECKPOINT_DRIFT");
@@ -377,7 +381,7 @@ export async function run(value, { inheritedEnv = process.env, execArgv = proces
         try { if (Object.keys(loaded).some(name => finalEnvironment[name] !== loaded[name]) || Object.keys(finalEnvironment).length !== Object.keys(loaded).length) fail("PRIVATE_CHECKPOINT_DRIFT"); }
         finally { clearRuntimeMessagingSecrets(finalEnvironment); }
         await parent.assertReady(); directoryIdentity(await scope.assertReady(), destinationIdentity);
-        return { status: application ? "application_checkpoint_saved" : "checkpoint_saved", profile, tables: tableCount, migrations: tableCount,
+        return { status: application ? "application_checkpoint_saved" : "checkpoint_saved", profile, tables: tableCount, migrations: migrationCount,
           ...(application ? { coverage: applicationCoverage } : {}),
           ...(operational ? { operationsCovered: true, operationalFiles: operationsBefore.files.length, externalRegistryContinuityVerified: false } : {}),
           sqlBytes: compressed.bytes, sqlSha256: compressed.sha256, mediaFiles: inventory.files.length, mediaBytes: inventory.bytes,

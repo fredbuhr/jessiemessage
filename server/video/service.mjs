@@ -12,7 +12,7 @@ export class VideoError extends Error {
 }
 const fail = (code) => { throw new VideoError(code); };
 const PREFIX_BYTES = 65536, ADMISSION_MS = 305000;
-const permitted = new Set(["VIDEO_INPUT", "VIDEO_FORMAT", "VIDEO_BUSY", "VIDEO_NOT_FOUND", "VIDEO_IN_USE", "VIDEO_RATE_LIMIT", "VIDEO_STORAGE_LIMIT",
+const permitted = new Set(["VIDEO_INPUT", "VIDEO_FORMAT", "VIDEO_BUSY", "VIDEO_NOT_FOUND", "VIDEO_IN_USE", "VIDEO_RATE_LIMIT", "VIDEO_STORAGE_LIMIT", "VIDEO_ADMIN_ONLY",
   "CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN", "CHAT_NOT_FOUND", "CHAT_CONFLICT", "CHAT_INPUT", "CHAT_RATE_LIMIT", "CHAT_READ_ONLY",
   "ACCESS_FORBIDDEN", "ACCESS_EXPIRED", "ACCESS_PREREQUISITES", "AUTH_RATE_LIMIT", "AUTH_BUSY"]);
 let activeUploads = 0, activeReads = 0;
@@ -204,6 +204,7 @@ export async function createVideoService({ store, chatService, authStore, storag
     admitUpload: (role, raw, { bytes, mime } = {}) => guarded(async () => {
       if (!validBytes(bytes) || mime !== "video/mp4") fail("VIDEO_INPUT");
       const { actor, request } = await context(role, raw);
+      if (actor.user.role !== "admin") fail("VIDEO_ADMIN_ONLY");
       if (!creationEnabled) fail("VIDEO_READ_ONLY");
       const releaseSlot = uploadSlot(actor.user.id);
       try {
@@ -222,6 +223,7 @@ export async function createVideoService({ store, chatService, authStore, storag
     }),
     releaseUpload: (ticket) => guarded(() => releaseUpload(ticket)),
     upload: (role, raw, ticket, source, { signal } = {}) => guarded(async () => {
+      if (role === "client") { await context(role, raw); fail("VIDEO_ADMIN_ONLY"); }
       if (!creationEnabled) { await context(role, raw); fail("VIDEO_READ_ONLY"); }
       const record = tickets.get(ticket);
       if (!record || record.state !== "waiting") fail("VIDEO_INPUT");
@@ -310,11 +312,15 @@ export async function createVideoService({ store, chatService, authStore, storag
     }),
     ...(messages === null ? {} : {
       send: (role, raw, conversationId, input) => guarded(async () => {
+        if (role === "client") { await context(role, raw); fail("VIDEO_ADMIN_ONLY"); }
         if (!creationEnabled) { await context(role, raw); fail("VIDEO_READ_ONLY"); }
         if (!["admin", "client"].includes(role)) fail("VIDEO_INPUT");
         identifier(conversationId);
-        if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).length !== 3
-          || !["clientMessageId", "videoId", "caption"].every((name) => Object.hasOwn(input, name))) fail("VIDEO_INPUT");
+        if (!input || typeof input !== "object" || Array.isArray(input) || ![3, 4, 5].includes(Object.keys(input).length)
+          || Object.keys(input).some(name => !["clientMessageId", "videoId", "caption", "replyThrough", "replyVersion"].includes(name))
+          || !["clientMessageId", "videoId", "caption"].every((name) => Object.hasOwn(input, name))
+          || Object.hasOwn(input, "replyThrough") && !sequence(input.replyThrough)
+          || Object.hasOwn(input, "replyVersion") && (!Object.hasOwn(input, "replyThrough") || !sequence(input.replyVersion) || BigInt(input.replyVersion) > 4294967295n)) fail("VIDEO_INPUT");
         identifier(input.clientMessageId); identifier(input.videoId);
         if (typeof input.caption !== "string" || input.caption.length > 1000) fail("VIDEO_INPUT");
         if (input.caption !== "") { try { validateMessageBody(input.caption); } catch { fail("VIDEO_INPUT"); } }

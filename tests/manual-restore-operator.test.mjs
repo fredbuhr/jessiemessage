@@ -133,6 +133,22 @@ test("restored service readiness waits for actual supervisor start; stop drains 
   assert.deepEqual(service.state(), { status: "stopped" }); await service.close();
 });
 
+test("an authenticated experience restore forwards the existing opt-in without changing legacy service arguments", async () => {
+  for (const experience of [false, true]) {
+    let received;
+    const context = { job: { version: 2, runtimeDirectory: "/reviewed", runtimeHead: "1".repeat(40), runtimeTree: "2".repeat(40),
+      targetPrivateDirectory: "/target-private" }, paths: { journalDirectory: "/target-operations" }, ...(experience ? { experience: true } : {}) };
+    const service = createRestoredService(context, { environment, outputStream: { write() {} } }, {
+      async recurringMain(args, dependencies) { received = args; await dependencies.makeSupervisor({ command: "start" }, {}).start(); },
+      makeSupervisor() { return { start: async () => ({ ready: true }) }; },
+    });
+    await service.start();
+    assert.deepEqual(received.slice(-2), experience ? ["--experience", "1"] : ["--profile", "photos-notify-recovery-crm-broadcast-video"]);
+    assert.equal(received.filter(value => value === "--experience").length, experience ? 1 : 0);
+    await service.close();
+  }
+});
+
 test("restored service rejects readiness when the actual supervisor fails to start", async () => {
   const failure = new ManualOperatorError("SERVICE"), events = [];
   const context = { job: { runtimeDirectory: "/reviewed", runtimeHead: "1".repeat(40), runtimeTree: "2".repeat(40), targetPrivateDirectory: "/target-private" }, paths: { journalDirectory: "/target-operations" } };

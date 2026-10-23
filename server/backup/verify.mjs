@@ -8,6 +8,7 @@ import { openNotes } from "../crm/crypto.mjs";
 import { openPayload, campaignFingerprint, createAudienceDigest, verifyRecipientProof } from "../broadcast/crypto.mjs";
 import { openSubscription, endpointDigest } from "../notifications/crypto.mjs";
 import { openAnnouncement } from "../announcements/crypto.mjs";
+import { openPreferences } from "../preferences/crypto.mjs";
 import { openTask } from "../tasks/crypto.mjs";
 import { createBackupCryptoStore } from "./crypto-store.mjs";
 import { MAX_VIDEO_BYTES, VIDEO_BLOCK_BYTES, videoStoredBytes } from "../video/storage.mjs";
@@ -82,14 +83,14 @@ export async function verifyPhotoNotificationRecoveryCrmBroadcastBackupData({ po
 }
 /** Explicit seven-key video profile; each committed original is authenticated
  * in bounded blocks and compared with its catalogue digest. */
-export async function verifyPhotoNotificationRecoveryCrmBroadcastVideoBackupData({ pool, storage, videoStorage, keys, signal, limits = {} } = {}) {
-  return verifyData({ pool, storage, videoStorage, keys, signal, limits }, "photos-notify-recovery-crm-broadcast-video");
+export async function verifyPhotoNotificationRecoveryCrmBroadcastVideoBackupData({ pool, storage, videoStorage, keys, signal, limits = {}, experience = false } = {}) {
+  return verifyData({ pool, storage, videoStorage, keys, signal, limits, experience }, "photos-notify-recovery-crm-broadcast-video");
 }
 export async function verifyFullNotificationBackupData({ store, storage, keys, signal, limits = {} } = {}) {
   return verifyData({ store, storage, keys, signal, limits }, "full-notify");
 }
 
-async function verifyData({ store, storage, videoStorage, keys, signal, limits = {}, pool } = {}, profile = "full") {
+async function verifyData({ store, storage, videoStorage, keys, signal, limits = {}, pool, experience = false } = {}, profile = "full") {
   const video = profile === "photos-notify-recovery-crm-broadcast-video";
   const broadcast = video || profile === "photos-notify-recovery-crm-broadcast";
   const textOnly = profile === "text", crm = broadcast || profile === "photos-notify-recovery-crm";
@@ -97,7 +98,7 @@ async function verifyData({ store, storage, videoStorage, keys, signal, limits =
   const notifications = crm || ["photos-notify", "photos-notify-recovery", "full-notify"].includes(profile);
   const recovery = crm || profile === "photos-notify-recovery";
   const report = { complete: true, healthy: false,
-    counts: { rows: 0, mfa: 0, mail: 0, reset: 0, messages: 0, crm: 0, tasks: 0, broadcast: 0, broadcastRecipients: 0, announcements: 0, media: 0, mediaFiles: 0, notifications: 0, notificationJobs: 0, ...(video ? { videos: 0, videoFiles: 0, videoBytes: 0 } : {}) }, issues: [] };
+    counts: { rows: 0, mfa: 0, mail: 0, reset: 0, messages: 0, crm: 0, tasks: 0, broadcast: 0, broadcastRecipients: 0, announcements: 0, media: 0, mediaFiles: 0, notifications: 0, notificationJobs: 0, ...(video ? { videos: 0, videoFiles: 0, videoBytes: 0 } : {}), ...(experience ? { preferences: 0 } : {}) }, issues: [] };
   let secrets, currentPurpose = "verification", maxIssues = 100;
   function issue(purpose, code) {
     if (report.issues.length >= maxIssues) stop("issue_limit");
@@ -106,7 +107,7 @@ async function verifyData({ store, storage, videoStorage, keys, signal, limits =
   const checkSignal = () => { if (signal?.aborted) stop("aborted"); };
   try {
     const keyNames = [...(textOnly ? KEY_NAMES.slice(0, 3) : limited && !crm ? KEY_NAMES.slice(0, 4) : KEY_NAMES), ...(notifications ? ["notificationKey"] : []), ...(video ? ["videoKey"] : [])];
-    if ((limited ? typeof pool?.getConnection !== "function" || !textOnly && typeof storage?.get !== "function"
+    if (typeof experience !== "boolean" || experience && !video || (limited ? typeof pool?.getConnection !== "function" || !textOnly && typeof storage?.get !== "function"
       : typeof store?.page !== "function" || typeof storage?.get !== "function")
       || video && typeof videoStorage?.open !== "function"
       || !keys || typeof keys !== "object" || Array.isArray(keys)
@@ -135,12 +136,16 @@ async function verifyData({ store, storage, videoStorage, keys, signal, limits =
           if (Number(rows[0].present) === 1) stop("inactive_domain_populated");
         }
       } finally { await connection?.release(); }
-      store = createBackupCryptoStore({ pool, video });
+      store = createBackupCryptoStore({ pool, video, experience });
     }
     const countRow = () => { if (++report.counts.rows > maxRows) { report.counts.rows--; stop("row_limit"); } };
     async function verifyRow(purpose, row) {
       if (!row || typeof row !== "object" || Array.isArray(row)) invalid();
       bytes(row.id, purpose === "crm" ? 32 : 16);
+      if (purpose === "preferences") {
+        text(row.encrypted, 90000);
+        openPreferences(row.encrypted, secrets.crmKey, row.id.toString("hex"), row.version); return;
+      }
       if (purpose === "mfa") {
         text(row.encrypted, 190); openTotpSecret(row.encrypted, secrets.totpKey, row.id); return;
       }
@@ -325,7 +330,7 @@ async function verifyData({ store, storage, videoStorage, keys, signal, limits =
         } finally { if (Buffer.isBuffer(plaintext)) plaintext.fill(0); }
       }
     }
-    const purposes = textOnly ? TEXT_PURPOSES : limited ? [...TEXT_PURPOSES, ...(recovery ? ["reset"] : []), ...(crm ? ["crm", "tasks"] : []), ...(broadcast ? ["broadcast", "announcements"] : []), "media", ...(video ? ["videos"] : []), ...(notifications ? NOTIFICATION_PURPOSES : [])] : [...PURPOSES, ...NOTIFICATION_PURPOSES];
+    const purposes = textOnly ? TEXT_PURPOSES : limited ? [...TEXT_PURPOSES, ...(recovery ? ["reset"] : []), ...(crm ? ["crm", "tasks", ...(experience ? ["preferences"] : [])] : []), ...(broadcast ? ["broadcast", "announcements"] : []), "media", ...(video ? ["videos"] : []), ...(notifications ? NOTIFICATION_PURPOSES : [])] : [...PURPOSES, ...NOTIFICATION_PURPOSES];
     for (const purpose of purposes) {
       currentPurpose = purpose;
       let afterId = null;

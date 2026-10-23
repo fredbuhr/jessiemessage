@@ -257,7 +257,7 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
 
 export async function createConfiguredServer(env = process.env, options = {}) {
   if (!options || Object.getPrototypeOf(options) !== Object.prototype || Object.getOwnPropertySymbols(options).length
-    || Object.getOwnPropertyNames(options).some(name => !["requestOrigin", "clock", "deviceTransition", "recovery", "crm", "broadcast", "announcements", "tasks", "backupDirectory", "accountClosures", "parentGateway", "video"].includes(name))
+    || Object.getOwnPropertyNames(options).some(name => !["requestOrigin", "clock", "deviceTransition", "recovery", "crm", "broadcast", "announcements", "tasks", "backupDirectory", "accountClosures", "parentGateway", "video", "experience"].includes(name))
     || Object.values(Object.getOwnPropertyDescriptors(options)).some(property => !Object.hasOwn(property, "value"))) throw new RequestOriginError();
   const requestOrigin = Object.hasOwn(options, "requestOrigin") ? options.requestOrigin : null;
   const clock = Object.hasOwn(options, "clock") ? options.clock : Date.now;
@@ -271,8 +271,11 @@ export async function createConfiguredServer(env = process.env, options = {}) {
   const parentGateway = Object.hasOwn(options, "parentGateway") ? options.parentGateway : false;
   const accountClosures = Object.hasOwn(options, "accountClosures") ? options.accountClosures : false;
   const video = Object.hasOwn(options, "video") ? options.video : false;
-  const schemaOptions = video ? { video: true } : {};
-  if (typeof video !== "boolean" || video && (!accountClosures || parentGateway || !broadcast || requestOrigin !== PRIMARY_ORIGIN)
+  // Compatibility185: experience selects the SQL38 schema only.
+  // Preference routes, password changes and reply tracking stay absent.
+  const experience = Object.hasOwn(options, "experience") ? options.experience : false;
+  const schemaOptions = video ? { video: true, ...(experience ? { experience: true } : {}) } : {};
+  if (typeof experience !== "boolean" || experience && !video || typeof video !== "boolean" || video && (!accountClosures || parentGateway || !broadcast || requestOrigin !== PRIMARY_ORIGIN)
     || typeof parentGateway !== "boolean" || parentGateway && requestOrigin !== PRIMARY_ORIGIN || typeof deviceTransition !== "boolean" || typeof recovery !== "boolean" || typeof crm !== "boolean" || typeof clock !== "function"
     || typeof broadcast !== "boolean" || broadcast && !crm || typeof announcements !== "boolean" || announcements && !broadcast
     || typeof tasks !== "boolean" || tasks && !crm
@@ -439,7 +442,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         await assertDistinctVideoRoots(mediaConfig.root, videoConfig.root);
         videoStorage = await createVideoStorage({ root: videoConfig.root, key: videoConfig.key });
         videoCapacity = { ...videoConfig.capacity, rootFingerprint: await videoStorage.fingerprint() };
-        videoStore = createVideoStore({ pool, chatStore, capacity: videoCapacity });
+        videoStore = createVideoStore({ pool, chatStore, capacity: videoCapacity, experience });
         videoMessages = createVideoMessageStore({ pool, chatStore, videoStore });
         await videoStore.assertSchema(); await videoMessages.assertSchema();
         if ((await videoStore.status()).ready !== true) throw new Error("Private video capacity must be initialized offline.");
@@ -506,7 +509,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         crmHandler = createCrmHandler(crmService, { origin: crmConfig.origin, conversationExporter });
         if (legacyHandlers) legacyHandlers.crmHandler = createCrmHandler(crmService, { origin: RECIPE_ORIGIN, conversationExporter });
         const { createTasksStore } = await import("./tasks/store.mjs");
-        const tasksStore = createTasksStore({ pool, chatStore, key: crmConfig.key, clock });
+        const tasksStore = createTasksStore({ pool, chatStore, key: crmConfig.key, clock, experience });
         await tasksStore.assertSchema(schemaOptions);
         if (tasks) {
           const [{ createTasksService }, { createTasksHttpHandler }] = await Promise.all([
@@ -532,8 +535,8 @@ export async function createConfiguredServer(env = process.env, options = {}) {
             { createClosureService, createClosureTargets }, { createClosureHandler }] = await Promise.all([
             import("./data/erasure-store.mjs"), import("./data/erasure-journal.mjs"), import("./data/closure-operations.mjs"),
             import("./data/closure-service.mjs"), import("./data/closure-http.mjs")]);
-          const erasureVideo = video ? (await import("./video/erasure-store.mjs")).createVideoErasureExtension({ videoStore, videoStorage, capacity: videoCapacity }) : null;
-          const erasureStore = createErasureStore({ pool, database: env.JESSIEMESSAGE_DB_NAME, capacity: mediaCapacity, broadcastKey: chatConfig.key,
+          const erasureVideo = video ? (await import("./video/erasure-store.mjs")).createVideoErasureExtension({ videoStore, videoStorage, capacity: videoCapacity, experience }) : null;
+          const erasureStore = createErasureStore({ pool, database: env.JESSIEMESSAGE_DB_NAME, capacity: mediaCapacity, broadcastKey: chatConfig.key, experience,
             ...(video ? { video: erasureVideo } : {}) });
           // The two-root owner authenticates completed historical photo receipts
           // in their original scope and refuses unfinished v1 work on upgrade.
@@ -545,7 +548,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
             const inspectApplicationSchema = async () => {
               const connection = await pool.getConnection();
               try {
-                await assertErasureSchema(connection, env.JESSIEMESSAGE_DB_NAME, { candidateMigrations: await loadVideoMigrations() });
+                await assertErasureSchema(connection, env.JESSIEMESSAGE_DB_NAME, { candidateMigrations: experience ? await (await import("./experience/migrations.mjs")).loadExperienceMigrations() : await loadVideoMigrations() });
                 await erasureVideo.snapshot(connection);
               } finally { connection.release(); }
               return { verified: true };
@@ -569,6 +572,10 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         import("./profile/store.mjs"), import("./profile/service.mjs"), import("./profile/http.mjs")]);
       const profileStore = createProfileStore({ pool, chatStore });
       await profileStore.assertSchema(schemaOptions);
+      if (experience) {
+        const { createPreferencesStore } = await import("./preferences/store.mjs");
+        await createPreferencesStore({ pool, chatStore }).assertSchema();
+      }
       const profileService = await createProfileService({ store: profileStore, chatService, storage: mediaStorage ?? null,
         authStore: store, key: chatConfig.key, clock });
       profileHandler = createProfileHandler(profileService, { origin: chatConfig.origin });
