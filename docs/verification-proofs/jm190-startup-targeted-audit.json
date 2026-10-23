@@ -1,0 +1,149 @@
+{
+  "type": "jm190-persistent-maintenance-targeted-audit",
+  "observedAtParis": "2026-10-23T17:18:46.177746+02:00",
+  "evidenceKinds": [
+    "USER_ATTACHED_CAPTURE",
+    "LOCAL_QUALIFIED_SOURCE_REVIEW",
+    "OFFICIAL_WEB_DOCUMENTATION"
+  ],
+  "newCapture": {
+    "name": "image(20261023-150943).png",
+    "sha256": "9ce60abd608f73060e41d01df3ca27759febfdb7b2d29537bb6dea59bd7d26aa",
+    "observed": "Infomaniak maintenance page at admin/readiness/",
+    "currentManagerFieldsOrStatusVisible": false
+  },
+  "priorHostEvidence": {
+    "SQL38AndLocalCHECK185190": "acquired",
+    "oldStartupLog": "empty at prior read, not a reading after the latest reported attempt",
+    "currentCorrectedManagerSettings": "not observed",
+    "runtime190Identity": "not acquired"
+  },
+  "codeAudit": {
+    "type": "release190-targeted-startup-code-audit",
+    "source184": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "source190": "5dda0dd4453d34a0be839d2a1402301dea835381",
+    "scope": [
+      "flags and option guards",
+      "parent/supervisor/IPC child",
+      "private environment and configuration loading",
+      "database/schema/media/video preflight",
+      "new factories and services",
+      "release/dependency differences"
+    ],
+    "confirmedFindings": [
+      {
+        "finding": "Hosted local_closure_precheck does not run the full private messaging preflight.",
+        "references": [
+          "scripts/start-recurring-private-messaging.mjs:59-70",
+          "server/backup/local-closure-parent.mjs:89-120",
+          "scripts/start-private-messaging.mjs:140-151"
+        ]
+      },
+      {
+        "finding": "Child startup failure loses its original error code in run catch; parent may only report MANAGED_RUNTIME_START.",
+        "references": [
+          "scripts/private-messaging-child.mjs:74-82",
+          "server/backup/managed-runtime.mjs:151-171"
+        ]
+      },
+      {
+        "finding": "The experience flag and schema38 options propagate through all inspected gates; no missing propagation established.",
+        "references": [
+          "server/backup/recurring-supervisor.mjs",
+          "server/backup/managed-runtime.mjs",
+          "scripts/private-messaging-child.mjs",
+          "scripts/start-private-messaging.mjs",
+          "server/index.mjs"
+        ]
+      },
+      {
+        "finding": "Dependencies unchanged between184 and190; package/lock differences are version and test-script only.",
+        "references": [
+          "package.json",
+          "package-lock.json"
+        ]
+      }
+    ],
+    "possibleUnobservedFailures": [
+      "Manager Run still old/wrong or command/path guard stops before final log redirection",
+      "Full runtime database privileges/schema checks can fail despite local closure check passing",
+      "Photo native decoder/free-space/video capacity startup gates not covered by local closure check",
+      "Runtime server factory/bind or Manager/proxy/port behavior after preflight"
+    ],
+    "notEstablished": "No concrete new functional code defect identified as the production cause. Maintenance screenshot alone does not identify current Node state or a corrected Manager configuration.",
+    "minimalNextControl": "Existing start-private-messaging check mode with live existing private bundle and experience38, safe phase wrapper. No migration, listener or new infrastructure.",
+    "hostAccess": false,
+    "appChanges": false,
+    "greenSuitesRepeated": false
+  },
+  "launcherAudit": {
+    "actualPrivateLauncherBodyReadByAgent": false,
+    "publishedPreparationChainChangesOnly": "source/tree/checkout/log plus experience flag; no app-version guard found",
+    "syntaxTestsUseSyntheticLauncherFixtures": true,
+    "noLiteral184GuardBugEstablished": true,
+    "possibleBeforeLogFailure": "Shell/source/binary/environment guard or Manager command/execution directory can fail before final log redirection. Actual current cause remains unobserved."
+  },
+  "officialSources": [
+    {
+      "url": "https://www.infomaniak.com/fr/support/faq/2535/modifier-la-configuration-dun-site-nodejs-infomaniak",
+      "supports": "Separate launch/build, correct execution directory, matching listening port/PORT, restart after saved settings."
+    },
+    {
+      "url": "https://www.infomaniak.com/fr/support/faq/2536/resoudre-un-probleme-de-site-nodejs",
+      "supports": "Use actual Manager status and execution console to distinguish launch, code/dependency and port errors."
+    },
+    {
+      "url": "https://infomaniakstatus.com/fr/Jnqlo5Qrxr/",
+      "observedAnnouncement": "Urgent Node.js security maintenance22Oct15:00CEST through estimated30Oct; each site one30s–5min interruption;23Oct12:42 update10percent sites updated.",
+      "explainsThisHostProven": false
+    }
+  ],
+  "publicHTTPProbeLimit": "Web opens of principal health/ready and recette health were inaccessible via retrieval tool. No HTTP status or endpoint failure was acquired from those tool errors.",
+  "preparedDiagnostic": {
+    "type": "release190-full-preflight-envelope-review",
+    "scope": "Read-only current runtime preflight, not local closure CHECK replay",
+    "source190": "5dda0dd4453d34a0be839d2a1402301dea835381",
+    "helper": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
+    "mode": "check",
+    "usesExistingQualifiedModules": true,
+    "wrapperDelegatesOriginalFunctions": true,
+    "sourceIdentityChecked": true,
+    "listensOrStartsServer": false,
+    "migratesOrWritesFiles": false,
+    "asksSQLPassword": false,
+    "printsCredentialsOrMessages": false,
+    "newDedicatedTestsRun": false,
+    "ASTValidated": true,
+    "details": [
+      "run default loader loads existing private bundle and clears source/env secrets in its original finally",
+      "inspectDatabase uses existing read-only snapshot, SELECT projection, SHOWGRANTS and transport checks; returns safe named statuses",
+      "checkMessagingSchema asserts physical schema via reads",
+      "photo native decoder uses a synthetic1x1 image only in memory, no disk/photo/message write",
+      "video preflight reads roots/capacity only",
+      "Node launched with argv dash, no Node exec flags; existing private-env validation remains active",
+      "outer Python suppresses stderr and prints only fixed-status JSON; generic failures do not leak error messages"
+    ],
+    "knownLimits": [
+      "This does not instantiate server services or HTTP listener; passing cannot prove bind/startup/Manager routing",
+      "Manager environment may differ from clean SSH diagnostic environment",
+      "Captured stdout uses real existing functions; unexpected non-JSON stdout returns unavailable rather than printing raw output"
+    ],
+    "JavaScriptSyntaxCheckedLocally": true,
+    "commandSha256": "24955f2d875fa9d4630b2d606f1916123b715969d825ac08ca941c0a10a4c2a5",
+    "runtimeGrantHypothesis": {
+      "actualCurrentProfileObserved": false,
+      "historicalDocumentation": "docs/infomaniak-runtime-profile.md documents infomaniak-shared; application-table-checkpoint records shared_admin pattern for past maintenance identity, not current grant evidence",
+      "strictProfile": "Requires SELECT/INSERT/UPDATE/DELETE on all selected tables, including new profile_preferences. Missing table-qualified grant fails privileges and/or schema_reads.",
+      "sharedProfile": "A matching database-level DML grant automatically covers new tables; do not add a grant blindly.",
+      "migration37ContainsGrant": false,
+      "safeDiscriminator": "Returned databaseChecks.privileges and schema_reads; never print SHOW GRANTS raw."
+    },
+    "startServerSeamExplicitlyRefusesListener": true
+  },
+  "hostedDiagnosticExecuted": false,
+  "nextAction": "One read-only full messaging preflight using unchanged functions in check mode; user supplies resulting JSON and screenshot of actual Manager execution directory, port, Build/Run and execution console. No new Run/Build, migration, grants, dependency install or product patch until evidence.",
+  "appChanged": false,
+  "greenCIRepeated": false,
+  "newInfrastructure": false,
+  "agentPrivateHostAccess": false
+}

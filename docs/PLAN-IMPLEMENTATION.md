@@ -7,10 +7,10 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 Les quatre lots et les six fonctions du [cahier](specs/cahier-20261023.md) sont codés, fusionnés, qualifiésPR/main5/5 et publiés. Source190 `5dda0dd4453d34a0be839d2a1402301dea835381`, release/latest421892314 ; repliSQL38 compatible185 publié non latest. [État et preuves](verification-proofs/experience190-progress.json), [procédure exacte](operations-release190.md).
 
 1. **Acquis :** préparation190/185, migration SQL38 et reçu durable confirmé, CHECK185/190 réussis sans démarrage. Ne pas les rejouer.
-2. **Diagnostic acquis :** journal190 vide, aucune trace de démarrage. Corriger Build=check190 et Run=start190 dans Manager, enregistrer, démarrer une seule fois si encore arrêté et relever l’identité réelle. Aucun autre diagnostic, SQL ou CI nécessaire.184/172 sont incompatibles SQL38 ;185 reste seulement précontrôlée.
+2. **Maintenance persistante, audit ciblé acquis.** Faire le précontrôle complet de messagerie existant en lecture seule (distinct du CHECK local), relever dossier/port/Build/Run et erreur Exécution réels dans Manager, puis corriger le seul défaut démontré. Aucun nouveau démarrage avant ces observations. [Audit](AUDIT-DEMARRAGE-190.md).
 3. Après identité190 concordante, utiliser le writer déjà épinglé et qualifié9/9 (run39972263974) pour enregistrer les métadonnées et vérifier le checkpoint final sans redémarrage.
 
-Dernière identité démarrée confirmée1.8.4 ; SQL38 et les deux CHECK sont acquis selon les preuves utilisateur. Diagnostic190 acquis : journal vide ; activation190 et identité réelle encore à obtenir. Aucune nouvelle infrastructure, reprise des sauvegardes reportées ou action sur les comptes réels. Téléphone physique et fonctions190 en production restent non vérifiés.
+Dernière identité démarrée confirmée1.8.4 ; SQL38 et les deux CHECK sont acquis selon les preuves utilisateur. Le diagnostic du journal vide est antérieur à la dernière tentative ; activation190 et identité réelle restent non acquises. Aucune nouvelle infrastructure, reprise des sauvegardes reportées ou action sur les comptes réels. Téléphone physique et fonctions190 en production restent non vérifiés.
 
 ## Correctif interface 1.8.4 — terminé
 

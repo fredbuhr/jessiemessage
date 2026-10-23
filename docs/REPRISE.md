@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**23 octobre 2026 — SQL38 et CHECK185/190 acquis ; journal190 vide, activation restante.** Le diagnostic utilisateur rapporte0octet et0 démarrage enregistré, empreinte vide exacte. La capture précédente montrait Node arrêté et start190 placé dans Build. Corriger maintenant les champs **Build=check190 / Run=start190**, enregistrer, démarrer une seule fois si toujours arrêté, puis relever l’identité réelle. Aucun SSH, SQL, CHECK ou CI à répéter. [Diagnostic et limites](verification-proofs/jm190-hosted-empty-runtime-log.json).
+**23octobre2026 — maintenance persistante après nouvelle tentative rapportée ; diagnostic complet requis.** SQL38 et CHECK locaux185/190 restent acquis. Le journal vide et l’ancien Build incorrect sont historiques ; le statut et les champs Manager actuels ne sont pas visibles dans la nouvelle capture. [Audit ciblé](AUDIT-DEMARRAGE-190.md). Aucun défaut produit précis encore établi. Prochaine action : précontrôle complet de messagerie en lecture seule et capture des paramètres/erreur Manager, sans nouveau démarrage, migration ou installation.
 
 ## Évolution 1.9.0 — codée, testée et publiée ; activation en attente
 
@@ -20,7 +20,9 @@ L’[interruption](verification-proofs/jm190-hosted-interruption.json) est réso
 
 **Diagnostic190 acquis : journal vide**,0octet,0ligne,0 `application_started`, SHA256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`. [Preuve](verification-proofs/jm190-hosted-empty-runtime-log.json). Aucun démarrage ni erreur n’y est enregistré ; aucune absence générale de processus n’est déduite.
 
-**Prochaine action : corriger les deux champs Manager puis démarrer190 une seule fois si encore arrêté.** [Liens et valeurs exactes](operations-release190.md) : Build doit lancer check190, Run doit lancer start190. Après enregistrement, ne pas provoquer un second lancement si le service a déjà démarré. Relever version1.9.0, commit5dda0dd4453d34a0be839d2a1402301dea835381, Nodev24.22.1 et date de démarrage dans État du service. L’identité190, ses HTTP et l’enregistrement final restent non acquis.
+**Nouveau blocage rapporté après la consigne de correction :** la capture montre toujours la maintenance Infomaniak, sans paramètres ou statut Node. [Audit](AUDIT-DEMARRAGE-190.md) : aucun défaut de propagation experience ou de dépendance établi ; les CHECK locaux acquis ne testent pas tous les préalables réels de messagerie. Certains échecs du child perdent leur code précis.
+
+**Prochaine action : une seule exécution du précontrôle complet existant en mode check**, source190/Node épinglés, sans écoute et avec garde startServer ; [commande](operations-release190.md). Rapporter son JSON et la capture des champs Manager enregistrés (dossier, port, Build/Run) avec dernière erreur Exécution, sans Run/Build supplémentaire. La maintenance de sécurité officielle annoncée sur Node est une possibilité générale, pas une preuve pour cet hôte. Le résultat exact décidera de la correction ; ne pas rejouer SQL ou CHECK local, changer les grants ou installer des dépendances à l’aveugle.
 
 Le writer final est déjà qualifié9/9 sous Node24.22.1, [run39972263974](https://github.com/fredbuhr/jessiemessage/actions/runs/39972263974), opérateur `8690a8255e1297f288f7eae8ab25811bf63d2262`, SHA256 `40cc11b177de7199d07b7552d440fcf7990a0f8e5e334c885ef8fca93c7d93b8` ; [preuve](verification-proofs/jm190/writer-final-native.json). Sa qualification n’est pas une exécution hôte. L’enregistrement reste conditionné à l’identité190 réelle.
 
@@ -136,7 +138,7 @@ La [sauvegarde privée D01/D08](verification-proofs/jm182-hosted-privacy-notes.j
 
 Le service Node **239143**, nommé **recette.jessiemessage.com** dans le Manager, dessert aussi **jessiemessage.com**, avec **le même runtime et la même base**. Recette est une origine de compatibilité pour les anciens appareils/PWA/Push, jamais une cible de qualification destructive. Accès directs : [SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), [Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), [état du service](https://jessiemessage.com/admin/readiness), [tâches](https://jessiemessage.com/admin/tasks), [connexion admin directe](https://jessiemessage.com/admin/login).
 
-Les commandes ci-dessous sont **la cible correcte190, à appliquer maintenant après le diagnostic du journal vide**. La capture montre actuellement le start dans Build et ne montre pas Run. Les deux CHECK sont acquis ; le démarrage190 réel reste incertain.
+Les commandes ci-dessous sont **la cible correcte190, à appliquer après le diagnostic complet et la correction démontrée**. La capture montre actuellement le start dans Build et ne montre pas Run. Les deux CHECK sont acquis ; le démarrage190 réel reste incertain.
 
 | Champ Manager | Cible190 après les CHECK réussis |
 | --- | --- |

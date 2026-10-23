@@ -1,7 +1,7 @@
 {
   "type": "experience190-progress",
   "version": 2,
-  "status": "empty190_log_confirmed_correct_ManagerBuildRun_then_start_once",
+  "status": "persistent_maintenance_targeted_audit_complete_full_preflight_and_Manager_evidence_needed",
   "release": {
     "version": "1.9.0",
     "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
@@ -63,8 +63,8 @@
     "checkpointSha256": "3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212",
     "evidence": "USER_REPORTED184 historical identity; currentSQL38 and stopped Manager state have separate proofs, no private host access",
     "schemaAtLastConfirmedRuntime": 36,
-    "runtimeCurrentlyActive": false,
-    "state": "stopped_in_capture_last184_identity_only"
+    "runtimeCurrentlyActive": null,
+    "state": "current_Manager_state_unobserved_after_latest_attempt_last184_identity_only"
   },
   "qualification": {
     "pr": 133,
@@ -130,7 +130,9 @@
     "activationProblemProof": "jm190-hosted-activation-problem.json",
     "startupLogEmptyReported": true,
     "recordedStartup190": false,
-    "emptyLogProof": "jm190-hosted-empty-runtime-log.json"
+    "emptyLogProof": "jm190-hosted-empty-runtime-log.json",
+    "currentManagerState": "unobserved_after_latest_attempt",
+    "startupLogEmptyEvidenceTiming": "before_latest_attempt"
   },
   "limits": [
     "Synthetic Chrome mobile/desktop and multiple browser sessions; no physical phone or two physical devices",
@@ -138,14 +140,13 @@
     "No production190 verification or new hosted backup trial; previous deferred work remains deferred"
   ],
   "nextAction": {
-    "only": "Correct Manager Build=check190/Run=start190, save, start once if still stopped, report actual readiness identity",
+    "only": "Read-only full messaging preflight once; user supplies JSON and actual Manager execution-directory/port/Build/Run plus latest execution error without retry",
     "instructions": "../operations-release190.md",
-    "Build": "bash /srv/customer/jessiemessage-private/check-primary-release190-5dda0dd4.sh",
-    "Run": "bash /srv/customer/jessiemessage-private/start-primary-release190-5dda0dd4.sh",
     "doNotReplayUpgrade": true,
     "doNotRerunPreparation": true,
-    "doNotRerunManualCHECKs": true,
-    "following": "After actual190 identity: execute already-qualified final metadata writer"
+    "doNotRerunLocalCHECKs": true,
+    "doNotStartAgainBeforeEvidence": true,
+    "following": "Correct only demonstrated cause; bounded190 startup identity then final metadata writer"
   },
   "historyProofs": [
     "jm190/pr-native-initial.json",
@@ -223,5 +224,12 @@
       "started": false
     },
     "proof": "jm190-hosted-prechecks.json"
+  },
+  "startupAudit": {
+    "proof": "jm190-startup-targeted-audit.json",
+    "report": "../AUDIT-DEMARRAGE-190.md",
+    "fullPreflightPrepared": true,
+    "fullPreflightHostedExecuted": false,
+    "newCaptureShowsManagerState": false
   }
 }
