@@ -108,7 +108,7 @@
     },
     {
       "path": "tests/browser/entry-navigation.browser.mjs",
-      "sha256": "7a8b30fc0f33349aaadb0b968f48047121166aac7ad6fc54c8fb238371aa69eb"
+      "sha256": "45311873c93fbc989da58e85fe253bb7ea8fa3a9184f3b267fe5d38792f3fa7f"
     },
     {
       "path": "tests/browser/help.browser.mjs",

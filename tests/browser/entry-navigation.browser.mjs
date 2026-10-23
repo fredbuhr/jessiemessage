@@ -128,6 +128,8 @@ test("real Chrome: configured root is one client sign-in page and administrator 
         assert.equal(await page.execute("return location.pathname === '/' && document.getElementById('client-login-form').hidden"), true);
         await page.click("#entry-admin-link"); await waitUntil(() => page.execute("return location.pathname === '/admin' && !document.getElementById('connected').hidden"), "explicit administration choice");
         assert.equal(await page.execute("return Object.keys(localStorage).length === 0 && Object.keys(sessionStorage).every(key=>key==='jessiemessage.language')"), true);
+        await page.click("#account-settings > summary");
+        await waitUntil(() => page.execute("return document.getElementById('account-settings').open && document.getElementById('logout-button').checkVisibility()"), "account and device actions opened explicitly");
         await page.click("#logout-button");
         await waitUntil(() => page.execute("return location.pathname === '/admin/login' && !document.getElementById('login-form').hidden"), "explicit logout returns to the MFA form");
         assert.deepEqual(await adminDestinations(page), { home: 1, messages: 0 }, "logout restores the single home link on the login page");

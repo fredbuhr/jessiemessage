@@ -1,0 +1,17 @@
+{
+  "type": "jm184-first-native-browser-failure",
+  "head": "cc08f6cd95f045968916a2f38bbfea1586c1e946",
+  "tree": "948ff33ac222f36693eefe23d4b9e4a601510dc3",
+  "run": 39875548292,
+  "job": 120160141648,
+  "tests": 231,
+  "passed": 228,
+  "failed": 3,
+  "skipped": 0,
+  "reason": "Two nested widths (320/1280) and their parent failed: the new logout regression clicked #logout-button inside closed #account-settings details. Native WebDriver correctly refused the hidden control; the handler was not reached.",
+  "correction": "Open #account-settings > summary through native click, wait for open and visible logout control, then preserve logout click, redirect and home/messages assertions. No application source changed.",
+  "log": "native/pr131-initial-browser.log",
+  "logSha256": "b7799941cc5e353fe3830113be25bc5c68427dfdfe9042d215ac291f4f259ca6",
+  "rerunPerformed": false,
+  "newHeadQualificationRequired": true
+}
