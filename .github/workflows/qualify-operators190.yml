@@ -1,4 +1,4 @@
-name: Qualify staged JessieMessage 1.9.0 migration operator
+name: Qualify pinned JessieMessage 1.9.0 metadata writer
 
 on:
   push:
@@ -28,4 +28,4 @@ jobs:
         with:
           node-version: "24.22.1"
           package-manager-cache: false
-      - run: python3 ops/test-migrate-release190.py
+      - run: python3 ops/test-record-release190.py

@@ -26,11 +26,11 @@ OLD_SOURCE = '1a41e08abc87c3a29d9163fbf8cd2342eb04693c'
 OLD_TREE = 'e0964b50c03d3881d851f01f86f58777d22b2c10'
 NODE_SHA = 'e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb'
 CHECKPOINT_SHA = '3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212'
-STAGING_SHA = 'STAGING_PENDING'
-SCHEMA_SHA = 'SCHEMA_PENDING'
+STAGING_SHA = '3a4788b4a31cac3d55f09950e3b98f99a700e0f0dd8af21f83a6135bd01d8cd0'
+SCHEMA_SHA = '0d12dfd9ea9c9510729d39f743159a70a2457b2d999b6d334ae09043fa5d6dfb'
 ROLLBACK185_SOURCE = '7a40de9742bdbedc5c0829d820882ca08bf23a91'
 ROLLBACK185_TREE = '7ec449cb3a63a091c5233993923ceb69f8314366'
-ROLLBACK185_STAGING_SHA = 'STAGING_PENDING'
+ROLLBACK185_STAGING_SHA = '8b3cb7d8b40d26ce16fa3b453a2f1fda265021a5b9f4584ec5533905f87ca11e'
 BUNDLE_SHA = 'bcca2f3fd91ffc0dec51a7077eb9e192a53b6e653b60c7db7159e473b83aac85'
 PROFILE = 'photos-notify-recovery-crm-broadcast-video'
 PRECHECK = dict(version=2, type='local_closure_precheck', status='passed', scope='local_application',
@@ -40,7 +40,7 @@ BUNDLE_NAMES = sorted(['runtime-database.json', 'runtime-auth.json', 'runtime-me
 VIDEO_DDL = ['0034_video_storage_state.sql', '0035_video_assets.sql', '0036_message_video.sql']
 EXPERIENCE_DDL = ['0037_profile_preferences.sql', '0038_reply_tracking.sql']
 LIMIT = 2 * 1024 * 1024
-RELEASE_ID = None
+RELEASE_ID = 421892314
 RELEASE_TAG = 'v1.9.0'
 
 class RecordError(Exception):
