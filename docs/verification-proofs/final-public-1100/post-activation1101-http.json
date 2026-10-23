@@ -1,0 +1,52 @@
+{
+  "atUtc": "2026-10-23T20:32:45.193565+00:00",
+  "scope": "Anonymous HTTPS GET after user startup identity; tool environment proxy may mediate TLS, no direct origin TLS qualification inferred. Home hash is an observation; final hosted writer must match active source.",
+  "results": [
+    {
+      "name": "health",
+      "url": "https://jessiemessage.com/api/health",
+      "status": 200,
+      "setsCookie": false,
+      "bytes": 15,
+      "body": {
+        "status": "ok"
+      }
+    },
+    {
+      "name": "ready",
+      "url": "https://jessiemessage.com/api/ready",
+      "status": 200,
+      "setsCookie": false,
+      "bytes": 18,
+      "body": {
+        "status": "ready"
+      }
+    },
+    {
+      "name": "home",
+      "url": "https://jessiemessage.com/",
+      "status": 200,
+      "setsCookie": false,
+      "bytes": 9833,
+      "sha256": "383e16c9a8a0df07caf121ea51c9fbe5e4697603522a6dd2151d8d2894baa925"
+    },
+    {
+      "name": "writer",
+      "url": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/ac101b4bfbfa3a7f765752cb2adc74287846145e/ops/record-release1101.py",
+      "status": 200,
+      "setsCookie": false,
+      "bytes": 28914,
+      "sha256": "638a3b7019654e840f403acc14f8384ec15ce255aea423cbc33b621240efda75",
+      "hashMatches": true
+    },
+    {
+      "name": "helper",
+      "url": "https://raw.githubusercontent.com/fredbuhr/jessiemessage/ac101b4bfbfa3a7f765752cb2adc74287846145e/ops/release1101-dependencies.py",
+      "status": 200,
+      "setsCookie": false,
+      "bytes": 14654,
+      "sha256": "293f06004d79d9b32a891473c7514b74eda58e5798f083561540a0108c58806b",
+      "hashMatches": true
+    }
+  ]
+}

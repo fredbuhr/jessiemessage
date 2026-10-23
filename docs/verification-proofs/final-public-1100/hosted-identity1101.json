@@ -1,0 +1,14 @@
+{
+  "provenance": "User copied startup identity from application service status page after Manager activation; no direct Manager settings inspection inferred",
+  "version": "1.10.1",
+  "commit": "9eb99f1f68ab4beb5484894249afa8f413cc5dd6",
+  "sourceTreeFromQualifiedRelease": "2a09d9d5d6698a04605e9a4b4faa551536cfca13",
+  "nodeVersion": "v24.22.1",
+  "startedAtDisplayParis": "23/10/2026 22:30:40",
+  "startedAtExactEpochMs": null,
+  "exactEpochMustComeFromStartupLog": true,
+  "identityMatchesQualifiedRelease": true,
+  "activationReported": true,
+  "metadataRecorded": false,
+  "previousCheckpointSha256": "3d60ceb7da3dc61c9ca198ba40a898f6f9ab054650030c7a1632f019ecc73e53"
+}

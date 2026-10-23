@@ -2,7 +2,7 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Audit prépublic terminé ; CHECK1.10.1 acquis, activation attendue
+## Audit prépublic terminé ; activation1.10.1 acquise, enregistrement final attendu
 
 Les134 points, la seconde revue de couverture, les six correctifs, les qualifications PR/main5/5 et la publication1.10.1 sont acquis. [Rapport et preuves](AUDIT-PUBLIC-1100-20261023.md), [état actuel](REPRISE.md). Aucun nouveau correctif ni CI du code inchangé n’est à relancer.
 
@@ -10,9 +10,11 @@ La tentative initiale [non confirmée](verification-proofs/final-public-1100/hos
 
 **CHECK acquis selon le [résultat utilisateur](verification-proofs/final-public-1100/hosted-check1101.json) :** `CHECK1101_EXIT=0`, puis `CHECK_1101_OK`. Ne pas le rejouer.
 
-**Prochaine action unique :** [activation Manager1101](operations-release1101.md#activation-manager--prochaine-action). Fermer les éditeurs de préférences et attendre la confirmation des enregistrements déjà lancés avant d’arrêter la1.10.0 encore affectée par F-05. Renseigner Exécution en haut avec start1101, Build en bas avec check1101, port3000 conservé, puis recevoir l’identité réelle1.10.1/source9eb99f1f…/Nodev24.22.1 et sa date de démarrage. Le [writer final qualifié16/16](verification-proofs/final-public-1100/writer1101-final-native.json) attend cette identité avant utilisation ; son exécution n’est pas acquise. Aucun nouveau correctif applicatif ni CI applicative inchangée à relancer.
+**Activation acquise selon l’[identité utilisateur](verification-proofs/final-public-1100/hosted-identity1101.json) :** version1.10.1, source9eb99f1f68ab4beb5484894249afa8f413cc5dd6, Nodev24.22.1, texte Paris `23/10/2026 22:30:40`. Epoch en millisecondes non relevée. Ne pas redémarrer de nouveau.
 
-La1.10.0 reste la dernière identité active attestée et le dernier checkpoint confirmé. Les GET publics health/ready200 après l’échec ne prouvent pas l’activation1101. F-05 empêche l’ouverture au public en l’état. Les points physiques non exercés et la sauvegarde hébergée reportée restent des limites déclarées ; aucun envoi ni effacement de compte réel n’est ajouté.
+**Prochaine action unique :** [enregistrement final1101](operations-release1101.md#enregistrement-final--prochaine-action) avec le [writer épinglé et qualifié16/16](verification-proofs/final-public-1100/writer1101-final-native.json), opérateurac101b4b…. Le bootstrap exact à deux outils épinglés est prêt dans ce guide ; attendre son reçu final. Ni son exécution, ni l’alignement du checkpoint, ni la décision d’ouverture ne sont acquis.
+
+Le checkpoint reste le dernier état confirmé1.10.0/SQL38 jusqu’à cet enregistrement. Préparation, inspection, récupération, CHECK et activation ne sont pas à rejouer. Les points physiques non exercés et la sauvegarde hébergée reportée restent des limites déclarées ; aucun envoi ni effacement de compte réel n’est ajouté.
 
 ## Évolution 1.10.0 — livraison terminée
 
