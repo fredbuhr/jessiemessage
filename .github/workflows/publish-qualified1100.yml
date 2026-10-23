@@ -1,0 +1,59 @@
+name: Publish qualified JessieMessage 1.10.0
+
+on:
+  push:
+    branches: ["ops/publish-v1.10.0"]
+    paths: [".github/workflows/publish-qualified1100.yml"]
+
+permissions: {}
+
+concurrency:
+  group: publish-jessiemessage-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  operator-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact operator commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Use qualified Node.js 24.22.1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+          package-manager-cache: false
+      - name: Test isolated release preparation
+        run: python3 ops/test-prepare-release1100.py
+      - name: Test final metadata without hosting or network
+        run: python3 ops/test-record-release1100.py
+      - name: Test publication against a simulated API
+        run: python3 ops/test-publish-qualified1100.py
+  publish:
+    needs: operator-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Checkout exact operator commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Use qualified Node.js 24.22.1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+          package-manager-cache: false
+      - name: Publish immutable qualified1100 as latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 ops/publish-qualified1100.py
