@@ -323,6 +323,7 @@ async function mountProfile() {
       avatarsEnabled: profileCapability.avatars === true,
       passwordEnabled: profileCapability.passwordEnabled === true,
       preferencesEnabled: profileCapability.preferencesEnabled === true,
+      publicationEnabled: profileCapability.publicationEnabled === true,
       onPasswordChanged: async changed => {
         const current = await refreshSession();
         await start({ session: current.session });
@@ -427,7 +428,7 @@ async function resumeConnection({ reset = false } = {}) {
       if (crm) await crm.resume();
       if (!fresh(ticket, true) || !visible() || loggingOut) return;
       const state = currentState(); if (state) renderMessages(state);
-      el("workspace").hidden = false; conversationDownload?.update(); void mountConversationDownload(conversationDownloadCapability); void mountProfile(); void mountFollowup(); void mountAnnouncements(); notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
+      el("workspace").hidden = false; profileUI?.resume(); conversationDownload?.update(); void mountConversationDownload(conversationDownloadCapability); void mountProfile(); void mountFollowup(); void mountAnnouncements(); notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
       reconnectAttempt = 0; stopReconnect(); retryDelay = 3000; schedulePolling(0);
       await openNotification();
     } catch (error) {

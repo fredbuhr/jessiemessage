@@ -2,6 +2,14 @@
 
 **23 octobre 2026 — livraison 1.9.0 close et alignée.** Application active, publication/latest et checkpoint privé correspondent à la source qualifiée. Le [reçu final utilisateur](verification-proofs/jm190-hosted-metadata.json) confirme `release190_metadata_recorded`, `publicReady:true` et métadonnées seules, sans redémarrage. Aucune commande de livraison restante.
 
+## Évolution 1.10.0 — développement en cours
+
+Demande du 23 octobre : profil public de Jessie et conservation de la sélection goûts/fantasmes lors d’un changement temporaire de fenêtre/application. Branche `feat/jessie-public-profile`, départ `bd16641a64783d39cbb08d27ad774af368e677ca`. [Périmètre et vérifications](public-profile-1100.md). Aucun déploiement1100 n’est acquis ; la production190 ci-dessous reste la référence.
+
+Le brouillon reste seulement en mémoire dans la page ouverte, masqué pendant l’absence et réaffiché après revalidation du même propriétaire. Aucun POST n’est rejoué automatiquement. Fermeture explicite, déconnexion ou changement de session effacent le brouillon. La page `/jessie` lit une copie explicitement publiée par l’admin, séparée des préférences privées. Pas de migration SQL ni de publication automatique des données existantes.
+
+Prochaine action : finir les tests ciblés, contre-revue et qualification CI sur la branche, puis qualifier/publier la source exacte. Les actions Manager restent personnelles et seront données avec les champs exacts ; ne pas modifier la190 en cours ni rejouer sa livraison.
+
 ## Évolution 1.9.0 — déployée et finalisée
 
 Les quatre lots et les six fonctions du [cahier intégral](specs/cahier-20261023.md) sont codés, fusionnés, testés et déployés : droits vidéo/compte, préférences privées, galerie/photos multiples et suivi « À répondre ». Catalogue préservé : **691 préférences, 25 catégories, 934 alias**, SHA256 `5ce26f14f15fb9c3447b07777aa5c8d17a6e823e8099dbb37959fc48f00f93cb`. [Résultats fonctionnels](experience190.md), [revue du cahier](verification-proofs/jm190/spec-completion-review.json).

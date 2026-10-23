@@ -6,6 +6,7 @@ globalThis.JessieI18n?.register({
   "Enregistrer mes choix": "Save my choices", "Tout effacer": "Clear all", "Aucune sélection.": "No selections.",
   "Chargement des préférences…": "Loading preferences…", "Enregistrement des préférences…": "Saving preferences…",
   "Préférences enregistrées.": "Preferences saved.", "Les préférences sont indisponibles. Réessaie dans un moment.": "Preferences are unavailable. Try again shortly.",
+  "L’enregistrement n’a pas été confirmé. Tes choix en cours sont conservés.": "Saving could not be confirmed. Your draft choices have been kept.",
   "Réessayer le chargement des préférences": "Retry loading preferences",
   "Les préférences ont changé sur un autre appareil. Ton brouillon est conservé.": "Preferences changed on another device. Your draft has been kept.",
   "Recharger les choix enregistrés": "Reload saved choices", "Garder mes choix en cours": "Keep my draft choices",

@@ -2,6 +2,7 @@ import { prepareImageUpload } from "./image-preparation.js";
 import "./i18n-profile.js";
 import { createPasswordChangeUI } from "./password-change.js";
 import { createPreferencesUI } from "./preferences.js";
+import { createPublicationUI } from "./profile-publication.js";
 
 const MAX_AVATAR_BYTES = 262144;
 let instance = 0;
@@ -49,7 +50,7 @@ const validName = value => typeof value === "string" && value.trim().normalize("
 // the same owner checks and return a bounded Blob, never an object URL.
 export function createProfileUI(adapter) {
   const { role, request, fetchBinary, isCurrent, onSaved, onError, avatarsEnabled = true,
-    prepareAvatar = prepareProfileAvatar, host = document.body, button: openerButton, getReturnFocus, onPasswordChanged, passwordEnabled = false, preferencesEnabled = false } = adapter;
+    prepareAvatar = prepareProfileAvatar, host = document.body, button: openerButton, getReturnFocus, onPasswordChanged, passwordEnabled = false, preferencesEnabled = false, publicationEnabled = false } = adapter;
   if (!["admin", "client"].includes(role) || typeof request !== "function" || typeof isCurrent !== "function"
     || avatarsEnabled && typeof fetchBinary !== "function" || typeof prepareAvatar !== "function") throw new TypeError("invalid_profile_adapter");
   const base = `/api/profile/${role}`, media = `/api/media/${role}/assets`;
@@ -100,13 +101,13 @@ export function createProfileUI(adapter) {
   feedback.setAttribute("role", "status"); feedback.setAttribute("aria-live", "polite");
   host.append(dialog, feedback);
 
-  let destroyed = false, opened = false, epoch = 0, preparation = 0, previewEpoch = 0;
+  let destroyed = false, opened = false, suspended = false, internalCloseEvents = 0, epoch = 0, preparation = 0, previewEpoch = 0;
   let saved = null, draftAvatarId = null, draftBlob = null, conflict = false, busy = false, preparing = false;
   let previewUrl = null, previewAbort = null, preparationAbort = null, returnFocus = null;
   const controllers = new Set();
   const ownerCurrent = () => !destroyed && isCurrent() && document.visibilityState !== "hidden";
   const current = ticket => {
-    if (!opened || ticket !== epoch || destroyed) return false;
+    if (!opened || suspended || ticket !== epoch || destroyed) return false;
     if (!ownerCurrent()) { close(false); return false; }
     return true;
   };
@@ -114,9 +115,11 @@ export function createProfileUI(adapter) {
   const passwordChange = passwordEnabled && typeof onPasswordChanged === "function" ? createPasswordChangeUI({ role, request, isCurrent: () => opened && ownerCurrent(), onSessionChanged: onPasswordChanged, onError, host: dialog }) : null;
   const preferences = preferencesEnabled ? createPreferencesUI({ role, request, isCurrent: () => opened && ownerCurrent(), onError, host: dialog }) : null;
 
+  const publication = role === "admin" && preferences && publicationEnabled ? createPublicationUI({ request, isCurrent: () => opened && !suspended && ownerCurrent(), host: dialog, getSelection: () => preferences.selection(), getName: () => name.value, onError }) : null;
+
   function message(text, error = false) { ui.text(status, text); status.classList.toggle("is-error", error); }
   function controls() {
-    if (opened && !ownerCurrent()) { close(false); return; }
+    if (opened && !suspended && !ownerCurrent()) { close(false); return; }
     name.disabled = busy || !saved; file.disabled = busy || !saved; choose.disabled = busy || !saved;
     remove.disabled = busy || !saved || !draftAvatarId && !draftBlob && !preparing;
     saveButton.disabled = busy || preparing || conflict || !saved || !validName(name.value);
@@ -278,28 +281,54 @@ export function createProfileUI(adapter) {
   }
   function close(restoreFocus) {
     const wasOpen = opened, previous = returnFocus;
-    opened = false; epoch += 1; preparation += 1;
-    passwordChange?.close(); preferences?.close();
+    opened = false; suspended = false; epoch += 1; preparation += 1;
+    passwordChange?.close(); preferences?.close(); publication?.close();
     for (const controller of controllers) controller.abort(); controllers.clear();
     preparationAbort = null; preparing = false; clearPreview();
     saved = null; draftAvatarId = null; draftBlob = null; conflict = false; busy = false; returnFocus = null;
     name.value = ""; file.value = ""; message(""); conflictBox.hidden = true; retry.hidden = true;
     feedback.hidden = true; ui.text(feedback, ""); controls();
-    if (dialog.open) dialog.close();
+    if (dialog.open) { internalCloseEvents++; dialog.close(); }
     if (wasOpen && restoreFocus) focus(typeof getReturnFocus === "function" ? getReturnFocus() : previous);
   }
   async function open(opener = openerButton) {
     if (!ownerCurrent()) return false;
     close(false); returnFocus = opener ?? document.activeElement; opened = true;
-    dialog.showModal(); controls(); focus(closeButton); await load(); if (opened && ownerCurrent()) void preferences?.load(); return opened;
+    dialog.showModal(); controls(); focus(closeButton); await load(); if (opened && ownerCurrent()) { void preferences?.load(); void publication?.load(); } return opened;
+  }
+  function suspend() {
+    if (destroyed || !opened || suspended) return;
+    suspended = true; epoch++; preparation++;
+    passwordChange?.close(); preferences?.suspend(); publication?.suspend();
+    for (const controller of controllers) controller.abort(); controllers.clear();
+    preparationAbort = null; preparing = false; busy = false; clearPreview();
+    if (dialog.open) { internalCloseEvents++; dialog.close(); }
+  }
+  function resume() {
+    // The chat adapter becomes current only after checking the same session.
+    if (!opened || !suspended || !ownerCurrent()) return false;
+    suspended = false; dialog.showModal(); controls();
+    const ticket = epoch;
+    if (saved) {
+      if (draftBlob) showPreview(draftBlob, ticket);
+      else if (draftAvatarId) void loadAvatar(saved, ticket);
+      if (preferences && !preferences.resume()) void preferences.load();
+      void publication?.resume();
+      message("Ton brouillon est conservé. Vérifie-le puis enregistre le profil.");
+    } else void load().then(() => {
+      if (!current(ticket)) return;
+      if (preferences && !preferences.resume()) void preferences.load();
+      void publication?.resume();
+    });
+    focus(closeButton); return true;
   }
   const onOpen = () => { void open(); };
-  const hidden = () => { if (document.visibilityState === "hidden") close(false); };
+  const hidden = () => { if (document.visibilityState === "hidden") suspend(); else resume(); };
   const pagehide = () => close(false);
   openerButton?.addEventListener("click", onOpen);
   name.addEventListener("input", controls); file.addEventListener("change", () => { void chooseAvatar(); }); form.addEventListener("submit", event => { void save(event); });
   dialog.addEventListener("cancel", event => { event.preventDefault(); close(true); });
-  dialog.addEventListener("close", () => { if (opened) close(false); });
+  dialog.addEventListener("close", () => { if (internalCloseEvents) { internalCloseEvents--; return; } if (opened) close(false); });
   dialog.addEventListener("keydown", event => {
     if (event.key === "Escape") { event.preventDefault(); close(true); return; }
     if (event.key !== "Tab" || !opened) return;
@@ -315,12 +344,12 @@ export function createProfileUI(adapter) {
   });
   document.addEventListener("visibilitychange", hidden); globalThis.window?.addEventListener("pagehide", pagehide);
   controls();
-  return Object.freeze({ open, close: () => close(true), suspend: () => close(false), destroy() {
+  return Object.freeze({ open, close: () => close(true), suspend, resume, destroy() {
     if (destroyed) return;
     close(false); destroyed = true;
     openerButton?.removeEventListener("click", onOpen); document.removeEventListener("visibilitychange", hidden);
     globalThis.window?.removeEventListener("pagehide", pagehide);
-    passwordChange?.destroy(); preferences?.destroy();
+    passwordChange?.destroy(); preferences?.destroy(); publication?.destroy();
     ui.forget(dialog); ui.forget(feedback); dialog.remove(); feedback.remove();
   } });
 }

@@ -11,8 +11,8 @@ export function createPreferencesUI({ role, request, isCurrent, onError, host, c
   const title = node("h3", readOnly ? "Goûts & fantasmes" : "Mes goûts & fantasmes");
   const help = node("p", "Facultatif. Tes choix restent accessibles à toi et aux administrateurs autorisés.", "preferences-help"); help.hidden = readOnly;
   const status = node("p", undefined, "preferences-status"); status.setAttribute("role", "status"); status.setAttribute("aria-live", "polite");
-  const searchLabel = node("label", "Rechercher une préférence", "preferences-search-label"), search = node("input", undefined, "preferences-search");
-  search.type = "search"; search.maxLength = 120; search.autocomplete = "off"; ui.attr(search, "placeholder", "Rechercher en français, en anglais ou avec un synonyme"); searchLabel.append(search); searchLabel.hidden = readOnly;
+  const searchLabel = node("label", undefined, "preferences-search-label"), searchTitle = node("span", "Rechercher une préférence"), search = node("input", undefined, "preferences-search");
+  search.type = "search"; search.maxLength = 120; search.autocomplete = "off"; ui.attr(search, "placeholder", "Rechercher en français, en anglais ou avec un synonyme"); searchLabel.append(searchTitle, search); searchLabel.hidden = readOnly;
   const selectedTitle = node("h4", readOnly ? "Sélections partagées" : "Mes sélections"), summary = node("div", undefined, "preferences-selected");
   const categories = node("div", undefined, "preferences-categories");
   const family = node("p", "J’aime / Mes fantasmes", "preferences-help"); family.hidden = readOnly;
@@ -22,9 +22,9 @@ export function createPreferencesUI({ role, request, isCurrent, onError, host, c
   const reload = action("Recharger les choix enregistrés", () => { void load(); }), keep = action("Garder mes choix en cours", () => { void load(true); }); conflictBox.append(reload, keep);
   const retry = action("Réessayer le chargement des préférences", () => { void load(); }); retry.hidden = true;
   section.append(title, help, status, retry, searchLabel, selectedTitle, summary, family, categories, conflictBox, buttons); host.append(section);
-  let destroyed = false, opened = false, epoch = 0, busy = false, catalogue = null, index = null, saved = null, selected = new Set(), conflict = false;
+  let destroyed = false, opened = false, suspended = false, interruptedSave = false, epoch = 0, busy = false, catalogue = null, index = null, saved = null, selected = new Set(), conflict = false;
   const controllers = new Set(), expanded = new Set();
-  const active = () => !destroyed && opened && isCurrent() && document.visibilityState !== "hidden";
+  const active = () => !destroyed && opened && !suspended && isCurrent() && document.visibilityState !== "hidden";
   const current = ticket => active() && ticket === epoch;
   function message(source, error = false) { ui.text(status, source); status.classList.toggle("is-error", error); }
   function clearChildren(target) { ui.forget?.(target); target.replaceChildren(); }
@@ -120,17 +120,34 @@ export function createPreferencesUI({ role, request, isCurrent, onError, host, c
   }
   async function save() {
     if (!active() || busy || conflict || !saved || readOnly) return;
-    busy = true; const ticket = epoch; message("Enregistrement des préférences…"); controls();
+    busy = true; interruptedSave = true; const ticket = epoch; message("Enregistrement des préférences…"); controls();
     try {
       const input = { expectedVersion: saved.version, catalogueVersion: PREFERENCES_CATALOGUE_VERSION, selectedIds: [...selected] };
       const result = await ask({ mutation: true, body: input }, ticket); if (!current(ticket)) return;
-      saved = result; selected = new Set(result.selectedIds); conflict = false; render(); message("Préférences enregistrées.");
+      saved = result; selected = new Set(result.selectedIds); interruptedSave = false; conflict = false; render(); message("Préférences enregistrées.");
     } catch (error) { report(error, ticket); }
     finally { if (current(ticket)) { busy = false; controls(); } }
   }
-  function close() { epoch++; opened = false; for (const controller of controllers) controller.abort(); controllers.clear(); saved = null; selected.clear(); conflict = false; busy = false; expanded.clear(); search.value = ""; clearChildren(summary); clearChildren(categories); message(""); section.hidden = true; }
-  const changed = () => { if (active()) render(); }, hidden = () => { if (document.visibilityState === "hidden") close(); };
+  function close() { epoch++; opened = false; suspended = false; interruptedSave = false; for (const controller of controllers) controller.abort(); controllers.clear(); saved = null; selected.clear(); conflict = false; busy = false; expanded.clear(); search.value = ""; clearChildren(summary); clearChildren(categories); message(""); section.hidden = true; }
+  function suspend() {
+    if (destroyed || !opened || suspended) return;
+    suspended = true; epoch++;
+    for (const controller of controllers) controller.abort(); controllers.clear();
+    busy = false; section.hidden = true;
+  }
+  function resume() {
+    if (destroyed || !opened || !isCurrent() || document.visibilityState === "hidden") return false;
+    if (!suspended) return true;
+    suspended = false; section.hidden = false;
+    if (!saved) { void load(); return true; }
+    render();
+    if (interruptedSave) message("L’enregistrement n’a pas été confirmé. Tes choix en cours sont conservés.", true);
+    return true;
+  }
+  const changed = () => { if (active()) render(); }, hidden = () => {
+    if (document.visibilityState === "hidden") suspend(); else resume();
+  };
   search.addEventListener("input", () => { if (active() && !busy) render(); });
   const unbind = ui.onChange?.(changed); document.addEventListener("visibilitychange", hidden);
-  return Object.freeze({ section, load, close, destroy() { if (destroyed) return; close(); destroyed = true; unbind?.(); document.removeEventListener("visibilitychange", hidden); ui.forget?.(section); section.remove(); } });
+  return Object.freeze({ section, load, close, suspend, resume, selection: () => active() && saved ? [...selected] : null, destroy() { if (destroyed) return; close(); destroyed = true; unbind?.(); document.removeEventListener("visibilitychange", hidden); ui.forget?.(section); section.remove(); } });
 }
