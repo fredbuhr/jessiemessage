@@ -1,7 +1,7 @@
 {
   "type": "experience190-progress",
   "version": 2,
-  "status": "schema38_upgrade_confirmed_awaiting185_190_hosted_CHECKs",
+  "status": "SQL38_and185_190_CHECKs_passed_awaiting_Manager190_activation_identity",
   "release": {
     "version": "1.9.0",
     "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
@@ -115,14 +115,15 @@
     "sourcesPrepared": true,
     "schemaStatusRead": true,
     "migrated": true,
-    "prechecked185": false,
-    "prechecked190": false,
+    "prechecked185": true,
+    "prechecked190": true,
     "started190": false,
     "metadataRecorded190": false,
     "hostMutations": false,
     "serviceStoppedReported": true,
     "schema38StatusRead": true,
-    "schema38ReceiptAcquired": true
+    "schema38ReceiptAcquired": true,
+    "precheckProof": "jm190-hosted-prechecks.json"
   },
   "limits": [
     "Synthetic Chrome mobile/desktop and multiple browser sessions; no physical phone or two physical devices",
@@ -130,7 +131,7 @@
     "No production190 verification or new hosted backup trial; previous deferred work remains deferred"
   ],
   "nextAction": {
-    "only": "Verify and run prepared185 then190 CHECKs, never start or migrate; reuse already-passed logs",
+    "only": "User saves exact190 Manager Build/Run, starts once if still stopped, then reports actual readiness identity",
     "operator": "fbbe445bc37c90509d2af30c1ba7dc630927a40e",
     "migratorSha256": "3c52c95817cdbdfb0849f3d5bf8c191269937237830d398ccdc8440c6e40c0b2",
     "instructions": "../operations-release190.md",
@@ -138,7 +139,7 @@
     "keepServiceStopped": true,
     "doNotReplayUpgrade": true,
     "doNotRerunPreparation": true,
-    "following": "After both CHECKs: exact Manager190 Build/Run activation and startup identity, then final metadata writer"
+    "following": "After actual190 identity: execute already-qualified final metadata writer"
   },
   "historyProofs": [
     "jm190/pr-native-initial.json",
@@ -203,5 +204,18 @@
     "nativePassed": 9,
     "proof": "jm190/writer-final-native.json",
     "hostExecuted": false
+  },
+  "hostedPrechecks": {
+    "185": {
+      "status": "passed",
+      "sha256": "6aac70a7b9626362009117094981574277cdbb8f3bde674096b067f5518b8712",
+      "started": false
+    },
+    "190": {
+      "status": "passed",
+      "sha256": "6aac70a7b9626362009117094981574277cdbb8f3bde674096b067f5518b8712",
+      "started": false
+    },
+    "proof": "jm190-hosted-prechecks.json"
   }
 }

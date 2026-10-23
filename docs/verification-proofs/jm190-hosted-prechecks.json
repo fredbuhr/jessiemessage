@@ -1,0 +1,73 @@
+{
+  "type": "jm190-hosted-prechecks",
+  "reportedDate": "2026-10-23",
+  "evidenceKind": "USER_REPORTED_JSON_AND_EXACT_LOG_HASH",
+  "reportedResults": [
+    {
+      "release": "1.8.5",
+      "status": "passed",
+      "precheckLogSha256": "6aac70a7b9626362009117094981574277cdbb8f3bde674096b067f5518b8712",
+      "runtimeStarted": false
+    },
+    {
+      "release": "1.9.0",
+      "status": "passed",
+      "precheckLogSha256": "6aac70a7b9626362009117094981574277cdbb8f3bde674096b067f5518b8712",
+      "runtimeStarted": false
+    }
+  ],
+  "expectedProtocolRecord": {
+    "version": 2,
+    "type": "local_closure_precheck",
+    "status": "passed",
+    "scope": "local_application",
+    "pendingClosures": false,
+    "started": false,
+    "erased": false,
+    "externalContinuityVerified": false
+  },
+  "matchingExpectedLog": {
+    "bytes": 182,
+    "sha256": "6aac70a7b9626362009117094981574277cdbb8f3bde674096b067f5518b8712",
+    "provenance": "The protocol record is reconstructed from qualified source output ordering, compact JSON and final LF, not an agent read of a production log. Both user-reported hashes match exactly.",
+    "independentReviewers": [
+      "root",
+      "followup190"
+    ]
+  },
+  "commandEchoLimit": "Pasted shell command echo is incomplete; acquisition relies on the two complete coherent result objects and exact protocol hashes. No replay is needed.",
+  "stageIdentities": {
+    "1.8.5": {
+      "source": "7a40de9742bdbedc5c0829d820882ca08bf23a91",
+      "tree": "7ec449cb3a63a091c5233993923ceb69f8314366",
+      "everStarted": false
+    },
+    "1.9.0": {
+      "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
+      "tree": "f06a140e738f20994425c714a278b0646f651c1b",
+      "started": false
+    }
+  },
+  "conclusions": {
+    "CHECK185Acquired": true,
+    "CHECK190Acquired": true,
+    "schemaUpgradeProof": "jm190-hosted-upgrade-confirmation.json",
+    "schemaMigrations": 38,
+    "localPreflightOnly": true,
+    "runtime190IdentityAcquired": false,
+    "metadata190Recorded": false,
+    "agentPrivateHostAccess": false,
+    "physicalPhoneOrFeatureChecksAcquired": false
+  },
+  "nextAction": {
+    "only": "User replaces Manager Build/Run with exact190 scripts, saves and starts190 once, then reports actual readiness identity.",
+    "manager": "https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application",
+    "service": 239143,
+    "displayName": "recette.jessiemessage.com",
+    "Build": "bash /srv/customer/jessiemessage-private/check-primary-release190-5dda0dd4.sh",
+    "Run": "bash /srv/customer/jessiemessage-private/start-primary-release190-5dda0dd4.sh",
+    "port": 3000,
+    "noStart185": true,
+    "noRestart184Or172": true
+  }
+}

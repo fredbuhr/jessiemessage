@@ -1,6 +1,6 @@
 # Reprendre JessieMessage
 
-**23 octobre 2026 — Node239143 arrêté ; migration SQL38 terminée et reçu confirmé.** Le statut rapporte 38 migrations appliquées/0 en attente. Les empreintes du marqueur et du reçu correspondent exactement au résultat qualifié : 2 migrations appliquées, 36 préservées. Dernière identité démarrée confirmée : 1.8.4/Node24.22.1, incompatible avec SQL38. Les sources190/185 sont préparées ; aucun CHECK ou démarrage190 encore acquis. Ne relancer ni préparation ni migration.
+**23 octobre 2026 — SQL38 migré, CHECK185 et190 réussis ; activation190 restante.** Les deux contrôles sont acquis selon les JSON utilisateur et l’empreinte exacte du reçu attendu, sans démarrage. Node239143 est arrêté selon le dernier constat ; dernière identité démarrée confirmée1.8.4/Node24.22.1. Remplacer maintenant Build et Run par les scripts190 puis démarrer190 une seule fois et relever son identité. Ne relancer ni préparation, migration ni CHECK manuel ;184/172 sont incompatiblesSQL38.
 
 ## Évolution 1.9.0 — codée, testée et publiée ; activation en attente
 
@@ -16,7 +16,11 @@ La [publication39963496073](https://github.com/fredbuhr/jessiemessage/actions/ru
 
 L’[interruption](verification-proofs/jm190-hosted-interruption.json) est résolue pour la migration : le [retour des deux traces](verification-proofs/jm190-hosted-upgrade-confirmation.json) confirme le marqueur `db873cb4f9d751ab167bd960bd35a5962b89df23a5f99616d0693d6fa4b4b48e` et le reçu `0d12dfd9ea9c9510729d39f743159a70a2457b2d999b6d334ae09043fa5d6dfb`. Le corps déterministe du reçu est reconstruit depuis le helper qualifié et son empreinte exacte rapportée, sans lecture privée directe par l’agent. Il lie le marqueur, le staging190 et le résultat `applied:2`, `unchanged:36`, `migrated:true`.
 
-**Prochaine action : CHECK185 puis CHECK190, sans démarrer l’application.** [Commande et journaux attendus](operations-release190.md). Le contrôle réutilise les sources et scripts déjà préparés ; un journal déjà entièrement valide évite un nouveau CHECK. Node239143 **recette.jessiemessage.com** reste arrêté. Ne pas lancer Run/Build184 ou172 sur SQL38. Après les deux CHECK réussis : activation190 avec identité exacte, puis writer. Ces trois résultats restent non acquis. Le writer final est déjà qualifié9/9 sous Node24.22.1, [run39972263974](https://github.com/fredbuhr/jessiemessage/actions/runs/39972263974), opérateur `8690a8255e1297f288f7eae8ab25811bf63d2262`, SHA256 `40cc11b177de7199d07b7552d440fcf7990a0f8e5e334c885ef8fca93c7d93b8` ; [preuve](verification-proofs/jm190/writer-final-native.json). Sa qualification n’est pas une exécution hôte.
+**CHECK185 et190 acquis selon les résultats utilisateur** : chacun `passed`, `runtimeStarted:false`, journal SHA256 `6aac70a7b9626362009117094981574277cdbb8f3bde674096b067f5518b8712`, correspondant exactement au reçu protocolaire182octets. [Preuve et limites](verification-proofs/jm190-hosted-prechecks.json).185 est précontrôlée jamais démarrée ;190 est précontrôlée mais son identité démarrée reste inconnue.
+
+**Prochaine action : configurer Build/Run190 dans Manager, démarrer190 une seule fois et relever l’identité réelle.** [Liens et consignes exactes](operations-release190.md). Node239143 **recette.jessiemessage.com** dessert aussi le principal. Après enregistrement des deux champs, démarrer seulement si encore arrêté ; relever version1.9.0, commit5dda0dd4453d34a0be839d2a1402301dea835381, Nodev24.22.1 et date de démarrage dans État du service. Ne pas démarrer185 ni184/172, ne pas rejouer la migration ou les contrôles manuels.
+
+Le writer final est déjà qualifié9/9 sous Node24.22.1, [run39972263974](https://github.com/fredbuhr/jessiemessage/actions/runs/39972263974), opérateur `8690a8255e1297f288f7eae8ab25811bf63d2262`, SHA256 `40cc11b177de7199d07b7552d440fcf7990a0f8e5e334c885ef8fca93c7d93b8` ; [preuve](verification-proofs/jm190/writer-final-native.json). Sa qualification n’est pas une exécution hôte. L’enregistrement reste conditionné à l’identité190 réelle.
 
 **Dernier checkpoint confirmé184** : `3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212`. [Point compact](verification-proofs/experience190-progress.json). Aucune préparation réussie ou opération incertaine n’est à rejouer. Sauvegarde reportée, PC et réservesA10/A11/A12 restent hors de cette reprise.
 
@@ -69,11 +73,11 @@ Le [plan de correction exécuté](PLAN-IMPLEMENTATION.md#second-audit-après-liv
 | --- | --- |
 | Application | **Service239143 arrêté.** Dernière identité démarrée confirmée : 1.8.4, source `1a41e08abc87c3a29d9163fbf8cd2342eb04693c`, Nodev24.22.1. Ne pas redémarrer cette version sur SQL38. |
 | Publication disponible | **1.9.0**, tag/release/latest421892314 sur `5dda0dd4453d34a0be839d2a1402301dea835381`, arbre `f06a140e738f20994425c714a278b0646f651c1b`, qualifiée mais non activée. Repli185 publié non latest421892280. |
-| Sources hébergées | Préparation190 et185 acquise selon le [reçu](verification-proofs/jm190-hosted-preparation.json). Les CHECK185/190 restent à obtenir. [Procédure](operations-release190.md). |
+| Sources hébergées | Préparation190 et185 acquise selon le [reçu](verification-proofs/jm190-hosted-preparation.json). Les CHECK185/190 sont acquis, sans démarrage. [Procédure](operations-release190.md). |
 | Base | **SQL38**, 38 migrations appliquées/0 en attente selon le [statut utilisateur](verification-proofs/jm190-hosted-schema38-status.json). Le [reçu durable confirmé par empreinte](verification-proofs/jm190-hosted-upgrade-confirmation.json) indique 2 migrations appliquées et 36 préservées. Aucun inventaire physique nouveau n’est déduit. |
 | Qualification du code | [CI main190](verification-proofs/jm190/main-native-final.json) **5/5**. Les contrôles hébergés et l’identité de démarrage190 restent distincts de cette qualification. |
 | Checkpoint privé | Dernières métadonnées confirmées **1.8.4/SQL36**, SHA256 `3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212`. Ce bloc historique ne décrit plus le SQL courant ; le writer190 l’actualisera après activation. |
-| Repli compatible SQL38 | **1.8.5**, source `7a40de9742bdbedc5c0829d820882ca08bf23a91`, arbre `7ec449cb3a63a091c5233993923ceb69f8314366` ; sources préparées, CHECK hébergé non encore rapporté, jamais démarrée. Le repli historique1.7.2 reste conservé mais incompatible SQL38. |
+| Repli compatible SQL38 | **1.8.5**, source `7a40de9742bdbedc5c0829d820882ca08bf23a91`, arbre `7ec449cb3a63a091c5233993923ceb69f8314366` ; sources préparées, CHECK hébergé réussi selon le résultat utilisateur, jamais démarrée. Le repli historique1.7.2 reste conservé mais incompatible SQL38. |
 | Disponibilité | Node arrêté ; aucun résultat de disponibilité ou interface190 en production acquis. Sauvegarde hébergée reportée, téléphone physique et réserves précédentes non vérifiés. |
 
 **Ne rejouer aucune préparation ou migration acquise. Ne démarrer ni184 ni172 sur SQL38.** `main` peut avancer pour les preuves ; le tag et le commit réellement exécuté restent la référence applicative.
@@ -130,17 +134,18 @@ La [sauvegarde privée D01/D08](verification-proofs/jm182-hosted-privacy-notes.j
 
 Le service Node **239143**, nommé **recette.jessiemessage.com** dans le Manager, dessert aussi **jessiemessage.com**, avec **le même runtime et la même base**. Recette est une origine de compatibilité pour les anciens appareils/PWA/Push, jamais une cible de qualification destructive. Accès directs : [SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), [Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), [état du service](https://jessiemessage.com/admin/readiness), [tâches](https://jessiemessage.com/admin/tasks), [connexion admin directe](https://jessiemessage.com/admin/login).
 
-| Champ Manager | Référence184 de l’identité active rapportée — ne pas réexécuter |
+Les commandes ci-dessous sont **la prochaine configuration190, pas une configuration Manager déjà observée**. Les deux CHECK sont acquis ; l’activation n’est pas encore rapportée.
+
+| Champ Manager | Cible190 après les CHECK réussis |
 | --- | --- |
-| Run | `bash /srv/customer/jessiemessage-private/start-primary-release184-1a41e08a.sh` |
-| Build | `bash /srv/customer/jessiemessage-private/check-primary-release184-1a41e08a.sh` |
-| Port | **3000** |
-| Checkout | `/srv/customer/jessiemessage-operator/production-184-1a41e08a` |
-| Journal | `/srv/customer/jessiemessage-private/jm184-node24221.log` — ne pas tronquer. |
+| Build | `bash /srv/customer/jessiemessage-private/check-primary-release190-5dda0dd4.sh` |
+| Run | `bash /srv/customer/jessiemessage-private/start-primary-release190-5dda0dd4.sh` |
+| Port | **3000**, inchangé |
+| Checkout préparé | `/srv/customer/jessiemessage-operator/production-190-5dda0dd4` |
+| Journal190 | `/srv/customer/jessiemessage-private/jm190-node24221.log` — ne pas tronquer. |
 
-Les lanceurs181 antérieurs `start-primary-release181-1ae4c751.sh` et `check-primary-release181-1ae4c751.sh` restent conservés sous `/srv/customer/jessiemessage-private`. Le repli technique1.7.2 conserve ses lanceurs `start-primary-release172-6b3319a7.sh` et `check-primary-release172-6b3319a7.sh`, précontrôlés sans démarrage. Les anciens lanceurs1.7.1/1.6.0 restent historiques et inutilisables sur SQL36. Le Node privé officiel est épinglé ; ne pas remplacer le binaire système du fournisseur.
+Les lanceurs184/181/172 et les autres versions historiques restent conservés.184/172 ne sont pas utilisables sur SQL38. Le repli185 compatible38 conserve ses propres scripts, sources et reçus : il est précontrôlé, jamais démarré, et son activation n’est pas demandée. Le Node privé officiel reste épinglé ; ne pas remplacer le binaire système du fournisseur.
 
-Préparation, CHECK, activation et enregistrement final184 acquis selon les retours utilisateur. Aucune commande de livraison à rejouer ; les chemins ci-dessus sont des références de l’état actif. [Bilan clos](operations-release184.md).
 
 ## Domaines et éléments à préserver
 

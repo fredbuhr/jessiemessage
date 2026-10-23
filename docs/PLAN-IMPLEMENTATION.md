@@ -6,12 +6,11 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 Les quatre lots et les six fonctions du [cahier](specs/cahier-20261023.md) sont codés, fusionnés, qualifiésPR/main5/5 et publiés. Source190 `5dda0dd4453d34a0be839d2a1402301dea835381`, release/latest421892314 ; repliSQL38 compatible185 publié non latest. [État et preuves](verification-proofs/experience190-progress.json), [procédure exacte](operations-release190.md).
 
-1. **Acquis :** préparation190/185, statut38 appliquées/0 en attente et reçu durable de migration confirmé par les deux empreintes. Ne pas les rejouer.
-2. **À obtenir :** CHECK185 puis190, en gardant Node arrêté ; réutiliser tout journal déjà valide sans nouveau contrôle. Aucun démarrage ou SQL upgrade dans cette étape.
-3. Après les deux CHECK réussis, configurer et démarrer190 dans Manager puis relever l’identité exacte. Aucun Run/Build184 ou172 sur SQL38.
-4. Après activation, utiliser le writer déjà épinglé et qualifié9/9 (run39972263974) pour enregistrer l’identité et vérifier le checkpoint final sans redémarrage.
+1. **Acquis :** préparation190/185, migration SQL38 et reçu durable confirmé, CHECK185/190 réussis sans démarrage. Ne pas les rejouer.
+2. **À effectuer :** enregistrer les scripts190 exacts dans Build/Run de Manager, démarrer190 une seule fois, puis relever version/commit/Node/date réels. Aucun Run/Build184 ou172 sur SQL38 ;185 reste seulement précontrôlée.
+3. Après identité190 concordante, utiliser le writer déjà épinglé et qualifié9/9 (run39972263974) pour enregistrer les métadonnées et vérifier le checkpoint final sans redémarrage.
 
-Dernière identité démarrée confirmée1.8.4 ; SQL38/0 et migration terminée selon les preuves utilisateur. Node reste arrêté. Aucune nouvelle infrastructure, reprise des sauvegardes reportées ou action sur les comptes réels. Téléphone physique et production190 restent non vérifiés.
+Dernière identité démarrée confirmée1.8.4 ; SQL38 et les deux CHECK sont acquis selon les preuves utilisateur. Aucun démarrage190 encore rapporté. Aucune nouvelle infrastructure, reprise des sauvegardes reportées ou action sur les comptes réels. Téléphone physique et fonctions190 en production restent non vérifiés.
 
 ## Correctif interface 1.8.4 — terminé
 
