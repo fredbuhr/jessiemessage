@@ -1,7 +1,7 @@
 {
   "type": "experience190-progress",
   "version": 2,
-  "status": "Manager_execution_build_inverted_cause_confirmed_targeted_correction_pending",
+  "status": "runtime190_identity_reported_metadata_writer_pending",
   "release": {
     "version": "1.9.0",
     "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
@@ -11,8 +11,9 @@
     "coded": true,
     "tested": true,
     "published": true,
-    "deployed": false,
-    "productionVerified": false
+    "deployed": true,
+    "productionVerified": false,
+    "runtimeIdentityVerifiedByUserReport": true
   },
   "catalogue": {
     "sha256": "5ce26f14f15fb9c3447b07777aa5c8d17a6e823e8099dbb37959fc48f00f93cb",
@@ -26,7 +27,7 @@
       "name": "rights-and-account",
       "coded": true,
       "tested": true,
-      "deployed": false,
+      "deployed": true,
       "productionVerified": false,
       "testScope": "Qualified native Node24.22.1 PR and exactmain5of5; synthetic Chrome mobile/desktop and SQL38; not physical phone or production"
     },
@@ -34,7 +35,7 @@
       "name": "preferences",
       "coded": true,
       "tested": true,
-      "deployed": false,
+      "deployed": true,
       "productionVerified": false,
       "testScope": "Qualified native Node24.22.1 PR and exactmain5of5; synthetic Chrome mobile/desktop and SQL38; not physical phone or production"
     },
@@ -42,7 +43,7 @@
       "name": "photos",
       "coded": true,
       "tested": true,
-      "deployed": false,
+      "deployed": true,
       "productionVerified": false,
       "testScope": "Qualified native Node24.22.1 PR and exactmain5of5; synthetic Chrome mobile/desktop and SQL38; not physical phone or production"
     },
@@ -50,21 +51,24 @@
       "name": "reply-followup",
       "coded": true,
       "tested": true,
-      "deployed": false,
+      "deployed": true,
       "productionVerified": false,
       "testScope": "Qualified native Node24.22.1 PR and exactmain5of5; synthetic Chrome mobile/desktop and SQL38; not physical phone or production"
     }
   ],
   "activeHosted": {
-    "version": "1.8.4",
-    "source": "1a41e08abc87c3a29d9163fbf8cd2342eb04693c",
+    "version": "1.9.0",
+    "source": "5dda0dd4453d34a0be839d2a1402301dea835381",
+    "tree": "f06a140e738f20994425c714a278b0646f651c1b",
     "schema": 38,
     "node": "v24.22.1",
-    "checkpointSha256": "3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212",
-    "evidence": "USER_REPORTED184 historical identity; currentSQL38 and stopped Manager state have separate proofs, no private host access",
-    "schemaAtLastConfirmedRuntime": 36,
-    "runtimeCurrentlyActive": false,
-    "state": "stopped_in_latest_Manager_capture"
+    "displayedStartedAt": "23/10/2026 17:31:26",
+    "timezone": "Europe/Paris",
+    "runtimeCurrentlyActive": true,
+    "evidence": "USER_REPORTED_READINESS_UI",
+    "identityProof": "jm190-hosted-identity.json",
+    "metadataCheckpointVersion": "1.8.4",
+    "metadataCheckpointSha256": "3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212"
   },
   "qualification": {
     "pr": 133,
@@ -120,10 +124,10 @@
     "migrated": true,
     "prechecked185": true,
     "prechecked190": true,
-    "started190": null,
+    "started190": true,
     "metadataRecorded190": false,
     "hostMutations": false,
-    "serviceStoppedReported": true,
+    "serviceStoppedReported": false,
     "schema38StatusRead": true,
     "schema38ReceiptAcquired": true,
     "precheckProof": "jm190-hosted-prechecks.json",
@@ -131,12 +135,13 @@
     "startupLogEmptyReported": true,
     "recordedStartup190": false,
     "emptyLogProof": "jm190-hosted-empty-runtime-log.json",
-    "currentManagerState": "stopped_in_latest_capture",
+    "currentManagerState": "190_serves_readiness_identity_per_user_report",
     "startupLogEmptyEvidenceTiming": "before_latest_attempt",
     "fullMessagingPreflightPassed": true,
     "fullMessagingPreflightProof": "jm190-hosted-full-preflight.json",
-    "ManagerConfigurationCorrect": false,
-    "ManagerInversionProof": "jm190-Manager-command-inversion.json"
+    "ManagerConfigurationCorrect": "successful190_identity_after_requested_correction_inferred_not_directly_read",
+    "ManagerInversionProof": "jm190-Manager-command-inversion.json",
+    "startupIdentityProof": "jm190-hosted-identity.json"
   },
   "limits": [
     "Synthetic Chrome mobile/desktop and multiple browser sessions; no physical phone or two physical devices",
@@ -144,12 +149,14 @@
     "No production190 verification or new hosted backup trial; previous deferred work remains deferred"
   ],
   "nextAction": {
-    "only": "Correct top Commande d’exécution=start190 and bottom Commande de build=check190, save, Run once only if still stopped, report actual readiness identity",
+    "only": "Execute immutable final metadata writer8690a825 once, no restart, report actual JSON",
     "instructions": "../operations-release190.md",
+    "writerSha256": "40cc11b177de7199d07b7552d440fcf7990a0f8e5e334c885ef8fca93c7d93b8",
     "doNotReplayUpgrade": true,
     "doNotRerunPreparation": true,
     "doNotRerunPreflight": true,
-    "following": "After actual190 identity: final qualified metadata writer"
+    "doNotRestart": true,
+    "following": "Validate writer receipt and checkpoint alignment; no feature verification inferred from startup alone"
   },
   "historyProofs": [
     "jm190/pr-native-initial.json",

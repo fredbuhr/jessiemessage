@@ -1,0 +1,46 @@
+{
+  "type": "jm190-hosted-startup-identity",
+  "reportedDate": "2026-10-23",
+  "evidenceKind": "USER_REPORTED_READINESS_UI",
+  "reportedIdentity": {
+    "version": "1.9.0",
+    "commit": "5dda0dd4453d34a0be839d2a1402301dea835381",
+    "nodeVersion": "v24.22.1",
+    "displayedStartedAt": "23/10/2026 17:31:26",
+    "displayTimezone": "Europe/Paris"
+  },
+  "matches": {
+    "published190Source": true,
+    "qualifiedNode": true,
+    "expectedReleaseVersion": true
+  },
+  "context": "Identity supplied after instructions to correct the observed swapped execution/build fields. Successful190 startup is user-reported; corrected Manager fields not independently inspected.",
+  "acquired": {
+    "runtime190StartupIdentity": true,
+    "code190Deployed": true,
+    "SQL38Proof": "jm190-hosted-upgrade-confirmation.json",
+    "prechecksProof": "jm190-hosted-prechecks.json",
+    "fullPreflightProof": "jm190-hosted-full-preflight.json"
+  },
+  "notAcquired": {
+    "exactEpochMilliseconds": true,
+    "startupLogRecordCount": true,
+    "freshPublicHTTPResults": true,
+    "metadataCheckpoint190": true,
+    "physicalPhoneFeatureTests": true
+  },
+  "limits": [
+    "No epoch is reconstructed as observed from UI seconds. Writer will read actual startup log.",
+    "No agent private-host access.",
+    "No restart or metadata190 write performed by this review."
+  ],
+  "nextAction": "Run immutable qualified metadata writer once; it verifies actual startup log/CHECKs/schema receipts/HTTP/publication and records metadata without restart.",
+  "writer": {
+    "source": "8690a8255e1297f288f7eae8ab25811bf63d2262",
+    "sha256": "40cc11b177de7199d07b7552d440fcf7990a0f8e5e334c885ef8fca93c7d93b8",
+    "nativeRun": 39972263974,
+    "testsPassed": 9,
+    "rawReverifiedAgainstLocal": true,
+    "commandASTChecked": true
+  }
+}

@@ -1,6 +1,6 @@
 # Audit ciblé du démarrage1.9.0 —23octobre2026
 
-Le blocage persiste selon la nouvelle capture de maintenance. La cause exacte de la dernière tentative n’est pas encore établie : cette capture ne montre ni le statut Node courant, ni les champs Manager enregistrés, ni une erreur de lancement. [Preuve détaillée](verification-proofs/jm190-startup-targeted-audit.json).
+Au début de cet audit, la capture de maintenance seule ne permettait pas d’établir la cause. Les captures de paramètres ont ensuite montré l’inversion Exécution/Build ; l’utilisateur rapporte désormais le démarrage190 exact après correction demandée. [Identité](verification-proofs/jm190-hosted-identity.json). [Preuve détaillée](verification-proofs/jm190-startup-targeted-audit.json).
 
 ## Constats établis
 
@@ -28,6 +28,6 @@ Le [résultat utilisateur](verification-proofs/jm190-hosted-full-preflight.json)
 
 1. **Captures acquises : inversion confirmée.** Le champ du haut « Commande d’exécution » contient check190, celui du bas « Commande de build » contient start190. Node est arrêté ; port3000/Node24 corrects. [Preuve](verification-proofs/jm190-Manager-command-inversion.json).
 2. Corriger ces deux valeurs avec les libellés exacts de l’écran, enregistrer et démarrer une seule fois si encore arrêté. Aucun autre diagnostic n’est nécessaire avant cette correction.
-3. Relever l’identité réelle190 puis exécuter le writer déjà qualifié après concordance. Ces résultats restent non acquis.
+3. L’identité réelle190 est désormais acquise (23octobre17:31:26 Paris, version/source/Node exacts). Exécuter le writer déjà qualifié ; son reçu final reste à obtenir. Aucun autre démarrage à effectuer.
 
 Aucun nouveau service, audit général, réinstallation, changement de droits, migration ou patch produit n’est justifié par la seule capture de maintenance. Les paramètres Manager restent inaccessibles à l’agent sans action personnelle du propriétaire ; aucun navigateur cloud ou secret n’est demandé.

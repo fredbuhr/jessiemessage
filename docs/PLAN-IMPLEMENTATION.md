@@ -2,15 +2,14 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Évolution1.9.0 — activation hébergée restante
+## Évolution1.9.0 — enregistrement final restant
 
 Les quatre lots et les six fonctions du [cahier](specs/cahier-20261023.md) sont codés, fusionnés, qualifiésPR/main5/5 et publiés. Source190 `5dda0dd4453d34a0be839d2a1402301dea835381`, release/latest421892314 ; repliSQL38 compatible185 publié non latest. [État et preuves](verification-proofs/experience190-progress.json), [procédure exacte](operations-release190.md).
 
-1. **Acquis :** préparation190/185, migration SQL38 et reçu durable confirmé, CHECK185/190 réussis sans démarrage. Ne pas les rejouer.
-2. **Cause confirmée : commandes Manager inversées.** En haut « Commande d’exécution » doit lancer start190 ; en bas « Commande de build » doit lancer check190. Enregistrer, démarrer190 une seule fois si arrêté et relever l’identité réelle. Aucun nouveau diagnostic ou SQL nécessaire. [Preuve](verification-proofs/jm190-Manager-command-inversion.json).
-3. Après identité190 concordante, utiliser le writer déjà épinglé et qualifié9/9 (run39972263974) pour enregistrer les métadonnées et vérifier le checkpoint final sans redémarrage.
+1. **Acquis :** préparation190/185, SQL38, CHECKs locaux, précontrôle complet et identité190 démarrée (version/source/Node exacts, relevé23octobre17:31:26 à Paris). L’inversion Manager expliquait le blocage. Ne rien rejouer.
+2. **Restant :** utiliser le writer déjà épinglé et qualifié9/9 (run39972263974), vérifier son reçu final et l’alignement du checkpoint sans redémarrage.
 
-Dernière identité démarrée confirmée1.8.4 ; SQL38 et les deux CHECK sont acquis selon les preuves utilisateur. Le diagnostic du journal vide est antérieur à la dernière tentative ; activation190 et identité réelle restent non acquises. Aucune nouvelle infrastructure, reprise des sauvegardes reportées ou action sur les comptes réels. Téléphone physique et fonctions190 en production restent non vérifiés.
+Application190 démarrée selon l’identité utilisateur ; métadonnées privées encore184 tant que le writer n’est pas acquis. Aucune nouvelle infrastructure, reprise des sauvegardes reportées ou action sur les comptes réels. Téléphone physique et fonctions190 en production restent non vérifiés séparément.
 
 ## Correctif interface 1.8.4 — terminé
 

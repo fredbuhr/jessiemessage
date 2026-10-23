@@ -1,26 +1,30 @@
 # Mise en service de la1.9.0
 
-**Cause identifiée dans les nouvelles captures : les deux commandes Manager sont inversées.** En haut, « Commande d’exécution » contient check190 ; en bas, « Commande de build » contient start190. Node est arrêté, port3000 et Node24 sont corrects. CHECK termine sans ouvrir de listener ; START doit rester actif et appartient à la commande d’exécution. [Preuve](verification-proofs/jm190-Manager-command-inversion.json). Le précontrôle complet est acquis ; aucune nouvelle commande SSH ou migration n’est nécessaire.
+**Application1.9.0 démarrée selon l’identité rapportée dans État du service.** Source `5dda0dd4453d34a0be839d2a1402301dea835381`, Nodev24.22.1, relevéUI **23/10/2026 17:31:26** à Paris. [Preuve](verification-proofs/jm190-hosted-identity.json). L’inversion des commandes expliquait le blocage ; le résultat de démarrage est maintenant acquis après la consigne de correction. Aucun nouveau démarrage ou contrôle à rejouer.
 
-## Prochaine action — correction ciblée puis démarrage
+## Prochaine action unique — enregistrer les métadonnées finales
 
-1. Ouvrir les [paramètres Node.js239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), site **recette.jessiemessage.com**.
-2. Dans le champ du haut **Commande d’exécution**, saisir :
+Le writer final est épinglé aux reçus réels et qualifié9/9 sous Nodev24.22.1, [run39972263974](https://github.com/fredbuhr/jessiemessage/actions/runs/39972263974), opérateur `8690a8255e1297f288f7eae8ab25811bf63d2262`, SHA256 `40cc11b177de7199d07b7552d440fcf7990a0f8e5e334c885ef8fca93c7d93b8`. Son contenu publié immuable est revérifié identique au local ; aucune suite verte à répéter.
 
-```bash
-bash /srv/customer/jessiemessage-private/start-primary-release190-5dda0dd4.sh
-```
-
-3. Dans le champ du bas **Commande de build**, saisir :
+Dans le [terminal SSH](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), exécuter une seule fois :
 
 ```bash
-bash /srv/customer/jessiemessage-private/check-primary-release190-5dda0dd4.sh
+env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD190'
+import hashlib, urllib.request
+
+url = "https://raw.githubusercontent.com/fredbuhr/jessiemessage/8690a8255e1297f288f7eae8ab25811bf63d2262/ops/record-release190.py"
+code = urllib.request.urlopen(url, timeout=30).read()
+expected = "40cc11b177de7199d07b7552d440fcf7990a0f8e5e334c885ef8fca93c7d93b8"
+if hashlib.sha256(code).hexdigest() != expected:
+    raise SystemExit("Empreinte incorrecte : arrêt.")
+
+exec(compile(code, "<enregistrement190>", "exec"), {"__name__": "__main__"})
+PY_RECORD190
 ```
 
-4. Cliquer **Enregistrer**. Ouvrir le [tableau de bord](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) et cliquer une seule fois **Run** si encore **Arrêté**. Si déjà démarré après enregistrement, ne pas relancer. Le port3000 et Node24 restent identiques.
-5. Ouvrir [État du service](https://jessiemessage.com/admin/readiness) et rapporter version, commit, Node et date de démarrage réellement affichés. Cible :1.9.0/source5dda0dd4453d34a0be839d2a1402301dea835381/Nodev24.22.1.
+Rapporter le JSON réellement obtenu. Le writer vérifie sources, reçus, scripts, bundle, CHECKs, journal de démarrage, HTTP publics et release avant de modifier uniquement le checkpoint privé. Il ne redémarre ni ne migre l’application. Il exige un seul `application_started` cohérent, lit l’epoch réel et préserve les historiques/autres blocs. Un refus doit être rapporté et inspecté sans nouvelle tentative ni effacement du journal.
 
-La correction sauvegardée et le démarrage ne sont pas encore rapportés. Aucun autre diagnostic, SQL, CHECK ou installation demandé.185 reste précontrôlée jamais démarrée.
+La dateUI à la seconde ne prouve ni les millisecondes ni le nombre de records ; ces données seront lues par le writer. Les HTTP courants et l’enregistrement190 ne sont pas encore acquis. Le dernier checkpoint confirmé reste184, SHA256 `3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212`.
 
 ## Résultats acquis — ne pas répéter
 
@@ -29,12 +33,5 @@ La correction sauvegardée et le démarrage ne sont pas encore rapportés. Aucun
 - CHECK185 et190 chacun `passed`, sans démarrage, journal SHA256 `6aac70a7b9626362009117094981574277cdbb8f3bde674096b067f5518b8712`. Cette empreinte correspond au reçu protocolaire attendu de182octets. [Preuve](verification-proofs/jm190-hosted-prechecks.json). Ne pas répéter ces CHECK manuellement ; le Build de Manager pourra naturellement ajouter un reçu de contrôle valide.
 - Code190 qualifiéPR/main5/5 et publié latest421892314 sur source `5dda0dd4453d34a0be839d2a1402301dea835381`, arbre `f06a140e738f20994425c714a278b0646f651c1b`. Repli185 compatibleSQL38 publié non latest421892280, source `7a40de9742bdbedc5c0829d820882ca08bf23a91`, arbre `7ec449cb3a63a091c5233993923ceb69f8314366`.185 est précontrôlée sur l’hôte, jamais démarrée.
 
-## Après identité190 concordante — métadonnées seules
 
-Le writer final est déjà épinglé aux reçus réels et à la release421892314, qualifié **9/9** sous Nodev24.22.1 par le [run39972263974](https://github.com/fredbuhr/jessiemessage/actions/runs/39972263974), tentative1. Opérateur `8690a8255e1297f288f7eae8ab25811bf63d2262`, SHA256 `40cc11b177de7199d07b7552d440fcf7990a0f8e5e334c885ef8fca93c7d93b8`. [Preuve native](verification-proofs/jm190/writer-final-native.json).
-
-Après l’identité190 réelle, la consigne fournira ce writer immuable. Il contrôlera les sources, reçus, journaux, HTTP publics et publication avant d’actualiser les seules métadonnées du checkpoint. Les historiques184/183/182/181/180/171/160 et autres blocs restent préservés ;185 sera consignée comme précontrôlée jamais démarrée. Aucune écriture190 sur l’hôte n’a encore été rapportée.
-
-Le dernier checkpoint confirmé reste184, SHA256 `3b1781bebf857c465fce429b5160d7432f1e9afa98e0c2a983784bcc3127a212` ; ce bloc historique ne décrit plus le schéma courant38.
-
-Chaque étape dépend de la preuve de la précédente. Les anciennes commandes de préparation, migration et CHECK sont historiques et disponibles dans Git ; elles ne sont plus des actions courantes. Aucun nouvel essai de sauvegarde reportée, compte réel, message, notification, suppression ou infrastructure n’est ouvert par cette mise en service. Téléphone physique et fonctionnalités190 en production restent non vérifiés.
+Le repli185 reste précontrôlé, jamais démarré ;184/172 ne doivent pas redémarrer sur SQL38. Aucune nouvelle infrastructure ou reprise de sauvegardes reportées. Téléphone physique et fonctions190 en production restent non vérifiés ; le démarrage de la bonne source est acquis séparément.
