@@ -1,6 +1,8 @@
-# Livraison 1.11.1 — prochaine action : enregistrement final
+# Livraison 1.11.1 — terminée
 
-Le correctif remplace les lignes répétées par **le dernier message reçu de chaque client**, une seule ligne par client, avec les conversations non lues d’abord. Le [relevé utilisateur](verification-proofs/jm1111/hosted-identity.json) rapporte désormais1.11.1/source80b7fbf5…/Nodev24.22.1, démarrage24octobre19:31:34Paris, précision seconde. Le checkpoint confirmé reste1110 jusqu’au reçu final1111. Préparation, CHECK et activation sont acquis : ne pas les rejouer.
+Le correctif remplace les lignes répétées par **le dernier message reçu de chaque client**, une seule ligne par client, avec les conversations non lues d’abord. Application, publication et checkpoint privé sont alignés en **1.11.1** selon le [reçu final utilisateur](verification-proofs/jm1111/hosted-metadata.json), `release1111_metadata_recorded`, `publicReady:true`, bon commit etNode24.22.1. Démarrage réel `1792863094521`, soit **24 octobre 2026 à19:31:34.521 à Paris**, conforme au relevé UI à la seconde. Checkpoint SHA256 `41a51d38a50c3ff07b1878a6cfd96de9e383dbafc5ccff9c96a3a97aa272d90a`. Historiques1110/1101/1100/190/184, état actif antérieur et autres blocs préservés ; seules les métadonnées ont été modifiées, sans redémarrage.
+
+**Aucune prochaine action de livraison. Ne rejouer ni préparation, CHECK, activation ou writer.** Les commandes ci-dessous sont historiques. Les limites physiques, de charge et de sauvegarde demeurent ; aucune inspection privée directe de l’hôte par l’agent n’est déduite du reçu.
 
 - Source : `80b7fbf5f9b5ba32ac1aae817043126e93025946` ; arbre : `ba1289bae9ce095560922a7ed6665f17709d07ed`.
 - [PR138](https://github.com/fredbuhr/jessiemessage/pull/138), CI PR40109325838 acquise5/5 après reprise du seul job HTTPS initialement en échec. [Preuve](verification-proofs/jm1111/pr-native.json), [échec conservé](verification-proofs/jm1111/pr-initial-failure.json).
@@ -8,11 +10,11 @@ Le correctif remplace les lignes répétées par **le dernier message reçu de c
 - Tag/release/latest `v1.11.1`, release422839761 ; [publication40110800429](https://github.com/fredbuhr/jessiemessage/actions/runs/40110800429)2/2, préparateur26/26 et publisher7/7 natifs. [Preuve](verification-proofs/jm1111/publication-native.json).
 - Opérateur immuable : `9f4ff39e2de9198e29256587d5fa0075977788b1`, préparateur SHA256 `ce06046ac5c76f8d2a940cb9dc4525e28d3bc06f5b3c708c87606bbc74b5e9b0`.
 
-## Prochaine action — enregistrer les seules métadonnées
+## Historique — enregistrement final acquis, ne pas rejouer
 
-Writer immuable `27b52394d794b23e4aa90a0f386e2714424f9d4b`, SHA256 `ca2ff495097fbf7564c2bc7903d5afd85b1a94cc69700b0f8f2621d592774411`, [qualifié16/16 natifs sousNode24.22.1](verification-proofs/jm1111/writer-final-native.json), run40116842605. Il vérifie le vrai journal de démarrage, les HTTP publics, la publication, les fichiers épinglés et les liens de dépendances avant d’aligner les seules métadonnées privées, sans SQL, Manager ni redémarrage. Les historiques1110/1101/1100/190/184, l’état actif antérieur, les autres blocs et le repli185 sont préservés.
+Writer immuable `27b52394d794b23e4aa90a0f386e2714424f9d4b`, SHA256 `ca2ff495097fbf7564c2bc7903d5afd85b1a94cc69700b0f8f2621d592774411`, [qualifié16/16 natifs sousNode24.22.1](verification-proofs/jm1111/writer-final-native.json), run40116842605, puis exécuté avec succès selon le reçu utilisateur. Il a vérifié le vrai journal de démarrage, les HTTP publics, la publication, les fichiers épinglés et les liens de dépendances avant d’aligner les seules métadonnées privées, sans SQL, Manager ni redémarrage. Les historiques1110/1101/1100/190/184, l’état actif antérieur, les autres blocs et le repli185 sont préservés.
 
-Dans le [terminal Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), exécuter une fois :
+La commande exécutée une fois dans le [terminal Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal) était :
 
 ```bash
 env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD1111'
@@ -28,7 +30,7 @@ exec(compile(code, '<enregistrement1111>', 'exec'), {'__name__': '__main__'})
 PY_RECORD1111
 ```
 
-Transmettre le JSON retourné avant clôture. Un résultat non confirmé conserve ses traces : lire l’état durable avant toute reprise, sans répétition automatique. Le writer lira l’epoch réel du journal ; ne pas inventer les millisecondes à partir du relevé UI.
+Le [JSON final](verification-proofs/jm1111/hosted-metadata.json) est acquis ; aucune relance n’est nécessaire. Les millisecondes viennent de la lecture du vrai journal par le writer :19:31:34.521. La preuve UI d’origine conserve sa précision à la seconde.
 
 ## Historique — activation rapportée, ne pas rejouer
 
@@ -83,4 +85,4 @@ Le JSON, `CHECK1111_EXIT=0` et `PREPARATION_1111_CHECK_OK` sont désormais conse
 
 ## Portée conservée
 
-Le writer final est désormais épinglé au vrai reçu de préparation ; son résultat hébergé reste à recevoir. SQL38, les37 tables qualifiées, le catalogue et les dépendances sont inchangés. Repli185 conservé compatibleSQL38, jamais démarré ;184/172 interdits. Aucun nouveau test de sauvegarde, PC, envoi réel ou publication du profil public.
+Le writer final épinglé au vrai reçu de préparation a réussi selon le reçu utilisateur ; son résultat hébergé est conservé. SQL38, les37 tables qualifiées, le catalogue et les dépendances sont inchangés. Repli185 conservé compatibleSQL38, jamais démarré ;184/172 interdits. Aucun nouveau test de sauvegarde, PC, envoi réel ou publication du profil public.

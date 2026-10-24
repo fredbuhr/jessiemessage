@@ -1,0 +1,42 @@
+{
+  "provenance": "User terminal output from the pinned final writer; no direct private host, SQL, Manager or PID inspection by the agent inferred",
+  "operator": "27b52394d794b23e4aa90a0f386e2714424f9d4b",
+  "writerSha256": "ca2ff495097fbf7564c2bc7903d5afd85b1a94cc69700b0f8f2621d592774411",
+  "receipt": {
+    "status": "release1111_metadata_recorded",
+    "version": "1.11.1",
+    "source": "80b7fbf5f9b5ba32ac1aae817043126e93025946",
+    "tree": "ba1289bae9ce095560922a7ed6665f17709d07ed",
+    "metadataOnly": true,
+    "noRestart": true,
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "release": {
+      "version": "1.11.1",
+      "commit": "80b7fbf5f9b5ba32ac1aae817043126e93025946",
+      "nodeVersion": "v24.22.1",
+      "startedAt": 1792863094521
+    },
+    "publicReady": true,
+    "rollbackRelease": "1.8.5",
+    "rollbackAfterMigrationQualified": true,
+    "restart184Allowed": false,
+    "restart172Allowed": false,
+    "historicalRelease1110Preserved": true,
+    "historicalRelease1101Preserved": true,
+    "historicalRelease1100Preserved": true,
+    "historicalRelease190Preserved": true,
+    "historicalRelease184Preserved": true,
+    "priorActivePreserved": true,
+    "otherBlocksPreserved": true,
+    "checkpointSha256": "41a51d38a50c3ff07b1878a6cfd96de9e383dbafc5ccff9c96a3a97aa272d90a"
+  },
+  "startedAtParis": "2026-10-24T19:31:34.521+02:00",
+  "matchesPreviousUiToSecond": true,
+  "actualEpochCameFromWriterStartupLogRead": true,
+  "freshPhysicalSqlInventoryByAgent": false,
+  "physicalTablesConvention": "37 qualified physical tables total, including schema-migration ledger; not 37 business tables plus ledger",
+  "deploymentComplete": true,
+  "metadataRecorded": true,
+  "technicalDecision": "GO_in_qualified_scope_with_documented_limits"
+}

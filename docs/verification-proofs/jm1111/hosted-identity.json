@@ -10,5 +10,5 @@
     "fromInclusive": 1792863094000,
     "toExclusive": 1792863095000
   },
-  "scope": "Identity reported after Manager action; no direct agent inspection of Manager, log or runtime process. Final metadata recording remains pending; writer will read the actual startup epoch."
+  "scope": "Identity reported after Manager action; no direct agent inspection of Manager, log or runtime process. Final metadata success is recorded separately in hosted-metadata.json; this UI observation retains its original seconds precision."
 }
