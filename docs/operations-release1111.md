@@ -1,4 +1,4 @@
-# Livraison 1.11.1 — préparation hébergée restante
+# Livraison 1.11.1 — prochaine action : activation
 
 Le correctif remplace les lignes répétées par **le dernier message reçu de chaque client**, une seule ligne par client, avec les conversations non lues d’abord. Production confirmée :1.11.0 ; aucune activation1111 n’est déduite de la publication.
 
@@ -8,11 +8,25 @@ Le correctif remplace les lignes répétées par **le dernier message reçu de c
 - Tag/release/latest `v1.11.1`, release422839761 ; [publication40110800429](https://github.com/fredbuhr/jessiemessage/actions/runs/40110800429)2/2, préparateur26/26 et publisher7/7 natifs. [Preuve](verification-proofs/jm1111/publication-native.json).
 - Opérateur immuable : `9f4ff39e2de9198e29256587d5fa0075977788b1`, préparateur SHA256 `ce06046ac5c76f8d2a940cb9dc4525e28d3bc06f5b3c708c87606bbc74b5e9b0`.
 
-## Prochaine action — préparer puis contrôler, sans redémarrage
+## Prochaine action — activation unique dans le Manager
+
+La [préparation et le CHECK sont acquis selon le reçu utilisateur](verification-proofs/jm1111/hosted-preparation.json) : reçuSHA256 `6b3d46c260be82a3474c71e303726e8532d1e6a5156c01f9ed464ba8f0aa688f`, reconstitution canonique identique, `CHECK1111_EXIT=0`, `PREPARATION_1111_CHECK_OK`. Ne pas les rejouer. Le reçu conserve ses indicateurs d’avant CHECK, sans démarrage déduit.
+
+Ouvrir le [Manager, réglages de l’application Node239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application). Le service est encore nommé `recette.jessiemessage.com` et dessert aussi `jessiemessage.com`.
+
+| Champ | Valeur1111 |
+| --- | --- |
+| Commande d’exécution — champ du haut | `bash /srv/customer/jessiemessage-private/start-primary-release1111-80b7fbf5.sh` |
+| Commande de build — champ du bas | `bash /srv/customer/jessiemessage-private/check-primary-release1111-80b7fbf5.sh` |
+| Port | `3000` |
+
+Enregistrer les réglages et redémarrer le service **une seule fois**. Ouvrir ensuite la [page de vérification de l’application](https://jessiemessage.com/admin/readiness) : attendre version1.11.1, commit `80b7fbf5f9b5ba32ac1aae817043126e93025946`, Nodev24.22.1, puis relever l’heure de démarrage. Aucun de ces champs Manager ou démarrage n’est encore observé directement par l’agent.
+
+## Historique — préparation et CHECK acquis, ne pas rejouer
 
 Le préparateur épinglé ci-dessous est qualifié nativement26/26. Il exige le checkpoint1110 confirmé, les lanceurs et la source active1110 exacts, ainsi que le lien de dépendances1110 vers la racine privée1101 attendue. Les33 fichiers SQL normaux,3vidéo et2expérience doivent rester identiques ; toute sortie existante est préservée et refuse une répétition automatique.
 
-Dans le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), la commande ci-dessous prépare un nouveau checkout exact, réutilise les dépendances1101 déjà liées à1110, puis lance son CHECK. Elle ne démarre pas le service et ne modifie ni Manager, configuration, clés ou checkpoint.
+L’instruction exécutée était : dans le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), la commande ci-dessous préparait un nouveau checkout exact, réutilise les dépendances1101 déjà liées à1110, puis lance son CHECK. Elle ne démarre pas le service et ne modifie ni Manager, configuration, clés ou checkpoint.
 
 ```bash
 env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_PREPARE1111'
@@ -43,10 +57,8 @@ print('PREPARATION_1111_CHECK_OK')
 PY_PREPARE1111
 ```
 
-Relever le JSON, `CHECK1111_EXIT=0` et `PREPARATION_1111_CHECK_OK`. Toute préparation non confirmée conserve son état : lire les traces avant une reprise, sans répéter la mutation pour en découvrir le résultat.
+Le JSON, `CHECK1111_EXIT=0` et `PREPARATION_1111_CHECK_OK` sont désormais conservés dans la preuve utilisateur. Aucune relance de cette commande n’est nécessaire.
 
-## Étapes suivantes, dépendantes du reçu
+## Enregistrement final après le relevé d’identité
 
-Après le reçu de préparation/CHECK1111 : activation unique dans le [Manager du service Node239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), encore nommé `recette.jessiemessage.com` et desservant le principal. Exécution prévue `bash /srv/customer/jessiemessage-private/start-primary-release1111-80b7fbf5.sh`, build prévu `bash /srv/customer/jessiemessage-private/check-primary-release1111-80b7fbf5.sh`, port3000. Ne pas appliquer ces étapes avant lecture du reçu.
-
-L’identité après démarrage sera ensuite lue, puis l’enregistrement final sera épinglé au vrai reçu de préparation avant toute écriture. Ces étapes ne sont pas encore réalisées. SQL38, les37 tables qualifiées, le catalogue et les dépendances sont inchangés. Repli185 conservé compatibleSQL38, jamais démarré ;184/172 interdits. Aucun nouveau test de sauvegarde, PC, envoi réel ou publication du profil public.
+Après activation et lecture de l’identité, l’enregistrement final sera épinglé au vrai reçu de préparation avant toute écriture. Ces étapes ne sont pas encore réalisées. SQL38, les37 tables qualifiées, le catalogue et les dépendances sont inchangés. Repli185 conservé compatibleSQL38, jamais démarré ;184/172 interdits. Aucun nouveau test de sauvegarde, PC, envoi réel ou publication du profil public.
