@@ -22,7 +22,7 @@
     "M’écrire": "Write to me",
     "Retrouver ton espace": "Finding your space",
     "Comment rejoindre mon espace ?": "How can you join my space?",
-    "Mon espace privé est accessible sur invitation et réservé aux adultes. Ouvre le lien que je t’ai envoyé, crée ton compte et confirme ton e-mail. Ton accès attendra ensuite ma validation.": "My private space is invitation-only and for adults. Open the link I sent you, create your account and confirm your email. Your access will then await my approval.",
+    "Mon espace privé est accessible sur invitation et réservé aux adultes. Saisis le code reçu en message privé sur jessiemessage.com, ou ouvre ton lien d’invitation. Crée ton compte et confirme ton e-mail. Ton accès attendra ensuite ma validation.": "My private space is invitation-only and for adults. Enter the code received in a private message on jessiemessage.com, or open your invitation link. Create your account and confirm your email. Your access will then await my approval.",
     "Déclarer avoir 18 ans ne constitue pas une vérification de majorité.": "Declaring that you are 18 does not verify your age.",
     "Faut-il se reconnecter à chaque visite ?": "Do I need to sign in every time?",
     "Ta connexion peut rester ouverte sur plusieurs appareils. Une utilisation régulière la prolonge. Après environ six mois sans utilisation, il faut te reconnecter.": "You can stay signed in on several devices. Regular use keeps your sign-in active. After about six months without use, you need to sign in again.",

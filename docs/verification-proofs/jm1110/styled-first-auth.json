@@ -1,0 +1,16 @@
+{
+  "source": "019a909565cd38e47b9b0155c2b77aac0434b8ea",
+  "tree": "fe1e3fcf6bf776d982af0975f1515ce1cd0ab781",
+  "run": 40100094975,
+  "authJob": 120890449624,
+  "status": "not_qualified",
+  "failure": "20-second wait for manual reply-handling synchronization in existing HTTPS experience rehearsal. Same functional JS passed prior revision.",
+  "codeInspection": "The rehearsal proved SQL receipt persistence but clicked Handle before proving the UI consumed that receipt and its owner check. A targeted UI unread-badge wait is added; the production read/handling guards are unchanged. This is not a claim that the timeout cause was independently reproduced.",
+  "targetedRerun": "Not executed: GitHub403 because entire workflow was still running. New test synchronization requires a new qualified revision.",
+  "visualReview": {
+    "artifact": 12562249292,
+    "mobile320": "readable after CSS adjustment",
+    "desktop1280": "reviewed",
+    "noNativePhoneClaim": true
+  }
+}

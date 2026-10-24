@@ -37,6 +37,9 @@ let sessionOwner = null; let ownerCheck = null; let bootstrapTask = null; let po
 let pollTimer = null; let cycleRunning = false; let retryDelay = 3000; let sessionCheckedAt = 0;
 let inboxCursor = null; let inboxMore = false; let inboxLoading = false;
 let inboxRefreshCursor = null; let lastInboxRefresh = 0;
+let receivedEnabled = false, receivedLoading = false, receivedCursor = null, receivedMore = false, receivedEpoch = 0, receivedRefreshedAt = 0;
+let receivedExpanded = false;
+const receivedItems = new Map();
 let olderBusy = false; let sendBusy = false; let logoutBusy = false; let loggingOut = false; let readBusy = false; let readTimer = null; let selectionLoading = false;
 const eventRequests = new Set();
 const imageUrls = createObjectUrlCache(); const imageRequests = new Map();
@@ -254,6 +257,7 @@ function clearImages() {
 }
 function clearChat() {
   followupUI?.clear();
+  syncReceivedOverview();
   clearMessageSelection();
   closeChatMenu(); closeComposerTools();
   conversationDownload?.suspend();
@@ -382,6 +386,7 @@ function clearPrivate({ purgeDrafts = false } = {}) {
   clearNotificationSettings();
   cancelConfirmation(); stopReconnect(); resumeTask = null; retryConnection(false);
   generation += 1; selectionEpoch += 1; visibilityGeneration += 1; ready = false; csrf = null;
+  clearReceived(); receivedEnabled = false;
   sessionOwner = null; ownerCheck = null; bootstrapTask = null; pollEpoch += 1; cycleRunning = false;
   olderBusy = false; newerBusy = false; sendBusy = false; readBusy = false; selectionLoading = false; eventRequests.clear();
   mediaEnabled = false; videoEnabled = false; videoCreationEnabled = false;
@@ -1367,6 +1372,92 @@ function changeGalleryMonth() {
 function dateParameter(value, long = false, year = false) {
   return ui.dateParam(value, long ? { day: "numeric", month: "short", ...(year ? { year: "numeric" } : {}), hour: "2-digit", minute: "2-digit" } : { hour: "2-digit", minute: "2-digit" });
 }
+function clearReceivedRows() {
+  if (!el("received-list")) return;
+  ui.forget(el("received-list")); el("received-list").replaceChildren();
+}
+function clearReceived() {
+  receivedEpoch += 1; receivedLoading = false; receivedItems.clear(); receivedCursor = null; receivedMore = false; receivedRefreshedAt = 0; receivedExpanded = false;
+  clearReceivedRows(); if (el("received-status")) ui.text(el("received-status"), "");
+  if (el("more-received")) el("more-received").hidden = true;
+}
+function syncReceivedOverview() {
+  if (!el("received-overview")) return;
+  const overview = role === "admin" && receivedEnabled && selected === null;
+  el("workspace").classList.toggle("overview", overview);
+  el("received-overview").hidden = !overview;
+  el("chat").setAttribute("aria-labelledby", overview ? "received-title" : "peer-name");
+}
+function renderReceived() {
+  const list = el("received-list"), focused = document.activeElement?.dataset?.receivedId;
+  clearReceivedRows();
+  for (const item of [...receivedItems.values()].sort((a, b) => Number(b.unread) - Number(a.unread) || b.message.createdAt - a.message.createdAt)) {
+    const button = document.createElement("button"); button.type = "button"; button.className = "received-item";
+    button.dataset.receivedId = item.message.id; button.classList.toggle("is-unread", item.unread);
+    const head = document.createElement("span"); head.className = "received-item-head";
+    const name = document.createElement("strong"); ui.rawText(name, crm?.displayName(item.conversation) ?? item.conversation.peerName);
+    const time = document.createElement("time"); time.dateTime = new Date(item.message.createdAt).toISOString();
+    ui.text(time, "{date}", { date: dateParameter(item.message.createdAt, true) }); head.append(name, time);
+    if (item.unread) { const badge = document.createElement("span"); badge.className = "received-badge"; ui.text(badge, "Non lu"); head.append(badge); }
+    const body = document.createElement("span"); body.className = "received-body";
+    const kind = item.message.media ? "Photo" : item.message.video ? "Vidéo" : null;
+    if (kind) { const label = document.createElement("span"); ui.text(label, kind); body.append(label); }
+    if (item.message.body) { const text = document.createElement("span"); ui.rawText(text, (kind ? " · " : "") + item.message.body); body.append(text); }
+    button.append(head, body);
+    button.addEventListener("click", () => { void (async () => {
+      const target = { conversationId: item.conversation.id, sequence: item.message.sequence, messageId: item.message.id };
+      await selectConversation(target.conversationId, { focus: true, target });
+      if (ready && visible() && selected === target.conversationId) focusNotification(target);
+    })(); });
+    list.append(button);
+  }
+  ui.text(el("received-status"), receivedItems.size ? "" : "Aucun message reçu pour le moment.");
+  el("more-received").hidden = !receivedMore; el("more-received").disabled = receivedLoading;
+  if (focused) focusVisible([...list.children].find(node => node.dataset.receivedId === focused));
+}
+async function loadReceived(more = false) {
+  if (!receivedEnabled || !ready || !visible() || selected !== null || receivedLoading || more && (!receivedMore || !receivedCursor)) return;
+  const previousIds = new Set(receivedItems.keys()), restoreMore = more && document.activeElement === el("more-received");
+  const ticket = snapshot(), epoch = ++receivedEpoch; receivedLoading = true;
+  el("refresh-received").disabled = true; el("more-received").disabled = true;
+  if (!receivedItems.size) ui.text(el("received-status"), "Chargement des messages reçus…");
+  try {
+    const result = await request(`${chatBase}/inbox?limit=50${more ? `&cursor=${encodeURIComponent(receivedCursor)}` : ""}`);
+    if (!fresh(ticket) || epoch !== receivedEpoch || selected !== null) return;
+    if (!result || !Array.isArray(result.items) || result.items.length > 50 || typeof result.hasMore !== "boolean"
+      || result.hasMore !== (result.nextCursor !== null) || result.hasMore && (result.items.length !== 50 || typeof result.nextCursor !== "string" || !/^[A-Za-z0-9_-]{1,160}$/.test(result.nextCursor))) throw new Error("invalid_received_page");
+    const seen = new Set();
+    for (const item of result.items) {
+      if (!item || !/^[a-f0-9]{32}$/.test(item.conversation?.id) || typeof item.conversation.peerName !== "string" || item.conversation.peerName.length > 64
+        || !/^[a-f0-9]{32}$/.test(item.message?.id) || item.message.sender !== "peer" || item.message.deletedAt !== null
+        || typeof item.message.body !== "string" || item.message.body.length > 4096 || !Number.isSafeInteger(item.message.createdAt)
+        || item.message.createdAt < 0 || item.message.createdAt > 253402300799999 || typeof item.unread !== "boolean" || seen.has(item.message.id)) throw new Error("invalid_received_item");
+      sequence(item.message.sequence); if (item.message.sequence === "0") throw new Error("invalid_received_item");
+      seen.add(item.message.id);
+    }
+    if (!more) receivedItems.clear();
+    receivedExpanded = more;
+    for (const item of result.items) receivedItems.set(item.message.id, item);
+    receivedCursor = result.nextCursor; receivedMore = result.hasMore; receivedRefreshedAt = Date.now();
+    renderReceived();
+    if (!more) el("received-list").parentElement.scrollTop = 0;
+    if (restoreMore && !receivedMore) focusVisible([...el("received-list").children].find(node => !previousIds.has(node.dataset.receivedId)) ?? el("received-title"));
+  } catch (error) {
+    if (error.stale || epoch !== receivedEpoch) return;
+    if (error.status === 401 || error.status === 403) { await handleError(error); return; }
+    // Do not retain a deleted message or an old owner's preview after a failed refresh.
+    receivedItems.clear(); clearReceivedRows(); receivedCursor = null; receivedMore = false; el("more-received").hidden = true;
+    ui.text(el("received-status"), "Les messages reçus ne sont pas disponibles. Réessaie avec Actualiser.");
+  } finally {
+    if (epoch === receivedEpoch) { receivedLoading = false; el("refresh-received").disabled = false; el("more-received").disabled = false; }
+  }
+}
+el("refresh-received")?.addEventListener("click", () => { void loadReceived(); });
+el("more-received")?.addEventListener("click", () => { void loadReceived(true); });
+el("show-clients")?.addEventListener("click", () => { el("workspace").classList.add("show-clients"); focusVisible(el("inbox-title")); });
+el("return-received")?.addEventListener("click", () => { el("workspace").classList.remove("show-clients"); focusVisible(el("received-title")); void loadReceived(); });
+ui.onChange(() => { if (role === "admin" && ready && visible() && selected === null && receivedItems.size) renderReceived(); });
+
 function renderInbox({ restoreFocus = true } = {}) {
   const container = el("conversations");
   const focused = [...container.children].find((button) => button.contains(document.activeElement));
@@ -1619,6 +1710,7 @@ async function selectConversation(id, { focus = false, target = null } = {}) {
   const previous = currentState(); if (previous) { previous.draft = el("message-body").value; if (previous.pending?.status === "sending") retrySend(previous); }
   selectionEpoch += 1; stopPolling(); abortRequests(true); inboxLoading = false; olderBusy = false; newerBusy = false; sendBusy = false; readBusy = false; selectionLoading = true;
   selected = id;
+  receivedEpoch += 1; receivedLoading = false; clearReceivedRows(); el("workspace").classList.remove("show-clients");
   crm?.selectConversation(id);
   const oldState = states.get(id);
   const state = oldState ? { ...oldState, epoch: selectionEpoch } : makeConversationState(id, selectionEpoch);
@@ -1756,6 +1848,7 @@ async function poll() {
     if (Date.now() - sessionCheckedAt > 60000 && !await refreshAndContinue()) return;
     if (role === "admin" && Date.now() - lastInboxRefresh >= 30000) await loadInbox(false, true);
     const state = currentState(); if (state) catchup = await fetchEvents(state);
+    else if (role === "admin" && receivedEnabled && !receivedExpanded && el("received-list")?.parentElement?.scrollTop < 48 && Date.now() - receivedRefreshedAt >= 15000) await loadReceived();
     void announcementUI?.refresh();
     retryDelay = 3000; notice("");
   } catch (error) { if (!error.stale) { retryDelay = Math.min(30000, retryDelay * 2); await handleError(error, currentState()); } }
@@ -2252,7 +2345,8 @@ el("back-to-inbox").addEventListener("click", () => {
   const state = currentState(); const returnId = state?.id;
   if (state) { state.draft = el("message-body").value; if (state.pending?.status === "sending") retrySend(state); }
   selectionEpoch += 1; abortRequests(true); inboxLoading = false; selected = null; crm?.selectConversation(null); clearChat(); renderInbox(); schedulePolling();
-  selectionLoading = false; focusInbox(returnId);
+  selectionLoading = false; el("workspace").classList.remove("show-clients");
+  void loadReceived(); if (!focusVisible(el("received-title"))) focusInbox(returnId);
 });
 el("logout").addEventListener("click", () => { void logout(); });
 el("open-notifications").addEventListener("click", () => {
@@ -2333,6 +2427,7 @@ globalThis.navigator?.serviceWorker?.addEventListener("message", (event) => {
 document.addEventListener("visibilitychange", () => {
   if (!visible()) {
     clearMessageSelection();
+    clearReceived();
     closeChatMenu(); closeComposerTools();
     closeQuickReplies();
     closeEmojis();
@@ -2374,6 +2469,7 @@ async function start({ session = null } = {}) {
       announcementCapability = capability.announcements?.enabled === true ? capability.announcements : null;
       tasksCapability = role === "admin" && capability.tasks?.enabled === true;
       repliesCapability = role === "admin" && capability.replies?.enabled === true;
+      receivedEnabled = role === "admin" && capability.inbox?.enabled === true;
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       await refreshMediaCapability();
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
@@ -2394,6 +2490,7 @@ async function start({ session = null } = {}) {
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
       ready = true; reconnectAttempt = 0; stopReconnect(); retryConnection(false); el("workspace").hidden = false; notice("", false, "session-status");
       if (currentState()?.conversation) renderMeta(currentState());
+      else if (role === "admin") { syncReceivedOverview(); await loadReceived(); }
       await mountProfile(); await mountFollowup();
       conversationDownloadCapability = capability.conversationExport;
       await mountConversationDownload(conversationDownloadCapability);

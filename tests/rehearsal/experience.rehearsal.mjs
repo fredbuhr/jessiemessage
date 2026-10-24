@@ -36,6 +36,7 @@ async function login(page, fixture, role, { credentials = null, password = null,
     await waitUntil(() => page.execute("return !!document.querySelector('#conversations [data-conversation-id]')"), "admin conversations loaded");
     // Pick the primary synthetic client, independent of the other client's sort order.
     const selected = await page.execute("const nodes=[...document.querySelectorAll('#conversations [data-conversation-id]')];return nodes.find(n=>n.querySelector('strong')?.textContent==='Synthetic browser client')?.getAttribute('data-conversation-id')");
+    if (await page.execute("return document.getElementById('show-clients')?.checkVisibility()===true")) await page.click("#show-clients");
     assert.match(selected ?? "", /^[a-f0-9]{32}$/); await page.click(`[data-conversation-id="${selected}"]`);
   } else {
     await page.navigate("/access");
@@ -114,6 +115,7 @@ async function changePassword(page, role, currentPassword, replacement) {
   if (role === "admin") {
     await waitUntil(() => page.execute("return !![...document.querySelectorAll('#conversations [data-conversation-id]')].find(n=>n.querySelector('strong')?.textContent==='Synthetic browser client')"), "renewed admin inbox");
     const selected = await page.execute("return [...document.querySelectorAll('#conversations [data-conversation-id]')].find(n=>n.querySelector('strong')?.textContent==='Synthetic browser client').getAttribute('data-conversation-id')");
+    if (await page.execute("return document.getElementById('show-clients')?.checkVisibility()===true")) await page.click("#show-clients");
     await page.click(`[data-conversation-id="${selected}"]`);
   }
   await ready(page, role);
@@ -318,6 +320,11 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
         return current.status === 200 && BigInt(current.data.conversation.lastReadSequence) >= BigInt(questionMessage.sequence);
       }, "the actual administrator scroll posts a persisted read receipt", 20000);
       const read = await json(admin, "admin", `/api/chat/admin/conversations/${conversation}/messages`); assert.equal(read.data.conversation.reply.needed, true, "reading the client message never handles it");
+      // A SQL read can observe the persisted receipt before the controller has
+      // consumed its response and fresh-owner proof. Wait for the UI's own
+      // unread badge to clear before asking it to handle the observed message.
+      await waitUntil(() => admin.execute(`const contact=document.querySelector('[data-conversation-id="'+arguments[0]+'"]');
+        return !!contact&&!contact.querySelector('.unread');`, conversation), "administrator UI acknowledges the observed read before handling it", 20000);
       await admin.click(".reply-followup > button:nth-of-type(2)");
       for (const page of [admin, adminDevice]) await waitReplyUI(page, false);
       const handled = await json(adminDevice, "admin", `/api/chat/admin/conversations/${conversation}/messages`); assert.equal(handled.data.conversation.reply.handledThrough, questionMessage.sequence);

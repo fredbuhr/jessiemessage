@@ -254,11 +254,19 @@ async function startFixtureServer() {
         if (request.method === "GET" && suffix === "/capabilities") {
           if (feature === "media" && fixture.mediaDisabled) { sendJson(404, { error: "not_found" }); return; }
           sendJson(200, { enabled: true,
+            ...(fixture.receivedEnabled && feature === "chat" && role === "admin" ? { inbox: { enabled: true } } : {}),
             ...(fixture.videoReadOnly && feature === "chat" ? { video: { enabled: true, creationEnabled: false, maxBytes: 104857600, mime: "video/mp4" } } : {}),
             ...(fixture.profileEnabled && feature === "chat" ? { profile: { enabled: true, avatars: fixture.profileAvatarsEnabled, preferencesEnabled: fixture.preferencesEnabled } } : {}),
             ...(fixture.clientExportEnabled && feature === "chat" && role === "client" ? { conversationExport: { enabled: true, photos: true, maxBytes: 32 * 1024 * 1024 } } : {}) }); return;
         }
         if (feature === "chat" && request.method === "GET") {
+          if (suffix === "/inbox" && role === "admin" && fixture.receivedEnabled) {
+            fixture.receivedReads = (fixture.receivedReads ?? 0) + 1;
+            if (fixture.receivedFailure) { sendJson(503, { error: "messaging_unavailable" }); return; }
+            const items = [3, 1, 2].map(n => ({ conversation: n === 2 ? { ...conversation("admin"), id: id(101), peerName: "Read client", lastReadSequence: "2" } : conversation("admin"), unread: n !== 2,
+              message: { ...message(n, "admin"), sender: "peer", body: n === 3 ? "<b>Fictional received photo</b>" : `Fictional received ${n}` } }));
+            sendJson(200, { items, nextCursor: null, hasMore: false }); return;
+          }
           if (suffix === "/conversation") { sendJson(200, { id: conversationId }); return; }
           if (suffix === "/conversations") { sendJson(200, { conversations: [conversation(role)], nextCursor: null, hasMore: false }); return; }
           if (suffix === `/conversations/${conversationId}/messages`) {
@@ -1685,4 +1693,37 @@ test("Chrome photo neighbors use authorized server order within a millisecond wh
       throw error;
     } finally { await page.close(); }
   }
+});
+
+test("Chrome: unselected admin has actual unread-first messages instead of a fictitious conversation at320/1280px", { timeout: 120000 }, async t => {
+  for (const [width, language] of [[320, "en"], [1280, "fr"]]) await t.test(`${language} ${width}px`, async () => {
+    resetFixture(); fixture.receivedEnabled = true;
+    const page = await browser(width, 800);
+    try {
+      await loaded(page, "/admin/messages");
+      if (language === "en") await toggleChatLanguage(page);
+      await waitUntil(() => page.execute("return document.querySelectorAll('.received-item').length===3"), "all incoming messages shown without choosing a client");
+      assert.equal(await page.execute("return document.getElementById('composer').checkVisibility() || document.querySelector('.chat-head').checkVisibility()"), false);
+      assert.deepEqual(await page.execute("return [...document.querySelectorAll('.received-item')].map(node=>({id:node.dataset.receivedId,unread:node.classList.contains('is-unread')}))"), [3,1,2].map(n => ({ id:id(200+n), unread:n!==2 })));
+      assert.equal(fixture.read.admin, "0", "the overview must never mark messages read");
+      assert.equal(await page.execute("return !!document.querySelector('.received-body b')"), false, "message body remains literal text");
+      assert.equal(await page.execute("return document.documentElement.scrollWidth<=innerWidth+1"), true);
+      assert.equal(await page.execute("return document.getElementById('received-title').textContent"), language === "en" ? "Received messages" : "Messages reçus");
+      await mkdir(new URL("../../artifacts/homepage/", import.meta.url), { recursive: true });
+      await writeFile(new URL(`../../artifacts/homepage/received-inbox-${language}-${width}.png`, import.meta.url), Buffer.from(await page.screenshot(), "base64"));
+      if (width === 320) {
+        await page.click("#show-clients"); await waitUntil(() => page.execute("return document.getElementById('inbox').checkVisibility()"), "mobile client filters");
+        await page.click("#return-received"); await waitUntil(() => page.execute("return document.querySelector('.received-item').checkVisibility()"), "mobile back to all received messages");
+      }
+      fixture.receivedFailure = true; await page.click("#refresh-received");
+      await waitUntil(() => page.execute("return document.querySelectorAll('.received-item').length===0 && !document.getElementById('refresh-received').disabled"), "a failed refresh purges old previews");
+      fixture.receivedFailure = false; await page.click("#refresh-received");
+      await waitUntil(() => page.execute("return document.querySelectorAll('.received-item').length===3 && !document.getElementById('refresh-received').disabled"), "explicit refresh recovers the overview");
+      await page.click(".received-item"); await loadedPhoto(page);
+      assert.equal(await page.execute("return document.getElementById('received-overview').hidden && document.getElementById('composer').checkVisibility()"), true);
+      await page.click("#back-to-inbox");
+      await waitUntil(() => page.execute("return document.querySelectorAll('.received-item').length===3 && !document.getElementById('received-overview').hidden"), "back returns to the received overview");
+      assert.deepEqual(await page.execute("return window.__browserErrors"), []);
+    } finally { await page.close(); }
+  });
 });

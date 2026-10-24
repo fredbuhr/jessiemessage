@@ -5,6 +5,7 @@ import { createAccessService } from "../server/access/service.mjs";
 import { hashPassword, newToken, tokenDigest, verifyPassword } from "../server/auth/crypto.mjs";
 import { openVerificationPayload } from "../server/mail/crypto.mjs";
 import { encodeAccessCursor } from "../server/access/pagination.mjs";
+import { invitationDigest } from "../server/access/invitation-code.mjs";
 
 const key = randomBytes(32); const mailKey = randomBytes(32); const userId = randomBytes(16);
 const password = " Testé8 "; const token = newToken();
@@ -12,7 +13,7 @@ let now, service, passwordHash, captured, state;
 before(async () => {
   passwordHash = await hashPassword(password);
   const store = {
-    inspectInvitation: async () => state.invitation ? { expiresAt: now + 100000, accessDays: 30 } : null,
+    inspectInvitation: async (hash) => { state.inspectedInvitationHash = hash; return state.invitation ? { expiresAt: now + 100000, accessDays: 30 } : null; },
     register: async (options) => { captured.push(options); return state.registered; },
     getClientLoginRecord: async () => state.record ? { id: userId, role: "client", status: "pending", emailVerified: state.verified,
       credentialVersion: 1, passwordHash } : null,
@@ -38,7 +39,7 @@ before(async () => {
       if (state.storeError) throw Object.assign(new Error("Sensitive SQL detail"), { code: state.storeError });
       return state.renewed === undefined ? { id: id.toString("hex"), calculatedAt: options.now, accessExpiresAt: Math.max(options.now, options.expectedExpiresAt) + options.accessDays * 86400000 } : state.renewed;
     },
-    createInvitation: async (options) => ({ id: options.id, expiresAt: options.expiresAt, accessDays: options.accessDays }),
+    createInvitation: async (options) => { state.createdInvitation = options; return { id: options.id, expiresAt: options.expiresAt, accessDays: options.accessDays }; },
   };
   const authStore = { consumeRateLimit: async (hash, options) => {
     captured.push({ hash, options });
@@ -137,6 +138,49 @@ test("only a current administrator can obtain invitation links and stored lists 
   assert.equal(link.origin, "https://example.invalid"); assert.equal(link.pathname, "/access"); assert.equal(link.search, "");
   assert.match(link.hash, /^#invitation=[A-Za-z0-9_-]{43}$/); assert.equal(result.accessDays, null);
   await assert.rejects(service.createInvitation(token, { lifetimeHours: 0, accessDays: 30 }), { code: "AUTH_INVALID" });
+});
+
+test("code invitations store only their namespaced digest and expose the secret only on creation", async () => {
+  state.admin = false;
+  await assert.rejects(service.createInvitation(token, { format: "code" }), { code: "ACCESS_FORBIDDEN" });
+  assert.equal(state.createdInvitation, undefined);
+  state.admin = true;
+  const result = await service.createInvitation(token, { lifetimeHours: 1, accessDays: null, format: "code" });
+  assert.match(result.code, /^(?:[0-9A-HJKMNP-TV-Z]{4}-){4}[0-9A-HJKMNP-TV-Z]{4}$/);
+  assert.equal(result.format, "code"); assert.equal(Object.hasOwn(result, "url"), false);
+  assert.deepEqual(state.createdInvitation.tokenHash, invitationDigest(result.code));
+  assert.deepEqual(Object.keys(state.createdInvitation).sort(), ["accessDays", "actorTokenHash", "expiresAt", "id", "now", "tokenHash"]);
+  assert.equal(result.expiresAt, now + 3600000);
+  state.invitations = { invitations: [{ ...syntheticInvitation(), code: result.code, format: "code" }], hasMore: false, nextCursor: null };
+  const list = await service.listInvitations(token);
+  assert.equal(JSON.stringify(list).includes(result.code), false);
+  state.sessionCalls = 0;
+  for (const format of ["email", null, true, 1, {}]) await assert.rejects(service.createInvitation(token, { format }), { code: "AUTH_INVALID" });
+  assert.equal(state.sessionCalls, 0);
+});
+
+test("code formatting shares lookup and inspection/register quotas without changing legacy link digests", async () => {
+  const code = "0123-4567-89AB-CDEF-GHJK";
+  const variants = [code, code.toLowerCase(), "0123456789ABCDEFGHJK", " 0123 4567 89ab cdef ghjk "];
+  for (const value of variants) {
+    await service.inspectInvitation({ token: value, peerAddress: "192.0.2.20" });
+    assert.deepEqual(state.inspectedInvitationHash, invitationDigest(code));
+  }
+  for (let i = 2; i < captured.length; i += 2) {
+    assert.deepEqual(captured[i].hash, captured[0].hash);
+    assert.deepEqual(captured[i + 1].hash, captured[1].hash);
+    assert.deepEqual(captured[i].options.network.bucketHash, captured[0].options.network.bucketHash);
+  }
+  captured = [];
+  for (const value of variants.slice(0, 2)) {
+    assert.deepEqual(await service.register({ invitationToken: value, email: "client@example.invalid", pseudonym: "Client", password, ageDeclared: true, peerAddress: "192.0.2.20" }), { status: "verification_pending" });
+    assert.deepEqual(captured.findLast((item) => item.user).invitationHash, invitationDigest(code));
+  }
+  const budgets = captured.filter((item) => item.options);
+  assert.deepEqual(budgets[1].hash, budgets[3].hash); assert.equal(budgets[1].options.limit, 3);
+  const legacy = "-----------------------AAAAAAAAAAAAAAAAAAAA";
+  await service.inspectInvitation({ token: legacy, peerAddress: "192.0.2.20" });
+  assert.deepEqual(state.inspectedInvitationHash, tokenDigest(legacy));
 });
 
 const syntheticClient = (overrides = {}) => ({ id: "a".repeat(32), createdAt: now - 1000, pseudonym: "Synthetic client",

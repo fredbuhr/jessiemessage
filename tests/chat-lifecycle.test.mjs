@@ -1698,3 +1698,55 @@ test("viewer swipes keep pinch zoom and cancelled or multi-touch gestures from c
   start();end();await flush();
   assert.equal(galleries().length,1);assert.match(galleries()[0].path,/gallery\?limit=1&before=3$/,'one completed horizontal swipe uses the displayed message cursor');
 });
+
+function receivedFixture(intercept) {
+  const conversation = { id: id(101), peerName: "Synthetic received client" };
+  const items = [3, 2, 1].map((n, i) => ({ conversation, unread: i < 2,
+    message: { id: id(800 + n), sequence: String(n), sender: "peer", body: n === 3 ? "<script>private body</script>" : `Synthetic received ${n}`, createdAt: now - (3 - n) * 1000, deletedAt: null } }));
+  const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: (path, options, state) => {
+    if (path === "/api/chat/admin/capabilities") return response(200, { enabled: true, inbox: { enabled: true } });
+    const custom = intercept?.(path, options, state, items); if (custom !== undefined) return custom;
+    if (path.startsWith("/api/chat/admin/inbox?")) return response(200, { items, hasMore: false, nextCursor: null });
+  } });
+  return { f, items };
+}
+test("admin overview displays every incoming message without a composer or automatic read, then opens its conversation", async () => {
+  const { f, items } = receivedFixture();
+  try {
+    await flush(); assert.equal(f.inspect().selected, null); assert.equal(f.element("workspace").classList.contains("overview"), true);
+    const rows = f.element("received-list").children;
+    assert.deepEqual(rows.map(row => row.dataset.receivedId), items.map(item => item.message.id));
+    assert.ok(contents(rows[0]).includes("<script>private body</script>"));
+    assert.equal(rows[0].classList.contains("is-unread"), true); assert.equal(rows[2].classList.contains("is-unread"), false);
+    assert.equal(f.calls.some(call => /\/read$/.test(call.path)), false);
+    assert.equal(f.element("message-body").disabled, true);
+    for (const handler of rows[0].events.get("click")) handler({}); await flush();
+    assert.equal(f.inspect().selected, id(101)); assert.equal(f.element("received-overview").hidden, true);
+  } finally { await f.hide(); }
+});
+test("received preview is removed on hide and a late response cannot restore it for a different owner", async () => {
+  const pending = pause(); let hold = true;
+  const { f, items } = receivedFixture((path, _options, state) => {
+    if (!path.startsWith("/api/chat/admin/inbox?")) return;
+    if (hold) return pending.promise;
+    if (state.currentSession.user.id === id(2)) return response(200, { items: [], hasMore: false, nextCursor: null });
+  });
+  try {
+    await flush(); await f.hide(); hold = false;
+    pending.resolve(response(200, { items, hasMore: false, nextCursor: null })); await flush();
+    assert.equal(f.element("received-list").children.length, 0);
+    f.state.currentSession = session(2, "B".repeat(43), "admin"); await f.show();
+    assert.equal(f.element("received-list").children.length, 0);
+    assert.ok(!contents(f.element("workspace")).includes("<script>private body</script>"));
+  } finally { await f.hide(); }
+});
+test("failed received refresh clears old previews and explicit retry reuses only GET", async () => {
+  let fail = false;
+  const { f } = receivedFixture(path => path.startsWith("/api/chat/admin/inbox?") && fail ? response(503, { error: "messaging_unavailable" }) : undefined);
+  try {
+    await flush(); fail = true; await f.click("refresh-received"); assert.equal(f.element("received-list").children.length, 0);
+    assert.ok(contents(f.element("received-status")).includes("Actualiser"));
+    fail = false; await f.click("refresh-received"); assert.equal(f.element("received-list").children.length, 3);
+    assert.equal(f.calls.filter(call => call.path.startsWith("/api/chat/admin/inbox?")).some(call => call.options.method !== "GET"), false);
+  } finally { await f.hide(); }
+});

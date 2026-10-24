@@ -3,6 +3,7 @@ import { CLIENT_ADMISSION_POLICY } from "./admission.mjs";
 import { readFile } from "node:fs/promises";
 import { checkMutation, httpError, isToken, readJson, reply, safeSession, sameText, sessionCookie, sessionToken } from "../auth/http.mjs";
 import { decodeAccessCursor, validateAccessPage } from "./pagination.mjs";
+import { formatInvitationCode, isInvitationSecret } from "./invitation-code.mjs";
 
 const CLIENT_COOKIE = "__Host-jessie_client";
 const publicRoot = new URL("../../public/", import.meta.url);
@@ -61,13 +62,20 @@ export function safeClientSession(session) {
   return { user: { id: user.id, role: "client", pseudonym: user.pseudonym }, csrf: session.csrf, expiresAt: session.expiresAt,
     access: { state: access.state, admissionPolicy: CLIENT_ADMISSION_POLICY, invitationConsumed: access.invitationConsumed, emailVerified: access.emailVerified, ageAssured: access.ageAssured, approved: access.approved, expiresAt: access.expiresAt } };
 }
-function safeInvitation(value, created = false, origin) {
+function safeInvitation(value, created = false, origin, format = "link") {
   if (!value || typeof value.id !== "string" || !idPattern.test(value.id) || !date(value.expiresAt) || !accessDays(value.accessDays)) throw httpError(503, "authentication_unavailable");
   const result = { id: value.id, expiresAt: value.expiresAt, accessDays: value.accessDays };
   if (created) {
-    const prefix = `${origin}/access#invitation=`;
-    if (typeof value.url !== "string" || !value.url.startsWith(prefix) || !isToken(value.url.slice(prefix.length))) throw httpError(503, "authentication_unavailable");
-    result.url = value.url;
+    if (format === "code") {
+      if (value.format !== "code" || typeof value.code !== "string" || formatInvitationCode(value.code) !== value.code
+        || Object.hasOwn(value, "url")) throw httpError(503, "authentication_unavailable");
+      Object.assign(result, { format: "code", code: value.code });
+    } else {
+      const prefix = `${origin}/access#invitation=`;
+      if (value.format !== undefined && value.format !== "link" || Object.hasOwn(value, "code")
+        || typeof value.url !== "string" || !value.url.startsWith(prefix) || !isToken(value.url.slice(prefix.length))) throw httpError(503, "authentication_unavailable");
+      result.url = value.url;
+    }
   } else {
     if (!millisecondDate(value.createdAt) || !["pending", "used", "expired", "revoked"].includes(value.state)
       || !(value.consumedById === null || typeof value.consumedById === "string" && idPattern.test(value.consumedById))) throw httpError(503, "authentication_unavailable");
@@ -139,6 +147,8 @@ export function createAccessHandler(service, { origin, clock = Date.now }) {
     if (!allowed.includes(method)) { reply(response, method, 405, { error: "method_not_allowed" }, { Allow: allowed.join(", ") }); return true; }
     try {
       if (method === "POST") checkMutation(request, origin, pathname, preAuth.has(pathname));
+      if (method === "POST" && ["/api/access/invitation", "/api/access/register"].includes(pathname)
+        && requestUrl.searchParams.size) throw httpError(400, "invalid_request");
       let page;
       if (method === "GET" && pathname.startsWith("/api/")) {
         if (["/api/admin/clients", "/api/admin/invitations"].includes(pathname)) page = pageQuery(requestUrl, pathname.endsWith("clients") ? "clients" : "invitations");
@@ -162,9 +172,11 @@ export function createAccessHandler(service, { origin, clock = Date.now }) {
       else if (pathname === "/api/admin/invitations" && method === "GET") {
         reply(response, method, 200, safePage(await service.listInvitations(adminToken, page), "invitations", page, origin));
       } else if (pathname === "/api/admin/invitations") {
-        const body = shape(await readJson(request), ["lifetimeHours", "accessDays"]);
-        if (!Number.isInteger(body.lifetimeHours) || body.lifetimeHours < 1 || body.lifetimeHours > 720 || !accessDays(body.accessDays)) throw httpError(400, "invalid_request");
-        reply(response, method, 201, safeInvitation(await service.createInvitation(adminToken, body), true, origin));
+        const body = await readJson(request);
+        shape(body, ["lifetimeHours", "accessDays", ...(Object.hasOwn(body, "format") ? ["format"] : [])]);
+        if (!Number.isInteger(body.lifetimeHours) || body.lifetimeHours < 1 || body.lifetimeHours > 720 || !accessDays(body.accessDays)
+          || body.format !== undefined && !["link", "code"].includes(body.format)) throw httpError(400, "invalid_request");
+        reply(response, method, 201, safeInvitation(await service.createInvitation(adminToken, body), true, origin, body.format ?? "link"));
       } else if (pathname === "/api/admin/clients") {
         reply(response, method, 200, safePage(await service.listClients(adminToken, page), "clients", page, origin));
       } else if (member?.[3] === "renew") {
@@ -185,7 +197,7 @@ export function createAccessHandler(service, { origin, clock = Date.now }) {
         reply(response, method, changed ? 200 : 404, changed ? { status: member[3] === "approve" ? "approved" : "revoked" } : { error: "not_found" });
       } else if (pathname === "/api/access/invitation") {
         const body = shape(await readJson(request), ["token"]);
-        if (!isToken(body.token)) throw httpError(400, "invalid_request");
+        if (!isInvitationSecret(body.token)) throw httpError(400, "invalid_request");
         const invitation = await service.inspectInvitation({ token: body.token, peerAddress });
         if (!invitation) throw httpError(401, "invalid_credentials");
         if (!date(invitation.expiresAt) || !accessDays(invitation.accessDays)) throw httpError(503, "authentication_unavailable");
@@ -193,7 +205,7 @@ export function createAccessHandler(service, { origin, clock = Date.now }) {
       } else if (pathname === "/api/access/register") {
         const body = shape(await readJson(request), ["invitationToken", "email", "pseudonym", "password", "ageDeclared"]);
         const login = credentials(body);
-        if (!isToken(body.invitationToken) || typeof body.pseudonym !== "string" || !body.pseudonym.trim() || body.pseudonym.length > 64 || body.password.length < 8 || body.ageDeclared !== true) throw httpError(400, "invalid_request");
+        if (!isInvitationSecret(body.invitationToken) || typeof body.pseudonym !== "string" || !body.pseudonym.trim() || body.pseudonym.length > 64 || body.password.length < 8 || body.ageDeclared !== true) throw httpError(400, "invalid_request");
         const result = await service.register({ ...login, pseudonym: body.pseudonym, invitationToken: body.invitationToken, ageDeclared: true, peerAddress });
         if (result?.status !== "verification_pending") throw httpError(503, "authentication_unavailable");
         reply(response, method, 202, { status: "verification_pending" });

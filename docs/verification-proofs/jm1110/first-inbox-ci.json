@@ -1,0 +1,18 @@
+{
+  "source": "c731df1656fb4528cb42940e73629de0b4567a72",
+  "tree": "326c50c5145a97dc49c1ebaac7efcef29809a47a",
+  "run": 40099075100,
+  "qualified": false,
+  "fixedTestExpectations": [
+    "Mobile admin rehearsals open Clients et filtres before selecting a conversation.",
+    "New Chrome overview switches language through its visible Options menu.",
+    "Admin capability now strictly expects inbox.enabled; client expectation unchanged.",
+    "Direct SQL client-token refusal uses existing CHAT_FORBIDDEN from missing admin MFA; ordering/pagination assertions preceding that point passed.",
+    "Invitation POSTs must have no query; GET invitation-list pagination remains permitted. All referrers still checked."
+  ],
+  "local": {
+    "focusedPassed": 183,
+    "buildSyntaxFiles": 778
+  },
+  "productionUntouched": true
+}

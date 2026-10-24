@@ -183,6 +183,51 @@ test("invitation date and duration are reformatted live without repeating or exp
   } finally { f.dispose(); }
 });
 
+test("invitation code validates explicitly in either language and reuses registration without URL or storage exposure", async () => {
+  const code = "ABCDEFGHJKMNPQRSTVWX", expiresAt = Date.now() + 3600000;
+  const f = controller("access", path => path === "/api/access/session" ? response({}, 401) : path === "/api/access/invitation" ? response({ expiresAt, accessDays: 30 }) : path === "/api/access/register" ? response({ status: "verification_pending" }) : capability());
+  try {
+    await flush(); f.get("show-invitation-code").dispatchEvent(new Event("click"));
+    assert.equal(f.get("client-login-form").hidden, true); assert.equal(f.get("invitation-code-form").hidden, false);
+    f.input("invitation-code", "abcd efgh-jkmn-pqrs tvwx"); f.language("en");
+    assert.equal(f.get("invitation-code").value, "abcd efgh-jkmn-pqrs tvwx"); assert.equal(f.get("validate-invitation-code").textContent, "Validate my code");
+    f.submit("invitation-code-form"); await flush();
+    assert.equal(f.get("registration-form").hidden, false); assert.equal(f.get("invitation-code-form").hidden, true); assert.equal(f.get("invitation-code").value, "");
+    const inspection = f.calls.filter(call => call.path === "/api/access/invitation"); assert.equal(inspection.length, 1); assert.deepEqual(JSON.parse(inspection[0].options.body), { token: code });
+    assert.equal(f.calls.filter(call => call.path === "/api/access/register").length, 0);
+    f.input("registration-email", "synthetic@example.invalid"); f.input("registration-name", "Synthetic client"); f.input("registration-password", "synthetic password"); f.get("age-declared").checked = true;
+    f.submit("registration-form"); await flush();
+    const registration = f.calls.find(call => call.path === "/api/access/register"); assert.equal(JSON.parse(registration.options.body).invitationToken, code);
+    assert.equal(f.location.hash, ""); assert.equal(f.get("registration-form").hidden, true); assert.equal(f.get("invitation-code").value, "");
+    assert.ok(f.writes.every(([key]) => key === "jessiemessage.language")); assert.ok(!f.document.root.textContent.includes(code));
+  } finally { f.dispose(); }
+});
+
+test("invalid invitation code has one generic retryable message and accepts only ASCII spaces and hyphens", async () => {
+  const f = controller("access", path => path === "/api/access/session" ? response({}, 401) : path === "/api/access/invitation" ? response({ error: "invalid_invitation" }, 401) : capability());
+  try {
+    await flush(); f.get("show-invitation-code").dispatchEvent(new Event("click"));
+    for (const input of ["bad", "ABCD\u00a0EFGH-JKMN-PQRS-TVWX", "A".repeat(18) + "ß", "A".repeat(17) + "ﬃ", "ABCD EFGH-JKMN-PQRS-TVWX"]) {
+      f.input("invitation-code", input); f.submit("invitation-code-form"); await flush();
+      assert.equal(f.get("access-status").textContent, "Ce code est invalide, expiré ou déjà utilisé."); assert.equal(f.get("invitation-code-form").hidden, false);
+      assert.equal(f.get("validate-invitation-code").disabled, false);
+    }
+    assert.equal(f.calls.filter(call => call.path === "/api/access/invitation").length, 1);
+    f.language("en"); assert.equal(f.get("access-status").textContent, "This code is invalid, expired or already used.");
+    f.get("cancel-invitation-code").dispatchEvent(new Event("click")); assert.equal(f.get("invitation-code").value, ""); assert.equal(f.get("client-login-form").hidden, false);
+  } finally { f.dispose(); }
+});
+
+test("a hidden invitation code inspection cannot reveal registration or replay itself after return", async () => {
+  const pending = deferred(), f = controller("access", path => path === "/api/access/session" ? response({}, 401) : path === "/api/access/invitation" ? pending.promise : capability());
+  try {
+    await flush(); f.get("show-invitation-code").dispatchEvent(new Event("click")); f.input("invitation-code", "ABCD-EFGH-JKMN-PQRS-TVWX"); f.submit("invitation-code-form"); await flush();
+    f.hide(); pending.resolve(response({ expiresAt: Date.now() + 3600000, accessDays: 30 })); await flush();
+    assert.equal(f.get("registration-form").hidden, true); assert.equal(f.get("invitation-code").value, ""); await f.show();
+    assert.equal(f.calls.filter(call => call.path === "/api/access/invitation").length, 1); assert.equal(f.get("registration-form").hidden, true); assert.equal(f.get("invitation-code-form").hidden, false);
+  } finally { f.dispose(); }
+});
+
 test("recovery malformed capability switches its retry error without another HTTP request", async () => {
   const f = controller("recover", () => malformed(), { language: "en" });
   try {

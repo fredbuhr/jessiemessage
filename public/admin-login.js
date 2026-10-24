@@ -44,6 +44,7 @@ let needsSession = true;
 let resumeAnonymousLogin = false;
 let nextSessionNotice = "";
 let proofRecoveryAvailable = true;
+let invitationCreationBlocked = false;
 const controllers = new Set();
 const accessTools = document.getElementById("access-tools");
 const accessPages = {
@@ -80,8 +81,7 @@ function clearCredentials() {
 function clearAccess() {
   accessTools.hidden = true;
   document.body.classList.remove("has-access");
-  document.getElementById("new-invitation").hidden = true;
-  document.getElementById("invitation-link").value = "";
+  clearInvitation();
   for (const id of ["invitations-list", "clients-list"]) {
     const list = document.getElementById(id); adminUI.forget(list); list.replaceChildren();
   }
@@ -203,6 +203,8 @@ function setBusy(value) {
   logoutAllButton.disabled = value;
   form.setAttribute("aria-busy", String(value));
   for (const root of [accessTools, document.getElementById("devices-panel")]) for (const button of root.querySelectorAll("button")) button.disabled = value || button.dataset.unavailable === "true";
+  document.getElementById("invitation-create").disabled = value || invitationCreationBlocked;
+  document.getElementById("invitation-format").disabled = value;
 }
 
 async function request(path, { body, mutation = false, login = false } = {}) {
@@ -448,9 +450,9 @@ function paintInvitations(invitations) {
       adminLine("Créée le {created} · valable jusqu’au {expires}", { created: adminUI.dateParam(invitation.createdAt), expires: adminUI.dateParam(invitation.expiresAt) }),
       invitation.accessDays === null ? "Accès sans limite de durée après validation." : adminLine("Accès de {days} jours après validation.", { days: adminUI.numberParam(invitation.accessDays) }),
     ]);
-    if (invitation.state === "pending") actionButton(card, "Révoquer le lien", async () => {
+    if (invitation.state === "pending") actionButton(card, "Révoquer l’invitation", async () => {
       await request(`/api/admin/invitations/${invitation.id}/revoke`, { mutation: true });
-      document.getElementById("new-invitation").hidden = true; document.getElementById("invitation-link").value = "";
+      clearInvitation();
       await refreshAccessLists({ afterMutation: true }); notice("L’invitation est révoquée.");
     });
     container.append(card);
@@ -616,13 +618,52 @@ document.getElementById("invitation-unlimited").addEventListener("change", (even
   document.getElementById("invitation-days").disabled = event.target.checked;
   document.getElementById("invitation-days").required = !event.target.checked;
 });
+function clearInvitation() {
+  document.getElementById("new-invitation").hidden = true;
+  for (const id of ["invitation-link", "invitation-code-result"]) document.getElementById(id).value = "";
+  for (const id of ["invitation-link-field", "invitation-code-result-field"]) document.getElementById(id).hidden = true;
+}
+function invitationResult(value, format) {
+  const fields = ["id", "expiresAt", "accessDays", ...(format === "code" ? ["format", "code"] : ["url"])];
+  if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length !== fields.length || fields.some(key => !Object.hasOwn(value, key))
+    || !/^[a-f0-9]{32}$/.test(value.id) || !Number.isSafeInteger(value.expiresAt) || value.expiresAt <= Date.now() || value.expiresAt > 253402300799999
+    || !(value.accessDays === null || Number.isSafeInteger(value.accessDays) && value.accessDays >= 1 && value.accessDays <= 3650)) throw new Error("invalid_invitation");
+  if (format === "code") {
+    if (value.format !== "code" || typeof value.code !== "string" || !/^[0-9A-HJKMNP-TV-Z]{4}(?:-[0-9A-HJKMNP-TV-Z]{4}){4}$/.test(value.code)) throw new Error("invalid_invitation");
+    return value.code;
+  }
+  if (typeof value.url !== "string" || value.url.length > 256) throw new Error("invalid_invitation");
+  const url = new URL(value.url);
+  if (url.origin !== location.origin || url.username || url.password || url.pathname !== "/access" || url.search || !/^#invitation=[A-Za-z0-9_-]{43}$/.test(url.hash) || url.href !== value.url) throw new Error("invalid_invitation");
+  return value.url;
+}
 document.getElementById("invitation-form").addEventListener("submit", (event) => {
   event.preventDefault(); void accessAction(async () => {
-    const invitation = await request("/api/admin/invitations", { mutation: true, body: { lifetimeHours: Number(document.getElementById("invitation-hours").value), accessDays: document.getElementById("invitation-unlimited").checked ? null : Number(document.getElementById("invitation-days").value) } });
-    await refreshAccessLists({ afterMutation: true });
-    document.getElementById("invitation-link").value = invitation.url;
+    if (invitationCreationBlocked) { notice("L’invitation a peut-être été créée. Consulte la liste puis actualise les accès avant d’en créer une autre.", true); return; }
+    const ticket = generation, format = document.getElementById("invitation-format").value;
+    if (!["code", "link"].includes(format)) throw new Error("invalid_invitation_format");
+    clearInvitation(); let secret;
+    try {
+      const invitation = await request("/api/admin/invitations", { mutation: true, body: { lifetimeHours: Number(document.getElementById("invitation-hours").value), accessDays: document.getElementById("invitation-unlimited").checked ? null : Number(document.getElementById("invitation-days").value), format } });
+      secret = invitationResult(invitation, format);
+    } catch (error) {
+      if (error.stale) throw error;
+      if (error.status && error.status < 500) throw error;
+      invitationCreationBlocked = true;
+      notice("L’invitation a peut-être été créée. Consulte la liste puis actualise les accès avant d’en créer une autre.", true); return;
+    }
+    await verifyIdentity(ticket, { afterMutation: true }); if (!current(ticket)) throw stale();
+    const code = format === "code";
+    document.getElementById(code ? "invitation-code-result" : "invitation-link").value = secret;
+    document.getElementById(code ? "invitation-code-result-field" : "invitation-link-field").hidden = false;
     document.getElementById("new-invitation").hidden = false;
-    notice("L’invitation est créée. Tu peux transmettre le lien au client.");
+    try { await refreshAccessLists({ afterMutation: true }); }
+    catch (error) {
+      if (error.stale) throw error;
+      await verifyIdentity(ticket, { afterMutation: true });
+      notice("L’invitation est créée. Copie-la maintenant ; la liste n’a pas pu être actualisée.", true); return;
+    }
+    notice(code ? "L’invitation est créée. Tu peux transmettre le code au client." : "L’invitation est créée. Tu peux transmettre le lien au client.");
   });
 });
 document.getElementById("copy-invitation").addEventListener("click", () => { void accessAction(async () => {
@@ -632,7 +673,14 @@ document.getElementById("copy-invitation").addEventListener("click", () => { voi
   try { await navigator.clipboard.writeText(input.value); if (ticket === generation) notice("Le lien est copié."); }
   catch { if (ticket !== generation) return; input.focus(); input.select(); notice("Sélectionne puis copie le lien affiché."); }
 }); });
-document.getElementById("refresh-access").addEventListener("click", () => { void accessAction(async () => { await refreshAccessLists(); notice("Les accès sont actualisés."); }); });
+document.getElementById("copy-invitation-code").addEventListener("click", () => { void accessAction(async () => {
+  const ticket = generation, input = document.getElementById("invitation-code-result");
+  await verifyIdentity(ticket);
+  if (!input.value) return;
+  try { await navigator.clipboard.writeText(input.value); if (ticket === generation) notice("Le code est copié."); }
+  catch { if (ticket !== generation) return; input.focus(); input.select(); notice("Sélectionne puis copie le code affiché."); }
+}); });
+document.getElementById("refresh-access").addEventListener("click", () => { void accessAction(async () => { await refreshAccessLists(); invitationCreationBlocked = false; notice("Les accès sont actualisés."); }); });
 
 for (const kind of ["invitations", "clients"]) {
   document.getElementById(`${kind}-next`).addEventListener("click", () => {

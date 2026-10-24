@@ -2,7 +2,7 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin: 0; min-height: 100vh; }
-button, input { font: inherit; }
+button, input, select { font: inherit; }
 a { color: inherit; }
 .page { min-height: 100vh; display: flex; flex-direction: column; background: radial-gradient(ellipse at 80% 30%, #2c192a 0, transparent 46%), #100d12; }
 .topbar { width: min(1120px, calc(100% - 40px)); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 24px 0; }
@@ -18,8 +18,8 @@ h1 { margin: 0 0 16px; font-size: clamp(30px, 6vw, 39px); font-weight: 730; line
 .status.is-error { color: #ffb8cb; }
 .field { display: grid; gap: 9px; margin-bottom: 20px; }
 label { font-size: 14px; font-weight: 650; }
-input { width: 100%; padding: 13px 14px; color: #f5eef2; background: #100d12; border: 1px solid #897287; border-radius: 11px; min-height: 46px; }
-input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid #d8b999; outline-offset: 4px; }
+input, select { width: 100%; padding: 13px 14px; color: #f5eef2; background: #100d12; border: 1px solid #897287; border-radius: 11px; min-height: 46px; }
+input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid #d8b999; outline-offset: 4px; }
 .field-help { margin: 0; color: #bcaebb; font-size: 12px; line-height: 1.6; }
 .button { display: block; width: 100%; min-height: 46px; padding: 13px 16px; border-radius: 11px; cursor: pointer; font-weight: 650; font-size: 14px; line-height: 1.4; text-align: center; text-decoration: none; overflow-wrap: anywhere; }
 .button-primary { color: #f5eef2; background: #71354f; border: 1px solid #b37894; }
@@ -40,6 +40,9 @@ h2 { font-size: 19px; line-height: 1.4; margin: 0 0 18px; color: #f5eef2; }
 .checkbox-field { display: flex; align-items: flex-start; gap: 12px; line-height: 1.6; margin-bottom: 20px; }
 .checkbox-field input { width: 20px; min-height: 20px; margin: 1px 0 0; accent-color: #71354f; flex-shrink: 0; }
 .new-invitation { display: grid; gap: 12px; padding: 20px; margin-top: 20px; background: #100d12; border: 1px solid #897287; border-radius: 12px; }
+.invitation-result-field { display: grid; gap: 12px; min-width: 0; }
+.invitation-payment-help { margin: 0 0 18px; }
+#invitation-code-result { font-family: ui-monospace, monospace; font-size: clamp(.65rem, 2.8vw, .93rem); letter-spacing: .025em; }
 .access-list { display: grid; gap: 12px; margin: 16px 0 24px; }
 .access-item { padding: 18px; border: 1px solid #423343; border-radius: 12px; background: #100d12; overflow-wrap: anywhere; }
 .access-item h3 { font-size: 15px; margin: 0 0 8px; color: #f5eef2; }

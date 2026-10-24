@@ -1,0 +1,18 @@
+{
+  "source": "4a7ff645b2dae61b5a3749fb2552e6a20b8f82ca",
+  "tree": "0ad2ca27d3c4189ade88408579e6894c40b3b196",
+  "run": 40097764909,
+  "pr": 137,
+  "jobs": {
+    "verify": "success",
+    "auth-browser": "success",
+    "MariaDB10.11": "success",
+    "MariaDB11.4": "success",
+    "browser": "failure"
+  },
+  "failure": {
+    "test": "tests/browser/invitation-code.browser.mjs",
+    "reason": "Fixture asserted no query on every API URL, including legitimate GET invitation-list pagination. No secret-in-referrer failure established. The no-query rule now applies to invitation/register POSTs; all referrers remain checked."
+  },
+  "newRevisionReason": "User requested received-message overview; includes bounded correction to the initial browser assertion. New source requires qualification."
+}

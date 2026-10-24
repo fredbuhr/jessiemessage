@@ -179,3 +179,19 @@ globalThis.JessieI18n?.register({
 globalThis.JessieI18n?.register({"Accueil admin":"Admin home"});
 
 globalThis.JessieI18n?.register({"Diffusions":"Broadcasts","Annonces":"Announcements"});
+globalThis.JessieI18n?.register({
+  "Invitation à transmettre": "Invitation to share",
+  "Code individuel": "Individual code",
+  "Lien d’invitation": "Invitation link",
+  "Validité de l’invitation (heures)": "Invitation validity (hours)",
+  "Après vérification du paiement, transmets le code en privé. Le client le saisit sur jessiemessage.com.": "After checking payment, send the code privately. The client enters it on jessiemessage.com.",
+  "Code à transmettre au client": "Code to share with the client",
+  "Ce code n’est affiché qu’à sa création. Copie-le avant de quitter cette page.": "This code is only displayed when it is created. Copy it before leaving this page.",
+  "Copier le code": "Copy code",
+  "Révoquer l’invitation": "Revoke invitation",
+  "L’invitation est créée. Tu peux transmettre le code au client.": "The invitation is created. You can share the code with the client.",
+  "Le code est copié.": "The code is copied.",
+  "Sélectionne puis copie le code affiché.": "Select and copy the displayed code.",
+  "L’invitation a peut-être été créée. Consulte la liste puis actualise les accès avant d’en créer une autre.": "The invitation may have been created. Check the list and refresh access before creating another one.",
+  "L’invitation est créée. Copie-la maintenant ; la liste n’a pas pu être actualisée.": "The invitation is created. Copy it now; the list could not be refreshed."
+});

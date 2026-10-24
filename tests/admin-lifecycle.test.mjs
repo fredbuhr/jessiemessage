@@ -41,10 +41,11 @@ class Element {
 const clientRow = (index = 3, changes = {}) => ({ id: index.toString(16).padStart(32, "0"), pseudonym: `Client ${index}`, email: `client-${index}@example.invalid`,
   status: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: true, createdAt: initialTime - index, accessExpiresAt: initialTime + 86400000, ...changes });
 const invitationRow = (index = 2) => ({ id: index.toString(16).padStart(32, "0"), createdAt: initialTime - index, expiresAt: initialTime + 3600000, accessDays: 30, state: "pending" });
+const createdLink = letter => ({ id: "2".repeat(32), expiresAt: initialTime + 3600000, accessDays: 30, url: `https://example.invalid/access#invitation=${letter.repeat(43)}` });
 function harness({ visible = true, currentSession = session(), intercept, clipboard, confirm = () => true,
   pathname = "/admin/clients", notification = null, search = "",
   clients = [clientRow(3, { pseudonym: "Client synthétique", email: "private-client@example.invalid", accessExpiresAt: null })],
-  invitations = [invitationRow(2)] } = {}) {
+  invitations = [invitationRow(2)], invitationFormat = "link" } = {}) {
   const nodes = new Map(), documentEvents = new Map(), windowEvents = new Map(), calls = [], timers = new Map(), history = [], navigations = [];
   let now = initialTime, timerId = 0;
   const element = (id, tagName = "div") => { if (!nodes.has(id)) { const node = new Element(tagName); node.id = id; nodes.set(id, node); } return nodes.get(id); };
@@ -52,11 +53,12 @@ function harness({ visible = true, currentSession = session(), intercept, clipbo
   const email = element("email", "input"), password = element("password", "input"), factor = element("factor", "input");
   password.type = "password";
   form.append(email, password, factor, element("login-button", "button")); form.hidden = true; connected.hidden = true; tools.hidden = true;
-  const invitationForm = element("invitation-form", "form"), createButton = new Element("button");
+  const invitationForm = element("invitation-form", "form"), createButton = element("invitation-create", "button");
+  const invitationFormatInput = element("invitation-format", "select"); invitationFormatInput.value = invitationFormat;
   const hours = element("invitation-hours", "input"), days = element("invitation-days", "input"), unlimited = element("invitation-unlimited", "input");
   hours.value = hours.defaultValue = "72"; days.value = days.defaultValue = "30";
-  invitationForm.append(hours, days, unlimited, createButton);
-  tools.append(invitationForm, element("copy-invitation", "button"), element("refresh-access", "button"), element("clients-list"), element("invitations-list"));
+  invitationForm.append(invitationFormatInput, hours, days, unlimited, createButton);
+  tools.append(invitationForm, element("copy-invitation", "button"), element("copy-invitation-code", "button"), element("refresh-access", "button"), element("clients-list"), element("invitations-list"));
   for (const kind of ["invitations", "clients"]) {
     const navigation = element(`${kind}-pagination`);
     navigation.append(element(`${kind}-page-note`), element(`${kind}-next`, "button"), element(`${kind}-first`, "button"));
@@ -66,12 +68,12 @@ function harness({ visible = true, currentSession = session(), intercept, clipbo
   const document = { readyState: "loading", visibilityState: visible ? "visible" : "hidden", body: new Element("body"), getElementById: element,
     createElement: (tagName) => new Element(tagName), addEventListener: (name, handler) => documentEvents.set(name, handler) };
   const state = { currentSession, clipboardCalls: [], clients, invitations };
-  const pageLocation = { pathname, search, replace: value => navigations.push(value) };
+  const pageLocation = { pathname, search, origin: "https://example.invalid", replace: value => navigations.push(value) };
   const context = vm.createContext({ document, window: { confirm, addEventListener: (name, handler) => windowEvents.set(name, handler) },
     location: pageLocation, JessieNotificationLink: { read: () => notification }, history: { replaceState(...args) {
       history.push(args); const target = new URL(args[2], "https://example.invalid");
       pageLocation.pathname = target.pathname; pageLocation.search = target.search;
-    } }, AbortController, URLSearchParams,
+    } }, AbortController, URLSearchParams, URL,
     navigator: { clipboard: { writeText: async (value) => { state.clipboardCalls.push(value); if (clipboard) return clipboard(value); } } },
     Date: class extends Date { static now() { return now; } },
     setTimeout: (handler, delay) => { const id = ++timerId; timers.set(id, { handler, at: now + delay }); return id; }, clearTimeout: (id) => timers.delete(id),
@@ -84,7 +86,8 @@ function harness({ visible = true, currentSession = session(), intercept, clipbo
       if (path === "/api/auth/session") return response(state.currentSession ? 200 : 401, state.currentSession ?? { error: "authentication_required" });
       if (path === "/api/admin/access") return response(200, { capabilities: {} });
       if (path === "/api/chat/admin/capabilities") return response(200, { enabled: true });
-      if (path === "/api/admin/invitations" && options.method === "POST") return response(201, { url: `https://example.invalid/access#invitation=${"B".repeat(43)}` });
+      if (path === "/api/admin/invitations" && options.method === "POST") return response(201, { id: "2".repeat(32), expiresAt: initialTime + 3600000, accessDays: 30,
+        ...(JSON.parse(options.body).format === "code" ? { format: "code", code: "ABCD-EFGH-JKMN-PQRS-TVWX" } : { url: `https://example.invalid/access#invitation=${"B".repeat(43)}` }) });
       for (const kind of ["invitations", "clients"]) {
         if (!path.startsWith(`/api/admin/${kind}?`)) continue;
         const url = new URL(path, "https://example.invalid"), cursor = url.searchParams.get("cursor");
@@ -115,7 +118,7 @@ const contents = (node) => [node.value, node.textContent, ...node.children.map(c
 const posts = (f) => f.calls.filter((call) => call.options.method === "POST");
 function privateCleared(f) {
   for (const id of ["connected", "access-tools", "admin-chat-link", "new-invitation"]) assert.equal(f.element(id).hidden, true, id);
-  assert.equal(f.element("connected-name").textContent, ""); assert.equal(f.element("invitation-link").value, "");
+  assert.equal(f.element("connected-name").textContent, ""); assert.equal(f.element("invitation-link").value, ""); assert.equal(f.element("invitation-code-result").value, "");
   assert.equal(f.element("clients-list").children.length, 0); assert.equal(f.element("invitations-list").children.length, 0);
   for (const id of ["email", "password", "factor"]) assert.equal(f.element(id).value, "", id);
 }
@@ -308,7 +311,7 @@ test("a hidden pending logout is not replayed and its old finally cannot unlock 
   await f.submit("invitation-form"); assert.equal(f.createButton.disabled, true);
   logout.resolve(response(200, { status: "signed_out" })); await flush(); assert.equal(f.createButton.disabled, true);
   assert.equal(f.element("connected-name").textContent, "Jess");
-  create.resolve(response(201, { url: `https://example.invalid/access#invitation=${"C".repeat(43)}` })); await flush();
+  create.resolve(response(201, createdLink("C"))); await flush();
   assert.equal(f.createButton.disabled, false); assert.equal(posts(f).filter((call) => call.path === "/api/auth/logout").length, 1);
 });
 
@@ -318,14 +321,14 @@ test("a late clipboard result and finally cannot affect the new visible administ
   await flush(); await f.submit("invitation-form"); await f.click("copy-invitation"); await f.hide(); await f.show();
   await f.submit("invitation-form"); assert.equal(f.createButton.disabled, true);
   copy.resolve(); await flush(); assert.equal(f.createButton.disabled, true); assert.notEqual(f.element("auth-status").textContent, "Le lien est copié.");
-  create.resolve(response(201, { url: `https://example.invalid/access#invitation=${"D".repeat(43)}` })); await flush();
+  create.resolve(response(201, createdLink("D"))); await flush();
   assert.equal(f.createButton.disabled, false); assert.equal(f.state.clipboardCalls.length, 1);
 });
 
 test("late invitation creation stays hidden and resuming performs GET validation without replaying its POST", async () => {
   const create = pause(), f = harness({ intercept: (path, options) => path === "/api/admin/invitations" && options.method === "POST" ? create.promise : undefined });
   await flush(); await f.submit("invitation-form"); await f.hide();
-  create.resolve(response(201, { url: `https://example.invalid/access#invitation=${"E".repeat(43)}` })); await flush(); privateCleared(f);
+  create.resolve(response(201, createdLink("E"))); await flush(); privateCleared(f);
   await f.show(); assert.equal(posts(f).length, 1); assert.equal(f.element("invitation-link").value, "");
   assert.equal(f.element("connected-name").textContent, "Jess");
 });
@@ -379,7 +382,7 @@ test("a failed final GET proof after committed invitation creation remains an un
     const f = harness({ intercept: (path, options) => {
       if (path === "/api/admin/invitations" && options.method === "POST") {
         proofFailure = true;
-        return response(201, { url: `https://example.invalid/access#invitation=${"G".repeat(43)}` });
+        return response(201, createdLink("G"));
       }
       if (path === "/api/auth/session" && proofFailure) { proofFailure = false; return response(status, { error: "synthetic_get_failure" }); }
       return undefined;
@@ -395,7 +398,7 @@ test("a failed final GET proof after committed invitation creation remains an un
 test("an old proof rejected after hide and return cannot clear the newly validated administrator view", async () => {
   const oldProof = pause(); let gateProof = false;
   const f = harness({ intercept: (path, options) => {
-    if (path === "/api/admin/invitations" && options.method === "POST") { gateProof = true; return response(201, { url: "https://example.invalid/access#invitation=old" }); }
+    if (path === "/api/admin/invitations" && options.method === "POST") { gateProof = true; return response(201, createdLink("H")); }
     if (path === "/api/auth/session" && gateProof) return oldProof.promise;
     return undefined;
   } });
@@ -802,4 +805,57 @@ test("administrator login keeps a closed continue target including client manage
     const f = harness({ pathname: "/admin/login", search }); await flush();
     assert.deepEqual(f.navigations, [expected]); assert.equal(posts(f).length, 0);
   }
+});
+
+test("individual invitation code is created and copied once, while link credentials stay empty and hide wipes the code", async () => {
+  const f = harness({ invitationFormat: "code" }); await flush(); await f.submit("invitation-form");
+  const creations = posts(f).filter(call => call.path === "/api/admin/invitations"); assert.equal(creations.length, 1);
+  assert.equal(JSON.parse(creations[0].options.body).format, "code");
+  assert.equal(f.element("invitation-code-result").value, "ABCD-EFGH-JKMN-PQRS-TVWX"); assert.equal(f.element("invitation-link").value, "");
+  assert.equal(f.element("invitation-code-result-field").hidden, false); assert.equal(f.element("invitation-link-field").hidden, true);
+  await f.click("copy-invitation-code"); assert.deepEqual(f.state.clipboardCalls, ["ABCD-EFGH-JKMN-PQRS-TVWX"]);
+  await f.hide(); privateCleared(f); await f.show();
+  assert.equal(f.element("invitation-code-result").value, ""); assert.equal(posts(f).filter(call => call.path === "/api/admin/invitations").length, 1);
+});
+
+test("mismatched or malformed creation credentials remain hidden and block another POST until explicit access refresh", async () => {
+  const code = { id: "2".repeat(32), expiresAt: initialTime + 3600000, accessDays: 30, format: "code", code: "ABCD-EFGH-JKMN-PQRS-TVWX" };
+  for (const [format, result] of [["code", createdLink("A")], ["code", { ...code, code: "AAAA-BBBB-CCCC-DDDD-IIII" }], ["code", { ...code, ownerId: "1".repeat(32) }], ["link", code], ["link", { ...createdLink("A"), url: `https://attacker.invalid/access#invitation=${"A".repeat(43)}` }]]) {
+    let invalid = true;
+    const f = harness({ invitationFormat: format, intercept: (path, options) => path === "/api/admin/invitations" && options.method === "POST" && invalid ? response(201, result) : undefined });
+    await flush(); await f.submit("invitation-form"); assert.equal(f.element("new-invitation").hidden, true);
+    assert.equal(f.element("invitation-code-result").value, ""); assert.equal(f.element("invitation-link").value, ""); assert.equal(f.createButton.disabled, true);
+    await f.submit("invitation-form"); assert.equal(posts(f).length, 1); assert.match(f.element("auth-status").textContent, /peut-être été créée/);
+    invalid = false; await f.click("refresh-access"); assert.equal(f.createButton.disabled, false); await f.submit("invitation-form"); assert.equal(posts(f).length, 2);
+  }
+});
+
+test("a failed list read preserves the validated created code for copying without replaying its creation", async () => {
+  let created = false, failList = true;
+  const f = harness({ invitationFormat: "code", intercept: (path, options) => {
+    if (path === "/api/admin/invitations" && options.method === "POST") { created = true; return undefined; }
+    if (created && path.startsWith("/api/admin/invitations?") && failList) { failList = false; return response(503, { error: "unavailable" }); }
+  } });
+  await flush(); await f.submit("invitation-form"); assert.equal(posts(f).length, 1);
+  assert.equal(f.element("invitation-code-result").value, "ABCD-EFGH-JKMN-PQRS-TVWX"); assert.match(f.element("auth-status").textContent, /Copie-la maintenant/);
+  await f.click("copy-invitation-code"); assert.deepEqual(f.state.clipboardCalls, ["ABCD-EFGH-JKMN-PQRS-TVWX"]); assert.equal(posts(f).length, 1);
+});
+
+test("an uncertain invitation POST never repeats and only an explicit successful list refresh unlocks creation", async () => {
+  let fail = true;
+  const f = harness({ invitationFormat: "code", intercept: (path, options) => path === "/api/admin/invitations" && options.method === "POST" && fail ? response(503, { error: "unavailable" }) : undefined });
+  await flush(); await f.submit("invitation-form"); assert.equal(f.createButton.disabled, true); await f.submit("invitation-form"); assert.equal(posts(f).length, 1);
+  fail = false; await f.click("refresh-access"); assert.equal(f.createButton.disabled, false); await f.submit("invitation-form"); assert.equal(posts(f).length, 2);
+  assert.equal(f.element("invitation-code-result").value, "ABCD-EFGH-JKMN-PQRS-TVWX");
+});
+
+test("a new administrator session after code creation cannot see the previous administrator's secret", async () => {
+  let changed = false;
+  const replacement = session("Other administrator", { user: { id: "4".repeat(32), role: "admin", pseudonym: "Other administrator" }, csrf: "E".repeat(43) });
+  const f = harness({ invitationFormat: "code", intercept: (path, options) => {
+    if (path === "/api/admin/invitations" && options.method === "POST") { changed = true; return undefined; }
+    if (path === "/api/auth/session" && changed) return response(200, replacement);
+  } });
+  await flush(); await f.submit("invitation-form"); assert.equal(posts(f).length, 1);
+  assert.equal(f.element("invitation-code-result").value, ""); assert.equal(f.element("new-invitation").hidden, true); assert.equal(f.element("connected-name").textContent, "Other administrator");
 });

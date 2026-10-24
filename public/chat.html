@@ -44,12 +44,16 @@
       <main id="workspace" class="workspace" hidden>
         <a class="conversation-skip" href="#message-scroll" data-jm-i18n="Aller à la conversation">Aller à la conversation</a>
         <aside id="inbox" class="inbox" hidden aria-labelledby="inbox-title">
-          <div class="inbox-head"><span class="eyebrow" data-jm-i18n="ESPACE PRIVÉ">ESPACE PRIVÉ</span><h1 id="inbox-title" tabindex="-1" data-jm-i18n="Messages">Messages</h1><p id="inbox-status" role="status"></p></div>
+          <div class="inbox-head"><button id="return-received" class="text-button mobile-received" type="button" data-jm-i18n="Messages reçus">Messages reçus</button><span class="eyebrow" data-jm-i18n="ESPACE PRIVÉ">ESPACE PRIVÉ</span><h1 id="inbox-title" tabindex="-1" data-jm-i18n="Messages">Messages</h1><p id="inbox-status" role="status"></p></div>
           <div id="conversations" class="conversations"></div>
           <button id="more-conversations" class="button secondary" type="button" hidden data-jm-i18n="Autres conversations">Autres conversations</button>
         </aside>
         <section id="client-aside" class="client-aside" hidden aria-label="Notre espace privé" data-jm-i18n-aria-label="Notre espace privé"><span class="eyebrow" data-jm-i18n="JUSTE ENTRE NOUS">JUSTE ENTRE NOUS</span><h1>Jessie.</h1><p data-jm-i18n="Retrouve ici notre conversation privée.">Retrouve ici notre conversation privée.</p></section>
         <section id="chat" class="chat" aria-labelledby="peer-name">
+          <section id="received-overview" class="received-overview" hidden aria-labelledby="received-title">
+            <header class="received-head"><div><h2 id="received-title" tabindex="-1" data-jm-i18n="Messages reçus">Messages reçus</h2><p data-jm-i18n="Non lus en premier, puis les plus récents.">Non lus en premier, puis les plus récents.</p></div><button id="show-clients" class="text-button mobile-received" type="button" data-jm-i18n="Clients et filtres">Clients et filtres</button><button id="refresh-received" class="text-button" type="button" data-jm-i18n="Actualiser">Actualiser</button></header>
+            <div class="received-scroll"><p id="received-status" role="status" aria-live="polite"></p><div id="received-list" class="received-list"></div><button id="more-received" class="button secondary" type="button" hidden data-jm-i18n="Autres messages">Autres messages</button></div>
+          </section>
           <header class="chat-head"><button id="back-to-inbox" class="back-button" type="button" hidden aria-label="Retour aux conversations" data-jm-i18n-aria-label="Retour aux conversations">←</button><span id="peer-avatar" class="peer-avatar" aria-hidden="true"></span><div class="person"><h2 id="peer-name" data-jm-i18n="Messages privés">Messages privés</h2><p id="conversation-status" data-jm-i18n="Chargement de ta conversation…">Chargement de ta conversation…</p></div><button id="open-conversation-menu" class="icon-button" type="button" aria-expanded="false" aria-controls="chat-menu" aria-label="Ouvrir les options de la conversation" data-jm-i18n-aria-label="Ouvrir les options de la conversation">⋮</button></header>
           <p id="message-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
           <div id="message-scroll" class="message-scroll" tabindex="0" aria-label="Historique de la conversation" data-jm-i18n-aria-label="Historique de la conversation">

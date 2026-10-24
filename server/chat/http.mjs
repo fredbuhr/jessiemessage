@@ -1,3 +1,4 @@
+import { decodeInboxCursor } from "./inbox-cursor.mjs";
 import { createClientConversationExportHandler } from "./client-export-http.mjs";
 import { CLIENT_ADMISSION_POLICY } from "../access/admission.mjs";
 import { readFile } from "node:fs/promises";
@@ -151,6 +152,7 @@ function matchedRoute(pathname) {
   }
   const capability = /^\/api\/chat\/(admin|client)\/capabilities$/.exec(pathname);
   if (capability) return { kind: "capabilities", role: capability[1], methods: ["GET"] };
+  if (pathname === "/api/chat/admin/inbox") return { kind: "inbox", role: "admin", methods: ["GET"] };
   if (pathname === "/api/chat/admin/conversations") return { kind: "list", role: "admin", methods: ["GET"] };
   if (pathname === "/api/chat/client/conversation") return { kind: "conversation", role: "client", methods: ["GET"] };
   const replyRoute = /^\/api\/chat\/admin\/conversations\/([a-f0-9]{32})\/reply$/.exec(pathname);
@@ -227,7 +229,7 @@ export function createChatHandler(service, { origin, clientConversationExporter 
           ...(videoEnabled ? { "Content-Security-Policy": AUTH_HEADERS["Content-Security-Policy"] + "; media-src 'self' blob:" } : {}) });
       } else if (route.kind === "capabilities") {
         query(url, []);
-        reply(response, method, 200, { enabled: true, ...(videoEnabled ? { video: { enabled: true, maxBytes: 104857600, mime: "video/mp4", ...(!videoCreationEnabled || route.role !== "admin" ? { creationEnabled: false } : {}) } } : {}), ...(profileEnabled ? { profile: { enabled: true, avatars: avatarsEnabled, passwordEnabled, preferencesEnabled, ...(publicationEnabled && route.role === "admin" ? { publicationEnabled: true } : {}) } } : {}), ...(announcementsEnabled ? { announcements: { enabled: true } } : {}), ...(tasksEnabled && route.role === "admin" ? { tasks: { enabled: true } } : {}), ...(route.role === "admin" && typeof service.markReply === "function" ? { replies: { enabled: true } } : {}), ...(route.role === "client" && clientConversationExporter ? { conversationExport: { enabled: true, photos: clientConversationExporter.photos, maxBytes: clientConversationExporter.maxBytes, ...(clientConversationExporter.videos === true ? { videos: true } : {}) } } : {}) });
+        reply(response, method, 200, { enabled: true, ...(route.role === "admin" && typeof service.inbox === "function" ? { inbox: { enabled: true } } : {}), ...(videoEnabled ? { video: { enabled: true, maxBytes: 104857600, mime: "video/mp4", ...(!videoCreationEnabled || route.role !== "admin" ? { creationEnabled: false } : {}) } } : {}), ...(profileEnabled ? { profile: { enabled: true, avatars: avatarsEnabled, passwordEnabled, preferencesEnabled, ...(publicationEnabled && route.role === "admin" ? { publicationEnabled: true } : {}) } } : {}), ...(announcementsEnabled ? { announcements: { enabled: true } } : {}), ...(tasksEnabled && route.role === "admin" ? { tasks: { enabled: true } } : {}), ...(route.role === "admin" && typeof service.markReply === "function" ? { replies: { enabled: true } } : {}), ...(route.role === "client" && clientConversationExporter ? { conversationExport: { enabled: true, photos: clientConversationExporter.photos, maxBytes: clientConversationExporter.maxBytes, ...(clientConversationExporter.videos === true ? { videos: true } : {}) } } : {}) });
       } else if (route.kind === "list") {
         const options = query(url, ["afterId", "limit"], 50);
         const afterId = options.afterId ?? null;
@@ -237,6 +239,28 @@ export function createChatHandler(service, { origin, clientConversationExporter 
           || typeof result.hasMore !== "boolean" || !(result.nextCursor === null || id(result.nextCursor))) throw unavailable();
         const conversations = result.conversations.map((value) => safeConversation(value, route.role));
         reply(response, method, 200, { conversations, nextCursor: result.nextCursor, hasMore: result.hasMore });
+      } else if (route.kind === "inbox") {
+        const options = query(url, ["cursor", "limit"], 50), cursor = options.cursor ?? null;
+        try { if (cursor !== null) decodeInboxCursor(cursor); } catch { throw invalid(); }
+        if (typeof service.inbox !== "function") throw unavailable();
+        const result = await service.inbox(token, { cursor, limit: options.limit });
+        if (!result || !Array.isArray(result.items) || result.items.length > options.limit || typeof result.hasMore !== "boolean"
+          || result.hasMore !== (result.nextCursor !== null) || result.hasMore && result.items.length !== options.limit) throw unavailable();
+        if (result.nextCursor !== null) { try { decodeInboxCursor(result.nextCursor); } catch { throw unavailable(); } }
+        const seen = new Set();
+        const items = result.items.map(item => {
+          const conversation = safeConversation(item?.conversation, "admin");
+          const message = safeMessage(item?.message, { role: "admin", conversationId: conversation.id });
+          if (typeof item.unread !== "boolean" || message.sender !== "peer" || message.deletedAt !== null || seen.has(message.id)
+            || item.unread !== (BigInt(message.sequence) > BigInt(conversation.lastReadSequence))) throw unavailable();
+          seen.add(message.id);
+          return { conversation, message, unread: item.unread };
+        });
+        for (let i = 1; i < items.length; i++) {
+          const a = items[i - 1], b = items[i];
+          if (Number(a.unread) < Number(b.unread) || a.unread === b.unread && (a.message.createdAt < b.message.createdAt)) throw unavailable();
+        }
+        reply(response, method, 200, { items, hasMore: result.hasMore, nextCursor: result.nextCursor });
       } else if (route.kind === "conversation") {
         query(url, []);
         reply(response, method, 200, safeConversation(await service.clientConversation(token), route.role));

@@ -1,5 +1,17 @@
 /* Explicit UI catalogue only. User messages, captions and names are never keys. */
 globalThis.JessieI18n?.register({
+  "Messages reçus": "Received messages",
+  "Non lus en premier, puis les plus récents.": "Unread first, then newest first.",
+  "Clients et filtres": "Clients and filters",
+  "Actualiser": "Refresh",
+  "Autres messages": "More messages",
+  "Non lu": "Unread",
+  "Photo": "Photo",
+  "Vidéo": "Video",
+  "Aucun message reçu pour le moment.": "No messages received yet.",
+  "Chargement des messages reçus…": "Loading received messages…",
+  "Les messages reçus ne sont pas disponibles. Réessaie avec Actualiser.": "Received messages are unavailable. Try Refresh again.",
+
   "Vidéos": "Videos",
   "Vidéos de la conversation": "Conversation videos",
   "Conversation": "Conversation",

@@ -27,6 +27,7 @@ async function login(page, fixture, role, recoveryIndex = 0) {
     await waitUntil(() => page.execute("return !!document.getElementById('connected')&&!document.getElementById('connected').hidden"), "administrator MFA session");
     await page.navigate("/admin/messages");
     await waitUntil(() => page.execute("return !!document.querySelector('#conversations [data-conversation-id]')"), "synthetic client in administrator inbox");
+    if (await page.execute("return document.getElementById('show-clients')?.checkVisibility()===true")) await page.click("#show-clients");
     await page.click("#conversations [data-conversation-id]");
   } else {
     await page.navigate("/access");
