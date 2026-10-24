@@ -68,3 +68,4 @@
 @media(max-width:780px){.workspace.overview:not(.show-clients) .chat{display:flex}.workspace.overview:not(.show-clients) .inbox{display:none}.workspace.overview.show-clients .chat{display:none}.workspace.overview.show-clients .inbox{display:flex}.mobile-received{display:inline-flex;align-items:center}.received-head{padding:16px;gap:8px}.received-scroll{padding:12px}.received-item{padding:14px}.received-head h2{font-size:19px}}
 
 .workspace.is-admin.selected #back-to-inbox{display:inline-flex!important;align-items:center;justify-content:center;min-width:44px;min-height:44px}
+@media(max-width:430px){.received-head>div{flex-basis:100%}.received-head>#refresh-received{margin-inline-start:auto}.received-item-head strong{flex-basis:100%}}
