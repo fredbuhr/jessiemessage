@@ -70,33 +70,43 @@ test("real MariaDB private text chat persistence (synthetic disposable database 
       events: Number((await connection.query("SELECT COUNT(*) AS value FROM chat_events WHERE conversation_id = ?", [fixture.conversationId]))[0].value),
     });
 
-    await t.test("received inbox orders every incoming message unread-first with exact microsecond pagination and account isolation", async () => {
-      const a = await pair(), b = await pair(a.admin), other = await pair();
+    await t.test("received inbox selects only each client's latest visible incoming message before unread-first pagination", async () => {
+      const a = await pair(), b = await pair(a.admin), c = await pair(a.admin), other = await pair();
       const a1 = (await send(a)).message, a2 = (await send(a)).message;
       const b1 = (await send(b)).message, b2 = (await send(b)).message;
+      await send(c); const c2 = (await send(c)).message;
       const removed = (await send(b)).message;
       await send(a, "admin"); await send(other);
       await store.deleteMessage({ ...request(b), messageId: removed.id });
       await store.markRead({ ...request(a, "admin"), through: a2.sequence });
       const stamp = sqlDate(now).slice(0, -6);
-      for (const [message, suffix] of [[a1, "000001"], [a2, "000002"], [b1, "000003"], [b2, "000004"]]) {
+      for (const [message, suffix] of [[a1, "000001"], [a2, "000006"], [b1, "000003"], [b2, "000004"], [c2, "000003"]]) {
         await connection.query("UPDATE messages SET created_at = ? WHERE id = ?", [stamp + suffix, message.id]);
       }
       // Advance only this read's wall clock beyond all microsecond fixtures.
       const options = { tokenHash: a.admin.tokenHash, now: now + 1, limit: 1 };
-      const ids = [], cursors = new Set(); let cursor = null;
+      const ids = [], clients = new Set(), cursors = new Set(); let cursor = null;
       do {
         const page = await store.readInbox({ ...options, cursor });
         assert.equal(page.items.length, 1);
         ids.push(page.items[0].message.id.toString("hex"));
+        const clientId = page.items[0].conversation.clientId.toString("hex");
+        assert.ok(!clients.has(clientId), "a client appears once across all pages"); clients.add(clientId);
         assert.equal(page.items[0].unread, ids.length <= 2);
         assert.equal(page.items[0].message.senderRole, "client");
         cursor = page.nextCursor;
         if (cursor) { assert.ok(!cursors.has(cursor)); cursors.add(cursor); }
         assert.equal(page.hasMore, cursor !== null);
       } while (cursor);
-      assert.deepEqual(ids, [b2, b1, a2, a1].map(message => message.id.toString("hex")));
+      assert.deepEqual(ids, [b2, c2, a2].map(message => message.id.toString("hex")), "unread clients precede a more recent read message, preserving microseconds");
       const check = await read(b, "admin"); assert.equal(check.conversation.unreadCount, 2, "overview never changes read receipts");
+      await store.deleteMessage({ ...request(a, "client", { now: now + 1 }), messageId: a2.id });
+      assert.equal((await store.readInbox(options)).items[0].message.id.toString("hex"), b2.id.toString("hex"));
+      const fallback = await store.readInbox({ ...options, limit: 100 });
+      assert.deepEqual(fallback.items.map(item => item.message.id.toString("hex")), [b2, c2, a1].map(message => message.id.toString("hex")), "deleting the latest incoming message reveals its predecessor");
+      await store.deleteMessage({ ...request(b, "client", { now: now + 1 }), messageId: b2.id });
+      await store.deleteMessage({ ...request(b, "client", { now: now + 1 }), messageId: b1.id });
+      assert.deepEqual((await store.readInbox({ ...options, limit: 100 })).items.map(item => item.message.id.toString("hex")), [c2, a1].map(message => message.id.toString("hex")), "clients without a visible incoming message are absent");
       await assert.rejects(store.readInbox({ ...options, tokenHash: a.client.tokenHash }), errorCode("CHAT_FORBIDDEN"));
       await assert.rejects(store.readInbox({ ...options, cursor: "bad" }), errorCode("CHAT_STORE_INPUT"));
     });

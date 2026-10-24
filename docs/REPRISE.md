@@ -2,6 +2,12 @@
 
 **24 octobre 2026 — livraison 1.11.0 terminée ; application, publication et checkpoint privé alignés.** [Reçu final utilisateur](verification-proofs/jm1110/hosted-metadata.json) : version1.11.0, source `88bbb4edfa15e7502c25c5e9e319c36f5f60276d`, arbre `513011bfde600b979bd93687ecf47095262caa6a`, Nodev24.22.1, `publicReady:true`. Démarrage réel rapporté par le writer : `1792853987566`, soit **24/10/2026 16:59:47.566 à Paris**, concordant avec le relevé UI à la seconde. Checkpoint1110 SHA256 `859727b6d196989cc87c512fec1e1758fb25aa401d8d1ab4753c7d9a744feb11`. Aucune opération de livraison restante ; ne rejouer ni préparation, CHECK, activation ou writer.
 
+## Correctif 1.11.1 — un aperçu par client, en qualification
+
+Le retour utilisateur du 24 octobre précise la vue attendue : **une seule ligne par client, avec son dernier message reçu encore visible**, conversations non lues en premier puis date décroissante. La1.11.0 affiche chaque message et reste la production confirmée ci-dessus. Le correctif sélectionne le dernier message de chaque conversation avant le curseur et la limite SQL ; la page conserve aussi une seule entrée par conversation pendant la pagination. Cliquer ouvre le message choisi, sans lecture automatique depuis la vue générale. Aucun changement des invitations, migrations, dépendances ou droits.
+
+Branche `fix/inbox-latest-1111`. Contrôles locaux ciblés169/169 et syntaxe réussis ; MariaDB10.11/11.4 et Chrome doivent encore qualifier le changement via la CI de la PR. Prochaine étape : qualification native, puis fusion et publication du correctif1.11.1 avant préparation hébergée. Ne rejouer aucune opération1110 acquise.
+
 ## Évolution 1.11.0 — déployée et finalisée
 
 [Codes individuels d’invitation](invitation-codes-1110.md) et [messages reçus sans client sélectionné](received-inbox-1110.md) codés, fusionnés et publiés. [PR137](https://github.com/fredbuhr/jessiemessage/pull/137), source `88bbb4edfa15e7502c25c5e9e319c36f5f60276d`, arbre `513011bfde600b979bd93687ecf47095262caa6a`. Le [relevé utilisateur](verification-proofs/jm1110/hosted-identity.json) rapporte désormais1110 active après l’étape Manager ; aucune inspection directe des champs Manager par l’agent n’est déduite. Préparation et CHECK sont acquis séparément.

@@ -2,6 +2,12 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
+## Correctif 1.11.1 — dernier message reçu de chaque client
+
+Corriger la vue générale de Messages : un seul aperçu par client, le dernier message reçu encore visible. Conversations non lues d’abord, puis les plus récentes dans chaque groupe. La sélection doit précéder la pagination SQL ; un client ne doit pas se répéter au chargement des pages suivantes. Préserver le clic vers la conversation et l’absence de marquage lu dans la vue générale.
+
+Implémentation et contrôles locaux ciblés169/169 acquis sur `fix/inbox-latest-1111` ; syntaxe réussie. Restent la CI native PR puis main, la publication immuable1.11.1 et sa préparation/activation hébergées. Production confirmée1.11.0. Aucune migration ni nouvelle dépendance ; ne pas rejouer sa livraison acquise.
+
 ## Évolution 1.11.0 — livraison terminée
 
 Codes d’invitation et vue des messages reçus qualifiés PR/main5/5, tag/release422775194 et publication2/2 acquis. [Périmètre codes](invitation-codes-1110.md), [messages reçus](received-inbox-1110.md), [source et preuves](REPRISE.md). Démarrage et enregistrement final acquis selon les reçus utilisateur : version1.11.0, commit88bbb4edfa15e7502c25c5e9e319c36f5f60276d, Node24.22.1, démarrage le 24 octobre à **16:59:47.566 à Paris**. Aucune migration ni nouvelle dépendance.

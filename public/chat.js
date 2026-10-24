@@ -1393,7 +1393,7 @@ function renderReceived() {
   clearReceivedRows();
   for (const item of [...receivedItems.values()].sort((a, b) => Number(b.unread) - Number(a.unread) || b.message.createdAt - a.message.createdAt)) {
     const button = document.createElement("button"); button.type = "button"; button.className = "received-item";
-    button.dataset.receivedId = item.message.id; button.classList.toggle("is-unread", item.unread);
+    button.dataset.receivedId = item.message.id; button.dataset.receivedConversationId = item.conversation.id; button.classList.toggle("is-unread", item.unread);
     const head = document.createElement("span"); head.className = "received-item-head";
     const name = document.createElement("strong"); ui.rawText(name, crm?.displayName(item.conversation) ?? item.conversation.peerName);
     const time = document.createElement("time"); time.dateTime = new Date(item.message.createdAt).toISOString();
@@ -1431,17 +1431,17 @@ async function loadReceived(more = false) {
       if (!item || !/^[a-f0-9]{32}$/.test(item.conversation?.id) || typeof item.conversation.peerName !== "string" || item.conversation.peerName.length > 64
         || !/^[a-f0-9]{32}$/.test(item.message?.id) || item.message.sender !== "peer" || item.message.deletedAt !== null
         || typeof item.message.body !== "string" || item.message.body.length > 4096 || !Number.isSafeInteger(item.message.createdAt)
-        || item.message.createdAt < 0 || item.message.createdAt > 253402300799999 || typeof item.unread !== "boolean" || seen.has(item.message.id)) throw new Error("invalid_received_item");
+        || item.message.createdAt < 0 || item.message.createdAt > 253402300799999 || typeof item.unread !== "boolean" || seen.has(item.conversation.id)) throw new Error("invalid_received_item");
       sequence(item.message.sequence); if (item.message.sequence === "0") throw new Error("invalid_received_item");
-      seen.add(item.message.id);
+      seen.add(item.conversation.id);
     }
     if (!more) receivedItems.clear();
     receivedExpanded = more;
-    for (const item of result.items) receivedItems.set(item.message.id, item);
+    for (const item of result.items) receivedItems.set(item.conversation.id, item);
     receivedCursor = result.nextCursor; receivedMore = result.hasMore; receivedRefreshedAt = Date.now();
     renderReceived();
     if (!more) el("received-list").parentElement.scrollTop = 0;
-    if (restoreMore && !receivedMore) focusVisible([...el("received-list").children].find(node => !previousIds.has(node.dataset.receivedId)) ?? el("received-title"));
+    if (restoreMore && !receivedMore) focusVisible([...el("received-list").children].find(node => !previousIds.has(node.dataset.receivedConversationId)) ?? el("received-title"));
   } catch (error) {
     if (error.stale || epoch !== receivedEpoch) return;
     if (error.status === 401 || error.status === 403) { await handleError(error); return; }
