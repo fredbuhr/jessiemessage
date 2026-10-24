@@ -1,0 +1,44 @@
+{
+  "version": "1.11.1",
+  "pr": 138,
+  "source": "6338589a1781b427e829ce8fd1dd1c612d5632a4",
+  "tree": "ba1289bae9ce095560922a7ed6665f17709d07ed",
+  "run": 40109325838,
+  "finalAttempt": 2,
+  "status": "success",
+  "nativeNode": "v24.22.1",
+  "initialJobs": {
+    "verify": 120917548752,
+    "chrome": 120917548858,
+    "MariaDB11.4": 120917548513,
+    "MariaDB10.11": 120917548735
+  },
+  "failedJobRetriedOnly": 120917548795,
+  "retryJob": 120919481500,
+  "results": {
+    "general": {
+      "passed": 4058,
+      "skipped": 52,
+      "failed": 0
+    },
+    "Chrome": {
+      "passed": 272,
+      "skipped": 0
+    },
+    "HTTPS": {
+      "passed": 12,
+      "skipped": 0
+    },
+    "MariaDB10.11": {
+      "passed": 605,
+      "skipped": 0
+    },
+    "MariaDB11.4": {
+      "passed": 605,
+      "skipped": 0
+    }
+  },
+  "initialFailure": "See pr-initial-failure.json; cause not established, failed job succeeded on same source without code/timeout/guard changes",
+  "physicalDevicesTested": false,
+  "productionTouched": false
+}

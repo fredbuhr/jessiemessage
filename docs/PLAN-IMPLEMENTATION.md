@@ -6,7 +6,7 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 Corriger la vue générale de Messages : un seul aperçu par client, le dernier message reçu encore visible. Conversations non lues d’abord, puis les plus récentes dans chaque groupe. La sélection doit précéder la pagination SQL ; un client ne doit pas se répéter au chargement des pages suivantes. Préserver le clic vers la conversation et l’absence de marquage lu dans la vue générale.
 
-Implémentation et contrôles locaux ciblés169/169 acquis sur `fix/inbox-latest-1111` ; syntaxe réussie. Restent la CI native PR puis main, la publication immuable1.11.1 et sa préparation/activation hébergées. Production confirmée1.11.0. Aucune migration ni nouvelle dépendance ; ne pas rejouer sa livraison acquise.
+Implémentation fusionnée, CI PR acquise5/5 après reprise du seul job HTTPS en échec et main5/5 dès la tentative1, source80b7fbf5f9b5ba32ac1aae817043126e93025946. [Preuves et portée](REPRISE.md#correctif-1111--publié-préparation-hébergée-restante). Tag/release/latest422839761 publiés après33 tests opérateur natifs et workflow2/2. Restent la [préparation/CHECK1111](operations-release1111.md), l’activation unique après lecture du reçu, puis l’enregistrement final épinglé à ce reçu. Production confirmée1.11.0. Aucune migration ni nouvelle dépendance ; ne pas rejouer sa livraison acquise.
 
 ## Évolution 1.11.0 — livraison terminée
 

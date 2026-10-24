@@ -1,0 +1,46 @@
+{
+  "operator": "9f4ff39e2de9198e29256587d5fa0075977788b1",
+  "tree": "d10154d4a101c33cf5434471e0d26462eb9d7af9",
+  "run": 40110800429,
+  "attempt": 1,
+  "status": "success",
+  "jobs": {
+    "operatorTests": 120921917229,
+    "publish": 120922014664
+  },
+  "nativeNode": "v24.22.1",
+  "prepareTests": 26,
+  "publisherTests": 7,
+  "prepareSha256": "ce06046ac5c76f8d2a940cb9dc4525e28d3bc06f5b3c708c87606bbc74b5e9b0",
+  "publisherSha256": "fd8fd20bb913e8c3e4324c3c1240a5bbe226b179ea6b4a88188a6c888939c11f",
+  "receipt": {
+    "status": "published_verified",
+    "nodeVersion": "24.22.1",
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "normalMigrations": 33,
+    "videoMigrations": 3,
+    "experienceMigrations": 2,
+    "releases": [
+      {
+        "tag": "v1.11.1",
+        "source": "80b7fbf5f9b5ba32ac1aae817043126e93025946",
+        "tree": "ba1289bae9ce095560922a7ed6665f17709d07ed",
+        "ciRun": "40110183520",
+        "releaseId": 422839761
+      }
+    ],
+    "latest": {
+      "tag": "v1.11.1",
+      "source": "80b7fbf5f9b5ba32ac1aae817043126e93025946",
+      "id": 422839761
+    },
+    "publicationMode": "created",
+    "created": [
+      "v1.11.1"
+    ],
+    "deploymentPerformed": false
+  },
+  "tagAndLatestIndependentReadback": true,
+  "hostPreparationPerformed": false
+}

@@ -1,0 +1,81 @@
+{
+  "source": "80b7fbf5f9b5ba32ac1aae817043126e93025946",
+  "tree": "ba1289bae9ce095560922a7ed6665f17709d07ed",
+  "run": 40110183520,
+  "attempt": 1,
+  "status": "success",
+  "jobs": [
+    {
+      "id": 120920083662,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "head": "80b7fbf5f9b5ba32ac1aae817043126e93025946",
+      "counts": {
+        "tests": 12,
+        "pass": 12,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "id": 120920083819,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "head": "80b7fbf5f9b5ba32ac1aae817043126e93025946",
+      "counts": {
+        "tests": 4110,
+        "pass": 4058,
+        "fail": 0,
+        "skipped": 52
+      }
+    },
+    {
+      "id": 120920083836,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "head": "80b7fbf5f9b5ba32ac1aae817043126e93025946",
+      "counts": {
+        "tests": 605,
+        "pass": 605,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "id": 120920083845,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "head": "80b7fbf5f9b5ba32ac1aae817043126e93025946",
+      "counts": {
+        "tests": 272,
+        "pass": 272,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "id": 120920083828,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "head": "80b7fbf5f9b5ba32ac1aae817043126e93025946",
+      "counts": {
+        "tests": 605,
+        "pass": 605,
+        "fail": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "nativeNode": "v24.22.1",
+  "productionTouched": false
+}

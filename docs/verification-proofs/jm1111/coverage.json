@@ -1,0 +1,52 @@
+{
+  "version": "1.11.1",
+  "source": "6338589a1781b427e829ce8fd1dd1c612d5632a4",
+  "checks": [
+    {
+      "point": "one_latest_preview_per_client",
+      "evidence": "Native MariaDB store scenario with three assigned clients, multiple incoming messages each",
+      "status": "addressed"
+    },
+    {
+      "point": "selection_before_pagination",
+      "evidence": "Native SQL limit=1 traversal yields only b2,c2,a2; each client appears once",
+      "status": "addressed"
+    },
+    {
+      "point": "unread_first_then_newest",
+      "evidence": "Two unread clients precede a more recent already-read client; microsecond times distinguish unread order",
+      "status": "addressed"
+    },
+    {
+      "point": "outgoing_and_deleted_excluded",
+      "evidence": "Newer admin message excluded, deleted latest falls back, no visible incoming removes client",
+      "status": "addressed"
+    },
+    {
+      "point": "authorization_and_receipts",
+      "evidence": "Foreign admin excluded, client token refused, overview does not alter unread count",
+      "status": "addressed"
+    },
+    {
+      "point": "pagination_deduplication_and_focus",
+      "evidence": "Local/native general lifecycle test loads 50 then changed client plus new client; 51 unique rows, focus to new client",
+      "status": "addressed"
+    },
+    {
+      "point": "privacy_error_and_navigation",
+      "evidence": "Lifecycle/Chrome tests: hide/owner change purge, failed refresh purge, explicit GET retry, no overview read marking, click opens conversation",
+      "status": "addressed"
+    },
+    {
+      "point": "layout",
+      "evidence": "Native Chrome assertions and manual review of synthetic EN320 and FR1280 captures, artifact12566236612",
+      "status": "addressed"
+    }
+  ],
+  "allScopedPointsAddressed": true,
+  "limits": [
+    "No new physical-device or hosted functional test",
+    "No production load benchmark",
+    "Earlier backup/A10/A11/A12 scope unchanged"
+  ]
+}

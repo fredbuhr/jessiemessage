@@ -148,4 +148,4 @@ Une restauration se fait manuellement en maintenance, avec la personne chargée 
 
 Pour une question, consulte l’[aide](https://jessiemessage.com/help) ou [contact@jessiemessage.com](mailto:contact@jessiemessage.com). Ne transmets jamais ton mot de passe ni tes codes.
 
-À partir de1.11.0, sans client sélectionné dans Messages, la [vue des messages reçus](received-inbox-1110.md) affiche les non lus en premier puis les plus récents. Le correctif1.11.1 en préparation limite cette vue au dernier message reçu de chaque client, avec une seule ligne par client. Clique sur un aperçu pour ouvrir sa conversation ; sur mobile, « Clients et filtres » ouvre la liste des clients. [État de livraison](REPRISE.md).
+À partir de1.11.0, sans client sélectionné dans Messages, la [vue des messages reçus](received-inbox-1110.md) affiche les non lus en premier puis les plus récents. Le correctif1.11.1 publié, encore à activer sur l’hébergement, limite cette vue au dernier message reçu de chaque client, avec une seule ligne par client. Clique sur un aperçu pour ouvrir sa conversation ; sur mobile, « Clients et filtres » ouvre la liste des clients. [État de livraison](REPRISE.md).

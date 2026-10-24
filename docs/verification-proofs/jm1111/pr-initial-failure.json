@@ -1,0 +1,40 @@
+{
+  "source": "6338589a1781b427e829ce8fd1dd1c612d5632a4",
+  "tree": "ba1289bae9ce095560922a7ed6665f17709d07ed",
+  "run": 40109325838,
+  "attempt": 1,
+  "failedJob": 120917548795,
+  "initialFailure": {
+    "file": "tests/rehearsal/experience.rehearsal.mjs",
+    "line": 195,
+    "message": "Timed out: client preferences are rendered read-only in the actual CRM profile"
+  },
+  "followingFailures": [
+    {
+      "line": 210,
+      "message": "WebDriver click HTTP400 opening profile"
+    },
+    {
+      "line": 328,
+      "message": "WebDriver click HTTP400 reply handling"
+    },
+    {
+      "line": 366,
+      "message": "WebDriver click HTTP400 password-change profile"
+    }
+  ],
+  "cause": "not established; these failures do not establish a production regression",
+  "readCode": "CRM lazy preference UI, scenario initialization and unchanged selection/profile handlers inspected",
+  "action": "Await complete workflow before retrying only failed HTTPS job; preserve initial failure and all completed results",
+  "applicationGuardsChanged": false,
+  "resolution": {
+    "onlyFailedJobRetried": true,
+    "retryJob": 120919481500,
+    "sameSource": true,
+    "result": "success 12/12",
+    "guardsAndTimeoutsUnchanged": true,
+    "mainFirstAttempt": "success 5/5; HTTPS12/12",
+    "causeRemainsUnestablished": true,
+    "nextAction": "None; do not rerun the acquired checks"
+  }
+}
