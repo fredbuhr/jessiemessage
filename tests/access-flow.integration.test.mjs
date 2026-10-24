@@ -354,6 +354,133 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
       assert.deepEqual(await deliver(), { sent: 0, failed: 0 });
       assert.equal(inbox.length, deliveredCount);
     });
+
+    let codeInvitation;
+    let compactCode;
+    await t.test("a code invitation is returned once and its spelling variants inspect the same persisted invitation", async () => {
+      const created = await request("/api/admin/invitations", { method: "POST", headers: adminHeaders(),
+        body: { lifetimeHours: 1, accessDays: 3, format: "code" } });
+      assert.equal(created.status, 201);
+      assert.deepEqual(Object.keys(created.body).sort(), ["accessDays", "code", "expiresAt", "format", "id"]);
+      codeInvitation = created.body;
+      assert.equal(codeInvitation.format, "code");
+      assert.match(codeInvitation.id, /^[a-f0-9]{32}$/);
+      assert.match(codeInvitation.code, /^[0-9A-HJKMNP-TV-Z]{4}(?:-[0-9A-HJKMNP-TV-Z]{4}){4}$/);
+      compactCode = codeInvitation.code.replaceAll("-", "");
+      assert.equal(compactCode.length, 20);
+      assert.equal(codeInvitation.expiresAt, now + 3600000);
+      assert.equal(codeInvitation.accessDays, 3);
+      assert.equal(created.headers.get("set-cookie"), null);
+      assert.equal(created.headers.get("cache-control"), "no-store");
+      const row = (await connection.query("SELECT token_hash, consumed_at, consumed_by_id, revoked_at FROM invitations WHERE id = ?",
+        [Buffer.from(codeInvitation.id, "hex")]))[0];
+      assert.ok(Buffer.isBuffer(row.token_hash));
+      assert.equal(row.token_hash.length, 32);
+      assert.equal(row.consumed_at, null); assert.equal(row.consumed_by_id, null); assert.equal(row.revoked_at, null);
+      let quotaRows;
+      for (const token of [codeInvitation.code, compactCode, codeInvitation.code.toLowerCase(),
+        `  ${codeInvitation.code.toLowerCase().replaceAll("-", " - ")}  `]) {
+        const inspected = await request("/api/access/invitation", { method: "POST", body: { token } });
+        assert.equal(inspected.status, 200);
+        assert.deepEqual(inspected.body, { expiresAt: codeInvitation.expiresAt, accessDays: codeInvitation.accessDays });
+        if (quotaRows === undefined) quotaRows = await count("auth_rate_limits");
+        else assert.equal(await count("auth_rate_limits"), quotaRows, "normalization does not allocate alternate invitation quota identities");
+      }
+      const beforeQuery = { users: await count("users"), mail: await count("mail_outbox"), quotas: await count("auth_rate_limits") };
+      assert.equal((await request("/api/access/invitation?unexpected=1", { method: "POST", body: { token: compactCode } })).status, 400);
+      assert.equal((await request("/api/access/register?unexpected=1", { method: "POST", body: { invitationToken: compactCode,
+        email: "query-code-refused@example.invalid", pseudonym: "Synthetic refused client", password: clientPassword, ageDeclared: true } })).status, 400);
+      assert.equal(await count("users"), beforeQuery.users); assert.equal(await count("mail_outbox"), beforeQuery.mail);
+      assert.equal(await count("auth_rate_limits"), beforeQuery.quotas);
+      const listed = await request("/api/admin/invitations", { headers: adminHeaders() });
+      assert.equal(listed.status, 200);
+      const visible = listed.body.invitations.find(invitation => invitation.id === codeInvitation.id);
+      assert.equal(visible.state, "pending");
+      assert.equal(Object.hasOwn(visible, "code"), false); assert.equal(Object.hasOwn(visible, "url"), false);
+      assert.equal(JSON.stringify(listed.body).includes(compactCode), false);
+      assert.equal(JSON.stringify(listed.body).includes(codeInvitation.code), false);
+    });
+
+    await t.test("concurrent registrations using different spellings of one code have exactly one SQL winner", async () => {
+      const before = { users: await count("users"), verification: await count("email_verifications"), mail: await count("mail_outbox"),
+        sessions: await count("sessions"), conversations: await count("conversations") };
+      const emails = ["code-race-first@example.invalid", "code-race-second@example.invalid"];
+      const spellings = [compactCode.toLowerCase(), ` ${codeInvitation.code.toLowerCase().replaceAll("-", " - ")} `];
+      const attempts = await Promise.all(emails.map((email, index) => request("/api/access/register", { method: "POST", body: {
+        invitationToken: spellings[index], email, pseudonym: "Synthetic code client", password: clientPassword, ageDeclared: true,
+      } })));
+      assert.deepEqual(attempts.map(result => result.status).sort(), [202, 400]);
+      const winner = attempts.findIndex(result => result.status === 202);
+      assert.deepEqual(attempts[winner].body, { status: "verification_pending" });
+      assert.deepEqual(attempts[1 - winner].body, { error: "registration_failed" });
+      for (const result of attempts) assert.equal(result.headers.get("set-cookie"), null);
+      assert.equal(await count("users"), before.users + 1);
+      assert.equal(await count("email_verifications"), before.verification + 1);
+      assert.equal(await count("mail_outbox"), before.mail + 1);
+      assert.equal(await count("sessions"), before.sessions);
+      assert.equal(await count("conversations"), before.conversations);
+      const users = await connection.query("SELECT id, email, status, email_verified_at, access_approved_at FROM users WHERE email IN (?, ?)", emails);
+      assert.equal(users.length, 1); assert.equal(users[0].email, emails[winner]);
+      assert.equal(users[0].status, "pending"); assert.equal(users[0].email_verified_at, null); assert.equal(users[0].access_approved_at, null);
+      const consumed = (await connection.query("SELECT consumed_at, consumed_by_id, revoked_at FROM invitations WHERE id = ?",
+        [Buffer.from(codeInvitation.id, "hex")]))[0];
+      assert.equal(instant(consumed.consumed_at), now);
+      assert.ok(consumed.consumed_by_id.equals(users[0].id)); assert.equal(consumed.revoked_at, null);
+      const queued = (await connection.query("SELECT payload_encrypted, status FROM mail_outbox WHERE recipient_user_id = ?", [users[0].id]))[0];
+      assert.equal(queued.status, "pending"); assert.match(queued.payload_encrypted, /^v1\./);
+      assert.equal(queued.payload_encrypted.includes(emails[winner]), false);
+      assert.equal((await request("/api/access/invitation", { method: "POST", body: { token: codeInvitation.code } })).status, 401);
+      assert.equal((await request("/api/access/register", { method: "POST", body: { invitationToken: codeInvitation.code,
+        email: "code-reuse@example.invalid", pseudonym: "Synthetic refused client", password: clientPassword, ageDeclared: true } })).status, 400);
+      assert.equal(await count("users"), before.users + 1); assert.equal(await count("mail_outbox"), before.mail + 1);
+      assert.equal((await request("/api/access/login", { method: "POST", body: { email: emails[winner], password: clientPassword } })).status, 401);
+    });
+
+    await t.test("expired and revoked codes cannot create accounts or verification mail", async () => {
+      const expired = await request("/api/admin/invitations", { method: "POST", headers: adminHeaders(),
+        body: { lifetimeHours: 1, accessDays: null, format: "code" } });
+      assert.equal(expired.status, 201);
+      now = expired.body.expiresAt;
+      const revoked = await request("/api/admin/invitations", { method: "POST", headers: adminHeaders(),
+        body: { lifetimeHours: 1, accessDays: null, format: "code" } });
+      assert.equal(revoked.status, 201);
+      assert.equal((await request(`/api/admin/invitations/${revoked.body.id}/revoke`, { method: "POST", headers: adminHeaders(), body: {} })).status, 200);
+      const before = { users: await count("users"), verification: await count("email_verifications"), mail: await count("mail_outbox") };
+      for (const [index, invitation] of [expired.body, revoked.body].entries()) {
+        const token = invitation.code.toLowerCase().replaceAll("-", " ");
+        assert.equal((await request("/api/access/invitation", { method: "POST", body: { token } })).status, 401);
+        const registration = await request("/api/access/register", { method: "POST", body: { invitationToken: token,
+          email: `invalid-code-${index}@example.invalid`, pseudonym: "Synthetic refused client", password: clientPassword, ageDeclared: true } });
+        assert.equal(registration.status, 400); assert.deepEqual(registration.body, { error: "registration_failed" });
+      }
+      assert.equal(await count("users"), before.users);
+      assert.equal(await count("email_verifications"), before.verification);
+      assert.equal(await count("mail_outbox"), before.mail);
+      const rows = await connection.query("SELECT consumed_at, consumed_by_id FROM invitations WHERE id IN (?, ?)",
+        [Buffer.from(expired.body.id, "hex"), Buffer.from(revoked.body.id, "hex")]);
+      assert.equal(rows.length, 2);
+      for (const row of rows) { assert.equal(row.consumed_at, null); assert.equal(row.consumed_by_id, null); }
+    });
+
+    await t.test("explicit link format retains the existing fragment credential and registration gates", async () => {
+      const created = await request("/api/admin/invitations", { method: "POST", headers: adminHeaders(),
+        body: { lifetimeHours: 1, accessDays: null, format: "link" } });
+      assert.equal(created.status, 201);
+      assert.deepEqual(Object.keys(created.body).sort(), ["accessDays", "expiresAt", "id", "url"]);
+      const link = new URL(created.body.url);
+      assert.equal(link.origin, origin); assert.equal(link.pathname, "/access"); assert.equal(link.search, "");
+      assert.match(link.hash, /^#invitation=[A-Za-z0-9_-]{43}$/);
+      const token = link.hash.slice("#invitation=".length);
+      assert.equal((await request("/api/access/invitation", { method: "POST", body: { token } })).status, 200);
+      const email = "explicit-link-client@example.invalid";
+      const registered = await request("/api/access/register", { method: "POST", body: { invitationToken: token, email,
+        pseudonym: "Synthetic linked client", password: clientPassword, ageDeclared: true } });
+      assert.equal(registered.status, 202); assert.deepEqual(registered.body, { status: "verification_pending" });
+      assert.equal((await request("/api/access/login", { method: "POST", body: { email, password: clientPassword } })).status, 401);
+      const consumed = (await connection.query("SELECT consumed_by_id FROM invitations WHERE id = ?", [Buffer.from(created.body.id, "hex")]))[0];
+      const user = (await connection.query("SELECT id, status FROM users WHERE email = ?", [email]))[0];
+      assert.ok(consumed.consumed_by_id.equals(user.id)); assert.equal(user.status, "pending");
+    });
   } finally {
     if (server) await new Promise((resolve) => { server.close(resolve); server.closeAllConnections(); });
     try { if (pool) await pool.end(); }

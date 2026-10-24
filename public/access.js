@@ -15,11 +15,13 @@ const element = (id) => document.getElementById(id);
 const status = element("access-status");
 const loginForm = element("client-login-form");
 const registrationForm = element("registration-form");
+const invitationCodeForm = element("invitation-code-form");
 const connected = element("client-connected");
 const verificationSection = element("email-verification");
 const publicEntry = ["/", "/app", "/index.html"].includes(location.pathname);
 let openConversation = publicEntry;
 let invitationToken = null;
+let codeEntry = false;
 let verificationToken = null;
 let csrf = null;
 let busy = false;
@@ -78,12 +80,13 @@ function signedOut(message = "", { allowRecovery = true } = {}) {
   element("client-chat-link").hidden = true;
   element("access-retry").hidden = true;
   element("access-intro").hidden = false;
-  loginForm.hidden = Boolean(invitationToken || verificationToken);
+  loginForm.hidden = Boolean(invitationToken || verificationToken || codeEntry);
   registrationForm.hidden = !invitationToken;
+  invitationCodeForm.hidden = !codeEntry || Boolean(invitationToken || verificationToken);
   verificationSection.hidden = !verificationToken;
   connected.hidden = true;
   element("entry-role-choice").hidden = true;
-  element("resend-section").hidden = false;
+  element("resend-section").hidden = codeEntry;
   accessI18n.text(element("access-title"), invitationToken ? "Bienvenue dans mon espace." : "Bienvenue.");
   loginForm.reset(); clearPrivateAccessSummary();
   notice(message);
@@ -104,6 +107,7 @@ function showEntry(entry) {
   if (entry.status === "unavailable" || client === null && administrator === null) throw new Error("entry_unavailable");
   if (administrator && client && client.state !== "signed_out") {
     signedOut("", { allowRecovery: false }); loginForm.hidden = true; element("resend-section").hidden = true;
+    invitationCodeForm.hidden = true;
     element("client-recovery-link").hidden = true; recoveryRetry.hidden = true;
     accessI18n.text(element("access-title"), "Choisis ton espace.");
     element("entry-client-link").href = client.href + (notificationReference ? `#notification=${notificationReference}` : "");
@@ -125,6 +129,7 @@ function signedIn(session) {
     return;
   }
   displayedSession = session;
+  codeEntry = false; invitationCodeForm.reset(); invitationCodeForm.hidden = true;
   invalidate(); csrf = session.csrf; loginForm.reset(); registrationForm.reset();
   element("client-chat-link").hidden = true;
   element("client-chat-note").hidden = true;
@@ -262,7 +267,33 @@ registrationForm.addEventListener("submit", (event) => {
     invitationToken = null; registrationForm.reset(); signedOut("C’est créé ! Ouvre l’e-mail reçu pour confirmer ton adresse, puis connecte-toi ici.");
   });
 });
-element("show-login").addEventListener("click", () => { invitationToken = null; registrationForm.reset(); signedOut(); });
+function returnToLogin() { codeEntry = false; invitationToken = null; invitationCodeForm.reset(); registrationForm.reset(); signedOut(); }
+element("show-login").addEventListener("click", returnToLogin);
+element("cancel-invitation-code").addEventListener("click", returnToLogin);
+element("show-invitation-code").addEventListener("click", () => {
+  if (busy || !visible()) return; invitationToken = null; codeEntry = true; signedOut(); element("invitation-code").focus();
+});
+function invitationSummary(invitation) {
+  if (!invitation || !Number.isSafeInteger(invitation.expiresAt) || invitation.expiresAt <= Date.now() || invitation.expiresAt > 253402300799999
+    || !(invitation.accessDays === null || Number.isSafeInteger(invitation.accessDays) && invitation.accessDays >= 1 && invitation.accessDays <= 3650)) throw new Error("invalid_invitation");
+  accessI18n.text(element("invitation-summary"), invitation.accessDays === null
+    ? "Invitation valable jusqu’au {date}. Accès sans limite de durée après validation."
+    : "Invitation valable jusqu’au {date}. Accès prévu pour {days} jours après validation.",
+  { date: accessI18n.dateParam(invitation.expiresAt), ...(invitation.accessDays === null ? {} : { days: accessI18n.numberParam(invitation.accessDays) }) });
+}
+invitationCodeForm.addEventListener("submit", (event) => {
+  event.preventDefault(); void submit(async () => {
+    const raw = element("invitation-code").value;
+    const code = raw.toUpperCase().replace(/[ -]/g, "");
+    if (raw.length < 20 || raw.length > 64 || !/^[0-9A-Za-z -]+$/.test(raw) || !/^[0-9A-HJKMNP-TV-Z]{20}$/.test(code)) { notice("Ce code est invalide, expiré ou déjà utilisé.", true); return; }
+    notice("Vérification du code…");
+    let invitation;
+    try { invitation = await request("/api/access/invitation", { mutation: true, body: { token: code } }); }
+    catch (error) { if (!error.stale && [400, 401, 404].includes(error.status)) { notice("Ce code est invalide, expiré ou déjà utilisé.", true); return; } throw error; }
+    invitationSummary(invitation);
+    invitationToken = code; codeEntry = false; invitationCodeForm.reset(); signedOut(); element("registration-email").focus();
+  });
+});
 element("verify-email-button").addEventListener("click", () => { void submit(async () => {
   if (!verificationToken) return;
   await request("/api/access/verify-email", { mutation: true, body: { token: verificationToken } });
@@ -323,10 +354,7 @@ async function start() {
   if (invitationToken) {
     try {
       const invitation = await request("/api/access/invitation", { mutation: true, body: { token: invitationToken } });
-      accessI18n.text(element("invitation-summary"), invitation.accessDays === null
-        ? "Invitation valable jusqu’au {date}. Accès sans limite de durée après validation."
-        : "Invitation valable jusqu’au {date}. Accès prévu pour {days} jours après validation.",
-      { date: accessI18n.dateParam(invitation.expiresAt), ...(invitation.accessDays === null ? {} : { days: accessI18n.numberParam(invitation.accessDays) }) });
+      invitationSummary(invitation);
     } catch (error) {
       if (!error.stale) { invitationToken = null; signedOut(errorMessage(error)); }
     }
@@ -341,11 +369,11 @@ function hideAccess() {
   submitEpoch += 1; sessionRefreshEpoch += 1; checkingSession = false; invalidate(); csrf = null; displayedSession = null; setBusy(false);
   cancelSessionCheck?.(); cancelSessionCheck = null;
   element("access-retry").hidden = true;
-  loginForm.hidden = true; registrationForm.hidden = true; verificationSection.hidden = true; connected.hidden = true;
+  loginForm.hidden = true; registrationForm.hidden = true; invitationCodeForm.hidden = true; verificationSection.hidden = true; connected.hidden = true;
   element("entry-role-choice").hidden = true;
   element("resend-section").hidden = true; element("client-chat-link").hidden = true;
   clearPrivateAccessSummary();
-  for (const form of [loginForm, registrationForm, element("resend-form")]) form.reset();
+  for (const form of [loginForm, registrationForm, invitationCodeForm, element("resend-form")]) form.reset();
   updateRecoveryLink(); notice("");
 }
 document.addEventListener("visibilitychange", () => { if (visible()) void refreshSession(); else hideAccess(); });

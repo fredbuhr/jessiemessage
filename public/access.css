@@ -2,6 +2,8 @@
 .checkbox-field { display: flex; align-items: flex-start; gap: 12px; line-height: 1.6; }
 .checkbox-field input { width: 20px; min-height: 20px; margin: 1px 0 0; accent-color: #71354f; flex-shrink: 0; }
 #registration-form .button + .button { margin-top: 12px; }
+#invitation-code-form .button + .button, #show-invitation-code { margin-top: 16px; }
+#invitation-code { text-transform: uppercase; letter-spacing: .05em; font-family: ui-monospace, monospace; }
 .check-list { margin: 0 0 24px; padding-left: 20px; color: #bcaebb; font-size: 14px; line-height: 1.8; }
 details { margin-top: 24px; padding-top: 20px; border-top: 1px solid #423343; }
 summary { color: #d8b999; font-size: 13px; cursor: pointer; line-height: 1.6; }

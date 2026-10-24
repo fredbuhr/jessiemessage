@@ -49,6 +49,12 @@
             <button class="button button-primary" type="submit" data-jm-i18n="Se connecter">Se connecter</button>
             <p class="field-help" data-jm-i18n="Ta connexion reste ouverte sur cet appareil. Tu peux la fermer dans « Mon accès ».">Ta connexion reste ouverte sur cet appareil. Tu peux la fermer dans « Mon accès ».</p>
             <p class="field-help"><a id="client-recovery-link" href="/recover" hidden data-jm-i18n="Mot de passe oublié ?">Mot de passe oublié ?</a></p>
+            <button id="show-invitation-code" class="button button-secondary" type="button" data-jm-i18n="J’ai un code d’invitation">J’ai un code d’invitation</button>
+          </form>
+          <form id="invitation-code-form" hidden>
+            <div class="field"><label for="invitation-code" data-jm-i18n="Ton code d’invitation">Ton code d’invitation</label><input id="invitation-code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="64" aria-describedby="invitation-code-help" required /><p id="invitation-code-help" class="field-help" data-jm-i18n="Colle le code reçu de Jessie en message privé. Les espaces et les tirets sont acceptés.">Colle le code reçu de Jessie en message privé. Les espaces et les tirets sont acceptés.</p></div>
+            <button id="validate-invitation-code" class="button button-primary" type="submit" data-jm-i18n="Valider mon code">Valider mon code</button>
+            <button id="cancel-invitation-code" class="button button-secondary" type="button" data-jm-i18n="J’ai déjà un compte">J’ai déjà un compte</button>
           </form>
           <form id="registration-form" hidden>
             <p id="invitation-summary" class="session-note"></p>

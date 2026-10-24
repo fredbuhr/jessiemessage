@@ -2,6 +2,12 @@
 
 // Only fixed interface sources belong in this catalog. Account fields stay raw.
 globalThis.JessieI18n?.register({
+  "J’ai un code d’invitation": "I have an invitation code",
+  "Ton code d’invitation": "Your invitation code",
+  "Colle le code reçu de Jessie en message privé. Les espaces et les tirets sont acceptés.": "Paste the code Jessie sent you privately. Spaces and hyphens are accepted.",
+  "Valider mon code": "Validate my code",
+  "Vérification du code…": "Checking your code…",
+  "Ce code est invalide, expiré ou déjà utilisé.": "This code is invalid, expired or already used.",
   "Ta connexion reste ouverte sur cet appareil. Tu peux la fermer dans « Mon accès ».": "You stay signed in on this device. You can sign out in ‘My access’.",
     "Notifications": "Notifications",
 

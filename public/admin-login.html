@@ -82,18 +82,28 @@
               <div class="access-section">
                 <h2 id="invitation-title" data-jm-i18n="Inviter un client">Inviter un client</h2>
                 <form id="invitation-form">
+                  <div class="field"><label for="invitation-format" data-jm-i18n="Invitation à transmettre">Invitation à transmettre</label><select id="invitation-format"><option value="code" data-jm-i18n="Code individuel">Code individuel</option><option value="link" data-jm-i18n="Lien d’invitation">Lien d’invitation</option></select></div>
                   <div class="form-pair">
-                    <div class="field"><label for="invitation-hours" data-jm-i18n="Validité du lien (heures)">Validité du lien (heures)</label><input id="invitation-hours" type="number" min="1" max="720" value="72" title="Entre une durée de 1 à 720 heures." data-jm-i18n-title="Entre une durée de 1 à 720 heures." required /></div>
+                    <div class="field"><label for="invitation-hours" data-jm-i18n="Validité de l’invitation (heures)">Validité de l’invitation (heures)</label><input id="invitation-hours" type="number" min="1" max="720" value="72" title="Entre une durée de 1 à 720 heures." data-jm-i18n-title="Entre une durée de 1 à 720 heures." required /></div>
                     <div class="field"><label for="invitation-days" data-jm-i18n="Durée d’accès (jours)">Durée d’accès (jours)</label><input id="invitation-days" type="number" min="1" max="3650" value="30" title="Entre une durée de 1 à 3 650 jours." data-jm-i18n-title="Entre une durée de 1 à 3 650 jours." required /></div>
                   </div>
                   <label class="checkbox-field" for="invitation-unlimited"><input id="invitation-unlimited" type="checkbox" /><span data-jm-i18n="Accès sans limite de durée">Accès sans limite de durée</span></label>
-                  <button class="button button-primary" type="submit" data-jm-i18n="Créer une invitation">Créer une invitation</button>
+                  <p class="field-help invitation-payment-help" data-jm-i18n="Après vérification du paiement, transmets le code en privé. Le client le saisit sur jessiemessage.com.">Après vérification du paiement, transmets le code en privé. Le client le saisit sur jessiemessage.com.</p>
+                  <button id="invitation-create" class="button button-primary" type="submit" data-jm-i18n="Créer une invitation">Créer une invitation</button>
                 </form>
                 <div id="new-invitation" class="new-invitation" hidden>
+                  <div id="invitation-code-result-field" class="invitation-result-field" hidden>
+                    <label for="invitation-code-result" data-jm-i18n="Code à transmettre au client">Code à transmettre au client</label>
+                    <input id="invitation-code-result" type="text" readonly autocomplete="off" spellcheck="false" />
+                    <p class="field-help" data-jm-i18n="Ce code n’est affiché qu’à sa création. Copie-le avant de quitter cette page.">Ce code n’est affiché qu’à sa création. Copie-le avant de quitter cette page.</p>
+                    <button id="copy-invitation-code" class="button button-secondary" type="button" data-jm-i18n="Copier le code">Copier le code</button>
+                  </div>
+                  <div id="invitation-link-field" class="invitation-result-field" hidden>
                   <label for="invitation-link" data-jm-i18n="Lien à transmettre au client">Lien à transmettre au client</label>
                   <input id="invitation-link" type="text" readonly autocomplete="off" spellcheck="false" />
                   <p class="field-help" data-jm-i18n="Ce lien n’est affiché qu’à sa création.">Ce lien n’est affiché qu’à sa création.</p>
                   <button id="copy-invitation" class="button button-secondary" type="button" data-jm-i18n="Copier le lien">Copier le lien</button>
+                  </div>
                 </div>
               </div>
               <div class="access-section"><h2 data-jm-i18n="Invitations">Invitations</h2><div id="invitations-list" class="access-list"></div><div id="invitations-pagination" class="access-pagination" hidden><p id="invitations-page-note" class="field-help" role="status"></p><div class="pagination-actions"><button id="invitations-first" class="button button-secondary" type="button" disabled data-jm-i18n="Revenir au début">Revenir au début</button><button id="invitations-next" class="button button-secondary" type="button" disabled data-jm-i18n="Plus anciens">Plus anciens</button></div></div></div>

@@ -96,6 +96,78 @@ test("invitation inspection requires a body token and exposes only expiry and ac
   assert.equal(calls.length, 1);
 });
 
+test("invitation codes use the existing inspection and registration body fields without appearing in responses or URLs", async t => {
+  const { base, calls } = await fixture(t);
+  const code = "0123-4567-89AB-CDEF-GHJK";
+  const inspected = await post(base, "/api/access/invitation", { token: code.toLowerCase() });
+  assert.equal(inspected.status, 200); assertHeaders(inspected);
+  assert.deepEqual(Object.keys(await inspected.json()).sort(), ["accessDays", "expiresAt"]);
+  assert.deepEqual(calls[0], ["inspectInvitation", { token: code.toLowerCase(), peerAddress: "127.0.0.1" }]);
+  const registered = await post(base, "/api/access/register", { ...registration, invitationToken: code });
+  assert.equal(registered.status, 202);
+  assert.deepEqual(await registered.json(), { status: "verification_pending" });
+  const count = calls.length;
+  for (const [path, body] of [["invitation", { token: code }], ["register", { ...registration, invitationToken: code }]]) {
+    const response = await post(base, `/api/access/${path}?code=${code}`, body);
+    assert.equal(response.status, 400); assert.equal((await response.text()).includes(code), false);
+  }
+  for (const token of ["A".repeat(19), "A".repeat(65), "AAAA-AAAA-AAAA-AAAA-AAAU", "AAAA\nAAAA-AAAA-AAAA-AAAA"]) {
+    assert.equal((await post(base, "/api/access/invitation", { token })).status, 400);
+  }
+  assert.equal((await post(base, "/api/access/verify-email", { token: code })).status, 400);
+  assert.equal((await fetch(`${base}/api/access/session`, { headers: { Cookie: `__Host-jessie_client=${code}` } })).status, 401);
+  assert.equal(calls.length, count);
+});
+
+test("admin creation opts into a code-only DTO while omitted or explicit link format keeps the existing URL", async t => {
+  const code = "0123-4567-89AB-CDEF-GHJK";
+  const { base, calls } = await fixture(t, {
+    createInvitation: (_token, body) => body.format === "code"
+      ? { ...invitation(), format: "code", code, tokenHash: "never-publish" }
+      : { ...invitation(), url: `${origin}/access#invitation=${invitationToken}` },
+  });
+  const options = { lifetimeHours: 72, accessDays: 30 };
+  const created = await post(base, "/api/admin/invitations", { ...options, format: "code" }, adminHeaders());
+  assert.equal(created.status, 201); assertHeaders(created);
+  const data = await created.json();
+  assert.deepEqual(Object.keys(data).sort(), ["accessDays", "code", "expiresAt", "format", "id"]);
+  assert.equal(data.code, code); assert.equal(data.format, "code");
+  assert.deepEqual(calls.find(([name]) => name === "createInvitation"), ["createInvitation", adminToken, { ...options, format: "code" }]);
+  for (const extra of [{}, { format: "link" }]) {
+    const response = await post(base, "/api/admin/invitations", { ...options, ...extra }, adminHeaders());
+    assert.equal(response.status, 201);
+    const link = await response.json();
+    assert.equal(link.url, `${origin}/access#invitation=${invitationToken}`);
+    assert.equal(Object.hasOwn(link, "code"), false);
+  }
+  const before = calls.filter(([name]) => name === "createInvitation").length;
+  for (const extra of [{ format: null }, { format: true }, { format: "email" }, { email: "client@example.invalid" }]) {
+    assert.equal((await post(base, "/api/admin/invitations", { ...options, ...extra }, adminHeaders())).status, 400);
+  }
+  assert.equal(calls.filter(([name]) => name === "createInvitation").length, before);
+});
+
+test("created invitation DTOs reject malformed, mixed or cross-format secrets", async t => {
+  const code = "0123-4567-89AB-CDEF-GHJK", url = `${origin}/access#invitation=${invitationToken}`;
+  const cases = [
+    ["code", { format: "code", code, url }],
+    ["code", { format: "link", code }],
+    ["code", { code }],
+    ["code", { format: "code", code: code.toLowerCase() }],
+    ["code", { format: "code", code: code.replaceAll("-", "") }],
+    ["code", { format: "code", code: "A".repeat(43) }],
+    ["link", { format: "code", code }],
+    ["link", { url, code }],
+    ["link", { url: `${origin}/access#invitation=${code}` }],
+  ];
+  for (const [format, value] of cases) {
+    const { base } = await fixture(t, { createInvitation: () => ({ ...invitation(), ...value }) });
+    const response = await post(base, "/api/admin/invitations", { lifetimeHours: 72, accessDays: 30, format }, adminHeaders());
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { error: "authentication_unavailable" });
+  }
+});
+
 test("all pre-auth mutations require same-origin JSON and a custom header before service work", async (t) => {
   const { base, calls } = await fixture(t);
   for (const path of ["invitation", "register", "verify-email", "resend-verification", "login"]) {

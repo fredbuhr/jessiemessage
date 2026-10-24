@@ -2,6 +2,12 @@
 
 **23 octobre 2026 — livraison1.10.1 terminée : application, checkpoint privé et latest alignés selon le reçu final utilisateur.** Le [reçu `release1101_metadata_recorded`](verification-proofs/final-public-1100/hosted-metadata1101.json) confirme version1.10.1, source `9eb99f1f68ab4beb5484894249afa8f413cc5dd6`, arbre `2a09d9d5d6698a04605e9a4b4faa551536cfca13`, Nodev24.22.1, SQL38/37 tables physiques et `publicReady:true`. Démarrage `1792787440361`, soit **23/10/2026 22:30:40.361 à Paris**. Checkpoint1101 SHA256 `6a4ab751f1a89433502df3db898da0ab65aef0e80fc99c38df29978359c02e90`. L’état1100,190,184, les autres blocs et historiques sont préservés, ainsi que le repli185 qualifié compatibleSQL38, jamais démarré. Aucune opération technique restante ; ne rejouer aucune commande de livraison.
 
+## Évolution 1.11.0 — invitations par code en développement
+
+Demande du 24 octobre : le client ouvre l’adresse commune `jessiemessage.com` depuis un emplacement autorisé, puis saisit le code individuel reçu en MP après paiement vérifié manuellement. [Périmètre](invitation-codes-1110.md). Branche `feat/invitation-codes-1110` ; la production reste1.10.1 et aucune commande hébergée n’est à rejouer.
+
+Ce lot ajoute le format code aux invitations existantes, sans migration ni changement de dépendances : génération admin, saisie à l’accueil, inspection puis inscription habituelle. Usage unique, expiration, révocation, confirmation d’e-mail et approbation manuelle conservés ; anciens liens compatibles. Pas de paiement automatique ni de communication avec Stripchat. Qualification et publication encore à effectuer ; aucune disponibilité de cette fonction en production n’est déduite du développement.
+
 ## Audit final et correctif1.10.1 — livraison terminée
 
 L’ouverture était visée le23octobre vers22hParis ; la clôture technique est désormais acquise après les reçus hébergés. Les134 points de la [checklist](AUDIT-PUBLIC-1100-20261023.md) ont été traités ; la seconde revue de couverture conserve les limites et les22 anciens constats. Six défauts sont corrigés, dont F-05(P1, préférences en vol à l’arrêt) et F-01(P2, anciennes réponses cookies), puis Nodemailer10.1.4, galerie microsecondes, titreEN et événements de fermeture sur dialogues rouverts. Aucun module métier retiré, migration ou changement du catalogue691/25/934.

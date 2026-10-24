@@ -6,6 +6,7 @@ import { AuthError } from "../auth/service.mjs";
 import { csrfToken, hashPassword, newId, newToken, tokenDigest, verifyPassword } from "../auth/crypto.mjs";
 import { sealVerificationPayload } from "../mail/crypto.mjs";
 import { decodeAccessCursor, encodeAccessCursor, validateAccessPage } from "./pagination.mjs";
+import { invitationDigest, newInvitationCode } from "./invitation-code.mjs";
 
 const SESSION_MILLISECONDS = CLIENT_SESSION_SECONDS * 1000;
 const VERIFICATION_MILLISECONDS = 24 * 3600000;
@@ -83,6 +84,9 @@ function canonicalPseudonym(value) {
 }
 function digest(raw) {
   try { return tokenDigest(raw); } catch { throw invalid(); }
+}
+function invitationHash(raw) {
+  try { return invitationDigest(raw); } catch { throw invalid(); }
 }
 
 export async function createAccessService({ store, authStore, authService, totpKey, mailKey, origin, clock = Date.now }) {
@@ -163,17 +167,19 @@ export async function createAccessService({ store, authStore, authService, totpK
   }
 
   async function inspectInvitation({ token, peerAddress } = {}) {
-    const hash = digest(token);
+    const hash = invitationHash(token);
     await limit("inspect", hash.toString("hex"), peerAddress, 20);
     return database(() => store.inspectInvitation(hash, { now: clock() }));
   }
-  async function createInvitation(raw, { lifetimeHours = 72, accessDays = 30 } = {}) {
+  async function createInvitation(raw, { lifetimeHours = 72, accessDays = 30, format = "link" } = {}) {
     if (!Number.isSafeInteger(lifetimeHours) || lifetimeHours < 1 || lifetimeHours > 720
-      || (accessDays !== null && (!Number.isSafeInteger(accessDays) || accessDays < 1 || accessDays > 3650))) throw invalid();
+      || (accessDays !== null && (!Number.isSafeInteger(accessDays) || accessDays < 1 || accessDays > 3650))
+      || !["link", "code"].includes(format)) throw invalid();
     const actorTokenHash = await administratorToken(raw);
-    const now = clock(); const token = newToken();
-    const result = await database(() => store.createInvitation({ actorTokenHash, now, id: newId(), tokenHash: tokenDigest(token), expiresAt: now + lifetimeHours * 3600000, accessDays }));
+    const now = clock(); const token = format === "code" ? newInvitationCode() : newToken();
+    const result = await database(() => store.createInvitation({ actorTokenHash, now, id: newId(), tokenHash: invitationHash(token), expiresAt: now + lifetimeHours * 3600000, accessDays }));
     if (!result) throw rejected("ACCESS_FORBIDDEN");
+    if (format === "code") return { id: result.id.toString("hex"), expiresAt: result.expiresAt, accessDays: result.accessDays, format, code: token };
     return { id: result.id.toString("hex"), expiresAt: result.expiresAt, accessDays: result.accessDays, url: `${origin}/access#invitation=${token}` };
   }
   async function listInvitations(raw, input = {}) {
@@ -188,18 +194,18 @@ export async function createAccessService({ store, authStore, authService, totpK
     return database(() => store.revokeInvitation(hash, identity(id), { now: clock() }));
   }
   async function register({ invitationToken, email, pseudonym, password, ageDeclared, peerAddress } = {}) {
-    const invitationHash = digest(invitationToken);
-    await limit("register", invitationHash.toString("hex"), peerAddress, 3);
+    const hash = invitationHash(invitationToken);
+    await limit("register", hash.toString("hex"), peerAddress, 3);
     let address;
     try { address = canonicalEmail(email); } catch { throw rejected(); }
     const display = canonicalPseudonym(pseudonym);
     if (ageDeclared !== true) throw rejected();
-    if (!await database(() => store.inspectInvitation(invitationHash, { now: clock() }))) throw rejected();
+    if (!await database(() => store.inspectInvitation(hash, { now: clock() }))) throw rejected();
     let passwordHash;
     try { passwordHash = await hashPassword(password); }
     catch (error) { if (error.code === "AUTH_BUSY") throw new AuthError("AUTH_BUSY", 5); throw rejected(); }
     const now = clock();
-    const accepted = await database(() => store.register({ invitationHash,
+    const accepted = await database(() => store.register({ invitationHash: hash,
       user: { id: newId(), email: address, pseudonym: display, passwordHash }, ...verificationJob(address, now), now }));
     if (!accepted) throw rejected();
     return { status: "verification_pending" };
