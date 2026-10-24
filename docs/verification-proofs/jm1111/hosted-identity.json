@@ -1,0 +1,14 @@
+{
+  "reportedBy": "user application version page",
+  "version": "1.11.1",
+  "source": "80b7fbf5f9b5ba32ac1aae817043126e93025946",
+  "nodeVersion": "v24.22.1",
+  "startedAtLocal": "24/10/2026 19:31:34",
+  "timezone": "Europe/Paris",
+  "precision": "seconds; milliseconds not reported",
+  "epochRange": {
+    "fromInclusive": 1792863094000,
+    "toExclusive": 1792863095000
+  },
+  "scope": "Identity reported after Manager action; no direct agent inspection of Manager, log or runtime process. Final metadata recording remains pending; writer will read the actual startup epoch."
+}
