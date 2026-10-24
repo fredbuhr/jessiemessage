@@ -147,3 +147,5 @@ L’administrateur peut choisir **Fermer définitivement** dans la carte du clie
 Une restauration se fait manuellement en maintenance, avec la personne chargée de l’exploitation et un contrôle des comptes fermés avant réouverture. Les messages postérieurs à la sauvegarde choisie peuvent être perdus ; la récupération dépend de la copie effectivement conservée. [Parcours opérateur](manual-restore-operator-078.md).
 
 Pour une question, consulte l’[aide](https://jessiemessage.com/help) ou [contact@jessiemessage.com](mailto:contact@jessiemessage.com). Ne transmets jamais ton mot de passe ni tes codes.
+
+À partir de1.11.0, sans client sélectionné dans Messages, la [vue des messages reçus](received-inbox-1110.md) affiche les non lus en premier puis les plus récents. Clique sur un message pour ouvrir sa conversation ; sur mobile, « Clients et filtres » ouvre la liste des clients.

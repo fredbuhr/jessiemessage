@@ -1,3 +1,4 @@
+import { decodeInboxCursor, encodeInboxCursor } from "./inbox-cursor.mjs";
 import { loadStoreMigrations } from "../db/store-migrations.mjs";
 import { createSessionClock, sessionIsValid, adminSessionExpiry, clientSessionExpiry, CLIENT_SESSION_SECONDS, SESSION_TOUCH_MILLISECONDS } from "../auth/session-policy.mjs";
 import { manuallyAdmittedClient, invitationConsumptionProjection } from "../access/admission.mjs";
@@ -508,6 +509,41 @@ export function createChatStore(pool, { clock, enqueueNotification, decorateMess
           conversations.push(await summary(connection, { actor: admin, admin, client, conversation, now }));
         }
         return { conversations, nextCursor: hasMore ? selected.at(-1).id : null, hasMore };
+      });
+    },
+
+    async readInbox({ tokenHash, now, cursor = null, limit = 50 }) {
+      bytes(tokenHash, 32); instant(now); limitValue(limit);
+      let position = null;
+      try { if (cursor !== null) position = decodeInboxCursor(cursor); } catch { input(); }
+      return run(async (connection) => {
+        const actorId = await candidateActor(connection, tokenHash);
+        const admin = await lockUser(connection, actorId);
+        const mfa = await lockMfa(connection, admin, now);
+        now = (await actorSession(connection, tokenHash, admin, "admin", mfa, now)).now;
+        const unread = "(m.sequence_no > COALESCE(r.last_read_sequence, 0))";
+        const seek = position === null ? "" : `AND (${unread} < ? OR (${unread} = ? AND (m.created_at < ? OR (m.created_at = ? AND m.id < ?))))`;
+        const rows = await connection.query(`SELECT ${messageProjection}, ${unread} AS inbox_unread,
+          DATE_FORMAT(m.created_at, '%Y-%m-%d %H:%i:%s.%f') AS inbox_created
+          FROM messages m JOIN conversations c ON c.id = m.conversation_id
+          LEFT JOIN chat_receipts r ON r.conversation_id = c.id AND r.user_id = c.admin_id ${messageJoins}
+          WHERE c.admin_id = ? AND c.created_at <= ? AND m.created_at <= ?
+            AND m.sender_role = 'client' AND m.sender_id = c.client_id AND m.deleted_at IS NULL ${seek}
+          ORDER BY inbox_unread DESC, m.created_at DESC, m.id DESC LIMIT ?`,
+        [admin.id, sqlDate(now), sqlDate(now), ...(position ? [position[0], position[0], position[1], position[1], Buffer.from(position[2], "hex")] : []), limit + 1]);
+        const selected = rows.slice(0, limit), contexts = new Map(), items = [];
+        for (const row of selected) {
+          const id = row.conversation_id.toString("hex");
+          if (!contexts.has(id)) {
+            const context = await authorize(connection, { role: "admin", tokenHash, conversationId: row.conversation_id, now });
+            contexts.set(id, { context, conversation: await summary(connection, context) });
+          }
+          const { context, conversation } = contexts.get(id);
+          const message = (await decorated(connection, context, [rawMessage(row, admin.id)]))[0];
+          items.push({ conversation, message, unread: Number(row.inbox_unread) === 1 });
+        }
+        const hasMore = rows.length > limit, last = selected.at(-1);
+        return { items, hasMore, nextCursor: hasMore ? encodeInboxCursor([Number(last.inbox_unread), last.inbox_created, last.id.toString("hex")]) : null };
       });
     },
 

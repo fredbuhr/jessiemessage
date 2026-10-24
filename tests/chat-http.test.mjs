@@ -598,3 +598,24 @@ test("reply state is private to admin and manual action is authenticated and CSR
   const response = await post(f.base, endpoint, body); assert.equal(response.status, 200); headersArePrivate(response);
   assert.equal((await response.json()).reply.needed, false);
 });
+
+test("received inbox is admin-only, never marks read, strips private data and rejects malformed pages", async t => {
+  const item = { conversation: conversation("admin"), message: message({ sender: "peer", clientMessageId: null }), unread: true };
+  let page = { items: [item], hasMore: false, nextCursor: null }, reads = 0;
+  const { base, calls } = await fixture(t, { inbox: async () => { reads++; return page; } });
+  const response = await fetch(base + "/api/chat/admin/inbox?limit=50", { headers: { Cookie: cookie("admin") } });
+  assert.equal(response.status, 200); assert.equal(response.headers.get("cache-control"), "no-store");
+  const body = await response.json(); assert.equal(body.items[0].message.body, item.message.body);
+  assert.equal(body.items[0].conversation.client.email, undefined); assert.equal(body.items[0].message.encryptedBody, undefined);
+  assert.equal(calls.some(call => call[0] === "read"), false);
+  assert.equal((await fetch(base + "/api/chat/admin/inbox", { headers: { Cookie: cookie("client") } })).status, 401);
+  assert.equal((await fetch(base + "/api/chat/client/inbox", { headers: { Cookie: cookie("client") } })).status, 404);
+  for (const query of ["cursor=bad", "limit=0", "limit=51&limit=50", "unknown=1"]) {
+    assert.equal((await fetch(base + "/api/chat/admin/inbox?" + query, { headers: { Cookie: cookie("admin") } })).status, 400);
+  }
+  assert.equal(reads, 1);
+  for (const bad of [{ ...item, unread: false }, { ...item, message: message() }, { ...item, message: { ...item.message, deletedAt: now, body: null } }]) {
+    page = { items: [bad], hasMore: false, nextCursor: null };
+    assert.equal((await fetch(base + "/api/chat/admin/inbox", { headers: { Cookie: cookie("admin") } })).status, 503);
+  }
+});

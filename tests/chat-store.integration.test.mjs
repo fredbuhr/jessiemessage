@@ -70,6 +70,37 @@ test("real MariaDB private text chat persistence (synthetic disposable database 
       events: Number((await connection.query("SELECT COUNT(*) AS value FROM chat_events WHERE conversation_id = ?", [fixture.conversationId]))[0].value),
     });
 
+    await t.test("received inbox orders every incoming message unread-first with exact microsecond pagination and account isolation", async () => {
+      const a = await pair(), b = await pair(a.admin), other = await pair();
+      const a1 = (await send(a)).message, a2 = (await send(a)).message;
+      const b1 = (await send(b)).message, b2 = (await send(b)).message;
+      const removed = (await send(b)).message;
+      await send(a, "admin"); await send(other);
+      await store.deleteMessage({ ...request(b), messageId: removed.id });
+      await store.markRead({ ...request(a, "admin"), through: a2.sequence });
+      const stamp = sqlDate(now).slice(0, -6);
+      for (const [message, suffix] of [[a1, "000001"], [a2, "000002"], [b1, "000003"], [b2, "000004"]]) {
+        await connection.query("UPDATE messages SET created_at = ? WHERE id = ?", [stamp + suffix, message.id]);
+      }
+      // Advance only this read's wall clock beyond all microsecond fixtures.
+      const options = { tokenHash: a.admin.tokenHash, now: now + 1, limit: 1 };
+      const ids = [], cursors = new Set(); let cursor = null;
+      do {
+        const page = await store.readInbox({ ...options, cursor });
+        assert.equal(page.items.length, 1);
+        ids.push(page.items[0].message.id.toString("hex"));
+        assert.equal(page.items[0].unread, ids.length <= 2);
+        assert.equal(page.items[0].message.senderRole, "client");
+        cursor = page.nextCursor;
+        if (cursor) { assert.ok(!cursors.has(cursor)); cursors.add(cursor); }
+        assert.equal(page.hasMore, cursor !== null);
+      } while (cursor);
+      assert.deepEqual(ids, [b2, b1, a2, a1].map(message => message.id.toString("hex")));
+      const check = await read(b, "admin"); assert.equal(check.conversation.unreadCount, 2, "overview never changes read receipts");
+      await assert.rejects(store.readInbox({ ...options, tokenHash: a.client.tokenHash }), errorCode("CHAT_UNAUTHORIZED"));
+      await assert.rejects(store.readInbox({ ...options, cursor: "bad" }), errorCode("CHAT_STORE_INPUT"));
+    });
+
     await t.test("read-only schema checks reject dirty history, unsigned/type drift, lost uniqueness and missing CHECK/FK enforcement", async () => {
       assert.equal(await store.assertSchema(), true);
       await connection.query("UPDATE schema_migrations SET state = 'failed', finished_at = NULL WHERE version = ?", [migrations.at(-1).version]);

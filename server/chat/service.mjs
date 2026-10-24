@@ -1,3 +1,4 @@
+import { decodeInboxCursor } from "./inbox-cursor.mjs";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { tokenDigest } from "../auth/crypto.mjs";
 import { decryptMessageBody, encryptMessageBody, messageFingerprint, videoMessageFingerprint, validateMessageBody } from "./crypto.mjs";
@@ -153,6 +154,17 @@ export async function createChatService({ store, authStore, authService, accessS
       await readLimit(session.user.id, now, session.user.role);
       const result = await store.listConversations({ tokenHash: tokenDigest(token), now: nowValue(), afterId: after, limit });
       return { conversations: result.conversations.map((row) => conversationDTO(row, "admin")), nextCursor: result.nextCursor?.toString("hex") ?? null, hasMore: result.hasMore };
+    }),
+    ...(typeof store.readInbox !== "function" ? {} : {
+      inbox: (token, { cursor = null, limit = 50 } = {}) => guarded(async () => {
+        limitValue(limit);
+        try { if (cursor !== null) decodeInboxCursor(cursor); } catch { fail("CHAT_INPUT"); }
+        const session = await actor("admin", token), now = nowValue();
+        await readLimit(session.user.id, now, "admin");
+        const result = await store.readInbox({ tokenHash: tokenDigest(token), now: nowValue(), cursor, limit });
+        return { items: result.items.map(item => ({ conversation: conversationDTO(item.conversation, "admin"),
+          message: messageDTO(item.message, session), unread: item.unread })), hasMore: result.hasMore, nextCursor: result.nextCursor };
+      }),
     }),
     clientConversation: (token) => guarded(async () => {
       const session = await actor("client", token), now = nowValue();

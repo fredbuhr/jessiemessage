@@ -42,6 +42,7 @@ async function fixture() {
   state.rows = [row(adminId, "Synthetic admin text"), row(clientId, "Synthetic client text", { sequence: maximumSequence })];
   const record = (name, options) => { calls.push({ name, options }); if (state.rawError) throw state.rawError; };
   const store = {
+    readInbox: async (options) => { record("readInbox", options); return { items: [{ conversation: conversation(), message: state.rows[1], unread: true }], hasMore: false, nextCursor: null }; },
     listConversations: async (options) => { record("listConversations", options); return { conversations: [conversation()], nextCursor: conversationId, hasMore: true }; },
     getClientConversation: async (options) => { record("getClientConversation", options); return state.noConversation ? null : conversation(); },
     readMessages: async (options) => {
@@ -147,7 +148,7 @@ test("chat service refuses absent dependencies, missing store operations and imp
   for (const dependency of ["store", "authStore", "authService", "accessService"]) {
     await assert.rejects(createChatService({ ...f.options, [dependency]: null }), hasCode("CHAT_CONFIG"));
   }
-  for (const method of Object.keys(f.store)) await assert.rejects(createChatService({ ...f.options, store: { ...f.store, [method]: undefined } }), hasCode("CHAT_CONFIG"));
+  for (const method of Object.keys(f.store).filter(name => name !== "readInbox")) await assert.rejects(createChatService({ ...f.options, store: { ...f.store, [method]: undefined } }), hasCode("CHAT_CONFIG"));
   await assert.rejects(createChatService({ ...f.options, clock: null }), hasCode("CHAT_CONFIG"));
   assert.ok(Object.isFrozen(f.service));
 });
@@ -653,4 +654,17 @@ test("client video sends refuse before persistence and never consume shared send
   const service = await createChatService({ ...f.options, videoMessages: { async sendMessage() { writes++; } } });
   await assert.rejects(service.sendVideo("client", f.token, conversationHex, { clientMessageId: "5".repeat(32), videoId: "6".repeat(32), caption: "" }), hasCode("CHAT_FORBIDDEN"));
   assert.equal(writes, 0); assert.equal(f.rateCalls.length, 0);
+});
+
+test("received inbox decrypts only administrator-authorized incoming items and keeps existing read quotas", async () => {
+  const f = await fixture();
+  const page = await f.service.inbox(f.token);
+  assert.equal(page.items.length, 1); assert.equal(page.items[0].message.sender, "peer");
+  assert.equal(page.items[0].message.body, "Synthetic client text");
+  assert.equal(page.items[0].unread, true);
+  const text = JSON.stringify(page); assert.ok(!text.includes("bodyEncrypted") && !text.includes("bodyFingerprint") && !text.includes("private-client@example.invalid"));
+  assert.equal(f.calls.filter(call => call.name === "readInbox").length, 1);
+  await assert.rejects(f.service.inbox(f.token, { cursor: "invalid" }), hasCode("CHAT_INPUT"));
+  await assert.rejects(f.service.inbox(f.token, { limit: 101 }), hasCode("CHAT_INPUT"));
+  f.state.admin = false; await assert.rejects(f.service.inbox(f.token), hasCode("CHAT_UNAUTHORIZED"));
 });

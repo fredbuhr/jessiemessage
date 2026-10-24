@@ -1,0 +1,11 @@
+# Messages reçus sans client sélectionné — 1.11.0
+
+Dans l’administration, le panneau central affiche tous les messages reçus des clients lorsqu’aucune conversation n’est sélectionnée. Les messages non lus viennent en premier ; chaque groupe suit l’ordre des dates décroissantes. Chaque message reste une ligne distincte, avec nom du client, date, texte ou légende et type de pièce jointe. Les messages envoyés par Jessie et les messages supprimés sont exclus.
+
+Un clic ouvre la conversation au message choisi. La vue générale ne marque rien comme lu ; les règles existantes de lecture dans la conversation restent actives. La flèche de retour retrouve les messages reçus. Sur mobile, « Clients et filtres » donne accès à la liste et aux filtres de clients, puis « Messages reçus » revient à la vue générale. Les filtres de clients restent propres à la liste latérale ; la vue générale présente tous les messages reçus.
+
+Le chargement se fait par pages de 50 avec « Autres messages ». Le curseur conserve la précision SQL à six chiffres et un identifiant pour départager les dates identiques. La première page est actualisée toutes les quinze secondes tant que la vue est visible, au début de la liste et sans pages supplémentaires ouvertes. Pendant la lecture des pages précédentes, le bouton « Actualiser » permet de revenir à la première page ; les mutations intervenues sur un autre appareil peuvent déplacer un message entre les groupes lors de la pagination. Les doublons sont éliminés par identifiant.
+
+Les aperçus sont limités à l’administrateur de chaque conversation, sous autorisation SQL/session/MFA actuelle et quotas de lecture existants. Ils restent en mémoire, sont retirés au masquage, à la déconnexion et au changement de propriétaire. Une réponse obsolète ne peut pas les réafficher. Le texte est inséré comme texte brut, jamais comme HTML ; aucune miniature ou pièce jointe n’est téléchargée par la vue générale. Aucune migration ni dépendance ajoutée.
+
+Qualification en cours dans la PR137 avec les invitations par code. La production reste1.10.1 ; les tests synthétiques ne valent pas une validation sur téléphone réel ou une mesure de charge de production.
