@@ -1,4 +1,4 @@
-# Livraison1.11.0 — prochaine action : préparation et CHECK
+# Livraison1.11.0 — prochaine action : activation Manager
 
 L’application hébergée reste1.10.1. La1.11.0 est publiée et qualifiée, sans activation attestée. Ce document donne uniquement la prochaine action ; ne rejouer aucune préparation1101, récupération, migration ou ancien writer.
 
@@ -7,9 +7,11 @@ L’application hébergée reste1.10.1. La1.11.0 est publiée et qualifiée, san
 - Opérateur `79dd0bde2013e862230188292247b311561e5f7e`, publication40101983330 réussie2/2, opérateurs32/32 sousNode24.22.1.
 - Préparateur SHA256 `44f30bdd0fdf94eb63eb081a7309b2fe2d8fb6bd7515a82c4d9c52065c1a0c92`.
 
-## Préparation à exécuter une seule fois
+## Historique — préparation et CHECK acquis, ne pas rejouer
 
-Ouvrir le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis coller cette commande. Elle prépare le checkout exact et lance son CHECK, sans démarrer le service ni modifier le Manager, les clés, la configuration ou le checkpoint. Les dépendances1101 sont réutilisées ; aucune migration ni installation.
+**Acquis selon le [reçu utilisateur](verification-proofs/jm1110/hosted-preparation.json)** : CHECK0 puis `PREPARATION_1110_CHECK_OK`, reçuSHA256 `6cbbf3bac780f965646ade8293a55aade3a221581a21f6ddcc7ad8e708293dae` reconstitué identique. Ne rejouer ni préparation ni CHECK. La commande ci-dessous est désormais historique.
+
+L’instruction exécutée était : ouvrir le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis coller cette commande. Elle prépare le checkout exact et lance son CHECK, sans démarrer le service ni modifier le Manager, les clés, la configuration ou le checkpoint. Les dépendances1101 sont réutilisées ; aucune migration ni installation.
 
 ```bash
 env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_PREPARE1110'
@@ -42,8 +44,8 @@ PY_PREPARE1110
 
 Relever le JSON puis `CHECK1110_EXIT=0` et `PREPARATION_1110_CHECK_OK`. Toute sortie non confirmée conserve son état : lire les traces et le résultat durable avant d’envisager une reprise. Aucun essai de démarrage ne doit être déduit de la préparation.
 
-## Étapes dépendantes, encore non exécutées
+## Activation Manager — à effectuer maintenant
 
-Après réception du véritable résultat de préparation/CHECK, activer dans le [Manager, réglages du service Node](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), service encore nommé `recette.jessiemessage.com` qui dessert aussi le principal. Les futurs champs sont exécution `bash /srv/customer/jessiemessage-private/start-primary-release1110-88bbb4ed.sh`, build `bash /srv/customer/jessiemessage-private/check-primary-release1110-88bbb4ed.sh`, port3000. Ne pas appliquer cette étape avant le reçu de préparation/CHECK.
+La préparation et le CHECK sont confirmés. Activer dans le [Manager, réglages du service Node](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), service encore nommé `recette.jessiemessage.com` qui dessert aussi le principal. Les champs sont exécution `bash /srv/customer/jessiemessage-private/start-primary-release1110-88bbb4ed.sh`, build `bash /srv/customer/jessiemessage-private/check-primary-release1110-88bbb4ed.sh`, port3000. Enregistrer ces champs puis redémarrer le service une fois ; ne pas utiliser le site PHP accueil.
 
 Relever ensuite la version1.11.0, le commit88bbb4edfa15e7502c25c5e9e319c36f5f60276d, Nodev24.22.1 et le démarrage dans [l’identité du service](https://jessiemessage.com/admin/readiness). Le writer final sera épinglé et qualifié avec le SHA256 du véritable reçu ; aucun writer provisoire n’est à exécuter. Repli185/SQL38 conservé, jamais démarré ;184/172 interdits. Pas de test de sauvegarde reporté ni de nouvel envoi réel.

@@ -6,9 +6,10 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 Codes d’invitation et vue des messages reçus qualifiés PR/main5/5, tag/release422775194 et publication2/2 acquis. [Périmètre codes](invitation-codes-1110.md), [messages reçus](received-inbox-1110.md), [source et preuves](REPRISE.md). Production toujours1.10.1 ; aucune migration ni nouvelle dépendance.
 
-1. Exécuter une fois [préparation1110 et CHECK](operations-release1110.md), puis lire le reçu réel avant d’avancer. Ne rejouer aucune commande1101 ou antérieure.
-2. Activer le lanceur1110 exact dans le Manager et relever la version/commit/Node réellement démarrés.
-3. Finaliser et qualifier le writer sur le véritable reçu de préparation, puis aligner les métadonnées après vérifications gardées. Ne pas relancer les suites vertes du code inchangé.
+Préparation et CHECK acquis selon le [reçu utilisateur](verification-proofs/jm1110/hosted-preparation.json) : empreinte canonique conforme, `CHECK1110_EXIT=0`, `PREPARATION_1110_CHECK_OK`. Ne pas les rejouer.
+
+1. Activer le lanceur1110 exact dans le [Manager](operations-release1110.md) et relever version/commit/Node réellement démarrés.
+2. Qualifier le writer sur le véritable reçu de préparation, puis aligner les métadonnées après activation et vérifications gardées. Ne pas relancer les suites vertes du code inchangé.
 
 Aucun envoi réel, test de sauvegarde reporté, migration ou nouvelle manipulation PC. Les limites physiques précédentes restent explicites.
 
