@@ -23,4 +23,4 @@ Le code n’est révélé qu’à sa création. La liste des invitations permet 
 
 ## État de livraison
 
-Fonction publiée et qualifiée dans1.11.0, PR/main5/5, démarrage hébergé1110 rapporté et enregistrement final encore en attente selon [REPRISE](REPRISE.md). Les tests synthétiques ne constituent pas une recette sur compte ou appareil réel.
+Fonction publiée, qualifiée et déployée dans1.11.0, PR/main5/5 ; démarrage et enregistrement final acquis selon le [reçu utilisateur](verification-proofs/jm1110/hosted-metadata.json). Application, publication et checkpoint alignés, `publicReady:true` ; aucune opération de livraison restante selon [REPRISE](REPRISE.md). Les tests synthétiques ne constituent pas une recette sur compte ou appareil réel.

@@ -1,17 +1,19 @@
-# Livraison1.11.0 — prochaine action : enregistrement final
+# Livraison 1.11.0 — terminée
 
-L’application1.11.0 est démarrée selon le [relevé utilisateur](verification-proofs/jm1110/hosted-identity.json) du24octobre à16:59:47Paris, bon commit etNode24.22.1. La préparation, le CHECK et l’activation sont acquis : ne pas les rejouer. Le dernier checkpoint confirmé reste1101 jusqu’au reçu final1110.
+L’application, la publication et le checkpoint privé sont alignés en **1.11.0** selon le [reçu final utilisateur](verification-proofs/jm1110/hosted-metadata.json), `release1110_metadata_recorded`, `publicReady:true`, bon commit etNode24.22.1. Démarrage réel `1792853987566`, soit **24 octobre 2026 à 16:59:47.566 à Paris**, conforme au relevé UI à la seconde. Checkpoint SHA256 `859727b6d196989cc87c512fec1e1758fb25aa401d8d1ab4753c7d9a744feb11`. Historiques1101/1100/190/184, état actif antérieur et autres blocs préservés ; seules les métadonnées ont été modifiées, sans redémarrage.
+
+**Aucune prochaine action de livraison. Ne rejouer ni préparation, CHECK, activation ou writer.** Les commandes ci-dessous sont historiques. Les limites des essais physiques, de charge et de sauvegarde demeurent ; aucune inspection privée directe de l’hôte par l’agent n’est déduite du reçu.
 
 - Source : `88bbb4edfa15e7502c25c5e9e319c36f5f60276d` ; arbre : `513011bfde600b979bd93687ecf47095262caa6a`.
 - Tag/release/latest `v1.11.0`, release422775194 ; CI PR40100795293 et main40101446801 chacune5/5.
 - Opérateur `79dd0bde2013e862230188292247b311561e5f7e`, publication40101983330 réussie2/2, opérateurs32/32 sousNode24.22.1.
 - Préparateur SHA256 `44f30bdd0fdf94eb63eb081a7309b2fe2d8fb6bd7515a82c4d9c52065c1a0c92`.
 
-## Enregistrement final à exécuter maintenant
+## Historique — enregistrement final acquis, ne pas rejouer
 
-Writer immuable `45b795a8f6dcff452ffb57131e79980448f0440e`, SHA256 `4672bea6395df03036ad482ed89df72314ff657f6d081369159f85bb6c789772`, [qualifié15/15 natifs sousNode24.22.1](verification-proofs/jm1110/writer-final-native.json), run40104619873. Il vérifie les vrais fichiers, démarrage, HTTP publics et publication avant d’aligner les seules métadonnées privées, sans SQL ni redémarrage.
+Writer immuable `45b795a8f6dcff452ffb57131e79980448f0440e`, SHA256 `4672bea6395df03036ad482ed89df72314ff657f6d081369159f85bb6c789772`, [qualifié15/15 natifs sousNode24.22.1](verification-proofs/jm1110/writer-final-native.json), run40104619873, puis exécuté avec succès selon le reçu utilisateur. Il a vérifié les vrais fichiers, démarrage, HTTP publics et publication avant d’aligner les seules métadonnées privées, sans SQL ni redémarrage.
 
-Dans le [terminal Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), exécuter une fois :
+La commande exécutée une fois dans le [terminal Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal) était :
 
 ```bash
 env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD1110'
@@ -27,7 +29,7 @@ exec(compile(code, '<enregistrement1110>', 'exec'), {'__name__': '__main__'})
 PY_RECORD1110
 ```
 
-Transmettre le JSON retourné. Un résultat non confirmé ne justifie pas de relance : conserver les traces et lire l’état durable avant toute reprise. Le relevé d’interface ne remplace pas ce reçu final.
+Le JSON final est conservé dans la [preuve hébergée](verification-proofs/jm1110/hosted-metadata.json). Le résultat est confirmé ; aucune relance n’est nécessaire. La preuve UI d’origine conserve sa précision à la seconde, sans réécriture de son observation initiale.
 
 ## Historique — préparation et CHECK acquis, ne pas rejouer
 
@@ -70,4 +72,4 @@ Relever le JSON puis `CHECK1110_EXIT=0` et `PREPARATION_1110_CHECK_OK`. Toute so
 
 L’instruction appliquée avant le relevé d’identité était : activer dans le [Manager, réglages du service Node](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), service encore nommé `recette.jessiemessage.com` qui dessert aussi le principal. Les champs sont exécution `bash /srv/customer/jessiemessage-private/start-primary-release1110-88bbb4ed.sh`, build `bash /srv/customer/jessiemessage-private/check-primary-release1110-88bbb4ed.sh`, port3000. Le démarrage1110 est désormais rapporté ; ne pas redémarrer à nouveau. Les champs Manager n’ont pas été inspectés directement par l’agent.
 
-Le [relevé reçu](verification-proofs/jm1110/hosted-identity.json) indique1.11.0/source88bbb4edfa15e7502c25c5e9e319c36f5f60276d/Nodev24.22.1/démarrage24octobre16:59:47Paris. La précision milliseconde reste à lire dans le vrai journal par le writer. Repli185/SQL38 conservé, jamais démarré ;184/172 interdits. Aucun test de sauvegarde reporté ni nouvel envoi réel.
+Le [relevé reçu](verification-proofs/jm1110/hosted-identity.json) indique1.11.0/source88bbb4edfa15e7502c25c5e9e319c36f5f60276d/Nodev24.22.1/démarrage24octobre16:59:47Paris. La précision milliseconde est désormais acquise séparément dans le reçu final après lecture du vrai journal par le writer :16:59:47.566. Repli185/SQL38 conservé, jamais démarré ;184/172 interdits. Aucun test de sauvegarde reporté ni nouvel envoi réel.
