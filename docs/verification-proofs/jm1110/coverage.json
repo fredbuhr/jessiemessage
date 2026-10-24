@@ -1,0 +1,113 @@
+{
+  "source": "88bbb4edfa15e7502c25c5e9e319c36f5f60276d",
+  "tree": "513011bfde600b979bd93687ecf47095262caa6a",
+  "items": [
+    {
+      "id": 1,
+      "check": "all_received_messages",
+      "evidence": "native SQL and Chrome, one row per incoming message",
+      "status": "addressed_with_stated_scope"
+    },
+    {
+      "id": 2,
+      "check": "unread_first_then_recent",
+      "evidence": "Chrome mixed unread/read fixture; SQL query and cursor review",
+      "status": "addressed_with_stated_scope"
+    },
+    {
+      "id": 3,
+      "check": "exact_cursor_pagination",
+      "evidence": "native MariaDB10.11/11.4, one-item pages across same-millisecond microseconds",
+      "status": "addressed_with_stated_scope"
+    },
+    {
+      "id": 4,
+      "check": "sent_and_deleted_excluded",
+      "evidence": "native SQL fixture",
+      "status": "addressed_with_stated_scope"
+    },
+    {
+      "id": 5,
+      "check": "admin_authority_and_no_private_metadata",
+      "evidence": "native SQL isolation, service and HTTP DTO tests",
+      "status": "addressed_with_stated_scope"
+    },
+    {
+      "id": 6,
+      "check": "overview_does_not_mark_read",
+      "evidence": "native SQL and Chrome",
+      "status": "addressed_with_stated_scope"
+    },
+    {
+      "id": 7,
+      "check": "click_opens_message_and_back_returns",
+      "evidence": "native Chrome FR/EN320/1280",
+      "status": "addressed_with_stated_scope"
+    },
+    {
+      "id": 8,
+      "check": "no_fictitious_composer",
+      "evidence": "native Chrome and reviewed screenshots",
+      "status": "addressed_with_stated_scope"
+    },
+    {
+      "id": 9,
+      "check": "mobile_clients_and_filters",
+      "evidence": "native Chrome320",
+      "status": "addressed_with_stated_scope"
+    },
+    {
+      "id": 10,
+      "check": "plaintext_content_not_HTML",
+      "evidence": "native Chrome and controller fixtures",
+      "status": "addressed_with_stated_scope"
+    },
+    {
+      "id": 11,
+      "check": "hidden_or_changed_owner_purges_previews",
+      "evidence": "controller fixtures; native preexisting multi-device profile/session rehearsals",
+      "status": "addressed_with_stated_scope"
+    },
+    {
+      "id": 12,
+      "check": "failed_refresh_and_explicit_retry",
+      "evidence": "controller fixtures and native Chrome",
+      "status": "addressed_with_stated_scope"
+    },
+    {
+      "id": 13,
+      "check": "existing_functions_and_invitation_codes",
+      "evidence": "main5/5, general4057/52explicit omissions, Chrome272, HTTPS12, MariaDB605each",
+      "status": "addressed_with_stated_scope"
+    },
+    {
+      "id": 14,
+      "check": "SQL_dependencies_catalogue_preserved",
+      "evidence": "publisher guards plus Git comparison; no migration/dependency change",
+      "status": "addressed_with_stated_scope"
+    }
+  ],
+  "secondReview": {
+    "items": 14,
+    "allAddressed": true,
+    "hostActivation": false,
+    "phoneHardware": false,
+    "loadQualification": false
+  },
+  "screenshots": [
+    {
+      "path": "received-inbox-fr-1280.png",
+      "sha256": "a7840c7609195dfb5bd476888eea06f7ac53ac2195a8ab82e2322231e9991b0e",
+      "artifact": 12562249292,
+      "source": "019a909565cd38e47b9b0155c2b77aac0434b8ea",
+      "publicAssetsIdenticalToRelease": true
+    },
+    {
+      "path": "received-inbox-en-320.png",
+      "sha256": "a3df9ff6dd2db03f5f765cd914c11279a126e5792c99dbe2095668d44239b63c",
+      "artifact": 12562249292,
+      "source": "019a909565cd38e47b9b0155c2b77aac0434b8ea",
+      "publicAssetsIdenticalToRelease": true
+    }
+  ]
+}

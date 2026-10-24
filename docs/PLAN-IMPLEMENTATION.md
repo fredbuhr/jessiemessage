@@ -2,13 +2,15 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Évolution 1.11.0 — invitations par code et messages reçus
+## Évolution 1.11.0 — livraison hébergée restante
 
-Résultat demandé le24octobre : saisir sur l’accueil commun un code individuel reçu en MP après paiement vérifié manuellement. [Périmètre](invitation-codes-1110.md), [état courant](REPRISE.md). Aucun changement du paiement, du schéma ou des fonctions métier existantes. Ajout demandé ensuite : [vue générale des messages reçus](received-inbox-1110.md), non lus en premier puis dates décroissantes, sans faux éditeur lorsqu’aucun client n’est choisi.
+Codes d’invitation et vue des messages reçus qualifiés PR/main5/5, tag/release422775194 et publication2/2 acquis. [Périmètre codes](invitation-codes-1110.md), [messages reçus](received-inbox-1110.md), [source et preuves](REPRISE.md). Production toujours1.10.1 ; aucune migration ni nouvelle dépendance.
 
-1. Ajouter le format code et sa saisie en conservant les anciens liens et les règles d’admission.
-2. Vérifier formats, quotas, expiration/révocation/usage unique, parcours navigateur et SQL isolé ; qualifier la PR puis le SHA fusionné.
-3. Publier le commit qualifié et préparer la mise à jour hébergée. Activation et vérification restent distinctes de ces étapes ; la1.10.1 reste active jusqu’à preuve du démarrage suivant.
+1. Exécuter une fois [préparation1110 et CHECK](operations-release1110.md), puis lire le reçu réel avant d’avancer. Ne rejouer aucune commande1101 ou antérieure.
+2. Activer le lanceur1110 exact dans le Manager et relever la version/commit/Node réellement démarrés.
+3. Finaliser et qualifier le writer sur le véritable reçu de préparation, puis aligner les métadonnées après vérifications gardées. Ne pas relancer les suites vertes du code inchangé.
+
+Aucun envoi réel, test de sauvegarde reporté, migration ou nouvelle manipulation PC. Les limites physiques précédentes restent explicites.
 
 ## Audit prépublic et livraison1.10.1 — terminés
 

@@ -1,0 +1,39 @@
+{
+  "operator": "79dd0bde2013e862230188292247b311561e5f7e",
+  "operatorTree": "8dc14e063174093b97cccfbf9fe22397b5fb7705",
+  "run": 40101983330,
+  "jobsPassed": 2,
+  "nativeTests": {
+    "prepare": 25,
+    "publisher": 7
+  },
+  "prepareSha256": "44f30bdd0fdf94eb63eb081a7309b2fe2d8fb6bd7515a82c4d9c52065c1a0c92",
+  "receipt": {
+    "status": "published_verified",
+    "nodeVersion": "24.22.1",
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "normalMigrations": 33,
+    "videoMigrations": 3,
+    "experienceMigrations": 2,
+    "releases": [
+      {
+        "tag": "v1.11.0",
+        "source": "88bbb4edfa15e7502c25c5e9e319c36f5f60276d",
+        "tree": "513011bfde600b979bd93687ecf47095262caa6a",
+        "ciRun": "40101446801",
+        "releaseId": 422775194
+      }
+    ],
+    "latest": {
+      "tag": "v1.11.0",
+      "source": "88bbb4edfa15e7502c25c5e9e319c36f5f60276d",
+      "id": 422775194
+    },
+    "publicationMode": "created",
+    "created": [
+      "v1.11.0"
+    ],
+    "deploymentPerformed": false
+  }
+}

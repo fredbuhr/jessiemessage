@@ -1,0 +1,58 @@
+{
+  "format": "jessiemessage-1110-PR-qualification",
+  "source": "11c9af418c9b6d1094b3b4d9d8aaeffb870e8e45",
+  "tree": "513011bfde600b979bd93687ecf47095262caa6a",
+  "pr": 137,
+  "run": 40100795293,
+  "status": "passed",
+  "jobsPassed": 5,
+  "node": "v24.22.1",
+  "tests": {
+    "general": {
+      "passed": 4057,
+      "skipped": 52,
+      "failed": 0
+    },
+    "chrome": {
+      "passed": 272,
+      "skipped": 0,
+      "failed": 0
+    },
+    "https": {
+      "passed": 12,
+      "skipped": 0,
+      "failed": 0
+    },
+    "mariadb10.11": {
+      "passed": 605,
+      "skipped": 0,
+      "failed": 0
+    },
+    "mariadb11.4": {
+      "passed": 605,
+      "skipped": 0,
+      "failed": 0
+    }
+  },
+  "merge": {
+    "source": "88bbb4edfa15e7502c25c5e9e319c36f5f60276d",
+    "treeIdentical": true,
+    "mainRun": 40101446801,
+    "mainStatus": "passed5of5"
+  },
+  "visualReview": {
+    "codeScreenshots": 10,
+    "codeSource": "4a7ff645b2dae61b5a3749fb2552e6a20b8f82ca",
+    "receivedScreenshots": 2,
+    "receivedSource": "019a909565cd38e47b9b0155c2b77aac0434b8ea",
+    "receivedArtifact": 12562249292,
+    "publicAndServerFilesIdenticalToPRSource": true,
+    "phoneHardwareTested": false
+  },
+  "limits": [
+    "No real account or outbound message used.",
+    "No hosting activation or configuration change.",
+    "Physical devices, Safari/Firefox and OS Push remain outside this qualification.",
+    "Earlier failures remain in separate evidence files."
+  ]
+}

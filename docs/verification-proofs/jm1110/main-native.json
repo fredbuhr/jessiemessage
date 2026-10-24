@@ -1,0 +1,75 @@
+{
+  "format": "jessiemessage1110-main-qualification",
+  "source": "88bbb4edfa15e7502c25c5e9e319c36f5f60276d",
+  "tree": "513011bfde600b979bd93687ecf47095262caa6a",
+  "run": 40101446801,
+  "event": "push",
+  "branch": "main",
+  "attempt": 1,
+  "status": "passed",
+  "jobsPassed": 5,
+  "node": "v24.22.1",
+  "summaries": [
+    {
+      "id": 120894261733,
+      "name": "MariaDB 10.11",
+      "node24221": true,
+      "summary": [
+        "# tests 605",
+        "# pass 605",
+        "# fail 0",
+        "# cancelled 0",
+        "# skipped 0"
+      ]
+    },
+    {
+      "id": 120894261897,
+      "name": "verify",
+      "node24221": true,
+      "summary": [
+        "\u2139 tests 4109",
+        "\u2139 pass 4057",
+        "\u2139 fail 0",
+        "\u2139 cancelled 0",
+        "\u2139 skipped 52"
+      ]
+    },
+    {
+      "id": 120894261917,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "node24221": true,
+      "summary": [
+        "\u2139 tests 12",
+        "\u2139 pass 12",
+        "\u2139 fail 0",
+        "\u2139 cancelled 0",
+        "\u2139 skipped 0"
+      ]
+    },
+    {
+      "id": 120894261922,
+      "name": "MariaDB 11.4",
+      "node24221": true,
+      "summary": [
+        "# tests 605",
+        "# pass 605",
+        "# fail 0",
+        "# cancelled 0",
+        "# skipped 0"
+      ]
+    },
+    {
+      "id": 120894261935,
+      "name": "Chrome keyboard and chat lifecycle",
+      "node24221": true,
+      "summary": [
+        "\u2139 tests 272",
+        "\u2139 pass 272",
+        "\u2139 fail 0",
+        "\u2139 cancelled 0",
+        "\u2139 skipped 0"
+      ]
+    }
+  ],
+  "productionDeployed": false
+}
