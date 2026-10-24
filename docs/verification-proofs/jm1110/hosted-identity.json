@@ -1,0 +1,14 @@
+{
+  "reportedBy": "user application version page",
+  "version": "1.11.0",
+  "source": "88bbb4edfa15e7502c25c5e9e319c36f5f60276d",
+  "nodeVersion": "v24.22.1",
+  "startedAtLocal": "24/10/2026 16:59:47",
+  "timezone": "Europe/Paris",
+  "precision": "seconds; milliseconds not reported",
+  "epochRange": {
+    "fromInclusive": 1792853987000,
+    "toExclusive": 1792853988000
+  },
+  "scope": "Identity reported after Manager action; no direct agent inspection of Manager, log or runtime process. Metadata recording remains pending."
+}

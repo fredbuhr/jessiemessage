@@ -23,4 +23,4 @@ Le code n’est révélé qu’à sa création. La liste des invitations permet 
 
 ## État de livraison
 
-Fonction publiée et qualifiée dans1.11.0, PR/main5/5, sans activation hébergée encore confirmée. La production reste **1.10.1** selon [REPRISE](REPRISE.md). Les tests synthétiques ne constituent pas une recette sur compte ou appareil réel.
+Fonction publiée et qualifiée dans1.11.0, PR/main5/5, démarrage hébergé1110 rapporté et enregistrement final encore en attente selon [REPRISE](REPRISE.md). Les tests synthétiques ne constituent pas une recette sur compte ou appareil réel.

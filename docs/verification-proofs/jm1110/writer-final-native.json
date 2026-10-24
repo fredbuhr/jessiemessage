@@ -1,0 +1,19 @@
+{
+  "operator": "45b795a8f6dcff452ffb57131e79980448f0440e",
+  "operatorTree": "11760d7ff2440960c2675c8b3814725d2e005179",
+  "writerBlob": "390860e113b6031162ce44e386c927e1f04e2000",
+  "writerSha256": "4672bea6395df03036ad482ed89df72314ff657f6d081369159f85bb6c789772",
+  "source": "88bbb4edfa15e7502c25c5e9e319c36f5f60276d",
+  "tree": "513011bfde600b979bd93687ecf47095262caa6a",
+  "stagingSha256": "6cbbf3bac780f965646ade8293a55aade3a221581a21f6ddcc7ad8e708293dae",
+  "releaseId": 422775194,
+  "run": 40104619873,
+  "job": 120903622756,
+  "node": "v24.22.1",
+  "status": "passed",
+  "tests": 15,
+  "failed": 0,
+  "syntheticOnly": true,
+  "hostRecordingExecuted": false,
+  "remoteBlobMatchesLocalQualifiedScript": true
+}

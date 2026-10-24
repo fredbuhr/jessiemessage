@@ -4,12 +4,13 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 ## Évolution 1.11.0 — livraison hébergée restante
 
-Codes d’invitation et vue des messages reçus qualifiés PR/main5/5, tag/release422775194 et publication2/2 acquis. [Périmètre codes](invitation-codes-1110.md), [messages reçus](received-inbox-1110.md), [source et preuves](REPRISE.md). Production toujours1.10.1 ; aucune migration ni nouvelle dépendance.
+Codes d’invitation et vue des messages reçus qualifiés PR/main5/5, tag/release422775194 et publication2/2 acquis. [Périmètre codes](invitation-codes-1110.md), [messages reçus](received-inbox-1110.md), [source et preuves](REPRISE.md). Démarrage1.11.0 rapporté par l’utilisateur le24octobre à16:59:47Paris, bon commit etNode24.22.1 ; métadonnées privées encore à finaliser. Aucune migration ni nouvelle dépendance.
 
 Préparation et CHECK acquis selon le [reçu utilisateur](verification-proofs/jm1110/hosted-preparation.json) : empreinte canonique conforme, `CHECK1110_EXIT=0`, `PREPARATION_1110_CHECK_OK`. Ne pas les rejouer.
 
-1. Activer le lanceur1110 exact dans le [Manager](operations-release1110.md) et relever version/commit/Node réellement démarrés.
-2. Qualifier le writer sur le véritable reçu de préparation, puis aligner les métadonnées après activation et vérifications gardées. Ne pas relancer les suites vertes du code inchangé.
+Activation acquise selon le [relevé utilisateur](verification-proofs/jm1110/hosted-identity.json). Ne pas la rejouer.
+
+**Seule étape restante :** exécuter le [writer final](operations-release1110.md), désormais épinglé au vrai reçu et qualifié15/15 natifs, puis lire son résultat avant de clôturer. Aucune CI verte du code inchangé à relancer.
 
 Aucun envoi réel, test de sauvegarde reporté, migration ou nouvelle manipulation PC. Les limites physiques précédentes restent explicites.
 

@@ -8,4 +8,4 @@ Le chargement se fait par pages de 50 avec « Autres messages ». Le curseur con
 
 Les aperçus sont limités à l’administrateur de chaque conversation, sous autorisation SQL/session/MFA actuelle et quotas de lecture existants. Ils restent en mémoire, sont retirés au masquage, à la déconnexion et au changement de propriétaire. Une réponse obsolète ne peut pas les réafficher. Le texte est inséré comme texte brut, jamais comme HTML ; aucune miniature ou pièce jointe n’est téléchargée par la vue générale. Aucune migration ni dépendance ajoutée.
 
-Fonction publiée et qualifiée dans1.11.0 avec les invitations par code, PR/main5/5. La production reste1.10.1 jusqu’à activation confirmée ; les tests synthétiques ne valent pas une validation sur téléphone réel ou une mesure de charge de production.
+Fonction publiée et qualifiée dans1.11.0 avec les invitations par code, PR/main5/5. Le démarrage1110 est rapporté, avec enregistrement final encore en attente ; les tests synthétiques ne valent pas une validation sur téléphone réel ou une mesure de charge de production.
