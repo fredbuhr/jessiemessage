@@ -263,7 +263,7 @@ async function startFixtureServer() {
           if (suffix === "/inbox" && role === "admin" && fixture.receivedEnabled) {
             fixture.receivedReads = (fixture.receivedReads ?? 0) + 1;
             if (fixture.receivedFailure) { sendJson(503, { error: "messaging_unavailable" }); return; }
-            const items = [3, 1, 2].map(n => ({ conversation: n === 2 ? { ...conversation("admin"), id: id(101), peerName: "Read client", lastReadSequence: "2" } : conversation("admin"), unread: n !== 2,
+            const items = [3, 1, 2].map(n => ({ conversation: n === 3 ? conversation("admin") : { ...conversation("admin"), id: id(100+n), peerName: n === 2 ? "Read client" : "Other unread client", lastReadSequence: n === 2 ? "2" : "0" }, unread: n !== 2,
               message: { ...message(n, "admin"), sender: "peer", body: n === 3 ? "<b>Fictional received photo</b>" : `Fictional received ${n}` } }));
             sendJson(200, { items, nextCursor: null, hasMore: false }); return;
           }
@@ -1695,7 +1695,7 @@ test("Chrome photo neighbors use authorized server order within a millisecond wh
   }
 });
 
-test("Chrome: unselected admin has actual unread-first messages instead of a fictitious conversation at320/1280px", { timeout: 120000 }, async t => {
+test("Chrome: unselected admin has one latest received message per client, unread-first at320/1280px", { timeout: 120000 }, async t => {
   for (const [width, language] of [[320, "en"], [1280, "fr"]]) await t.test(`${language} ${width}px`, async () => {
     resetFixture(); fixture.receivedEnabled = true;
     const page = await browser(width, 800);
@@ -1705,6 +1705,7 @@ test("Chrome: unselected admin has actual unread-first messages instead of a fic
       await waitUntil(() => page.execute("return document.querySelectorAll('.received-item').length===3"), "all incoming messages shown without choosing a client");
       assert.equal(await page.execute("return document.getElementById('composer').checkVisibility() || document.querySelector('.chat-head').checkVisibility()"), false);
       assert.deepEqual(await page.execute("return [...document.querySelectorAll('.received-item')].map(node=>({id:node.dataset.receivedId,unread:node.classList.contains('is-unread')}))"), [3,1,2].map(n => ({ id:id(200+n), unread:n!==2 })));
+      assert.equal(await page.execute("return new Set([...document.querySelectorAll('.received-item')].map(node=>node.dataset.receivedConversationId)).size"), 3);
       assert.equal(fixture.read.admin, "0", "the overview must never mark messages read");
       assert.equal(await page.execute("return !!document.querySelector('.received-body b')"), false, "message body remains literal text");
       assert.equal(await page.execute("return document.documentElement.scrollWidth<=innerWidth+1"), true);

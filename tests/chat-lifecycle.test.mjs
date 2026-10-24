@@ -1701,7 +1701,7 @@ test("viewer swipes keep pinch zoom and cancelled or multi-touch gestures from c
 
 function receivedFixture(intercept) {
   const conversation = { id: id(101), peerName: "Synthetic received client" };
-  const items = [3, 2, 1].map((n, i) => ({ conversation, unread: i < 2,
+  const items = [3, 2, 1].map((n, i) => ({ conversation: { ...conversation, id: id(104 - n), peerName: `Synthetic received client ${n}` }, unread: i < 2,
     message: { id: id(800 + n), sequence: String(n), sender: "peer", body: n === 3 ? "<script>private body</script>" : `Synthetic received ${n}`, createdAt: now - (3 - n) * 1000, deletedAt: null } }));
   const f = harness({ currentSession: session(1, "A".repeat(43), "admin"), intercept: (path, options, state) => {
     if (path === "/api/chat/admin/capabilities") return response(200, { enabled: true, inbox: { enabled: true } });
@@ -1710,7 +1710,7 @@ function receivedFixture(intercept) {
   } });
   return { f, items };
 }
-test("admin overview displays every incoming message without a composer or automatic read, then opens its conversation", async () => {
+test("admin overview displays one latest incoming message per client without a composer or automatic read, then opens its conversation", async () => {
   const { f, items } = receivedFixture();
   try {
     await flush(); assert.equal(f.inspect().selected, null); assert.equal(f.element("workspace").classList.contains("overview"), true);
@@ -1748,5 +1748,25 @@ test("failed received refresh clears old previews and explicit retry reuses only
     assert.ok(contents(f.element("received-status")).includes("Actualiser"));
     fail = false; await f.click("refresh-received"); assert.equal(f.element("received-list").children.length, 3);
     assert.equal(f.calls.filter(call => call.path.startsWith("/api/chat/admin/inbox?")).some(call => call.options.method !== "GET"), false);
+  } finally { await f.hide(); }
+});
+
+test("received pagination keeps one row per client when its latest message changes between pages", async () => {
+  const item = (n, message = n) => ({ conversation: { id: id(100 + n), peerName: `Synthetic client ${n}` }, unread: true,
+    message: { id: id(800 + message), sequence: String(message), sender: "peer", body: `Latest ${message}`, createdAt: now - n * 1000, deletedAt: null } });
+  const { f } = receivedFixture(path => {
+    if (!path.startsWith("/api/chat/admin/inbox?")) return;
+    return response(200, path.includes("cursor=") ? { items: [item(1, 100), item(51)], hasMore: false, nextCursor: null }
+      : { items: Array.from({ length: 50 }, (_, i) => item(i + 1)), hasMore: true, nextCursor: "AQID" });
+  });
+  try {
+    await flush(); assert.equal(f.element("received-list").children.length, 50);
+    f.element("more-received").focus(); await f.click("more-received");
+    const rows = f.element("received-list").children;
+    assert.equal(rows.length, 51);
+    assert.equal(new Set(rows.map(row => row.dataset.receivedConversationId)).size, 51);
+    assert.equal(rows.find(row => row.dataset.receivedConversationId === id(101)).dataset.receivedId, id(900));
+    assert.equal(f.document.activeElement.dataset.receivedConversationId, id(151), "focus advances to a new client rather than the replaced preview");
+    assert.equal(f.calls.some(call => /\/read$/.test(call.path)), false);
   } finally { await f.hide(); }
 });

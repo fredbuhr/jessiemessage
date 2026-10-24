@@ -523,14 +523,20 @@ export function createChatStore(pool, { clock, enqueueNotification, decorateMess
         now = (await actorSession(connection, tokenHash, admin, "admin", mfa, now)).now;
         const unread = "(m.sequence_no > COALESCE(r.last_read_sequence, 0))";
         const seek = position === null ? "" : `AND (${unread} < ? OR (${unread} = ? AND (m.created_at < ? OR (m.created_at = ? AND m.id < ?))))`;
+        // Select one current incoming preview per conversation before applying
+        // the global unread/date cursor and page limit.
         const rows = await connection.query(`SELECT ${messageProjection}, ${unread} AS inbox_unread,
           DATE_FORMAT(m.created_at, '%Y-%m-%d %H:%i:%s.%f') AS inbox_created
           FROM messages m JOIN conversations c ON c.id = m.conversation_id
           LEFT JOIN chat_receipts r ON r.conversation_id = c.id AND r.user_id = c.admin_id ${messageJoins}
           WHERE c.admin_id = ? AND c.created_at <= ? AND m.created_at <= ?
-            AND m.sender_role = 'client' AND m.sender_id = c.client_id AND m.deleted_at IS NULL ${seek}
+            AND m.sender_role = 'client' AND m.sender_id = c.client_id AND m.deleted_at IS NULL
+            AND m.sequence_no = (SELECT latest.sequence_no FROM messages latest
+              WHERE latest.conversation_id = c.id AND latest.sender_role = 'client' AND latest.sender_id = c.client_id
+                AND latest.deleted_at IS NULL AND latest.created_at <= ?
+              ORDER BY latest.sequence_no DESC LIMIT 1) ${seek}
           ORDER BY inbox_unread DESC, m.created_at DESC, m.id DESC LIMIT ?`,
-        [admin.id, sqlDate(now), sqlDate(now), ...(position ? [position[0], position[0], position[1], position[1], Buffer.from(position[2], "hex")] : []), limit + 1]);
+        [admin.id, sqlDate(now), sqlDate(now), sqlDate(now), ...(position ? [position[0], position[0], position[1], position[1], Buffer.from(position[2], "hex")] : []), limit + 1]);
         const selected = rows.slice(0, limit), contexts = new Map(), items = [];
         for (const row of selected) {
           const id = row.conversation_id.toString("hex");
