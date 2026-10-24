@@ -113,7 +113,7 @@ async function fillRegistration(page) {
 }
 function cleanFixture(source) {
   assert.deepEqual(source.failures, []);
-  assert.equal(source.requests.every(request => request.noSecretInReferrer && (!["/api/access/invitation", "/api/access/register", "/api/admin/invitations"].includes(request.path) || request.noQuery)), true, "no invitation secret is transported by API query or any referrer");
+  assert.equal(source.requests.every(request => request.noSecretInReferrer && (request.method !== "POST" || !["/api/access/invitation", "/api/access/register", "/api/admin/invitations"].includes(request.path) || request.noQuery)), true, "no invitation secret is transported by API query or any referrer");
   assert.equal(source.registrations.every(call => call.valid), true, "registration forwards the exact synthetic credentials and accepted invitation");
 }
 

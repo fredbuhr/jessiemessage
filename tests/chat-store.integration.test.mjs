@@ -97,7 +97,7 @@ test("real MariaDB private text chat persistence (synthetic disposable database 
       } while (cursor);
       assert.deepEqual(ids, [b2, b1, a2, a1].map(message => message.id.toString("hex")));
       const check = await read(b, "admin"); assert.equal(check.conversation.unreadCount, 2, "overview never changes read receipts");
-      await assert.rejects(store.readInbox({ ...options, tokenHash: a.client.tokenHash }), errorCode("CHAT_UNAUTHORIZED"));
+      await assert.rejects(store.readInbox({ ...options, tokenHash: a.client.tokenHash }), errorCode("CHAT_FORBIDDEN"));
       await assert.rejects(store.readInbox({ ...options, cursor: "bad" }), errorCode("CHAT_STORE_INPUT"));
     });
 

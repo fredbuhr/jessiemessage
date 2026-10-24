@@ -12,7 +12,7 @@
   },
   "failure": {
     "test": "tests/browser/invitation-code.browser.mjs",
-    "reason": "Fixture asserted no query on every API URL, including legitimate avatar version queries. No secret-in-referrer failure established. Assertion now scopes the no-query rule to invitation/register endpoints; all referrers remain checked."
+    "reason": "Fixture asserted no query on every API URL, including legitimate GET invitation-list pagination. No secret-in-referrer failure established. The no-query rule now applies to invitation/register POSTs; all referrers remain checked."
   },
   "newRevisionReason": "User requested received-message overview; includes bounded correction to the initial browser assertion. New source requires qualification."
 }

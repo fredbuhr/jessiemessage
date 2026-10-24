@@ -129,7 +129,7 @@ test("real HTTP private chat, ciphertext, receipts, deletion and live authorizat
       assert.equal((await request("/messages", { headers: headersFor(a) })).status, 200);
       assert.equal((await request("/admin/messages", { headers: headersFor(admin) })).status, 200);
       assert.deepEqual((await request("/api/chat/client/capabilities", { headers: headersFor(a) })).body, { enabled: true, conversationExport: { enabled: true, photos: false, maxBytes: 32 * 1024 * 1024 } });
-      assert.deepEqual((await request("/api/chat/admin/capabilities", { headers: headersFor(admin) })).body, { enabled: true });
+      assert.deepEqual((await request("/api/chat/admin/capabilities", { headers: headersFor(admin) })).body, { enabled: true, inbox: { enabled: true } });
       assert.equal((await request("/api/chat/admin/conversations", { headers: { Cookie: `__Host-jessie_session=${cookieToken(a.cookie)}` } })).status, 401);
       assert.equal((await request("/api/chat/client/conversation", { headers: { Cookie: `__Host-jessie_client=${cookieToken(admin.cookie)}` } })).status, 401);
       const own = await request("/api/chat/client/conversation", { headers: headersFor(a) });

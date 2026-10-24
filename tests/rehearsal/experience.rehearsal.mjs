@@ -36,6 +36,7 @@ async function login(page, fixture, role, { credentials = null, password = null,
     await waitUntil(() => page.execute("return !!document.querySelector('#conversations [data-conversation-id]')"), "admin conversations loaded");
     // Pick the primary synthetic client, independent of the other client's sort order.
     const selected = await page.execute("const nodes=[...document.querySelectorAll('#conversations [data-conversation-id]')];return nodes.find(n=>n.querySelector('strong')?.textContent==='Synthetic browser client')?.getAttribute('data-conversation-id')");
+    if (await page.execute("return document.getElementById('show-clients')?.checkVisibility()===true")) await page.click("#show-clients");
     assert.match(selected ?? "", /^[a-f0-9]{32}$/); await page.click(`[data-conversation-id="${selected}"]`);
   } else {
     await page.navigate("/access");
@@ -114,6 +115,7 @@ async function changePassword(page, role, currentPassword, replacement) {
   if (role === "admin") {
     await waitUntil(() => page.execute("return !![...document.querySelectorAll('#conversations [data-conversation-id]')].find(n=>n.querySelector('strong')?.textContent==='Synthetic browser client')"), "renewed admin inbox");
     const selected = await page.execute("return [...document.querySelectorAll('#conversations [data-conversation-id]')].find(n=>n.querySelector('strong')?.textContent==='Synthetic browser client').getAttribute('data-conversation-id')");
+    if (await page.execute("return document.getElementById('show-clients')?.checkVisibility()===true")) await page.click("#show-clients");
     await page.click(`[data-conversation-id="${selected}"]`);
   }
   await ready(page, role);

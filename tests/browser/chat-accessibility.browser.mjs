@@ -1701,7 +1701,7 @@ test("Chrome: unselected admin has actual unread-first messages instead of a fic
     const page = await browser(width, 800);
     try {
       await loaded(page, "/admin/messages");
-      if (language === "en") await page.click("[data-jm-language]");
+      if (language === "en") await toggleChatLanguage(page);
       await waitUntil(() => page.execute("return document.querySelectorAll('.received-item').length===3"), "all incoming messages shown without choosing a client");
       assert.equal(await page.execute("return document.getElementById('composer').checkVisibility() || document.querySelector('.chat-head').checkVisibility()"), false);
       assert.deepEqual(await page.execute("return [...document.querySelectorAll('.received-item')].map(node=>({id:node.dataset.receivedId,unread:node.classList.contains('is-unread')}))"), [3,1,2].map(n => ({ id:id(200+n), unread:n!==2 })));
