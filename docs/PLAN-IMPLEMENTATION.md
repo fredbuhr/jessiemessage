@@ -2,13 +2,13 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Diagnostic d’accès1112 — livraison1113 suspendue
+## Diagnostic d’accès1112 — récupération personnelle attendue, activation1113 suspendue
 
-Le correctif frontend1113 reste publié et qualifié à sa source immuable `89571636d6fde97b28b5e8aec9257801c1b71f8b`, mais l’utilisateur signale désormais un refus de connexion directe, un renvoi sans e-mail reçu et une page de maintenance Infomaniak. Il n’a pas exécuté la préparation. Ces symptômes ne sont pas résolus par les seuls essais du formulaire ; production1112 conservée.
+Le [diagnostic hébergé reçu](verification-proofs/jm1113/hosted-account-diagnostic-summary.json) confirme les conditions d’accès du compte : actif, confirmé, approuvé, invitation consommée une fois, sans expiration ni décalage d’horloge. Aucune session conservée au relevé ; le mot de passe soumis n’a pas été vérifié. L’absence d’un nouveau mail de confirmation est expliquée par le compte déjà confirmé. Deux démarrages1112 sont enregistrés, dernier à21:10Paris, cause inconnue. Le correctif frontend1113 reste publié et qualifié à son tag immuable ; aucune préparation ou activation exécutée.
 
-1. Exécuter la [révision corrigée du relevé en lecture seule](access-diagnostic-20261025.md) : la première tentative a retourné un message générique sans résultat du compte. Saisie terminal et erreurs corrigées,14tests Python natifs réussis dont un vrai PTY ; requêtes Node/SQL identiques à celles déjà qualifiées sur les deuxMariaDB. Recueillir le JSON du nouvel opérateur2e06b3b4 sans relancer l’ancienne révision ni les qualifications vertes.
-2. Recueillir le relevé hébergé avant de choisir la correction ; ne pas supposer une erreur de mot de passe ou une maintenance fournisseur comme cause confirmée.
-3. Regrouper le correctif complémentaire nécessaire et sa qualification avant une unique activation. Ne pas déplacer le tag1113 publié ni rejouer la livraison1112 close. [État courant](REPRISE.md) ; [périmètre frontend1113](invitation-access-1113.md).
+1. L’utilisateur suit la [récupération de mot de passe](https://jessiemessage.com/recover), puis se reconnecte avec le nouveau mot de passe. Page et capacité200/activée [observées anonymement](verification-proofs/jm1113/client-recovery-public-observation.json) ; aucun envoi réel déclenché par l’agent. [Instructions et limites](access-diagnostic-20261025.md). Ne pas recréer le compte ni rejouer le diagnostic acquis.
+2. Recueillir le résultat de la récupération et de la connexion. Si elles échouent encore, limiter le diagnostic au stade effectivement refusé ; ne pas attribuer par défaut la faute au mot de passe ou à la maintenance.
+3. Après résolution de l’accès, choisir le seul code à activer et reprendre sa préparation qualifiée. Ne pas déplacer le tag1113 ni rejouer la livraison1112 close. [État courant](REPRISE.md).
 
 ## Correctif 1.11.2 — audit et livraison terminés
 

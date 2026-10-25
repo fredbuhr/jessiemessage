@@ -1,5 +1,5 @@
 {
-  "status": "release1113_activation_held_pending_read_only_account_diagnosis",
+  "status": "release1113_held_existing_account_password_recovery_pending",
   "branch": "fix/invitation-access-1113",
   "source": "89571636d6fde97b28b5e8aec9257801c1b71f8b",
   "tree": "e16a22043ea00908afa37cad64e5f9b421f4e5ae",
@@ -12,7 +12,7 @@
     "skipped": 0
   },
   "syntaxSources": 778,
-  "next": "User runs corrected read-only diagnostic2e06b3b4 and supplies anonymized JSON; no account mutation or release1113 preparation/activation.",
+  "next": "User performs existing password recovery then fresh manual login; no new hosted diagnostic or release1113 preparation/activation.",
   "manualDirectLoginResult": "user_reports_still_rejected",
   "run": 40231447183,
   "qualifiedPrSource": "cd54e868116d605c01c7ad09033998813f61a490",
@@ -33,14 +33,22 @@
   "publicationRun": 40233214193,
   "publicationSuccessful": true,
   "releaseId": 423658747,
-  "recordedAt": "2026-10-25T21:50:00.152722+00:00",
+  "recordedAt": "2026-10-25T21:58:53.898261+00:00",
   "release1113PreparationPerformed": false,
   "release1113ActivationHeld": true,
   "diagnosticOperatorSource": "2e06b3b463f99fc62851aa215f73f9a0e3436913",
   "diagnosticRun": 40237166078,
-  "diagnosticHostedObserved": false,
+  "diagnosticHostedObserved": true,
   "diagnosticScriptSha256": "8c2520502ef12d5674b4bde41d15acb3945f51664850c57b814122dcba5598e1",
   "diagnosticFirstAttemptSource": "1d4c38e98633ddcde5f308295e09412343533788",
   "diagnosticFirstAttemptStatus": "not_confirmed_generic_error",
-  "diagnosticFirstFailureStage": "unknown"
+  "diagnosticFirstFailureStage": "unknown",
+  "diagnosticSuccessfulObservedAt": 1792965112126,
+  "diagnosticAccountGatesPass": true,
+  "diagnosticPasswordMatchChecked": false,
+  "diagnosticRetainedSessions": 0,
+  "verificationResendNoopExplained": true,
+  "passwordRecoveryOutcome": "not_yet_reported",
+  "freshLoginOutcome": "not_yet_reported",
+  "publicRecoveryProbeRun": 40237807989
 }

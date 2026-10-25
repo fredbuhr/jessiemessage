@@ -1,0 +1,67 @@
+{
+  "format": "jessiemessage-anonymized-hosted-access-diagnostic-summary",
+  "version": 1,
+  "provenance": "user_supplied_successful_read_only_diagnostic_output",
+  "diagnosticOperatorSource": "2e06b3b463f99fc62851aa215f73f9a0e3436913",
+  "diagnosticScriptSha256": "8c2520502ef12d5674b4bde41d15acb3945f51664850c57b814122dcba5598e1",
+  "reportedStatus": "access1112_read_only_diagnostic",
+  "checkoutSource": "af352607ff7e12c41185f42b8232c72219a304cd",
+  "observedAt": 1792965112126,
+  "observedAtParis": "2026-10-25T22:51:52.126+01:00",
+  "applicationMutation": false,
+  "loginAttemptByDiagnostic": false,
+  "mailSentByDiagnostic": false,
+  "migrationOrRestart": false,
+  "databaseSkewMilliseconds": 0,
+  "sessionUtc": true,
+  "anonymizedFindings": {
+    "clientExistsAndActive": true,
+    "emailConfirmed": true,
+    "administratorApprovalValid": true,
+    "exactlyOneConsumedInvitation": true,
+    "admissionChronologyValid": true,
+    "accessUnexpired": true,
+    "authStateAndCredentialVersionPresent": true,
+    "passwordPresent": true,
+    "freshLoginAccountGatesPassWithoutPasswordCheck": true,
+    "retainedSessionsForSelectedAccount": 0,
+    "passwordMatchChecked": false,
+    "resendVerificationEligible": false,
+    "verificationConsumed": true,
+    "verificationOutboxSent": true,
+    "verificationOutboxPendingOrFailed": false
+  },
+  "runtimeLog": {
+    "matchingStartupRecords": 2,
+    "firstStartedAt": 1792946135648,
+    "lastStartedAt": 1792959000284,
+    "lastStartedAtParis": "2026-10-25T21:10:00.284+01:00",
+    "otherOrMalformedStartupRecords": 0,
+    "liveProcessIdentityProven": false,
+    "restartCause": "unknown"
+  },
+  "publicHttp": {
+    "health": 200,
+    "ready": 200,
+    "access": 200,
+    "admin": {"status": 303, "location": "/admin/login"},
+    "adminTrailingSlash": 404,
+    "adminLogin": 200
+  },
+  "dispositions": {
+    "confirmationAndApprovalBlockerExcludedAtObservation": true,
+    "resendNoNewMailExplainedByAlreadyConfirmedAccount": true,
+    "passwordOrSubmittedCredentialsMismatch": "possible_not_proven",
+    "preSessionLoginRefusal": "consistent_with_observation_not_traced",
+    "nextPersonalAction": "existing_password_recovery_then_fresh_login",
+    "release1113ActivationHeld": true
+  },
+  "limitations": [
+    "No account identity, email, pseudonym, password, hash, token, mail content or raw runtime log retained.",
+    "No submitted password or live login request inspected.",
+    "Zero retained sessions is a point-in-time observation, not a complete historical request trace.",
+    "Sent outbox state alone does not prove inbox delivery.",
+    "A second matching startup record does not identify its cause or establish provider maintenance correlation.",
+    "Password recovery and successful fresh login have not yet been reported by the user."
+  ]
+}

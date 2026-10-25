@@ -1,0 +1,39 @@
+{
+  "format": "jessiemessage-public-client-recovery-observation",
+  "version": 1,
+  "operatorSource": "494dd0fdf84dcebdcd02f322a24ed87732dd22d0",
+  "operatorTree": "59ef7f5b6a0e2341999745f83cae631378804c9a",
+  "workflow": {
+    "id": 40237807989,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40237807989",
+    "attempt": 1,
+    "conclusion": "success",
+    "job": 121303024322
+  },
+  "observation": {
+    "type": "anonymous_client_recovery_observation",
+    "observedAt": "2026-10-25T21:56:16.758129+00:00",
+    "noLogin": true,
+    "noMail": true,
+    "noAccountMutation": true,
+    "routes": {
+      "/recover": {
+        "status": 200,
+        "requestFormPresent": true,
+        "emailFieldPresent": true
+      },
+      "/api/access/recovery/capabilities": {
+        "status": 200,
+        "enabled": true,
+        "passwordBoundsExpected": true
+      }
+    }
+  },
+  "limits": [
+    "anonymous_GET_only",
+    "no_real_mail_request",
+    "no_password_change",
+    "no_account_login",
+    "page_and_capability_availability_only_not_end_to_end_account_recovery"
+  ]
+}

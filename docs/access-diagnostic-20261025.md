@@ -5,11 +5,11 @@ L’utilisateur signale désormais un refus de connexion directe après confirma
 ## Constats acquis et limites
 
 - Le backend1112 renvoie le même401 pour plusieurs refus : compte/état non admissible, mot de passe refusé, achèvement de connexion ou session finale refusés. Le message visible ne permet pas de les départager. Aucun mot de passe réel n’a été vérifié par l’agent.
-- Le renvoi de confirmation ne crée un nouveau message que pour un client `pending`, non confirmé, avec mot de passe correct et génération d’identifiants conservée. La réponse publique reste générique. Pour un compte déjà confirmé, aucun nouvel e-mail n’est créé ; cela ne prouve pas une panne SMTP. L’état réel du compte n’est pas encore inspecté.
+- Le renvoi de confirmation ne crée un nouveau message que pour un client `pending`, non confirmé, avec mot de passe correct et génération d’identifiants conservée. La réponse publique reste générique. Pour un compte déjà confirmé, aucun nouvel e-mail n’est créé ; cela ne prouve pas une panne SMTP. Le relevé hébergé reçu confirme désormais que le compte sélectionné est déjà confirmé et actif ; le renvoi n’est donc pas admissible.
 - Une [observation HTTP anonyme](verification-proofs/jm1113/access-diagnostic-native.json) du25octobre à21:33:36UTC, soit22:33:36Paris, obtient santé200, disponibilité200 et accès200. `/admin` répond303 vers `/admin/login`, qui répond200 ; `/admin/` répond404 `Not found`. Aucune redirection de maintenance n’est observée. C’est un instantané, sans preuve du commit actif ni de disponibilité continue.
 - L’[état officiel Infomaniak](https://infomaniakstatus.com/en/) consulté ce25octobre annonce une maintenance de sécurité Node.js du22au30octobre, avec30secondes à5minutes d’interruption par site. La capture utilisateur ne suffit pas à attribuer sa coupure à cet événement. L’application ne génère pas cette page fournisseur et sa route `/admin/` est actuellement absente.
 
-## Relevé hébergé qualifié — prochaine action unique
+## Relevé hébergé acquis — commande historique, à ne pas rejouer
 
 Le premier relevé, opérateur1d4c38e9, a retourné le message générique `DIAGNOSTIC_ACCES_NON_CONFIRME`. Aucun résultat exploitable du compte n’a été reçu ; l’étape réelle de cet arrêt reste inconnue. Deux défauts de l’outil ont été reproduits : ouvrir un terminal avec le flux Python `r+` impose une capacité de repositionnement absente d’un terminal ; certaines consoles WebSSH ont une sortie PTY sans terminal de contrôle `/dev/tty`. Les anciens tests qualifiaient les fichiers et les requêtes, sans exercer cette saisie interactive.
 
@@ -23,7 +23,7 @@ La nouvelle révision lit directement le terminal de stderr/stdout disponible, s
 - Adresse saisie localement et sans écho dans le terminal, transmise à Node par stdin seulement ; aucune adresse, identifiant, hash, token, contenu de mail ou valeur de configuration dans la sortie. Aucun mot de passe demandé ou traité.
 - SQL dans une transaction `READ ONLY`, terminée par `ROLLBACK` : état du compte, dates sous forme de booléens, comptes de sessions/vérifications et états d’e-mails. Pas de `FOR UPDATE`, d’écriture, de connexion réelle, de renvoi, de migration ou de redémarrage. Les lectures HTTP sont anonymes et ne suivent pas les redirections.
 
-Dans le [terminal du service Node existant](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), coller ce seul bloc. Saisir ensuite localement l’adresse exacte du compte concerné ; ne pas l’envoyer dans la discussion.
+**Étape acquise : le relevé corrigé a été reçu.** Le bloc suivant est conservé pour traçabilité, sans nouvelle exécution demandée. Lors de cette étape, dans le [terminal du service Node existant](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), coller ce seul bloc. Saisir ensuite localement l’adresse exacte du compte concerné ; ne pas l’envoyer dans la discussion.
 
 ```bash
 env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_DIAG_ACCES'
@@ -40,4 +40,22 @@ exec(compile(code, '<diagnostic-acces>', 'exec'), {'__name__': '__main__'})
 PY_DIAG_ACCES
 ```
 
-Recueillir uniquement le JSON ou le court message d’arrêt. Un arrêt ne demande pas de copie du journal, de mot de passe, de code d’invitation ou de lien de confirmation. Aucun relevé SQL de production n’a encore été reçu. Choisir ensuite la correction adaptée et regrouper les éventuels changements avant une seule activation ; ne pas déployer1113 par défaut, déplacer son tag ou recréer le compte pour diagnostiquer.
+Recueillir uniquement le JSON ou le court message d’arrêt. Un arrêt ne demande pas de copie du journal, de mot de passe, de code d’invitation ou de lien de confirmation. Le relevé corrigé est désormais acquis ; conserver sa synthèse ci-dessous, sans relancer cette commande. Ne pas déployer1113 par défaut, déplacer son tag ou recréer le compte pour diagnostiquer.
+
+## Résultat reçu à22:51:52Paris et prochaine action
+
+La [synthèse anonymisée du relevé](verification-proofs/jm1113/hosted-account-diagnostic-summary.json) confirme un compte client actif, e-mail confirmé, approbation valide, invitation consommée une fois, accès non expiré, état d’authentification présent et horloges alignées. Toutes les conditions de compte vérifiables sans mot de passe passent. Aucune session n’est conservée pour ce compte à cet instant. Le formulaire lit le mot de passe avant son effacement ; le code ne prouve pas une perte du champ à la soumission. Le diagnostic n’a pas vérifié le mot de passe : une différence de mot de passe ou d’identifiants soumis reste possible, sans être une cause démontrée ; un refus avant insertion reste possible également.
+
+La vérification d’e-mail est consommée et son unique e-mail est marqué envoyé, sans attente/échec en file. Le renvoi de confirmation ne crée pas de message pour un compte déjà confirmé ; ce comportement explique l’absence d’un nouveau mail, sans accuser SMTP ou revérifier le compte. Un état envoyé n’est pas une attestation séparée de livraison dans la boîte.
+
+Deux enregistrements de démarrage de la même identité1112/af352607/Node24.22.1 existent :17:35:35.648 et21:10:00.284Paris. Ce second démarrage est un fait du journal anonymisé, sans cause enregistrée dans ce relevé ni preuve de corrélation avec la maintenance Infomaniak. Santé, disponibilité et accès répondent200 ; `/admin/`404 et `/admin`303 vers `/admin/login`200 restent distincts de la page fournisseur.
+
+La [récupération publique](https://jessiemessage.com/recover) et sa capacité sont [vérifiées anonymement](verification-proofs/jm1113/client-recovery-public-observation.json) à22:56:16Paris : page200, formulaire présent, service200 et activé, mot de passe8–128caractères. Les lectures GET n’ont demandé aucun e-mail, modifié aucun compte et n’attestent pas encore une récupération complète réelle.
+
+Prochaine action personnelle unique :
+
+1. Ouvrir `https://jessiemessage.com/recover`, saisir l’adresse du compte déjà examiné et cliquer **Recevoir un lien**.
+2. Ouvrir l’e-mail de récupération, choisir et confirmer un nouveau mot de passe, puis cliquer **Enregistrer mon mot de passe**. La transaction change le mot de passe et sa génération et révoque les anciennes sessions ; elle conserve le compte, son approbation et ses conversations.
+3. Revenir sur `https://jessiemessage.com/access`, saisir manuellement l’adresse et le nouveau mot de passe, puis rapporter le résultat de la connexion.
+
+Ne transmettre aucun mot de passe ni lien privé dans la discussion. La récupération et la connexion finales sont encore non observées ; préparation et activation1113 restent suspendues. Aucun nouveau script hébergé, statut SQL à réparer ou compte à recréer n’est demandé à ce stade.
