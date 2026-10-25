@@ -1,0 +1,102 @@
+{
+  "format": "jessiemessage-read-only-access-diagnostic-qualification",
+  "version": 1,
+  "status": "qualified_awaiting_hosted_read_only_observation",
+  "operatorSource": "1d4c38e98633ddcde5f308295e09412343533788",
+  "operatorTree": "dbddc7c7173b6dca958ff52d024f45ace7a126c1",
+  "operatorBranch": "ops/diagnose-access1112",
+  "scriptSha256": "acc623ef5a0ea1018fecfeebe4b119e25bbf77a7f87b3f6c4208c1a9c0a97af8",
+  "scriptGitBlob": "968a773e3a10fa617919f88c671d9e5ddd096c24",
+  "workflow": {
+    "id": 40236054759,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40236054759",
+    "attempt": 1,
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 121297761226,
+        "name": "operator-and-public-http",
+        "conclusion": "success"
+      },
+      {
+        "id": 121297761373,
+        "name": "database (10.11)",
+        "conclusion": "success"
+      },
+      {
+        "id": 121297761418,
+        "name": "database (11.4)",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "checks": {
+    "pythonSynthetic": {
+      "passed": 8,
+      "failed": 0
+    },
+    "mariadb1011": {
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mariadb114": {
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "publicObservation": {
+    "type": "anonymous_public_http_observation",
+    "observedAt": "2026-10-25T21:33:36.884335+00:00",
+    "noAuthentication": true,
+    "noMail": true,
+    "noRestart": true,
+    "routes": {
+      "/api/health": {
+        "status": 200,
+        "kind": "app_health",
+        "redirect": false
+      },
+      "/api/ready": {
+        "status": 200,
+        "kind": "app_ready",
+        "redirect": false
+      },
+      "/access": {
+        "status": 200,
+        "kind": "app_access_html",
+        "redirect": false
+      },
+      "/admin": {
+        "status": 303,
+        "kind": "other",
+        "redirect": "/admin/login"
+      },
+      "/admin/": {
+        "status": 404,
+        "kind": "app_not_found",
+        "redirect": false
+      },
+      "/admin/login": {
+        "status": 200,
+        "kind": "other",
+        "redirect": false
+      }
+    }
+  },
+  "productionDiagnosticPerformed": false,
+  "privateAccountInspected": false,
+  "productionVersionLastUserReceipt": "1.11.2",
+  "release1113Staged": false,
+  "release1113ActivationHeld": true,
+  "noRealLogin": true,
+  "noRealMail": true,
+  "noHostingWrite": true,
+  "limits": [
+    "anonymous_http_is_a_point_in_time_observation",
+    "provider_maintenance_not_correlated_with_user_screenshot",
+    "public_http_does_not_expose_commit",
+    "actual_account_state_and_password_match_unknown"
+  ]
+}

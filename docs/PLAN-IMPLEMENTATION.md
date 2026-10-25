@@ -6,7 +6,7 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 Le correctif frontend1113 reste publié et qualifié à sa source immuable `89571636d6fde97b28b5e8aec9257801c1b71f8b`, mais l’utilisateur signale désormais un refus de connexion directe, un renvoi sans e-mail reçu et une page de maintenance Infomaniak. Il n’a pas exécuté la préparation. Ces symptômes ne sont pas résolus par les seuls essais du formulaire ; production1112 conservée.
 
-1. Qualifier un relevé ciblé en lecture seule : état du compte sélectionné localement, sessions, vérifications/e-mails, horloge, démarrages et réponses HTTP publiques, sans adresse ni donnée privée dans le résultat.
+1. Exécuter le [relevé ciblé en lecture seule désormais qualifié](access-diagnostic-20261025.md) : état du compte sélectionné localement, sessions, vérifications/e-mails, horloge, démarrages et réponses HTTP publiques, sans adresse ni donnée privée dans le résultat. Qualification native3/3 acquise,8tests Python et15parMariaDB sans omission ; ne pas la relancer sur le même code.
 2. Recueillir le relevé hébergé avant de choisir la correction ; ne pas supposer une erreur de mot de passe ou une maintenance fournisseur comme cause confirmée.
 3. Regrouper le correctif complémentaire nécessaire et sa qualification avant une unique activation. Ne pas déplacer le tag1113 publié ni rejouer la livraison1112 close. [État courant](REPRISE.md) ; [périmètre frontend1113](invitation-access-1113.md).
 
