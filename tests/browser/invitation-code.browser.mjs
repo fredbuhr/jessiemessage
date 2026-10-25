@@ -11,17 +11,19 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createAppServer } from "../../server/index.mjs";
 import { createAuthHandler } from "../../server/auth/http.mjs";
+import { AuthError } from "../../server/auth/service.mjs";
 import { createAccessHandler } from "../../server/access/http.mjs";
 import { createEntryHandler } from "../../server/entry/http.mjs";
 import { startWebDriver, waitUntil } from "./webdriver.mjs";
 
 const code = "0123-4567-89AB-CDEF-GHJK", compact = code.replaceAll("-", "");
 const legacyToken = Buffer.alloc(32, 21).toString("base64url");
+const verificationToken = Buffer.alloc(32, 24).toString("base64url");
 const password = "Synthetic invitation password", email = "invited@example.invalid";
 const screenshots = new URL("../../artifacts/homepage/", import.meta.url);
 const copy = {
-  fr: { invalid: "Ce code est invalide, expiré ou déjà utilisé.", created: "C’est créé !" },
-  en: { invalid: "This code is invalid, expired or already used.", created: "Your account is ready!" },
+  fr: { invalid: "Ce code est invalide, expiré ou déjà utilisé.", created: "C’est créé !", verificationRejected: "Ce lien de confirmation est invalide, expiré ou déjà utilisé. Connecte-toi si ton e-mail est confirmé, ou demande un nouvel e-mail ci-dessous.", verified: "Ton adresse e-mail est vérifiée.", signIn: "Aller à la connexion" },
+  en: { invalid: "This code is invalid, expired or already used.", created: "Your account is ready!", verificationRejected: "This confirmation link is invalid, expired or already used. Sign in if your email is confirmed, or request another email below.", verified: "Your email address is verified.", signIn: "Go to sign in" },
 };
 
 async function fixture() {
@@ -34,12 +36,12 @@ async function fixture() {
     await chmod(key, 0o600); await chmod(cert, 0o600);
     const adminToken = Buffer.alloc(32, 22).toString("base64url");
     const admin = { user: { id: "2".repeat(32), role: "admin", pseudonym: "Jessie de test" }, csrf: Buffer.alloc(32, 23).toString("base64url"), expiresAt: Date.now() + 3600000 };
-    const requests = [], inspections = [], registrations = [], creations = [], failures = [];
-    let app, registrationRefused = false;
+    const requests = [], inspections = [], registrations = [], creations = [], verifications = [], failures = [];
+    let app, registrationRefused = false, verificationUsed = false;
     server = createServer({ key: await readFile(key), cert: await readFile(cert), minVersion: "TLSv1.2" }, (request, response) => {
       const url = new URL(request.url, "https://localhost");
       requests.push({ path: url.pathname, method: request.method, noQuery: !url.search,
-        noSecretInReferrer: ![compact, code, legacyToken].some(value => request.headers.referer?.includes(value)) });
+        noSecretInReferrer: ![compact, code, legacyToken, verificationToken].some(value => request.headers.referer?.includes(value)) });
       app.emit("request", request, response);
     });
     await new Promise((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", resolve); });
@@ -50,6 +52,13 @@ async function fixture() {
     const access = Object.fromEntries(["revokeInvitation", "verifyEmail", "resendVerification", "login", "logout", "logoutAll", "approveClient", "revokeClient", "renewClient"].map(name => [name, unsupported]));
     Object.assign(access, {
       session: clientSession, adminSession,
+      async verifyEmail({ token }) {
+        const accepted = token === verificationToken && !verificationUsed;
+        verifications.push({ accepted });
+        if (!accepted) throw new AuthError("AUTH_INVALID");
+        verificationUsed = true;
+        return { status: "email_verified" };
+      },
       listClients: async () => ({ clients: [], hasMore: false, nextCursor: null }),
       listInvitations: async () => ({ invitations: [], hasMore: false, nextCursor: null }),
       async inspectInvitation(input) {
@@ -76,7 +85,8 @@ async function fixture() {
     }, async logout() {}, async logoutAll() {} }, { origin });
     app = createAppServer({ authHandler, accessHandler: createAccessHandler(access, { origin }),
       entryHandler: createEntryHandler({ clientSession, adminSession, chatEnabled: true, deviceTransition: true }) });
-    return { origin, requests, inspections, registrations, creations, failures,
+    return { origin, requests, inspections, registrations, creations, verifications, failures,
+      setVerificationUsed(value) { verificationUsed = value; },
       refuseNextRegistration() { registrationRefused = true; },
       async close() { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); await rm(directory, { recursive: true, force: true }); } };
   } catch (error) {
@@ -104,7 +114,7 @@ async function capture(page, name) {
 }
 async function cleanClientSurfaces(page) {
   assert.equal(await page.execute(`const values=arguments[0];return !location.hash&&!location.search
-    && values.every(value=>![location.href,JSON.stringify({...localStorage}),JSON.stringify({...sessionStorage})].some(surface=>surface.includes(value)));`, [compact, code, legacyToken]), true,
+    && values.every(value=>![location.href,JSON.stringify({...localStorage}),JSON.stringify({...sessionStorage})].some(surface=>surface.includes(value)));`, [compact, code, legacyToken, verificationToken]), true,
   "invitation secrets stay out of the current URL and browser storage");
 }
 async function fillRegistration(page) {
@@ -113,9 +123,46 @@ async function fillRegistration(page) {
 }
 function cleanFixture(source) {
   assert.deepEqual(source.failures, []);
-  assert.equal(source.requests.every(request => request.noSecretInReferrer && (request.method !== "POST" || !["/api/access/invitation", "/api/access/register", "/api/admin/invitations"].includes(request.path) || request.noQuery)), true, "no invitation secret is transported by API query or any referrer");
+  assert.equal(source.requests.every(request => request.noSecretInReferrer && (request.method !== "POST" || !["/api/access/invitation", "/api/access/register", "/api/access/verify-email", "/api/access/login", "/api/admin/invitations"].includes(request.path) || request.noQuery)), true, "no invitation or verification secret is transported by API query or any referrer");
   assert.equal(source.registrations.every(call => call.valid), true, "registration forwards the exact synthetic credentials and accepted invitation");
 }
+
+test("real Chrome: a used verification link opens sign-in, while a fresh link and explicit fallback remain usable inFR/EN at320/1280px", { timeout: 240000 }, async t => {
+  const source = await fixture(); let driver;
+  try {
+    driver = await startWebDriver();
+    for (const language of ["fr", "en"]) for (const width of [320, 1280]) await t.test(`${language}, ${width}px`, async () => {
+      const page = await driver.browser({ origin: source.origin, acceptInsecureCerts: true, width });
+      try {
+        source.setVerificationUsed(true);
+        await open(page, language, `/access#verification=${verificationToken}`);
+        await waitUntil(() => page.execute("return document.getElementById('email-verification').hidden===false && !document.getElementById('verify-email-button').disabled"), "verification link view");
+        assert.equal(await page.execute("return document.getElementById('verification-login-button').textContent"), copy[language].signIn);
+        await cleanClientSurfaces(page); await geometry(page);
+        const before = source.verifications.length;
+        await page.click("#verify-email-button"); await loginReady(page);
+        assert.equal(await page.execute("return document.getElementById('access-status').textContent"), copy[language].verificationRejected);
+        assert.equal(await page.execute("return document.getElementById('email-verification').hidden && !document.getElementById('resend-section').hidden && document.activeElement?.id==='login-email'"), true);
+        assert.deepEqual(source.verifications.slice(before), [{ accepted: false }]);
+        await geometry(page); await capture(page, `verification-used-${language}-${width}`); await cleanClientSurfaces(page);
+
+        source.setVerificationUsed(false);
+        await open(page, language, `/access#verification=${verificationToken}`);
+        await waitUntil(() => page.execute("return document.getElementById('email-verification').hidden===false && !document.getElementById('verification-login-button').disabled"), "explicit sign-in alternative");
+        const beforeChoice = source.verifications.length;
+        await page.click("#verification-login-button"); await loginReady(page);
+        assert.equal(source.verifications.length, beforeChoice, "choosing sign-in neither submits nor consumes a verification token");
+
+        await open(page, language, `/access#verification=${verificationToken}`);
+        await waitUntil(() => page.execute("return document.getElementById('email-verification').hidden===false && !document.getElementById('verify-email-button').disabled"), "fresh verification view");
+        await page.click("#verify-email-button"); await loginReady(page);
+        assert.equal(await page.execute("return document.getElementById('access-status').textContent.startsWith(arguments[0])", copy[language].verified), true);
+        assert.equal(source.verifications.at(-1).accepted, true); await cleanClientSurfaces(page);
+      } finally { await page.close(); }
+    });
+    cleanFixture(source);
+  } finally { await driver?.close(); await source.close(); }
+});
 
 test("real Chrome: invitation code entry is generic, retryable and opens explicit registration inFR/EN at320/1280px", { timeout: 240000 }, async t => {
   const source = await fixture(); let driver;

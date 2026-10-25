@@ -2,6 +2,14 @@
 
 **25 octobre 2026 — livraison1.11.2 terminée ; application, publication et checkpoint privé alignés selon le reçu final utilisateur.** [Reçu final](verification-proofs/jm1112/hosted-metadata.json) : version1.11.2, source `af352607ff7e12c41185f42b8232c72219a304cd`, arbre `655f759079979d608b0ec1c62a7c892311899515`, Nodev24.22.1, `publicReady:true`. Démarrage `1792946135648`, soit **25/10/2026 17:35:35.648 à Paris** (UTC+01), conforme au relevé UI à la seconde. Checkpoint SHA256 `3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf72aa26cd080b5a0ac2f400f`. Métadonnées seules et aucun nouveau redémarrage. Aucune opération de livraison restante ; ne rejouer ni préparation, CHECK, activation ou writer.
 
+## Correctif 1.11.3 — sortie du lien de confirmation en qualification
+
+Nouveau signalement : après confirmation de l’e-mail et approbation admin déclarées, la page reste sur la vérification avec refus du lien. [Diagnostic et périmètre](invitation-access-1113.md). Défaut frontend reproduit : un token déjà utilisé conserve la vue de vérification sans accès à la connexion. Le backend conserve le refus du token réutilisé et toutes ses conditions d’accès. L’état du compte réel n’est pas inspecté et l’origine exacte du refus réel n’est pas affirmée.
+
+Branche `fix/invitation-access-1113` : retour à la connexion après400/401, bouton explicite de sortie, isolation d’une éventuelle autre session client jusqu’à connexion par identifiants et preuve du propriétaire ; pas de renvoi d’e-mail automatique.102tests ciblés réussis,0échec/omission, après7échecs de reproduction sur1112. Scénarios Chrome FR/EN320/1280 ajoutés, qualification native et captures attendues. Version1113 cohérente package/lock ; backend,38migrations et dépendances inchangés. Aucun compte, message, média ou e-mail réel manipulé.
+
+**Prochaine action :** qualifier la PR puis le SHA main exact avant publication/préparation1113. Production1112 et checkpoint ci-dessus inchangés. Le contournement immédiat est l’ouverture de `https://jessiemessage.com/access` dans un nouvel onglet, puis la connexion par identifiants. Ne pas rejouer les commandes1112 closes, ni les anciens audits/sauvegardes reportées. [Couverture bornée](verification-proofs/jm1113/coverage.json).
+
 ## Correctif 1.11.2 — déployé et finalisé
 
 Demande du 25 octobre : transitions mobiles sans écran vide, consultation directe des profils/préférences clients et avatar de Jessie côté client, puis **audit frontend/backend complet avant une seule mise à jour**. [Rapport](AUDIT-MOBILE-PROFILES-1112.md) et [checklist](verification-proofs/jm1112/audit-checklist.json) clos : 24 domaines, 171 contrôles avec disposition, seconde revue de couverture terminée. Tous les chemins frontend/backend sont rattachés aux domaines ; cela ne signifie pas chaque ligne relue manuellement. Aucun défaut de code bloquant identifié ne reste ouvert. La1.11.1 a été préservée pendant l’audit ; le démarrage1112 est désormais rapporté séparément.

@@ -106,6 +106,86 @@ function controller(name, fetchHandler, { language = "fr", hash = "", pathname =
 const user = (state = "pending", pseudonym = "Bienvenue.") => ({ user: { id: "a".repeat(32), role: "client", pseudonym }, csrf: "A".repeat(43), expiresAt: Date.now() + 3600000,
   access: { state, admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: false, ageAssured: false, approved: false, expiresAt: null } });
 
+for (const language of ["fr", "en"]) for (const refusalStatus of [400, 401]) test(`a refused verification link returns to credential sign-in and resend in ${language} (HTTP ${refusalStatus})`, async () => {
+  const token = "A".repeat(43);
+  const f = controller("access", path => path === "/api/access/verify-email" ? response({ error: "invalid_credentials" }, refusalStatus)
+    : path === "/api/access/session" ? response({}, 401) : capability(), { language, hash: `#verification=${token}` });
+  try {
+    await flush(); assert.equal(f.get("email-verification").hidden, false);
+    f.get("verify-email-button").dispatchEvent(new Event("click")); await flush();
+    assert.equal(f.get("client-login-form").hidden, false, "an already used/expired/revoked link must not trap the user before sign-in");
+    assert.equal(f.get("email-verification").hidden, true); assert.equal(f.get("resend-section").hidden, false);
+    assert.equal(f.document.activeElement, f.get("login-email"));
+    assert.equal(f.get("access-status").classList.contains("is-error"), true);
+    assert.match(f.get("access-status").textContent, language === "fr" ? /déjà utilisé.*Connecte-toi/ : /already used.*Sign in/);
+    assert.equal(f.calls.filter(call => call.path === "/api/access/verify-email").length, 1);
+    assert.equal(f.calls.filter(call => call.path === "/api/access/resend-verification" || call.path === "/api/access/login").length, 0);
+    assert.equal(f.location.hash, ""); assert.equal(f.writes.some(([, value]) => value.includes(token)), false);
+  } finally { f.dispose(); }
+});
+
+for (const verifiedStatus of [200, 401]) test(`verification intent cannot adopt another client's cookie before explicit sign-in (HTTP ${verifiedStatus})`, async () => {
+  let signedIn = false;
+  const oldOwner = user("active", "Other client must stay hidden");
+  const newOwner = { ...user("active", "New invited client"), user: { id: "b".repeat(32), role: "client", pseudonym: "New invited client" } };
+  oldOwner.access.emailVerified = oldOwner.access.approved = true;
+  newOwner.access.emailVerified = newOwner.access.approved = true;
+  const f = controller("access", (path, options) => {
+    if (path === "/api/access/session") return response(signedIn ? newOwner : oldOwner);
+    if (path === "/api/access/verify-email") return response(verifiedStatus === 200 ? { status: "email_verified" } : { error: "invalid_credentials" }, verifiedStatus);
+    if (path === "/api/access/login") { assert.deepEqual(JSON.parse(options.body), { email: "new-client@example.invalid", password: "synthetic password" }); signedIn = true; return response(newOwner); }
+    if (path === "/api/chat/client/capabilities") return response({ enabled: true });
+    return capability();
+  }, { hash: `#verification=${"A".repeat(43)}` });
+  try {
+    await flush(); assert.equal(f.get("client-connected").hidden, true); assert.equal(f.get("client-name").textContent, "");
+    assert.equal(f.calls.filter(call => call.path === "/api/access/session").length, 0, "a verification link does not select a pre-existing client session");
+    f.get("verify-email-button").dispatchEvent(new Event("click")); await flush();
+    assert.equal(f.get("client-login-form").hidden, false); assert.equal(f.get("client-connected").hidden, true);
+    f.hide(); await f.show(); await f.online();
+    assert.equal(f.get("client-login-form").hidden, false); assert.equal(f.calls.filter(call => call.path === "/api/access/session").length, 0);
+    f.input("login-email", "new-client@example.invalid"); f.input("login-password", "synthetic password"); f.submit("client-login-form"); await flush();
+    assert.equal(f.calls.filter(call => call.path === "/api/access/login").length, 1);
+    assert.equal(f.calls.filter(call => call.path === "/api/access/session").length, 1, "sign-in is followed by the actual current owner proof");
+    assert.equal(f.get("client-name").textContent, "New invited client"); assert.deepEqual(f.navigations, ["/messages"]);
+  } finally { f.dispose(); }
+});
+
+test("a verification response lost while hidden leaves an explicit sign-in path without replaying the token", async () => {
+  const verification = deferred();
+  const f = controller("access", path => path === "/api/access/verify-email" ? verification.promise
+    : path === "/api/access/session" ? response({}, 401) : capability(), { hash: `#verification=${"A".repeat(43)}` });
+  try {
+    await flush(); f.get("verify-email-button").dispatchEvent(new Event("click")); await flush(); f.hide();
+    verification.resolve(response({ status: "email_verified" })); await flush(); await f.show();
+    assert.equal(f.get("email-verification").hidden, false);
+    assert.ok(f.get("verification-login-button"), "the user can leave an uncertain verification without consuming the link again");
+    f.get("verification-login-button").dispatchEvent(new Event("click")); await flush();
+    assert.equal(f.get("client-login-form").hidden, false); assert.equal(f.get("email-verification").hidden, true);
+    assert.equal(f.document.activeElement, f.get("login-email"));
+    assert.equal(f.calls.filter(call => call.path === "/api/access/verify-email").length, 1);
+  } finally { f.dispose(); }
+});
+
+test("the explicit verification sign-in choice does not submit the token or silently log in", async () => {
+  const f = controller("access", () => capability(), { hash: `#verification=${"A".repeat(43)}` });
+  try {
+    await flush(); assert.ok(f.get("verification-login-button")); f.get("verification-login-button").dispatchEvent(new Event("click")); await flush();
+    assert.equal(f.get("client-login-form").hidden, false); assert.equal(f.get("email-verification").hidden, true);
+    assert.equal(f.calls.some(call => call.options.method === "POST"), false);
+  } finally { f.dispose(); }
+});
+
+test("an unavailable verification remains retryable and offers sign-in without declaring the token invalid", async () => {
+  const f = controller("access", path => path === "/api/access/verify-email" ? response({ error: "authentication_unavailable" }, 503) : capability(), { hash: `#verification=${"A".repeat(43)}` });
+  try {
+    await flush(); f.get("verify-email-button").dispatchEvent(new Event("click")); await flush();
+    assert.equal(f.get("email-verification").hidden, false); assert.equal(f.get("verify-email-button").disabled, false); assert.ok(f.get("verification-login-button"));
+    assert.match(f.get("access-status").textContent, /indisponible/);
+    assert.equal(f.calls.some(call => call.path === "/api/access/login" || call.path === "/api/access/resend-verification"), false);
+  } finally { f.dispose(); }
+});
+
 test("access and recovery catalogs cover every declared UI leaf and load before their controllers", () => {
   const catalog = {}, catalogContext = {
     JessieI18n: { register(value) { Object.assign(catalog, value); }, getLanguage: () => "fr", onChange() {} },
