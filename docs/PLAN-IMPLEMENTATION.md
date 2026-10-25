@@ -2,13 +2,13 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Correctif 1.11.3 — publié, préparation hébergée attendue
+## Diagnostic d’accès1112 — livraison1113 suspendue
 
-Défaut de sortie du lien de confirmation reproduit et corrigé ; [PR140](https://github.com/fredbuhr/jessiemessage/pull/140) fusionnée, PR/main5/5, quatre captures inspectées et publication2/2 après33tests opérateur natifs. Source unique `89571636d6fde97b28b5e8aec9257801c1b71f8b`. [Périmètre et preuves](invitation-access-1113.md), [état courant](REPRISE.md). Production1112 conservée. Connexion réelle du compte signalé non observée par l’agent ; aucun nouveau compte ou e-mail réel déclenché.
+Le correctif frontend1113 reste publié et qualifié à sa source immuable `89571636d6fde97b28b5e8aec9257801c1b71f8b`, mais l’utilisateur signale désormais un refus de connexion directe, un renvoi sans e-mail reçu et une page de maintenance Infomaniak. Il n’a pas exécuté la préparation. Ces symptômes ne sont pas résolus par les seuls essais du formulaire ; production1112 conservée.
 
-1. Exécuter une fois la [préparation1113 et son CHECK](operations-release1113.md), puis recueillir source/arbre, empreintes, `CHECK1113_EXIT=0` et `PREPARATION_1113_CHECK_OK`. Pas de relance aveugle d’une sortie incertaine.
-2. Après ce reçu, activer ce seul commit depuis le service Node existant et recueillir version/commit/Node/date de démarrage. Node privé24.22.1 et SQL38 inchangés ; aucune nouvelle migration.
-3. Qualifier puis exécuter le writer1113 lié à cette identité : HTTP/publication prêts, métadonnées seules, relecture et historiques préservés, sans nouveau redémarrage. Ne rejouer ni les commandes1112 closes ni les CI vertes. Limites physiques et historiques inchangées, aucun nouvel audit général ou sauvegarde reportée ouvert.
+1. Qualifier un relevé ciblé en lecture seule : état du compte sélectionné localement, sessions, vérifications/e-mails, horloge, démarrages et réponses HTTP publiques, sans adresse ni donnée privée dans le résultat.
+2. Recueillir le relevé hébergé avant de choisir la correction ; ne pas supposer une erreur de mot de passe ou une maintenance fournisseur comme cause confirmée.
+3. Regrouper le correctif complémentaire nécessaire et sa qualification avant une unique activation. Ne pas déplacer le tag1113 publié ni rejouer la livraison1112 close. [État courant](REPRISE.md) ; [périmètre frontend1113](invitation-access-1113.md).
 
 ## Correctif 1.11.2 — audit et livraison terminés
 
