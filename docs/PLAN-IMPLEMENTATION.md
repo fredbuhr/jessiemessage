@@ -10,8 +10,10 @@ Préparation et CHECK1113 [rapportés réussis](verification-proofs/jm1113/hoste
 
 Le [relevé après activation](verification-proofs/jm1113/hosted-identity.json) est reçu :1.11.3, commit89571636, Node24.22.1,25octobre23:17:23Paris (UTC+01), seconde1792966643. Ne pas redémarrer à nouveau.
 
-1. Qualifier le writer1113 lié à cette identité : candidat dérivé du writer1112,17tests locaux acquis, qualification native attendue. Référence au checkpoint1112 inchangé, staging1113 et historiques complets préservés ; aucun SQL ni nouvelle activation.
-2. Après qualification, fournir sa seule commande puis recueillir le reçu final de métadonnées. Ne pas déplacer le tag ou rejouer1112, préparation/CHECK SSH1113, activation, diagnostics ou CI déjà acquis. [État courant](REPRISE.md).
+Le writer final lié à cette seconde et aux reçus est désormais [qualifié17/17 natifs](verification-proofs/jm1113/writer-final-native.json), run40240046476,1/1, tentative1, sans omission. Opérateur `e3821d9231f0e7ead0a8eea7c3e1730aff0ea86e`, script SHA256 `a8904e91b394cf8a09f6a2a0b419fbfc45e590438da7ed5de18f24f36583b3f9`, source relue identique. Qualification acquise, aucune relance du même code.
+
+1. Exécuter une fois sa [commande de métadonnées](operations-release1113.md), puis recueillir le JSON final et le nouveau SHA256 de checkpoint. Aucun SQL ou redémarrage ; historiques et autres blocs préservés.
+2. Après succès du reçu, clore la livraison documentaire. Ne pas déplacer le tag ni rejouer1112, préparation/CHECK SSH1113, activation, diagnostics ou CI déjà acquis. [État courant](REPRISE.md).
 
 ## Correctif 1.11.2 — audit et livraison terminés
 

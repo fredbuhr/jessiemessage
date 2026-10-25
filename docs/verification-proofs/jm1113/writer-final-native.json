@@ -1,0 +1,48 @@
+{
+  "format": "jessiemessage-release1113-writer-final-native",
+  "operator": "e3821d9231f0e7ead0a8eea7c3e1730aff0ea86e",
+  "operatorTree": "c5a434b786ae19b255baafdda5b1028990b5e52d",
+  "writerSha256": "a8904e91b394cf8a09f6a2a0b419fbfc45e590438da7ed5de18f24f36583b3f9",
+  "run": 40240046476,
+  "attempt": 1,
+  "nodeVersion": "24.22.1",
+  "allJobsSuccessful": true,
+  "tests": {
+    "pass": 17,
+    "fail": 0,
+    "skipped": 0
+  },
+  "jobs": [
+    {
+      "id": 121309697433,
+      "name": "operator-tests",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "release": {
+    "version": "1.11.3",
+    "source": "89571636d6fde97b28b5e8aec9257801c1b71f8b",
+    "tree": "e16a22043ea00908afa37cad64e5f9b421f4e5ae",
+    "releaseId": 423658747
+  },
+  "pins": {
+    "reportedStartupSecond": 1792966643,
+    "priorCheckpointSha256": "3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf72aa26cd080b5a0ac2f400f",
+    "stagingReceiptSha256": "7c1a51e0033e329b3daaf3ee8895a989f67e13c42199f7c4e6ac2907afbd8282"
+  },
+  "nativeScope": "Real synthetic local receipts, file permissions, bounded reads, atomic replacement, complete history preservation and idempotence; Git inventories/public HTTP are synthetic test doubles. No hosted SQL, account, mail, Manager or runtime action.",
+  "preservedHistoricalReleaseNames": [
+    "1112",
+    "1111",
+    "1110",
+    "1101",
+    "1100",
+    "190",
+    "184"
+  ],
+  "publicSnapshotDowngradeLimit": "backend1111_cannot_read_new_public_snapshot_format2",
+  "rollbackQualificationScope": "sql38_precheck_only",
+  "hostMetadataRecorded": false,
+  "exactOperatorSourceReadBack": true
+}

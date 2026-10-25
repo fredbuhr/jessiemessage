@@ -1,5 +1,5 @@
 {
-  "status": "release1113_startup_reported_writer_native_qualification_pending",
+  "status": "release1113_started_writer_qualified_metadata_receipt_pending",
   "branch": "fix/invitation-access-1113",
   "source": "89571636d6fde97b28b5e8aec9257801c1b71f8b",
   "tree": "e16a22043ea00908afa37cad64e5f9b421f4e5ae",
@@ -12,7 +12,7 @@
     "skipped": 0
   },
   "syntaxSources": 778,
-  "next": "Qualify pinned metadata-only writer1113 for reported startup second1792966643, then supply command; do not restart or replay successful stages.",
+  "next": "User executes qualified pinned metadata-only writer1113 once, then supplies JSON receipt; no restart, SQL, migration or email.",
   "manualDirectLoginResult": "user_reports_connected",
   "run": 40231447183,
   "qualifiedPrSource": "cd54e868116d605c01c7ad09033998813f61a490",
@@ -33,7 +33,7 @@
   "publicationRun": 40233214193,
   "publicationSuccessful": true,
   "releaseId": 423658747,
-  "recordedAt": "2026-10-25T22:23:21.887857+00:00",
+  "recordedAt": "2026-10-25T22:28:43.152331+00:00",
   "release1113PreparationPerformed": true,
   "release1113ActivationHeld": false,
   "diagnosticOperatorSource": "2e06b3b463f99fc62851aa215f73f9a0e3436913",
@@ -66,5 +66,14 @@
     "fail": 0,
     "skipped": 0
   },
-  "writerNativeQualification": "pending"
+  "writerNativeQualification": "success",
+  "writerNativeRun": 40240046476,
+  "writerOperatorSource": "e3821d9231f0e7ead0a8eea7c3e1730aff0ea86e",
+  "writerOperatorTree": "c5a434b786ae19b255baafdda5b1028990b5e52d",
+  "writerSha256": "a8904e91b394cf8a09f6a2a0b419fbfc45e590438da7ed5de18f24f36583b3f9",
+  "writerNativeTests": {
+    "pass": 17,
+    "fail": 0,
+    "skipped": 0
+  }
 }

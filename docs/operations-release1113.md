@@ -13,6 +13,33 @@ Le correctif rend la connexion accessible après un lien de confirmation déjà 
 - Opérateur immuable : `fead96f4c8bde918dde5c72a1860fe298f47abe3` ; arbre `9d1fe014682919280837df2ec806941212afd7ed`.
 - Préparateur SHA256 : `8267f0b8169cc3857503afe16506b471b879a732d458e799b7b17a12363b1916`, relu à cette source et identique aux octets qualifiés.
 
+## Prochaine action unique — finalisation des métadonnées
+
+Le [relevé après activation](verification-proofs/jm1113/hosted-identity.json) rapporte1.11.3, source89571636, Node24.22.1 et démarrage25octobre23:17:23Paris (UTC+01), seconde1792966643. Ne pas redémarrer à nouveau.
+
+Le writer lié à cette seconde et aux reçus est [qualifié17/17 natifs](verification-proofs/jm1113/writer-final-native.json), [run40240046476](https://github.com/fredbuhr/jessiemessage/actions/runs/40240046476),1/1, tentative1, sans omission. Opérateur `e3821d9231f0e7ead0a8eea7c3e1730aff0ea86e`, arbre `c5a434b786ae19b255baafdda5b1028990b5e52d` ; script SHA256 `a8904e91b394cf8a09f6a2a0b419fbfc45e590438da7ed5de18f24f36583b3f9`, relu à cette source et identique aux octets qualifiés. Les tests emploient de vrais fichiers synthétiques et permissions/remplacement atomique ; Git et HTTP y sont simulés, pas de lecture privée hébergée ou envoi d’e-mail.
+
+Le script contrôle source/tag/arbre, verrous et migrations identiques, Node et lanceurs privés, précontrôle, startup à la seconde rapportée, HTTP publics et publication. Il met uniquement à jour le checkpoint privé, en conservant l’active1112 antérieure et tous les blocs historiques, puis relit le fichier. Aucun SQL, commande Manager, démarrage, migration ou e-mail. L’ancienne limite de snapshot public appartient toujours au backend1111 et antérieurs ; rollback185 reste qualifiéSQL38 seulement, jamais démarré.
+
+Dans le [terminal Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), exécuter ce seul bloc une fois :
+
+```bash
+env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD1113'
+import hashlib, urllib.request
+
+url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/e3821d9231f0e7ead0a8eea7c3e1730aff0ea86e/ops/record-release1113.py'
+with urllib.request.urlopen(url, timeout=30) as response:
+    if response.status != 200 or response.url != url:
+        raise SystemExit('URL_OUTIL_A_VERIFIER : arrêt.')
+    code = response.read(262145)
+if len(code) > 262144 or hashlib.sha256(code).hexdigest() != 'a8904e91b394cf8a09f6a2a0b419fbfc45e590438da7ed5de18f24f36583b3f9':
+    raise SystemExit('EMPREINTE_OUTIL_INCORRECTE : aucun outil exécuté.')
+exec(compile(code, '<enregistrement1113>', 'exec'), {'__name__': '__main__'})
+PY_RECORD1113
+```
+
+Recueillir uniquement le JSON. Succès attendu : `release1113_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, identité exacte et nouveau `checkpointSha256`. Un refus ou une interruption ne demande aucune relance automatique ; conserver le résultat et inspecter l’état durable. Enregistrement final non effectué/non rapporté à ce stade.
+
 ## Historique — activation rapportée, ne pas redémarrer
 
 La [préparation et son CHECK sont acquis selon le reçu utilisateur](verification-proofs/jm1113/hosted-preparation.json) : empreinte canonique identique `7c1a51e0033e329b3daaf3ee8895a989f67e13c42199f7c4e6ac2907afbd8282`, `CHECK1113_EXIT=0` et `PREPARATION_1113_CHECK_OK`. Les flags faux et empreintes de logs vides du staging décrivent l’état avant ce CHECK séparé. Ne pas rejouer la commande SSH. Aucune inspection directe des fichiers privés, champs Manager ou processus n’est déduite du reçu.
@@ -78,8 +105,5 @@ Le JSON, `CHECK1113_EXIT=0` et `PREPARATION_1113_CHECK_OK` sont désormais reçu
 
 Le helper est lié au checkpoint1112 `3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf72aa26cd080b5a0ac2f400f`, au staging1112 `eef0d3f64599ee5ccfdd1e0a5bd996daf035fa3e79cab957ef7e97a3afaea628`, aux lanceurs1112, à Node24.22.1 privé et au tag/source/arbre exacts. Il réutilise les dépendances1101 après vérification. Aucune sortie1113 existante n’est remplacée.
 
-## Prochaine action unique — finalisation des métadonnées
-
-Le [relevé après activation](verification-proofs/jm1113/hosted-identity.json) rapporte désormais1.11.3, source89571636, Node24.22.1 et démarrage25octobre23:17:23Paris (UTC+01). Ne pas redémarrer à nouveau. Qualifier le writer1113 lié à cette seconde exacte, puis fournir sa seule commande : HTTP/publication, métadonnées seules et relecture. Le candidat passe17tests locaux ; qualification native et exécution hébergée encore attendues. Aucun nouveau compte ni code d’invitation à créer pour ce correctif.
 
 La version1112 et son checkpoint finalisé restent conservés. Repli185 qualifié pourSQL38 seulement, jamais démarré ;184/172 interdits. La limite de lecture du snapshot publicformat2 par les anciens backends1111 et antérieurs reste distincte. Appareils physiques/Safari/Firefox/Push fermé non fraîchement qualifiés, sauvegarde reportée et réservesA10/A11/A12 inchangées.
