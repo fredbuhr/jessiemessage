@@ -11,10 +11,14 @@ L’utilisateur signale désormais un refus de connexion directe après confirma
 
 ## Relevé hébergé qualifié — prochaine action unique
 
-[Qualification40236054759](https://github.com/fredbuhr/jessiemessage/actions/runs/40236054759), tentative1,3/3 :8tests Python de fichiers/sorties synthétiques,15tests natifs surMariaDB10.11 et15sur11.4, aucun échec ni omission native. Les transactions de diagnostic préservent toutes les lignes synthétiques et MariaDB refuse une écriture pendant `READ ONLY`. La source téléchargée a été relue et comparée exactement aux octets qualifiés. [Preuve structurée](verification-proofs/jm1113/access-diagnostic-native.json).
+Le premier relevé, opérateur1d4c38e9, a retourné le message générique `DIAGNOSTIC_ACCES_NON_CONFIRME`. Aucun résultat exploitable du compte n’a été reçu ; l’étape réelle de cet arrêt reste inconnue. Deux défauts de l’outil ont été reproduits : ouvrir un terminal avec le flux Python `r+` impose une capacité de repositionnement absente d’un terminal ; certaines consoles WebSSH ont une sortie PTY sans terminal de contrôle `/dev/tty`. Les anciens tests qualifiaient les fichiers et les requêtes, sans exercer cette saisie interactive.
 
-- Opérateur : `1d4c38e98633ddcde5f308295e09412343533788` ; arbre : `dbddc7c7173b6dca958ff52d024f45ace7a126c1`.
-- Script : `ops/inspect-access1112.py`, SHA256 `acc623ef5a0ea1018fecfeebe4b119e25bbf77a7f87b3f6c4208c1a9c0a97af8`.
+La nouvelle révision lit directement le terminal de stderr/stdout disponible, sans écho ni utilisation du stdin consommé par le heredoc. Elle restaure ses réglages après saisie ou interruption et refuse une absence totale de terminal. Toute erreur du parcours principal produit un JSON limité à l’étape, un code autorisé et éventuellement un errno numérique : aucun message d’exception, chemin, paramètre SQL ou stderr du sous-processus.
+
+[Qualification40237166078](https://github.com/fredbuhr/jessiemessage/actions/runs/40237166078), tentative1,1/1,14tests Python réussis sans omission, comprenant un vrai PTY sans terminal de contrôle, une interruption, l’absence de terminal, les gardes et la suppression des données privées dans les erreurs. Une régression échoue avant correction et réussit après. Le module de requêtes et l’entrée Node sont relus identiques à la révision précédente et leurs SHA256 contrôlés par test : les qualificationsMariaDB10.11/11.4,15/15 chacune du [run40236054759](verification-proofs/jm1113/access-diagnostic-native.json), sont conservées sans relance des mêmes requêtes. [Preuve de correction terminal](verification-proofs/jm1113/access-diagnostic-terminal-native.json). Ce défaut reproduit localement ne prouve pas l’étape réelle du premier arrêt hébergé.
+
+- Opérateur courant : `2e06b3b463f99fc62851aa215f73f9a0e3436913` ; arbre : `869f25757d322a34d7b1f16765d24940e0d43fc0`.
+- Script : `ops/inspect-access1112.py`, SHA256 `8c2520502ef12d5674b4bde41d15acb3945f51664850c57b814122dcba5598e1`, relu à cette source immuable et identique aux octets qualifiés.
 - Préconditions : checkpoint et staging1112, source/arbre propres, binaire privé24.22.1 et configuration inchangés, dépendances réutilisées. Aucun module serveur de démarrage ou store pouvant modifier `last_seen_at` n’est appelé.
 - Adresse saisie localement et sans écho dans le terminal, transmise à Node par stdin seulement ; aucune adresse, identifiant, hash, token, contenu de mail ou valeur de configuration dans la sortie. Aucun mot de passe demandé ou traité.
 - SQL dans une transaction `READ ONLY`, terminée par `ROLLBACK` : état du compte, dates sous forme de booléens, comptes de sessions/vérifications et états d’e-mails. Pas de `FOR UPDATE`, d’écriture, de connexion réelle, de renvoi, de migration ou de redémarrage. Les lectures HTTP sont anonymes et ne suivent pas les redirections.
@@ -25,12 +29,12 @@ Dans le [terminal du service Node existant](https://manager.infomaniak.com/v3/ho
 env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_DIAG_ACCES'
 import hashlib, urllib.request
 
-url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/1d4c38e98633ddcde5f308295e09412343533788/ops/inspect-access1112.py'
+url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/2e06b3b463f99fc62851aa215f73f9a0e3436913/ops/inspect-access1112.py'
 with urllib.request.urlopen(url, timeout=30) as response:
     if response.status != 200 or response.url != url:
         raise SystemExit('URL_DIAGNOSTIC_A_VERIFIER')
     code = response.read(65537)
-if len(code) > 65536 or hashlib.sha256(code).hexdigest() != 'acc623ef5a0ea1018fecfeebe4b119e25bbf77a7f87b3f6c4208c1a9c0a97af8':
+if len(code) > 65536 or hashlib.sha256(code).hexdigest() != '8c2520502ef12d5674b4bde41d15acb3945f51664850c57b814122dcba5598e1':
     raise SystemExit('EMPREINTE_DIAGNOSTIC_INCORRECTE : aucun outil exécuté.')
 exec(compile(code, '<diagnostic-acces>', 'exec'), {'__name__': '__main__'})
 PY_DIAG_ACCES

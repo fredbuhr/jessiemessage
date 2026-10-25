@@ -1,0 +1,71 @@
+{
+  "format": "jessiemessage-read-only-access-terminal-correction",
+  "version": 1,
+  "status": "qualified_awaiting_hosted_account_result",
+  "operatorSource": "2e06b3b463f99fc62851aa215f73f9a0e3436913",
+  "operatorTree": "869f25757d322a34d7b1f16765d24940e0d43fc0",
+  "operatorBranch": "ops/diagnose-access1112-terminal",
+  "scriptSha256": "8c2520502ef12d5674b4bde41d15acb3945f51664850c57b814122dcba5598e1",
+  "workflow": {
+    "id": 40237166078,
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/40237166078",
+    "attempt": 1,
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 121301082260,
+        "name": "terminal-and-output",
+        "conclusion": "success"
+      }
+    ],
+    "pythonTests": {
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "userFirstAttempt": {
+    "source": "1d4c38e98633ddcde5f308295e09412343533788",
+    "result": "DIAGNOSTIC_ACCES_NON_CONFIRME : aucun compte modifié ; transmettre ce message, pas de journal privé.",
+    "usableAccountResult": false,
+    "actualFailureStage": "unknown_generic_error"
+  },
+  "reproduction": {
+    "oldTerminalOpenRequiresSeekableStream": true,
+    "webConsoleWithoutControllingTerminalReproduced": true,
+    "regressionFailedBeforeCorrection": true,
+    "correctedHiddenInputPassedOnRealPty": true,
+    "echoRestoredAfterInterrupt": true,
+    "noFallbackToEchoedStdin": true,
+    "exceptionMessagesPathsAndPrivateValuesRedacted": true
+  },
+  "reusedSqlQualification": {
+    "operatorSource": "1d4c38e98633ddcde5f308295e09412343533788",
+    "run": 40236054759,
+    "proof": "access-diagnostic-native.json",
+    "nodeModuleSha256": "3f00601bba2d13b521268946b6bcfb92549c566abf62d1f696a8f92a4eb225ee",
+    "nodeEntrySha256": "d2986518c84137f7afe5c830b29e8bf03e609c716e496a27efe6bc16efa665ee",
+    "exactCodeUnchanged": true,
+    "mariadb1011": {
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mariadb114": {
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    "rerun": false
+  },
+  "productionActionsByAgent": false,
+  "actualAccountStateUnknown": true,
+  "release1113PreparationPerformed": false,
+  "release1113ActivationHeld": true,
+  "productionLastUserReceipt": "1.11.2",
+  "limits": [
+    "host_first_failure_not_located_due_to_generic_error",
+    "local_terminal_reproduction_does_not_prove_host_first_failure_stage",
+    "no_successful_hosted_account_observation_yet"
+  ]
+}
