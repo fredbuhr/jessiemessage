@@ -1072,8 +1072,12 @@ async function refreshCrmCapability() {
     const style = document.createElement("link"); style.id = "crm-style"; style.rel = "stylesheet"; style.href = "/crm.css"; document.head.append(style);
     crm = module.createCrmUI({
       request, inboxHead: document.querySelector(".inbox-head"), chatHead: el("conversation-actions"), getReturnFocus: menuReturnFocus,
+      getProfileReturnFocus(id) {
+        return selected === null ? el("received-list")?.querySelector(`[data-profile-conversation-id="${id}"]`) : null;
+      },
       renderClientAvatar(container, id) {
-        const conversation = states.get(id)?.conversation ?? inbox.get(id) ?? receivedItems.get(id)?.conversation;
+        // A retained chat can predate the profile seen by a refreshed overview.
+        const conversation = selected === id ? states.get(id)?.conversation : receivedItems.get(id)?.conversation ?? inbox.get(id) ?? states.get(id)?.conversation;
         if (conversation) renderPeerAvatar(container, conversation);
       },
       clearClientAvatar(container) { avatarContainers.delete(container); ui.forget(container); container.replaceChildren(); },
@@ -1411,7 +1415,7 @@ function syncReceivedOverview() {
   el("chat").setAttribute("aria-labelledby", overview ? "received-title" : "peer-name");
 }
 function renderReceived() {
-  const list = el("received-list"), focused = document.activeElement?.dataset?.receivedId;
+  const list = el("received-list"), focused = document.activeElement?.dataset?.receivedId, focusedProfile = document.activeElement?.dataset?.profileConversationId;
   clearReceivedRows();
   for (const item of [...receivedItems.values()].sort((a, b) => Number(b.unread) - Number(a.unread) || b.message.createdAt - a.message.createdAt)) {
     const hasProfile = typeof crm?.openClientProfile === "function";
@@ -1445,7 +1449,8 @@ function renderReceived() {
   }
   ui.text(el("received-status"), receivedItems.size ? "" : "Aucun message reçu pour le moment.");
   el("more-received").hidden = !receivedMore; el("more-received").disabled = receivedLoading;
-  if (focused) { const row = [...list.children].find(node => node.dataset.receivedId === focused); focusVisible(row?.querySelector?.(".received-open") ?? row); }
+  if (focusedProfile) focusVisible(list.querySelector(`[data-profile-conversation-id="${focusedProfile}"]`));
+  else if (focused) { const row = [...list.children].find(node => node.dataset.receivedId === focused); focusVisible(row?.querySelector?.(".received-open") ?? row); }
 }
 async function loadReceived(more = false) {
   if (!receivedEnabled || !ready || !visible() || selected !== null || receivedLoading || more && (!receivedMore || !receivedCursor)) return;

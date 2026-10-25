@@ -134,6 +134,15 @@ async function createPhoto(page, conversationId) {
 async function imageReadable(page, path) {
   return page.executeAsync(`const path=arguments[0],done=arguments[arguments.length-1];(async()=>{const response=await fetch(path,{cache:'no-store',credentials:'same-origin'});if(response.status!==200)return{status:response.status};const image=await createImageBitmap(await response.blob());const result={status:200,width:image.width,height:image.height};image.close();return result;})().then(done,()=>done({status:0}));`, path);
 }
+async function createAdminAvatar(page) {
+  return page.executeAsync(`const done=arguments[arguments.length-1];(async()=>{
+    const session=await(await fetch('/api/auth/session',{cache:'no-store'})).json();
+    const canvas=document.createElement('canvas');canvas.width=32;canvas.height=24;const context=canvas.getContext('2d');
+    context.fillStyle='#a83268';context.fillRect(0,0,32,24);context.fillStyle='#efcf96';context.fillRect(8,4,16,16);
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg'));
+    const response=await fetch('/api/media/admin/assets',{method:'POST',headers:{'X-CSRF-Token':session.csrf,'Content-Type':'image/jpeg'},body:blob});
+    return{status:response.status,data:await response.json()};})().then(done,()=>done({status:0}));`);
+}
 async function selectPhotos(page, bytes, count, offset = 0) {
   // Replace only the OS picker; decoding, normalization, uploads and sends use
   // the production controller and actual SQL-backed HTTPS endpoints.
@@ -234,8 +243,11 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
           const after = await json(admin, "admin", `/api/chat/admin/conversations/${conversation}/messages`); assert.equal(after.data.conversation.lastReadSequence, through, "profile consultation preserves the exact unread cursor");
           await mkdir(new URL("../../artifacts/homepage/", import.meta.url), { recursive: true });
           await writeFile(new URL(`../../artifacts/homepage/experience-admin-${width}-client-profile.png`, import.meta.url), Buffer.from(await page.screenshot(), "base64"));
+          await page.execute("window.__profileEntryBeforeRefresh=document.querySelector(arguments[0]);document.getElementById('refresh-received').click()", selector);
+          await waitUntil(() => page.execute("return !window.__profileEntryBeforeRefresh.isConnected&&!document.getElementById('refresh-received').disabled&&document.querySelector('.crm-dialog').open"), "a background inbox refresh replaces the entry while its profile remains open");
           await page.click(".crm-dialog .dialog-head button");
           assert.equal(await page.execute("return document.activeElement.getAttribute('data-profile-conversation-id')"), conversation, "closing the profile restores its direct entry");
+          await page.execute("delete window.__profileEntryBeforeRefresh");
         }
       } finally {
         const restored = await Promise.allSettled([restore(admin), restore(adminDevice)]);
@@ -245,6 +257,19 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
       await admin.click("#open-client-profile");
       try { await waitUntil(() => admin.execute("return document.querySelector('.crm-dialog')?.open===true"), "conversation profile entry opens the same authorized profile"); }
       finally { if (await admin.execute("return document.querySelector('.crm-dialog')?.open===true")) await admin.click(".crm-dialog .dialog-head button"); }
+    });
+    await t.test("Jessie's saved avatar replaces the application logo in both client chat identities", async () => {
+      const upload = await createAdminAvatar(admin); assert.equal(upload.status, 201);
+      const before = await json(admin, "admin", "/api/profile/admin"); assert.equal(before.status, 200);
+      const saved = await json(admin, "admin", "/api/profile/admin", { expectedVersion: before.data.version, pseudonym: before.data.pseudonym, avatarId: upload.data.asset.id });
+      assert.equal(saved.status, 200); assert.equal(saved.data.avatarId, upload.data.asset.id);
+      for (const [page, width] of [[client, 320], [clientDevice, 1280]]) {
+        await waitUntil(() => page.execute("const brand=document.querySelector('#brand-avatar img'),peer=document.querySelector('#peer-avatar img');return !!brand?.complete&&brand.naturalWidth===32&&!!peer?.complete&&peer.naturalWidth===32"), "saved Jessie JPEG displayed in the client brand and conversation", 20000);
+        assert.equal(await page.execute("return document.getElementById('brand-link').getAttribute('href')==='/jessie'&&!document.querySelector('#brand-avatar .jm-brand-icon')"), true);
+        await mkdir(new URL("../../artifacts/homepage/", import.meta.url), { recursive: true });
+        await writeFile(new URL(`../../artifacts/homepage/experience-client-${width}-jessie-avatar.png`, import.meta.url), Buffer.from(await page.screenshot(), "base64"));
+      }
+      assert.equal((await json(client, "client", "/api/public/jessie")).status, 404, "saving a private avatar does not publish a profile or photo");
     });
     await t.test("public Jessie profile is an explicit admin snapshot; temporary hiding preserves the private draft after actual session proof", async () => {
       const anonymous = await browser(320), displayName = "Synthetic Jessie public profile", bio = "A synthetic public introduction for the isolated rehearsal.";
@@ -282,6 +307,10 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
         assert.equal((await anonymous.cookies()).some(cookie => [cookieName("admin"), cookieName("client")].includes(cookie.name)), false, "public reads have no authenticated cookie");
         await anonymous.navigate("/jessie");
         await waitUntil(() => anonymous.execute("return !document.getElementById('public-profile-content').hidden&&document.getElementById('public-profile-name').textContent===arguments[0]", displayName), "public page renders without signing in", 20000);
+        await waitUntil(() => anonymous.execute("const image=document.querySelector('#public-profile-portrait img');return !!image?.complete&&image.naturalWidth===32"), "explicit public snapshot renders Jessie's saved JPEG");
+        const publicAvatar = await anonymous.execute("return document.querySelector('#public-profile-portrait img').getAttribute('src')");
+        assert.match(publicAvatar, /^\/api\/public\/jessie\/avatar\?v=[1-9][0-9]*$/);
+        assert.deepEqual(await imageReadable(anonymous, publicAvatar), { status: 200, width: 32, height: 24 });
         assert.equal(await anonymous.execute("return document.getElementById('public-profile-bio').textContent"), bio);
         assert.deepEqual(await anonymous.execute("return [...document.querySelectorAll('.public-preference-list li')].map(node=>node.textContent)"), catalogue.categories[0].preferences.slice(0, 2).map(choice => choice.fr));
         assert.equal(await anonymous.execute("return document.documentElement.scrollWidth<=innerWidth"), true, "public profile fits a 320px screen");
@@ -301,6 +330,7 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
         await waitUntil(() => admin.execute("return document.querySelector('.profile-publication-status').textContent==='Profil public retiré.'"), "explicit unpublish acknowledged", 20000);
         assert.equal(await admin.execute("return __publicationTransport.writes"), 2);
         assert.equal((await json(anonymous, null, "/api/public/jessie")).status, 404);
+        assert.deepEqual(await imageReadable(anonymous, publicAvatar), { status: 404 }, "withdrawing the profile also withdraws its exact published image URL");
         await anonymous.navigate("/jessie");
         await waitUntil(() => anonymous.execute("return document.getElementById('public-profile-content').hidden&&document.getElementById('public-profile-status').textContent==='Ce profil n’est pas disponible pour le moment.'"), "withdrawn public content is no longer rendered", 20000);
       } finally {

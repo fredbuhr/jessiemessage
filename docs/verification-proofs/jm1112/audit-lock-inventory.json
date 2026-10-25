@@ -1,0 +1,297 @@
+[
+  {
+    "package": "@emnapi/runtime",
+    "version": "1.11.3",
+    "optional": true
+  },
+  {
+    "package": "@img/colour",
+    "version": "1.1.0",
+    "optional": false
+  },
+  {
+    "package": "@img/sharp-darwin-arm64",
+    "version": "0.35.5",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-darwin-x64",
+    "version": "0.35.5",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-freebsd-wasm32",
+    "version": "0.35.5",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-libvips-darwin-arm64",
+    "version": "1.3.4",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-libvips-darwin-x64",
+    "version": "1.3.4",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-libvips-linux-arm",
+    "version": "1.3.4",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-libvips-linux-arm64",
+    "version": "1.3.4",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-libvips-linux-ppc64",
+    "version": "1.3.4",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-libvips-linux-riscv64",
+    "version": "1.3.4",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-libvips-linux-s390x",
+    "version": "1.3.4",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-libvips-linux-x64",
+    "version": "1.3.4",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-libvips-linuxmusl-arm64",
+    "version": "1.3.4",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-libvips-linuxmusl-x64",
+    "version": "1.3.4",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-linux-arm",
+    "version": "0.35.5",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-linux-arm64",
+    "version": "0.35.5",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-linux-ppc64",
+    "version": "0.35.5",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-linux-riscv64",
+    "version": "0.35.5",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-linux-s390x",
+    "version": "0.35.5",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-linux-x64",
+    "version": "0.35.5",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-linuxmusl-arm64",
+    "version": "0.35.5",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-linuxmusl-x64",
+    "version": "0.35.5",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-wasm32",
+    "version": "0.35.5",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-webcontainers-wasm32",
+    "version": "0.35.5",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-win32-arm64",
+    "version": "0.35.5",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-win32-ia32",
+    "version": "0.35.5",
+    "optional": true
+  },
+  {
+    "package": "@img/sharp-win32-x64",
+    "version": "0.35.5",
+    "optional": true
+  },
+  {
+    "package": "@noble/hashes",
+    "version": "2.4.0",
+    "optional": false
+  },
+  {
+    "package": "@types/geojson",
+    "version": "7946.0.16",
+    "optional": false
+  },
+  {
+    "package": "@types/node",
+    "version": "26.6.5",
+    "optional": false
+  },
+  {
+    "package": "agent-base",
+    "version": "7.1.4",
+    "optional": false
+  },
+  {
+    "package": "asn1.js",
+    "version": "5.4.1",
+    "optional": false
+  },
+  {
+    "package": "bn.js",
+    "version": "4.12.5",
+    "optional": false
+  },
+  {
+    "package": "buffer-equal-constant-time",
+    "version": "1.0.1",
+    "optional": false
+  },
+  {
+    "package": "debug",
+    "version": "4.4.3",
+    "optional": false
+  },
+  {
+    "package": "denque",
+    "version": "2.1.0",
+    "optional": false
+  },
+  {
+    "package": "detect-libc",
+    "version": "2.1.2",
+    "optional": false
+  },
+  {
+    "package": "ecdsa-sig-formatter",
+    "version": "1.0.11",
+    "optional": false
+  },
+  {
+    "package": "http_ece",
+    "version": "1.2.0",
+    "optional": false
+  },
+  {
+    "package": "https-proxy-agent",
+    "version": "7.0.6",
+    "optional": false
+  },
+  {
+    "package": "iconv-lite",
+    "version": "0.7.3",
+    "optional": false
+  },
+  {
+    "package": "inherits",
+    "version": "2.0.4",
+    "optional": false
+  },
+  {
+    "package": "jwa",
+    "version": "2.0.1",
+    "optional": false
+  },
+  {
+    "package": "jws",
+    "version": "4.0.1",
+    "optional": false
+  },
+  {
+    "package": "lru-cache",
+    "version": "11.5.3",
+    "optional": false
+  },
+  {
+    "package": "mariadb",
+    "version": "3.5.4",
+    "optional": false
+  },
+  {
+    "package": "minimalistic-assert",
+    "version": "1.0.1",
+    "optional": false
+  },
+  {
+    "package": "minimist",
+    "version": "1.2.8",
+    "optional": false
+  },
+  {
+    "package": "ms",
+    "version": "2.1.3",
+    "optional": false
+  },
+  {
+    "package": "nodemailer",
+    "version": "10.1.4",
+    "optional": false
+  },
+  {
+    "package": "otpauth",
+    "version": "9.5.2",
+    "optional": false
+  },
+  {
+    "package": "safe-buffer",
+    "version": "5.2.1",
+    "optional": false
+  },
+  {
+    "package": "safer-buffer",
+    "version": "2.1.2",
+    "optional": false
+  },
+  {
+    "package": "semver",
+    "version": "7.8.5",
+    "optional": false
+  },
+  {
+    "package": "sharp",
+    "version": "0.35.5",
+    "optional": false
+  },
+  {
+    "package": "tslib",
+    "version": "2.8.1",
+    "optional": true
+  },
+  {
+    "package": "undici-types",
+    "version": "8.9.0",
+    "optional": false
+  },
+  {
+    "package": "web-push",
+    "version": "3.6.7",
+    "optional": false
+  }
+]

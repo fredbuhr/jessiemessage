@@ -1,0 +1,1324 @@
+{
+  "format": "jessiemessage-1112-full-audit-checklist",
+  "version": 1,
+  "status": "review_complete_final_qualification_pending",
+  "baseline": {
+    "application": "1.11.1",
+    "source": "80b7fbf5f9b5ba32ac1aae817043126e93025946",
+    "mainAtAudit": "39e0d134813c0d14e84ef74735e689fd61f8aa30",
+    "baseTree": "7f0541c6573c3c75f815d360d4f00a9db37504c4",
+    "productionChanged": false
+  },
+  "method": "Domain-wide frontend/backend review using inventory, focused fresh source reading, complete automated suites on exact candidate SHA, explicit inherited and physical limits; inventory is not a claim of full line-by-line rereading.",
+  "groupCount": 24,
+  "checkCount": 171,
+  "groups": [
+    {
+      "id": "continuity",
+      "domain": "Reprise et versionnage",
+      "sources": [
+        "server/release.mjs",
+        "server/release-features.mjs",
+        "package.json",
+        "package-lock.json"
+      ],
+      "tests": [
+        "tests/release*.test.mjs",
+        "tests/registry-continuity.test.mjs"
+      ],
+      "checks": [
+        {
+          "id": "continuity-01",
+          "check": "État Git local et arbre distant concordants",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "continuity-02",
+          "check": "Résultats durables de la CI interrompue lus avant reprise",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "continuity-03",
+          "check": "Production1111 et checkpoint privé préservés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "continuity-04",
+          "check": "Versions package et deux racines lock identiques",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "continuity-05",
+          "check": "Node24.22.1 cohérent avec CI et exploitation",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "continuity-06",
+          "check": "Diff sans suppression de module ou migration",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "navigation",
+      "domain": "Navigation, chargements et responsive",
+      "sources": [
+        "public/chat.*",
+        "public/entry*",
+        "public/*.html",
+        "public/*.css"
+      ],
+      "tests": [
+        "tests/chat-lifecycle.test.mjs",
+        "tests/browser/chat-accessibility.browser.mjs",
+        "tests/entry-lifecycle.test.mjs"
+      ],
+      "checks": [
+        {
+          "id": "navigation-01",
+          "check": "État neutre visible avant preuve de session",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "navigation-02",
+          "check": "Attente et échec de chargement avec reprise explicite",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "navigation-03",
+          "check": "Navigation arrière sans rechargement forcé",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "navigation-04",
+          "check": "Réveil et changement de compte revalidés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "navigation-05",
+          "check": "Conversation en chargement signalée",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "navigation-06",
+          "check": "Purge des anciennes identités et médias",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "navigation-07",
+          "check": "Mise en page320/375/390/1280 et zoom/clavier simulé",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "accessibility",
+      "domain": "Accessibilité et langues",
+      "sources": [
+        "public/i18n*.js",
+        "public/*.html",
+        "public/brand/*"
+      ],
+      "tests": [
+        "tests/*i18n.test.mjs",
+        "tests/chat-accessibility*.test.mjs",
+        "tests/browser/*.browser.mjs"
+      ],
+      "checks": [
+        {
+          "id": "accessibility-01",
+          "check": "IDs uniques et labels associés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "accessibility-02",
+          "check": "Boutons typés et liens externes protégés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "accessibility-03",
+          "check": "Navigation clavier et retour de focus",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "accessibility-04",
+          "check": "Remplacement du bouton Profil pendant rafraîchissement",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "accessibility-05",
+          "check": "État vide lisible et contrôles indisponibles cohérents",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "accessibility-06",
+          "check": "Traductions FR/EN et données privées hors catalogue",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "accessibility-07",
+          "check": "Mouvement réduit et cibles tactiles",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "auth",
+      "domain": "Authentification et appareils",
+      "sources": [
+        "server/auth/*",
+        "public/admin-login.*",
+        "public/session-clock.js"
+      ],
+      "tests": [
+        "tests/auth*.test.mjs",
+        "tests/admin-recovery*.test.mjs",
+        "tests/session-*.test.mjs",
+        "tests/rehearsal/authentication.rehearsal.mjs"
+      ],
+      "checks": [
+        {
+          "id": "auth-01",
+          "check": "scrypt borné et file de travail limitée",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "auth-02",
+          "check": "MFA TOTP non rejouable et secours atomique",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "auth-03",
+          "check": "Cookies Secure HttpOnly SameSite Strict distincts",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "auth-04",
+          "check": "Échéances absolues et inactivité côté serveur",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "auth-05",
+          "check": "Appareils indépendants et révocation ciblée/globale",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "auth-06",
+          "check": "Ancien401/logout ne remplace pas une connexion récente",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "auth-07",
+          "check": "Conflits et génération MFA après attente SQL",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "invitations",
+      "domain": "Invitations, codes et admission",
+      "sources": [
+        "server/access/*",
+        "public/access.*",
+        "public/recover*"
+      ],
+      "tests": [
+        "tests/access*.test.mjs",
+        "tests/invitation-code.test.mjs",
+        "tests/reset*.test.mjs",
+        "tests/rehearsal/authentication.rehearsal.mjs"
+      ],
+      "checks": [
+        {
+          "id": "invitations-01",
+          "check": "Lien historique et code saisi sur adresse commune",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "invitations-02",
+          "check": "Normalisation bornée et génération aléatoire100bits",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "invitations-03",
+          "check": "Consommation unique transactionnelle",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "invitations-04",
+          "check": "Inscription et e-mail vérifié puis approbation",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "invitations-05",
+          "check": "Accès en attente/actif/expiré/révoqué",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "invitations-06",
+          "check": "Renouvellement sans écrasement concurrent",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "invitations-07",
+          "check": "Réponse de récupération neutre et jeton limité",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "invitations-08",
+          "check": "Codes et liens privés absents des journaux/publications",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "password",
+      "domain": "Changement de mot de passe",
+      "sources": [
+        "server/account-password/*",
+        "public/password*",
+        "server/reset/*"
+      ],
+      "tests": [
+        "tests/account-password*.test.mjs",
+        "tests/reset*.test.mjs",
+        "tests/rehearsal/experience.rehearsal.mjs"
+      ],
+      "checks": [
+        {
+          "id": "password-01",
+          "check": "Mot de passe actuel et confirmation exigés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "password-02",
+          "check": "Limites compte/réseau/global",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "password-03",
+          "check": "Écriture atomique et génération recontrôlée",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "password-04",
+          "check": "Session courante renouvelée et autres révoquées",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "password-05",
+          "check": "MFA et clefs des contenus conservées",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "password-06",
+          "check": "Lien reset antérieur invalidé et historique lisible",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "entry",
+      "domain": "Origines, entrée et transition",
+      "sources": [
+        "server/entry/*",
+        "server/transition/*",
+        "server/site.mjs",
+        "public/device-transition*"
+      ],
+      "tests": [
+        "tests/entry*.test.mjs",
+        "tests/device-transition*.test.mjs",
+        "tests/primary-*.test.mjs",
+        "tests/browser/device-transition*.browser.mjs"
+      ],
+      "checks": [
+        {
+          "id": "entry-01",
+          "check": "Choix explicite si deux rôles connectés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "entry-02",
+          "check": "Destinations internes validées",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "entry-03",
+          "check": "Compatibilité recette/principal conservée",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "entry-04",
+          "check": "Ticket court lié rôle/origine/nonce",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "entry-05",
+          "check": "Révocation et conflit de compte recontrôlés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "entry-06",
+          "check": "Pas de confiance ajoutée aux en-têtes de forwarding",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "messaging",
+      "domain": "Messagerie et cohérence",
+      "sources": [
+        "server/chat/*",
+        "public/chat-model.js",
+        "public/chat-drafts.js"
+      ],
+      "tests": [
+        "tests/chat*.test.mjs",
+        "tests/reply-*.test.mjs",
+        "tests/rehearsal/messaging.rehearsal.mjs"
+      ],
+      "checks": [
+        {
+          "id": "messaging-01",
+          "check": "Texte et Unicode affichés littéralement",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "messaging-02",
+          "check": "Ordre de séquence et pagination historique/événements",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "messaging-03",
+          "check": "Un dernier reçu visible par client",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "messaging-04",
+          "check": "Non lus avant date décroissante",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "messaging-05",
+          "check": "Curseur avant limite et cas égalités/suppression",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "messaging-06",
+          "check": "Aperçu et consultation de profil sans reçu de lecture",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "messaging-07",
+          "check": "Identité immuable des POST incertains",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "messaging-08",
+          "check": "Brouillons de même onglet liés au compte/session",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "messaging-09",
+          "check": "Aucun envoi automatique après reprise",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "messaging-10",
+          "check": "Fermeture/historique et accès inactif conformes",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "profiles",
+      "domain": "Profils privés et préférences",
+      "sources": [
+        "server/profile/*",
+        "server/preferences/*",
+        "public/profile.*",
+        "public/preferences*"
+      ],
+      "tests": [
+        "tests/profile*.test.mjs",
+        "tests/preferences*.test.mjs",
+        "tests/browser/preferences.browser.mjs",
+        "tests/rehearsal/experience.rehearsal.mjs"
+      ],
+      "checks": [
+        {
+          "id": "profiles-01",
+          "check": "Modification limitée à son propre profil",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "profiles-02",
+          "check": "Consultation client réservée à admin autorisé",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "profiles-03",
+          "check": "Préférences client en lecture seule",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "profiles-04",
+          "check": "Catalogue25catégories et empreinte inchangés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "profiles-05",
+          "check": "Choix facultatifs chiffrés et versionnés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "profiles-06",
+          "check": "Conflit entre appareils sans perte du brouillon",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "profiles-07",
+          "check": "Masquage temporaire conservant les choix du même compte",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "profiles-08",
+          "check": "Avatar/version revalidés après lecture disque",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "profiles-09",
+          "check": "Pas de faux message de recherche sur profil vide",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "public-profile",
+      "domain": "Profil public de Jessie",
+      "sources": [
+        "server/public-profile/*",
+        "public/public-profile*",
+        "public/profile-publication.js"
+      ],
+      "tests": [
+        "tests/public-profile*.test.mjs",
+        "tests/browser/public-profile.browser.mjs",
+        "tests/rehearsal/experience.rehearsal.mjs"
+      ],
+      "checks": [
+        {
+          "id": "public-profile-01",
+          "check": "Masqué par défaut et publication explicite",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "public-profile-02",
+          "check": "Copie de préférences distincte du brouillon privé",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "public-profile-03",
+          "check": "Copie JPEG atomique du seul avatar admin choisi",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "public-profile-04",
+          "check": "Aucune lecture publique directe du média privé",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "public-profile-05",
+          "check": "JSON public conservé à quatre champs",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "public-profile-06",
+          "check": "Lecture des anciens snapshotsformat1",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "public-profile-07",
+          "check": "Version périmée et retrait de photo retournent404",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "public-profile-08",
+          "check": "Bornes JPEG/base64/fichier et révocation avant commit",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "public-profile-09",
+          "check": "Limite de relectureformat2 par ancienbackend1111 documentée",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "photos",
+      "domain": "Photos et bibliothèque",
+      "sources": [
+        "server/media/*",
+        "public/image-preparation.js",
+        "public/photo-batch.js"
+      ],
+      "tests": [
+        "tests/media*.test.mjs",
+        "tests/photo-batch.test.mjs",
+        "tests/image-preparation.test.mjs",
+        "tests/rehearsal/messaging.rehearsal.mjs",
+        "tests/rehearsal/experience.rehearsal.mjs"
+      ],
+      "checks": [
+        {
+          "id": "photos-01",
+          "check": "MIME/signature/dimensions/animation contrôlés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "photos-02",
+          "check": "Normalisation JPEG et métadonnées supprimées",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "photos-03",
+          "check": "Décodage isolé et temps/mémoire/files bornés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "photos-04",
+          "check": "Capacité durable réservée avant écriture",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "photos-05",
+          "check": "Bibliothèque propriétaire et galerie par conversation",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "photos-06",
+          "check": "Lectures autorisées et liens supprimés invalidés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "photos-07",
+          "check": "Lot de1à5photos et légende conservés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "photos-08",
+          "check": "ACK perdu repris sans nouvel upload ni doublon",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "videos",
+      "domain": "Vidéos",
+      "sources": [
+        "server/video/*"
+      ],
+      "tests": [
+        "tests/video*.test.mjs",
+        "tests/rehearsal/video.rehearsal.mjs",
+        "tests/broadcast-video.test.mjs"
+      ],
+      "checks": [
+        {
+          "id": "videos-01",
+          "check": "Création réservée à Jessie côté UI et serveur",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "videos-02",
+          "check": "MP4/H264 et taille100Mo contrôlés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "videos-03",
+          "check": "Transfert en flux avec délais et annulation",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "videos-04",
+          "check": "GET Range206 et HEAD ressource entière",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "videos-05",
+          "check": "Isolation client/conversation/média",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "videos-06",
+          "check": "Galerie et réutilisation explicite",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "videos-07",
+          "check": "Suppression et exports intègrent le cycle vidéo",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "crm",
+      "domain": "Fiches et organisation clients",
+      "sources": [
+        "server/crm/*",
+        "public/crm*"
+      ],
+      "tests": [
+        "tests/crm*.test.mjs",
+        "tests/browser/crm-collaboration.browser.mjs",
+        "tests/rehearsal/experience.rehearsal.mjs"
+      ],
+      "checks": [
+        {
+          "id": "crm-01",
+          "check": "Cible de profil indépendante du chat sélectionné",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "crm-02",
+          "check": "Pseudo/surnom/e-mail et état accès cohérents",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "crm-03",
+          "check": "Notes privées chiffrées et conflits multiéditeur",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "crm-04",
+          "check": "Tags/groupes/recherche/filtres et pagination",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "crm-05",
+          "check": "Préférences et photo accessibles en tête de fiche",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "crm-06",
+          "check": "Retours tardifs et suspension invalidés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "crm-07",
+          "check": "Focus retrouvé après rafraîchissement de la liste",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "work-tools",
+      "domain": "Réponses, suivi et tâches",
+      "sources": [
+        "server/quick-replies/*",
+        "server/tasks/*",
+        "public/quick-replies.js",
+        "public/followup.js",
+        "public/tasks*"
+      ],
+      "tests": [
+        "tests/personal-quick-replies*.test.mjs",
+        "tests/quick-replies.test.mjs",
+        "tests/tasks*.test.mjs",
+        "tests/reply-*.test.mjs"
+      ],
+      "checks": [
+        {
+          "id": "work-tools-01",
+          "check": "Réponses personnelles privées avec versions et replay exact",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "work-tools-02",
+          "check": "Réponses communes conservées",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "work-tools-03",
+          "check": "Lire ne signifie pas répondre",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "work-tools-04",
+          "check": "Traiter/réouvrir/attente et réponse individuelle observée",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "work-tools-05",
+          "check": "Tâches et dates privées sans notification client",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "work-tools-06",
+          "check": "Filtres, compteurs et brouillons protégés",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "broadcasts",
+      "domain": "Diffusions et annonces",
+      "sources": [
+        "server/broadcast/*",
+        "server/announcements/*",
+        "public/broadcast*",
+        "public/announcements*",
+        "public/announcement-banner*"
+      ],
+      "tests": [
+        "tests/broadcast*.test.mjs",
+        "tests/announcements*.test.mjs",
+        "tests/announcement-banner.test.mjs"
+      ],
+      "checks": [
+        {
+          "id": "broadcasts-01",
+          "check": "Aperçu audience authentifié puis création explicite",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "broadcasts-02",
+          "check": "Liste éligible revalidée par destinataire",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "broadcasts-03",
+          "check": "Texte/photo/vidéo et répétition volontaire",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "broadcasts-04",
+          "check": "Idempotence et annulation concurrente",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "broadcasts-05",
+          "check": "Lease/retry et état incertain conservés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "broadcasts-06",
+          "check": "Annonces programmées/expiration et retrait",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "broadcasts-07",
+          "check": "Brouillons privés et conflits sans publication automatique",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "notifications",
+      "domain": "Notifications et PWA",
+      "sources": [
+        "server/notifications/*",
+        "public/notifications*",
+        "public/sw.js",
+        "public/notification-link.js",
+        "public/manifest.webmanifest"
+      ],
+      "tests": [
+        "tests/notifications*.test.mjs",
+        "tests/notification-link.test.mjs",
+        "tests/browser/notifications*.browser.mjs"
+      ],
+      "checks": [
+        {
+          "id": "notifications-01",
+          "check": "Notification générique sans contenu privé",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "notifications-02",
+          "check": "Abonnement lié au compte/appareil",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "notifications-03",
+          "check": "Endpoints fournisseurs bornés et DNS public épinglé",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "notifications-04",
+          "check": "Retry borné et abonnements expirés invalidés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "notifications-05",
+          "check": "Référence exacte réautorisée après connexion",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "notifications-06",
+          "check": "Fenêtre existante préserve son brouillon",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "notifications-07",
+          "check": "Service worker sans cache privé ni interception fetch",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "http",
+      "domain": "Frontière HTTP et disponibilité",
+      "sources": [
+        "server/http/*",
+        "server/index.mjs",
+        "server/lifecycle.mjs"
+      ],
+      "tests": [
+        "tests/request-*.test.mjs",
+        "tests/server*.test.mjs",
+        "tests/https-policy.test.mjs",
+        "tests/worker-lifecycle.test.mjs"
+      ],
+      "checks": [
+        {
+          "id": "http-01",
+          "check": "Host et request-target canoniques",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "http-02",
+          "check": "Routes/fichiers servis depuis listes explicites",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "http-03",
+          "check": "Origin Fetch-Metadata CSRF et méthodes contrôlés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "http-04",
+          "check": "JSON/UTF8/paramètres/tailles bornés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "http-05",
+          "check": "CSP nosniff CORP no-store et HSTS sur origine configurée",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "http-06",
+          "check": "Admission globale/pair/token avant SQL privé",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "http-07",
+          "check": "Socket/headers/body et concurrence bornés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "http-08",
+          "check": "Drain et fermeture des workers sans faux commit confirmé",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "sql",
+      "domain": "Base, transactions et migrations",
+      "sources": [
+        "server/db/*",
+        "db/migrations/*",
+        "server/experience/*",
+        "server/chat/store.mjs",
+        "server/video/migrations/*.sql",
+        "server/experience/migrations/*.sql"
+      ],
+      "tests": [
+        "tests/migrations*.test.mjs",
+        "tests/*-store.integration.test.mjs",
+        "tests/runtime-db.test.mjs",
+        "tests/shared-runtime-privileges.test.mjs"
+      ],
+      "checks": [
+        {
+          "id": "sql-01",
+          "check": "38migrations attendues et37tables physiques dont ledger",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "sql-02",
+          "check": "33normales+3vidéo+2expérience inchangées",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "sql-03",
+          "check": "Requêtes paramétrées et projections bornées",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "sql-04",
+          "check": "Verrous/horloge/preuves après attente et rollback",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "sql-05",
+          "check": "Runtime DML distinct de migration",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "sql-06",
+          "check": "MariaDB10.11 et11.4 sur bases jetables",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "sql-07",
+          "check": "Mutualisation admininbox sans élargir les droits",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "files-crypto",
+      "domain": "Fichiers et chiffrement",
+      "sources": [
+        "server/files/*",
+        "server/chat/crypto.mjs",
+        "server/preferences/crypto.mjs",
+        "server/media/storage.mjs",
+        "server/video/storage.mjs"
+      ],
+      "tests": [
+        "tests/*crypto.test.mjs",
+        "tests/private-directory.test.mjs",
+        "tests/*dirfd*.test.mjs",
+        "tests/media-storage*.test.mjs",
+        "tests/video-storage.test.mjs"
+      ],
+      "checks": [
+        {
+          "id": "files-crypto-01",
+          "check": "AES-GCM et contexte propriétaire/conversation/version",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "files-crypto-02",
+          "check": "Nonces aléatoires et intégrité avant livraison",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "files-crypto-03",
+          "check": "Modes0700/0600, propriétaire et liens vérifiés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "files-crypto-04",
+          "check": "Accès ancré et identité avant/après I/O",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "files-crypto-05",
+          "check": "Écritures atomiques CAS et nettoyage limité aux fichiers détenus",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "files-crypto-06",
+          "check": "Augmentation du plafond générique sans augmenter les plafonds des autres stores",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "data",
+      "domain": "Export, fermeture et restauration",
+      "sources": [
+        "server/data/*",
+        "server/backup/*",
+        "server/privacy/*",
+        "public/privacy*",
+        "public/closures*",
+        "public/manual-backups*",
+        "public/backups*",
+        "public/private-archive.js",
+        "public/client-archive.js",
+        "public/conversation-download.js"
+      ],
+      "tests": [
+        "tests/*export*.test.mjs",
+        "tests/*erasure*.test.mjs",
+        "tests/*closure*.test.mjs",
+        "tests/manual-restore*.test.mjs",
+        "tests/*backup*.test.mjs"
+      ],
+      "checks": [
+        {
+          "id": "data-01",
+          "check": "Export borné au client/conversation autorisé",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "data-02",
+          "check": "ZIP et authentification des médias avant pied valide",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "data-03",
+          "check": "Revalidation après préparation et annulation transfert",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "data-04",
+          "check": "Fermeture explicite avec confirmation et journal chiffré",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "data-05",
+          "check": "Droits/reprises/commits incertains et graphes voisins préservés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "data-06",
+          "check": "Compatibilité historique et garde anti-restauration périmée",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "data-07",
+          "check": "Copies de sauvegarde distinguées de données actives",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "data-08",
+          "check": "Sauvegarde réelle reportée non exécutée ni déclarée validée",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "operations",
+      "domain": "Configuration et exploitation",
+      "sources": [
+        "server/config/*",
+        "server/preflight/*",
+        "server/operations/*",
+        "server/readiness/*",
+        "server/mail/*",
+        "scripts/*",
+        "public/readiness*"
+      ],
+      "tests": [
+        "tests/runtime-*.test.mjs",
+        "tests/preflight*.test.mjs",
+        "tests/operations*.test.mjs",
+        "tests/mail*.test.mjs",
+        "tests/smtp*.test.mjs"
+      ],
+      "checks": [
+        {
+          "id": "operations-01",
+          "check": "Secrets privés hors dépôt et erreurs neutres",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "operations-02",
+          "check": "Configuration TLS/base/stockage bornée",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "operations-03",
+          "check": "Prêt public depuis cache sans requête SQL",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "operations-04",
+          "check": "Envois mail synthétiques et échéances/leases recontrôlées",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "operations-05",
+          "check": "Aucune automatisation de sauvegarde réintroduite",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "operations-06",
+          "check": "PC/témoin/quarantaines/clefs/reçus conservés",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "operations-07",
+          "check": "Pas de mutation de la production pendant l’audit",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "dependencies",
+      "domain": "Dépendances et chaîne de livraison",
+      "sources": [
+        "package-lock.json",
+        ".github/workflows/*"
+      ],
+      "tests": [
+        "tests/release.test.mjs",
+        "tests/release-features.test.mjs",
+        "tests/neutral-site-build.test.mjs"
+      ],
+      "checks": [
+        {
+          "id": "dependencies-01",
+          "check": "5dépendances directes épinglées et lock inchangé",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "dependencies-02",
+          "check": "Audit npm de59entrées dont transitives/optionnelles",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "dependencies-03",
+          "check": "Zéro avis connu signalé à la date du contrôle",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "dependencies-04",
+          "check": "Node24.22.1 vérifié auprès de la source officielle",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "dependencies-05",
+          "check": "Actions CI épinglées et permissions minimales",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "dependencies-06",
+          "check": "Aucun script installation ni mise à niveau globale ajouté",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "support",
+      "domain": "Accueil, aide et contrôles communs",
+      "sources": [
+        "public/app.js",
+        "public/help*",
+        "public/emoji-catalog.js",
+        "public/apple-touch-icon.png",
+        "public/favicon.ico",
+        "public/icon.svg",
+        "public/password-fields*"
+      ],
+      "tests": [
+        "tests/help*.test.mjs",
+        "tests/emoji-catalog.test.mjs",
+        "tests/brand.test.mjs",
+        "tests/neutral-site-build.test.mjs",
+        "tests/profile-ui.test.mjs"
+      ],
+      "checks": [
+        {
+          "id": "support-01",
+          "check": "Accueil configuré orienté vers l’accès réel, aperçu autonome distingué",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "support-02",
+          "check": "Aide et liens internes corrects sans perte de langue",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "support-03",
+          "check": "Contact commun conservé sans secret ou paramètre privé dans URL",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "support-04",
+          "check": "Émojis texte et insertion respectent le brouillon",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "support-05",
+          "check": "Afficher/masquer mot de passe garde autocomplete et se réinitialise au masquage",
+          "state": "reviewed_pending_final_native"
+        },
+        {
+          "id": "support-06",
+          "check": "Icônes installation et marque distinctes de la photo de Jessie",
+          "state": "reviewed_pending_final_native"
+        }
+      ]
+    },
+    {
+      "id": "closure",
+      "domain": "Revue finale de couverture et livraison",
+      "sources": [
+        "docs/REPRISE.md",
+        "docs/PLAN-IMPLEMENTATION.md"
+      ],
+      "tests": [
+        "tests/registry-continuity.test.mjs"
+      ],
+      "checks": [
+        {
+          "id": "closure-01",
+          "check": "Tous les domaines ont un constat et des preuves",
+          "state": "closure_pending"
+        },
+        {
+          "id": "closure-02",
+          "check": "Échecs initiaux conservés et corrections qualifiées",
+          "state": "closure_pending"
+        },
+        {
+          "id": "closure-03",
+          "check": "Captures synthétiques mobile/desktop inspectées",
+          "state": "closure_pending"
+        },
+        {
+          "id": "closure-04",
+          "check": "Fonctions retirées volontairement non réintroduites",
+          "state": "closure_pending"
+        },
+        {
+          "id": "closure-05",
+          "check": "A10/A11/A12 et appareils non exercés restent distincts",
+          "state": "closure_pending"
+        },
+        {
+          "id": "closure-06",
+          "check": "Une seule mise à jour après qualification du candidat exact",
+          "state": "closure_pending"
+        }
+      ]
+    }
+  ],
+  "qualification": {
+    "localTargeted": {
+      "tests": 198,
+      "pass": 198,
+      "fail": 0,
+      "skipped": 0
+    },
+    "syntaxFiles": 778,
+    "npmAuditKnownVulnerabilities": 0,
+    "finalNative": "pending",
+    "visualReview": "pending",
+    "deployment": "not_performed"
+  },
+  "limits": [
+    "Physical iOS/Android, Safari/Firefox, OS keyboard and closed-app system push not freshly exercised.",
+    "Hosted manual backup creation/completion/download remains explicitly postponed.",
+    "A10 outside scope; A11 inconclusive; A12 hosted capacity unqualified, with no new capacity claim.",
+    "Native fixture bases and accounts are isolated; recette shares production and is never used as a disposable target.",
+    "No claim that old backend1111 can read newly published public snapshotformat2."
+  ],
+  "inventoryCoverage": {
+    "publicFiles": 119,
+    "serverFiles": 241,
+    "unassignedFiles": {
+      "public": [],
+      "server": []
+    },
+    "meaning": "Every current frontend/backend path belongs to a reviewed domain. This is scope coverage, not an assertion that every line was manually read."
+  }
+}

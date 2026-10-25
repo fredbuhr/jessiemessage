@@ -296,6 +296,18 @@ test("a client profile has its own target for private saves and restores its ava
   assert.equal(f.calls.some(call => /\/read$/.test(call.path)), false); assert.deepEqual(f.errors, []);
 });
 
+test("closing a profile returns to its current entry after a received-list refresh replaces the original button", async t => {
+  const target = id(100), original = new Element("button"), replacement = new Element("button"), resolved = [];
+  const f = await harness(t, call => call.path.endsWith(`/conversations/${target}`) ? profileFor(target) : undefined,
+    { getProfileReturnFocus(id) { resolved.push(id); return replacement; }, getReturnFocus() { throw new Error("the profile still has a live entry"); } });
+  f.body.append(original); await f.ui.openClientProfile(target, original); await f.settle();
+  original.remove(); f.body.append(replacement);
+  const dialog = clientProfileDialog(f);
+  await f.emit(dialog.querySelectorAll(".dialog-head")[0].querySelectorAll("button")[0], "click");
+  assert.equal(dialog.open, false); assert.equal(replacement.focused, true); assert.deepEqual(resolved, [target]);
+  assert.equal(f.calls.some(call => /\/read$/.test(call.path) || call.options.mutation), false); assert.deepEqual(f.errors, []);
+});
+
 test("late profile and preference responses cannot replace the explicitly opened current client or survive suspension", async t => {
   const first = id(100), second = id(101), oldProfile = deferred(), oldPreferences = deferred();
   const f = await harness(t, call => {

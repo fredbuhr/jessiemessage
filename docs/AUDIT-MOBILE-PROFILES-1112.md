@@ -1,51 +1,79 @@
-# Revue globale complémentaire — JessieMessage, 25 octobre 2026
+# Audit frontend/backend avant la mise à jour1.11.2 — 25 octobre2026
 
-Référence de départ : production 1.11.1, source `80b7fbf5f9b5ba32ac1aae817043126e93025946`, arbre `ba1289bae9ce095560922a7ed6665f17709d07ed`, Node 24.22.1 et checkpoint privé `41a51d38a50c3ff07b1878a6cfd96de9e383dbafc5ccff9c96a3a97aa272d90a`, acquis selon le reçu utilisateur. La branche de travail peut ensuite évoluer : ces observations ne qualifient pas automatiquement le futur lot intégré.
+**Revue réalisée ; qualification finale du candidat corrigé et inspection des captures encore en cours. Aucune mise à jour de production effectuée.** Les corrections sont regroupées sur une seule branche et une seule version applicative1.11.2.
 
-## Méthode et portée
+La production de référence reste1.11.1, source `80b7fbf5f9b5ba32ac1aae817043126e93025946`, arbre `ba1289bae9ce095560922a7ed6665f17709d07ed`, Node24.22.1 et checkpoint privé `41a51d38a50c3ff07b1878a6cfd96de9e383dbafc5ccff9c96a3a97aa272d90a`, acquis selon le reçu utilisateur. Le point de départ documentaire main39e0d134 a pour arbre7f0541c6573c3c75f815d360d4f00a9db37504c4 ; le parent local65236ce6 a exactement le même arbre. Cette différence de SHA liée à la copie de travail ne représente pas une perte de code.
 
-La checklist historique de 134 points de l’audit prépublic 1.10.1 et ses six correctifs ont été consultés comme base, sans rejouer des contrôles verts ni effacer leurs limites. Cette passe combine une vérification structurelle des 17 pages HTML, la relecture de parcours transversaux et une contre-revue backend récente. L’inventaire comporte 416 chemins dans `public`, `server` et `scripts` ; **416 ne désigne pas un nombre de fichiers relus intégralement**. Les autres agents traitent les trois demandes UX, puis leurs patches devront être revus et qualifiés sur le SHA final.
+## Méthode et checklist
 
-Aucun compte réel, message, contenu privé, média client, base hébergée, Manager, PID/socket, navigateur cloud, sauvegarde ou PC n’a été utilisé ou modifié par cette revue. Pas de nouvelle CI ou suite déjà verte rejouée. Les sauvegardes reportées et A10/A11/A12 ne sont pas réouvertes.
+La [checklist détaillée](verification-proofs/jm1112/audit-checklist.json) contient **171 contrôles dans24domaines**. Elle complète l’audit historique134points, les contre-revues précédentes et leurs limites. Inventaire actuel :119fichiersfrontend,241backend,56scripts,33migrations normales,430fichiers de tests et3workflows. Tous les chemins frontend/backend sont rattachés à un domaine ; aucun module n’est omis de la grille.
 
-## Résultats transversaux acquis
+La méthode combine inventaire, relecture fraîche des frontières HTTP, autorisations, services, chemins transactionnels/fichiers et changements réels, contrôles structurels, puis suites complètes sur le SHA candidat. **Le nombre de fichiers inventoriés ne prétend pas que chaque ligne a été relue intégralement.** Les domaines inchangés sont examinés par leurs contrats, gardes et tests ; les modifications sont relues dans leur diff. Les essais utilisent uniquement des comptes, contenus, bases et médias synthétiques isolés.
 
-- 17 fichiers HTML analysés ; 262 références internes `a/link/script` correspondent à un chemin littéral des sources serveur. Aucun chemin non résolu dans cette correspondance statique. Il ne s’agit pas de 262 GET réussis et les routes dépendant d’une session/fonction ne sont pas déclarées disponibles pour tous.
-- Aucun doublon d’ID, label`for` sans cible, bouton sans type ou lien`target=_blank` dépourvu de `noopener noreferrer` dans ces 17 pages. Les cinq cases initialement signalées par une lecture naïve sont bien enveloppées dans un label : faux positifs écartés. Cela n’établit pas une conformité globale d’accessibilité ni le résultat visuel sur téléphone.
-- Les trois versions package/lock concordent à 1.11.1 au début de la passe. Les cinq dépendances directes sont verrouillées et concordantes. Inventaire statique SQL :33 normaux + 3 vidéo + 2 expérience ; pas d’inventaire SQL réel déduit.
-- Le catalogue public garde son empreinte exacte qualifiée `5ce26f14f15fb9c3447b07777aa5c8d17a6e823e8099dbb37959fc48f00f93cb` et ses 25 catégories. Les 691 préférences / 934 alias de cette version ne sont donc pas modifiés.
-- Le service worker est réservé aux notifications : aucun `fetch` intercepté ou cache de messages/identités/médias. Ne pas ajouter un cache privé pour dissimuler des écrans vides. Les notifications restent génériques et ciblent un identifiant borné ; l’intention est envoyée à une fenêtre déjà ouverte, avec repli sans recharger son brouillon si elle ne répond pas.
+| Domaine | Contrôles |
+| --- | ---: |
+| Reprise et versionnage | 6 |
+| Navigation, chargements et responsive | 7 |
+| Accessibilité et langues | 7 |
+| Authentification et appareils | 7 |
+| Invitations, codes et admission | 8 |
+| Changement de mot de passe | 6 |
+| Origines, entrée et transition | 6 |
+| Messagerie et cohérence | 10 |
+| Profils privés et préférences | 9 |
+| Profil public de Jessie | 9 |
+| Photos et bibliothèque | 8 |
+| Vidéos | 7 |
+| Fiches et organisation clients | 7 |
+| Réponses, suivi et tâches | 6 |
+| Diffusions et annonces | 7 |
+| Notifications et PWA | 7 |
+| Frontière HTTP et disponibilité | 8 |
+| Base, transactions et migrations | 7 |
+| Fichiers et chiffrement | 6 |
+| Export, fermeture et restauration | 8 |
+| Configuration et exploitation | 7 |
+| Dépendances et chaîne de livraison | 6 |
+| Accueil, aide et contrôles communs | 6 |
+| Revue finale de couverture et livraison | 6 |
 
-Preuve machine : `global-static-structure.json`. Inventaire de chemins : `global-file-inventory.txt`.
+## Corrections regroupées
 
-## Défauts / points complémentaires
+| Constat | Correction et vérification |
+| --- | --- |
+| Le bootstrap et la reprise mobile pouvaient masquer la zone privée puis effacer son message d’attente. | Coquille neutre visible, état de chargement/erreur et reprise explicite ; capacités indépendantes chargées ensemble ; retour arrière revalidé sans reload forcé. Aucun cache privé ajouté. |
+| Le changement de conversation ne signalait pas clairement l’attente dans la zone des messages. | Indicateur neutre et aria-busy pendant le chargement, sans conversation fictive ni ancien contenu. |
+| Les profils/préférences clients étaient difficiles à atteindre. | Entrée explicite dans la vue reçue et dans une conversation ; cible du profil indépendante du chat, choix en lecture seule, photo et préférences avant les notes ; consultation sans marquage lu. |
+| Le nouveau parcours de profil utilisait parfois une ancienne conversation en mémoire pour choisir la photo. | Défaut reproduit par la première qualification HTTPS ; priorité aux métadonnées actualisées de la vue reçue lorsqu’aucune conversation n’est sélectionnée. La preuve d’échec est conservée. |
+| Un rafraîchissement de la vue reçue pouvait détacher le bouton Profil, et perdre le retour de focus. | Résolution du bouton actuel par conversation et maintien du focus lors du rafraîchissement ; test unitaire et scénario HTTPS sous dialogue ouvert. |
+| Le logo de l’app remplaçait la personne de Jessie. | Avatar privé autorisé dans les deux identités du chat client ; portrait public issu exclusivement de la copie explicitement publiée ; initiales si photo absente/indisponible. L’icône d’installation reste celle de l’application. |
+| Un profil client sans choix pouvait afficher un message de recherche alors que le champ est masqué. | État vide en lecture seule, sans suggestion de recherche inaccessible ; contrôle FR/EN. |
+| La vue reçue répétait cinq lectures d’autorisation admin par aperçu. | Preuve admin verrouillée commune, comme la liste des conversations ; verrous/preuves client, liaison et expiration fraîche maintenus.250lectures répétées retirées pour50aperçus, sans promesse de latence ou capacité hébergée. |
 
-Les trois problèmes rapportés par l’utilisateur sont traités par les propriétaires navigation, profils et avatar. Cette revue indépendante n’a pas établi un autre défaut de confidentialité ou de perte métier à corriger immédiatement dans les surfaces relues.
+Deux corrections concernent uniquement la fiabilité des tests : attendre le bootstrap réellement en cours pour la liaison WebCrypto du brouillon, au lieu d’un nombre de tours de boucle ; mettre à jour le libellé attendu « Profil du client / Client profile ». Les conditions de sécurité, conflits, propriétaire et absence de POST automatique restent contrôlées.
 
-**P-01, coût de lecture répété de l’inbox :** `server/chat/store.mjs` répète `authorize` par client bien que l’acteur admin, sa session et sa MFA soient déjà verrouillés dans la transaction. La contre-revue relève au moins 8 lectures d’autorisation par client, soit ≥400 pour 50 lignes, avant résumés/décorations. Ce coût existe dans le code ; sa latence réelle sur le mutualisé n’est pas mesurée et il n’est pas établi comme cause des écrans vides. Root a retenu une correction bornée reprenant la preuve admin verrouillée comme `listConversations`, en conservant verrou/preuve client, liaison de conversation et échéance de session fraîche. Fichiers attribués au backend reviewer : `server/chat/store.mjs` et `tests/chat-store.integration.test.mjs`. Correction et résultats à compléter après intégration ; aucune nouvelle promesse de capacité A12.
+## Préservation métier et formats
 
-**Point de contrôle métier :** un bouton Profil ajouté à une ligne de la vue reçue ne doit pas appeler `selectConversation` uniquement pour consulter une fiche, car cela pourrait marquer la conversation lue. Le backend CRM/préférences ne produit pas ce reçu. Le propriétaire des profils et root en ont été avertis ; ce point doit rester couvert dans le parcours corrigé.
+Le diff ne retire aucun module métier, aucune route historique, migration ou dépendance. Les invitations par lien/code, validation e-mail et admin, renouvellement, sessions indépendantes, mot de passe/MFA, texte/photos/vidéos, bibliothèque/galerie, messages non lus et suivi des réponses, réponses communes/personnelles, notes/tags/groupes/tâches, diffusions/annonces, notifications et exports/fermetures conservent leurs suites de contrôle. Une seule entrée reçue par client et l’ordre nonlus/date restent requis.
 
-**Point de contrôle format public :** le nouveau snapshot public avec photo doit rester une copie explicitement publiée par admin, sans GET vers un avatar privé, et lire les anciens fichiers sans photo. Le format 2 n’autorise pas à promettre un retour complet de toutes les fonctions publiques vers un lecteur 1.11.1. Contre-revue du patch en attente.
+Les trois versions package/lock concordent à1.11.2 ; les dépendances et tous les fichiers SQL sont inchangés. Schéma attendu38,37tables physiques dont le ledger ;33migrations normales+3vidéo+2expérience. Le catalogue conserve25catégories,691préférences/934alias et l’empreinte `5ce26f14f15fb9c3447b07777aa5c8d17a6e823e8099dbb37959fc48f00f93cb`.
 
-## Couverture fraîche par domaine
+Le snapshot publicformat2 associe JPEG et préférences dans la même écriture atomique bornée à262144octets. Les anciennes copiesformat1 restent lisibles sans modification. Le JSON public garde exactement quatre champs ; l’image possède une URL publique versionnée distincte. Un GET ne publie jamais un avatar privé. Pour ajouter une photo à une copie déjà publiée, Jessie doit choisir explicitement **Mettre à jour le profil public** après avoir enregistré son avatar. Une modification privée seule ne change pas cette copie ; le retrait public invalide son URL.
 
-| Domaine | Ce qui a été revu maintenant | Résultat / limite |
-| --- | --- | --- |
-| Versions et livraison | Package/lock, Node engine, inventaire migrations, reçu et consignes 1111, hiérarchie REPRISE/plan | Concordants à la référence de départ. Déploiement du nouveau lot non déduit. |
-| Accès et invitations | Génération/normalisation du code, inspect/create/register/list/revoke et gardes HTTP sélectionnées | Aucune nouvelle anomalie établie ; détail et portions exactes dans `backend-review.md`. |
-| Sécurité/confidentialité | Autorisation chat, chiffrement/DTO préférences, rebinding avatar, gardes de routage et erreurs serveur | Aucune fuite ou élargissement prouvé dans ces surfaces ; pas audit intégral de tous les stores. |
-| Messagerie | Inbox SQL/service/curseur et invariants de contexte, séparation lecture/aperçu | P-01 borné retenu ; pas de nouveau défaut fonctionnel établi dans le dernier aperçu par client. |
-| Médias | Routes privées/profil-avatar et worker notifications, protections existantes de versions | Pas de nouveau test de codecs, caméra ou lecture physique ; historique natif conservé. |
-| Outils de travail | Fonctions request/session/bootstrap/mutation des tâches et annonces, gestion conflit/incertitude et liens utiles | Gardes présentes, état d’erreur et reprise explicite préservés ; pas de nouvelle panne reproduite. Parcours CRM relu par agent spécialisé. |
-| Interface/accessibilité | 17 HTML, IDs, labels explicites ou enveloppants, types de boutons, liens externes et références serveur | Pas d’anomalie dans ces contrôles statiques précis ; tests visuels/Chrome du futur lot nécessaires. |
-| Installation/notifications | `public/sw.js` intégral, `session-clock.js` intégral, `entry-model.js` intégral | Intentions bornées, cache privé absent, retour même origine, timers bornés ; téléphone/Push fermé non retestés. |
-| Exploitation/données | Routes `server/index.mjs` 18-64 et 173-247 ; limites du dernier reçu et repli 185 | Pas de routage arbitraire observé ; prêt public lit son cache sans SQL ; aucune opération de sauvegarde/restauration réelle. |
-| Dépendances | Recherche bornée d’avis mainteneurs/GHSA pour les cinq versions directes | Aucun nouvel avis applicable établi ; pas audit exhaustif transitif/native-system. Sources dans `dependency-advisories.json`. |
-| Documentation et abandons | REPRISE/plan, audit 134, contraintes AGENTS, rapports récents et fonctions abandonnées | Aucun abandon transformé en manque à réimplémenter. Limites anciennes restent distinctes des résultats acquis. |
+**Limite de retour :** le backend1111 ne relit pas le nouveau snapshotformat2. Un ancien backend ne constitue donc pas un retour fonctionnel complet du profil public après republication. Le repli185 compatibleSQL38 reste une preuve distincte, jamais démarrée ; ne pas déplacer un tag historique ou relancer les anciens opérateurs pour effacer cette limite. La copie publique ne remplace pas les médias privés et reste hors des archives historiques.
 
-## Contrôles restants pour clôturer ce lot
+## Preuves et état de qualification
 
-1. Contre-revoir les patches réels navigation/profils/avatar et la réduction de coût SQL, puis adapter la couverture à ce qui a réellement changé.
-2. Qualifier le SHA final sur les parcours natifs utiles, sans compter les omissions comme des succès ; vérifier notamment retours/erreurs mobiles, consultation sans marquage lu et mise à jour/retrait du snapshot de photo.
-3. Conserver des captures synthétiques mobile/desktop, preuves de source et limites physiques. Une absence de nouveau défaut prouvé n’est pas une garantie absolue d’absence de défaut.
+- [Premier runPR40203143152](https://github.com/fredbuhr/jessiemessage/actions/runs/40203143152), sourceba2b080b, **non qualifié** : général4071réussis/0échec/52omissions ; MariaDB608/608 chacune ; Chrome270réussis/5échecs comptant le parent ; HTTPS11réussis/2échecs comptant le parent. Les quatre échecs Chrome venaient du libellé attendu ; le scénario HTTPS a détecté le défaut d’avatar décrit ci-dessus. [Preuve initiale](verification-proofs/jm1112/pr-initial.json).
+- Les52omissions générales comprennent50scénarios SQL réservés aux suites natives et2branches conditionnelles d’absence de procfs ; elles ne sont pas des succès. Les suites SQL dédiées de ce premier run ont608réussis et0omission chacune.
+- Après les corrections d’audit :198tests locaux ciblés réussis,0échec et0omission ; vérification syntaxique de778sources réussie. Qualification native complète de la nouvelle source encore attendue.
+- [Structure fraîche](verification-proofs/jm1112/global-static-structure.json) :17HTML,262références internes correspondant aux littéraux de routage serveur ; aucun doublon ID, label absent, bouton sans type ou lien externe non protégé détecté dans ces contrôles. Ce résultat n’est pas262GETni une conformité d’accessibilité globale.
+- [Audit npm actuel](verification-proofs/jm1112/npm-audit-current.json) :59entrées verrouillées, dépendances transitives et optionnelles incluses ;0vulnérabilité connue signalée. Cela ne couvre pas toutes les bibliothèques système ou une vulnérabilité non publiée. Les cinq dépendances directes restent3.5.4/10.1.4/9.5.2/0.35.5/3.6.7. Node24.22.1 est confirmé par la [publication officielle](https://nodejs.org/en/blog/release/v24.22.1) et le [bulletin sécurité officiel](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases).
+
+## Limites conservées et clôture restante
+
+Pas d’accès à des comptes, messages, médias, SQL, PID ou journaux privés réels. Pas de navigateur cloud, manipulation Manager/PC, sauvegarde/restauration hébergée, envoi réel, effacement réel ou activation de publication. `recette` partage la production et n’a pas servi de cible jetable.
+
+Les appareils physiques iOS/Android, Safari/Firefox, clavier système et Push avec application fermée ne sont pas fraîchement qualifiés par les tests Chrome. L’événement pageshow.persisted testé n’atteste pas l’éligibilité réelle au BFCache. Le test de sauvegarde hébergée explicitement reporté reste reporté. A10 reste hors chantier ; A11 non concluant et A12 sans qualification de capacité du mutualisé restent distincts des corrections.
+
+Pour clore : qualifier le candidat exact corrigé sur les cinq jobs natifs, inspecter ses captures synthétiques, puis relire les171points en vérifiant que chaque contrôle et réserve a un résultat. La fusion/publication/préparation de l’unique mise à jour viennent ensuite ; aucun résultat en attente n’est déclaré réussi.

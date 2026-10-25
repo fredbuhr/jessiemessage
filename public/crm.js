@@ -283,6 +283,7 @@ export function createCrmUI(adapter) {
     try { await loadLabels(); if (profileOpen && currentDetail(profileState, ticket)) await loadProfile(); } catch (error) { if (profileOpen && currentDetail(profileState, ticket)) await report(error, profileStatus); }
   }
   function closeProfile(restore = true) {
+    const conversationId = profileState.selected;
     closePreferences();
     adapter.clearClientAvatar?.(clientAvatar); replace(clientAvatar); clientAvatar.hidden = true;
     exportEpoch += 1; exportAbort?.abort(); exportAbort = null; exportBusy = false; exportButton.disabled = false; exportPhotos.disabled = false; exportVideos.disabled = false; exportSection.open = false; exportSection.hidden = true; status(exportStatus, "");
@@ -294,7 +295,8 @@ export function createCrmUI(adapter) {
       let direct = profileReturnFocus?.isConnected && !profileReturnFocus.disabled;
       for (let node = profileReturnFocus; direct && node; node = node.parentElement) if (node.hidden) direct = false;
       if (direct && typeof profileReturnFocus.getClientRects === "function") direct = profileReturnFocus.getClientRects().length > 0;
-      const target = direct ? profileReturnFocus : typeof adapter.getReturnFocus === "function" ? adapter.getReturnFocus() : profileReturnFocus;
+      const replacement = !direct ? adapter.getProfileReturnFocus?.(conversationId) : null;
+      const target = direct ? profileReturnFocus : replacement ?? (typeof adapter.getReturnFocus === "function" ? adapter.getReturnFocus() : profileReturnFocus);
       if (target?.isConnected) target.focus();
     }
     profileReturnFocus = null;

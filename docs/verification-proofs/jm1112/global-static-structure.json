@@ -1,0 +1,132 @@
+{
+  "baseline": "1111; current candidate after full-audit corrections",
+  "scope": "Static HTML structure and literal server route correspondence only; no live availability/accessibility conformance inferred",
+  "htmlFiles": 17,
+  "internalReferences": 262,
+  "pages": [
+    {
+      "file": "public/access.html",
+      "references": 23,
+      "ids": 43,
+      "controls": 9
+    },
+    {
+      "file": "public/admin-login.html",
+      "references": 29,
+      "ids": 55,
+      "controls": 9
+    },
+    {
+      "file": "public/announcements.html",
+      "references": 15,
+      "ids": 31,
+      "controls": 6
+    },
+    {
+      "file": "public/backups.html",
+      "references": 13,
+      "ids": 23,
+      "controls": 2
+    },
+    {
+      "file": "public/broadcast.html",
+      "references": 17,
+      "ids": 67,
+      "controls": 12
+    },
+    {
+      "file": "public/chat.html",
+      "references": 23,
+      "ids": 135,
+      "controls": 9
+    },
+    {
+      "file": "public/closures.html",
+      "references": 11,
+      "ids": 22,
+      "controls": 2
+    },
+    {
+      "file": "public/device-transition.html",
+      "references": 10,
+      "ids": 9,
+      "controls": 0
+    },
+    {
+      "file": "public/entry.html",
+      "references": 12,
+      "ids": 16,
+      "controls": 0
+    },
+    {
+      "file": "public/help.html",
+      "references": 12,
+      "ids": 11,
+      "controls": 0
+    },
+    {
+      "file": "public/index.html",
+      "references": 14,
+      "ids": 3,
+      "controls": 0
+    },
+    {
+      "file": "public/manual-backups.html",
+      "references": 13,
+      "ids": 11,
+      "controls": 0
+    },
+    {
+      "file": "public/privacy.html",
+      "references": 12,
+      "ids": 22,
+      "controls": 2
+    },
+    {
+      "file": "public/public-profile.html",
+      "references": 10,
+      "ids": 8,
+      "controls": 0
+    },
+    {
+      "file": "public/readiness.html",
+      "references": 16,
+      "ids": 25,
+      "controls": 0
+    },
+    {
+      "file": "public/recover.html",
+      "references": 16,
+      "ids": 12,
+      "controls": 3
+    },
+    {
+      "file": "public/tasks.html",
+      "references": 16,
+      "ids": 33,
+      "controls": 3
+    }
+  ],
+  "unresolvedLiteralServerReferences": [],
+  "staticIssues": [],
+  "htmlSha256": {
+    "public/access.html": "25e422a65e1f79ea68c64873d59004b302a189b72626505f409cab9f85b6702b",
+    "public/admin-login.html": "12aa99fcb8aac36846a776071d0db8b1a003494029e86f3693c877c1c5a01d1f",
+    "public/announcements.html": "5cffbe6a2a1fd0a723e893919728154a6c3adbbe5906b0b83e812dd86db30e4a",
+    "public/backups.html": "75a4094f73c663a1dc3c158a23002e57a306a459057dbf865b0eebeea35e4517",
+    "public/broadcast.html": "7b3d86aa39e4d85eae2fbb136992f46c691cc61ed65c2932a62020704d7e1345",
+    "public/chat.html": "647badd5228267860bb00ed2f17b8f6121905247a3dfcedfc07729f58c9a4257",
+    "public/closures.html": "8c4cdbc147412c4b16a2194eaada85bfd73af5b405ac79628c0d322ea4805b95",
+    "public/device-transition.html": "e1827839e4174539db9e8932f22c7b0735cb423a24c9e5fb342a36b4ace3ea1f",
+    "public/entry.html": "524af111ab19c59f0538f8050a253856cda410442b2227233670db2ae561970e",
+    "public/help.html": "43599ae1762491ec1e49eb54a169b821c9be5bf01370ca7f1b1ebc4bb5bf4147",
+    "public/index.html": "f66af81b9c69d01386a86e3195aff5cf791d120bae63112c1b3dc24d51d55e9f",
+    "public/manual-backups.html": "9033c3360369fa695d323ffd77fd9bffc168d24745e73995c59c4f22b652a1a2",
+    "public/privacy.html": "df649a5044872d13f643b43f64d1914e038c504603183ff847a6242413900c40",
+    "public/public-profile.html": "689b8e5f0611a0c4a164d9ffa17fe2419d69d88390ba5a3aaf4086727d9b4c73",
+    "public/readiness.html": "ac48c066275ee8941d706f9f0dac8fb199542ea7ca21549aca9995836dea782c",
+    "public/recover.html": "a803bd5773b399343a699b0786d8b29ef789405416d2611d885f07f3de92de52",
+    "public/tasks.html": "0e75c416aa924f0f4bed8cce29dbd25b262abd595030427db75cc06087c030d7"
+  },
+  "noRealAccountsOrProductionWrites": true
+}

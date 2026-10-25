@@ -127,7 +127,7 @@ test("real Chrome: shared administrator CRM drafts, conflicts and paused label r
         first = await openPage(driver, source, language, width); second = await openPage(driver, source, language, width);
         await tabUntil(first, ".crm-fiche-button"); await first.key("\uE007"); await second.click(".crm-fiche-button");
         for (const page of [first, second]) await waitUntil(() => page.execute("return !document.querySelector('.crm-profile-form fieldset').hidden"), "profile loaded");
-        assert.equal(await first.execute("return document.querySelector('.crm-fiche-button').textContent"), language === "fr" ? "Fiche" : "Profile");
+        assert.equal(await first.execute("return document.querySelector('.crm-fiche-button').textContent"), language === "fr" ? "Profil du client" : "Client profile");
         await first.type(profileSelector, noteA); await second.type(profileSelector, noteB);
         await first.click(".crm-profile-form button[type=submit]");
         await waitUntil(() => first.execute("return document.querySelector('.crm-dialog > .crm-status').textContent === arguments[0]", language === "fr" ? "Fiche enregistrée." : "Profile saved."), "first saved");

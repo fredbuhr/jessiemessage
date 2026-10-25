@@ -1,0 +1,108 @@
+{
+  "format": "jessiemessage-1112-initial-qualification",
+  "observedAt": "2026-10-25T15:04:46.309Z",
+  "source": "ba2b080b3b5fd5023af711f183f9c3322f278a0c",
+  "tree": "feac214b10af440c951270fe1f0db37f375e06ef",
+  "run": 40203143152,
+  "attempt": 1,
+  "productionChanged": false,
+  "qualified": false,
+  "jobs": [
+    {
+      "id": 121198380866,
+      "length": 576320,
+      "summary": [
+        "2026-10-25T14:40:05.9766164Z ℹ tests 4123",
+        "2026-10-25T14:40:05.9766602Z ℹ pass 4071",
+        "2026-10-25T14:40:05.9766806Z ℹ fail 0",
+        "2026-10-25T14:40:05.9767242Z ℹ skipped 52"
+      ]
+    },
+    {
+      "id": 121198381067,
+      "length": 360978,
+      "summary": [
+        "2026-10-25T14:45:48.8645900Z # tests 608",
+        "2026-10-25T14:45:48.8656141Z # pass 608",
+        "2026-10-25T14:45:48.8666117Z # fail 0",
+        "2026-10-25T14:45:48.8667079Z # skipped 0"
+      ]
+    },
+    {
+      "id": 121198381091,
+      "length": 63539,
+      "summary": [
+        "2026-10-25T14:42:23.4745168Z ℹ tests 275",
+        "2026-10-25T14:42:23.4745399Z ℹ pass 270",
+        "2026-10-25T14:42:23.4745510Z ℹ fail 5",
+        "2026-10-25T14:42:23.4745741Z ℹ skipped 0",
+        "2026-10-25T14:42:23.4746386Z test at tests/browser/crm-collaboration.browser.mjs:123:83",
+        "2026-10-25T14:42:23.4750261Z     actual: 'Profil du client',",
+        "2026-10-25T14:42:23.4750474Z     expected: 'Fiche',",
+        "2026-10-25T14:42:23.4751007Z test at tests/browser/crm-collaboration.browser.mjs:123:83",
+        "2026-10-25T14:42:23.4755435Z     actual: 'Profil du client',",
+        "2026-10-25T14:42:23.4755626Z     expected: 'Fiche',",
+        "2026-10-25T14:42:23.4756277Z test at tests/browser/crm-collaboration.browser.mjs:123:83",
+        "2026-10-25T14:42:23.4759888Z     actual: 'Client profile',",
+        "2026-10-25T14:42:23.4760021Z     expected: 'Profile',",
+        "2026-10-25T14:42:23.4760548Z test at tests/browser/crm-collaboration.browser.mjs:123:83",
+        "2026-10-25T14:42:23.4764187Z     actual: 'Client profile',",
+        "2026-10-25T14:42:23.4764319Z     expected: 'Profile',"
+      ]
+    },
+    {
+      "id": 121198381172,
+      "length": 43775,
+      "summary": [
+        "2026-10-25T14:40:15.0000347Z ℹ tests 13",
+        "2026-10-25T14:40:15.0001071Z ℹ pass 11",
+        "2026-10-25T14:40:15.0001309Z ℹ fail 2",
+        "2026-10-25T14:40:15.0001702Z ℹ skipped 0",
+        "2026-10-25T14:40:15.0009802Z test at tests/rehearsal/experience.rehearsal.mjs:202:13",
+        "2026-10-25T14:40:15.0011965Z   Error: Timed out: actual authorized client avatar and read-only preferences in the profile"
+      ]
+    },
+    {
+      "id": 121198381216,
+      "length": 361126,
+      "summary": [
+        "2026-10-25T14:44:52.2417767Z # tests 608",
+        "2026-10-25T14:44:52.2418248Z # pass 608",
+        "2026-10-25T14:44:52.2418472Z # fail 0",
+        "2026-10-25T14:44:52.2418962Z # skipped 0"
+      ]
+    }
+  ],
+  "failures": [
+    {
+      "kind": "application_integration",
+      "file": "tests/rehearsal/experience.rehearsal.mjs",
+      "reason": "Overview client profile preferred a retained conversation without the freshly saved avatar over current received metadata.",
+      "correction": "Use selected conversation metadata only for the selected conversation; otherwise use refreshed received metadata before older inbox/retained state.",
+      "status": "corrected_locally_pending_native"
+    },
+    {
+      "kind": "test_contract",
+      "file": "tests/browser/crm-collaboration.browser.mjs",
+      "reason": "Four language/width cases still expected Fiche/Profile after the intentional client-profile entry rename.",
+      "correction": "Expect Profil du client / Client profile while preserving draft/conflict/owner assertions.",
+      "status": "corrected_locally_pending_native"
+    }
+  ],
+  "localFinding": {
+    "file": "tests/chat-lifecycle.test.mjs",
+    "firstResult": {
+      "tests": 197,
+      "pass": 196,
+      "fail": 1
+    },
+    "reason": "A fixed number of event-loop turns could expire before real WebCrypto owner binding completed.",
+    "correction": "Await the actual bootstrap promise, with the original readiness/current-owner/no-POST assertions unchanged.",
+    "correctedResult": {
+      "tests": 197,
+      "pass": 197,
+      "fail": 0,
+      "skipped": 0
+    }
+  }
+}

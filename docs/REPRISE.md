@@ -4,9 +4,11 @@
 
 ## Correctif 1.11.2 — navigation mobile, profils et identité en qualification
 
-Nouvelle demande du25octobre : transitions sans écran vide, accès direct aux profils/préférences clients et avatar Jessie côtéclient. Branche `fix/mobile-identity-1112`. Corrections intégrées ; production confirmée1.11.1 inchangée. Chargement neutre et revalidation propriétaire conservés, profil client indépendant du chat sans marquage lu, copie publique explicite de l’avatar, lectures admin répétées mutualisées sous verrou. Syntaxe réussie et162 tests locaux d’intégration réussis ; qualification native Chrome/HTTPS/MariaDB encore requise. Ne pas déployer avant ces résultats.
+Demande du25octobre : transitions sans écran vide, accès direct aux profils/préférences clients et avatar Jessie côtéclient, puis **audit frontend/backend complet avant une seule mise à jour**. Branche `fix/mobile-identity-1112`, [PR139](https://github.com/fredbuhr/jessiemessage/pull/139), ouverte et non fusionnée. Production confirmée1.11.1 inchangée. Grille de24domaines/171contrôles et [rapport](AUDIT-MOBILE-PROFILES-1112.md) ; inventaire intégral rattaché aux domaines, sans prétendre chaque ligne relue manuellement.
 
-La copie publique format2 accepte lectureanciensformat1, exige republication explicite pour ajouterphoto et ne garantit pas relecture par backend1111. Pas de migration SQL/dépendance. Revueglobale bornée dans le rapport ; sauvegarde reportée/PC/A10/A11/A12 restent dans leur portée.
+Premier runPR40203143152 terminé : général et deux MariaDB réussis, Chrome/HTTPS refusés. [Échecs conservés](verification-proofs/jm1112/pr-initial.json) : ancien libellé attendu dans quatre cas Chrome, et profil de la vue reçue préférant une ancienne conversation sans avatar. Corrections locales intégrées avec une correction de retour de focus après rafraîchissement ;198tests ciblés réussis,0omission ; syntaxe778sources réussie et audit npm59entrées/0avis connu. La qualification native du candidat corrigé et l’inspection des captures restent à obtenir. **Ne pas déployer, publier ou fusionner avant clôture de cette qualification et seconde revue de la checklist.**
+
+La copie publiqueformat2 lit les anciensformat1, exige republication explicite pour ajouterphoto et ne garantit pas relecture par backend1111. Pas de migration SQL/dépendance ; aucun module métier retiré dans le diff. Sauvegarde reportée/PC/A10/A11/A12 et appareils physiques non exercés gardent leur portée.
 
 ## Correctif 1.11.1 — déployé et finalisé
 
