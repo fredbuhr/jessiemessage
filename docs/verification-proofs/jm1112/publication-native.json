@@ -1,0 +1,72 @@
+{
+  "format": "jessiemessage-1112-publication-native",
+  "operator": "7134e6e22de4f9f4c4deb2ff89512f6e1335be01",
+  "operatorTree": "4a53069b4a2142892c531a07f34c6e491afd8cb1",
+  "run": 40210405799,
+  "attempt": 1,
+  "nodeVersion": "24.22.1",
+  "allJobsSuccessful": true,
+  "operatorTests": {
+    "prepare": 26,
+    "publish": 7,
+    "fail": 0,
+    "skipped": 0
+  },
+  "jobs": [
+    {
+      "id": 121220224587,
+      "name": "operator-tests",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-25T16:10:28Z",
+      "completedAt": "2026-10-25T16:10:56Z"
+    },
+    {
+      "id": 121220346947,
+      "name": "publish",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-25T16:10:58Z",
+      "completedAt": "2026-10-25T16:11:20Z"
+    }
+  ],
+  "receipt": {
+    "status": "published_verified",
+    "nodeVersion": "24.22.1",
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "normalMigrations": 33,
+    "videoMigrations": 3,
+    "experienceMigrations": 2,
+    "releases": [
+      {
+        "tag": "v1.11.2",
+        "source": "af352607ff7e12c41185f42b8232c72219a304cd",
+        "tree": "655f759079979d608b0ec1c62a7c892311899515",
+        "ciRun": "40209568701",
+        "releaseId": 423509844
+      }
+    ],
+    "latest": {
+      "tag": "v1.11.2",
+      "source": "af352607ff7e12c41185f42b8232c72219a304cd",
+      "id": 423509844
+    },
+    "publicationMode": "created",
+    "created": [
+      "v1.11.2"
+    ],
+    "deploymentPerformed": false
+  },
+  "independentReadback": {
+    "tag": "v1.11.2",
+    "source": "af352607ff7e12c41185f42b8232c72219a304cd",
+    "releaseId": 423509844,
+    "latestId": 423509844,
+    "draft": false,
+    "prerelease": false
+  },
+  "preparerSha256": "5fe4cbef6da83788f635ac7c46e7febfd550887bd7c013c23b772561251f5e9c",
+  "hostingPreparationPerformed": false,
+  "productionChanged": false
+}

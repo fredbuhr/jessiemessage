@@ -1,0 +1,78 @@
+{
+  "format": "jessiemessage-1112-visual-review",
+  "source": "e35d56f6fb849a9096a2accd01362f77045849d7",
+  "run": 40208512760,
+  "artifacts": [
+    {
+      "id": 12605215798,
+      "name": "homepage-render",
+      "digest": "sha256:6fbb6927e64e5d09d7ba31eb964b67438c6b4b5f1dca2364cfe24d757a468f9b",
+      "source": "e35d56f6fb849a9096a2accd01362f77045849d7"
+    },
+    {
+      "id": 12605032327,
+      "name": "experience-https-render",
+      "digest": "sha256:64e3527fdd42ebcddc3a9e62bd6f81d1311b27fb39fdd94d886332614ca968bb",
+      "source": "e35d56f6fb849a9096a2accd01362f77045849d7"
+    },
+    {
+      "id": 12604967864,
+      "name": "public-profile-render",
+      "digest": "sha256:9ff0340d347e5b8de64c45f5e2f6bc2b4fed7c31041e7ddb873b8b07eb068a81",
+      "source": "e35d56f6fb849a9096a2accd01362f77045849d7"
+    }
+  ],
+  "images": [
+    {
+      "path": "captures/connection-loading-admin-320.png",
+      "original": "loading/connection-loading-admin-320.png",
+      "sha256": "5921c769e8d2c2f0f8fa5a079b8ee1d9e7f408832fdffa7b3fded7c3b0fb1eb9",
+      "bytes": 20700,
+      "inspected": true
+    },
+    {
+      "path": "captures/admin-chat-320.png",
+      "original": "experience/experience-admin-320-client-conversation.png",
+      "sha256": "793a01fdb389d5bcee2005b481a2cb4c17e6c74dcbac0d7f785e27e47e6c5a65",
+      "bytes": 61557,
+      "inspected": true
+    },
+    {
+      "path": "captures/client-chat-320.png",
+      "original": "experience/experience-client-320-jessie-avatar.png",
+      "sha256": "5e2d434a17c81d7e0086e4e8e86a58f46ed6dc94ca7660a4436a62d38dda61f8",
+      "bytes": 60607,
+      "inspected": true
+    },
+    {
+      "path": "captures/client-profile-320.png",
+      "original": "experience/experience-admin-320-client-profile.png",
+      "sha256": "cf5393d30405f10b941b52807654edf8cec912bdf27190ac6362af62b70ab593",
+      "bytes": 40624,
+      "inspected": true
+    },
+    {
+      "path": "captures/client-profile-1280.png",
+      "original": "experience/experience-admin-1280-client-profile.png",
+      "sha256": "eb4f1b1a067709902edb19f84ac1d9e3f1e6c9cabb1d23168ba781b907f60932",
+      "bytes": 70267,
+      "inspected": true
+    },
+    {
+      "path": "captures/public-profile-320.png",
+      "original": "experience/experience-public-320-profile.png",
+      "sha256": "da9e3508643b4eb585c4d5409358ab567a2f1af0dc29bd7f47c2ea74e7693b9a",
+      "bytes": 123808,
+      "inspected": true
+    },
+    {
+      "path": "captures/public-profile-en-320.png",
+      "original": "public/public-320-en.png",
+      "sha256": "764b955995cf27cb511ce312c11aecffbdecdaa0bd357667f271631e78dca973",
+      "bytes": 117688,
+      "inspected": true
+    }
+  ],
+  "result": "Neutral connection state visible; profile/preferences/current JPEG and Jessie identities visible; 320px header/control dimensions asserted; composer hint fully visible; FR/EN public UI fits. Synthetic content only.",
+  "physicalPhoneVerified": false
+}
