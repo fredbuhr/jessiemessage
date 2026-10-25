@@ -350,6 +350,7 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
         context.fillStyle='#b52f68';context.fillRect(0,0,96,64);context.fillStyle='#153f68';context.fillRect(48,0,48,64);return canvas.toDataURL('image/jpeg').split(',')[1];`);
       await selectPhotos(client, bytes, 5);
       await waitUntil(() => client.execute("return document.querySelectorAll('.photo-batch-item').length===5&&[...document.querySelectorAll('.photo-batch-item img')].every(image=>image.complete&&image.naturalWidth===96)"), "five real JPEG previews before sending");
+      assert.equal(await client.execute("const input=document.getElementById('message-body'),style=getComputedStyle(input),context=document.createElement('canvas').getContext('2d');context.font=style.font;return input.placeholder==='Légende…'&&context.measureText(input.placeholder).width<=input.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight)+1"), true, "the optional caption hint stays readable on a 320px composer");
       const initial = await client.execute("return [...document.querySelectorAll('.photo-batch-item')].map(node=>node.dataset.photoId)");
       await client.click(".photo-batch-item:nth-child(2) button"); assert.equal(await client.execute("return document.querySelectorAll('.photo-batch-item').length"), 4);
       await selectPhotos(client, bytes, 1, 5);

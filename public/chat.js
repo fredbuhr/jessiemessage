@@ -789,7 +789,7 @@ function renderImageDraft(state) {
   el("image-draft").hidden = !Boolean(draft || pending);
   renderPhotoBatch(state);
   el("message-body").maxLength = hasImage ? 1000 : 4096; el("message-body").required = !hasImage;
-  ui.attr(el("message-body"), "placeholder", hasImage ? "Ajoute une légende (facultatif)…" : role === "client" ? "Écris-moi…" : "Écris ton message…");
+  ui.attr(el("message-body"), "placeholder", hasImage ? "Légende…" : role === "client" ? "Écris-moi…" : "Message…");
   ui.text(el("composer-help"), hasImage ? "Photo privée · légende facultative de 1 000 caractères maximum" : "Message privé · 4 096 caractères maximum");
   el("composer-help").classList.toggle("sr-only", !hasImage && el("message-body").value.length < 3896);
   el("cancel-image").disabled = Boolean(state.pending) || sendBusy;
@@ -887,7 +887,7 @@ function renderVideoDraft(state) {
   ui.text(el("cancel-video"), uploading ? "Annuler le transfert" : "Retirer la vidéo");
   if (!hasVideo) { revokeVideoPreview(); return; }
   el("message-body").maxLength = 1000; el("message-body").required = false;
-  ui.attr(el("message-body"), "placeholder", "Ajoute une légende (facultatif)…");
+  ui.attr(el("message-body"), "placeholder", "Légende…");
   ui.text(el("composer-help"), "Vidéo privée · MP4, 100 Mo maximum · légende facultative");
   el("composer-help").classList.remove("sr-only");
   ui.text(el("video-draft-status"), pending?.stage === "sending" ? "Envoi de la vidéo…" : uploading ? "Transfert de la vidéo…" : draft?.invalid ? "Cette vidéo n’est plus disponible ou ce navigateur ne peut pas la lire." : "Une vidéo à envoyer");

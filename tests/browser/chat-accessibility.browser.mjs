@@ -476,13 +476,16 @@ test("Chrome mobile: compact messages reveal one accessible details area at a ti
       await loadedPhoto(page);
       if (language === "en") await toggleChatLanguage(page);
       const resting = await page.execute(`const row=document.querySelector('#messages [data-sequence="2"]'), bubble=row.querySelector('.bubble');
+        const input=document.getElementById('message-body'),style=getComputedStyle(input),context=document.createElement('canvas').getContext('2d');context.font=style.font;
         return {visibleDetails:[...document.querySelectorAll('#messages .message-meta')].filter(node=>node.getClientRects().length>0).length,
           selected:document.querySelectorAll('#messages .is-selected').length, gap:parseFloat(getComputedStyle(document.getElementById('messages')).rowGap),
+          placeholderFits:context.measureText(input.placeholder).width<=input.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight)+1,
           bubbleHeight:bubble.getBoundingClientRect().height, placeholder:document.getElementById('message-body').placeholder};`);
       assert.equal(resting.visibleDetails, 0, `${context}: dates, receipts and deletion reserve no permanent row`);
       assert.equal(resting.selected, 0); assert.ok(resting.gap<=10, `${context}: compact message gap (${resting.gap}px)`);
       assert.ok(resting.bubbleHeight<=48, `${context}: one-line text bubble stays compact (${resting.bubbleHeight}px)`);
-      assert.equal(resting.placeholder, role === "client" ? language === "fr" ? "Écris-moi…" : "Write to me…" : language === "fr" ? "Écris ton message…" : "Write your message…");
+      assert.equal(resting.placeholder, role === "client" ? language === "fr" ? "Écris-moi…" : "Write to me…" : "Message…");
+      assert.equal(resting.placeholderFits, true, `${context}: the empty composer hint fits on one visible line`);
 
       await openMessageDetails(page, "2");
       const details = await page.execute(`const row=document.querySelector('#messages [data-sequence="2"]'),meta=row.querySelector('.message-meta'),toggle=row.querySelector('.message-details-toggle'),r=toggle.getBoundingClientRect();
@@ -648,13 +651,13 @@ test("Chrome desktop and 320px: actual Tab / Enter contact selection and return,
       await tabUntil(page, "[data-conversation-id]"); await page.key("\uE007");
       await loadedPhoto(page);
       assert.equal(await page.execute("return document.activeElement.id"), "message-scroll", "selecting a contact focuses the history, leaving the draft untouched");
-      assert.equal(await page.execute("return document.getElementById('message-body').placeholder"), "Écris ton message…");
+      assert.equal(await page.execute("return document.getElementById('message-body').placeholder"), "Message…");
       assert.equal(await page.execute("return document.getElementById('peer-name').textContent"), peerName);
       assert.deepEqual(await page.execute("const link=document.getElementById('account-link');return {href:link.getAttribute('href'),text:link.textContent,oldNav:!!document.getElementById('readiness-nav')};"), {href:"/admin",text:"Accueil admin",oldNav:false});
       assert.equal(await page.execute("return document.getElementById('message-announcement').textContent"), "", "loaded history is silent");
       await toggleChatLanguage(page);
       assert.equal(await page.execute("return document.documentElement.lang"), "en");
-      assert.equal(await page.execute("return document.getElementById('message-body').placeholder"), "Write your message…");
+      assert.equal(await page.execute("return document.getElementById('message-body').placeholder"), "Message…");
       assert.equal(await page.execute("return document.getElementById('peer-name').textContent"), peerName, "private names are never translated");
       assert.deepEqual(await page.execute("const link=document.getElementById('account-link');return {href:link.getAttribute('href'),text:link.textContent};"), {href:"/admin",text:"Admin home"});
       await tabUntil(page, "#back-to-inbox"); await page.key("\uE007");

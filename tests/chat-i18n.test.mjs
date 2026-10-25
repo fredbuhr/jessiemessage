@@ -203,7 +203,7 @@ test("chat HTML loads explicit catalogues before its controller and marks UI lea
     for (const attr of ["data-jm-i18n", "data-jm-i18n-placeholder", "data-jm-i18n-aria-label"]) {
       const source = node.getAttribute(attr); if (!source) continue;
       f.language("en"); const translated = f.context.JessieI18n.t(source);
-      if (!["Messages", "Photos", "Contact", "Notifications", "Emojis", "Options", "Conversation"].includes(source)) assert.notEqual(translated, source, source);
+      if (!["Messages", "Message…", "Photos", "Contact", "Notifications", "Emojis", "Options", "Conversation"].includes(source)) assert.notEqual(translated, source, source);
     }
   }
   // The new gallery tab uses the same word in French and English; its sibling
@@ -325,12 +325,12 @@ test("image draft captions and uploading state remain unchanged while UI labels 
   const state = f.inspect().states.get(f.inspect().selected), pending = state.pending, key = pending.clientMessageId;
   const before = f.calls.length; f.language("en");
   assert.equal(f.element("image-draft-status").textContent, "Preparing photo…");
-  assert.equal(f.element("message-body").placeholder, "Add a caption (optional)…");
+  assert.equal(f.element("message-body").placeholder, "Caption…");
   assert.equal(f.element("image-preview").querySelector("img"), preview); assert.equal(preview.getAttribute("aria-label"), "Selected photo preview");
   assert.equal(state.pending, pending); assert.equal(state.pending.caption, "Envoyer"); assert.equal(state.pending.clientMessageId, key);
   assert.equal(f.element("message-body").value, "Envoyer"); assert.equal(f.calls.length, before); assert.equal(contentPosts(f).length, 1);
   upload.reject(new Error("synthetic upload interruption")); await flush();
-  f.language("fr"); assert.equal(f.element("message-body").placeholder, "Ajoute une légende (facultatif)…");
+  f.language("fr"); assert.equal(f.element("message-body").placeholder, "Légende…");
   assert.equal(state.pending.clientMessageId, key); assert.equal(state.pending.caption, "Envoyer"); assert.equal(contentPosts(f).length, 1);
 });
 
