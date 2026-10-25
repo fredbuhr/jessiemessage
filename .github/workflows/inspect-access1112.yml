@@ -1,0 +1,76 @@
+name: Qualify read-only access1112 diagnosis
+
+on:
+  push:
+    branches: [ops/diagnose-access1112]
+    paths:
+      - 'ops/inspect-access1112.py'
+      - 'ops/test-inspect-access1112.py'
+      - 'ops/test-access-readonly.mjs'
+      - '.github/workflows/inspect-access1112.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  operator-and-public-http:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Test file guards and anonymized output with synthetic fixtures
+        run: PYTHONDONTWRITEBYTECODE=1 python3 ops/test-inspect-access1112.py
+      - name: Observe public routes anonymously (no account or private hosting access)
+        run: |
+          PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'
+          import json, runpy
+          from datetime import datetime, timezone
+          ns = runpy.run_path('ops/inspect-access1112.py', run_name='jm_public_probe')
+          print(json.dumps({'type':'anonymous_public_http_observation','observedAt':datetime.now(timezone.utc).isoformat(),
+            'noAuthentication':True,'noMail':True,'noRestart':True,'routes':ns['public_http']()},separators=(',',':')))
+          PY
+
+  database:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    strategy:
+      fail-fast: false
+      matrix:
+        mariadb: ['10.11', '11.4']
+    services:
+      mariadb:
+        image: mariadb:${{ matrix.mariadb }}
+        env:
+          MARIADB_ROOT_PASSWORD: ci-only-root-not-a-secret
+          MARIADB_DATABASE: jessiemessage_test_access_diagnostic
+          MARIADB_USER: jessiemessage_test
+          MARIADB_PASSWORD: ci-only-not-a-secret
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24.22.1'
+          package-manager-cache: false
+      - run: npm ci --ignore-scripts
+      - name: Exercise the exact SELECTs, privacy and server-enforced read-only transaction
+        run: node --test ops/test-access-readonly.mjs
+        env:
+          JM_ACCESS_DIAGNOSTIC_DB_TEST: '1'
+          JESSIEMESSAGE_DB_HOST: '127.0.0.1'
+          JESSIEMESSAGE_DB_PORT: '3306'
+          JESSIEMESSAGE_DB_NAME: jessiemessage_test_access_diagnostic
+          JESSIEMESSAGE_MIGRATION_DATABASE: jessiemessage_test_access_diagnostic
+          JESSIEMESSAGE_DB_USER: jessiemessage_test
+          JESSIEMESSAGE_DB_PASSWORD: ci-only-not-a-secret
+          JESSIEMESSAGE_DB_ALLOW_INSECURE_LOCAL: '1'

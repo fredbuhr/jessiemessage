@@ -1,0 +1,325 @@
+#!/usr/bin/env python3
+"""Bounded read-only account/runtime diagnosis for the unchanged active 1.11.2.
+
+No login, password request, mail delivery, migration, restart or persistent output.
+The selected email is entered locally without echo and sent to Node only by stdin.
+Only enum states, booleans, counts and public process identity leave this script.
+"""
+import getpass
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import stat
+import subprocess
+import urllib.error
+import urllib.request
+
+PRIVATE = Path('/srv/customer/jessiemessage-private')
+CHECKOUT = Path('/srv/customer/jessiemessage-operator/production-1112-af352607')
+DEPENDENCIES = Path('/srv/customer/jessiemessage-operator/production-1101-9eb99f1f/node_modules')
+SOURCE = 'af352607ff7e12c41185f42b8232c72219a304cd'
+TREE = '655f759079979d608b0ec1c62a7c892311899515'
+CHECKPOINT_SHA = '3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf72aa26cd080b5a0ac2f400f'
+STAGING_SHA = 'eef0d3f64599ee5ccfdd1e0a5bd996daf035fa3e79cab957ef7e97a3afaea628'
+NODE_SHA = 'e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb'
+BUNDLE_SHA = 'bcca2f3fd91ffc0dec51a7077eb9e192a53b6e653b60c7db7159e473b83aac85'
+BUNDLE_NAMES = sorted(['runtime-database.json', 'runtime-auth.json', 'runtime-messaging.json',
+    'runtime-media.json', 'runtime-notifications.json', 'runtime-crm.json', 'runtime-video.json'])
+
+# This module has no top-level side effects. Native tests exercise the same SELECTs
+# against disposable migrated databases. The production entry is appended below.
+NODE_MODULE = r'''
+export const sql = Object.freeze({
+  clock: "SELECT UTC_TIMESTAMP(6) AS utc_now, @@session.time_zone AS session_timezone",
+  user: `SELECT u.id, u.role, u.status, u.password_hash IS NOT NULL AS password_present,
+    u.email_verified_at, u.access_approved_at, u.access_expires_at, c.credential_version
+    FROM users u LEFT JOIN client_auth_state c ON c.user_id = u.id WHERE u.email = ? LIMIT 1`,
+  invitations: `SELECT COUNT(*) AS total, MIN(consumed_at) AS first_consumed, MAX(consumed_at) AS last_consumed
+    FROM invitations WHERE consumed_by_id = ? AND consumed_at IS NOT NULL`,
+  sessions: `SELECT COUNT(*) AS total,
+    COALESCE(SUM(s.created_at >= ?), 0) AS created_last_hour,
+    COALESCE(SUM(c.session_id IS NULL), 0) AS missing_client_state,
+    COALESCE(SUM(c.credential_version <> ?), 0) AS credential_mismatch,
+    COALESCE(SUM(s.revoked_at IS NOT NULL), 0) AS revoked,
+    COALESCE(SUM(s.expires_at <= ?), 0) AS expired,
+    COALESCE(SUM(s.created_at > ? OR c.last_seen_at > ? OR c.last_seen_at < s.created_at), 0) AS invalid_chronology,
+    COALESCE(SUM(s.revoked_at IS NULL AND s.expires_at > ? AND s.created_at <= ?
+      AND c.last_seen_at >= s.created_at AND c.last_seen_at <= ? AND c.credential_version = ?), 0) AS usable_persisted
+    FROM sessions s LEFT JOIN client_session_state c ON c.session_id = s.id WHERE s.user_id = ?`,
+  verifications: `SELECT COUNT(*) AS total,
+    COALESCE(SUM(consumed_at IS NOT NULL), 0) AS consumed,
+    COALESCE(SUM(revoked_at IS NOT NULL), 0) AS revoked,
+    COALESCE(SUM(consumed_at IS NULL AND revoked_at IS NULL AND expires_at <= ?), 0) AS expired_unused,
+    COALESCE(SUM(consumed_at IS NULL AND revoked_at IS NULL AND created_at <= ? AND expires_at > ?), 0) AS available
+    FROM email_verifications WHERE user_id = ?`,
+  mail: `SELECT COUNT(*) AS total,
+    COALESCE(SUM(status = 'pending'), 0) AS pending, COALESCE(SUM(status = 'sending'), 0) AS sending,
+    COALESCE(SUM(status = 'sent'), 0) AS sent, COALESCE(SUM(status = 'cancelled'), 0) AS cancelled,
+    COALESCE(SUM(status = 'failed'), 0) AS failed,
+    COALESCE(SUM(last_error = 'MAIL_DELIVERY_FAILED'), 0) AS delivery_error,
+    COALESCE(SUM(last_error = 'PAYLOAD_INVALID'), 0) AS payload_error,
+    COALESCE(SUM(status <> 'sent' AND expires_at <= ?), 0) AS expired_unsent
+    FROM mail_outbox WHERE recipient_user_id = ?`
+});
+const count = value => {
+  const n = Number(value); if (!Number.isSafeInteger(n) || n < 0) throw Error('COUNT'); return n;
+};
+const counts = row => Object.fromEntries(Object.entries(row).map(([k, v]) => [k, count(v)]));
+const instant = value => {
+  if (value === null) return null;
+  if (typeof value !== 'string' || !/^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(?:\.\d{1,6})?$/.test(value)) throw Error('DATE');
+  const result = Date.parse(value.replace(' ', 'T') + 'Z');
+  if (!Number.isSafeInteger(result)) throw Error('DATE'); return result;
+};
+const date = value => new Date(value).toISOString().replace('T', ' ').replace('Z', '000');
+export async function inspectAccount(connection, email, clock = Date.now) {
+  // No SELECT FOR UPDATE and no calls to application stores: even their session
+  // readers may touch last_seen_at. Server-enforced READ ONLY is an extra guard.
+  await connection.query('SET TRANSACTION READ ONLY');
+  await connection.query('START TRANSACTION WITH CONSISTENT SNAPSHOT');
+  try {
+    const before = clock();
+    const [time] = await connection.query(sql.clock);
+    const now = clock(); const dbNow = instant(time.utc_now);
+    const rows = await connection.query(sql.user, [email]);
+    const output = { clock: { observedAt: now, databaseSkewMilliseconds: Math.round(dbNow - (before + now) / 2),
+      sessionUtc: time.session_timezone === '+00:00' }, account: { found: rows.length === 1 }, passwordMatchChecked: false };
+    if (!rows.length) return output;
+    const u = rows[0];
+    if (!['admin', 'client'].includes(u.role) || !['pending', 'active', 'suspended', 'revoked', 'deleted'].includes(u.status)) throw Error('STATE');
+    const [inv] = await connection.query(sql.invitations, [u.id]);
+    const verified = instant(u.email_verified_at), approved = instant(u.access_approved_at), expiry = instant(u.access_expires_at);
+    const consumed = instant(inv.last_consumed), invitationCount = count(inv.total);
+    const credential = u.credential_version === null ? null : count(u.credential_version);
+    const loginEligible = u.role === 'client' && ['pending', 'active'].includes(u.status)
+      && verified !== null && verified <= now && Boolean(u.password_present) && credential > 0;
+    const admission = invitationCount === 1 && consumed <= now;
+    const approval = approved !== null && approved <= now && consumed !== null && approved >= consumed;
+    output.account = { found: true, role: u.role, status: u.status, authStatePresent: credential !== null,
+      credentialVersionValid: credential > 0, passwordPresent: Boolean(u.password_present),
+      emailVerified: verified !== null, verificationNotFuture: verified !== null && verified <= now,
+      approved: approved !== null, approvalNotFuture: approved !== null && approved <= now,
+      invitationCount, invitationNotFuture: consumed !== null && consumed <= now,
+      approvalAfterInvitation: approval, accessExpired: expiry !== null && expiry <= now,
+      loginEligibleWithoutPasswordCheck: loginEligible,
+      freshLoginAccountGatesPass: loginEligible && admission && (u.status !== 'active' || approval),
+      resendVerificationEligibleWithoutPasswordCheck: u.role === 'client' && u.status === 'pending'
+        && verified === null && Boolean(u.password_present) && credential > 0 };
+    const stamp = date(now);
+    const [sessions] = await connection.query(sql.sessions, [date(now - 3600000), credential ?? 0,
+      stamp, stamp, stamp, stamp, stamp, stamp, credential ?? 0, u.id]);
+    const [verifications] = await connection.query(sql.verifications, [stamp, stamp, stamp, u.id]);
+    const [mail] = await connection.query(sql.mail, [stamp, u.id]);
+    output.sessions = counts(sessions); output.verifications = counts(verifications); output.verificationMail = counts(mail);
+    return output;
+  } finally { await connection.query('ROLLBACK'); }
+}
+'''
+
+NODE_ENTRY = r'''
+import { readFile } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
+let pool, connection;
+try {
+  const root = pathToFileURL(process.argv[1] + '/');
+  const config = await import(new URL('server/config/runtime-database-file.mjs', root));
+  const { canonicalEmail } = await import(new URL('server/auth/config.mjs', root));
+  const { createRuntimePool } = await import(new URL('server/db/runtime.mjs', root));
+  const input = JSON.parse(await readFile('/dev/stdin', 'utf8'));
+  const email = canonicalEmail(input.email);
+  const value = await config.readRuntimeDatabaseConfiguration(process.argv[2]);
+  pool = await createRuntimePool(config.runtimeDatabaseEnvironment(value));
+  connection = await pool.getConnection();
+  await connection.query('SET SESSION max_statement_time = 5');
+  const result = await inspectAccount(connection, email);
+  await connection.release(); connection = null;
+  await pool.end(); pool = null;
+  process.stdout.write(JSON.stringify(result));
+} catch {
+  process.exitCode = 1; process.stderr.write('ACCOUNT_READ_ONLY_UNCONFIRMED\n');
+} finally {
+  try { if (connection) await connection.release(); } catch { process.exitCode = 1; }
+  try { if (pool) await pool.end(); } catch { process.exitCode = 1; }
+}
+'''
+
+
+class Refused(Exception):
+    pass
+
+
+def require(ok, code):
+    if not ok:
+        raise Refused(code)
+
+
+def file(path, mode=0o600, limit=2 * 1024 * 1024, growing=False, hash_only=False):
+    require(path.is_absolute() and path.resolve() == path, 'FILE_PATH')
+    before = path.lstat()
+    require(stat.S_ISREG(before.st_mode) and before.st_uid == os.getuid()
+        and before.st_nlink == 1 and stat.S_IMODE(before.st_mode) == mode and before.st_size <= limit, 'FILE_METADATA')
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(fd, 'rb') as handle:
+        first = os.fstat(handle.fileno())
+        require((before.st_dev, before.st_ino) == (first.st_dev, first.st_ino), 'FILE_IDENTITY')
+        if hash_only:
+            aggregate = hashlib.sha256()
+            while chunk := handle.read(262144):
+                aggregate.update(chunk)
+            data = aggregate.hexdigest()
+        else:
+            data = handle.read(before.st_size if growing else limit + 1)
+        last = os.fstat(handle.fileno())
+    after = path.lstat()
+    keys = ('st_dev', 'st_ino', 'st_mode', 'st_uid', 'st_nlink') if growing else (
+        'st_dev', 'st_ino', 'st_mode', 'st_uid', 'st_nlink', 'st_size', 'st_mtime_ns', 'st_ctime_ns')
+    require(all(len({getattr(s, k) for s in (before, first, last, after)}) == 1 for k in keys), 'FILE_CHANGED')
+    require(hash_only or len(data) <= limit, 'FILE_SIZE')
+    return data
+
+
+def digest(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def private_directory(path):
+    s = path.lstat()
+    require(path.resolve() == path and stat.S_ISDIR(s.st_mode) and s.st_uid == os.getuid()
+        and stat.S_IMODE(s.st_mode) == 0o700, 'DIRECTORY')
+
+
+def command(args, *, data=None, timeout=25):
+    result = subprocess.run(args, input=data, capture_output=True, timeout=timeout, check=False,
+        env={'PATH': '/usr/bin:/bin', 'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': '/dev/null',
+             'GIT_TERMINAL_PROMPT': '0', 'JESSIEMESSAGE_PRIVATE_PATH_MODE': 'linux-dirfd'})
+    require(result.returncode == 0, 'COMMAND_UNCONFIRMED')
+    require(len(result.stdout) <= 65536, 'COMMAND_OUTPUT_SIZE')
+    return result.stdout
+
+
+def preflight():
+    private_directory(PRIVATE)
+    checkpoint = PRIVATE / 'jm0702-existing-pc-update.json'
+    require(digest(file(checkpoint)) == CHECKPOINT_SHA, 'ACTIVE_CHECKPOINT_CHANGED')
+    require(digest(file(PRIVATE / 'jm1112-staging.json')) == STAGING_SHA, 'STAGING_CHANGED')
+    node = PRIVATE / 'runtime-node-v24.22.1/bin/node'
+    require(file(node, 0o700, 256 * 1024 * 1024, hash_only=True) == NODE_SHA, 'NODE_CHANGED')
+    require(command([str(node), '--version']).strip() == b'v24.22.1', 'NODE_VERSION')
+    require(CHECKOUT.resolve() == CHECKOUT and CHECKOUT.is_dir(), 'CHECKOUT')
+    base = ['/usr/bin/git', '--no-optional-locks', '-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=/dev/null', '-C', str(CHECKOUT)]
+    require(command(base + ['rev-parse', 'HEAD']).decode().strip() == SOURCE, 'SOURCE')
+    require(command(base + ['rev-parse', 'HEAD^{tree}']).decode().strip() == TREE, 'TREE')
+    require(command(base + ['status', '--porcelain', '--untracked-files=no']).strip() == b'', 'TRACKED_FILES_CHANGED')
+    link = CHECKOUT / 'node_modules'
+    require(link.is_symlink() and link.resolve() == DEPENDENCIES, 'DEPENDENCY_LINK')
+    bundle = PRIVATE / 'runtime-video-180'
+    private_directory(bundle)
+    require(sorted(p.name for p in bundle.iterdir()) == BUNDLE_NAMES, 'CONFIGURATION_FILES')
+    aggregate = hashlib.sha256()
+    for name in BUNDLE_NAMES:
+        data = file(bundle / name, limit=16384)
+        aggregate.update(name.encode() + b'\0' + str(len(data)).encode() + b'\0' + data)
+    require(aggregate.hexdigest() == BUNDLE_SHA, 'CONFIGURATION_CHANGED')
+    return node, bundle
+
+
+def startup_summary():
+    data = file(PRIVATE / 'jm1112-node24221.log', limit=16 * 1024 * 1024, growing=True)
+    records = []
+    malformed = 0
+    for line in data.splitlines():
+        if b'application_started' not in line:
+            continue
+        try:
+            value = json.loads(line)
+            r = value['release']
+            require(value.get('type') == 'application_started' and type(r) is dict
+                and r.get('version') == '1.11.2' and r.get('commit') == SOURCE
+                and r.get('nodeVersion') == 'v24.22.1' and type(r.get('startedAt')) is int
+                and 0 < r['startedAt'] < 253402300800000, 'STARTUP_RECORD')
+            records.append(r['startedAt'])
+        except (ValueError, KeyError, TypeError, Refused):
+            malformed += 1
+    return {'matchingStartupRecords': len(records), 'otherOrMalformedStartupRecords': malformed,
+        'firstStartedAt': min(records) if records else None, 'lastStartedAt': max(records) if records else None,
+        'originalStartupPresent': 1792946135648 in records, 'liveProcessIdentityProven': False}
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *_args, **_kwargs):
+        return None
+
+
+def classify_http(status, body, location=''):
+    lower = body.lower()
+    provider = b'infomaniak' in lower and (b'undergoing maintenance' in lower or b'under maintenance' in lower)
+    if provider:
+        kind = 'provider_maintenance'
+    elif body.strip() == b'{"status":"ok"}':
+        kind = 'app_health'
+    elif body.strip() == b'{"status":"ready"}':
+        kind = 'app_ready'
+    elif body.strip() in (b'{"status":"unavailable"}', b'{"error":"service_unavailable"}'):
+        kind = 'app_unavailable'
+    elif b'access.js' in body and b'jessiemessage' in lower:
+        kind = 'app_access_html'
+    elif b'auth.js' in body and b'jessiemessage' in lower:
+        kind = 'app_auth_html'
+    elif status == 404 and body.strip() == b'Not found':
+        kind = 'app_not_found'
+    else:
+        kind = 'other'
+    return {'status': status, 'kind': kind, 'redirect': location if location in ('/admin/login', '/access') else bool(location)}
+
+
+def public_http():
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
+    results = {}
+    for route in ('/api/health', '/api/ready', '/access', '/admin', '/admin/', '/admin/login'):
+        try:
+            request = urllib.request.Request('https://jessiemessage.com' + route,
+                headers={'Accept': 'text/html' if route.startswith('/admin') else '*/*', 'Cache-Control': 'no-cache'})
+            try:
+                response = opener.open(request, timeout=6)
+            except urllib.error.HTTPError as error:
+                response = error
+            with response:
+                results[route] = classify_http(response.status, response.read(32768), response.headers.get('Location', ''))
+        except (OSError, ValueError):
+            results[route] = {'status': None, 'kind': 'network_unconfirmed', 'redirect': False}
+    return results
+
+
+def local_email():
+    # Fail closed if no terminal; getpass must never fall back to echoed stdin.
+    with open('/dev/tty', 'r+') as tty:
+        require(os.isatty(tty.fileno()), 'TERMINAL_REQUIRED')
+        value = getpass.getpass('Adresse e-mail du compte à examiner (saisie masquée) : ', stream=tty)
+    require(0 < len(value) <= 254 and value == value.strip() and '\n' not in value and '\r' not in value, 'EMAIL_INPUT')
+    return value
+
+
+def inspect():
+    node, bundle = preflight()
+    email = local_email()
+    raw = command([str(node), '--input-type=module', '--eval', NODE_MODULE + NODE_ENTRY, str(CHECKOUT), str(bundle)],
+        data=json.dumps({'email': email}).encode(), timeout=60)
+    result = json.loads(raw)
+    require(type(result) is dict and set(result) <= {'clock', 'account', 'passwordMatchChecked', 'sessions', 'verifications', 'verificationMail'}
+        and type(result.get('account')) is dict and result.get('passwordMatchChecked') is False, 'ACCOUNT_OUTPUT')
+    # The email and all potential secret column names/values are never printed.
+    require(email.casefold() not in raw.decode().casefold(), 'PRIVATE_OUTPUT')
+    result['runtimeLog'] = startup_summary()
+    result['publicHttp'] = public_http()
+    require(digest(file(PRIVATE / 'jm0702-existing-pc-update.json')) == CHECKPOINT_SHA, 'CHECKPOINT_CHANGED_DURING_READ')
+    return {'status': 'access1112_read_only_diagnostic', 'source': SOURCE, 'noLogin': True,
+        'noMail': True, 'noRestart': True, 'noMigration': True, 'noPersistentWrite': True, 'checks': result}
+
+
+if __name__ == '__main__':
+    try:
+        print(json.dumps(inspect(), ensure_ascii=True, separators=(',', ':')), flush=True)
+    except (Exception, KeyboardInterrupt):
+        raise SystemExit('DIAGNOSTIC_ACCES_NON_CONFIRME : aucun compte modifié ; transmettre ce message, pas de journal privé.') from None
