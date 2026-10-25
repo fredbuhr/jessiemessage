@@ -2,13 +2,13 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Correctif 1.11.3 — lien de confirmation et connexion
+## Correctif 1.11.3 — publié, préparation hébergée attendue
 
-Défaut frontend reproduit et corrigé sur `fix/invitation-access-1113` ;102tests ciblés réussis. [Périmètre et preuves](invitation-access-1113.md). Production1112 conservée. Aucun nouveau chantier d’audit général ou sauvegarde.
+Défaut de sortie du lien de confirmation reproduit et corrigé ; [PR140](https://github.com/fredbuhr/jessiemessage/pull/140) fusionnée, PR/main5/5, quatre captures inspectées et publication2/2 après33tests opérateur natifs. Source unique `89571636d6fde97b28b5e8aec9257801c1b71f8b`. [Périmètre et preuves](invitation-access-1113.md), [état courant](REPRISE.md). Production1112 conservée. Connexion réelle du compte signalé non observée par l’agent ; aucun nouveau compte ou e-mail réel déclenché.
 
-1. Qualifier la PR exacte avec les cinq suites natives et relire les captures de vérification/connexion FR/EN320/1280. Confirmer les gardes backend inchangés et le retour possible sans rejouer le token.
-2. Fusionner puis qualifier le SHA main exact, publier le tag/release immuable1113, préparer/CHECK sur l’hébergement et recueillir le reçu avant activation.
-3. Après identité1113 rapportée, qualifier puis exécuter son writer de métadonnées, vérifier HTTP/publication et préserver les historiques. Une seule activation corrective ; Node privé24.22.1 et SQL38 inchangés.
+1. Exécuter une fois la [préparation1113 et son CHECK](operations-release1113.md), puis recueillir source/arbre, empreintes, `CHECK1113_EXIT=0` et `PREPARATION_1113_CHECK_OK`. Pas de relance aveugle d’une sortie incertaine.
+2. Après ce reçu, activer ce seul commit depuis le service Node existant et recueillir version/commit/Node/date de démarrage. Node privé24.22.1 et SQL38 inchangés ; aucune nouvelle migration.
+3. Qualifier puis exécuter le writer1113 lié à cette identité : HTTP/publication prêts, métadonnées seules, relecture et historiques préservés, sans nouveau redémarrage. Ne rejouer ni les commandes1112 closes ni les CI vertes. Limites physiques et historiques inchangées, aucun nouvel audit général ou sauvegarde reportée ouvert.
 
 ## Correctif 1.11.2 — audit et livraison terminés
 

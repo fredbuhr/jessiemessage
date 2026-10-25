@@ -1,0 +1,42 @@
+{
+  "run": 40231447183,
+  "source": "cd54e868116d605c01c7ad09033998813f61a490",
+  "artifactId": 12613016981,
+  "artifactDigest": "sha256:faa5a487f9347d4619a04624ae627cd49a395525ac44771f81edcad969ad16d1",
+  "images": [
+    {
+      "name": "verification-used-en-1280.png",
+      "bytes": 231356,
+      "sha256": "148c30026f5457858db2fa2b7d94444a89277971d1ac6fcedf345fc4b43a473e",
+      "inspected": true,
+      "path": "captures/verification-used-en-1280.png"
+    },
+    {
+      "name": "verification-used-en-320.png",
+      "bytes": 75379,
+      "sha256": "ad6afdabc56d0bc7cde08294bb0691ff2d361ca9e5388af4431364b8a5d6f3a1",
+      "inspected": true,
+      "path": "captures/verification-used-en-320.png"
+    },
+    {
+      "name": "verification-used-fr-1280.png",
+      "bytes": 237955,
+      "sha256": "109e183d1f7ece5d528705d4cf4fafa3bc3b1b6d35652a5d74c94b5ec8b0f514",
+      "inspected": true,
+      "path": "captures/verification-used-fr-1280.png"
+    },
+    {
+      "name": "verification-used-fr-320.png",
+      "bytes": 70384,
+      "sha256": "81d355870282ea28b0f957b7fb13b3a204f169e576abc027639654664cc28fb2",
+      "inspected": true,
+      "path": "captures/verification-used-fr-320.png"
+    }
+  ],
+  "imagesInspected": 4,
+  "physicalPhoneVerified": false,
+  "format": "jessiemessage-1113-visual-review",
+  "tree": "e16a22043ea00908afa37cad64e5f9b421f4e5ae",
+  "sameFullTreeAsQualifiedMain": true,
+  "result": "Used verification link exposes readable credential sign-in and explicit resend in FR/EN at320/1280; focus and geometry assertions pass;4images inspected."
+}

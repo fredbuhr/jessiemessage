@@ -1,6 +1,6 @@
 {
   "format": "jessiemessage-1113-invitation-access-coverage",
-  "status": "targeted_pass_native_pending",
+  "status": "pr_main_publication_qualified_host_preparation_pending",
   "baseline": {
     "version": "1.11.2",
     "source": "af352607ff7e12c41185f42b8232c72219a304cd",
@@ -23,7 +23,7 @@
   },
   "syntaxSources": 778,
   "newNativeCoverage": {
-    "status": "pending",
+    "status": "qualified",
     "languages": [
       "fr",
       "en"
@@ -49,5 +49,96 @@
     "Browser tests use isolated HTTPS handlers and synthetic service; actual backend verification/replay/approval remains covered by dedicated native database suites.",
     "No cloud browser, real mail, private host inspection or destructive action. Physical and prior operational limits remain."
   ],
-  "productionChanged": false
+  "productionChanged": false,
+  "qualification": {
+    "pr": {
+      "source": "cd54e868116d605c01c7ad09033998813f61a490",
+      "run": 40231447183,
+      "allFiveJobsSuccessful": true,
+      "proof": "pr-native.json"
+    },
+    "main": {
+      "source": "89571636d6fde97b28b5e8aec9257801c1b71f8b",
+      "tree": "e16a22043ea00908afa37cad64e5f9b421f4e5ae",
+      "run": 40232421442,
+      "allFiveJobsSuccessful": true,
+      "proof": "main-native.json"
+    },
+    "visual": {
+      "proof": "visual-review.json",
+      "inspected": 4,
+      "physicalPhoneVerified": false
+    },
+    "publication": {
+      "operator": "fead96f4c8bde918dde5c72a1860fe298f47abe3",
+      "run": 40233214193,
+      "releaseId": 423658747,
+      "allTwoJobsSuccessful": true,
+      "operatorTests": 33,
+      "proof": "publication-native.json"
+    },
+    "hosting": {
+      "preparation": "not_performed",
+      "check": "not_performed",
+      "activation": "not_performed",
+      "metadataWriter": "not_qualified_or_executed",
+      "currentProduction": "1.11.2"
+    }
+  },
+  "finalCoverageReview": {
+    "allPlannedChecksHaveDisposition": true,
+    "identifiedCodeDefectsOpen": [],
+    "manualDirectLoginResult": "not_confirmed",
+    "remainingSteps": "Hosted preparation/CHECK, activation and metadata recording for1113; no replay of successful1112 operations."
+  },
+  "checks": [
+    {
+      "id": "reproduce_used_link_trap",
+      "state": "qualified_with_stated_scope"
+    },
+    {
+      "id": "refused400_401_to_credential_sign_in_fr_en",
+      "state": "qualified_with_stated_scope"
+    },
+    {
+      "id": "explicit_exit_without_token_replay",
+      "state": "qualified_with_stated_scope"
+    },
+    {
+      "id": "fresh_verification_and_fresh_owner_login",
+      "state": "qualified_with_stated_scope"
+    },
+    {
+      "id": "hidden_uncertain_response_and_exit",
+      "state": "qualified_with_stated_scope"
+    },
+    {
+      "id": "unavailable503_retry_without_automatic_mail",
+      "state": "qualified_with_stated_scope"
+    },
+    {
+      "id": "other_client_cookie_not_adopted",
+      "state": "qualified_with_stated_scope"
+    },
+    {
+      "id": "tokens_not_in_url_storage_or_referrer",
+      "state": "qualified_with_stated_scope"
+    },
+    {
+      "id": "native_geometry_and_visual320_1280",
+      "state": "qualified_with_stated_scope"
+    },
+    {
+      "id": "versions_lock_and38migrations_preserved",
+      "state": "qualified_with_stated_scope"
+    },
+    {
+      "id": "native_pr_and_main_exact_same_tree",
+      "state": "qualified_with_stated_scope"
+    },
+    {
+      "id": "immutable_publication_and33operator_tests",
+      "state": "qualified_with_stated_scope"
+    }
+  ]
 }

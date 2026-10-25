@@ -1,0 +1,66 @@
+{
+  "format": "jessiemessage-1113-main-native",
+  "source": "89571636d6fde97b28b5e8aec9257801c1b71f8b",
+  "tree": "e16a22043ea00908afa37cad64e5f9b421f4e5ae",
+  "run": 40232421442,
+  "attempt": 1,
+  "nodeVersion": "24.22.1",
+  "allFiveJobsSuccessful": true,
+  "pr": 140,
+  "qualifiedPrSource": "cd54e868116d605c01c7ad09033998813f61a490",
+  "applicationAndFullTreeSameAsQualifiedPr": true,
+  "jobs": [
+    {
+      "id": 121286785543,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 14,
+      "pass": 14,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "id": 121286785652,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 608,
+      "pass": 608,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "id": 121286785714,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 608,
+      "pass": 608,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "id": 121286785719,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 280,
+      "pass": 280,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "id": 121286785732,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 4133,
+      "pass": 4081,
+      "fail": 0,
+      "skipped": 52
+    }
+  ],
+  "productionChanged": false,
+  "manualDirectLoginResult": "not_confirmed"
+}

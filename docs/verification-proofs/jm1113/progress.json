@@ -1,0 +1,37 @@
+{
+  "status": "release1113_published_host_preparation_pending",
+  "branch": "fix/invitation-access-1113",
+  "source": "89571636d6fde97b28b5e8aec9257801c1b71f8b",
+  "tree": "e16a22043ea00908afa37cad64e5f9b421f4e5ae",
+  "pr": 140,
+  "production": "1.11.2",
+  "productionChanged": false,
+  "localTargeted": {
+    "pass": 102,
+    "fail": 0,
+    "skipped": 0
+  },
+  "syntaxSources": 778,
+  "next": "User executes once pinned prepare1113+CHECK, then supplies receipt before Manager activation. No actual account state inspected or production change by agent.",
+  "manualDirectLoginResult": "not_confirmed",
+  "run": 40231447183,
+  "qualifiedPrSource": "cd54e868116d605c01c7ad09033998813f61a490",
+  "qualifiedPrRun": 40231447183,
+  "mainRun": 40232421442,
+  "operatorBranch": "ops/publish-v1.11.3",
+  "operatorPreparedSource": "c5ed7905346dce2a580ad69ff465e8af0843b0d8",
+  "operatorPreparedTree": "df3329c2a4b4b57cd53c65e4482a5abb298a0a0a",
+  "operatorLocalTests": {
+    "prepare": 26,
+    "publish": 7
+  },
+  "operatorWorkflowAdded": true,
+  "operatorSource": "fead96f4c8bde918dde5c72a1860fe298f47abe3",
+  "operatorTree": "9d1fe014682919280837df2ec806941212afd7ed",
+  "mainQualificationSuccessful": true,
+  "preparerSha256": "8267f0b8169cc3857503afe16506b471b879a732d458e799b7b17a12363b1916",
+  "publicationRun": 40233214193,
+  "publicationSuccessful": true,
+  "releaseId": 423658747,
+  "recordedAt": "2026-10-25T21:07:19.984839+00:00"
+}
