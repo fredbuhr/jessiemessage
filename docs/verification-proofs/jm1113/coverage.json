@@ -1,0 +1,53 @@
+{
+  "format": "jessiemessage-1113-invitation-access-coverage",
+  "status": "targeted_pass_native_pending",
+  "baseline": {
+    "version": "1.11.2",
+    "source": "af352607ff7e12c41185f42b8232c72219a304cd",
+    "checkpointSha256": "3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf72aa26cd080b5a0ac2f400f"
+  },
+  "reportedProblem": "Used verification link traps the interface after user reports email confirmation and admin approval. Exact real-account state/token history not inspected.",
+  "preFixReproduction": {
+    "tests": 7,
+    "pass": 0,
+    "fail": 7,
+    "expectedFailure": true,
+    "logSha256": "ef8eaffa1e0b383055b5427769f40011814800b59237bce7889738a5b517ee04"
+  },
+  "localTargeted": {
+    "tests": 102,
+    "pass": 102,
+    "fail": 0,
+    "skipped": 0,
+    "newVerificationCases": 9
+  },
+  "syntaxSources": 778,
+  "newNativeCoverage": {
+    "status": "pending",
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "widths": [
+      320,
+      1280
+    ],
+    "scenarios": [
+      "used_token_returns_sign_in_and_resend",
+      "explicit_sign_in_does_not_submit_token",
+      "fresh_token_still_verifies"
+    ]
+  },
+  "preservation": {
+    "backendUnchanged": true,
+    "migrationFilesIdentical": 38,
+    "normalizedLockIdentical": true,
+    "nodeVersion": "24.22.1"
+  },
+  "limits": [
+    "Real account state, actual reason why its token was rejected, and successful manual sign-in are not inferred from the screenshot.",
+    "Browser tests use isolated HTTPS handlers and synthetic service; actual backend verification/replay/approval remains covered by dedicated native database suites.",
+    "No cloud browser, real mail, private host inspection or destructive action. Physical and prior operational limits remain."
+  ],
+  "productionChanged": false
+}

@@ -50,6 +50,8 @@ globalThis.JessieI18n?.register({
   "Vérification de l’e-mail": "Email verification",
   "Confirme cette adresse e-mail pour poursuivre la préparation de ton accès.": "Confirm this email address to continue setting up your access.",
   "Vérifier mon e-mail": "Verify my email",
+  "Aller à la connexion": "Go to sign in",
+  "Ce lien de confirmation est invalide, expiré ou déjà utilisé. Connecte-toi si ton e-mail est confirmé, ou demande un nouvel e-mail ci-dessous.": "This confirmation link is invalid, expired or already used. Sign in if your email is confirmed, or request another email below.",
   "État de ton accès": "Your access status",
   "La messagerie sera disponible quand ton accès sera validé et le service activé.": "Messaging will be available once your access is approved and the service is enabled.",
   "Ouvrir notre conversation": "Open our conversation",

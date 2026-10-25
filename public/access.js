@@ -23,6 +23,7 @@ let openConversation = publicEntry;
 let invitationToken = null;
 let codeEntry = false;
 let verificationToken = null;
+let verificationFlow = false;
 let csrf = null;
 let busy = false;
 let generation = 0;
@@ -51,7 +52,7 @@ const notificationReference = globalThis.JessieNotificationLink?.read() ?? null;
 const entries = [...fragment.entries()];
 if (entries.length === 1 && /^[A-Za-z0-9_-]{43}$/.test(entries[0][1])) {
   if (entries[0][0] === "invitation") invitationToken = entries[0][1];
-  if (entries[0][0] === "verification") verificationToken = entries[0][1];
+  if (entries[0][0] === "verification") { verificationToken = entries[0][1]; verificationFlow = true; }
 }
 const cleanEntryPath = publicEntry ? "/" : "/access";
 history.replaceState(null, "", notificationReference ? `${cleanEntryPath}#notification=${notificationReference}` : cleanEntryPath);
@@ -254,6 +255,7 @@ loginForm.addEventListener("submit", (event) => {
       const current = await request("/api/access/session");
       if (!validClientSession(current)) throw new Error("invalid_client_session");
       const unchanged = sameClientOwner(login, current);
+      verificationFlow = false;
       openConversation = true;
       signedIn(current); notice(unchanged ? "" : "La connexion a changé. Cet espace correspond à ta session actuelle.");
     } catch (error) { if (!error.stale) error.loginUnconfirmed = true; throw error; }
@@ -267,9 +269,10 @@ registrationForm.addEventListener("submit", (event) => {
     invitationToken = null; registrationForm.reset(); signedOut("C’est créé ! Ouvre l’e-mail reçu pour confirmer ton adresse, puis connecte-toi ici.");
   });
 });
-function returnToLogin() { codeEntry = false; invitationToken = null; invitationCodeForm.reset(); registrationForm.reset(); signedOut(); }
+function returnToLogin() { codeEntry = false; invitationToken = null; verificationToken = null; invitationCodeForm.reset(); registrationForm.reset(); signedOut(); element("login-email").focus(); }
 element("show-login").addEventListener("click", returnToLogin);
 element("cancel-invitation-code").addEventListener("click", returnToLogin);
+element("verification-login-button").addEventListener("click", returnToLogin);
 element("show-invitation-code").addEventListener("click", () => {
   if (busy || !visible()) return; invitationToken = null; codeEntry = true; signedOut(); element("invitation-code").focus();
 });
@@ -296,10 +299,15 @@ invitationCodeForm.addEventListener("submit", (event) => {
 });
 element("verify-email-button").addEventListener("click", () => { void submit(async () => {
   if (!verificationToken) return;
-  await request("/api/access/verify-email", { mutation: true, body: { token: verificationToken } });
-  verificationToken = null; verificationSection.hidden = true;
-  if (csrf) { signedIn(await request("/api/access/session")); notice("Ton adresse e-mail est vérifiée."); }
-  else signedOut("Ton adresse e-mail est vérifiée. Connecte-toi pour suivre la validation de ton accès.");
+  try { await request("/api/access/verify-email", { mutation: true, body: { token: verificationToken } }); }
+  catch (error) {
+    if (error.stale || ![400, 401].includes(error.status)) throw error;
+    returnToLogin();
+    notice("Ce lien de confirmation est invalide, expiré ou déjà utilisé. Connecte-toi si ton e-mail est confirmé, ou demande un nouvel e-mail ci-dessous.", true);
+    return;
+  }
+  returnToLogin();
+  notice("Ton adresse e-mail est vérifiée. Connecte-toi pour suivre la validation de ton accès.");
 }); });
 element("resend-form").addEventListener("submit", (event) => {
   event.preventDefault(); void submit(async () => {
@@ -331,6 +339,9 @@ function sessionUnavailable() {
 }
 async function refreshSession() {
   if (busy || checkingSession || !visible()) return;
+  // A mailbox link can belong to a different client than the existing cookie.
+  // Keep its explicit sign-in intent until credentials and current owner pass.
+  if (verificationFlow) { signedOut(); return; }
   checkingSession = true;
   const epoch = ++sessionRefreshEpoch;
   try {

@@ -2,6 +2,14 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
+## Correctif 1.11.3 — lien de confirmation et connexion
+
+Défaut frontend reproduit et corrigé sur `fix/invitation-access-1113` ;102tests ciblés réussis. [Périmètre et preuves](invitation-access-1113.md). Production1112 conservée. Aucun nouveau chantier d’audit général ou sauvegarde.
+
+1. Qualifier la PR exacte avec les cinq suites natives et relire les captures de vérification/connexion FR/EN320/1280. Confirmer les gardes backend inchangés et le retour possible sans rejouer le token.
+2. Fusionner puis qualifier le SHA main exact, publier le tag/release immuable1113, préparer/CHECK sur l’hébergement et recueillir le reçu avant activation.
+3. Après identité1113 rapportée, qualifier puis exécuter son writer de métadonnées, vérifier HTTP/publication et préserver les historiques. Une seule activation corrective ; Node privé24.22.1 et SQL38 inchangés.
+
 ## Correctif 1.11.2 — audit et livraison terminés
 
 **Audit et seconde revue terminés :** 24domaines/171contrôles avec disposition, corrections regroupées dans la PR139 fusionnée. Qualifications finales PR/main5/5, sept captures inspectées, publication2/2 et33 tests opérateur réussis. Source unique publiée `af352607ff7e12c41185f42b8232c72219a304cd`. [Rapport et checklist](AUDIT-MOBILE-PROFILES-1112.md), [état opérateur](REPRISE.md). Démarrage1112 désormais rapporté séparément. Les échecs initiaux et limites sont conservés, aucun nouvel audit/CI du même code à relancer.
