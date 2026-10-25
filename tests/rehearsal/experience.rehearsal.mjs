@@ -240,6 +240,7 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
           await waitUntil(() => page.execute("const dialog=document.querySelector('.crm-dialog'),image=dialog?.querySelector('.crm-profile-avatar img');return !!dialog?.open&&!!image?.complete&&image.naturalWidth>0&&dialog.querySelector('.preferences-selected .preference-choice')?.textContent===arguments[0]", catalogue.categories[0].preferences[0].fr), "actual authorized client avatar and read-only preferences in the profile", 20000);
           assert.equal(await page.execute("return !document.getElementById('composer').checkVisibility()&&document.getElementById('received-overview').checkVisibility()"), true, "viewing a profile must not select its conversation");
           assert.equal(await page.execute("const dialog=document.querySelector('.crm-dialog'),preferences=dialog.querySelector('.crm-client-preferences'),form=dialog.querySelector('.crm-profile-form');return !!(preferences.compareDocumentPosition(form)&Node.DOCUMENT_POSITION_FOLLOWING)&&document.documentElement.scrollWidth<=innerWidth+1"), true);
+          assert.equal(await page.execute("const r=document.querySelector('.crm-dialog .dialog-head button').getBoundingClientRect();return r.width>=44&&r.height>=44"), true, "the profile close action has a usable touch target");
           const after = await json(admin, "admin", `/api/chat/admin/conversations/${conversation}/messages`); assert.equal(after.data.conversation.lastReadSequence, through, "profile consultation preserves the exact unread cursor");
           await mkdir(new URL("../../artifacts/homepage/", import.meta.url), { recursive: true });
           await writeFile(new URL(`../../artifacts/homepage/experience-admin-${width}-client-profile.png`, import.meta.url), Buffer.from(await page.screenshot(), "base64"));
@@ -252,6 +253,12 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
       } finally {
         const restored = await Promise.allSettled([restore(admin), restore(adminDevice)]);
         const failure = restored.find(result => result.status === "rejected"); if (failure) throw failure.reason;
+      }
+      for (const [page, width] of [[admin, 1280], [adminDevice, 320]]) {
+        await waitUntil(() => page.execute("const button=document.getElementById('open-client-profile');return button.checkVisibility()&&!button.hidden"), "direct client profile button in the restored conversation");
+        const geometry = await page.execute("const name=document.getElementById('peer-name').getBoundingClientRect(),button=document.getElementById('open-client-profile').getBoundingClientRect();return {nameWidth:name.width,buttonWidth:button.width,buttonHeight:button.height,right:button.right,viewport:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth+1}");
+        assert.ok(geometry.nameWidth>=80&&geometry.buttonWidth>=44&&geometry.buttonHeight>=44&&geometry.right<=geometry.viewport&&!geometry.overflow, JSON.stringify(geometry));
+        await writeFile(new URL(`../../artifacts/homepage/experience-admin-${width}-client-conversation.png`, import.meta.url), Buffer.from(await page.screenshot(), "base64"));
       }
       await waitUntil(() => admin.execute("return document.getElementById('open-client-profile').checkVisibility()"), "direct profile entry in the selected conversation");
       await admin.click("#open-client-profile");

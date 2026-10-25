@@ -2,6 +2,7 @@
 globalThis.JessieI18n?.register({
   "Ouvrir le profil de {name}": "Open {name}’s profile",
   "Profil du client": "Client profile",
+  "Profil": "Profile",
   "Messages reçus": "Received messages",
   "Non lus en premier, puis les plus récents.": "Unread first, then newest first.",
   "Clients et filtres": "Clients and filters",
