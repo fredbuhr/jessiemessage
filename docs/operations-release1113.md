@@ -1,8 +1,8 @@
-# Livraison1.11.3 — publiée, préparation suspendue
+# Livraison1.11.3 — publiée, préparation et CHECK attendus
 
 Le correctif rend la connexion accessible après un lien de confirmation déjà utilisé, expiré ou mal formé. Il propose aussi une sortie explicite et garde le choix du compte jusqu’aux identifiants et à la preuve fraîche du propriétaire. Le backend, les conditions de vérification/approbation, les quotas et les comptes sont inchangés. [Périmètre et limites](invitation-access-1113.md).
 
-**Production confirmée :1.11.2. Préparation, CHECK, activation et enregistrement final1113 non effectués.** [REPRISE](REPRISE.md) reste la référence courante. La connexion directe du compte réel signalé n’a pas été observée par l’agent ; aucune réussite manuelle n’est déduite des essais synthétiques.
+**Production confirmée :1.11.2. Préparation, CHECK, activation et enregistrement final1113 non effectués.** [REPRISE](REPRISE.md) reste la référence courante. La connexion du compte signalé est désormais [rapportée réussie par l’utilisateur](verification-proofs/jm1113/hosted-login-confirmation.json), sans inspection de sa session par l’agent. Le diagnostic d’accès est clos ; aucune cause certaine de l’ancien refus n’est déduite.
 
 ## Source et qualifications acquises
 
@@ -13,11 +13,11 @@ Le correctif rend la connexion accessible après un lien de confirmation déjà 
 - Opérateur immuable : `fead96f4c8bde918dde5c72a1860fe298f47abe3` ; arbre `9d1fe014682919280837df2ec806941212afd7ed`.
 - Préparateur SHA256 : `8267f0b8169cc3857503afe16506b471b879a732d458e799b7b17a12363b1916`, relu à cette source et identique aux octets qualifiés.
 
-## Commande conservée — ne pas exécuter pendant le diagnostic
+## Prochaine action unique — préparation et CHECK
 
-**Suspendu sur instruction utilisateur :** connexion directe toujours refusée, renvoi sans e-mail reçu et page de maintenance signalés après publication. Aucune préparation1113 exécutée. Attendre le diagnostic ciblé indiqué dans REPRISE ; le bloc ci-dessous reste historique, sans autorisation courante de lancement.
+La suspension liée au diagnostic est levée après la connexion réussie rapportée. La PR fusionnée, la qualification main, le tag et le préparateur ont été relus inchangés. Aucun nouveau contrôle des identifiants n’est requis pour cette étape.
 
-Après résolution de cette attente seulement, ouvrir le [terminal Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis coller le bloc complet une seule fois. Il prépare le nouveau checkout et les lanceurs privés, puis exécute le précontrôle. Il conserve les comptes, la configuration et le checkpoint1112 ; il n’active pas le runtime et n’exécute aucune migration.
+Ouvrir le [terminal Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis coller le bloc complet une seule fois. Il prépare le nouveau checkout et les lanceurs privés, puis exécute le précontrôle. Il conserve les comptes, la configuration et le checkpoint1112 ; il n’active pas le runtime et n’exécute aucune migration.
 
 ```bash
 env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_PREPARE1113'

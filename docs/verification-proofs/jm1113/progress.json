@@ -1,5 +1,5 @@
 {
-  "status": "release1113_held_existing_account_password_recovery_pending",
+  "status": "release1113_published_access_incident_closed_host_preparation_pending",
   "branch": "fix/invitation-access-1113",
   "source": "89571636d6fde97b28b5e8aec9257801c1b71f8b",
   "tree": "e16a22043ea00908afa37cad64e5f9b421f4e5ae",
@@ -12,8 +12,8 @@
     "skipped": 0
   },
   "syntaxSources": 778,
-  "next": "User performs existing password recovery then fresh manual login; no new hosted diagnostic or release1113 preparation/activation.",
-  "manualDirectLoginResult": "user_reports_still_rejected",
+  "next": "User runs once pinned prepare1113+CHECK and supplies receipt before Manager activation; do not repeat acquired diagnosis or successful CI.",
+  "manualDirectLoginResult": "user_reports_connected",
   "run": 40231447183,
   "qualifiedPrSource": "cd54e868116d605c01c7ad09033998813f61a490",
   "qualifiedPrRun": 40231447183,
@@ -33,9 +33,9 @@
   "publicationRun": 40233214193,
   "publicationSuccessful": true,
   "releaseId": 423658747,
-  "recordedAt": "2026-10-25T21:58:53.898261+00:00",
+  "recordedAt": "2026-10-25T22:07:55.854899+00:00",
   "release1113PreparationPerformed": false,
-  "release1113ActivationHeld": true,
+  "release1113ActivationHeld": false,
   "diagnosticOperatorSource": "2e06b3b463f99fc62851aa215f73f9a0e3436913",
   "diagnosticRun": 40237166078,
   "diagnosticHostedObserved": true,
@@ -48,7 +48,10 @@
   "diagnosticPasswordMatchChecked": false,
   "diagnosticRetainedSessions": 0,
   "verificationResendNoopExplained": true,
-  "passwordRecoveryOutcome": "not_yet_reported",
-  "freshLoginOutcome": "not_yet_reported",
-  "publicRecoveryProbeRun": 40237807989
+  "passwordRecoveryOutcome": "not_separately_attested_after_instructions",
+  "freshLoginOutcome": "user_reports_connected",
+  "publicRecoveryProbeRun": 40237807989,
+  "accessIncidentClosed": true,
+  "diagnosticHoldCleared": true,
+  "activationAwaitingPreparationAndCheck": true
 }

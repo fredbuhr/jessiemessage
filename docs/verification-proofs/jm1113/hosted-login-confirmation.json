@@ -1,0 +1,20 @@
+{
+  "format": "jessiemessage-user-login-confirmation",
+  "version": 1,
+  "provenance": "user_message_after_password_recovery_instructions",
+  "reportedResult": "c'est bon je suis connecté!",
+  "loginSuccessReported": true,
+  "passwordResetCompletionSeparatelyReported": false,
+  "sessionInspectedByAgent": false,
+  "passwordInspectedByAgent": false,
+  "lastReportedProductionVersion": "1.11.2",
+  "release1113PreparationPerformed": false,
+  "release1113ActivationPerformed": false,
+  "accessIncidentClosedByUserConfirmation": true,
+  "next": "Resume qualified release1113 preparation and CHECK; collect receipt before Manager activation.",
+  "limitations": [
+    "The user's successful connection closes the access blocker; it does not prove the exact reason for earlier credential refusals.",
+    "No claim of a newly inspected session, password comparison, conversation round trip or media test.",
+    "The second startup cause and its possible relation to provider maintenance remain unknown."
+  ]
+}

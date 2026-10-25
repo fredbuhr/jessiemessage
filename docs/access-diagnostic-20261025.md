@@ -1,6 +1,6 @@
-# Diagnostic d’accès du25octobre — production1112 conservée
+# Diagnostic d’accès du25octobre — clos par connexion réussie rapportée
 
-L’utilisateur signale désormais un refus de connexion directe après confirmation et approbation déclarées, l’absence d’e-mail après renvoi et une page de maintenance Infomaniak sur `/admin/`. Il déclare ne pas avoir exécuté la préparation1113. Cette préparation, son CHECK, l’activation et le writer restent suspendus. Le correctif frontend1113 publié garde sa qualification et son tag immuable, sans preuve de résolution du refus des identifiants.
+L’utilisateur avait signalé un refus de connexion directe après confirmation et approbation déclarées, l’absence d’e-mail après renvoi et une page de maintenance Infomaniak sur `/admin/`. Il déclare ne pas avoir exécuté la préparation1113. Ils ont été suspendus pendant ce diagnostic ; la connexion réussie désormais rapportée lève cette attente. Préparation, CHECK, activation et writer1113 ne sont pas encore effectués. Le correctif frontend1113 publié garde sa qualification et son tag immuable, sans déploiement1113 nécessaire à la connexion réussie rapportée sur1112.
 
 ## Constats acquis et limites
 
@@ -42,7 +42,7 @@ PY_DIAG_ACCES
 
 Recueillir uniquement le JSON ou le court message d’arrêt. Un arrêt ne demande pas de copie du journal, de mot de passe, de code d’invitation ou de lien de confirmation. Le relevé corrigé est désormais acquis ; conserver sa synthèse ci-dessous, sans relancer cette commande. Ne pas déployer1113 par défaut, déplacer son tag ou recréer le compte pour diagnostiquer.
 
-## Résultat reçu à22:51:52Paris et prochaine action
+## Résultat reçu à22:51:52Paris et parcours proposé ensuite
 
 La [synthèse anonymisée du relevé](verification-proofs/jm1113/hosted-account-diagnostic-summary.json) confirme un compte client actif, e-mail confirmé, approbation valide, invitation consommée une fois, accès non expiré, état d’authentification présent et horloges alignées. Toutes les conditions de compte vérifiables sans mot de passe passent. Aucune session n’est conservée pour ce compte à cet instant. Le formulaire lit le mot de passe avant son effacement ; le code ne prouve pas une perte du champ à la soumission. Le diagnostic n’a pas vérifié le mot de passe : une différence de mot de passe ou d’identifiants soumis reste possible, sans être une cause démontrée ; un refus avant insertion reste possible également.
 
@@ -52,10 +52,16 @@ Deux enregistrements de démarrage de la même identité1112/af352607/Node24.22.
 
 La [récupération publique](https://jessiemessage.com/recover) et sa capacité sont [vérifiées anonymement](verification-proofs/jm1113/client-recovery-public-observation.json) à22:56:16Paris : page200, formulaire présent, service200 et activé, mot de passe8–128caractères. Les lectures GET n’ont demandé aucun e-mail, modifié aucun compte et n’attestent pas encore une récupération complète réelle.
 
-Prochaine action personnelle unique :
+Parcours personnel proposé après ce relevé :
 
 1. Ouvrir `https://jessiemessage.com/recover`, saisir l’adresse du compte déjà examiné et cliquer **Recevoir un lien**.
 2. Ouvrir l’e-mail de récupération, choisir et confirmer un nouveau mot de passe, puis cliquer **Enregistrer mon mot de passe**. La transaction change le mot de passe et sa génération et révoque les anciennes sessions ; elle conserve le compte, son approbation et ses conversations.
 3. Revenir sur `https://jessiemessage.com/access`, saisir manuellement l’adresse et le nouveau mot de passe, puis rapporter le résultat de la connexion.
 
-Ne transmettre aucun mot de passe ni lien privé dans la discussion. La récupération et la connexion finales sont encore non observées ; préparation et activation1113 restent suspendues. Aucun nouveau script hébergé, statut SQL à réparer ou compte à recréer n’est demandé à ce stade.
+Ne transmettre aucun mot de passe ni lien privé dans la discussion. Les détails de la réinitialisation n’ont pas été séparément attestés ; le retour final de connexion réussie ci-dessous clôt le blocage. Aucun nouveau script de diagnostic, statut SQL à réparer ou compte à recréer n’est demandé.
+
+## Clôture et reprise de livraison
+
+L’utilisateur rapporte **« c’est bon je suis connecté ! »** après les instructions de récupération. [Reçu de confirmation](verification-proofs/jm1113/hosted-login-confirmation.json). Connexion réussie rapportée sur la dernière version1112 connue, aucune préparation1113 ayant été exécutée. L’agent n’a inspecté ni mot de passe ni cookie/session réelle ; ce retour ne démontre pas la cause exacte du refus initial ni chaque étape de récupération séparément. Le renvoi sans nouvel e-mail reste expliqué par la confirmation déjà consommée et la cause du second démarrage demeure inconnue.
+
+Le diagnostic d’accès est clos. Reprendre uniquement la [préparation1113 et son CHECK](operations-release1113.md), avant toute activation Manager. Aucun diagnostic ou e-mail à relancer, aucun nouveau compte ou changement de version fonctionnelle supplémentaire à créer pour ce résultat.
