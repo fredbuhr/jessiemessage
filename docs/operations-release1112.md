@@ -1,6 +1,8 @@
-# Livraison 1.11.2 — démarrage rapporté, enregistrement final attendu
+# Livraison 1.11.2 — terminée
 
-L’[audit frontend/backend](AUDIT-MOBILE-PROFILES-1112.md) et sa seconde revue de couverture sont terminés :24domaines et171contrôles avec disposition, sans défaut de code bloquant identifié restant. Les corrections sont regroupées dans une seule version. **Préparation, CHECK et démarrage1112 acquis selon les retours utilisateur ; enregistrement final des métadonnées encore attendu.** [REPRISE](REPRISE.md) reste la référence courante. Ne rejouer ni préparation, CHECK ou redémarrage.
+L’[audit frontend/backend](AUDIT-MOBILE-PROFILES-1112.md) et sa seconde revue de couverture sont terminés :24domaines et171contrôles avec disposition, sans défaut de code bloquant identifié restant. **Application, publication et checkpoint privé alignés en1.11.2 selon le [reçu final utilisateur](verification-proofs/jm1112/hosted-metadata.json)**, `release1112_metadata_recorded`, identité exacte et `publicReady:true`. Démarrage1792946135648, soit **25/10/2026 17:35:35.648 à Paris**, concordant avec l’UI à la seconde. Checkpoint SHA256 `3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf72aa26cd080b5a0ac2f400f`. Historiques1111/1110/1101/1100/190/184, état actif antérieur et autres blocs préservés ; métadonnées seules, sans nouveau redémarrage. [REPRISE](REPRISE.md) reste la référence courante.
+
+**Aucune prochaine action de livraison. Ne rejouer ni préparation, CHECK, activation ou writer.** Les commandes ci-dessous sont historiques ; les limites physiques, de charge et de sauvegarde gardent leur portée.
 
 ## Source et qualifications acquises
 
@@ -11,13 +13,13 @@ L’[audit frontend/backend](AUDIT-MOBILE-PROFILES-1112.md) et sa seconde revue 
 - Opérateur immuable : `7134e6e22de4f9f4c4deb2ff89512f6e1335be01` ; arbre `4a53069b4a2142892c531a07f34c6e491afd8cb1`.
 - Préparateur SHA256 : `5fe4cbef6da83788f635ac7c46e7febfd550887bd7c013c23b772561251f5e9c`, relu à cette source et identique au fichier qualifié.
 
-## Prochaine action unique — enregistrement final
+## Historique — enregistrement final acquis, ne pas rejouer
 
 L’[identité démarrée1112](verification-proofs/jm1112/hosted-identity.json) est rapportée : version1.11.2, sourceaf352607…, Nodev24.22.1, **25/10/2026 17:35:35 à Paris** (UTC+01 ; UI à la seconde). Aucun accès direct aux champs Manager ou au processus par l’agent n’en est déduit. Ne pas redémarrer à nouveau.
 
-Writer immuable **`67c79dc6a2225580ef783ff4e3e85742a8bb9554`**, arbre `78fa7b598b8c3b6cc48b19c20804cd0540f71b9b`, SHA256 **`1874b6b98d2a75c15ab116842f5c92190bb8c6ef23d972da597d336d1ff65919`**. [Qualification native40213097595](https://github.com/fredbuhr/jessiemessage/actions/runs/40213097595) réussie1/1, tentative1, **17/17 tests**,0échec/omission, Nodev24.22.1. [Preuve](verification-proofs/jm1112/writer-final-native.json). Le writer est lié au checkpoint1111, au reçu1112 et à la seconde de démarrage rapportée ; les millisecondes proviendront du journal réel.
+Writer immuable **`67c79dc6a2225580ef783ff4e3e85742a8bb9554`**, arbre `78fa7b598b8c3b6cc48b19c20804cd0540f71b9b`, SHA256 **`1874b6b98d2a75c15ab116842f5c92190bb8c6ef23d972da597d336d1ff65919`**. [Qualification native40213097595](https://github.com/fredbuhr/jessiemessage/actions/runs/40213097595) réussie1/1, tentative1, **17/17 tests**,0échec/omission, Nodev24.22.1. [Preuve](verification-proofs/jm1112/writer-final-native.json). Le writer est lié au checkpoint1111, au reçu1112 et à la seconde de démarrage rapportée ; le reçu final rapporte désormais les millisecondes du journal réel, sans changer la précision initiale du relevé UI.
 
-Dans le [terminal Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), exécuter une fois :
+La commande déjà exécutée une fois dans le [terminal Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal) était :
 
 ```bash
 env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD1112'
@@ -34,9 +36,9 @@ exec(compile(code, '<enregistrement1112>', 'exec'), {'__name__': '__main__'})
 PY_RECORD1112
 ```
 
-Il vérifie source/arbre/tag, lanceurs, Node privé, lock, migrations, bundle de configuration, précontrôles, démarrage, HTTP publics et publication avant l’écriture gardée des seules métadonnées et leur relecture. Il préserve le bloc actif1111 complet, les historiques1111/1110/1101/1100/190/184 et les autres blocs. Aucun SQL, démarrage ou changement Manager. Le repli185 conserve sa qualificationSQL38 distincte, sans garantie de lecture du nouveau snapshot publicformat2.
+Il a vérifié source/arbre/tag, lanceurs, Node privé, lock, migrations, bundle de configuration, précontrôles, démarrage, HTTP publics et publication avant l’écriture gardée des seules métadonnées et leur relecture. Le résultat rapporte le bloc actif1111 complet, les historiques1111/1110/1101/1100/190/184 et les autres blocs préservés. Aucun SQL, démarrage ou changement Manager. Le repli185 conserve sa qualificationSQL38 distincte, sans garantie de lecture du nouveau snapshot publicformat2.
 
-Recueillir le JSON `release1112_metadata_recorded`, l’identité exacte, `publicReady:true`, `noRestart:true` et la nouvelle empreinte du checkpoint. Ce résultat est encore **non reçu**. Un refus ou une interruption doit être diagnostiqué à partir du résultat affiché ; ne pas relancer automatiquement.
+Le [JSON final reçu](verification-proofs/jm1112/hosted-metadata.json) renvoie `release1112_metadata_recorded`, l’identité exacte, `publicReady:true`, `noRestart:true` et la nouvelle empreinte du checkpoint. Le writer est acquis dans sa portée ; ne pas le rejouer. Aucun accès direct agent à l’hôte privé ou inventaire SQL indépendant n’en est déduit.
 
 ## Historique — activation rapportée, ne pas rejouer
 
@@ -104,7 +106,7 @@ Le helper refuse avant mutation un checkpoint autre que `41a51d38a50c3ff07b1878a
 
 ## Limites conservées
 
-L’activation1112 est rapportée et le writer final est qualifié ; seuls son exécution hébergée et son reçu restent attendus. Cet enregistrement n’est pas une nouvelle version applicative et ne redémarre pas le service.
+Préparation, CHECK, activation et enregistrement final1112 sont acquis selon les preuves séparées. Une seule mise à jour applicative a été réalisée ; l’enregistrement final n’a provoqué aucun nouveau redémarrage. Aucune opération de livraison restante.
 
 L’avatar public nécessite un choix explicite de Jessie : enregistrer sa photo puis **Mettre à jour le profil public**. Aucun profil privé n’est publié automatiquement. L’ancien snapshotformat1 reste lisible par1112 ; le backend1111 ne relit pas le nouveauformat2, donc un retour ancien n’offre pas une restitution complète de ce nouveau profil public. Le repli185 compatibleSQL38 reste séparément qualifié et jamais démarré ; ne démarrer ni184 ni172.
 

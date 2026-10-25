@@ -1,7 +1,7 @@
 {
   "format": "jessiemessage-1112-full-audit-checklist",
   "version": 1,
-  "status": "audit_complete_go_for_single_release_1112",
+  "status": "audit_complete_release1112_finalized",
   "baseline": {
     "application": "1.11.1",
     "source": "80b7fbf5f9b5ba32ac1aae817043126e93025946",
@@ -1313,7 +1313,7 @@
       "proof": "visual-review.json",
       "imagesInspected": 7
     },
-    "deployment": "reported_started_metadata_pending",
+    "deployment": "reported_verified_metadata_recorded",
     "main": {
       "source": "af352607ff7e12c41185f42b8232c72219a304cd",
       "tree": "655f759079979d608b0ec1c62a7c892311899515",
@@ -1336,12 +1336,16 @@
       "preparation": "reported_success",
       "check": "reported_success_exit0",
       "activation": "reported_success",
-      "metadataWriter": "native_qualified17_tests_not_executed",
+      "metadataWriter": "reported_success_metadata_only",
       "currentProduction": "1.11.2",
-      "nextAction": "Execute once the pinned metadata writer and observe its receipt; no new restart.",
+      "nextAction": "none_for_this_release; do not replay successful deployment operations.",
       "proof": "hosted-preparation.json",
       "identityProof": "hosted-identity.json",
-      "writerProof": "writer-final-native.json"
+      "writerProof": "writer-final-native.json",
+      "metadataProof": "hosted-metadata.json",
+      "publicReady": true,
+      "checkpointVersion": "1.11.2",
+      "checkpointSha256": "3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf72aa26cd080b5a0ac2f400f"
     }
   },
   "limits": [
@@ -1366,9 +1370,9 @@
     "allItemsHaveDisposition": true,
     "unresolvedCodeDefects": [],
     "scopeIntegrityProof": "scope-integrity.json",
-    "deployment": "reported_started_metadata_pending",
+    "deployment": "reported_verified_metadata_recorded",
     "note": "Every current frontend/backend path belongs to a reviewed domain. No claim of full line-by-line rereading, physical-device conformance or zero unknown defects.",
     "mainAndPublicationQualified": true,
-    "remainingSteps": "Execute qualified metadata writer once and observe receipt. Preparation, CHECK and startup already reported successful; do not replay."
+    "remainingSteps": "none_for_this_release; physical-device and historical limits remain explicit and are not counted as passed."
   }
 }

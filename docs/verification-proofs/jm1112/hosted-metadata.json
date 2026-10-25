@@ -1,0 +1,38 @@
+{
+  "reportedBy": "user terminal output",
+  "operator": "67c79dc6a2225580ef783ff4e3e85742a8bb9554",
+  "writerSha256": "1874b6b98d2a75c15ab116842f5c92190bb8c6ef23d972da597d336d1ff65919",
+  "receipt": {
+    "status": "release1112_metadata_recorded",
+    "version": "1.11.2",
+    "source": "af352607ff7e12c41185f42b8232c72219a304cd",
+    "tree": "655f759079979d608b0ec1c62a7c892311899515",
+    "metadataOnly": true,
+    "noRestart": true,
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "release": {
+      "version": "1.11.2",
+      "commit": "af352607ff7e12c41185f42b8232c72219a304cd",
+      "nodeVersion": "v24.22.1",
+      "startedAt": 1792946135648
+    },
+    "publicReady": true,
+    "rollbackRelease": "1.8.5",
+    "rollbackAfterMigrationQualified": true,
+    "rollbackQualificationScope": "sql38_precheck_only",
+    "publicProfileDowngradeQualified": false,
+    "restart184Allowed": false,
+    "restart172Allowed": false,
+    "historicalRelease1111Preserved": true,
+    "historicalRelease1110Preserved": true,
+    "historicalRelease1101Preserved": true,
+    "historicalRelease1100Preserved": true,
+    "historicalRelease190Preserved": true,
+    "historicalRelease184Preserved": true,
+    "priorActivePreserved": true,
+    "otherBlocksPreserved": true,
+    "checkpointSha256": "3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf72aa26cd080b5a0ac2f400f"
+  },
+  "scope": "Qualified writer reports startup-log identity, public HTTP readiness, immutable publication and guarded checkpoint metadata replacement with readback. No restart or SQL operation. No direct agent inspection of private host, SQL, Manager or PID inferred. Rollback qualification remains SQL38 only; public snapshotformat2 downgrade is not qualified."
+}

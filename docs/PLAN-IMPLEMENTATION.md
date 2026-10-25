@@ -2,7 +2,7 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Correctif 1.11.2 — audit complet puis une seule mise à jour
+## Correctif 1.11.2 — audit et livraison terminés
 
 **Audit et seconde revue terminés :** 24domaines/171contrôles avec disposition, corrections regroupées dans la PR139 fusionnée. Qualifications finales PR/main5/5, sept captures inspectées, publication2/2 et33 tests opérateur réussis. Source unique publiée `af352607ff7e12c41185f42b8232c72219a304cd`. [Rapport et checklist](AUDIT-MOBILE-PROFILES-1112.md), [état opérateur](REPRISE.md). Démarrage1112 désormais rapporté séparément. Les échecs initiaux et limites sont conservés, aucun nouvel audit/CI du même code à relancer.
 
@@ -10,7 +10,7 @@ Préparation et CHECK1112 acquis selon le [reçu utilisateur](verification-proof
 
 Démarrage1112 [rapporté par l’utilisateur](verification-proofs/jm1112/hosted-identity.json) :1.11.2, sourceaf352607…, Node24.22.1,25octobre17:35:35Paris (UTC+01). Writer lié à cette identité [qualifié17/17 natifs](verification-proofs/jm1112/writer-final-native.json). Ne pas rejouer l’activation.
 
-1. Exécuter une fois la [commande d’enregistrement final1112](operations-release1112.md#prochaine-action-unique--enregistrement-final), puis recueillir le reçu. Critère : identité exacte, HTTP/publication prêts, checkpoint concordant, états antérieurs préservés et aucun nouveau redémarrage. Les appareils physiques, Safari/Firefox/Push et A10/A11/A12 gardent leurs limites.
+**Livraison1112 close selon le [reçu final utilisateur](verification-proofs/jm1112/hosted-metadata.json)** : identité exacte, `publicReady:true`, métadonnées seules, aucun redémarrage ; checkpoint1112 SHA256 `3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf72aa26cd080b5a0ac2f400f`. Démarrage réel1792946135648, soit25octobre17:35:35.648Paris, concordant avec l’UI à la seconde. Historiques et autres blocs préservés. **Aucune étape de livraison restante.** Ne rejouer ni préparation, CHECK, activation, writer ou CI verte. Les appareils physiques, Safari/Firefox/Push, sauvegarde reportée et A10/A11/A12 gardent leurs limites ; aucun chantier supplémentaire ouvert automatiquement.
 
 ## Correctif 1.11.1 — livraison terminée
 

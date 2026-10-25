@@ -1,5 +1,5 @@
 {
-  "status": "release1112_startup_reported_writer_native_qualified_execution_pending",
+  "status": "release1112_finalized",
   "branch": "fix/mobile-identity-1112",
   "source": "af352607ff7e12c41185f42b8232c72219a304cd",
   "tree": "655f759079979d608b0ec1c62a7c892311899515",
@@ -13,7 +13,7 @@
     "fail": 0,
     "skipped": 0
   },
-  "next": "User executes once the pinned record1112 command; observe receipt before marking checkpoint aligned. No new restart, preparation/CHECK or application CI.",
+  "next": "No technical release step remains; do not replay preparation, CHECK, activation, metadata recording or green CI. Explicit physical/historical limits remain.",
   "priorQualifiedRun": 40206988826,
   "prMerged": true,
   "qualifiedPrSource": "e35d56f6fb849a9096a2accd01362f77045849d7",
@@ -34,7 +34,7 @@
   "releaseId": 423509844,
   "preparerSha256": "5fe4cbef6da83788f635ac7c46e7febfd550887bd7c013c23b772561251f5e9c",
   "mainQualificationSuccessful": true,
-  "recordedAt": "2026-10-25T16:47:33.876841+00:00",
+  "recordedAt": "2026-10-25T16:57:38.239105+00:00",
   "hostedPreparationReported": true,
   "hostedPreparationReceiptSha256": "eef0d3f64599ee5ccfdd1e0a5bd996daf035fa3e79cab957ef7e97a3afaea628",
   "hostedCheckExit": 0,
@@ -42,8 +42,8 @@
   "activationReported": true,
   "identityProof": "hosted-identity.json",
   "reportedStartupSecond": 1792946135,
-  "metadataRecorded": false,
-  "checkpointVersion": "1.11.1",
+  "metadataRecorded": true,
+  "checkpointVersion": "1.11.2",
   "writerBranch": "ops/record-v1.11.2",
   "writerSha256": "1874b6b98d2a75c15ab116842f5c92190bb8c6ef23d972da597d336d1ff65919",
   "writerLocalTests": {
@@ -60,5 +60,11 @@
     "fail": 0,
     "skipped": 0
   },
-  "writerNativeProof": "writer-final-native.json"
+  "writerNativeProof": "writer-final-native.json",
+  "metadataOnly": true,
+  "metadataProof": "hosted-metadata.json",
+  "noRestartOnMetadataRecord": true,
+  "publicReady": true,
+  "checkpointSha256": "3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf72aa26cd080b5a0ac2f400f",
+  "startedAt": 1792946135648
 }
