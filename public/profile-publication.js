@@ -8,7 +8,7 @@ export function createPublicationUI({ request, isCurrent, host, getSelection, ge
   const path = "/api/profile/admin/publication";
   const node = (tag, text, className) => { const value = document.createElement(tag); if (text !== undefined) ui.text(value, text); if (className) value.className = className; return value; };
   const section = node("section", undefined, "profile-publication"); section.hidden = true;
-  const title = node("h3", "Mon profil public"), help = node("p", "Cette page est visible par toute personne qui possède son lien. Publier copie les sélections affichées ci-dessus ; les modifications suivantes restent privées jusqu’à une nouvelle publication.", "profile-publication-help");
+  const title = node("h3", "Mon profil public"), help = node("p", "Cette page est visible par toute personne qui possède son lien. Publier copie les sélections affichées et l’avatar enregistré. Pour changer la photo publique, enregistre d’abord ton avatar puis mets à jour ce profil.", "profile-publication-help");
   const nameLabel = node("label"), name = node("input"); name.type = "text"; name.maxLength = 64; name.autocomplete = "off"; nameLabel.append(node("span", "Nom affiché sur la page"), name);
   const bioLabel = node("label"), bio = node("textarea"); bio.maxLength = 1000; bio.rows = 4; bioLabel.append(node("span", "Quelques mots sur moi"), bio);
   const length = node("p", "1 000 caractères maximum.", "profile-publication-help");

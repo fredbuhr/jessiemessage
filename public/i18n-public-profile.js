@@ -12,6 +12,7 @@ globalThis.JessieI18n?.register({
   "Réessayer": "Try again",
   "Mon profil public": "My public profile",
   "Cette page est visible par toute personne qui possède son lien. Publier copie les sélections affichées ci-dessus ; les modifications suivantes restent privées jusqu’à une nouvelle publication.": "Anyone with the link can see this page. Publishing copies the selections shown above; later changes stay private until you publish again.",
+  "Cette page est visible par toute personne qui possède son lien. Publier copie les sélections affichées et l’avatar enregistré. Pour changer la photo publique, enregistre d’abord ton avatar puis mets à jour ce profil.": "Anyone with the link can see this page. Publishing copies the displayed selections and saved avatar. To change the public photo, save your avatar first, then update this profile.",
   "Nom affiché sur la page": "Name displayed on the page",
   "Quelques mots sur moi": "A few words about me",
   "1 000 caractères maximum.": "Up to 1,000 characters.",

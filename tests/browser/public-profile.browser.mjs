@@ -5,6 +5,7 @@ import { createServer } from "node:http";
 import { startWebDriver, waitUntil } from "./webdriver.mjs";
 import catalogue from "../../public/preferences-catalogue.json" with { type: "json" };
 const entry = catalogue.categories[0].preferences[0], second = catalogue.categories[1].preferences[0];
+const avatarJpeg = Buffer.from("/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAACAAIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDlqKKKo9M//9k=", "base64");
 const files = ["public-profile.html", "public-profile.js", "public-profile.css", "public-profile-model.js", "profile-publication.js", "i18n-public-profile.js", "preferences-model.js", "preferences-catalogue.json", "i18n-preferences.js", "i18n.js", "i18n.css", "entry.css", "brand/brand.css", "brand/icon-128.png", "brand/icon-192.png"];
 async function capture(page, name) {
   const directory = new URL("../../artifacts/public-profile/", import.meta.url); await mkdir(directory, { recursive: true });
@@ -12,12 +13,12 @@ async function capture(page, name) {
 }
 async function fixture() {
   const resources = new Map(await Promise.all(files.map(async file => [`/${file}`, await readFile(new URL(`../../public/${file}`, import.meta.url))])));
-  const calls = [], failures = []; let state = { version: "0", published: false, displayName: "Jessie", bio: "", catalogueVersion: catalogue.meta.version, selectedIds: [] }, mode = "normal";
+  const calls = [], failures = []; let state = { version: "0", published: false, displayName: "Jessie", bio: "", catalogueVersion: catalogue.meta.version, selectedIds: [] }, mode = "normal", avatarMode = "normal";
   const publicValue = () => ({ displayName: state.displayName, bio: state.bio, catalogueVersion: state.catalogueVersion, selectedIds: state.selectedIds });
   const adminHTML = '<!doctype html><html lang="fr"><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/entry.css"><link rel="stylesheet" href="/public-profile.css"><script src="/i18n.js" defer></script><script type="module" src="/fixture.js"></script></head><body><main id="host"></main></body></html>';
   const script = `import {createPublicationUI} from '/profile-publication.js';window.__owner=true;window.__selection=${JSON.stringify([entry.id])};window.__publicationErrors=[];window.addEventListener('error',()=>__publicationErrors.push('error'));window.addEventListener('unhandledrejection',()=>__publicationErrors.push('unhandled'));window.__publication=createPublicationUI({host:document.getElementById('host'),getName:()=>'<img src=x onerror=alert(1)>',getSelection:()=>window.__selection,isCurrent:()=>window.__owner,request:async(path,options)=>{const response=await fetch(path,{method:options.mutation?'POST':'GET',signal:options.signal,headers:{'Content-Type':'application/json'},...(options.body?{body:JSON.stringify(options.body)}:{})});const value=await response.json();if(!response.ok)throw Object.assign(new Error('request'),{status:response.status,code:value.error});return value;}});window.__publication.load();`;
   const server = createServer((request, response) => { void (async () => {
-    const path = new URL(request.url, "http://localhost").pathname; response.setHeader("Cache-Control", "no-store");
+    const url = new URL(request.url, "http://localhost"), path = url.pathname; response.setHeader("Cache-Control", "no-store");
     response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'");
     if (path === "/admin-fixture") { response.setHeader("Content-Type", "text/html"); response.end(adminHTML); return; }
     if (path === "/fixture.js") { response.setHeader("Content-Type", "text/javascript"); response.end(script); return; }
@@ -31,13 +32,22 @@ async function fixture() {
       }
       response.end(JSON.stringify(state)); return;
     }
-    if (path === "/api/public/jessie") { response.setHeader("Content-Type", "application/json"); if (!state.published) { response.writeHead(404); response.end(JSON.stringify({ error: "not_found" })); } else response.end(JSON.stringify(publicValue())); return; }
+    if (path === "/api/public/jessie") {
+      response.setHeader("Content-Type", "application/json");
+      if (!state.published) { response.writeHead(404); response.end(JSON.stringify({ error: "not_found" })); }
+      else { if (avatarMode !== "none") response.setHeader("X-Jessie-Avatar-Version", state.version); response.end(JSON.stringify(publicValue())); }
+      return;
+    }
+    if (path === "/api/public/jessie/avatar") {
+      if (!state.published || avatarMode !== "normal" || url.searchParams.get("v") !== state.version) { response.writeHead(404); response.end(); return; }
+      response.setHeader("Content-Type", "image/jpeg"); response.end(avatarJpeg); return;
+    }
     const file = path === "/jessie" ? "/public-profile.html" : path;
     if (resources.has(file)) { response.setHeader("Content-Type", file.endsWith(".html") ? "text/html" : file.endsWith(".css") ? "text/css" : file.endsWith(".json") ? "application/json" : file.endsWith(".png") ? "image/png" : "text/javascript"); response.end(resources.get(file)); return; }
     response.writeHead(404); response.end();
   })().catch(error => { failures.push(error.message); response.destroy(); }); });
   await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
-  return { origin: `http://127.0.0.1:${server.address().port}`, calls, failures, get state() { return state; }, set state(value) { state = value; }, mode(value) { mode = value; }, async close() { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); } };
+  return { origin: `http://127.0.0.1:${server.address().port}`, calls, failures, get state() { return state; }, set state(value) { state = value; }, mode(value) { mode = value; }, avatarMode(value) { avatarMode = value; }, async close() { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); } };
 }
 test("real Chrome public Jessie profile: public snapshot only, safe text, FR/EN and mobile width; unpublish is unavailable", { timeout: 120000 }, async () => {
   const driver = await startWebDriver(); let source;
@@ -48,6 +58,9 @@ test("real Chrome public Jessie profile: public snapshot only, safe text, FR/EN 
       try {
         await page.navigate("/jessie"); await waitUntil(() => page.execute("return !document.getElementById('public-profile-content').hidden"), "public profile displayed");
         assert.equal(await page.execute("return document.title"), "Jessie — Découvrir mon univers");
+        await waitUntil(() => page.execute("return document.querySelector('#public-profile-portrait img')?.naturalWidth>0"), "published avatar replaces the app logo");
+        assert.equal(await page.execute("return document.querySelector('#public-profile-portrait img').getAttribute('src')"), "/api/public/jessie/avatar?v=1");
+        assert.equal(await page.execute("return !!document.querySelector('#public-profile-portrait img[src*=\"/brand/\"]')"), false);
         assert.equal(await page.execute("return document.getElementById('public-profile-name').textContent"), source.state.displayName);
         assert.equal(await page.execute("return document.querySelectorAll('#public-profile-bio script,#public-profile-name img').length"), 0);
         assert.equal(await page.execute("return document.querySelectorAll('.public-preference-list li').length"), 2);
@@ -61,7 +74,7 @@ test("real Chrome public Jessie profile: public snapshot only, safe text, FR/EN 
         assert.equal(await page.execute("return document.title"), "Jessie — Découvrir mon univers");
         source.state = { ...source.state, displayName: "Jessie", bio: "Bienvenue dans mon univers.\nRetrouvons-nous dans notre espace privé." };
         await page.navigate("/jessie"); await waitUntil(() => page.execute("return !document.getElementById('public-profile-content').hidden"), "neutral public profile capture");
-        await page.execute("JessieI18n.setLanguage('fr')"); await capture(page, `public-${width}-fr.png`);
+        await waitUntil(() => page.execute("return document.querySelector('#public-profile-portrait img')?.naturalWidth>0"), "avatar ready for capture"); await page.execute("JessieI18n.setLanguage('fr')"); await capture(page, `public-${width}-fr.png`);
         await page.execute("JessieI18n.setLanguage('en')"); await capture(page, `public-${width}-en.png`);
         source.state = { ...source.state, published: false }; await page.navigate("/jessie");
         await waitUntil(() => page.execute("return !document.getElementById('public-profile-retry').hidden"), "hidden profile unavailable");
@@ -104,5 +117,23 @@ test("real Chrome publication requires explicit snapshot, preserves hidden draft
     assert.equal(await page.execute("return document.documentElement.scrollWidth<=innerWidth"), true);
     await page.execute("window.__publication.close()"); assert.equal(await page.execute("return document.querySelector('.profile-publication textarea').value"), "");
     assert.deepEqual(await page.execute("return window.__publicationErrors"), []); assert.deepEqual(source.failures, []);
+  } finally { await page?.close(); await source?.close(); await driver.close(); }
+});
+
+
+test("real Chrome public avatar falls back to initials for legacy or unavailable snapshots without hiding the profile", { timeout: 60000 }, async () => {
+  const driver = await startWebDriver(); let source, page;
+  try {
+    source = await fixture(); source.state = { ...source.state, version: "1", published: true, displayName: "Jessie", selectedIds: [entry.id] };
+    page = await driver.browser({ origin: source.origin, width: 320 });
+    for (const mode of ["none", "missing"]) {
+      source.avatarMode(mode); await page.navigate("/jessie");
+      await waitUntil(() => page.execute("return !document.getElementById('public-profile-content').hidden"), "public preferences remain available without a photo");
+      assert.equal(await page.execute("return document.getElementById('public-profile-portrait').textContent"), "J");
+      assert.equal(await page.execute("return !!document.querySelector('#public-profile-portrait img')"), false);
+      assert.equal(await page.execute("return document.querySelectorAll('.public-preference-list li').length"), 1);
+      assert.equal(await page.execute("return document.documentElement.scrollWidth<=innerWidth"), true);
+    }
+    assert.deepEqual(source.calls, []); assert.deepEqual(source.failures, []);
   } finally { await page?.close(); await source?.close(); await driver.close(); }
 });

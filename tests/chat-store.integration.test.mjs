@@ -107,8 +107,96 @@ test("real MariaDB private text chat persistence (synthetic disposable database 
       await store.deleteMessage({ ...request(b, "client", { now: now + 1 }), messageId: b2.id });
       await store.deleteMessage({ ...request(b, "client", { now: now + 1 }), messageId: b1.id });
       assert.deepEqual((await store.readInbox({ ...options, limit: 100 })).items.map(item => item.message.id.toString("hex")), [c2, a1].map(message => message.id.toString("hex")), "clients without a visible incoming message are absent");
+      for (const status of ["suspended", "revoked", "deleted"]) {
+        await connection.query("UPDATE users SET status = ? WHERE id = ?", [status, c.client.id]);
+        const retained = (await store.readInbox({ ...options, limit: 100 })).items.find(item => item.conversation.clientId.equals(c.client.id));
+        assert.ok(retained.message.id.equals(c2.id), "the assigned administrator can retain an inactive client's received history");
+        assert.equal(retained.conversation.canSend, false);
+      }
       await assert.rejects(store.readInbox({ ...options, tokenHash: a.client.tokenHash }), errorCode("CHAT_FORBIDDEN"));
       await assert.rejects(store.readInbox({ ...options, cursor: "bad" }), errorCode("CHAT_STORE_INPUT"));
+    });
+
+    await t.test("received inbox rechecks the selected client and administrator assignment after a client-lock wait", async () => {
+      for (const field of ["admin_id", "client_id"]) {
+        const fixture = await pair(), replacement = await user(field === "admin_id" ? "admin" : "client");
+        await send(fixture);
+        let selected;
+        const selectedRows = new Promise(resolve => { selected = resolve; });
+        const observedStore = createChatStore({ getConnection: async () => {
+          const current = await pool.getConnection();
+          return { ...current, query: async (...args) => {
+            const result = await current.query(...args);
+            if (args[0].includes("AS inbox_unread")) selected();
+            return result;
+          } };
+        } });
+        await connection.beginTransaction();
+        let pending;
+        try {
+          await connection.query("SELECT id FROM users WHERE id = ? FOR UPDATE", [fixture.client.id]);
+          pending = observedStore.readInbox({ tokenHash: fixture.admin.tokenHash, now });
+          const rejection = assert.rejects(pending, errorCode("CHAT_NOT_FOUND"));
+          await selectedRows;
+          await connection.query(`UPDATE conversations SET ${field} = ? WHERE id = ?`, [replacement.id, fixture.conversationId]);
+          await connection.commit();
+          await rejection;
+        } finally { try { await connection.rollback(); } catch {} if (pending) await pending.catch(() => {}); }
+      }
+    });
+
+    await t.test("received inbox refuses an actor session that expires while waiting for a client before decorating private messages", async () => {
+      const fixture = await pair(); await send(fixture);
+      await connection.query("UPDATE sessions SET expires_at = ? WHERE id = ?", [sqlDate(now + 1000), fixture.admin.sessionId]);
+      let currentTime = now, selected, decorated = false;
+      const selectedRows = new Promise(resolve => { selected = resolve; });
+      const observedStore = createChatStore({ getConnection: async () => {
+        const current = await pool.getConnection();
+        return { ...current, query: async (...args) => {
+          const result = await current.query(...args);
+          if (args[0].includes("AS inbox_unread")) selected();
+          return result;
+        } };
+      } }, { clock: () => currentTime, decorateMessages: async (_connection, _context, rows) => { decorated = true; return rows; } });
+      await connection.beginTransaction();
+      let pending;
+      try {
+        await connection.query("SELECT id FROM users WHERE id = ? FOR UPDATE", [fixture.client.id]);
+        pending = observedStore.readInbox({ tokenHash: fixture.admin.tokenHash, now });
+        const rejection = assert.rejects(pending, errorCode("CHAT_UNAUTHORIZED"));
+        await selectedRows; currentTime = now + 1000;
+        await connection.commit();
+        await rejection;
+        assert.equal(decorated, false, "an expired actor cannot decorate or return a private preview");
+      } finally { try { await connection.rollback(); } catch {} if (pending) await pending.catch(() => {}); }
+    });
+
+    await t.test("received inbox observes current session revocation and MFA generation after the initial administrator-lock wait", async () => {
+      for (const fault of ["session", "mfa"]) {
+        const fixture = await pair(); await send(fixture);
+        let discovered;
+        const candidateRead = new Promise(resolve => { discovered = resolve; });
+        const observedStore = createChatStore({ getConnection: async () => {
+          const current = await pool.getConnection();
+          return { ...current, query: async (...args) => {
+            const result = await current.query(...args);
+            if (args[0].startsWith("SELECT user_id FROM sessions WHERE token_hash")) discovered();
+            return result;
+          } };
+        } });
+        await connection.beginTransaction();
+        let pending;
+        try {
+          await connection.query("SELECT id FROM users WHERE id = ? FOR UPDATE", [fixture.admin.id]);
+          pending = observedStore.readInbox({ tokenHash: fixture.admin.tokenHash, now });
+          const rejection = assert.rejects(pending, errorCode("CHAT_UNAUTHORIZED"));
+          await candidateRead;
+          if (fault === "session") await connection.query("UPDATE sessions SET revoked_at = ? WHERE id = ?", [sqlDate(now), fixture.admin.sessionId]);
+          else await connection.query("UPDATE admin_mfa SET version = version + 1 WHERE user_id = ?", [fixture.admin.id]);
+          await connection.commit();
+          await rejection;
+        } finally { try { await connection.rollback(); } catch {} if (pending) await pending.catch(() => {}); }
+      }
     });
 
     await t.test("read-only schema checks reject dirty history, unsigned/type drift, lost uniqueness and missing CHECK/FK enforcement", async () => {

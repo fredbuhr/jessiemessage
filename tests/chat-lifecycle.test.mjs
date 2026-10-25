@@ -887,7 +887,28 @@ test("a resumed workspace stays masked until the current session proof resolves,
   const f = harness({ intercept: (path) => hold && path.endsWith("/session") ? proof.promise : undefined });
   await flush(); assertOwner(f, 1); await f.hide(); assert.equal(f.element("workspace").hidden, true);
   hold = true; await f.show(); assert.equal(f.element("workspace").hidden, true); assert.equal(f.inspect().states.size, 1);
+  assert.equal(f.element("connection-shell").classList.contains("is-loading"), true);
+  assert.ok(f.element("session-status").textContent.includes("Retrouvons"), "a neutral connection state replaces the masked workspace");
   hold = false; proof.resolve(response(200, session())); await flush(); assertOwner(f, 1);
+  assert.equal(f.element("connection-shell").classList.contains("is-loading"), false);
+});
+
+test("initial private bootstrap shows a neutral connection shell while its first session proof is pending", async () => {
+  for (const role of ["admin", "client"]) {
+    const proof = pause(); let hold = true;
+    const actor = session(1, "A".repeat(43), role);
+    const f = harness({ currentSession: actor, intercept: path => hold && path.endsWith("/session") ? proof.promise : undefined });
+    await flush();
+    assert.equal(f.element("workspace").hidden, true);
+    assert.equal(f.element("messages").children.length, 0);
+    assert.equal(f.element("connection-shell").classList.contains("is-loading"), true);
+    assert.equal(f.element("connection-shell").getAttribute("aria-busy"), "true");
+    assert.ok(f.element("session-status").textContent.includes("Vérification"), "clearPrivate never erases the initial loading state");
+    hold = false; proof.resolve(response(200, actor)); await flush(); assertOwner(f, 1);
+    assert.equal(f.element("session-status").textContent, "");
+    assert.equal(f.element("connection-shell").getAttribute("aria-busy"), "false");
+    await f.hide();
+  }
 });
 
 test("late unauthorized photo headers cannot sign out the new owner or a hidden same-session page", async () => {
@@ -1488,6 +1509,28 @@ test("same-tab reload restores text for each role only after the conversation is
     await readyDraftFixture(reloaded);
     assert.equal(authorized, true); assert.equal(reloaded.element("message-body").value, text);
     assert.equal(posts(reloaded).length, 0); assert.equal(reloaded.inspect().selected, first.conversation().id);
+  }
+});
+
+test("bfcache return revalidates without a document reload and restores only the current owner's unsent draft", async () => {
+  for (const role of ["admin", "client"]) for (const changed of [false, true]) {
+    const store = persistentTabStore(), actor = session(1, "A".repeat(43), role), proof = pause(); let hold = false;
+    const f = harness({ currentSession: actor, draftStorage: store, intercept: path => hold && path.endsWith("/session") ? proof.promise : undefined });
+    await readyDraftFixture(f);
+    if (role === "admin") await f.context.selectConversation(f.conversation().id);
+    const draft = `Unsent ${role} draft before browser Back`;
+    await enterPersistentDraft(f, draft); await f.event("pagehide");
+    assert.equal(f.inspect().states.size, 0); assert.equal(f.element("message-body").value, "");
+    assert.equal(f.element("connection-shell").classList.contains("is-loading"), true);
+    if (changed) f.state.currentSession = session(2, "B".repeat(43), role);
+    hold = true; await f.event("pageshow", { persisted: true });
+    assert.equal(f.element("workspace").hidden, true); assert.equal(f.element("messages").children.length, 0);
+    assert.equal(f.element("message-body").value, ""); assert.deepEqual(f.redirects, [], "browser Back does not reload the document");
+    hold = false; proof.resolve(response(200, f.state.currentSession)); await readyDraftFixture(f);
+    assertOwner(f, changed ? 2 : 1, changed ? "B".repeat(43) : "A".repeat(43));
+    assert.equal(f.element("message-body").value, changed ? "" : draft);
+    assert.equal(posts(f).length, 0, "a restored draft is never sent automatically");
+    await f.hide();
   }
 });
 

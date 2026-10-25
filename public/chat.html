@@ -30,7 +30,7 @@
   <body>
     <div class="page">
       <header class="topbar">
-        <a class="brand" href="/" aria-label="JessieMessage"><span class="brandmark"><img src="/brand/icon-128.png" width="44" height="44" alt="" /></span><span class="brand-name">Jessie</span></a>
+        <a id="brand-link" class="brand" href="/" aria-label="JessieMessage"><span id="brand-avatar" class="brandmark"><img src="/brand/icon-128.png" width="44" height="44" alt="" /></span><span class="brand-name">Jessie</span></a>
         <button id="open-account-menu" class="icon-button" type="button" aria-expanded="false" aria-controls="chat-menu" aria-label="Ouvrir les options" data-jm-i18n-aria-label="Ouvrir les options">⋮</button>
       </header>
       <section id="chat-menu" class="chat-menu" aria-label="Options" data-jm-i18n-aria-label="Options" hidden>
@@ -39,8 +39,11 @@
         <div id="conversation-actions" class="menu-actions"><button id="open-gallery" class="text-button" type="button" aria-haspopup="dialog" hidden data-jm-i18n="Photos">Photos</button><button id="open-video-gallery" class="text-button" type="button" aria-haspopup="dialog" hidden data-jm-i18n="Vidéos">Vidéos</button></div>
         <details class="menu-extras"><summary data-jm-i18n="Autres options">Autres options</summary><div id="conversation-download-menu" class="menu-actions"></div><div id="chat-footer" class="menu-links"><a href="mailto:contact@jessiemessage.com" data-jm-i18n="Contact">Contact</a><a href="/help" target="_blank" rel="noopener noreferrer" data-help-link data-jm-i18n="Aide et confidentialité" aria-label="Aide et confidentialité (nouvel onglet)" data-jm-i18n-aria-label="Aide et confidentialité (nouvel onglet)">Aide et confidentialité</a></div></details>
       </section>
-      <p id="session-status" class="session-status" role="status" aria-live="polite" data-jm-i18n="Vérification de la connexion…">Vérification de la connexion…</p>
-      <div class="connection-actions"><button id="retry-connection" class="button secondary" type="button" hidden data-jm-i18n="Réessayer la connexion">Réessayer la connexion</button></div>
+      <section id="connection-shell" class="connection-shell is-loading" aria-busy="true">
+        <span class="connection-indicator" aria-hidden="true"></span>
+        <p id="session-status" class="session-status" role="status" aria-live="polite" data-jm-i18n="Vérification de la connexion…">Vérification de la connexion…</p>
+        <div class="connection-actions"><button id="retry-connection" class="button secondary" type="button" hidden data-jm-i18n="Réessayer la connexion">Réessayer la connexion</button></div>
+      </section>
       <main id="workspace" class="workspace" hidden>
         <a class="conversation-skip" href="#message-scroll" data-jm-i18n="Aller à la conversation">Aller à la conversation</a>
         <aside id="inbox" class="inbox" hidden aria-labelledby="inbox-title">
@@ -54,10 +57,11 @@
             <header class="received-head"><div><h2 id="received-title" tabindex="-1" data-jm-i18n="Messages reçus">Messages reçus</h2><p data-jm-i18n="Non lus en premier, puis les plus récents.">Non lus en premier, puis les plus récents.</p></div><button id="show-clients" class="text-button mobile-received" type="button" data-jm-i18n="Clients et filtres">Clients et filtres</button><button id="refresh-received" class="text-button" type="button" data-jm-i18n="Actualiser">Actualiser</button></header>
             <div class="received-scroll"><p id="received-status" role="status" aria-live="polite"></p><div id="received-list" class="received-list"></div><button id="more-received" class="button secondary" type="button" hidden data-jm-i18n="Autres messages">Autres messages</button></div>
           </section>
-          <header class="chat-head"><button id="back-to-inbox" class="back-button" type="button" hidden aria-label="Retour aux conversations" data-jm-i18n-aria-label="Retour aux conversations">←</button><span id="peer-avatar" class="peer-avatar" aria-hidden="true"></span><div class="person"><h2 id="peer-name" data-jm-i18n="Messages privés">Messages privés</h2><p id="conversation-status" data-jm-i18n="Chargement de ta conversation…">Chargement de ta conversation…</p></div><button id="open-conversation-menu" class="icon-button" type="button" aria-expanded="false" aria-controls="chat-menu" aria-label="Ouvrir les options de la conversation" data-jm-i18n-aria-label="Ouvrir les options de la conversation">⋮</button></header>
+          <header class="chat-head"><button id="back-to-inbox" class="back-button" type="button" hidden aria-label="Retour aux conversations" data-jm-i18n-aria-label="Retour aux conversations">←</button><span id="peer-avatar" class="peer-avatar" aria-hidden="true"></span><div class="person"><h2 id="peer-name" data-jm-i18n="Messages privés">Messages privés</h2><p id="conversation-status" data-jm-i18n="Chargement de ta conversation…">Chargement de ta conversation…</p></div><button id="open-client-profile" class="text-button client-profile-button" type="button" aria-haspopup="dialog" hidden data-jm-i18n="Profil du client">Profil du client</button><button id="open-conversation-menu" class="icon-button" type="button" aria-expanded="false" aria-controls="chat-menu" aria-label="Ouvrir les options de la conversation" data-jm-i18n-aria-label="Ouvrir les options de la conversation">⋮</button></header>
           <p id="message-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
           <div id="message-scroll" class="message-scroll" tabindex="0" aria-label="Historique de la conversation" data-jm-i18n-aria-label="Historique de la conversation">
             <button id="older-messages" class="button secondary older" type="button" hidden data-jm-i18n="Messages précédents">Messages précédents</button>
+            <p id="conversation-loading" class="conversation-loading" hidden role="status" aria-live="polite" data-jm-i18n="Chargement de la conversation…">Chargement de la conversation…</p>
             <p id="empty-message" class="empty-message" hidden data-jm-i18n="Aucun message pour le moment.">Aucun message pour le moment.</p>
             <div id="messages" class="messages" role="list" aria-label="Messages" data-jm-i18n-aria-label="Messages"></div>
             <button id="newer-messages" class="button secondary older" type="button" hidden data-jm-i18n="Messages suivants">Messages suivants</button>

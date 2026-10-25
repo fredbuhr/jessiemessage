@@ -2,6 +2,12 @@
 
 **24 octobre 2026 — livraison1.11.1 terminée ; application, publication et checkpoint privé alignés.** [Reçu final utilisateur](verification-proofs/jm1111/hosted-metadata.json) : version1.11.1, source `80b7fbf5f9b5ba32ac1aae817043126e93025946`, arbre `ba1289bae9ce095560922a7ed6665f17709d07ed`, Nodev24.22.1, `publicReady:true`. Démarrage réel rapporté par le writer : `1792863094521`, soit **24/10/2026 19:31:34.521 à Paris**, concordant avec le relevé UI à la seconde. Checkpoint1111 SHA256 `41a51d38a50c3ff07b1878a6cfd96de9e383dbafc5ccff9c96a3a97aa272d90a`. Aucune opération de livraison restante ; ne rejouer ni préparation, CHECK, activation ou writer.
 
+## Correctif 1.11.2 — navigation mobile, profils et identité en qualification
+
+Nouvelle demande du25octobre : transitions sans écran vide, accès direct aux profils/préférences clients et avatar Jessie côtéclient. Branche `fix/mobile-identity-1112`. Corrections intégrées ; production confirmée1.11.1 inchangée. Chargement neutre et revalidation propriétaire conservés, profil client indépendant du chat sans marquage lu, copie publique explicite de l’avatar, lectures admin répétées mutualisées sous verrou. Syntaxe réussie et162 tests locaux d’intégration réussis ; qualification native Chrome/HTTPS/MariaDB encore requise. Ne pas déployer avant ces résultats.
+
+La copie publique format2 accepte lectureanciensformat1, exige republication explicite pour ajouterphoto et ne garantit pas relecture par backend1111. Pas de migration SQL/dépendance. Revueglobale bornée dans le rapport ; sauvegarde reportée/PC/A10/A11/A12 restent dans leur portée.
+
 ## Correctif 1.11.1 — déployé et finalisé
 
 Le retour utilisateur du 24 octobre précise la vue attendue : **une seule ligne par client, avec son dernier message reçu encore visible**, conversations non lues en premier puis date décroissante. Le correctif sélectionne le dernier message de chaque conversation avant le curseur et la limite SQL ; le navigateur conserve une seule entrée par conversation pendant la pagination. Cliquer ouvre le message choisi, sans lecture automatique depuis la vue générale. Aucun changement des invitations, migrations, dépendances ou droits. Le démarrage1111 est désormais rapporté selon le relevé utilisateur, sans inspection directe des champs Manager ou du processus par l’agent.

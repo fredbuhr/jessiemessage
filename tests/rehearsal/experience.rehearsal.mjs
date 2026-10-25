@@ -191,13 +191,60 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
       // dialog does not reopen that menu automatically.
       await openMenu(admin); await admin.click(".crm-fiche-button");
       await waitUntil(() => admin.execute("return !!document.querySelector('.crm-dialog')?.open&&!document.querySelector('.crm-client-preferences').hidden"), "authorized admin client-profile preferences entry");
-      await admin.click(".crm-client-preferences summary");
-      await waitUntil(() => admin.execute("return document.querySelector('.crm-client-preferences .preferences-selected .preference-choice')?.textContent===arguments[0]", catalogue.categories[0].preferences[0].fr), "client preferences are rendered read-only in the actual CRM profile");
-      assert.equal(await admin.execute("const panel=document.querySelector('.crm-client-preferences');return panel.querySelector('.preferences-actions').hidden&&panel.querySelector('.preferences-search-label').hidden&&!panel.querySelector('[data-preference-id]')"), true);
-      await captureReadOnlyPreferences(admin);
-      await admin.click(".crm-dialog .dialog-head button");
+      try {
+        await waitUntil(() => admin.execute("return document.querySelector('.crm-client-preferences').open&&document.querySelector('.crm-client-preferences .preferences-selected .preference-choice')?.textContent===arguments[0]", catalogue.categories[0].preferences[0].fr), "client preferences are rendered read-only automatically in the actual CRM profile");
+        assert.equal(await admin.execute("const panel=document.querySelector('.crm-client-preferences');return panel.querySelector('.preferences-actions').hidden&&panel.querySelector('.preferences-search-label').hidden&&!panel.querySelector('[data-preference-id]')"), true);
+        await captureReadOnlyPreferences(admin);
+      } finally { if (await admin.execute("return document.querySelector('.crm-dialog')?.open===true")) await admin.click(".crm-dialog .dialog-head button"); }
       const state = await fixture.privatePreferencesState([firstChoice, secondChoice]); assert.equal(state.rows, 2); assert.equal(state.encrypted, true);
       assert.deepEqual((await json(other, "client", "/api/profile/client/preferences")).data.selectedIds, []);
+    });
+    await t.test("explicit desktop and mobile client profiles show the authorized avatar and preferences without consuming unread messages", async () => {
+      const profile = await json(client, "client", "/api/profile/client"); assert.equal(profile.status, 200);
+      const saved = await json(client, "client", "/api/profile/client", { expectedVersion: profile.data.version, pseudonym: profile.data.pseudonym, avatarId: photo.data.message.media.id });
+      assert.equal(saved.status, 200); assert.equal(saved.data.avatarId, photo.data.message.media.id);
+      await waitUntil(async () => {
+        const current = await json(admin, "admin", `/api/chat/admin/conversations/${conversation}/messages`);
+        return current.status === 200 && BigInt(current.data.conversation.lastReadSequence) >= BigInt(photo.data.message.sequence);
+      }, "existing conversation read receipt has settled before the unread-profile exercise", 20000);
+      const restore = async page => {
+        if (await page.execute("return document.querySelector('.crm-dialog')?.open===true")) await page.click(".crm-dialog .dialog-head button");
+        if (!await page.execute("return document.getElementById('composer').checkVisibility()")) {
+          if (await page.execute("return document.getElementById('show-clients')?.checkVisibility()===true")) await page.click("#show-clients");
+          await page.click(`#conversations [data-conversation-id="${conversation}"]`);
+        }
+        await ready(page, "admin");
+      };
+      try {
+        for (const page of [admin, adminDevice]) {
+          await page.click("#back-to-inbox");
+          await waitUntil(() => page.execute("return document.getElementById('received-overview').checkVisibility()&&!document.getElementById('composer').checkVisibility()"), "administrator received overview without a selected conversation");
+        }
+        const probe = await json(client, "client", `/api/chat/client/conversations/${conversation}/messages`, { clientMessageId: randomBytes(16).toString("hex"), body: "Synthetic unread client profile preview" }); assert.equal(probe.status, 201);
+        const before = await json(admin, "admin", `/api/chat/admin/conversations/${conversation}/messages`); assert.equal(before.status, 200);
+        const through = before.data.conversation.lastReadSequence; assert.ok(BigInt(through) < BigInt(probe.data.message.sequence));
+        for (const [page, width] of [[admin, 1280], [adminDevice, 320]]) {
+          await page.click("#refresh-received");
+          const selector = `.received-profile[data-profile-conversation-id="${conversation}"]`;
+          await waitUntil(() => page.execute("return !!document.querySelector(arguments[0])&&!document.getElementById('refresh-received').disabled", selector), "explicit profile button for the received client");
+          await page.click(selector);
+          await waitUntil(() => page.execute("const dialog=document.querySelector('.crm-dialog'),image=dialog?.querySelector('.crm-profile-avatar img');return !!dialog?.open&&!!image?.complete&&image.naturalWidth>0&&dialog.querySelector('.preferences-selected .preference-choice')?.textContent===arguments[0]", catalogue.categories[0].preferences[0].fr), "actual authorized client avatar and read-only preferences in the profile", 20000);
+          assert.equal(await page.execute("return !document.getElementById('composer').checkVisibility()&&document.getElementById('received-overview').checkVisibility()"), true, "viewing a profile must not select its conversation");
+          assert.equal(await page.execute("const dialog=document.querySelector('.crm-dialog'),preferences=dialog.querySelector('.crm-client-preferences'),form=dialog.querySelector('.crm-profile-form');return !!(preferences.compareDocumentPosition(form)&Node.DOCUMENT_POSITION_FOLLOWING)&&document.documentElement.scrollWidth<=innerWidth+1"), true);
+          const after = await json(admin, "admin", `/api/chat/admin/conversations/${conversation}/messages`); assert.equal(after.data.conversation.lastReadSequence, through, "profile consultation preserves the exact unread cursor");
+          await mkdir(new URL("../../artifacts/homepage/", import.meta.url), { recursive: true });
+          await writeFile(new URL(`../../artifacts/homepage/experience-admin-${width}-client-profile.png`, import.meta.url), Buffer.from(await page.screenshot(), "base64"));
+          await page.click(".crm-dialog .dialog-head button");
+          assert.equal(await page.execute("return document.activeElement.getAttribute('data-profile-conversation-id')"), conversation, "closing the profile restores its direct entry");
+        }
+      } finally {
+        const restored = await Promise.allSettled([restore(admin), restore(adminDevice)]);
+        const failure = restored.find(result => result.status === "rejected"); if (failure) throw failure.reason;
+      }
+      await waitUntil(() => admin.execute("return document.getElementById('open-client-profile').checkVisibility()"), "direct profile entry in the selected conversation");
+      await admin.click("#open-client-profile");
+      try { await waitUntil(() => admin.execute("return document.querySelector('.crm-dialog')?.open===true"), "conversation profile entry opens the same authorized profile"); }
+      finally { if (await admin.execute("return document.querySelector('.crm-dialog')?.open===true")) await admin.click(".crm-dialog .dialog-head button"); }
     });
     await t.test("public Jessie profile is an explicit admin snapshot; temporary hiding preserves the private draft after actual session proof", async () => {
       const anonymous = await browser(320), displayName = "Synthetic Jessie public profile", bio = "A synthetic public introduction for the isolated rehearsal.";

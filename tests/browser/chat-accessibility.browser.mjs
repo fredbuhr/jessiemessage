@@ -29,6 +29,10 @@ function resetFixture() {
       client: { pseudonym: peerName, version: "1", avatarId: null }, admin: { pseudonym: "Jessie", version: "1", avatarId: null },
     } };
 }
+function releaseHeldSessions() {
+  fixture.holdSessions = false;
+  for (const release of fixture.sessionHolds?.splice(0) ?? []) release();
+}
 function profile(role) {
   const saved = fixture.profiles[role];
   return { ...saved, avatarUrl: saved.avatarId === null ? null : `/api/profile/${role}/avatar?v=${saved.version}` };
@@ -114,6 +118,7 @@ async function startFixtureServer() {
         }
       }
       if (request.method === "GET" && ["/messages", "/admin/messages"].includes(url.pathname)) {
+        fixture.chatDocuments = (fixture.chatDocuments ?? 0) + 1;
         if (!fixture.signedIn) { response.writeHead(303, { Location: url.pathname === "/messages" ? "/access" : "/admin/login" }); response.end(); return; }
         response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); response.end(html); return;
       }
@@ -154,6 +159,13 @@ async function startFixtureServer() {
       const sessionRole = url.pathname === "/api/auth/session" ? "admin" : url.pathname === "/api/access/session" ? "client" : null;
       const loginRole = url.pathname === "/api/auth/login" ? "admin" : url.pathname === "/api/access/login" ? "client" : null;
       if (sessionRole && request.method === "GET" || loginRole && request.method === "POST") {
+        if (sessionRole && fixture.holdSessions) {
+          await new Promise(resolveHeld => {
+            const release = () => { response.off("close", release); resolveHeld(); };
+            (fixture.sessionHolds ??= []).push(release); response.once("close", release);
+          });
+          if (response.destroyed) return;
+        }
         if (loginRole) { for await (const _chunk of request) { /* Synthetic credentials only. */ } fixture.signedIn = true; fixture.loginRequests++; }
         if (!fixture.signedIn) { sendJson(401, { error: "authentication_required" }); return; }
         const role = sessionRole ?? loginRole;
@@ -1727,4 +1739,54 @@ test("Chrome: unselected admin has one latest received message per client, unrea
       assert.deepEqual(await page.execute("return window.__browserErrors"), []);
     } finally { await page.close(); }
   });
+});
+
+test("Chrome mobile: an initial session wait paints a neutral loading shell before any private workspace", { timeout: 45000 }, async () => {
+  for (const role of ["admin", "client"]) {
+    resetFixture(); fixture.holdSessions = true;
+    const page = await browser(320, 800);
+    try {
+      await page.navigate(role === "admin" ? "/admin/messages" : "/messages");
+      await waitUntil(() => (fixture.sessionHolds?.length ?? 0) > 0, "initial session request retained by the synthetic server");
+      assert.deepEqual(await page.execute(`const shell=document.getElementById('connection-shell'),r=shell.getBoundingClientRect();return {
+        loading:shell.checkVisibility()&&shell.classList.contains('is-loading'),busy:shell.getAttribute('aria-busy'),
+        workspace:document.getElementById('workspace').checkVisibility(),messages:document.querySelectorAll('#messages [data-sequence]').length,
+        status:document.getElementById('session-status').textContent,brand:document.querySelector('.topbar').checkVisibility(),
+        fits:r.left>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1,overflow:document.documentElement.scrollWidth>innerWidth+1};`),
+      { loading:true,busy:"true",workspace:false,messages:0,status:"Vérification de la connexion…",brand:true,fits:true,overflow:false });
+      await page.executeAsync("const done=arguments[arguments.length-1];requestAnimationFrame(()=>requestAnimationFrame(()=>done(true)))");
+      await mkdir(new URL("../../artifacts/homepage/", import.meta.url), { recursive: true });
+      await writeFile(new URL(`../../artifacts/homepage/connection-loading-${role}-320.png`, import.meta.url), Buffer.from(await page.screenshot(), "base64"));
+      releaseHeldSessions();
+      await waitUntil(() => page.execute("return !document.getElementById('workspace').hidden&&!document.getElementById('connection-shell').checkVisibility()"), "authorized workspace replaces the loading shell");
+      await noJavascriptErrors(page);
+    } finally { releaseHeldSessions(); await page.close(); }
+  }
+});
+
+test("Chrome mobile: a persisted-page event revalidates without reloading the document or sending its restored draft", { timeout: 45000 }, async () => {
+  // The DOM event is dispatched deliberately: this qualifies our persisted-page
+  // handler, not the browser's own eligibility/eviction policy for its bfcache.
+  for (const role of ["admin", "client"]) {
+    resetFixture(); const page = await browser(320, 800);
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      if (role === "admin") await page.click(`#conversations [data-conversation-id="${conversationId}"]`);
+      await loadedPhoto(page);
+      const draft = `Unsent ${role} browser-back draft`;
+      await page.type("#message-body", draft);
+      const documents = fixture.chatDocuments;
+      fixture.holdSessions = true;
+      await page.execute("window.__persistedNavigationMarker='same-document';window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}));return true");
+      assert.equal(await page.execute("return document.getElementById('workspace').hidden&&document.querySelectorAll('#messages [data-sequence]').length===0&&document.getElementById('message-body').value===''&&document.getElementById('connection-shell').checkVisibility()"), true);
+      await page.execute("window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));return true");
+      await waitUntil(() => (fixture.sessionHolds?.length ?? 0) > 0, "persisted-page return waits for a current session proof");
+      assert.equal(await page.execute("return window.__persistedNavigationMarker==='same-document'&&document.getElementById('workspace').hidden&&document.getElementById('connection-shell').checkVisibility()"), true);
+      assert.equal(fixture.chatDocuments, documents, "the persisted-page handler does not request the document again");
+      releaseHeldSessions();
+      await waitUntil(() => page.execute("return !document.getElementById('workspace').hidden&&document.getElementById('message-body').value===arguments[0]", draft), "same-owner draft restored after authorization");
+      assert.equal(fixture.sent.length, 0, "a preserved draft is never sent automatically");
+      assert.equal(fixture.chatDocuments, documents); await noJavascriptErrors(page);
+    } finally { releaseHeldSessions(); await page.close(); }
+  }
 });

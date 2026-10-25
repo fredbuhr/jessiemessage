@@ -25,6 +25,9 @@ function status(node, text, error = false) { ui.text(node, text); node.classList
 
 export function createCrmUI(adapter) {
   const state = createCrmState(); const owned = []; const renameDrafts = new Map(); const labelConflicts = new Set();
+  // Reading a profile from the received overview must not select its chat or
+  // consume unread messages. Detail tickets have their own target and epochs.
+  const profileState = { selected: null, selectionEpoch: 0, detailEpoch: 0, drafts: state.drafts };
   let life = 0; let loading = false; let pageRequest = 0; let refreshAfter = null; let refreshTarget = null;
   let debounce = null; let detailBusy = false; let detailRequest = 0; let profileOpen = false; let managerBusy = false;
   let profileReturnFocus = null; let labelsReturnFocus = null; let suspended = false; let deletedCandidate = null;
@@ -46,13 +49,15 @@ export function createCrmUI(adapter) {
   const filterStatus = node("p", null, "crm-filter-status"); filterStatus.setAttribute("role", "status"); filterStatus.setAttribute("aria-live", "polite"); filters.append(filterStatus);
   const selectionStatus = node("p", null, "crm-selection-status"); selectionStatus.hidden = true; selectionStatus.setAttribute("role", "status");
   adapter.inboxHead.after(filters, selectionStatus); owned.push(filters, selectionStatus);
-  const ficheButton = button("Fiche", () => { void openProfile(ficheButton); }, "button secondary crm-fiche-button"); ficheButton.hidden = true; adapter.chatHead.append(ficheButton); owned.push(ficheButton);
+  const ficheButton = button("Profil du client", () => { void openProfile(ficheButton); }, "button secondary crm-fiche-button"); ficheButton.hidden = true; adapter.chatHead.append(ficheButton); owned.push(ficheButton);
 
   const profileDialog = node("dialog", null, "crm-dialog"); profileDialog.setAttribute("aria-labelledby", "crm-profile-title");
   const profileTitle = node("h2", "Fiche client"); profileTitle.id = "crm-profile-title";
   const profileHeader = node("div", null, "dialog-head"); profileHeader.append(profileTitle, button("Fermer", () => closeProfile(), "text-button"));
   const profileHelp = node("p", "Ces informations restent dans ton espace privé.", "crm-help");
   const clientInfo = node("div", null, "crm-client-info"); const profileStatus = node("p", null, "crm-status"); profileStatus.setAttribute("role", "status"); profileStatus.setAttribute("aria-live", "polite");
+  const clientIdentity = node("div", null, "crm-client-identity"), clientAvatar = node("span", null, "peer-avatar crm-profile-avatar");
+  clientAvatar.setAttribute("aria-hidden", "true"); clientAvatar.hidden = true; clientIdentity.append(clientAvatar, clientInfo);
   const profileForm = node("form", null, "crm-profile-form"); const profileFields = node("fieldset"); profileFields.hidden = true;
   const nickname = input("text", "nickname", 64); const notes = node("textarea"); notes.name = "notes"; notes.maxLength = 8000; notes.rows = 7;
   const reminder = input("datetime-local", "reminder"); reminder.min = "1970-01-01T00:00"; reminder.max = "9999-12-31T23:59";
@@ -60,26 +65,32 @@ export function createCrmUI(adapter) {
   const memberships = node("div", null, "crm-memberships"); const saveButton = node("button", "Enregistrer la fiche", "button primary"); saveButton.type = "submit";
   profileFields.append(field("Surnom privé", nickname), field("Notes privées", notes), notesCount, field("Rappel privé · heure locale", reminder), reminderHelp, memberships, saveButton); profileForm.append(profileFields);
   const conflict = node("section", null, "crm-conflict"); conflict.hidden = true; ui.attr(conflict, "aria-label", "Modification à comparer");
-  profileDialog.append(profileHeader, profileHelp, clientInfo, profileStatus, profileForm, conflict); document.body.append(profileDialog); owned.push(profileDialog);
+  document.body.append(profileDialog); owned.push(profileDialog);
   const tasksLink = adapter.tasksEnabled === true ? node("a", "Tâches du client", "text-button") : null;
-  if (tasksLink) { tasksLink.hidden = true; profileDialog.append(tasksLink); }
+  if (tasksLink) tasksLink.hidden = true;
   const preferencesSection = node("details", null, "crm-client-preferences"); preferencesSection.hidden = adapter.preferencesEnabled !== true;
   preferencesSection.append(node("summary", "Goûts & fantasmes"));
-  const preferencesHost = node("div"); preferencesSection.append(preferencesHost); profileDialog.append(preferencesSection);
-  let preferencesUI = null, preferencesEpoch = 0;
-  function closePreferences() { preferencesEpoch++; preferencesUI?.destroy(); preferencesUI = null; preferencesSection.open = false; replace(preferencesHost); }
+  const preferencesHost = node("div"); preferencesSection.append(preferencesHost);
+  profileDialog.append(profileHeader, profileHelp, clientIdentity, profileStatus, preferencesSection, profileForm, conflict);
+  if (tasksLink) profileDialog.append(tasksLink);
+  let preferencesUI = null, preferencesEpoch = 0, preferencesMount = null;
+  function closePreferences() { preferencesEpoch++; preferencesMount = null; preferencesUI?.destroy(); preferencesUI = null; preferencesSection.open = false; replace(preferencesHost); }
   async function openPreferences() {
-    if (preferencesUI || !preferencesSection.open || adapter.preferencesEnabled !== true || !profileOpen || !state.selected) return;
-    const ticket = ++preferencesEpoch, owner = life, conversationId = state.selected;
-    const current = () => ticket === preferencesEpoch && currentLife(owner) && profileOpen && state.selected === conversationId && preferencesSection.open;
+    if (preferencesUI || preferencesMount || !preferencesSection.open || adapter.preferencesEnabled !== true || !profileOpen || !profileState.selected) return;
+    const mounting = {}; preferencesMount = mounting;
+    const ticket = ++preferencesEpoch, owner = life, conversationId = profileState.selected;
+    const current = () => ticket === preferencesEpoch && currentLife(owner) && profileOpen && profileState.selected === conversationId && preferencesSection.open;
+    const loadingPreferences = node("p", "Chargement des préférences…", "crm-help"); loadingPreferences.setAttribute("role", "status"); replace(preferencesHost, loadingPreferences);
     try {
       const { createPreferencesUI } = await import("/preferences.js");
       if (!current()) return;
+      replace(preferencesHost);
       preferencesUI = createPreferencesUI({ role: "admin", host: preferencesHost, conversationId, readOnly: true, isCurrent: current,
         request: async (path, options) => { if (!current()) throw stale(); const result = await adapter.request(path, { ...options, account: true }); if (!current()) throw stale(); return result; },
         onError: async error => { if (current()) await report(error, profileStatus); } });
       await preferencesUI.load();
     } catch (error) { if (current()) await report(error, profileStatus); }
+    finally { if (preferencesMount === mounting) preferencesMount = null; }
   }
   preferencesSection.addEventListener("toggle", () => { if (preferencesSection.open) void openPreferences(); else closePreferences(); });
   const exportSection = node("details", null, "crm-export"); exportSection.hidden = adapter.conversationExport?.enabled !== true;
@@ -196,7 +207,7 @@ export function createCrmUI(adapter) {
     state.labels = labels;
     replaceFilterOptions(tagFilter, "tag", "Tous les tags"); replaceFilterOptions(groupFilter, "group", "Tous les groupes");
     if (manager.open) renderLabels();
-    const draft = state.drafts.get(state.selected); if (profileOpen && draft) renderMemberships(draft);
+    const draft = state.drafts.get(profileState.selected); if (profileOpen && draft) renderMemberships(draft);
   }
   function renderMemberships(draft) {
     replace(memberships);
@@ -219,7 +230,7 @@ export function createCrmUI(adapter) {
     memberships.append(node("p", "32 tags et groupes maximum par fiche.", "crm-help"));
   }
   function syncDraft() {
-    const draft = state.drafts.get(state.selected); if (!profileOpen || !draft || detailBusy) return;
+    const draft = state.drafts.get(profileState.selected); if (!profileOpen || !draft || detailBusy) return;
     let timestamp; try { timestamp = reminder.value === localDateTime(draft.reminderAt) ? draft.reminderAt : reminderTimestamp(reminder.value); } catch { status(profileStatus, "Vérifie la date du rappel.", true); return; }
     changeDraft(draft, { nickname: nickname.value, notes: notes.value, reminderAt: timestamp, labelIds: [...memberships.querySelectorAll("input:checked")].map((checkbox) => checkbox.value) });
     ui.text(notesCount, "{count} / 8 000", { count: ui.numberParam(notes.value.length) });
@@ -235,12 +246,13 @@ export function createCrmUI(adapter) {
     const summary = textNode("p", "Surnom : {nickname} · Rappel : {reminder} · Étiquettes : {labels}", { nickname: latest.nickname || ui.messageParam("aucun"), reminder: dateName(latest.reminderAt), labels: latest.labels.length ? latest.labels.map((label) => label.name).join(", ") : ui.messageParam("aucune") }); conflict.append(summary);
     const savedNotes = node("textarea"); savedNotes.readOnly = true; savedNotes.rows = 5; savedNotes.value = latest.notes; conflict.append(field("Notes enregistrées", savedNotes));
     const actions = node("div", null, "crm-actions");
-    actions.append(button("Recharger la fiche", () => { const current = state.drafts.get(state.selected); if (current?.conflict) { const next = discardDraft(state, state.selected, current.conflict); renderProfile(next); status(profileStatus, "Version enregistrée rechargée."); } }),
+    actions.append(button("Recharger la fiche", () => { const current = state.drafts.get(profileState.selected); if (current?.conflict) { const next = discardDraft(profileState, profileState.selected, current.conflict); renderProfile(next); status(profileStatus, "Version enregistrée rechargée."); } }),
       button("Enregistrer ma version", () => { void saveProfile(true); }, "button primary")); conflict.append(actions);
   }
   function renderProfile(draft) {
     if (tasksLink) { tasksLink.href = `/admin/tasks?conversationId=${draft.profile.conversationId}`; tasksLink.hidden = false; }
     const profile = draft.profile; nickname.value = draft.nickname; notes.value = draft.notes; reminder.value = localDateTime(draft.reminderAt);
+    if (typeof adapter.renderClientAvatar === "function") { clientAvatar.hidden = false; adapter.renderClientAvatar(clientAvatar, profile.conversationId); }
     ui.text(notesCount, "{count} / 8 000", { count: ui.numberParam(draft.notes.length) }); ui.text(profileTitle, "Fiche · {name}", { name: profile.client.pseudonym });
     replace(clientInfo, rawNode("p", profile.client.email), textNode("p", "{status}{expiry}", { status: ui.messageParam(accessNames[profile.access.state] ?? "En attente"), expiry: ui.messageParam(profile.access.expiresAt === null ? "" : " · jusqu’au {date}", { date: profile.access.expiresAt === null ? "" : dateName(profile.access.expiresAt) }) }));
     profileFields.hidden = false; profileFields.disabled = detailBusy; exportSection.hidden = adapter.conversationExport?.enabled !== true; renderMemberships(draft); renderConflict(draft);
@@ -248,53 +260,60 @@ export function createCrmUI(adapter) {
   }
   async function loadProfile() {
     if (!profileOpen || detailBusy) return;
-    const ticket = detailTicket(state); const requestId = ++detailRequest;
+    const ticket = detailTicket(profileState); const requestId = ++detailRequest;
     try {
       const profile = await ask(`/conversations/${ticket.id}`);
-      if (!profileOpen || requestId !== detailRequest || !currentDetail(state, ticket)) return;
-      const draft = receiveProfile(state, profile, ticket); if (draft) { renderProfile(draft); if (!draft.dirty) status(profileStatus, ""); }
+      if (!profileOpen || requestId !== detailRequest || !currentDetail(profileState, ticket)) return;
+      const draft = receiveProfile(profileState, profile, ticket); if (draft) { renderProfile(draft); if (!draft.dirty) status(profileStatus, ""); }
     } catch (error) {
-      if (profileOpen && requestId === detailRequest && currentDetail(state, ticket)) {
+      if (profileOpen && requestId === detailRequest && currentDetail(profileState, ticket)) {
         if (error.status === 404) forgetUnavailableProfile(ticket.id);
         else await report(error, profileStatus);
       }
     }
   }
-  async function openProfile(opener) {
-    if (!state.selected || suspended) return;
-    invalidateDetail(state); const ticket = detailTicket(state);
+  async function openProfile(opener, conversationId = state.selected) {
+    if (typeof conversationId !== "string" || !/^[a-f0-9]{32}$/.test(conversationId) || !currentLife(life)) return;
+    if (profileOpen) { if (profileState.selected === conversationId) return; closeProfile(false); }
+    selectProfile(profileState, conversationId);
+    invalidateDetail(profileState); const ticket = detailTicket(profileState);
     profileReturnFocus = opener; profileOpen = true; profileFields.hidden = true; exportSection.hidden = true; conflict.hidden = true; replace(clientInfo); ui.text(profileTitle, "Fiche client"); status(profileStatus, "Chargement…");
-    profileDialog.showModal(); const existing = state.drafts.get(state.selected); if (existing) renderProfile(existing);
-    try { await loadLabels(); if (profileOpen && currentDetail(state, ticket)) await loadProfile(); } catch (error) { if (profileOpen && currentDetail(state, ticket)) await report(error, profileStatus); }
+    profileDialog.showModal(); const existing = state.drafts.get(profileState.selected); if (existing) renderProfile(existing);
+    preferencesSection.open = adapter.preferencesEnabled === true; if (preferencesSection.open) void openPreferences();
+    try { await loadLabels(); if (profileOpen && currentDetail(profileState, ticket)) await loadProfile(); } catch (error) { if (profileOpen && currentDetail(profileState, ticket)) await report(error, profileStatus); }
   }
   function closeProfile(restore = true) {
     closePreferences();
+    adapter.clearClientAvatar?.(clientAvatar); replace(clientAvatar); clientAvatar.hidden = true;
     exportEpoch += 1; exportAbort?.abort(); exportAbort = null; exportBusy = false; exportButton.disabled = false; exportPhotos.disabled = false; exportVideos.disabled = false; exportSection.open = false; exportSection.hidden = true; status(exportStatus, "");
     for (const url of exportUrls) URL.revokeObjectURL(url); exportUrls.clear();
     if (tasksLink) { tasksLink.removeAttribute("href"); tasksLink.hidden = true; }
-    profileOpen = false; invalidateDetail(state); detailRequest += 1; detailBusy = false; if (profileDialog.open) profileDialog.close();
+    profileOpen = false; invalidateDetail(profileState); selectProfile(profileState, null); detailRequest += 1; detailBusy = false; if (profileDialog.open) profileDialog.close();
     profileFields.hidden = true; profileFields.disabled = false; ui.text(profileTitle, "Fiche client"); nickname.value = ""; notes.value = ""; reminder.value = ""; replace(memberships); replace(clientInfo); replace(conflict); conflict.hidden = true; status(profileStatus, "");
     if (restore) {
-      const target = typeof adapter.getReturnFocus === "function" ? adapter.getReturnFocus() : profileReturnFocus;
+      let direct = profileReturnFocus?.isConnected && !profileReturnFocus.disabled;
+      for (let node = profileReturnFocus; direct && node; node = node.parentElement) if (node.hidden) direct = false;
+      if (direct && typeof profileReturnFocus.getClientRects === "function") direct = profileReturnFocus.getClientRects().length > 0;
+      const target = direct ? profileReturnFocus : typeof adapter.getReturnFocus === "function" ? adapter.getReturnFocus() : profileReturnFocus;
       if (target?.isConnected) target.focus();
     }
     profileReturnFocus = null;
   }
   profileDialog.addEventListener("close", () => { if (profileOpen && !profileDialog.open) closeProfile(); });
   async function downloadConversation() {
-    if (!profileOpen || !profileDialog.open || exportBusy || detailBusy || !state.selected || adapter.conversationExport?.enabled !== true) return;
-    const ticket = detailTicket(state), epoch = ++exportEpoch, controller = new AbortController(); exportAbort = controller; exportBusy = true;
+    if (!profileOpen || !profileDialog.open || exportBusy || detailBusy || !profileState.selected || adapter.conversationExport?.enabled !== true) return;
+    const ticket = detailTicket(profileState), epoch = ++exportEpoch, controller = new AbortController(); exportAbort = controller; exportBusy = true;
     exportButton.disabled = true; exportPhotos.disabled = true; exportVideos.disabled = true; status(exportStatus, "Préparation de la conversation…");
     try {
       const blob = await ask(`/conversations/${ticket.id}/export`, { mutation: true, archive: true,
         body: { includePhotos: exportPhotos.checked, ...(exportVideoEnabled ? { includeVideos: exportVideos.checked } : {}) }, signal: controller.signal });
-      if (!profileOpen || !profileDialog.open || epoch !== exportEpoch || !currentDetail(state, ticket) || controller.signal.aborted) return;
+      if (!profileOpen || !profileDialog.open || epoch !== exportEpoch || !currentDetail(profileState, ticket) || controller.signal.aborted) return;
       const url = URL.createObjectURL(blob); exportUrls.add(url); const link = document.createElement("a"); link.href = url; link.download = `JessieMessage-conversation-${ticket.id}.zip`;
       document.body.append(link); try { link.click(); } finally { link.remove(); }
       setTimeout(() => { URL.revokeObjectURL(url); exportUrls.delete(url); }, 5000);
       status(exportStatus, "Conversation téléchargée. Extrais le ZIP puis ouvre Conversation.html.");
     } catch (error) {
-      if (!profileOpen || epoch !== exportEpoch || !currentDetail(state, ticket) || controller.signal.aborted || error.stale || error.name === "AbortError") return;
+      if (!profileOpen || epoch !== exportEpoch || !currentDetail(profileState, ticket) || controller.signal.aborted || error.stale || error.name === "AbortError") return;
       if (error.status === 401 || error.status === 403) { await report(error, exportStatus); return; }
       const message = error.code === "conversation_export_limit"
         ? exportVideoEnabled ? "La conversation dépasse la limite de téléchargement. Essaie sans les photos ou les vidéos si elles sont incluses." : "La conversation dépasse la limite de téléchargement. Essaie sans les photos si elles sont incluses."
@@ -307,35 +326,35 @@ export function createCrmUI(adapter) {
   }
   profileForm.addEventListener("submit", (event) => { event.preventDefault(); void saveProfile(); });
   async function saveProfile(overwrite = false) {
-    const draft = state.drafts.get(state.selected); if (!profileOpen || !draft || detailBusy || (draft.conflict && !overwrite)) return;
+    const draft = state.drafts.get(profileState.selected); if (!profileOpen || !draft || detailBusy || (draft.conflict && !overwrite)) return;
     syncDraft(); if (!reminder.checkValidity() || draft.labelIds.length > 32) { status(profileStatus, "Vérifie le rappel et sélectionne 32 étiquettes maximum.", true); return; }
-    const ticket = detailTicket(state); const body = saveBody(draft, { overwrite }); detailRequest += 1;
+    const ticket = detailTicket(profileState); const body = saveBody(draft, { overwrite }); detailRequest += 1;
     detailBusy = true; profileFields.disabled = true; for (const control of conflict.querySelectorAll("button")) control.disabled = true; status(profileStatus, "Enregistrement…");
     try {
       const profile = await ask(`/conversations/${ticket.id}`, { mutation: true, body });
-      if (!profileOpen || !currentDetail(state, ticket)) return;
-      const saved = discardDraft(state, ticket.id, profile); renderProfile(saved); status(profileStatus, "Fiche enregistrée.");
-      await loadLabels(); if (profileOpen && currentDetail(state, ticket)) await loadInbox(false, true);
+      if (!profileOpen || !currentDetail(profileState, ticket)) return;
+      const saved = discardDraft(profileState, ticket.id, profile); renderProfile(saved); status(profileStatus, "Fiche enregistrée.");
+      await loadLabels(); if (profileOpen && currentDetail(profileState, ticket)) await loadInbox(false, true);
     } catch (error) {
-      if (!profileOpen || !currentDetail(state, ticket)) return;
+      if (!profileOpen || !currentDetail(profileState, ticket)) return;
       if (error.status === 409 && error.code === "record_changed") {
         status(profileStatus, "La fiche a changé. Ton brouillon est conservé.", true);
-        try { const latest = await ask(`/conversations/${ticket.id}`); if (profileOpen && currentDetail(state, ticket)) { draft.conflict = latest; draft.profile = latest; renderConflict(draft); await loadLabels(); } } catch (latestError) { if (profileOpen && currentDetail(state, ticket)) { if (latestError.status === 404) forgetUnavailableProfile(ticket.id); else await report(latestError, profileStatus); } }
+        try { const latest = await ask(`/conversations/${ticket.id}`); if (profileOpen && currentDetail(profileState, ticket)) { draft.conflict = latest; draft.profile = latest; renderConflict(draft); await loadLabels(); } } catch (latestError) { if (profileOpen && currentDetail(profileState, ticket)) { if (latestError.status === 404) forgetUnavailableProfile(ticket.id); else await report(latestError, profileStatus); } }
       } else {
         if (error.status === 404) {
           try {
             // A missing label should preserve a draft; a removed assignment
             // must also remove the previously opened private fiche.
             const latest = await ask(`/conversations/${ticket.id}`);
-            if (profileOpen && currentDetail(state, ticket)) { receiveProfile(state, latest, ticket); renderProfile(draft); await loadLabels(); }
+            if (profileOpen && currentDetail(profileState, ticket)) { receiveProfile(profileState, latest, ticket); renderProfile(draft); await loadLabels(); }
           } catch (checkError) {
-            if (profileOpen && currentDetail(state, ticket) && checkError.status === 404) { forgetUnavailableProfile(ticket.id); return; }
-            if (profileOpen && currentDetail(state, ticket)) await report(checkError, profileStatus);
+            if (profileOpen && currentDetail(profileState, ticket) && checkError.status === 404) { forgetUnavailableProfile(ticket.id); return; }
+            if (profileOpen && currentDetail(profileState, ticket)) await report(checkError, profileStatus);
           }
         }
-        if (profileOpen && currentDetail(state, ticket)) await report(error, profileStatus);
+        if (profileOpen && currentDetail(profileState, ticket)) await report(error, profileStatus);
       }
-    } finally { if (profileOpen && currentDetail(state, ticket)) { detailBusy = false; profileFields.disabled = false; renderConflict(state.drafts.get(ticket.id)); } }
+    } finally { if (profileOpen && currentDetail(profileState, ticket)) { detailBusy = false; profileFields.disabled = false; renderConflict(state.drafts.get(ticket.id)); } }
   }
   async function openManager(opener) {
     if (!currentLife(life)) return;
@@ -407,12 +426,19 @@ export function createCrmUI(adapter) {
     createName.value = ""; search.value = ""; replace(tagFilter); replace(groupFilter); replace(labelList); status(managerStatus, ""); status(filterStatus, "");
     for (const element of owned) { ui.forget(element); element.remove(); }
   }
-  function removeConversation(id) { state.contacts.delete(id); state.drafts.delete(id); if (state.selected === id) { closeProfile(false); selectProfile(state, null); ficheButton.hidden = true; } publish(); }
+  function removeConversation(id) {
+    state.contacts.delete(id); state.drafts.delete(id);
+    if (profileState.selected === id) closeProfile(false);
+    if (state.selected === id) { selectProfile(state, null); ficheButton.hidden = true; }
+    publish();
+  }
   function forgetUnavailableProfile(id) { removeConversation(id); adapter.onUnavailable?.(id); status(filterStatus, "Cette fiche n’est plus accessible.", true); }
   return {
     hasUnsavedWork() { return [...state.drafts.values()].some(draft => draft.dirty); },
     async initialize() { try { await loadLabels(); } catch (error) { await report(error, filterStatus); } },
     loadInbox,
+    openSelectedProfile(opener) { return openProfile(opener); },
+    openClientProfile(conversationId, opener) { return openProfile(opener, conversationId); },
     selectConversation(id) { closeProfile(false); selectProfile(state, id); ficheButton.hidden = !id; publish(); },
     removeConversation,
     updateConversation(conversation) {

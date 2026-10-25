@@ -606,7 +606,7 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       preferencesService = profileService.preferences;
       if (experience && backupDirectory !== undefined) {
         const { createPublicProfileService } = await import("./public-profile/service.mjs");
-        publicationService = createPublicProfileService({ directory: backupDirectory, chatService, authStore: store, key: crmConfig.key, clock });
+        publicationService = createPublicProfileService({ directory: backupDirectory, chatService, authStore: store, profileService, key: crmConfig.key, clock });
       }
       const profiles = publicationService ? { ...profileService, publication: publicationService } : profileService;
       profileHandler = createProfileHandler(profiles, { origin: chatConfig.origin });
