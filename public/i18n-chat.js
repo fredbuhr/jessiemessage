@@ -1,5 +1,8 @@
 /* Explicit UI catalogue only. User messages, captions and names are never keys. */
 globalThis.JessieI18n?.register({
+  "Ouvrir le profil de {name}": "Open {name}’s profile",
+  "Profil du client": "Client profile",
+  "Profil": "Profile",
   "Messages reçus": "Received messages",
   "Non lus en premier, puis les plus récents.": "Unread first, then newest first.",
   "Clients et filtres": "Clients and filters",
@@ -135,8 +138,8 @@ globalThis.JessieI18n?.register({
   "Photo privée agrandie": "Enlarged private photo",
   "Photo privée": "Private photo",
   "Photo indisponible": "Photo unavailable",
-  "Ajoute une légende (facultatif)…": "Add a caption (optional)…",
-  "Écris ton message…": "Write your message…",
+  "Légende…": "Caption…",
+  "Message…": "Message…",
   "Écris-moi…": "Write to me…",
   "Détails du message du {date}": "Details of message from {date}",
   "Photo privée · légende facultative de 1 000 caractères maximum": "Private photo · optional caption up to 1,000 characters",

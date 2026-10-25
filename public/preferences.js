@@ -75,7 +75,7 @@ export function createPreferencesUI({ role, request, isCurrent, onError, host, c
       details.addEventListener("toggle", () => { if (details.open) expanded.add(category.id); else expanded.delete(category.id); populate(); });
       details.append(list); categories.append(details); populate();
     }
-    if (!results) categories.append(node("p", "Aucun résultat pour cette recherche.", "preferences-help"));
+    if (!results && !readOnly) categories.append(node("p", "Aucun résultat pour cette recherche.", "preferences-help"));
     controls();
   }
   async function ask(options, ticket) {

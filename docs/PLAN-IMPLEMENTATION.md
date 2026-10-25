@@ -2,6 +2,12 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
+## Correctif 1.11.2 — audit complet puis une seule mise à jour
+
+1. Revue frontend/backend structurée en24domaines et171points, préservation des fonctions et corrections regroupées sur `fix/mobile-identity-1112` /PR139. [Rapport et checklist](AUDIT-MOBILE-PROFILES-1112.md). Production1111 maintenue.
+2. Première qualification refusée pour un défaut d’avatar en intégration et des libellés de test obsolètes ; preuves conservées, corrections intégrées,198tests ciblés réussis. Obtenir les cinq jobs natifs sur le candidat exact corrigé et relire les captures synthétiques mobile/desktop.
+3. Relire tous les points de couverture et leurs limites, puis seulement fusionner, qualifier main et publier/préparer l’unique livraison1112. Aucune activation ni nouvelle manipulation PC/sauvegarde réelle pendant l’audit. Ne pas compter les appareils physiques non essayés ou réserves historiques comme des succès.
+
 ## Correctif 1.11.1 — livraison terminée
 
 La vue générale de Messages présente un seul aperçu par client : son dernier message reçu encore visible. Conversations non lues d’abord, puis les plus récentes dans chaque groupe. La sélection précède la pagination SQL ; le navigateur conserve une entrée par conversation pendant le chargement des pages. Le clic ouvre la conversation et la vue générale ne marque rien comme lu.

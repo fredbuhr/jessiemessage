@@ -5,6 +5,9 @@ import vm from "node:vm";
 
 const model = await readFile(new URL("../public/crm-model.js", import.meta.url), "utf8");
 const controller = await readFile(new URL("../public/crm.js", import.meta.url), "utf8");
+const preferencesModel = await readFile(new URL("../public/preferences-model.js", import.meta.url), "utf8");
+const preferencesController = await readFile(new URL("../public/preferences.js", import.meta.url), "utf8");
+const catalogue = JSON.parse(await readFile(new URL("../public/preferences-catalogue.json", import.meta.url), "utf8"));
 const id = n => n.toString(16).padStart(32, "0");
 const label = (name = "Fixture", n = 1) => ({ id: id(n), kind: "tag", name, version: "1", memberCount: 0, createdAt: 1, updatedAt: 1 });
 const page = labels => ({ labels, hasMore: false, nextCursor: null });
@@ -23,6 +26,7 @@ class Element {
   get textContent() { return this.text + this.children.map(child => child.textContent).join(""); }
   setAttribute(name, value) { this.attributes.set(name, value); }
   getAttribute(name) { return this.attributes.get(name) ?? null; }
+  removeAttribute(name) { this.attributes.delete(name); }
   addEventListener(name, fn) { if (!this.events.has(name)) this.events.set(name, []); this.events.get(name).push(fn); }
   append(...children) { for (const child of children) { child.remove(); child.parentElement = this; this.children.push(child); } }
   after(...children) { const parent = this.parentElement; const at = parent.children.indexOf(this); for (const child of children) child.parentElement = parent; parent.children.splice(at + 1, 0, ...children); }
@@ -40,10 +44,17 @@ class Element {
 async function harness(t, intercept = () => undefined, adapterOptions = {}) {
   const body = new Element("body"), inboxHead = new Element("header"), chatHead = new Element("header"); body.append(inboxHead, chatHead);
   const calls = [], errors = []; let labels = [label()];
-  const document = { body, createElement: tag => new Element(tag) };
-  const context = vm.createContext({ document, Date, URLSearchParams, AbortController, setTimeout, clearTimeout });
+  const document = { body, visibilityState: "visible", createElement: tag => new Element(tag), addEventListener() {}, removeEventListener() {} };
+  const context = vm.createContext({ document, Date, URLSearchParams, AbortController, setTimeout, clearTimeout, __catalogue: catalogue });
+  // Exercise the real preferences UI while replacing only its module/catalogue
+  // transport, which this deliberately small VM DOM does not implement.
+  vm.runInContext(`globalThis.__preferencesModule = (() => {
+    ${preferencesModel.replace(/^export\s+/gm, "")}
+    ${preferencesController.replace(/^import[^\n]+\n/gm, "").replace(/^export\s+/gm, "")}
+    return { createPreferencesUI(options) { return createPreferencesUI({ ...options, loadCatalogue: async () => __catalogue }); } };
+  })();`, context);
   vm.runInContext(model.replace(/^export\s+/gm, ""), context);
-  vm.runInContext(controller.replace(/^import[^\n]+\n/, "").replace(/^export\s+/gm, ""), context);
+  vm.runInContext(controller.replace(/^import[^\n]+\n/, "").replace(/^export\s+/gm, "").replace('await import("/preferences.js")', 'await Promise.resolve(__preferencesModule)'), context);
   const ui = context.createCrmUI({ inboxHead, chatHead, ...adapterOptions, onContacts() {}, onError: error => errors.push(error),
     async request(path, options) {
       const call = { path, options }; calls.push(call); const result = intercept(call, calls);
@@ -234,4 +245,83 @@ test("CRM video export can omit originals and restores controls with useful size
   pending.reject(Object.assign(Error("size limit"), { status: 413, code: "conversation_export_limit" })); await f.settle();
   assert.equal(download.disabled, false); assert.equal(checkbox.disabled, false); assert.equal(checkbox.checked, false);
   assert.match(section.querySelectorAll(".crm-status")[0].textContent, /photos ou les vidéos/); assert.deepEqual(f.errors, []);
+});
+
+const profileFor = conversationId => ({ conversationId,
+  client: { id: id(900), pseudonym: `Synthetic ${conversationId}`, email: "synthetic@example.invalid", status: "active" },
+  access: { state: "active", expiresAt: null }, nickname: "", notes: "", reminderAt: null, labels: [], version: "1", updatedAt: 1 });
+const preferenceView = (entry = catalogue.categories[0].preferences[0]) => ({ version: "1", catalogueVersion: catalogue.meta.version, selectedIds: [entry.id] });
+const clientProfileDialog = f => f.body.querySelectorAll(".crm-dialog").find(element => !element.className.includes("crm-label-dialog"));
+
+test("an explicit profile from the received overview loads read-only preferences above private notes without selecting or reading a chat", async t => {
+  const conversationId = id(100), pendingPreferences = deferred();
+  const f = await harness(t, call => call.path.endsWith(`/conversations/${conversationId}/preferences`) ? pendingPreferences.promise
+    : call.path.endsWith(`/conversations/${conversationId}`) ? profileFor(conversationId) : undefined,
+  { preferencesEnabled: true, getReturnFocus() { throw new Error("a visible direct profile entry remains its own return target"); } });
+  const opener = new Element("button"); f.body.append(opener);
+  await f.ui.openClientProfile(conversationId, opener); await f.settle();
+  const dialog = clientProfileDialog(f), preferences = dialog.querySelectorAll(".crm-client-preferences")[0], form = dialog.querySelectorAll(".crm-profile-form")[0];
+  assert.equal(dialog.open, true); assert.equal(preferences.open, true);
+  assert.ok(dialog.children.indexOf(preferences) < dialog.children.indexOf(form));
+  await f.emit(preferences, "toggle");
+  assert.equal(f.calls.filter(call => call.path.endsWith("/preferences")).length, 1, "native details toggle cannot duplicate the programmatic load");
+  pendingPreferences.resolve(preferenceView()); await f.settle();
+  assert.equal(dialog.querySelectorAll(".preference-choice")[0].textContent, catalogue.categories[0].preferences[0].fr);
+  assert.equal(dialog.querySelectorAll(".preferences-search-label")[0].hidden, true);
+  assert.equal(dialog.querySelectorAll(".preferences-actions")[0].hidden, true);
+  assert.equal(dialog.querySelectorAll(".preference-choice")[0].tagName, "span");
+  assert.equal(f.calls.some(call => /\/read$/.test(call.path) || call.options.mutation), false);
+  await f.emit(dialog.querySelectorAll(".dialog-head")[0].querySelectorAll("button")[0], "click");
+  await f.ui.openSelectedProfile(opener); assert.equal(dialog.open, false, "profile consultation did not choose a conversation");
+  assert.deepEqual(f.errors, []);
+});
+
+test("a client profile has its own target for private saves and restores its avatar without changing the selected conversation", async t => {
+  const selected = id(100), target = id(101), shownAvatars = [], clearedAvatars = [];
+  const f = await harness(t, call => {
+    if (call.path.endsWith("/preferences")) return preferenceView();
+    for (const id of [selected, target]) if (call.path.endsWith(`/conversations/${id}`)) return { ...profileFor(id), ...(call.options.mutation ? { nickname: call.options.body.nickname, version: "2" } : {}) };
+  }, { preferencesEnabled: true, renderClientAvatar(node, id) { shownAvatars.push(id); node.textContent = "Synthetic avatar"; }, clearClientAvatar(node) { clearedAvatars.push(node); } });
+  const opener = new Element("button"); f.body.append(opener);
+  f.ui.selectConversation(selected); await f.ui.openClientProfile(target, opener); await f.settle();
+  const dialog = clientProfileDialog(f), form = dialog.querySelectorAll(".crm-profile-form")[0], nickname = form.querySelectorAll("input").find(node => node.name === "nickname");
+  nickname.value = "Private nickname for target"; await f.emit(nickname, "input"); await f.emit(form, "submit");
+  const saves = f.calls.filter(call => call.options.mutation);
+  assert.equal(saves.length, 1); assert.equal(saves[0].path, `/api/admin/crm/conversations/${target}`);
+  assert.equal(shownAvatars.at(-1), target);
+  await f.emit(dialog.querySelectorAll(".dialog-head")[0].querySelectorAll("button")[0], "click");
+  const avatar = dialog.querySelectorAll(".crm-profile-avatar")[0]; assert.equal(avatar.hidden, true); assert.equal(avatar.textContent, ""); assert.ok(clearedAvatars.includes(avatar));
+  await f.ui.openSelectedProfile(opener); await f.settle();
+  assert.equal(shownAvatars.at(-1), selected, "the conversation selection was never replaced by the standalone profile target");
+  assert.equal(f.calls.some(call => /\/read$/.test(call.path)), false); assert.deepEqual(f.errors, []);
+});
+
+test("closing a profile returns to its current entry after a received-list refresh replaces the original button", async t => {
+  const target = id(100), original = new Element("button"), replacement = new Element("button"), resolved = [];
+  const f = await harness(t, call => call.path.endsWith(`/conversations/${target}`) ? profileFor(target) : undefined,
+    { getProfileReturnFocus(id) { resolved.push(id); return replacement; }, getReturnFocus() { throw new Error("the profile still has a live entry"); } });
+  f.body.append(original); await f.ui.openClientProfile(target, original); await f.settle();
+  original.remove(); f.body.append(replacement);
+  const dialog = clientProfileDialog(f);
+  await f.emit(dialog.querySelectorAll(".dialog-head")[0].querySelectorAll("button")[0], "click");
+  assert.equal(dialog.open, false); assert.equal(replacement.focused, true); assert.deepEqual(resolved, [target]);
+  assert.equal(f.calls.some(call => /\/read$/.test(call.path) || call.options.mutation), false); assert.deepEqual(f.errors, []);
+});
+
+test("late profile and preference responses cannot replace the explicitly opened current client or survive suspension", async t => {
+  const first = id(100), second = id(101), oldProfile = deferred(), oldPreferences = deferred();
+  const f = await harness(t, call => {
+    if (call.path.endsWith(`/conversations/${first}/preferences`)) return oldPreferences.promise;
+    if (call.path.endsWith(`/conversations/${second}/preferences`)) return preferenceView(catalogue.categories[0].preferences[1]);
+    if (call.path.endsWith(`/conversations/${first}`)) return oldProfile.promise;
+    if (call.path.endsWith(`/conversations/${second}`)) return profileFor(second);
+  }, { preferencesEnabled: true });
+  const opening = f.ui.openClientProfile(first); await f.settle();
+  await f.ui.openClientProfile(second); await f.settle();
+  oldProfile.resolve(profileFor(first)); oldPreferences.resolve(preferenceView()); await opening; await f.settle();
+  const dialog = clientProfileDialog(f);
+  assert.ok(dialog.textContent.includes(`Synthetic ${second}`)); assert.ok(!dialog.textContent.includes(`Synthetic ${first}`));
+  assert.equal(dialog.querySelectorAll(".preferences-selected")[0].textContent, catalogue.categories[0].preferences[1].fr);
+  f.ui.suspend(); assert.equal(dialog.open, false); assert.equal(dialog.querySelectorAll(".crm-client-preferences")[0].textContent, "Goûts & fantasmes");
+  assert.equal(f.calls.some(call => /\/read$/.test(call.path) || call.options.mutation), false); assert.deepEqual(f.errors, []);
 });

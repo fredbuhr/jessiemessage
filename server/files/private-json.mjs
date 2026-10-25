@@ -6,7 +6,7 @@ import { withPrivateDirectory } from "./private-directory.mjs";
 /** Atomic, bounded, canonical private JSON with optimistic revision and a short writer lock. */
 export function createPrivateJsonStore({ name: NAME, lock: LOCK, maxBytes: MAX_BYTES, validate: validateCopyState, empty: emptyCopyState, fail: failCopy, isKnownError }) {
   if (![NAME, LOCK].every(name => typeof name === "string" && /^[a-z][a-z0-9.-]{0,80}$/.test(name)) || NAME === LOCK
-    || !Number.isSafeInteger(MAX_BYTES) || MAX_BYTES < 1 || MAX_BYTES > 131072
+    || !Number.isSafeInteger(MAX_BYTES) || MAX_BYTES < 1 || MAX_BYTES > 262144
     || [validateCopyState, emptyCopyState, failCopy, isKnownError].some(value => typeof value !== "function")) throw new TypeError("Invalid private JSON store configuration.");
 const FIELDS = ["dev", "ino", "mode", "uid", "gid", "nlink", "size", "mtimeNs", "ctimeNs"];
 const same = (a, b) => FIELDS.every(key => a[key] === b[key]);

@@ -520,7 +520,8 @@ export function createChatStore(pool, { clock, enqueueNotification, decorateMess
         const actorId = await candidateActor(connection, tokenHash);
         const admin = await lockUser(connection, actorId);
         const mfa = await lockMfa(connection, admin, now);
-        now = (await actorSession(connection, tokenHash, admin, "admin", mfa, now)).now;
+        const actorProof = await actorSession(connection, tokenHash, admin, "admin", mfa, now);
+        now = actorProof.now;
         const unread = "(m.sequence_no > COALESCE(r.last_read_sequence, 0))";
         const seek = position === null ? "" : `AND (${unread} < ? OR (${unread} = ? AND (m.created_at < ? OR (m.created_at = ? AND m.id < ?))))`;
         // Select one current incoming preview per conversation before applying
@@ -537,16 +538,23 @@ export function createChatStore(pool, { clock, enqueueNotification, decorateMess
               ORDER BY latest.sequence_no DESC LIMIT 1) ${seek}
           ORDER BY inbox_unread DESC, m.created_at DESC, m.id DESC LIMIT ?`,
         [admin.id, sqlDate(now), sqlDate(now), sqlDate(now), ...(position ? [position[0], position[0], position[1], position[1], Buffer.from(position[2], "hex")] : []), limit + 1]);
-        const selected = rows.slice(0, limit), contexts = new Map(), items = [];
+        const selected = rows.slice(0, limit), items = [];
         for (const row of selected) {
-          const id = row.conversation_id.toString("hex");
-          if (!contexts.has(id)) {
-            const context = await authorize(connection, { role: "admin", tokenHash, conversationId: row.conversation_id, now });
-            contexts.set(id, { context, conversation: await summary(connection, context) });
-          }
-          const { context, conversation } = contexts.get(id);
+          // The administrator, MFA and actor session remain exclusively locked,
+          // as in listConversations. Recheck each current client and binding
+          // after any lock wait, without repeating the same admin discovery.
+          const client = await lockUser(connection, row.sender_id);
+          await lockClientAuth(connection, client);
+          const conversation = (await connection.query("SELECT id, admin_id, client_id, created_at, closed_at FROM conversations WHERE id = ? FOR UPDATE", [row.conversation_id]))[0];
+          if (!conversation || !conversation.admin_id.equals(admin.id) || !conversation.client_id.equals(client.id)
+            || !conversation.client_id.equals(row.sender_id)) fail("CHAT_NOT_FOUND");
+          now = sessionNow(now);
+          if (now >= timestamp(actorProof.expires_at)) fail("CHAT_UNAUTHORIZED");
+          if (timestamp(conversation.created_at) > now) fail("CHAT_FORBIDDEN");
+          const context = { actor: admin, admin, client, conversation, now };
+          const view = await summary(connection, context);
           const message = (await decorated(connection, context, [rawMessage(row, admin.id)]))[0];
-          items.push({ conversation, message, unread: Number(row.inbox_unread) === 1 });
+          items.push({ conversation: view, message, unread: Number(row.inbox_unread) === 1 });
         }
         const hasMore = rows.length > limit, last = selected.at(-1);
         return { items, hasMore, nextCursor: hasMore ? encodeInboxCursor([Number(last.inbox_unread), last.inbox_created, last.id.toString("hex")]) : null };

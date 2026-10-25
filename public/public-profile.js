@@ -4,8 +4,20 @@ import "./i18n-preferences.js";
 import "./i18n-public-profile.js";
 
 const ui = globalThis.JessieI18n, byId = id => document.getElementById(id);
-let profile = null, catalogue = null, busy = false;
+let profile = null, catalogue = null, busy = false, portraitEpoch = 0;
 const content = byId("public-profile-content"), status = byId("public-profile-status"), retry = byId("public-profile-retry"), list = byId("public-profile-preferences");
+const portrait = byId("public-profile-portrait");
+function clearPortrait() { portraitEpoch++; portrait.replaceChildren(); ui.rawText(portrait, "J"); }
+function renderPortrait(version) {
+  clearPortrait();
+  const initials = profile.displayName.trim().split(/\s+/u).slice(0, 2).map(part => [...part][0] ?? "").join("").toUpperCase() || "J";
+  ui.rawText(portrait, initials);
+  if (version === null) return;
+  const epoch = portraitEpoch, image = document.createElement("img"); image.alt = ""; image.width = 96; image.height = 96; image.decoding = "async";
+  image.addEventListener("load", () => { if (epoch === portraitEpoch && profile) portrait.replaceChildren(image); });
+  image.addEventListener("error", () => { if (epoch === portraitEpoch && profile) ui.rawText(portrait, initials); });
+  image.src = `/api/public/jessie/avatar?v=${version}`;
+}
 function clear() { for (const child of [...list.children]) { ui.forget(child); child.remove(); } }
 function render() {
   if (!profile || !catalogue) return;
@@ -21,18 +33,22 @@ function render() {
   }
   if (!selected.size) { const empty = document.createElement("p"); empty.className = "status"; ui.text(empty, "Jessie n’a pas encore partagé de préférences ici."); list.append(empty); }
 }
-async function json(path, limit) {
+async function json(path, limit, publicProfile = false) {
   const response = await fetch(path, { credentials: "omit", cache: "no-store", signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw Object.assign(new Error("unavailable"), { status: response.status });
-  const raw = await response.text(); if (raw.length > limit) throw new Error("oversized"); return JSON.parse(raw);
+  const raw = await response.text(); if (raw.length > limit) throw new Error("oversized"); const body = JSON.parse(raw);
+  if (!publicProfile) return body;
+  const avatarVersion = response.headers.get("X-Jessie-Avatar-Version");
+  if (avatarVersion !== null && (!/^[1-9][0-9]{0,9}$/.test(avatarVersion) || Number(avatarVersion) > 4294967295)) throw new Error("invalid_avatar_version");
+  return { body, avatarVersion };
 }
 async function load() {
-  if (busy) return; busy = true; retry.hidden = true; content.hidden = true; status.hidden = false; status.classList.remove("is-error"); ui.text(status, "Chargement du profil…");
+  if (busy) return; busy = true; retry.hidden = true; content.hidden = true; clearPortrait(); status.hidden = false; status.classList.remove("is-error"); ui.text(status, "Chargement du profil…");
   try {
-    const [value, definitions] = await Promise.all([json("/api/public/jessie", 150000), json("/preferences-catalogue.json", 200000)]);
-    const validated = validatePublicProfile(value), index = buildPreferencesIndex(definitions); if (validated.selectedIds.some(id => !index.has(id))) throw new Error("invalid_preferences");
-    profile = validated; catalogue = definitions; render(); status.hidden = true; content.hidden = false;
-  } catch (error) { profile = null; catalogue = null; clear(); ui.rawText(byId("public-profile-name"), ""); ui.rawText(byId("public-profile-bio"), ""); ui.text(status, error.status === 404 ? "Ce profil n’est pas disponible pour le moment." : "Le profil n’a pas pu être chargé. Réessaie dans un moment."); status.classList.add("is-error"); retry.hidden = false; }
+    const [value, definitions] = await Promise.all([json("/api/public/jessie", 150000, true), json("/preferences-catalogue.json", 200000)]);
+    const validated = validatePublicProfile(value.body), index = buildPreferencesIndex(definitions); if (validated.selectedIds.some(id => !index.has(id))) throw new Error("invalid_preferences");
+    profile = validated; catalogue = definitions; render(); renderPortrait(value.avatarVersion); status.hidden = true; content.hidden = false;
+  } catch (error) { profile = null; catalogue = null; clear(); clearPortrait(); ui.rawText(byId("public-profile-name"), ""); ui.rawText(byId("public-profile-bio"), ""); ui.text(status, error.status === 404 ? "Ce profil n’est pas disponible pour le moment." : "Le profil n’a pas pu être chargé. Réessaie dans un moment."); status.classList.add("is-error"); retry.hidden = false; }
   finally { busy = false; }
 }
 ui.onChange(render); retry.addEventListener("click", () => void load()); void load();

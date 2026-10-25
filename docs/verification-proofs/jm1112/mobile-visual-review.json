@@ -1,0 +1,97 @@
+{
+  "format": "jessiemessage-1112-mobile-visual-review",
+  "source": "488716280cb55bc993e450ced83d705f421f1daa",
+  "tree": "b934e09155b157c5b5fd98ad8338e539a27c9b02",
+  "run": 40206988826,
+  "attempt": 1,
+  "jobs": [
+    {
+      "id": 121209943059,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "488716280cb55bc993e450ced83d705f421f1daa",
+      "summary": [
+        "2026-10-25T15:32:29.3449363Z ℹ tests 275",
+        "2026-10-25T15:32:29.3449771Z ℹ pass 275",
+        "2026-10-25T15:32:29.3449970Z ℹ fail 0",
+        "2026-10-25T15:32:29.3450389Z ℹ skipped 0"
+      ]
+    },
+    {
+      "id": 121209943187,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "488716280cb55bc993e450ced83d705f421f1daa",
+      "summary": [
+        "2026-10-25T15:29:15.1978968Z ℹ tests 4124",
+        "2026-10-25T15:29:15.1979385Z ℹ pass 4072",
+        "2026-10-25T15:29:15.1979582Z ℹ fail 0",
+        "2026-10-25T15:29:15.1980000Z ℹ skipped 52"
+      ]
+    },
+    {
+      "id": 121209943194,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "488716280cb55bc993e450ced83d705f421f1daa",
+      "summary": [
+        "2026-10-25T15:34:56.5611893Z # tests 608",
+        "2026-10-25T15:34:56.5612509Z # pass 608",
+        "2026-10-25T15:34:56.5612724Z # fail 0",
+        "2026-10-25T15:34:56.5628362Z # skipped 0"
+      ]
+    },
+    {
+      "id": 121209943259,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "488716280cb55bc993e450ced83d705f421f1daa",
+      "summary": [
+        "2026-10-25T15:29:15.3095875Z ℹ tests 14",
+        "2026-10-25T15:29:15.3101094Z ℹ pass 14",
+        "2026-10-25T15:29:15.3101519Z ℹ fail 0",
+        "2026-10-25T15:29:15.3102386Z ℹ skipped 0"
+      ]
+    },
+    {
+      "id": 121209943277,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "488716280cb55bc993e450ced83d705f421f1daa",
+      "summary": [
+        "2026-10-25T15:34:43.6961997Z # tests 608",
+        "2026-10-25T15:34:43.6962533Z # pass 608",
+        "2026-10-25T15:34:43.6962723Z # fail 0",
+        "2026-10-25T15:34:43.6991745Z # skipped 0"
+      ]
+    }
+  ],
+  "allFiveJobsSuccessful": true,
+  "artifact": {
+    "id": 12604735281,
+    "digest": "sha256:706bb51a2cfad8fd59234db7570d424c12220247a84ebc33b1c2b64a47291f52",
+    "run": 40206988826,
+    "source": "488716280cb55bc993e450ced83d705f421f1daa"
+  },
+  "inspected": [
+    "experience-admin-320-client-conversation.png",
+    "experience-admin-320-client-profile.png",
+    "experience-admin-1280-client-profile.png"
+  ],
+  "findings": [
+    {
+      "result": "verified",
+      "detail": "Profile target is independent of selected chat, actual JPEG/preferences visible, profile/close targets44px, name width at least80px and no page overflow at320/1280."
+    },
+    {
+      "result": "visual_defect_corrected_pending_final_qualification",
+      "detail": "The empty admin composer placeholder wraps and is partly clipped at320px. Message and optional-caption hints shortened; exact FR/EN/caption fit assertions added. No change to required/optional semantics or limits."
+    }
+  ],
+  "productionChanged": false
+}

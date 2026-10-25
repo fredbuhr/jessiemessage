@@ -65,7 +65,7 @@ test("chat keyboard destinations and composer instructions keep their explicit r
   assert.equal(ids.get("message-scroll").attributes["data-jm-i18n-aria-label"], "Historique de la conversation");
   assert.equal(ids.get("inbox-title").attributes.tabindex, "-1");
   assert.equal(ids.get("message-body").attributes["aria-describedby"], "composer-help");
-  assert.equal(ids.get("message-body").attributes["data-jm-i18n-placeholder"], "Écris ton message…");
+  assert.equal(ids.get("message-body").attributes["data-jm-i18n-placeholder"], "Message…");
   assert.equal(ids.get("composer-help").attributes["data-jm-i18n"], "Message privé · 4 096 caractères maximum");
 });
 

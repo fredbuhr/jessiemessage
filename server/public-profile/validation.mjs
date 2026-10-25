@@ -1,7 +1,10 @@
 import { selectedIds, PREFERENCES_CATALOGUE_VERSION } from "../preferences/validation.mjs";
+import { MAX_AVATAR_THUMBNAIL_BYTES } from "../profile/validation.mjs";
 
 export { PREFERENCES_CATALOGUE_VERSION };
-export const MAX_PUBLIC_PROFILE_BYTES = 65536;
+export const MAX_PUBLIC_PROFILE_INPUT_BYTES = 65536;
+export const MAX_PUBLIC_PROFILE_BYTES = 262144;
+export const MAX_PUBLIC_AVATAR_BYTES = MAX_AVATAR_THUMBNAIL_BYTES;
 export const MAX_PUBLIC_PROFILE_VERSION = 4294967295;
 export class PublicProfileError extends Error {
   constructor(code = "PUBLIC_PROFILE_UNAVAILABLE", retryAfter) {
@@ -38,12 +41,25 @@ export function validatePublicProfileInput(value) {
   if (!profileVersion(value.expectedVersion) || Number(value.expectedVersion) >= MAX_PUBLIC_PROFILE_VERSION) input();
   return { expectedVersion: value.expectedVersion, ...content(value) };
 }
+export function publicAvatarSnapshot(bytes) {
+  if (!Buffer.isBuffer(bytes) || bytes.length < 5 || bytes.length > MAX_PUBLIC_AVATAR_BYTES
+    || bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes[2] !== 0xff || bytes.at(-2) !== 0xff || bytes.at(-1) !== 0xd9) input();
+  return bytes.toString("base64");
+}
+function avatar(value) {
+  if (value === null) return null;
+  if (typeof value !== "string" || value.length > Math.ceil(MAX_PUBLIC_AVATAR_BYTES / 3) * 4
+    || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value)) input();
+  const bytes = Buffer.from(value, "base64");
+  try { if (publicAvatarSnapshot(bytes) !== value) input(); return value; }
+  finally { bytes.fill(0); }
+}
 export function validatePublicProfileState(value) {
-  fields(value, ["format", "revision", "published", "displayName", "bio", "catalogueVersion", "selectedIds"]);
-  if (value.format !== 1 || !Number.isSafeInteger(value.revision) || value.revision < 0 || value.revision > MAX_PUBLIC_PROFILE_VERSION) input();
+  fields(value, ["format", "revision", "published", "displayName", "bio", "catalogueVersion", "selectedIds", ...(value?.format === 2 ? ["avatar"] : [])]);
+  if (![1, 2].includes(value.format) || !Number.isSafeInteger(value.revision) || value.revision < 0 || value.revision > MAX_PUBLIC_PROFILE_VERSION) input();
   const validated = content(value);
   if (JSON.stringify(validated.selectedIds) !== JSON.stringify(value.selectedIds)) input();
-  return { format: 1, revision: value.revision, ...validated };
+  return { format: value.format, revision: value.revision, ...validated, ...(value.format === 2 ? { avatar: avatar(value.avatar) } : {}) };
 }
 export const emptyPublicProfile = () => ({ format: 1, revision: 0, published: false, displayName: "Jessie", bio: "", catalogueVersion: PREFERENCES_CATALOGUE_VERSION, selectedIds: [] });
 export function adminPublicProfile(state) {

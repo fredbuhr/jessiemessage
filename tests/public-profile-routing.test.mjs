@@ -22,13 +22,15 @@ test("the application serves the public profile page and module graph without en
 test("profile handler composition exposes only the publication service's public DTO anonymously", async t => {
   let privateCalls = 0;
   const privateOperation = () => { privateCalls++; throw new Error("private operation must not be reached"); };
-  const publication = { actor: privateOperation, read: privateOperation, save: privateOperation, publicView: async () => ({ ...view, userId: "never-serialize", csrf: "never-serialize" }) };
+  const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 0xff, 0xd9]);
+  const publication = { actor: privateOperation, read: privateOperation, save: privateOperation, publicView: async () => ({ ...view, userId: "never-serialize", csrf: "never-serialize" }), publicAvatar: async version => { assert.equal(version, "1"); return { bytes: jpeg, mime: "image/jpeg" }; } };
   const profileHandler = createProfileHandler({ actor: privateOperation, profile: privateOperation, save: privateOperation, avatar: privateOperation, peerAvatar: privateOperation, publication }, { origin });
   const server = createAppServer({ profileHandler });
   await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
   t.after(async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); });
   const base = `http://127.0.0.1:${server.address().port}`;
   const response = await fetch(base + "/api/public/jessie"); assert.equal(response.status, 200); assert.deepEqual(await response.json(), view);
+  const image = await fetch(base + "/api/public/jessie/avatar?v=1"); assert.equal(image.status, 200); assert.equal(image.headers.get("content-type"), "image/jpeg"); assert.deepEqual(Buffer.from(await image.arrayBuffer()), jpeg);
   assert.equal(privateCalls, 0);
   assert.equal((await fetch(base + "/api/profile/admin/publication")).status, 401);
   assert.equal(privateCalls, 0);

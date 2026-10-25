@@ -1,5 +1,5 @@
 import { checkMutation, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
-import { MAX_PUBLIC_PROFILE_BYTES, validatePublicProfileInput } from "./validation.mjs";
+import { MAX_PUBLIC_PROFILE_INPUT_BYTES, profileVersion, publicAvatarSnapshot, validatePublicProfileInput } from "./validation.mjs";
 
 function publicError(error) {
   if (Number.isInteger(error?.httpStatus) && [400, 401, 403, 408, 413, 415].includes(error.httpStatus)) return { status: error.httpStatus, code: error.publicCode };
@@ -25,11 +25,22 @@ export function createPublicProfileHandler(service, { origin }) {
   if (parsed.protocol !== "https:" || parsed.origin !== origin || ["actor", "read", "save", "publicView"].some(name => typeof service?.[name] !== "function")) throw new TypeError("A public-profile service is required.");
   return async (request, response) => {
     let url; try { url = new URL(request.url ?? "/", "http://localhost"); } catch { return false; }
-    const publicRead = url.pathname === "/api/public/jessie", admin = url.pathname === "/api/profile/admin/publication";
-    if (!publicRead && !admin) return false;
-    const method = request.method ?? "GET", methods = publicRead ? ["GET", "HEAD"] : ["GET", "POST"];
+    const publicRead = url.pathname === "/api/public/jessie", avatarRead = url.pathname === "/api/public/jessie/avatar", admin = url.pathname === "/api/profile/admin/publication";
+    if (!publicRead && !avatarRead && !admin) return false;
+    const method = request.method ?? "GET", methods = publicRead || avatarRead ? ["GET", "HEAD"] : ["GET", "POST"];
     if (!methods.includes(method)) { reply(response, method, 405, { error: "method_not_allowed" }, { Allow: methods.join(", "), Connection: "close" }); request.resume(); return true; }
     try {
+      if (avatarRead) {
+        if ([...url.searchParams].length !== 1 || !url.searchParams.has("v") || !profileVersion(url.searchParams.get("v")) || url.searchParams.get("v") === "0") throw httpError(400, "invalid_request");
+        if (typeof service.publicAvatar !== "function") throw httpError(503, "public_profile_unavailable");
+        const image = await service.publicAvatar(url.searchParams.get("v"));
+        try { if (image?.mime !== "image/jpeg") throw new Error("invalid"); publicAvatarSnapshot(image.bytes); }
+        catch { throw httpError(503, "public_profile_unavailable"); }
+        if (!response.destroyed && !response.writableEnded) reply(response, method, 200, image.bytes, {
+          "Content-Type": "image/jpeg", "Content-Length": String(image.bytes.length), "Content-Disposition": 'inline; filename="jessie.jpg"', "Accept-Ranges": "none",
+        });
+        return true;
+      }
       if ([...url.searchParams].length) throw httpError(400, "invalid_request");
       let value;
       if (publicRead) value = await service.publicView();
@@ -39,10 +50,15 @@ export function createPublicProfileHandler(service, { origin }) {
         const principal = await service.actor(token);
         if (principal?.user?.role !== "admin" || !isToken(principal.csrf)) throw httpError(401, "authentication_required");
         if (method === "POST" && !sameText(request.headers["x-csrf-token"], principal.csrf)) throw httpError(403, "csrf_failed");
-        value = method === "POST" ? await service.save(token, validatePublicProfileInput(await readJson(request, { maxBytes: MAX_PUBLIC_PROFILE_BYTES }))) : await service.read(token);
+        value = method === "POST" ? await service.save(token, validatePublicProfileInput(await readJson(request, { maxBytes: MAX_PUBLIC_PROFILE_INPUT_BYTES }))) : await service.read(token);
       }
       let view; try { view = dto(value, publicRead); } catch { throw httpError(503, "public_profile_unavailable"); }
-      if (!response.destroyed && !response.writableEnded) reply(response, method, 200, view);
+      const headers = {};
+      if (publicRead && value.avatarVersion !== undefined && value.avatarVersion !== null) {
+        if (!profileVersion(value.avatarVersion) || value.avatarVersion === "0") throw httpError(503, "public_profile_unavailable");
+        headers["X-Jessie-Avatar-Version"] = value.avatarVersion;
+      }
+      if (!response.destroyed && !response.writableEnded) reply(response, method, 200, view, headers);
     } catch (error) {
       if (!response.headersSent && !response.destroyed) {
         const mapped = publicError(error), headers = mapped.retry ? { "Retry-After": String(mapped.retry) } : {};

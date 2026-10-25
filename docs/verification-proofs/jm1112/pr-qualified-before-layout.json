@@ -1,0 +1,77 @@
+{
+  "format": "jessiemessage-1112-native-qualified-before-mobile-controls-polish",
+  "source": "45ea7cf858cf074dd8a22319426e0846bc8acfbd",
+  "tree": "97f5bd4be637970358d7ebf20d689831fc39d47a",
+  "run": 40206053487,
+  "attempt": 1,
+  "jobs": [
+    {
+      "id": 121207104608,
+      "name": "verify",
+      "conclusion": "success",
+      "summary": [
+        "2026-10-25T15:17:22.0356164Z ℹ tests 4124",
+        "2026-10-25T15:17:22.0356898Z ℹ pass 4072",
+        "2026-10-25T15:17:22.0357239Z ℹ fail 0",
+        "2026-10-25T15:17:22.0358289Z ℹ skipped 52"
+      ]
+    },
+    {
+      "id": 121207104790,
+      "name": "Chrome keyboard and chat lifecycle",
+      "conclusion": "success",
+      "summary": [
+        "2026-10-25T15:20:56.2929780Z ℹ tests 275",
+        "2026-10-25T15:20:56.2930204Z ℹ pass 275",
+        "2026-10-25T15:20:56.2930407Z ℹ fail 0",
+        "2026-10-25T15:20:56.2930819Z ℹ skipped 0"
+      ]
+    },
+    {
+      "id": 121207104813,
+      "name": "MariaDB 10.11",
+      "conclusion": "success",
+      "summary": [
+        "2026-10-25T15:19:59.0938008Z # tests 608",
+        "2026-10-25T15:19:59.0946481Z # pass 608",
+        "2026-10-25T15:19:59.0946635Z # fail 0",
+        "2026-10-25T15:19:59.0946951Z # skipped 0"
+      ]
+    },
+    {
+      "id": 121207104826,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "conclusion": "success",
+      "summary": [
+        "2026-10-25T15:17:16.6324042Z ℹ tests 14",
+        "2026-10-25T15:17:16.6326707Z ℹ pass 14",
+        "2026-10-25T15:17:16.6327065Z ℹ fail 0",
+        "2026-10-25T15:17:16.6327900Z ℹ skipped 0"
+      ]
+    },
+    {
+      "id": 121207104827,
+      "name": "MariaDB 11.4",
+      "conclusion": "success",
+      "summary": [
+        "2026-10-25T15:22:56.1256679Z # tests 608",
+        "2026-10-25T15:22:56.1257386Z # pass 608",
+        "2026-10-25T15:22:56.1257734Z # fail 0",
+        "2026-10-25T15:22:56.1258429Z # skipped 0"
+      ]
+    }
+  ],
+  "allFiveJobsSuccessful": true,
+  "productionChanged": false,
+  "subsequentChange": "Shorter visible client profile header label, 44px CRM close target, real HTTPS geometry assertions and selected-admin captures require final qualification.",
+  "visualInspection": {
+    "artifact": 12603268544,
+    "zipSha256": "10ed791acafa8922b57733d5aafac5412f2efc8eb9354d2167d1c1efd2fb1111",
+    "inspected": [
+      "experience-admin-320-client-profile.png",
+      "experience-client-320-jessie-avatar.png",
+      "experience-public-320-profile.png"
+    ],
+    "result": "Current client JPEG and read-only choices visible; private/public Jessie JPEG visible; no horizontal page overflow in the asserted paths. Small admin conversation header and close target are being polished separately."
+  }
+}

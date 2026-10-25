@@ -134,6 +134,15 @@ async function createPhoto(page, conversationId) {
 async function imageReadable(page, path) {
   return page.executeAsync(`const path=arguments[0],done=arguments[arguments.length-1];(async()=>{const response=await fetch(path,{cache:'no-store',credentials:'same-origin'});if(response.status!==200)return{status:response.status};const image=await createImageBitmap(await response.blob());const result={status:200,width:image.width,height:image.height};image.close();return result;})().then(done,()=>done({status:0}));`, path);
 }
+async function createAdminAvatar(page) {
+  return page.executeAsync(`const done=arguments[arguments.length-1];(async()=>{
+    const session=await(await fetch('/api/auth/session',{cache:'no-store'})).json();
+    const canvas=document.createElement('canvas');canvas.width=32;canvas.height=24;const context=canvas.getContext('2d');
+    context.fillStyle='#a83268';context.fillRect(0,0,32,24);context.fillStyle='#efcf96';context.fillRect(8,4,16,16);
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg'));
+    const response=await fetch('/api/media/admin/assets',{method:'POST',headers:{'X-CSRF-Token':session.csrf,'Content-Type':'image/jpeg'},body:blob});
+    return{status:response.status,data:await response.json()};})().then(done,()=>done({status:0}));`);
+}
 async function selectPhotos(page, bytes, count, offset = 0) {
   // Replace only the OS picker; decoding, normalization, uploads and sends use
   // the production controller and actual SQL-backed HTTPS endpoints.
@@ -191,13 +200,83 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
       // dialog does not reopen that menu automatically.
       await openMenu(admin); await admin.click(".crm-fiche-button");
       await waitUntil(() => admin.execute("return !!document.querySelector('.crm-dialog')?.open&&!document.querySelector('.crm-client-preferences').hidden"), "authorized admin client-profile preferences entry");
-      await admin.click(".crm-client-preferences summary");
-      await waitUntil(() => admin.execute("return document.querySelector('.crm-client-preferences .preferences-selected .preference-choice')?.textContent===arguments[0]", catalogue.categories[0].preferences[0].fr), "client preferences are rendered read-only in the actual CRM profile");
-      assert.equal(await admin.execute("const panel=document.querySelector('.crm-client-preferences');return panel.querySelector('.preferences-actions').hidden&&panel.querySelector('.preferences-search-label').hidden&&!panel.querySelector('[data-preference-id]')"), true);
-      await captureReadOnlyPreferences(admin);
-      await admin.click(".crm-dialog .dialog-head button");
+      try {
+        await waitUntil(() => admin.execute("return document.querySelector('.crm-client-preferences').open&&document.querySelector('.crm-client-preferences .preferences-selected .preference-choice')?.textContent===arguments[0]", catalogue.categories[0].preferences[0].fr), "client preferences are rendered read-only automatically in the actual CRM profile");
+        assert.equal(await admin.execute("const panel=document.querySelector('.crm-client-preferences');return panel.querySelector('.preferences-actions').hidden&&panel.querySelector('.preferences-search-label').hidden&&!panel.querySelector('[data-preference-id]')"), true);
+        await captureReadOnlyPreferences(admin);
+      } finally { if (await admin.execute("return document.querySelector('.crm-dialog')?.open===true")) await admin.click(".crm-dialog .dialog-head button"); }
       const state = await fixture.privatePreferencesState([firstChoice, secondChoice]); assert.equal(state.rows, 2); assert.equal(state.encrypted, true);
       assert.deepEqual((await json(other, "client", "/api/profile/client/preferences")).data.selectedIds, []);
+    });
+    await t.test("explicit desktop and mobile client profiles show the authorized avatar and preferences without consuming unread messages", async () => {
+      const profile = await json(client, "client", "/api/profile/client"); assert.equal(profile.status, 200);
+      const saved = await json(client, "client", "/api/profile/client", { expectedVersion: profile.data.version, pseudonym: profile.data.pseudonym, avatarId: photo.data.message.media.id });
+      assert.equal(saved.status, 200); assert.equal(saved.data.avatarId, photo.data.message.media.id);
+      await waitUntil(async () => {
+        const current = await json(admin, "admin", `/api/chat/admin/conversations/${conversation}/messages`);
+        return current.status === 200 && BigInt(current.data.conversation.lastReadSequence) >= BigInt(photo.data.message.sequence);
+      }, "existing conversation read receipt has settled before the unread-profile exercise", 20000);
+      const restore = async page => {
+        if (await page.execute("return document.querySelector('.crm-dialog')?.open===true")) await page.click(".crm-dialog .dialog-head button");
+        if (!await page.execute("return document.getElementById('composer').checkVisibility()")) {
+          if (await page.execute("return document.getElementById('show-clients')?.checkVisibility()===true")) await page.click("#show-clients");
+          await page.click(`#conversations [data-conversation-id="${conversation}"]`);
+        }
+        await ready(page, "admin");
+      };
+      try {
+        for (const page of [admin, adminDevice]) {
+          await page.click("#back-to-inbox");
+          await waitUntil(() => page.execute("return document.getElementById('received-overview').checkVisibility()&&!document.getElementById('composer').checkVisibility()"), "administrator received overview without a selected conversation");
+        }
+        const probe = await json(client, "client", `/api/chat/client/conversations/${conversation}/messages`, { clientMessageId: randomBytes(16).toString("hex"), body: "Synthetic unread client profile preview" }); assert.equal(probe.status, 201);
+        const before = await json(admin, "admin", `/api/chat/admin/conversations/${conversation}/messages`); assert.equal(before.status, 200);
+        const through = before.data.conversation.lastReadSequence; assert.ok(BigInt(through) < BigInt(probe.data.message.sequence));
+        for (const [page, width] of [[admin, 1280], [adminDevice, 320]]) {
+          await page.click("#refresh-received");
+          const selector = `.received-profile[data-profile-conversation-id="${conversation}"]`;
+          await waitUntil(() => page.execute("return !!document.querySelector(arguments[0])&&!document.getElementById('refresh-received').disabled", selector), "explicit profile button for the received client");
+          await page.click(selector);
+          await waitUntil(() => page.execute("const dialog=document.querySelector('.crm-dialog'),image=dialog?.querySelector('.crm-profile-avatar img');return !!dialog?.open&&!!image?.complete&&image.naturalWidth>0&&dialog.querySelector('.preferences-selected .preference-choice')?.textContent===arguments[0]", catalogue.categories[0].preferences[0].fr), "actual authorized client avatar and read-only preferences in the profile", 20000);
+          assert.equal(await page.execute("return !document.getElementById('composer').checkVisibility()&&document.getElementById('received-overview').checkVisibility()"), true, "viewing a profile must not select its conversation");
+          assert.equal(await page.execute("const dialog=document.querySelector('.crm-dialog'),preferences=dialog.querySelector('.crm-client-preferences'),form=dialog.querySelector('.crm-profile-form');return !!(preferences.compareDocumentPosition(form)&Node.DOCUMENT_POSITION_FOLLOWING)&&document.documentElement.scrollWidth<=innerWidth+1"), true);
+          assert.equal(await page.execute("const r=document.querySelector('.crm-dialog .dialog-head button').getBoundingClientRect();return r.width>=44&&r.height>=44"), true, "the profile close action has a usable touch target");
+          const after = await json(admin, "admin", `/api/chat/admin/conversations/${conversation}/messages`); assert.equal(after.data.conversation.lastReadSequence, through, "profile consultation preserves the exact unread cursor");
+          await mkdir(new URL("../../artifacts/homepage/", import.meta.url), { recursive: true });
+          await writeFile(new URL(`../../artifacts/homepage/experience-admin-${width}-client-profile.png`, import.meta.url), Buffer.from(await page.screenshot(), "base64"));
+          await page.execute("window.__profileEntryBeforeRefresh=document.querySelector(arguments[0]);document.getElementById('refresh-received').click()", selector);
+          await waitUntil(() => page.execute("return !window.__profileEntryBeforeRefresh.isConnected&&!document.getElementById('refresh-received').disabled&&document.querySelector('.crm-dialog').open"), "a background inbox refresh replaces the entry while its profile remains open");
+          await page.click(".crm-dialog .dialog-head button");
+          assert.equal(await page.execute("return document.activeElement.getAttribute('data-profile-conversation-id')"), conversation, "closing the profile restores its direct entry");
+          await page.execute("delete window.__profileEntryBeforeRefresh");
+        }
+      } finally {
+        const restored = await Promise.allSettled([restore(admin), restore(adminDevice)]);
+        const failure = restored.find(result => result.status === "rejected"); if (failure) throw failure.reason;
+      }
+      for (const [page, width] of [[admin, 1280], [adminDevice, 320]]) {
+        await waitUntil(() => page.execute("const button=document.getElementById('open-client-profile');return button.checkVisibility()&&!button.hidden"), "direct client profile button in the restored conversation");
+        const geometry = await page.execute("const name=document.getElementById('peer-name').getBoundingClientRect(),button=document.getElementById('open-client-profile').getBoundingClientRect();return {nameWidth:name.width,buttonWidth:button.width,buttonHeight:button.height,right:button.right,viewport:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth+1}");
+        assert.ok(geometry.nameWidth>=80&&geometry.buttonWidth>=44&&geometry.buttonHeight>=44&&geometry.right<=geometry.viewport&&!geometry.overflow, JSON.stringify(geometry));
+        await writeFile(new URL(`../../artifacts/homepage/experience-admin-${width}-client-conversation.png`, import.meta.url), Buffer.from(await page.screenshot(), "base64"));
+      }
+      await waitUntil(() => admin.execute("return document.getElementById('open-client-profile').checkVisibility()"), "direct profile entry in the selected conversation");
+      await admin.click("#open-client-profile");
+      try { await waitUntil(() => admin.execute("return document.querySelector('.crm-dialog')?.open===true"), "conversation profile entry opens the same authorized profile"); }
+      finally { if (await admin.execute("return document.querySelector('.crm-dialog')?.open===true")) await admin.click(".crm-dialog .dialog-head button"); }
+    });
+    await t.test("Jessie's saved avatar replaces the application logo in both client chat identities", async () => {
+      const upload = await createAdminAvatar(admin); assert.equal(upload.status, 201);
+      const before = await json(admin, "admin", "/api/profile/admin"); assert.equal(before.status, 200);
+      const saved = await json(admin, "admin", "/api/profile/admin", { expectedVersion: before.data.version, pseudonym: before.data.pseudonym, avatarId: upload.data.asset.id });
+      assert.equal(saved.status, 200); assert.equal(saved.data.avatarId, upload.data.asset.id);
+      for (const [page, width] of [[client, 320], [clientDevice, 1280]]) {
+        await waitUntil(() => page.execute("const brand=document.querySelector('#brand-avatar img'),peer=document.querySelector('#peer-avatar img');return !!brand?.complete&&brand.naturalWidth===32&&!!peer?.complete&&peer.naturalWidth===32"), "saved Jessie JPEG displayed in the client brand and conversation", 20000);
+        assert.equal(await page.execute("return document.getElementById('brand-link').getAttribute('href')==='/jessie'&&!document.querySelector('#brand-avatar .jm-brand-icon')"), true);
+        await mkdir(new URL("../../artifacts/homepage/", import.meta.url), { recursive: true });
+        await writeFile(new URL(`../../artifacts/homepage/experience-client-${width}-jessie-avatar.png`, import.meta.url), Buffer.from(await page.screenshot(), "base64"));
+      }
+      assert.equal((await json(client, "client", "/api/public/jessie")).status, 404, "saving a private avatar does not publish a profile or photo");
     });
     await t.test("public Jessie profile is an explicit admin snapshot; temporary hiding preserves the private draft after actual session proof", async () => {
       const anonymous = await browser(320), displayName = "Synthetic Jessie public profile", bio = "A synthetic public introduction for the isolated rehearsal.";
@@ -235,6 +314,10 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
         assert.equal((await anonymous.cookies()).some(cookie => [cookieName("admin"), cookieName("client")].includes(cookie.name)), false, "public reads have no authenticated cookie");
         await anonymous.navigate("/jessie");
         await waitUntil(() => anonymous.execute("return !document.getElementById('public-profile-content').hidden&&document.getElementById('public-profile-name').textContent===arguments[0]", displayName), "public page renders without signing in", 20000);
+        await waitUntil(() => anonymous.execute("const image=document.querySelector('#public-profile-portrait img');return !!image?.complete&&image.naturalWidth===32"), "explicit public snapshot renders Jessie's saved JPEG");
+        const publicAvatar = await anonymous.execute("return document.querySelector('#public-profile-portrait img').getAttribute('src')");
+        assert.match(publicAvatar, /^\/api\/public\/jessie\/avatar\?v=[1-9][0-9]*$/);
+        assert.deepEqual(await imageReadable(anonymous, publicAvatar), { status: 200, width: 32, height: 24 });
         assert.equal(await anonymous.execute("return document.getElementById('public-profile-bio').textContent"), bio);
         assert.deepEqual(await anonymous.execute("return [...document.querySelectorAll('.public-preference-list li')].map(node=>node.textContent)"), catalogue.categories[0].preferences.slice(0, 2).map(choice => choice.fr));
         assert.equal(await anonymous.execute("return document.documentElement.scrollWidth<=innerWidth"), true, "public profile fits a 320px screen");
@@ -254,6 +337,7 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
         await waitUntil(() => admin.execute("return document.querySelector('.profile-publication-status').textContent==='Profil public retiré.'"), "explicit unpublish acknowledged", 20000);
         assert.equal(await admin.execute("return __publicationTransport.writes"), 2);
         assert.equal((await json(anonymous, null, "/api/public/jessie")).status, 404);
+        assert.deepEqual(await imageReadable(anonymous, publicAvatar), { status: 404 }, "withdrawing the profile also withdraws its exact published image URL");
         await anonymous.navigate("/jessie");
         await waitUntil(() => anonymous.execute("return document.getElementById('public-profile-content').hidden&&document.getElementById('public-profile-status').textContent==='Ce profil n’est pas disponible pour le moment.'"), "withdrawn public content is no longer rendered", 20000);
       } finally {
@@ -266,6 +350,7 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
         context.fillStyle='#b52f68';context.fillRect(0,0,96,64);context.fillStyle='#153f68';context.fillRect(48,0,48,64);return canvas.toDataURL('image/jpeg').split(',')[1];`);
       await selectPhotos(client, bytes, 5);
       await waitUntil(() => client.execute("return document.querySelectorAll('.photo-batch-item').length===5&&[...document.querySelectorAll('.photo-batch-item img')].every(image=>image.complete&&image.naturalWidth===96)"), "five real JPEG previews before sending");
+      assert.equal(await client.execute("const input=document.getElementById('message-body'),style=getComputedStyle(input),context=document.createElement('canvas').getContext('2d');context.font=style.font;return input.placeholder==='Légende…'&&context.measureText(input.placeholder).width<=input.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight)+1"), true, "the optional caption hint stays readable on a 320px composer");
       const initial = await client.execute("return [...document.querySelectorAll('.photo-batch-item')].map(node=>node.dataset.photoId)");
       await client.click(".photo-batch-item:nth-child(2) button"); assert.equal(await client.execute("return document.querySelectorAll('.photo-batch-item').length"), 4);
       await selectPhotos(client, bytes, 1, 5);

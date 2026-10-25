@@ -97,6 +97,14 @@ test("real Chrome preferences: concurrent device changes preserve a draft until 
     await first.navigate("/?role=admin&readonly=1"); await waitUntil(() => first.execute("return document.querySelector('.preferences-selected').textContent.length>0"), "read-only peer selection");
     assert.equal(await first.execute("return document.querySelector('.preferences-actions').hidden"), true);
     assert.equal(await first.execute("return document.querySelectorAll('.preference-grid button').length"), 0);
+    const writes = source.calls.length;
+    source.rows.set("admin", { version: "2", catalogueVersion: catalogue.meta.version, selectedIds: [] });
+    for (const language of ["fr", "en"]) {
+      await first.navigate(`/?role=admin&readonly=1&lang=${language}`);
+      await waitUntil(() => first.execute("return !document.querySelector('.preferences-section').hidden&&document.querySelector('.preferences-selected').textContent===arguments[0]", language === "fr" ? "Aucune sélection." : "No selections."), "empty read-only client preferences loaded");
+      assert.equal(await first.execute("return document.querySelector('.preferences-search-label').hidden&&document.querySelector('.preferences-actions').hidden&&document.querySelector('.preferences-categories').children.length===0"), true, "an empty profile does not suggest using a hidden search or show editable controls");
+    }
+    assert.equal(source.calls.length, writes, "consulting empty or populated preferences never writes them");
     assert.deepEqual(source.failures, []);
   } finally { await first?.close(); await other?.close(); await source?.close(); await driver.close(); }
 });

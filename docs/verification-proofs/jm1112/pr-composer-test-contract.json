@@ -1,0 +1,48 @@
+{
+  "format": "jessiemessage-1112-composer-test-contract",
+  "source": "2c813d1d22c82b2e0d7966a206e4b546b2412f98",
+  "tree": "9a73e4c972289640c7a7d7634183ccf6a251f64b",
+  "run": 40207912976,
+  "attempt": 1,
+  "qualified": false,
+  "jobs": [
+    {
+      "id": 121212729442,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "2c813d1d22c82b2e0d7966a206e4b546b2412f98"
+    },
+    {
+      "id": 121212729558,
+      "name": "MariaDB 10.11",
+      "status": "in_progress",
+      "conclusion": null,
+      "source": "2c813d1d22c82b2e0d7966a206e4b546b2412f98"
+    },
+    {
+      "id": 121212729622,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "2c813d1d22c82b2e0d7966a206e4b546b2412f98"
+    },
+    {
+      "id": 121212729654,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "2c813d1d22c82b2e0d7966a206e4b546b2412f98"
+    },
+    {
+      "id": 121212729694,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "failure",
+      "source": "2c813d1d22c82b2e0d7966a206e4b546b2412f98"
+    }
+  ],
+  "reason": "One markup test still expected the previous placeholder Écris ton message… instead of the intentionally shortened Message…. General suite:4071pass/1fail/52conditional omissions. HTTPS including current hint-fit assertions succeeded.",
+  "correction": "Update only the exact expected placeholder in tests/chat-accessibility-markup.test.mjs. Preserve tabindex, skip link, aria-describedby, translation-marker and composer-help assertions.",
+  "productionChanged": false
+}
