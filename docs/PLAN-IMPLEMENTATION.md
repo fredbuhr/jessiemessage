@@ -2,14 +2,16 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Correctif1.11.3 — préparation et CHECK acquis, activation attendue
+## Correctif1.11.3 — démarrage rapporté, finalisation attendue
 
 L’utilisateur confirme désormais [sa connexion réussie](verification-proofs/jm1113/hosted-login-confirmation.json) après les instructions de récupération. Le relevé avait confirmé compte actif, e-mail et approbation valides, invitation consommée et horloges alignées ; l’ancien refus du mot de passe n’a pas été comparé ni attribué avec certitude. L’absence d’un nouveau mail de confirmation est expliquée par le compte déjà confirmé. Le diagnostic est clos, sans nouveau contrôle SQL/compte ou e-mail à déclencher.
 
 Préparation et CHECK1113 [rapportés réussis](verification-proofs/jm1113/hosted-preparation.json) : source89571636, arbre attendu, reçu canoniqueSHA256 `7c1a51e0033e329b3daaf3ee8895a989f67e13c42199f7c4e6ac2907afbd8282` identique, sortie0 et marqueur final acquis. Les indicateurs du staging restent ceux d’avant CHECK ; aucune identité démarrée déduite. Ne pas rejouer cette étape.
 
-1. Appliquer les [commandes Manager1113](operations-release1113.md) au service Node existant239143, port3000, puis déclencher une activation et recueillir version/commit/Node/date de démarrage. Source attendue `89571636d6fde97b28b5e8aec9257801c1b71f8b`.
-2. Qualifier et exécuter le writer1113 lié à cette identité, métadonnées seules, relecture et historiques préservés, sans nouveau redémarrage. Ne pas déplacer le tag, rejouer1112, la préparation/CHECK SSH, les diagnostics ou CI déjà acquis. [État courant](REPRISE.md).
+Le [relevé après activation](verification-proofs/jm1113/hosted-identity.json) est reçu :1.11.3, commit89571636, Node24.22.1,25octobre23:17:23Paris (UTC+01), seconde1792966643. Ne pas redémarrer à nouveau.
+
+1. Qualifier le writer1113 lié à cette identité : candidat dérivé du writer1112,17tests locaux acquis, qualification native attendue. Référence au checkpoint1112 inchangé, staging1113 et historiques complets préservés ; aucun SQL ni nouvelle activation.
+2. Après qualification, fournir sa seule commande puis recueillir le reçu final de métadonnées. Ne pas déplacer le tag ou rejouer1112, préparation/CHECK SSH1113, activation, diagnostics ou CI déjà acquis. [État courant](REPRISE.md).
 
 ## Correctif 1.11.2 — audit et livraison terminés
 

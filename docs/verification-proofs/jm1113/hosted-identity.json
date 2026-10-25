@@ -1,0 +1,17 @@
+{
+  "reportedBy": "user application startup UI",
+  "version": "1.11.3",
+  "commit": "89571636d6fde97b28b5e8aec9257801c1b71f8b",
+  "nodeVersion": "v24.22.1",
+  "startedAtDisplayed": "25/10/2026 23:17:23",
+  "timezone": "Europe/Paris",
+  "utcOffset": "+01:00",
+  "startedAtUtcSecond": 1792966643,
+  "precision": "second",
+  "expectedTreeFromQualifiedSource": "e16a22043ea00908afa37cad64e5f9b421f4e5ae",
+  "activationReported": true,
+  "metadataRecorded": false,
+  "directManagerInspectionByAgent": false,
+  "directProcessInspectionByAgent": false,
+  "scope": "Version, commit, Node and startup time reported by user after Manager activation. Milliseconds, public readiness and private checkpoint finalization are not inferred from this UI receipt."
+}
