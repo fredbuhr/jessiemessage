@@ -1313,7 +1313,7 @@
       "proof": "visual-review.json",
       "imagesInspected": 7
     },
-    "deployment": "not_performed",
+    "deployment": "reported_started_metadata_pending",
     "main": {
       "source": "af352607ff7e12c41185f42b8232c72219a304cd",
       "tree": "655f759079979d608b0ec1c62a7c892311899515",
@@ -1335,11 +1335,13 @@
     "hosting": {
       "preparation": "reported_success",
       "check": "reported_success_exit0",
-      "activation": "not_performed",
-      "metadataWriter": "not_qualified_or_executed",
-      "currentProduction": "1.11.1",
-      "nextAction": "Activate exact1112 launchers in Manager; then observe version/commit/Node/start date before metadata recording.",
-      "proof": "hosted-preparation.json"
+      "activation": "reported_success",
+      "metadataWriter": "native_qualified17_tests_not_executed",
+      "currentProduction": "1.11.2",
+      "nextAction": "Execute once the pinned metadata writer and observe its receipt; no new restart.",
+      "proof": "hosted-preparation.json",
+      "identityProof": "hosted-identity.json",
+      "writerProof": "writer-final-native.json"
     }
   },
   "limits": [
@@ -1364,9 +1366,9 @@
     "allItemsHaveDisposition": true,
     "unresolvedCodeDefects": [],
     "scopeIntegrityProof": "scope-integrity.json",
-    "deployment": "not_performed",
+    "deployment": "reported_started_metadata_pending",
     "note": "Every current frontend/backend path belongs to a reviewed domain. No claim of full line-by-line rereading, physical-device conformance or zero unknown defects.",
     "mainAndPublicationQualified": true,
-    "remainingSteps": "Activation and qualified metadata recording for this one version. Hosted preparation and CHECK already reported successful; do not replay."
+    "remainingSteps": "Execute qualified metadata writer once and observe receipt. Preparation, CHECK and startup already reported successful; do not replay."
   }
 }

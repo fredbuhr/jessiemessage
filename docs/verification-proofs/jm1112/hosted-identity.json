@@ -1,0 +1,14 @@
+{
+  "reportedBy": "user application version page",
+  "version": "1.11.2",
+  "source": "af352607ff7e12c41185f42b8232c72219a304cd",
+  "nodeVersion": "v24.22.1",
+  "startedAtLocal": "25/10/2026 17:35:35",
+  "timezone": "Europe/Paris",
+  "precision": "seconds; milliseconds not reported",
+  "epochRange": {
+    "fromInclusive": 1792946135000,
+    "toExclusive": 1792946136000
+  },
+  "scope": "Identity reported after Manager action; no direct agent inspection of Manager, log or runtime process. Metadata and public HTTP checks remain pending; this UI observation retains its original seconds precision."
+}

@@ -4,12 +4,13 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 ## Correctif 1.11.2 — audit complet puis une seule mise à jour
 
-**Audit et seconde revue terminés :** 24domaines/171contrôles avec disposition, corrections regroupées dans la PR139 fusionnée. Qualifications finales PR/main5/5, sept captures inspectées, publication2/2 et33 tests opérateur réussis. Source unique publiée `af352607ff7e12c41185f42b8232c72219a304cd`. [Rapport et checklist](AUDIT-MOBILE-PROFILES-1112.md), [état opérateur](REPRISE.md). Production1111 maintenue. Les échecs initiaux et limites sont conservés, aucun nouvel audit/CI du même code à relancer.
+**Audit et seconde revue terminés :** 24domaines/171contrôles avec disposition, corrections regroupées dans la PR139 fusionnée. Qualifications finales PR/main5/5, sept captures inspectées, publication2/2 et33 tests opérateur réussis. Source unique publiée `af352607ff7e12c41185f42b8232c72219a304cd`. [Rapport et checklist](AUDIT-MOBILE-PROFILES-1112.md), [état opérateur](REPRISE.md). Démarrage1112 désormais rapporté séparément. Les échecs initiaux et limites sont conservés, aucun nouvel audit/CI du même code à relancer.
 
 Préparation et CHECK1112 acquis selon le [reçu utilisateur](verification-proofs/jm1112/hosted-preparation.json), empreinte canonique identique, `CHECK1112_EXIT=0` et `PREPARATION_1112_CHECK_OK`. Ne pas les rejouer.
 
-1. [Activer ce seul commit depuis le Manager](operations-release1112.md#prochaine-action-unique--activation-manager), puis recueillir version/commit/Node/date de démarrage. Aucun changement global de Node, migration supplémentaire ou manipulation PC/sauvegarde reportée.
-2. Qualifier le writer1112 lié à cette identité, vérifier les HTTP/publication puis enregistrer les seules métadonnées avec relecture. Critère : reçu final1112, checkpoint concordant, états antérieurs préservés et aucun nouveau redémarrage. Les appareils physiques, Safari/Firefox/Push et A10/A11/A12 gardent leurs limites.
+Démarrage1112 [rapporté par l’utilisateur](verification-proofs/jm1112/hosted-identity.json) :1.11.2, sourceaf352607…, Node24.22.1,25octobre17:35:35Paris (UTC+01). Writer lié à cette identité [qualifié17/17 natifs](verification-proofs/jm1112/writer-final-native.json). Ne pas rejouer l’activation.
+
+1. Exécuter une fois la [commande d’enregistrement final1112](operations-release1112.md#prochaine-action-unique--enregistrement-final), puis recueillir le reçu. Critère : identité exacte, HTTP/publication prêts, checkpoint concordant, états antérieurs préservés et aucun nouveau redémarrage. Les appareils physiques, Safari/Firefox/Push et A10/A11/A12 gardent leurs limites.
 
 ## Correctif 1.11.1 — livraison terminée
 

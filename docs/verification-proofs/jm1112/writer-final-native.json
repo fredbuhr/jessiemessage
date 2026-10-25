@@ -1,0 +1,31 @@
+{
+  "format": "jessiemessage-1112-metadata-operator-native",
+  "operator": "67c79dc6a2225580ef783ff4e3e85742a8bb9554",
+  "tree": "78fa7b598b8c3b6cc48b19c20804cd0540f71b9b",
+  "run": 40213097595,
+  "attempt": 1,
+  "path": ".github/workflows/record-release1112.yml",
+  "conclusion": "success",
+  "nodeVersion": "v24.22.1",
+  "writerSha256": "1874b6b98d2a75c15ab116842f5c92190bb8c6ef23d972da597d336d1ff65919",
+  "applicationSource": "af352607ff7e12c41185f42b8232c72219a304cd",
+  "applicationTree": "655f759079979d608b0ec1c62a7c892311899515",
+  "reportedStartupSecond": 1792946135,
+  "tests": 17,
+  "pass": 17,
+  "fail": 0,
+  "skipped": 0,
+  "jobs": [
+    {
+      "id": 121228360687,
+      "name": "operator-tests",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-25T16:44:11Z",
+      "completedAt": "2026-10-25T16:44:23Z"
+    }
+  ],
+  "scope": "Synthetic Linux files/permissions/atomic metadata replacement and refusal cases; Git/public HTTP mocked. Runtime dependencies and histories preserved. No hosted access, SQL, Manager, process restart or metadata write performed by CI.",
+  "hostingMetadataWritePerformed": false,
+  "publicProfileDowngradeQualified": false
+}
