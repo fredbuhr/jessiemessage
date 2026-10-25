@@ -1,0 +1,48 @@
+name: Observe public client recovery availability
+
+on:
+  push:
+    branches: [ops/check-client-recovery1112]
+    paths: ['.github/workflows/check-client-recovery1112.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  anonymous-recovery-get:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Read recovery page and capability without account, cookies or mail request
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, urllib.error
+          from datetime import datetime, timezone
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, *args, **kwargs): return None
+          opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
+          result = {'type':'anonymous_client_recovery_observation','observedAt':datetime.now(timezone.utc).isoformat(),
+              'noLogin':True,'noMail':True,'noAccountMutation':True,'routes':{}}
+          for route in ('/recover','/api/access/recovery/capabilities'):
+              try:
+                  request=urllib.request.Request('https://jessiemessage.com'+route,headers={'Cache-Control':'no-cache'})
+                  try: response=opener.open(request,timeout=12)
+                  except urllib.error.HTTPError as error: response=error
+                  with response:
+                      status=response.status; body=response.read(32768)
+                  item={'status':status}
+                  if route=='/recover':
+                      item['requestFormPresent']=b'id="recovery-request-form"' in body
+                      item['emailFieldPresent']=b'id="recovery-email"' in body
+                  else:
+                      try: value=json.loads(body)
+                      except (ValueError,TypeError): value={}
+                      item['enabled']=value.get('enabled') is True
+                      item['passwordBoundsExpected']=value.get('password')=={'minLength':8,'maxLength':128}
+                  result['routes'][route]=item
+              except Exception:
+                  result['routes'][route]={'status':None,'observationConfirmed':False}
+          print(json.dumps(result,separators=(',',':')),flush=True)
+          assert result['routes']['/recover']=={'status':200,'requestFormPresent':True,'emailFieldPresent':True}
+          assert result['routes']['/api/access/recovery/capabilities']=={'status':200,'enabled':True,'passwordBoundsExpected':True}
+          PY
