@@ -1,0 +1,31 @@
+name: Qualify access1112 diagnostic terminal correction
+
+on:
+  push:
+    branches: [ops/diagnose-access1112-terminal]
+    paths:
+      - 'ops/inspect-access1112.py'
+      - 'ops/test-inspect-access1112.py'
+      - '.github/workflows/inspect-access1112-terminal.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  terminal-and-output:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Exercise real PTY, hidden input, interruption cleanup and redacted failure stages
+        run: PYTHONDONTWRITEBYTECODE=1 python3 ops/test-inspect-access1112.py
+      - name: Compile Python without creating cache files or contacting hosting
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in ('ops/inspect-access1112.py','ops/test-inspect-access1112.py'):
+              compile(Path(name).read_bytes(), name, 'exec')
+          print('Both Python sources compile; no hosting access, SQL, mail or runtime action.')
+          PY
