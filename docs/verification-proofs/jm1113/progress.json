@@ -1,5 +1,5 @@
 {
-  "status": "release1113_published_access_incident_closed_host_preparation_pending",
+  "status": "release1113_staged_check_passed_activation_pending",
   "branch": "fix/invitation-access-1113",
   "source": "89571636d6fde97b28b5e8aec9257801c1b71f8b",
   "tree": "e16a22043ea00908afa37cad64e5f9b421f4e5ae",
@@ -12,7 +12,7 @@
     "skipped": 0
   },
   "syntaxSources": 778,
-  "next": "User runs once pinned prepare1113+CHECK and supplies receipt before Manager activation; do not repeat acquired diagnosis or successful CI.",
+  "next": "User sets Manager execution to start1113 (upper field) and build to check1113 (lower field), port3000; activates once then reports actual startup identity before writer qualification.",
   "manualDirectLoginResult": "user_reports_connected",
   "run": 40231447183,
   "qualifiedPrSource": "cd54e868116d605c01c7ad09033998813f61a490",
@@ -33,8 +33,8 @@
   "publicationRun": 40233214193,
   "publicationSuccessful": true,
   "releaseId": 423658747,
-  "recordedAt": "2026-10-25T22:07:55.854899+00:00",
-  "release1113PreparationPerformed": false,
+  "recordedAt": "2026-10-25T22:14:20.130450+00:00",
+  "release1113PreparationPerformed": true,
   "release1113ActivationHeld": false,
   "diagnosticOperatorSource": "2e06b3b463f99fc62851aa215f73f9a0e3436913",
   "diagnosticRun": 40237166078,
@@ -53,5 +53,11 @@
   "publicRecoveryProbeRun": 40237807989,
   "accessIncidentClosed": true,
   "diagnosticHoldCleared": true,
-  "activationAwaitingPreparationAndCheck": true
+  "activationAwaitingPreparationAndCheck": false,
+  "hostedCheckExit": 0,
+  "hostedCheckMarker": "PREPARATION_1113_CHECK_OK",
+  "hostedStagingReceiptSha256": "7c1a51e0033e329b3daaf3ee8895a989f67e13c42199f7c4e6ac2907afbd8282",
+  "activationPending": true,
+  "activationReported": false,
+  "metadataRecorded": false
 }

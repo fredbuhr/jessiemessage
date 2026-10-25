@@ -1,8 +1,8 @@
-# Livraison1.11.3 — publiée, préparation et CHECK attendus
+# Livraison1.11.3 — préparation et CHECK acquis, activation attendue
 
 Le correctif rend la connexion accessible après un lien de confirmation déjà utilisé, expiré ou mal formé. Il propose aussi une sortie explicite et garde le choix du compte jusqu’aux identifiants et à la preuve fraîche du propriétaire. Le backend, les conditions de vérification/approbation, les quotas et les comptes sont inchangés. [Périmètre et limites](invitation-access-1113.md).
 
-**Production confirmée :1.11.2. Préparation, CHECK, activation et enregistrement final1113 non effectués.** [REPRISE](REPRISE.md) reste la référence courante. La connexion du compte signalé est désormais [rapportée réussie par l’utilisateur](verification-proofs/jm1113/hosted-login-confirmation.json), sans inspection de sa session par l’agent. Le diagnostic d’accès est clos ; aucune cause certaine de l’ancien refus n’est déduite.
+**Production confirmée :1.11.2. Préparation et CHECK1113 rapportés réussis ; activation et enregistrement final1113 encore attendus.** [REPRISE](REPRISE.md) reste la référence courante. La connexion du compte signalé est désormais [rapportée réussie par l’utilisateur](verification-proofs/jm1113/hosted-login-confirmation.json), sans inspection de sa session par l’agent. Le diagnostic d’accès est clos ; aucune cause certaine de l’ancien refus n’est déduite.
 
 ## Source et qualifications acquises
 
@@ -13,11 +13,27 @@ Le correctif rend la connexion accessible après un lien de confirmation déjà 
 - Opérateur immuable : `fead96f4c8bde918dde5c72a1860fe298f47abe3` ; arbre `9d1fe014682919280837df2ec806941212afd7ed`.
 - Préparateur SHA256 : `8267f0b8169cc3857503afe16506b471b879a732d458e799b7b17a12363b1916`, relu à cette source et identique aux octets qualifiés.
 
-## Prochaine action unique — préparation et CHECK
+## Prochaine action unique — activation dans le Manager
+
+La [préparation et son CHECK sont acquis selon le reçu utilisateur](verification-proofs/jm1113/hosted-preparation.json) : empreinte canonique identique `7c1a51e0033e329b3daaf3ee8895a989f67e13c42199f7c4e6ac2907afbd8282`, `CHECK1113_EXIT=0` et `PREPARATION_1113_CHECK_OK`. Les flags faux et empreintes de logs vides du staging décrivent l’état avant ce CHECK séparé. Ne pas rejouer la commande SSH. Aucune inspection directe des fichiers privés, champs Manager ou processus n’est déduite du reçu.
+
+1. Ouvrir les [réglages de l’application Node239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application). Le service reste nommé **recette.jessiemessage.com** et dessert aussi **jessiemessage.com**.
+2. Renseigner les champs suivants :
+
+| Champ | Valeur1113 préparée |
+| --- | --- |
+| Commande d’exécution — champ du haut | `bash /srv/customer/jessiemessage-private/start-primary-release1113-89571636.sh` |
+| Commande de build — champ du bas | `bash /srv/customer/jessiemessage-private/check-primary-release1113-89571636.sh` |
+| Port | `3000` |
+
+3. Enregistrer les valeurs. Si cela déclenche déjà le redémarrage, attendre sa fin ; sinon, cliquer **Redémarrer** depuis le [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard). Une seule activation est nécessaire.
+4. Ouvrir [État du service](https://jessiemessage.com/admin/readiness) et recueillir **Version de l’application**, **Commit au démarrage**, **Version Node.js** et **Relevé au démarrage**. Valeurs attendues :1.11.3, `89571636d6fde97b28b5e8aec9257801c1b71f8b`, `v24.22.1`, nouvelle date de démarrage. Recueillir l’identité avant de qualifier le writer final ; la configuration attendue ne prouve pas le code réellement exécuté.
+
+## Historique — préparation et CHECK acquis, ne pas rejouer
 
 La suspension liée au diagnostic est levée après la connexion réussie rapportée. La PR fusionnée, la qualification main, le tag et le préparateur ont été relus inchangés. Aucun nouveau contrôle des identifiants n’est requis pour cette étape.
 
-Ouvrir le [terminal Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis coller le bloc complet une seule fois. Il prépare le nouveau checkout et les lanceurs privés, puis exécute le précontrôle. Il conserve les comptes, la configuration et le checkpoint1112 ; il n’active pas le runtime et n’exécute aucune migration.
+La commande déjà exécutée une fois dans le [terminal Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal) était le bloc ci-dessous. Elle préparait le nouveau checkout et les lanceurs privés, puis exécutait le précontrôle. Il conserve les comptes, la configuration et le checkpoint1112 ; il n’active pas le runtime et n’exécute aucune migration.
 
 ```bash
 env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_PREPARE1113'
@@ -49,9 +65,9 @@ print('PREPARATION_1113_CHECK_OK')
 PY_PREPARE1113
 ```
 
-Recueillir le JSON, `CHECK1113_EXIT=0` et `PREPARATION_1113_CHECK_OK` avant de modifier le Manager. Une sortie interrompue/refusée doit être diagnostiquée à partir des traces ; ne pas relancer la préparation pour découvrir son état.
+Le JSON, `CHECK1113_EXIT=0` et `PREPARATION_1113_CHECK_OK` sont désormais reçus et conservés. Aucune relance de cette commande n’est requise.
 
-| Élément attendu après succès | Chemin |
+| Élément préparé selon le reçu | Chemin |
 | --- | --- |
 | Checkout | `/srv/customer/jessiemessage-operator/production-1113-89571636` |
 | Exécution | `/srv/customer/jessiemessage-private/start-primary-release1113-89571636.sh` |
@@ -62,6 +78,6 @@ Le helper est lié au checkpoint1112 `3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf7
 
 ## Étapes dépendantes encore attendues
 
-Après le reçu de préparation/CHECK, activer ce seul commit depuis le service Node existant, puis recueillir l’identité réellement démarrée. Ensuite qualifier et exécuter le writer1113 : HTTP/publication, métadonnées seules et relecture, sans nouveau redémarrage. Aucun nouveau compte ni code d’invitation à créer pour ce correctif.
+Après l’activation Manager décrite plus haut, recueillir l’identité réellement démarrée. Qualifier ensuite le writer1113 lié à ce relevé, puis l’exécuter : HTTP/publication, métadonnées seules et relecture, sans nouveau redémarrage. Aucun nouveau compte ni code d’invitation à créer pour ce correctif.
 
 La version1112 reste conservée. Repli185 qualifié pourSQL38 seulement, jamais démarré ;184/172 interdits. La limite de lecture du snapshot publicformat2 par les anciens backends1111 et antérieurs reste distincte. Appareils physiques/Safari/Firefox/Push fermé non fraîchement qualifiés, sauvegarde reportée et réservesA10/A11/A12 inchangées.
