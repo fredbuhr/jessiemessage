@@ -1333,12 +1333,13 @@
       "proof": "publication-native.json"
     },
     "hosting": {
-      "preparation": "not_performed",
-      "check": "not_performed",
+      "preparation": "reported_success",
+      "check": "reported_success_exit0",
       "activation": "not_performed",
       "metadataWriter": "not_qualified_or_executed",
       "currentProduction": "1.11.1",
-      "nextAction": "One pinned preparation command followed by its CHECK; observe receipt before Manager action."
+      "nextAction": "Activate exact1112 launchers in Manager; then observe version/commit/Node/start date before metadata recording.",
+      "proof": "hosted-preparation.json"
     }
   },
   "limits": [
@@ -1366,6 +1367,6 @@
     "deployment": "not_performed",
     "note": "Every current frontend/backend path belongs to a reviewed domain. No claim of full line-by-line rereading, physical-device conformance or zero unknown defects.",
     "mainAndPublicationQualified": true,
-    "remainingSteps": "Hosted preparation/CHECK, activation and qualified metadata recording for this one version. Not new application releases."
+    "remainingSteps": "Activation and qualified metadata recording for this one version. Hosted preparation and CHECK already reported successful; do not replay."
   }
 }

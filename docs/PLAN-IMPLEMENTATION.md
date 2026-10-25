@@ -6,9 +6,10 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 **Audit et seconde revue terminés :** 24domaines/171contrôles avec disposition, corrections regroupées dans la PR139 fusionnée. Qualifications finales PR/main5/5, sept captures inspectées, publication2/2 et33 tests opérateur réussis. Source unique publiée `af352607ff7e12c41185f42b8232c72219a304cd`. [Rapport et checklist](AUDIT-MOBILE-PROFILES-1112.md), [état opérateur](REPRISE.md). Production1111 maintenue. Les échecs initiaux et limites sont conservés, aucun nouvel audit/CI du même code à relancer.
 
-1. Exécuter une fois la [préparation1112 et son CHECK](operations-release1112.md), puis recueillir le reçu. Critère : sources/arbre exacts, anciennes références préservées, `CHECK1112_EXIT=0` et `PREPARATION_1112_CHECK_OK`. Ne pas poursuivre une sortie incertaine par une relance aveugle.
-2. Après ce reçu, activer ce seul commit depuis le service Node existant du Manager, puis recueillir version/commit/Node/date de démarrage. Aucun changement global de Node, migration supplémentaire ou manipulation PC/sauvegarde reportée.
-3. Qualifier le writer1112 lié à cette identité, vérifier les HTTP/publication puis enregistrer les seules métadonnées avec relecture. Critère : reçu final1112, checkpoint concordant, états antérieurs préservés et aucun nouveau redémarrage. Les appareils physiques, Safari/Firefox/Push et A10/A11/A12 gardent leurs limites.
+Préparation et CHECK1112 acquis selon le [reçu utilisateur](verification-proofs/jm1112/hosted-preparation.json), empreinte canonique identique, `CHECK1112_EXIT=0` et `PREPARATION_1112_CHECK_OK`. Ne pas les rejouer.
+
+1. [Activer ce seul commit depuis le Manager](operations-release1112.md#prochaine-action-unique--activation-manager), puis recueillir version/commit/Node/date de démarrage. Aucun changement global de Node, migration supplémentaire ou manipulation PC/sauvegarde reportée.
+2. Qualifier le writer1112 lié à cette identité, vérifier les HTTP/publication puis enregistrer les seules métadonnées avec relecture. Critère : reçu final1112, checkpoint concordant, états antérieurs préservés et aucun nouveau redémarrage. Les appareils physiques, Safari/Firefox/Push et A10/A11/A12 gardent leurs limites.
 
 ## Correctif 1.11.1 — livraison terminée
 

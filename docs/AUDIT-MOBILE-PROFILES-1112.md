@@ -1,6 +1,6 @@
 # Audit frontend/backend avant la mise à jour1.11.2 — 25 octobre2026
 
-**Audit terminé : GO technique pour préparer l’unique mise à jour 1.11.2. PR et main qualifiés, publication immuable acquise, captures inspectées. Production 1.11.1 conservée.** Les corrections sont regroupées dans une seule version applicative ; préparation et CHECK hébergés restent à exécuter avant son activation.
+**Audit terminé : GO technique pour l’unique mise à jour 1.11.2. PR et main qualifiés, publication immuable acquise, captures inspectées. Préparation et CHECK hébergés acquis selon le reçu utilisateur ; dernière production confirmée1.11.1.** Les corrections sont regroupées dans une seule version applicative ; activation et enregistrement final1112 restent à observer.
 
 La production de référence reste1.11.1, source `80b7fbf5f9b5ba32ac1aae817043126e93025946`, arbre `ba1289bae9ce095560922a7ed6665f17709d07ed`, Node24.22.1 et checkpoint privé `41a51d38a50c3ff07b1878a6cfd96de9e383dbafc5ccff9c96a3a97aa272d90a`, acquis selon le reçu utilisateur. Le point de départ documentaire main39e0d134 a pour arbre7f0541c6573c3c75f815d360d4f00a9db37504c4 ; le parent local65236ce6 a exactement le même arbre. Cette différence de SHA liée à la copie de travail ne représente pas une perte de code.
 
@@ -86,4 +86,4 @@ Les appareils physiques iOS/Android, Safari/Firefox, clavier système et Push av
 
 **Seconde revue de couverture terminée :** les171points ont chacun une disposition et leurs limites ; aucun défaut de code bloquant identifié ne reste ouvert. Le [contrôle de préservation](verification-proofs/jm1112/scope-integrity.json) confirme86motifs de tests existants,42imports publics et4ressources CSS sans référence manquante,38migrations identiques, dépendances inchangées et aucun chemin applicatif supprimé. Les limites physiques et historiques ci-dessus restent explicites.
 
-Fusion, qualification du SHA main et publication immuable sont acquises. La suite est la [préparation et le CHECK hébergés](operations-release1112.md), puis activation et enregistrement de cette seule version1.11.2, après observation de chaque résultat dépendant. Aucune production n’a été modifiée par cet audit.
+Fusion, qualification du SHA main et publication immuable sont acquises. La [préparation et le CHECK hébergés](verification-proofs/jm1112/hosted-preparation.json) sont désormais acquis selon le reçu utilisateur, empreinte reconstituée identique. La suite est l’[activation Manager](operations-release1112.md), puis l’enregistrement de cette seule version1.11.2, après observation de chaque résultat dépendant. Aucune activation de production n’a été réalisée par l’agent.

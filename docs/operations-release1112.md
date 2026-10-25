@@ -1,6 +1,6 @@
-# Livraison 1.11.2 — publiée, préparation hébergée attendue
+# Livraison 1.11.2 — préparation et CHECK acquis, activation attendue
 
-L’[audit frontend/backend](AUDIT-MOBILE-PROFILES-1112.md) et sa seconde revue de couverture sont terminés : 24 domaines et 171 contrôles avec disposition, sans défaut de code bloquant identifié restant. Les corrections sont regroupées dans une seule version. **La production confirmée reste 1.11.1 ; aucune préparation, aucun CHECK, aucun démarrage ni enregistrement final1112 n’a encore été effectué sur l’hébergement.** [REPRISE](REPRISE.md) reste la référence courante.
+L’[audit frontend/backend](AUDIT-MOBILE-PROFILES-1112.md) et sa seconde revue de couverture sont terminés : 24 domaines et 171 contrôles avec disposition, sans défaut de code bloquant identifié restant. Les corrections sont regroupées dans une seule version. **Préparation et CHECK1112 acquis selon le reçu utilisateur ; la dernière production confirmée reste1.11.1, activation et enregistrement final1112 non rapportés.** [REPRISE](REPRISE.md) reste la référence courante. Ne rejouer ni préparation ni CHECK.
 
 ## Source et qualifications acquises
 
@@ -11,9 +11,24 @@ L’[audit frontend/backend](AUDIT-MOBILE-PROFILES-1112.md) et sa seconde revue 
 - Opérateur immuable : `7134e6e22de4f9f4c4deb2ff89512f6e1335be01` ; arbre `4a53069b4a2142892c531a07f34c6e491afd8cb1`.
 - Préparateur SHA256 : `5fe4cbef6da83788f635ac7c46e7febfd550887bd7c013c23b772561251f5e9c`, relu à cette source et identique au fichier qualifié.
 
-## Prochaine action unique — préparation et CHECK
+## Prochaine action unique — activation Manager
 
-Ouvrir le [terminal Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis coller le bloc complet une seule fois. Il prépare le nouveau checkout, les lanceurs privés et leur reçu, puis exécute le précontrôle hébergé. Il conserve les anciennes sources, la configuration et le checkpoint1111 ; il n’active pas le nouveau runtime et n’exécute aucune migration.
+Le [reçu utilisateur](verification-proofs/jm1112/hosted-preparation.json) rapporte la préparation source/arbre exacts, `CHECK1112_EXIT=0`, puis `PREPARATION_1112_CHECK_OK`. Empreinte du reçu `eef0d3f64599ee5ccfdd1e0a5bd996daf035fa3e79cab957ef7e97a3afaea628`, reconstituée identique. Les indicateurs faux et empreintes vides restent l’état avant CHECK ; aucun démarrage n’en est déduit et aucune inspection directe de l’hôte par l’agent n’est présumée.
+
+1. Ouvrir les [réglages de l’application Node.js239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application). Le service reste nommé **recette.jessiemessage.com** et dessert aussi **jessiemessage.com**.
+2. Enregistrer les valeurs suivantes dans les deux champs, puis redémarrer une fois l’application depuis son [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard).
+
+| Champ | Valeur1112 |
+| --- | --- |
+| Commande d’exécution — champ du haut | `bash /srv/customer/jessiemessage-private/start-primary-release1112-af352607.sh` |
+| Commande de build — champ du bas | `bash /srv/customer/jessiemessage-private/check-primary-release1112-af352607.sh` |
+| Port | `3000` |
+
+3. Après le démarrage, ouvrir l’[état du service](https://jessiemessage.com/admin/readiness), puis recueillir **Version de l’application**, **Commit au démarrage**, **Version Node.js** et **Relevé au démarrage**. Identité attendue :1.11.2, `af352607ff7e12c41185f42b8232c72219a304cd`, `v24.22.1`. Recueillir ce résultat avant le writer final ; un réglage attendu ne prouve pas le code réellement démarré.
+
+## Historique — préparation et CHECK acquis, ne pas rejouer
+
+L’instruction déjà exécutée était : ouvrir le [terminal Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis coller le bloc complet une seule fois. Il prépare le nouveau checkout, les lanceurs privés et leur reçu, puis exécute le précontrôle hébergé. Il conserve les anciennes sources, la configuration et le checkpoint1111 ; il n’active pas le nouveau runtime et n’exécute aucune migration.
 
 ```bash
 env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_PREPARE1112'
@@ -45,9 +60,9 @@ print('PREPARATION_1112_CHECK_OK')
 PY_PREPARE1112
 ```
 
-Recueillir le JSON affiché, `CHECK1112_EXIT=0` et `PREPARATION_1112_CHECK_OK` avant de donner les instructions Manager. Une sortie interrompue ou refusée doit être diagnostiquée à partir des traces ; ne pas relancer la préparation pour découvrir son état.
+Le JSON, `CHECK1112_EXIT=0` et `PREPARATION_1112_CHECK_OK` sont maintenant reçus et conservés. Ne pas rejouer la commande. Une sortie interrompue ou refusée doit être diagnostiquée à partir des traces, sans relance aveugle.
 
-Chemins attendus après succès :
+Chemins rapportés par le reçu :
 
 | Élément | Chemin |
 | --- | --- |
@@ -60,7 +75,7 @@ Le helper refuse avant mutation un checkpoint autre que `41a51d38a50c3ff07b1878a
 
 ## Étapes dépendantes encore non effectuées
 
-Après le reçu de préparation/CHECK, activer ce commit depuis l’unique service Node existant, puis relever l’identité réellement démarrée. Ensuite qualifier le writer1112, vérifier démarrage/HTTP/publication, enregistrer les seules métadonnées et relire. Ces étapes ne sont pas des versions applicatives supplémentaires.
+Activer ce commit depuis l’unique service Node existant selon les instructions ci-dessus, puis relever l’identité réellement démarrée. Ensuite qualifier le writer1112, vérifier démarrage/HTTP/publication, enregistrer les seules métadonnées et relire. Ces étapes ne sont pas des versions applicatives supplémentaires.
 
 L’avatar public nécessite un choix explicite de Jessie : enregistrer sa photo puis **Mettre à jour le profil public**. Aucun profil privé n’est publié automatiquement. L’ancien snapshotformat1 reste lisible par1112 ; le backend1111 ne relit pas le nouveauformat2, donc un retour ancien n’offre pas une restitution complète de ce nouveau profil public. Le repli185 compatibleSQL38 reste séparément qualifié et jamais démarré ; ne démarrer ni184 ni172.
 
