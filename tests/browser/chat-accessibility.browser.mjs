@@ -487,13 +487,15 @@ test("Chrome mobile: compact messages reveal one accessible details area at a ti
         const input=document.getElementById('message-body'),style=getComputedStyle(input),context=document.createElement('canvas').getContext('2d');context.font=style.font;
         return {visibleDetails:[...document.querySelectorAll('#messages .message-meta')].filter(node=>node.getClientRects().length>0).length,
           selected:document.querySelectorAll('#messages .is-selected').length, gap:parseFloat(getComputedStyle(document.getElementById('messages')).rowGap),
+          placeholderWidth:context.measureText(input.placeholder).width,
+          placeholderRoom:input.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight),
           placeholderFits:context.measureText(input.placeholder).width<=input.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight)+1,
           bubbleHeight:bubble.getBoundingClientRect().height, placeholder:document.getElementById('message-body').placeholder};`);
       assert.equal(resting.visibleDetails, 0, `${context}: dates, receipts and deletion reserve no permanent row`);
       assert.equal(resting.selected, 0); assert.ok(resting.gap<=10, `${context}: compact message gap (${resting.gap}px)`);
       assert.ok(resting.bubbleHeight<=48, `${context}: one-line text bubble stays compact (${resting.bubbleHeight}px)`);
       assert.equal(resting.placeholder, role === "client" ? language === "fr" ? "Écris-moi…" : "Write to me…" : "Message…");
-      assert.equal(resting.placeholderFits, true, `${context}: the empty composer hint fits on one visible line`);
+      assert.equal(resting.placeholderFits, true, `${context}: the empty composer hint fits on one visible line (${resting.placeholderWidth}px in ${resting.placeholderRoom}px)`);
 
       await openMessageDetails(page, "2");
       const details = await page.execute(`const row=document.querySelector('#messages [data-sequence="2"]'),meta=row.querySelector('.message-meta'),toggle=row.querySelector('.message-details-toggle'),r=toggle.getBoundingClientRect();
@@ -827,7 +829,9 @@ test("Chrome 360px high: photo preview and multiline caption retain reachable at
         files.items.add(new File([bytes],'synthetic-attachment.jpg',{type:'image/jpeg'}));
         const input=document.getElementById('image-file');input.files=files.files;input.dispatchEvent(new Event('change',{bubbles:true}));`, jpeg.toString("base64"));
       await waitUntil(() => page.execute("const image=document.querySelector('#image-preview img');return !document.getElementById('image-draft').hidden && image?.complete && image.naturalWidth>0"), "the real photo preview remains present");
-      await page.type("#message-body", caption);
+      await typeMultilineDraft(page, caption);
+      assert.equal(fixture.messageRequests.length, 0, "the explicit newline command keeps the selected photo and multiline caption as a draft");
+      await captureOptions(page, `photo-caption-short-${role}`);
       if (await page.execute("return !document.getElementById('composer-tools').hidden")) await page.click("#close-composer-tools");
       await openComposerTools(page);
       const panel = await page.execute("const node=document.getElementById('composer-tools'),r=node.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height,scrollWidth:node.scrollWidth,clientWidth:node.clientWidth};");

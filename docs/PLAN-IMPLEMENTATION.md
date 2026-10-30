@@ -20,8 +20,7 @@ Le [relevé après activation](verification-proofs/jm1113/hosted-identity.json) 
 
 Le writer final lié à cette seconde et aux reçus est désormais [qualifié17/17 natifs](verification-proofs/jm1113/writer-final-native.json), run40240046476,1/1, tentative1, sans omission. Opérateur `e3821d9231f0e7ead0a8eea7c3e1730aff0ea86e`, script SHA256 `a8904e91b394cf8a09f6a2a0b419fbfc45e590438da7ed5de18f24f36583b3f9`, source relue identique. Qualification acquise, aucune relance du même code.
 
-1. Exécuter une fois sa [commande de métadonnées](operations-release1113.md), puis recueillir le JSON final et le nouveau SHA256 de checkpoint. Aucun SQL ou redémarrage ; historiques et autres blocs préservés.
-2. Après succès du reçu, clore la livraison documentaire. Ne pas déplacer le tag ni rejouer1112, préparation/CHECK SSH1113, activation, diagnostics ou CI déjà acquis. [État courant](REPRISE.md).
+La commande de métadonnées a été fournie, mais son reçu n’a pas été communiqué. Ne pas la rejouer pour découvrir son résultat : relever en lecture seule le checkpoint courant avant la prochaine préparation1.12.0. Les étapes de code/publication1113 restent acquises ; [REPRISE](REPRISE.md) distingue le démarrage rapporté de cette finalisation non confirmée.
 
 ## Correctif 1.11.2 — audit et livraison terminés
 

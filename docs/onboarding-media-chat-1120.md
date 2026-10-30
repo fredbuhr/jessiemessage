@@ -13,7 +13,7 @@ Périmètre demandé le30octobre : délai des confirmations, accès après confi
 
 Implémentation groupée sur `feat/onboarding-media-chat-1120` : worker réveillable après commit et drainage immédiat des lots prêts (44tests mail ciblés), activation après confirmation et rattrapage des anciens comptes confirmés, préparation des grandes photos vers2MiB avec fallback navigateur, Entrée/envoi et bouton de retour à la ligne. Contrôles ciblés :162tests admission/UI/session,44tests mail et204tests échéances média/compositeur passent, sans omission. Revue indépendante d’admission effectuée ; suites natives navigateur/SQL et revue des captures encore attendues. Aucune qualification globale, fusion, publication ou activation de1.12.0 encore effectuée. Aucune migration SQL nouvelle prévue. Aucun test réel d’e-mail, compte, photo privée ou sauvegarde reportée.
 
-Les preuves et limites seront complétées avant la qualification finale. Une omission ne sera pas comptée comme réussite.
+Première CI native [41143455149](verification-proofs/jm1120/pr-first-native.json), source `b1d1ab234878734b9dc303ec65015219886b6d0a` : HTTPS14/14 et vraie grande photo Chrome réussis, mais qualification refusée. Les assertions des anciens états en attente doivent suivre la nouvelle règle ; deux ajustements de composition sur petit écran sont repris sans supprimer les contrôles. Les premiers échecs sont conservés. Une omission ne sera pas comptée comme réussite.
 
 ## Résultat fonctionnel visé
 

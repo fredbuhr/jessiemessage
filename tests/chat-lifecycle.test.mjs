@@ -7,6 +7,7 @@ import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "../p
 import { webcrypto } from "node:crypto";
 import { createChatDrafts } from "../public/chat-drafts.js";
 import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "../public/photo-batch.js";
+import { prepareImageUpload } from "../public/image-preparation.js";
 
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
 const sessionClockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
@@ -1896,8 +1897,10 @@ test("newline respects the message length cap and can replace selected text at t
 });
 
 
-test("photo picker retains camera originals above ten MiB and generic-MIME JPEGs in the same batch without uploading", async () => {
-  const f = harness({ intercept: path => path === "/api/media/client/capabilities" ? response(200, { enabled: true }) : undefined }); await flush();
+test("photo picker retains camera originals and extensionless generic or empty MIME files without preparing or uploading", async () => {
+  let preparations = 0;
+  const f = harness({ prepare: async file => { preparations++; return file; },
+    intercept: path => path === "/api/media/client/capabilities" ? response(200, { enabled: true }) : undefined }); await flush();
   const original = new Blob([new Uint8Array(12 * 1024 * 1024)], { type: "image/jpeg" });
   f.element("message-body").value = "Keep my photo caption";
   f.element("image-file").files = [original];
@@ -1905,13 +1908,36 @@ test("photo picker retains camera originals above ten MiB and generic-MIME JPEGs
   const state = f.inspect().states.get(f.inspect().selected);
   assert.equal(state.imageDraft.file, original);
   const generic = new Blob(["synthetic JPEG contents validated only on prepare"], { type: "application/octet-stream" });
-  Object.defineProperty(generic, "name", { value: "camera.JPG" });
-  f.element("image-file").files = [generic];
+  Object.defineProperty(generic, "name", { value: "image" });
+  const unnamed = new Blob(["synthetic PNG contents validated only on prepare"]);
+  f.element("image-file").files = [generic, unnamed];
   for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
   assert.equal(state.imageDraft, null);
-  assert.deepEqual([...state.photoBatch.items].map(item => item.file), [original, generic]);
+  assert.deepEqual([...state.photoBatch.items].map(item => item.file), [original, generic, unnamed]);
   assert.equal(f.element("message-body").value, "Keep my photo caption");
+  assert.equal(preparations, 0);
   assert.equal(f.calls.filter(call => call.options.method === "POST" && /\/(messages|assets)$/.test(call.path)).length, 0);
+});
+
+test("extensionless generic or empty MIME files still fail byte validation before any upload", async () => {
+  for (const type of ["", "application/octet-stream"]) {
+    let preparations = 0;
+    const f = harness({ prepare: async file => { preparations++; return prepareImageUpload(file); },
+      intercept: path => path === "/api/media/client/capabilities" ? response(200, { enabled: true }) : undefined }); await flush();
+    const invalid = new Blob(["GIF89a this is not a supported photo"], { type });
+    Object.defineProperty(invalid, "name", { value: "image" });
+    f.element("image-file").files = [invalid];
+    for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+    assert.equal(preparations, 0);
+    await f.send("Keep my caption");
+    const state = f.inspect().states.get(f.inspect().selected);
+    assert.equal(preparations, 1);
+    assert.equal(state.pending, null);
+    assert.equal(state.imageDraft.file, invalid);
+    assert.equal(f.element("message-body").value, "Keep my caption");
+    assert.match(f.element("chat-status").textContent, /format.*JPEG, PNG ou WebP/);
+    assert.equal(f.calls.filter(call => call.options.method === "POST" && /\/(messages|assets)$/.test(call.path)).length, 0);
+  }
 });
 
 test("photo picker gives an actionable HEIC explanation while retaining an existing selection", async () => {
@@ -1920,10 +1946,14 @@ test("photo picker gives an actionable HEIC explanation while retaining an exist
   f.element("image-file").files = [ordinary];
   for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
   const state = f.inspect().states.get(f.inspect().selected);
-  f.element("image-file").files = [new Blob(["synthetic HEIC photo"], { type: "image/heic" })];
-  for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
-  assert.equal(state.imageDraft.file, ordinary);
-  assert.match(f.element("chat-status").textContent, /HEIC ou HEIF.*JPEG/);
+  const genericHeic = new Blob(["synthetic HEIC photo"], { type: "application/octet-stream" });
+  Object.defineProperty(genericHeic, "name", { value: "camera.HEIC" });
+  for (const file of [new Blob(["synthetic HEIC photo"], { type: "image/heic" }), genericHeic]) {
+    f.element("image-file").files = [file];
+    for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+    assert.equal(state.imageDraft.file, ordinary);
+    assert.match(f.element("chat-status").textContent, /HEIC ou HEIF.*JPEG/);
+  }
   assert.equal(f.calls.filter(call => call.options.method === "POST" && /\/(messages|assets)$/.test(call.path)).length, 0);
 });
 

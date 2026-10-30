@@ -1115,11 +1115,13 @@ function chooseFile() {
   if (!state || !files.length || state.pending || sendBusy || state.photoBatch?.started || !state.conversation?.canSend) return;
   // This is the original on-device photo, not the prepared network body.
   // The preparer independently bounds source pixels/bytes and targets 2 MiB.
+  const isHeic = file => ["image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence"].includes(file.type)
+    || /\.(?:heic|heif)$/i.test(file.name ?? "");
   const accepted = files.filter(file => (["image/jpeg", "image/jpg", "image/pjpeg", "image/png", "image/webp"].includes(file.type)
-    || ["", "application/octet-stream"].includes(file.type) && /\.(?:jpe?g|png|webp)$/i.test(file.name ?? ""))
-    && file.size > 0 && file.size <= 50 * 1024 * 1024);
+    || ["", "application/octet-stream"].includes(file.type))
+    && !isHeic(file) && file.size > 0 && file.size <= 50 * 1024 * 1024);
   const videoRefused = role === "client" && files.some(file => file.type.startsWith("video/"));
-  const heicRefused = files.some(file => !accepted.includes(file) && (["image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence"].includes(file.type) || /\.(?:heic|heif)$/i.test(file.name ?? "")));
+  const heicRefused = files.some(isHeic);
   if (el("message-body").value.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant d’ajouter une photo.", true); return; }
   if (!accepted.length) { notice(videoRefused ? "L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos." : heicRefused ? "Pour une photo HEIC ou HEIF, choisis une copie JPEG depuis ton téléphone." : "Choisis une photo JPEG, PNG ou WebP de 50 Mo maximum. Elle sera allégée avant l’envoi.", true); return; }
   const previous = state.imageDraft?.file ? [state.imageDraft.file] : [];
