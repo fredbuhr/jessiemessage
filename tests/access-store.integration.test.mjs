@@ -277,24 +277,59 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       assert.equal((await connection.query("SELECT id FROM email_verifications WHERE id = ?", [collision.verification.id])).length, 0);
     });
 
-    await t.test("verification is single-use under concurrency and grants neither age assurance nor approved access", async () => {
+    await t.test("single-use email verification activates invited access and creates one conversation without inventing age assurance", async () => {
       const fixture = await registered();
       const results = await Promise.all([store.verifyEmail(fixture.verification.tokenHash, { now }), store.verifyEmail(fixture.verification.tokenHash, { now })]);
       assert.equal(results.filter(Boolean).length, 1);
       assert.equal(await store.verifyEmail(fixture.verification.tokenHash, { now }), false);
       const record = await store.getClientLoginRecord(fixture.user.email);
-      assert.deepEqual(record, { id: fixture.user.id, role: "client", status: "pending", passwordHash, emailVerified: true, credentialVersion: 1 });
+      assert.deepEqual(record, { id: fixture.user.id, role: "client", status: "active", passwordHash, emailVerified: true, credentialVersion: 1 });
       const { accepted, session } = await login(fixture);
       assert.equal(accepted, true);
       const connected = await lookup(session);
-      assert.equal(connected.access.state, "pending");
+      assert.equal(connected.access.state, "active");
       assert.equal(connected.access.emailVerified, true);
       assert.equal(connected.access.ageAssured, false);
-      assert.equal(connected.access.approved, false);
-      assert.equal(connected.access.expiresAt, null);
+      assert.equal(connected.access.approved, true);
+      assert.equal(connected.access.expiresAt, now + 2 * 86400000);
       assert.equal((await connection.query("SELECT status FROM mail_outbox WHERE id = ?", [fixture.mail.id]))[0].status, "cancelled");
       const row = (await connection.query("SELECT status, age_assured_at, access_approved_at FROM users WHERE id = ?", [fixture.user.id]))[0];
-      assert.equal(row.status, "pending"); assert.equal(row.age_assured_at, null); assert.equal(row.access_approved_at, null);
+      assert.equal(row.status, "active"); assert.equal(row.age_assured_at, null); assert.equal(row.access_approved_at, sqlDate(now));
+      const conversations = await connection.query("SELECT admin_id FROM conversations WHERE client_id = ?", [fixture.user.id]);
+      assert.equal(conversations.length, 1); assert.ok(conversations[0].admin_id.equals(admin.id));
+    });
+
+    async function legacyConfirmedPending() {
+      const fixture = await registered();
+      // State created by a prior version after mailbox confirmation but before
+      // the now-removed manual approval step; no new production migration.
+      await connection.query("UPDATE users SET email_verified_at = ? WHERE id = ?", [sqlDate(now), fixture.user.id]);
+      await connection.query("UPDATE email_verifications SET consumed_at = ? WHERE id = ?", [sqlDate(now), fixture.verification.id]);
+      await connection.query("UPDATE mail_outbox SET status = 'cancelled' WHERE id = ?", [fixture.mail.id]);
+      return fixture;
+    }
+
+    await t.test("a previously confirmed pending account activates on credential login with its invitation's duration", async () => {
+      const fixture = await legacyConfirmedPending(), activatedAt = now + 300000;
+      const session = { id: id(), tokenHash: digest(), expiresAt: activatedAt + 8 * 3600000 };
+      assert.equal(await store.completeClientLogin({ userId: fixture.user.id, expectedPasswordHash: passwordHash,
+        expectedVersion: 1, now: activatedAt, session }), true);
+      const current = await lookup(session, activatedAt);
+      assert.equal(current.access.state, "active"); assert.equal(current.access.approved, true);
+      assert.equal(current.access.expiresAt, activatedAt + 2 * 86400000);
+      assert.equal((await connection.query("SELECT id FROM conversations WHERE client_id = ?", [fixture.user.id])).length, 1);
+    });
+
+    await t.test("an existing valid session activates a previously confirmed pending account once without extending access on refresh", async () => {
+      const fixture = await legacyConfirmedPending(), activatedAt = now + 300000;
+      const session = { id: id(), tokenHash: digest(), expiresAt: activatedAt + 8 * 3600000 };
+      await connection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)",
+        [session.id, fixture.user.id, session.tokenHash, sqlDate(now), sqlDate(session.expiresAt)]);
+      await connection.query("INSERT INTO client_session_state (session_id, last_seen_at, credential_version) VALUES (?, ?, 1)", [session.id, sqlDate(now)]);
+      const current = await lookup(session, activatedAt);
+      assert.equal(current.access.state, "active"); assert.equal(current.access.expiresAt, activatedAt + 2 * 86400000);
+      assert.equal((await lookup(session, activatedAt + 60000)).access.expiresAt, current.access.expiresAt);
+      assert.equal((await connection.query("SELECT id FROM conversations WHERE client_id = ?", [fixture.user.id])).length, 1);
     });
 
     await t.test("email verification checks expiry after its real token lock before changing the mailbox or queued mail", async () => {
@@ -349,36 +384,59 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       }
     });
 
-    await t.test("manual approval requires verified email and the consumed invitation, preserves absent age evidence and creates one conversation atomically", async () => {
+    await t.test("legacy admin approval is authenticated and idempotent after automatic activation without extending access", async () => {
       const fixture = await registered({}, { expiresAt: now + 1000, accessDays: 2 });
       assert.equal(await store.approveClient(admin.tokenHash, fixture.user.id, { now }), false, "the invitation alone does not verify email");
       await verify(fixture);
-      const approvedAt = now + 300000;
-      const results = await Promise.all([store.approveClient(admin.tokenHash, fixture.user.id, { now: approvedAt }), store.approveClient(admin.tokenHash, fixture.user.id, { now: approvedAt })]);
-      assert.equal(results.filter(Boolean).length, 1);
-      const user = (await connection.query("SELECT status, age_assured_at, access_approved_at, access_expires_at FROM users WHERE id = ?", [fixture.user.id]))[0];
+      const later = now + 300000;
+      const before = await connection.query("SELECT status, age_assured_at, access_approved_at, access_expires_at FROM users WHERE id = ?", [fixture.user.id]);
+      const results = await Promise.all([store.approveClient(admin.tokenHash, fixture.user.id, { now: later }), store.approveClient(admin.tokenHash, fixture.user.id, { now: later })]);
+      assert.deepEqual(results, [true, true]);
+      const after = await connection.query("SELECT status, age_assured_at, access_approved_at, access_expires_at FROM users WHERE id = ?", [fixture.user.id]);
+      assert.deepEqual(after, before);
+      const user = after[0];
       assert.equal(user.status, "active"); assert.equal(user.age_assured_at, null);
-      assert.equal(user.access_approved_at, sqlDate(approvedAt));
-      assert.equal(user.access_expires_at, sqlDate(approvedAt + 2 * 86400000));
+      assert.equal(user.access_approved_at, sqlDate(now)); assert.equal(user.access_expires_at, sqlDate(now + 2 * 86400000));
       const conversations = await connection.query("SELECT admin_id FROM conversations WHERE client_id = ?", [fixture.user.id]);
       assert.equal(conversations.length, 1); assert.ok(conversations[0].admin_id.equals(admin.id));
-      const session = { id: id(), tokenHash: digest(), expiresAt: approvedAt + 3 * 86400000 };
-      assert.equal(await store.completeClientLogin({ userId: fixture.user.id, expectedPasswordHash: passwordHash, expectedVersion: 1, now: approvedAt, session }), true);
-      assert.equal((await lookup(session, approvedAt)).access.state, "active");
-      await connection.query("UPDATE client_session_state SET last_seen_at = ? WHERE session_id = ?", [sqlDate(approvedAt + 2 * 86400000), session.id]);
-      assert.equal((await lookup(session, approvedAt + 2 * 86400000)).access.state, "expired");
+      assert.equal(await store.approveClient(digest(), fixture.user.id, { now: later }), false);
+      const session = { id: id(), tokenHash: digest(), expiresAt: later + 3 * 86400000 };
+      assert.equal(await store.completeClientLogin({ userId: fixture.user.id, expectedPasswordHash: passwordHash, expectedVersion: 1, now: later, session }), true);
+      assert.equal((await lookup(session, later)).access.state, "active");
+      await connection.query("UPDATE client_session_state SET last_seen_at = ? WHERE session_id = ?", [sqlDate(now + 2 * 86400000), session.id]);
+      assert.equal((await lookup(session, now + 2 * 86400000)).access.state, "expired");
 
       await resetAdministratorClock();
-      const atomic = await registered(); await verify(atomic);
-            await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)", [id(), atomic.user.id, admin.id, sqlDate(now)]);
-      await assert.rejects(store.approveClient(admin.tokenHash, atomic.user.id, { now }), (error) => error.code === "ACCESS_DATABASE_OPERATION");
-      const unchanged = (await connection.query("SELECT status, access_approved_at, access_expires_at FROM users WHERE id = ?", [atomic.user.id]))[0];
-      assert.equal(unchanged.status, "pending"); assert.equal(unchanged.access_approved_at, null); assert.equal(unchanged.access_expires_at, null);
+      const closed = await registered();
+      await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at, closed_at) VALUES (?, ?, ?, ?, ?)",
+        [id(), closed.user.id, admin.id, sqlDate(now), sqlDate(now)]);
+      assert.equal(await store.verifyEmail(closed.verification.tokenHash, { now }), false, "confirmation must not reopen a closed conversation");
+      const unchanged = (await connection.query("SELECT status, email_verified_at, access_approved_at, access_expires_at FROM users WHERE id = ?", [closed.user.id]))[0];
+      assert.equal(unchanged.status, "pending"); assert.equal(unchanged.email_verified_at, null);
+      assert.equal(unchanged.access_approved_at, null); assert.equal(unchanged.access_expires_at, null);
+      assert.equal((await connection.query("SELECT consumed_at FROM email_verifications WHERE id = ?", [closed.verification.id]))[0].consumed_at, null);
+      assert.equal((await connection.query("SELECT status FROM mail_outbox WHERE id = ?", [closed.mail.id]))[0].status, "pending");
     });
 
-    await t.test("approval refuses a future invitation consumption without changing the pending account", async () => {
-      const fixture = await registered(); await verify(fixture);
+    await t.test("automatic activation rolls mailbox, access and challenge state back when conversation creation fails", async () => {
+      const fixture = await registered();
+      await connection.query(`CREATE TRIGGER synthetic_access_conversation_failure BEFORE INSERT ON conversations
+        FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'synthetic conversation failure'`);
+      try {
+        await assert.rejects(store.verifyEmail(fixture.verification.tokenHash, { now }), error => error.code === "ACCESS_DATABASE_OPERATION");
+      } finally { await connection.query("DROP TRIGGER synthetic_access_conversation_failure"); }
+      const user = (await connection.query("SELECT status, email_verified_at, access_approved_at, access_expires_at FROM users WHERE id = ?", [fixture.user.id]))[0];
+      assert.deepEqual({ ...user }, { status: "pending", email_verified_at: null, access_approved_at: null, access_expires_at: null });
+      assert.equal((await connection.query("SELECT consumed_at FROM email_verifications WHERE id = ?", [fixture.verification.id]))[0].consumed_at, null);
+      assert.equal((await connection.query("SELECT status FROM mail_outbox WHERE id = ?", [fixture.mail.id]))[0].status, "pending");
+      assert.equal((await connection.query("SELECT id FROM conversations WHERE client_id = ?", [fixture.user.id])).length, 0);
+      await verify(fixture);
+    });
+
+    await t.test("automatic activation refuses future invitation consumption without changing the pending account", async () => {
+      const fixture = await registered();
       await connection.query("UPDATE invitations SET consumed_at = ? WHERE id = ?", [sqlDate(now + 1000), fixture.invite.id]);
+      assert.equal(await store.verifyEmail(fixture.verification.tokenHash, { now }), false);
       assert.equal(await store.approveClient(admin.tokenHash, fixture.user.id, { now }), false);
       const row = (await connection.query("SELECT status, access_approved_at, age_assured_at FROM users WHERE id = ?", [fixture.user.id]))[0];
       assert.equal(row.status, "pending"); assert.equal(row.access_approved_at, null); assert.equal(row.age_assured_at, null);
@@ -479,8 +537,8 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       await connection.query(`UPDATE users SET status = 'active', created_at = ?, email_verified_at = ?, age_assured_at = ?, access_approved_at = ?, access_expires_at = ?
         WHERE id = ?`, [sqlDate(approvedAt - 1000), sqlDate(approvedAt), null, sqlDate(approvedAt), sqlDate(expiresAt), fixture.user.id]);
       await connection.query("UPDATE invitations SET created_at = ?, consumed_at = ? WHERE id = ?", [sqlDate(approvedAt - 1000), sqlDate(approvedAt), fixture.invite.id]);
-      const conversationId = id();
-      await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)", [conversationId, fixture.user.id, admin.id, sqlDate(approvedAt)]);
+      const conversationId = (await connection.query("SELECT id FROM conversations WHERE client_id = ?", [fixture.user.id]))[0].id;
+      await connection.query("UPDATE conversations SET created_at = ? WHERE id = ?", [sqlDate(approvedAt), conversationId]);
       const { accepted, session } = await login(fixture); assert.equal(accepted, true);
       return { ...fixture, conversationId, session, expiresAt };
     }

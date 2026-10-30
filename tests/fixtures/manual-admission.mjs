@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 
 // Synthetic SQL fixtures only. Real accounts consume their invitation through
-// registration and receive a separate, explicit administrator approval.
+// registration; mailbox confirmation then activates that invitation automatically.
 export async function consumeSyntheticInvitation(connection, clientId, at) {
   const date = new Date(at).toISOString().replace("T", " ").replace("Z", "000");
   const expires = new Date(at + 86400000).toISOString().replace("T", " ").replace("Z", "000");

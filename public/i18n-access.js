@@ -2,6 +2,12 @@
 
 // Only fixed interface sources belong in this catalog. Account fields stay raw.
 globalThis.JessieI18n?.register({
+  "Mon espace est réservé aux adultes. Confirme ton e-mail pour activer automatiquement ton accès. Cette déclaration ne vérifie pas ta majorité.": "My space is for adults. Confirm your email to activate access automatically. This declaration does not verify your age.",
+  "La messagerie sera disponible après confirmation de ton e-mail.": "Messaging will be available after you confirm your email.",
+  "Ton e-mail est confirmé. Reconnecte-toi pour activer ton accès.": "Your email is confirmed. Sign in again to activate your access.",
+  "Ton compte est créé. L’e-mail de confirmation est en cours d’envoi. Vérifie aussi tes indésirables ; tu peux demander un nouvel e-mail ci-dessous. Après confirmation, connecte-toi pour accéder à la messagerie.": "Your account is ready. Your confirmation email is being sent. Check your spam folder too; you can request another email below. After confirming, sign in to access messaging.",
+  "Invitation valable jusqu’au {date}. Accès sans limite de durée après confirmation de ton e-mail.": "Invitation valid until {date}. Access has no time limit after you confirm your email.",
+  "Invitation valable jusqu’au {date}. Accès prévu pour {days} jours après confirmation de ton e-mail.": "Invitation valid until {date}. Access is planned for {days} days after you confirm your email.",
   "J’ai un code d’invitation": "I have an invitation code",
   "Ton code d’invitation": "Your invitation code",
   "Colle le code reçu de Jessie en message privé. Les espaces et les tirets sont acceptés.": "Paste the code Jessie sent you privately. Spaces and hyphens are accepted.",

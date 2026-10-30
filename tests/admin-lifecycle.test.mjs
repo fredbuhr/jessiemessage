@@ -536,26 +536,20 @@ test("only invited email-verified approved finite active access offers renewal a
   for (const form of renewForms(f)) assert.equal(form.querySelectorAll("input")[0].value, "30");
 });
 
-test("manual admission allows approval without age assurance only after invitation consumption and email verification", async () => {
+test("client administration no longer offers a manual approval and explains automatic activation", async () => {
   const clients = [clientRow(1, { status: "pending", approved: false }), clientRow(2, { status: "pending", approved: false, emailVerified: false }),
     clientRow(3, { status: "pending", approved: false, invitationConsumed: false })];
-  let f;
-  f = harness({ clients, intercept: (path) => {
-    if (!path.endsWith("/approve")) return undefined;
-    f.state.clients[0] = clientRow(1);
-    return response(200, { status: "approved" });
-  } });
-  await flush();
+  const f = harness({ clients }); await flush();
   const cards = f.element("clients-list").children;
-  const buttons = cards.map((card) => card.querySelectorAll("button")[0]);
-  assert.equal(buttons[0].disabled, false); assert.equal(buttons[1].disabled, true); assert.equal(buttons[2].disabled, true);
-  assert.doesNotMatch(contents(cards[0]), /Admission manuelle/); assert.match(contents(cards[0]), /Approbation de Jessie : en attente/);
+  assert.match(contents(cards[0]), /Activation automatique à la connexion/);
+  assert.match(contents(cards[1]), /Confirmation de l’e-mail attendue/);
+  assert.match(contents(cards[2]), /Accès non activé/);
+  for (const card of cards) {
+    assert.doesNotMatch(contents(card), /Approuver l’accès|Approbation de Jessie/);
+    assert.match(contents(card), /Révoquer l’accès/);
+  }
   assert.doesNotMatch(contents(f.element("clients-list")), /Majorité|majorité vérifiée/);
-  buttons[0].events.get("click")(); await flush();
-  const approval = posts(f); assert.equal(approval.length, 1); assert.equal(approval[0].path, `/api/admin/clients/${clients[0].id}/approve`);
-  assert.equal(approval[0].options.headers["X-CSRF-Token"], session().csrf);
-  assert.match(contents(f.element("clients-list").children[0]), /Accès approuvé par Jess/);
-  assert.equal(f.element("auth-status").textContent, "L’accès client est approuvé.");
+  assert.equal(posts(f).length, 0, "reading the list never approves an account on behalf of the administrator");
 });
 
 test("a client list with missing or unknown admission fields is rejected before private rows are rendered", async () => {

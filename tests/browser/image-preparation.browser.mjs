@@ -4,16 +4,21 @@ import { test } from "node:test";
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import sharp from "sharp";
+import { randomBytes } from "node:crypto";
 import { startWebDriver } from "./webdriver.mjs";
 import { normalizeImage } from "../../server/media/image.mjs";
 
-test("phone photo preparation really resizes twenty MP, preserves alpha and applies EXIF orientation", { timeout: 60000 }, async (t) => {
+test("phone photo preparation really resizes large camera originals, preserves alpha and applies EXIF through both browser decoders", { timeout: 90000 }, async (t) => {
   const helper = await readFile(new URL("../../public/image-preparation.js", import.meta.url));
   const privateMarker = "private-original-camera-owner-527";
   const exif = { IFD0: { Artist: privateMarker, Copyright: privateMarker } };
   const xmp = `<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:description="${privateMarker}"/></rdf:RDF></x:xmpmeta>`;
   const phone = await sharp({ create: { width: 5000, height: 4000, channels: 3, background: "#c32570" } })
     .withMetadata().withExif(exif).withXmp(xmp).jpeg().toBuffer();
+  const largePhone = await sharp(randomBytes(5000 * 4000 * 3), { raw: { width: 5000, height: 4000, channels: 3 } })
+    .withMetadata().withExif(exif).withXmp(xmp).jpeg({ quality: 95 }).toBuffer();
+  assert.ok(largePhone.length > 10 * 1024 * 1024 && largePhone.length < 50 * 1024 * 1024,
+    "real high-detail camera JPEG exceeds the old source cap while staying within the new one");
   const transparent = sharp({ create: { width: 3000, height: 1500, channels: 4, background: { r: 130, g: 50, b: 80, alpha: 0.3 } } })
     .withMetadata().withExif(exif).withXmp(xmp);
   const portrait = Buffer.alloc(80 * 40 * 3);
@@ -21,7 +26,7 @@ test("phone photo preparation really resizes twenty MP, preserves alpha and appl
   const oriented = await sharp(portrait, { raw: { width: 80, height: 40, channels: 3 } })
     .withMetadata({ orientation: 6 }).withExif(exif).withXmp(xmp).jpeg().toBuffer();
   const images = new Map([
-    ["/phone.jpg", [phone, "image/jpeg"]], ["/alpha.png", [await transparent.clone().png().toBuffer(), "image/png"]],
+    ["/phone.jpg", [phone, "image/jpeg"]], ["/large-phone.jpg", [largePhone, "image/jpeg"]], ["/alpha.png", [await transparent.clone().png().toBuffer(), "image/png"]],
     ["/alpha.webp", [await transparent.clone().webp({ lossless: true }).toBuffer(), "image/webp"]], ["/oriented.jpg", [oriented, "image/jpeg"]],
   ]);
   const server = createServer((request, response) => {
@@ -36,28 +41,37 @@ test("phone photo preparation really resizes twenty MP, preserves alpha and appl
   const driver = await startWebDriver(); t.after(() => driver.close());
   const browser = await driver.browser({ origin: `http://127.0.0.1:${server.address().port}` });
   await browser.navigate("/");
-  for (const path of images.keys()) {
+  const cases = [...images.keys()].map(path => ({ path, fallback: false }));
+  cases.push({ path: "/oriented.jpg", fallback: true }, { path: "/alpha.webp", fallback: true },
+    { path: "/phone.jpg", fallback: false, mime: "application/octet-stream" });
+  for (const fixture of cases) {
+    const { path } = fixture;
     const original = await sharp(images.get(path)[0]).metadata();
     assert.ok(original.exif?.includes(Buffer.from(privateMarker)), `${path}: EXIF fixture includes private source identity`);
     assert.ok(original.xmp?.includes(Buffer.from(privateMarker)), `${path}: XMP fixture includes private source identity`);
     const result = await browser.executeAsync(`
-      const done = arguments[arguments.length - 1], path = arguments[0];
+      const done = arguments[arguments.length - 1], { path, fallback, mime } = arguments[0];
       (async () => {
         const { prepareImageUpload } = await import('/image-preparation.js');
-        const input = await (await fetch(path)).blob();
-        const output = await prepareImageUpload(input);
-        return { type: output.type, bytes: Array.from(new Uint8Array(await output.arrayBuffer())) };
+        const original = await (await fetch(path)).blob();
+        const input = mime === undefined ? original : new Blob([original], { type: mime });
+        const saved = globalThis.createImageBitmap;
+        if (fallback) globalThis.createImageBitmap = undefined;
+        try {
+          const output = await prepareImageUpload(input);
+          return { type: output.type, bytes: Array.from(new Uint8Array(await output.arrayBuffer())) };
+        } finally { globalThis.createImageBitmap = saved; }
       })().then(done, (error) => done({ error: error.code || error.name }));
-    `, path);
+    `, fixture);
     assert.equal(result.error, undefined, path);
-    const bytes = Buffer.from(result.bytes); assert.ok(bytes.length < 10 * 1024 * 1024);
+    const bytes = Buffer.from(result.bytes); assert.ok(bytes.length <= 2 * 1024 * 1024);
     const metadata = await sharp(bytes).metadata();
     for (const field of ["exif", "iptc", "xmp", "orientation"]) assert.equal(metadata[field], undefined, `${path}: ${field}`);
     assert.equal(bytes.includes(Buffer.from(privateMarker)), false, `${path}: original private metadata is absent`);
     // Chrome can attach its standard sRGB ICC profile when encoding canvas.
     // A new colour profile is useful output metadata, not source identity.
     assert.equal(metadata.space, "srgb");
-    if (path === "/phone.jpg") {
+    if (path === "/phone.jpg" || path === "/large-phone.jpg") {
       assert.equal(result.type, "image/jpeg"); assert.deepEqual([metadata.width, metadata.height], [2048, 1638]);
       const accepted = await normalizeImage(bytes); assert.equal(accepted.width, 2048);
       const stored = await sharp(accepted.full).metadata();

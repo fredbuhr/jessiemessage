@@ -448,7 +448,7 @@ function paintInvitations(invitations) {
   for (const invitation of invitations) {
     const card = item(`Invitation · ${states[invitation.state]}`, [
       adminLine("Créée le {created} · valable jusqu’au {expires}", { created: adminUI.dateParam(invitation.createdAt), expires: adminUI.dateParam(invitation.expiresAt) }),
-      invitation.accessDays === null ? "Accès sans limite de durée après validation." : adminLine("Accès de {days} jours après validation.", { days: adminUI.numberParam(invitation.accessDays) }),
+      invitation.accessDays === null ? "Accès sans limite de durée après confirmation de l’e-mail." : adminLine("Accès de {days} jours après confirmation de l’e-mail.", { days: adminUI.numberParam(invitation.accessDays) }),
     ]);
     if (invitation.state === "pending") actionButton(card, "Révoquer l’invitation", async () => {
       await request(`/api/admin/invitations/${invitation.id}/revoke`, { mutation: true });
@@ -467,12 +467,9 @@ function paintClients(clients, renewalDraft = null) {
     const card = item(client.pseudonym, [{ raw: client.email },
       `État : ${expired ? "Accès expiré" : states[client.status]} · E-mail : ${client.emailVerified ? "vérifié" : "en attente"}`,
       client.invitationConsumed ? "Invitation utilisée" : "Invitation : en attente",
-      client.approved ? "Accès approuvé par Jessie" : "Approbation de Jessie : en attente",
+      client.approved ? "Activation enregistrée" : !client.emailVerified ? "Confirmation de l’e-mail attendue" : client.status === "pending" && client.invitationConsumed ? "Activation automatique à la connexion" : "Accès non activé",
       client.accessExpiresAt === null ? "Aucune date de fin d’accès." : adminLine("Fin d’accès : {date}", { date: adminUI.dateParam(client.accessExpiresAt) }),
     ], { rawTitle: true });
-    if (client.status === "pending") actionButton(card, "Approuver l’accès", async () => {
-      await request(`/api/admin/clients/${client.id}/approve`, { mutation: true }); await refreshAccessLists({ afterMutation: true }); notice("L’accès client est approuvé.");
-    }, client.admissionPolicy !== "manual_invitation" || !client.emailVerified || !client.invitationConsumed);
     if (client.status === "active" && client.admissionPolicy === "manual_invitation" && client.emailVerified && client.invitationConsumed && client.approved && Number.isSafeInteger(client.accessExpiresAt)) {
       const renewal = document.createElement("form"); renewal.className = "renewal-form";
       const label = document.createElement("label");

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import sharp from "sharp";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
-import { inspectImageInput, prepareImageUpload, ImagePreparationError, MAX_UPLOAD_BYTES } from "../public/image-preparation.js";
+import { inspectImageInput, prepareImageUpload, ImagePreparationError, MAX_UPLOAD_BYTES, MAX_SOURCE_IMAGE_BYTES, TARGET_UPLOAD_BYTES } from "../public/image-preparation.js";
 
 const source = await readFile(new URL("../public/image-preparation.js", import.meta.url), "utf8");
 const solid = (width, height, format = "jpeg") => sharp({ create: { width, height, channels: 4,
@@ -35,8 +35,9 @@ test("source pixel/side, compressed bytes and animation guards run before a brow
     const bytes = Buffer.from(ordinary); bytes.writeUInt32BE(width, 16); bytes.writeUInt32BE(height, 20);
     assert.throws(() => inspectImageInput(bytes), code("media_dimensions"));
   }
-  assert.throws(() => inspectImageInput(Buffer.alloc(MAX_UPLOAD_BYTES + 1)), code("request_too_large"));
-  for (const bytes of [Buffer.from("GIF89a"), Buffer.from("\0\0\0\x18ftypheic"), Buffer.from("<svg/>"), ordinary.subarray(0, 32)]) {
+  assert.throws(() => inspectImageInput(Buffer.alloc(MAX_SOURCE_IMAGE_BYTES + 1)), code("image_source_too_large"));
+  assert.throws(() => inspectImageInput(Buffer.from("\0\0\0\x18ftypheic")), code("media_heic"));
+  for (const bytes of [Buffer.from("GIF89a"), Buffer.from("<svg/>"), ordinary.subarray(0, 32)]) {
     assert.throws(() => inspectImageInput(bytes), code("media_format"));
   }
   const control = Buffer.alloc(20); control.writeUInt32BE(8); control.write("acTL", 4);
@@ -64,10 +65,18 @@ test("conflicting JPEG frames, duplicate PNG headers and WebP container/image di
   assert.throws(() => inspectImageInput(mismatch), code("media_format"));
 });
 
-function harness({ outputSizes = [1000], decodeError, contextAvailable = true, decode, onDecoded } = {}) {
-  const calls = [], canvases = [], bitmaps = [];
-  const context = vm.createContext({ Blob, Uint8Array, DataView, Set, Error, Number, Math, DOMException,
-    createImageBitmap: async (file, options) => {
+function harness({ outputSizes = [1000], decodeError, contextAvailable = true, decode, onDecoded,
+  nativeFallback = false, noBitmap = false, nativeSize = [5000, 4000], onNativeLoaded } = {}) {
+  const calls = [], canvases = [], bitmaps = [], nativeImages = [], urls = [], revokedUrls = [];
+  class NativeImage {
+    constructor() { this.naturalWidth = nativeSize[0]; this.naturalHeight = nativeSize[1]; nativeImages.push(this); }
+    set src(value) { this.source = value; if (value) Promise.resolve().then(() => { onNativeLoaded?.(); this.onload?.(); }); }
+    get src() { return this.source; }
+  }
+  const context = vm.createContext({ Blob, Uint8Array, DataView, Set, Error, Number, Math, DOMException, setTimeout, clearTimeout,
+    Image: nativeFallback ? NativeImage : undefined,
+    URL: nativeFallback ? { createObjectURL(file) { urls.push(file); return `blob:synthetic-${urls.length}`; }, revokeObjectURL(url) { revokedUrls.push(url); } } : undefined,
+    createImageBitmap: noBitmap ? undefined : async (file, options) => {
       calls.push({ kind: "decode", file, options });
       if (decodeError) throw decodeError;
       const bitmap = decode ?? { width: options.resizeWidth, height: options.resizeHeight };
@@ -87,7 +96,7 @@ function harness({ outputSizes = [1000], decodeError, contextAvailable = true, d
     } },
   });
   vm.runInContext(source.replace(/export /g, "") + "\nglobalThis.prepare = prepareImageUpload;", context);
-  return { prepare: context.prepare, calls, canvases, bitmaps };
+  return { prepare: context.prepare, calls, canvases, bitmaps, nativeImages, urls, revokedUrls };
 }
 
 test("preparation sizes a phone JPEG before decoding and releases its bitmap/canvas", async () => {
@@ -102,9 +111,9 @@ test("preparation sizes a phone JPEG before decoding and releases its bitmap/can
   assert.ok(f.canvases.every((canvas) => canvas.width === 0 && canvas.height === 0));
 });
 
-test("transparent PNG/WebP keep alpha, use PNG and reduce further if the output exceeds ten MiB", async () => {
+test("transparent PNG/WebP keep alpha, use PNG and reduce further if the output exceeds the mobile transfer target", async () => {
   for (const format of ["png", "webp"]) {
-    const f = harness({ outputSizes: [MAX_UPLOAD_BYTES + 1, 1000] });
+    const f = harness({ outputSizes: [TARGET_UPLOAD_BYTES + 1, 1000] });
     const prepared = await f.prepare(new Blob([await solid(3000, 1500, format)], { type: `image/${format}` }));
     assert.equal(prepared.type, "image/png");
     assert.equal(f.calls.find((call) => call.kind === "context").options.alpha, true);
@@ -118,10 +127,10 @@ test("unavailable canvas, bad bytes, HEIC, oversized output and cancellation fai
   await assert.rejects(noCanvas.prepare(file), code("media_unavailable"));
   assert.ok(noCanvas.bitmaps.every((bitmap) => bitmap.closed));
   await assert.rejects(harness({ decodeError: new Error("private decoder filename") }).prepare(file), code("media_format"));
-  await assert.rejects(harness().prepare(new Blob([await solid(30, 20)], { type: "image/heic" })), code("media_format"));
-  const tooLarge = harness({ outputSizes: [MAX_UPLOAD_BYTES + 1] });
+  await assert.rejects(harness().prepare(new Blob([await solid(30, 20)], { type: "image/heic" })), code("media_heic"));
+  const tooLarge = harness({ outputSizes: [TARGET_UPLOAD_BYTES + 1] });
   await assert.rejects(tooLarge.prepare(file), code("request_too_large"));
-  assert.equal(tooLarge.calls.filter((call) => call.kind === "encode").length, 3);
+  assert.equal(tooLarge.calls.filter((call) => call.kind === "encode").length, 5);
   assert.ok(tooLarge.bitmaps.every((bitmap) => bitmap.closed));
   const controller = new AbortController(); controller.abort();
   await assert.rejects(prepareImageUpload(file, { signal: controller.signal }), (error) => error.name === "AbortError");
@@ -130,4 +139,45 @@ test("unavailable canvas, bad bytes, HEIC, oversized output and cancellation fai
   assert.ok(interrupted.bitmaps.every((bitmap) => bitmap.closed));
   assert.equal(interrupted.canvases.length, 0);
   await assert.rejects(prepareImageUpload(null), (error) => error instanceof ImagePreparationError && error.code === "media_format");
+});
+
+test("camera originals above the transport cap are inspected and prepared before transfer", async () => {
+  const jpeg = await solid(5000, 4000);
+  const original = new Blob([jpeg, new Uint8Array(MAX_UPLOAD_BYTES + 1)], { type: "image/jpeg" });
+  assert.ok(original.size > MAX_UPLOAD_BYTES && original.size < MAX_SOURCE_IMAGE_BYTES);
+  const f = harness();
+  assert.equal((await f.prepare(original)).size, 1000);
+  assert.equal(f.calls.find(call => call.kind === "decode").options.resizeWidth, 2048);
+  const overSourceLimit = new Blob([new Uint8Array(MAX_SOURCE_IMAGE_BYTES + 1)], { type: "image/jpeg" });
+  await assert.rejects(f.prepare(overSourceLimit), code("image_source_too_large"));
+  assert.equal(f.calls.filter(call => call.kind === "decode").length, 1, "oversized original never reaches decoder");
+});
+
+test("missing, generic and legacy MIME labels use the proven JPEG bytes for decoding", async () => {
+  const bytes = await solid(40, 30);
+  for (const type of ["", "application/octet-stream", "image/jpg", "image/pjpeg"]) {
+    const f = harness();
+    await f.prepare(new Blob([bytes], { type }));
+    assert.equal(f.calls.find(call => call.kind === "decode").file.type, "image/jpeg");
+  }
+  await assert.rejects(harness().prepare(new Blob([bytes], { type: "image/png" })), code("media_format"));
+});
+
+test("phone decoder fallback handles absent ImageBitmap or rejected resize options and releases native image URLs", async () => {
+  const file = new Blob([await solid(5000, 4000)], { type: "image/jpeg" });
+  for (const options of [{ noBitmap: true }, { decodeError: new TypeError("unsupported bitmap options") }]) {
+    const f = harness({ ...options, nativeFallback: true });
+    const prepared = await f.prepare(file);
+    assert.equal(prepared.size, 1000);
+    const draw = f.calls.find(call => call.kind === "draw");
+    assert.deepEqual([draw.width, draw.height], [2048, 1638]);
+    assert.equal(f.nativeImages[0].src, "");
+    assert.deepEqual(f.revokedUrls, ["blob:synthetic-1"]);
+    assert.ok(f.canvases.every(canvas => canvas.width === 0 && canvas.height === 0));
+  }
+  const controller = new AbortController();
+  const interrupted = harness({ noBitmap: true, nativeFallback: true, onNativeLoaded: () => controller.abort() });
+  await assert.rejects(interrupted.prepare(file, { signal: controller.signal }), error => error.name === "AbortError");
+  assert.equal(interrupted.nativeImages[0].src, "");
+  assert.deepEqual(interrupted.revokedUrls, ["blob:synthetic-1"]);
 });

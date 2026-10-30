@@ -1,6 +1,13 @@
 "use strict";
 (() => {
   const dictionary = {
+    "Accès non activé": "Access not activated",
+    "Inviter et gérer les accès.": "Invite clients and manage access.",
+    "Activation enregistrée": "Activation recorded",
+    "Activation automatique à la connexion": "Access activates automatically at sign-in",
+    "Confirmation de l’e-mail attendue": "Awaiting email confirmation",
+    "Accès sans limite de durée après confirmation de l’e-mail.": "Access without an end date after email confirmation.",
+    "Accès de {days} jours après confirmation de l’e-mail.": "Access for {days} days after email confirmation.",
     "Accès rapides": "Quick access",
     "Invitations et clients": "Invitations and clients",
     "Fermeture des comptes": "Account closures",

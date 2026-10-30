@@ -429,6 +429,14 @@ async function loaded(page, path) {
 async function loadedPhoto(page) {
   await waitUntil(() => page.execute("const img = document.querySelector('#messages .photo-open img'); return !!img && img.complete && img.naturalWidth > 0"), "actual JPEG thumbnail decoding");
 }
+async function typeMultilineDraft(page, value) {
+  const [first, ...lines] = value.split("\n");
+  await page.type("#message-body", first);
+  for (const line of lines) {
+    await page.click("#insert-line-break");
+    if (line) await page.append("#message-body", line);
+  }
+}
 async function noJavascriptErrors(page) { assert.deepEqual(await page.execute("return window.__browserErrors"), [], "no JavaScript / promise / CSP errors"); }
 
 before(async () => { resetFixture(); await startFixtureServer(); driver = await startWebDriver(); }, { timeout: 30000 });
@@ -739,7 +747,7 @@ test("Chrome mobile: a single compact conversation bar leaves room for history a
             optionsClosed:document.getElementById('chat-menu').hidden, toolsClosed:document.getElementById('composer-tools').hidden,
             footerVisible:visible(document.getElementById('chat-footer')), historyHeight:history.height, historyBottom:history.bottom,
             rowHeight:row.height, rowBottom:row.bottom,
-            controls:['open-conversation-menu','open-composer-tools','open-emojis','message-body','send'].map(id=>{
+            controls:['open-conversation-menu','open-composer-tools','open-emojis','message-body','insert-line-break','send'].map(id=>{
               const node=document.getElementById(id),r=node.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
               return {id,left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height,reachable:hit===node||node.contains(hit)};
             })};
@@ -792,7 +800,7 @@ test("Chrome short mobile viewports: a multiline draft keeps the composer usable
     try {
       await loaded(page,role==='admin'?'/admin/messages':'/messages');
       if(role==='admin') await page.click('.contact');
-      await page.type('#message-body','A synthetic multiline draft\n'.repeat(8));
+      await typeMultilineDraft(page, 'A synthetic multiline draft\n'.repeat(8));
       const layout=await page.execute(`const ids=['message-body','send','open-emojis','open-composer-tools'];
         return {width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth,
           history:document.getElementById('message-scroll').getBoundingClientRect().height,
@@ -1270,7 +1278,7 @@ for (const width of [320, 1280]) for (const language of ["fr", "en"]) {
       assert.equal(await page.execute("return document.querySelector('#quick-replies-dialog').open"), false);
       assert.equal(await page.execute("return document.activeElement.id"), width < 800 ? "open-composer-tools" : "message-body"); assert.equal(fixture.sent.length, 0, "insertion never sends");
       assert.match(await page.execute("return document.querySelector('#chat-status').textContent"), language === "fr" ? /ajoutée au brouillon/ : /added to your draft/);
-      await page.type("#message-body", expected + " Edited"); await page.click("#send");
+      await page.append("#message-body", " Edited"); await page.click("#send");
       await waitUntil(() => fixture.sent.length === 1, "explicit ordinary send");
       assert.equal(fixture.sent[0].body, expected + " Edited");
       await waitUntil(() => page.execute("return document.querySelector('#message-body').value === ''"), "ordinary acknowledgement clears sent draft");
@@ -1792,4 +1800,61 @@ test("Chrome mobile: a persisted-page event revalidates without reloading the do
       assert.equal(fixture.chatDocuments, documents); await noJavascriptErrors(page);
     } finally { releaseHeldSessions(); await page.close(); }
   }
+});
+
+test("Chrome composer: explicit newline retains the caret and Enter sends once for both roles and languages", { timeout: 120000 }, async () => {
+  for (const width of [320, 1280]) for (const role of ["client", "admin"]) for (const language of ["fr", "en"]) {
+    resetFixture(); const page = await browser(width, 640), context = `${role} ${language} ${width}px`;
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      if (role === "admin") await page.click(".contact");
+      await loadedPhoto(page);
+      if (language === "en") await toggleChatLanguage(page);
+      if (width === 320) await page.execute(`const original=window.matchMedia.bind(window);window.matchMedia=query=>query==='(any-pointer: coarse)'?{matches:true}:original(query);`);
+      assert.equal(await page.execute("return document.getElementById('message-body').getAttribute('enterkeyhint')"), "send");
+      assert.equal(await page.execute("return document.getElementById('insert-line-break').getAttribute('aria-label')"), language === "fr" ? "Passer à la ligne" : "Insert a line break");
+      await page.type("#message-body", "Alpha Omega");
+      await page.execute("document.getElementById('message-body').setSelectionRange(6,6)");
+      if (language === "en") {
+        await page.key("\uE004");
+        assert.equal(await page.execute("return document.activeElement.id"), "insert-line-break", `${context}: the newline command is keyboard reachable`);
+        await page.key("\uE007");
+      } else await page.click("#insert-line-break");
+      assert.deepEqual(await page.execute("const t=document.getElementById('message-body');return {value:t.value,start:t.selectionStart,end:t.selectionEnd,focus:document.activeElement.id}"),
+        { value: "Alpha \nOmega", start: 7, end: 7, focus: "message-body" }, context);
+      assert.equal(fixture.sent.length, 0, `${context}: inserting a line break never sends`);
+      await captureOptions(page, `composer-enter-${role}-${language}-${width}`);
+      await page.key("\uE007");
+      await waitUntil(() => fixture.sent.length === 1, "native Enter creates one message");
+      await waitUntil(() => page.execute("return document.getElementById('message-body').value==='' && !document.getElementById('message-body').disabled"), "send confirmation clears and unlocks composer");
+      assert.equal(fixture.sent[0].body, "Alpha \nOmega", context);
+      assert.equal(await page.execute("return document.activeElement.id==='message-body'"), width !== 320, `${context}: touch sends do not reopen the keyboard`);
+      await delay(80); assert.equal(fixture.sent.length, 1, `${context}: no implicit form-submit duplicate`);
+      await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+
+test("Chrome composer: mobile beforeinput fallback does not send an IME confirmation or intercept another textarea", { timeout: 60000 }, async () => {
+  resetFixture(); const page = await browser(390, 640);
+  try {
+    await loaded(page, "/messages"); await loadedPhoto(page);
+    await page.execute("const t=document.createElement('textarea');t.id='external-enter-probe';document.body.append(t);t.focus()");
+    await page.type("#external-enter-probe", "Other field"); await page.key("\uE007");
+    assert.equal(await page.execute("return document.getElementById('external-enter-probe').value"), "Other field\n");
+    assert.equal(fixture.sent.length, 0);
+    await page.execute("document.getElementById('external-enter-probe').remove()");
+    const composition = await page.execute(`const t=document.getElementById('message-body');t.focus();t.value='日本語';t.dispatchEvent(new InputEvent('input',{bubbles:true}));
+      t.dispatchEvent(new CompositionEvent('compositionstart',{bubbles:true}));
+      const key=t.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',keyCode:229,isComposing:true,bubbles:true,cancelable:true}));
+      t.dispatchEvent(new CompositionEvent('compositionend',{bubbles:true}));
+      const newline=t.dispatchEvent(new InputEvent('beforeinput',{inputType:'insertLineBreak',bubbles:true,cancelable:true}));
+      return {key,newline,value:t.value};`);
+    assert.deepEqual(composition, { key: true, newline: true, value: "日本語" });
+    assert.equal(fixture.sent.length, 0, "candidate confirmation is not a send command");
+    assert.equal(await page.execute("return document.getElementById('message-body').dispatchEvent(new InputEvent('beforeinput',{inputType:'insertLineBreak',bubbles:true,cancelable:true}))"), false);
+    await waitUntil(() => fixture.sent.length === 1, "soft Enter submits after composition confirmation");
+    assert.equal(fixture.sent[0].body, "日本語");
+    await noJavascriptErrors(page);
+  } finally { await page.close(); }
 });

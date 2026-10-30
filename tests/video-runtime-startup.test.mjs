@@ -108,10 +108,11 @@ test("video startup storage inspection is read-only, closes SQL, clears the copi
   }
 });
 
-test("only the video candidate widens the native request budget while headers stay bounded", () => {
+test("photo and video body deadlines fit their native request budgets while ordinary requests and headers stay bounded", () => {
   const handler = async () => false;
   assert.equal(createAppServer().requestTimeout, 15000);
-  assert.equal(createAppServer({ mediaHandler: handler }).requestTimeout, 35000);
+  const photos = createAppServer({ mediaHandler: handler });
+  assert.equal(photos.requestTimeout, 65000); assert.equal(photos.headersTimeout, 10000);
   const selected = createAppServer({ videoHandler: handler });
   assert.equal(selected.requestTimeout, 300000); assert.equal(selected.headersTimeout, 10000); assert.equal(selected.keepAliveTimeout, 5000);
 });

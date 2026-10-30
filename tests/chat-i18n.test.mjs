@@ -433,7 +433,9 @@ test("all controller message and photo error variants retain reactive translated
     ["mediaErrorText", { status: 507, code: "storage_limit" }, "Le stockage des photos a atteint sa limite."],
     ["mediaErrorText", { status: 409, code: "media_in_use" }, "Cette photo est utilisée dans une conversation ou comme avatar. Retire ces utilisations avant de la supprimer."],
     ["mediaErrorText", { status: 404 }, "Cette photo n’est plus disponible."],
-    ["mediaErrorText", { status: 415 }, "Photo refusée. Utilise une image JPEG, PNG ou WebP de 10 Mo maximum, avec une légende de 1 000 caractères maximum."],
+    ["mediaErrorText", { status: 415 }, "Photo refusée. Utilise une image JPEG, PNG ou WebP, avec une légende de 1 000 caractères maximum."],
+    ["mediaErrorText", { code: "image_source_too_large" }, "Cette photo dépasse 50 Mo. Choisis une version plus légère."],
+    ["mediaErrorText", { code: "media_heic" }, "Pour une photo HEIC ou HEIF, choisis une copie JPEG depuis ton téléphone."],
     ["mediaErrorText", { status: 429 }, "Patiente un moment avant de réessayer cet envoi."],
     ["mediaErrorText", {}, "La photo n’a pas pu être chargée. Réessaie dans un moment."],
   ];

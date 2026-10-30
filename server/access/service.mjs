@@ -89,14 +89,19 @@ function invitationHash(raw) {
   try { return invitationDigest(raw); } catch { throw invalid(); }
 }
 
-export async function createAccessService({ store, authStore, authService, totpKey, mailKey, origin, clock = Date.now }) {
+export async function createAccessService({ store, authStore, authService, totpKey, mailKey, origin, clock = Date.now, onVerificationQueued }) {
   if (!store || !authStore || !authService || !Buffer.isBuffer(totpKey) || totpKey.length !== 32
-    || !Buffer.isBuffer(mailKey) || mailKey.length !== 32 || typeof clock !== "function") throw unavailable();
+    || !Buffer.isBuffer(mailKey) || mailKey.length !== 32 || typeof clock !== "function"
+    || onVerificationQueued !== undefined && typeof onVerificationQueued !== "function") throw unavailable();
   try { if (new URL(origin).protocol !== "https:" || new URL(origin).origin !== origin) throw new Error(); }
   catch { throw unavailable(); }
   const dummyHash = await hashPassword(newToken());
   const rateKey = createHmac("sha256", totpKey).update("jessiemessage:access-rate-key:v1").digest();
   const bucket = (kind, value) => createHmac("sha256", rateKey).update(`${kind}:`).update(value).digest();
+  function verificationQueued() {
+    // The committed outbox is authoritative; waking delivery is best effort.
+    try { Promise.resolve(onVerificationQueued?.()).catch(() => {}); } catch {}
+  }
   async function database(operation) {
     try { return await operation(); }
     catch (error) {
@@ -208,6 +213,7 @@ export async function createAccessService({ store, authStore, authService, totpK
     const accepted = await database(() => store.register({ invitationHash: hash,
       user: { id: newId(), email: address, pseudonym: display, passwordHash }, ...verificationJob(address, now), now }));
     if (!accepted) throw rejected();
+    verificationQueued();
     return { status: "verification_pending" };
   }
   async function verifyEmail({ token, peerAddress } = {}) {
@@ -225,8 +231,9 @@ export async function createAccessService({ store, authStore, authService, totpK
     const matched = await passwordMatches(password, eligible ? record.passwordHash : dummyHash);
     if (matched && eligible) {
       const now = clock();
-      await database(() => store.reissueVerification({ userId: record.id, expectedPasswordHash: record.passwordHash,
+      const accepted = await database(() => store.reissueVerification({ userId: record.id, expectedPasswordHash: record.passwordHash,
         expectedVersion: record.credentialVersion, ...verificationJob(address, now), now }));
+      if (accepted) verificationQueued();
     }
     // Mailbox/account existence and password validity are never disclosed.
     return { status: "accepted" };

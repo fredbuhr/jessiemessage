@@ -1,5 +1,6 @@
-// One admission policy for this invitation-only service. This records an
-// administrator's selection; it is not an independent age-assurance claim.
+// The administrator selects recipients by issuing invitations. Confirming the
+// mailbox activates that invitation without a second administrator approval.
+// This policy is not an independent age-assurance claim.
 export const CLIENT_ADMISSION_POLICY = "manual_invitation";
 
 // A scalar subquery deliberately fails closed if a manually altered database

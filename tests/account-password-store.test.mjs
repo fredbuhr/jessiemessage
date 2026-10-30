@@ -13,6 +13,7 @@ function fixture(role) {
     if(/^(?:INSERT|UPDATE)/.test(sql)){state.writes.push({sql,values});if(state.failInsert&&sql.startsWith("INSERT INTO sessions"))throw new Error("synthetic insertion failure");return {affectedRows:1};}
     let value;
     if(sql.startsWith("SELECT user_id FROM sessions"))value=[{user_id:userId}];
+    else if(sql.startsWith("SELECT i.created_by_id FROM invitations i JOIN users"))value=[];
     else if(sql.includes("FROM users")&&sql.includes("FOR UPDATE"))value=[user];
     else if(sql.includes("FROM admin_mfa"))value=[{version:1,enabled_at:new Date(NOW-1000)}];
     else if(sql.includes("FROM client_auth_state"))value=[{credential_version:1}];
