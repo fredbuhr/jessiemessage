@@ -263,9 +263,9 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   });
   server.beginDrain = () => { draining = true; };
   server.waitForRequests = () => pendingRequests === 0 ? Promise.resolve() : new Promise((resolve) => { requestWaiters.add(resolve); });
-  // The video handler owns fixed 300s upload/transfer and 30s inactivity
-  // deadlines. Earlier deployments keep their original request budget.
-  server.requestTimeout = videoHandler ? 300000 : mediaHandler ? 35000 : 15000;
+  // Handlers retain their own bounded readers: photos get 60s to receive a
+  // body, video owns 300s transfer/30s inactivity, ordinary JSON stays short.
+  server.requestTimeout = videoHandler ? 300000 : mediaHandler ? 65000 : 15000;
   server.headersTimeout = 10000;
   server.keepAliveTimeout = 5000;
   server.maxRequestsPerSocket = 100;
@@ -418,10 +418,12 @@ export async function createConfiguredServer(env = process.env, options = {}) {
     const mailStore = createMailStore(pool, { clock });
     await accessStore.assertSchema(schemaOptions);
     await mailStore.assertSchema(schemaOptions);
+    let verificationMailWorker = null;
+    const onVerificationQueued = () => verificationMailWorker?.wake();
     const accessService = await createAccessService({ store: accessStore, authStore: store, authService: service,
-      totpKey: config.totpKey, mailKey: accessConfig.mail.key, origin: config.origin, clock });
+      totpKey: config.totpKey, mailKey: accessConfig.mail.key, origin: config.origin, clock, onVerificationQueued });
     const legacyAccessService = deviceTransition ? await createAccessService({ store: accessStore, authStore: store, authService: service,
-      totpKey: config.totpKey, mailKey: accessConfig.mail.key, origin: RECIPE_ORIGIN, clock }) : null;
+      totpKey: config.totpKey, mailKey: accessConfig.mail.key, origin: RECIPE_ORIGIN, clock, onVerificationQueued }) : null;
     if (legacyHandlers) legacyHandlers.accessHandler = createAccessHandler(legacyAccessService, { origin: RECIPE_ORIGIN, clock });
     const [{ createPasswordService }, { createPasswordHandler }] = await Promise.all([
       import("./account-password/service.mjs"), import("./account-password/http.mjs")]);
@@ -683,8 +685,9 @@ export async function createConfiguredServer(env = process.env, options = {}) {
       operations.start();
       broadcastWorker?.start();
       notificationWorker?.start();
-      workers.push(startMailWorker({ store: mailStore, transport, key: accessConfig.mail.key, closeTransport: false,
-        onState: observe("verification") }));
+      verificationMailWorker = startMailWorker({ store: mailStore, transport, key: accessConfig.mail.key, closeTransport: false,
+        onState: observe("verification") });
+      workers.push(verificationMailWorker);
       if (resetMailStore) workers.push(startMailWorker({ store: resetMailStore, transport, key: resetConfig.key, purpose: "password-reset", closeTransport: false,
         onState: observe("recovery") }));
     });

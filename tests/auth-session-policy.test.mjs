@@ -19,6 +19,7 @@ function fixture(role = "admin", { at = now, seen = now - 3600000, expires = adm
       state.queried.push([sql, values]);
       if (sql.startsWith("SET TRANSACTION")) return [];
       if (sql.startsWith("SELECT user_id FROM sessions")) return [{ user_id: userId }];
+      if (sql.startsWith("SELECT i.created_by_id FROM invitations i JOIN users")) return [];
       if (sql.includes("FROM users") && sql.includes("FOR UPDATE")) return [user];
       if (sql.includes("FROM admin_mfa")) return [{ version: state.mfaVersion, enabled_at: date(now - 7200000) }];
       if (sql.includes("FROM client_auth_state")) return [{ credential_version: state.mfaVersion }];

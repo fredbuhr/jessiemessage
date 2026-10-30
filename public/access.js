@@ -146,7 +146,7 @@ function signedIn(session) {
   const stateMessage = access.state === "active" ? "On reprend notre conversation ?"
     : access.state === "expired" ? "Ton accès est arrivé à son terme. Écris-moi pour le renouveler."
     : !access.emailVerified ? "Confirme ton e-mail pour continuer."
-    : "Tout est prêt. Ton accès attend encore ma validation.";
+    : "Ton e-mail est confirmé. Reconnecte-toi pour activer ton accès.";
   accessI18n.text(element("client-access-state"), stateMessage);
   const list = element("client-checks"); accessI18n.forget(list); list.replaceChildren(); list.hidden = true;
   element("client-validity").hidden = access.state !== "active" || access.expiresAt === null;
@@ -266,7 +266,7 @@ registrationForm.addEventListener("submit", (event) => {
     if (!invitationToken || !element("age-declared").checked) { notice("L’invitation et la déclaration de majorité sont nécessaires.", true); return; }
     notice("Création du compte…");
     await request("/api/access/register", { mutation: true, body: { invitationToken, email: element("registration-email").value, pseudonym: element("registration-name").value, password: element("registration-password").value, ageDeclared: true } });
-    invitationToken = null; registrationForm.reset(); signedOut("C’est créé ! Ouvre l’e-mail reçu pour confirmer ton adresse, puis connecte-toi ici.");
+    invitationToken = null; registrationForm.reset(); signedOut("Ton compte est créé. L’e-mail de confirmation est en cours d’envoi. Vérifie aussi tes indésirables ; tu peux demander un nouvel e-mail ci-dessous. Après confirmation, connecte-toi pour accéder à la messagerie.");
   });
 });
 function returnToLogin() { codeEntry = false; invitationToken = null; verificationToken = null; invitationCodeForm.reset(); registrationForm.reset(); signedOut(); element("login-email").focus(); }
@@ -280,8 +280,8 @@ function invitationSummary(invitation) {
   if (!invitation || !Number.isSafeInteger(invitation.expiresAt) || invitation.expiresAt <= Date.now() || invitation.expiresAt > 253402300799999
     || !(invitation.accessDays === null || Number.isSafeInteger(invitation.accessDays) && invitation.accessDays >= 1 && invitation.accessDays <= 3650)) throw new Error("invalid_invitation");
   accessI18n.text(element("invitation-summary"), invitation.accessDays === null
-    ? "Invitation valable jusqu’au {date}. Accès sans limite de durée après validation."
-    : "Invitation valable jusqu’au {date}. Accès prévu pour {days} jours après validation.",
+    ? "Invitation valable jusqu’au {date}. Accès sans limite de durée après confirmation de ton e-mail."
+    : "Invitation valable jusqu’au {date}. Accès prévu pour {days} jours après confirmation de ton e-mail.",
   { date: accessI18n.dateParam(invitation.expiresAt), ...(invitation.accessDays === null ? {} : { days: accessI18n.numberParam(invitation.accessDays) }) });
 }
 invitationCodeForm.addEventListener("submit", (event) => {

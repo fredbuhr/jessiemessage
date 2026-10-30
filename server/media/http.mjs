@@ -136,7 +136,7 @@ export function readUpload(request) {
     const onAborted = () => finish(invalid());
     // Keep a hard overall body budget, with enough time for a phone upload.
     // The account/global upload admission still bounds concurrent readers.
-    const timer = setTimeout(() => finish(httpError(408, "request_timeout")), 30_000);
+    const timer = setTimeout(() => finish(httpError(408, "request_timeout")), 60_000);
     timer.unref();
     request.on("data", onData);
     request.once("end", onEnd);

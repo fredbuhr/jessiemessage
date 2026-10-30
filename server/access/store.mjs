@@ -3,7 +3,7 @@ import { createSessionClock, sessionIsValid, adminSessionExpiry, clientSessionEx
 import { randomBytes } from "node:crypto";
 import { migrationStatus } from "../db/migrations.mjs";
 import { encodeAccessCursor, validateAccessPage } from "./pagination.mjs";
-import { CLIENT_ADMISSION_POLICY, hasConsumedInvitation, invitationConsumptionProjection } from "./admission.mjs";
+import { CLIENT_ADMISSION_POLICY, hasConsumedInvitation, invitationConsumptionProjection, manuallyAdmittedClient } from "./admission.mjs";
 
 export class AuthAccessStoreError extends Error {
   constructor(code, message = "Client access persistence operation failed.") {
@@ -63,6 +63,7 @@ const schemaChecks = {
 
 export function createAccessStore(pool, { clock } = {}) {
   const sessionNow = createSessionClock(clock);
+  const rollbackClientRequest = Symbol("rollback_client_request");
   async function withConnection(operation, transaction = false) {
     let connection;
     let begun = false;
@@ -74,6 +75,7 @@ export function createAccessStore(pool, { clock } = {}) {
       return result;
     } catch (error) {
       if (begun) { try { await connection.rollback(); } catch {} }
+      if (error === rollbackClientRequest) return null;
       if (error instanceof AuthAccessStoreError) throw error;
       throw new AuthAccessStoreError("ACCESS_DATABASE_OPERATION");
     } finally {
@@ -81,9 +83,44 @@ export function createAccessStore(pool, { clock } = {}) {
     }
   }
 
+  async function pendingAdmissionIssuer(connection, userId, now) {
+    // Match administrative mutations' lock order: issuer, client, invitation.
+    // The snapshot is only a candidate; activation rechecks it after all locks.
+    const rows = await connection.query(`SELECT i.created_by_id FROM invitations i JOIN users u ON u.id = i.consumed_by_id
+      WHERE u.id = ? AND u.status = 'pending' AND i.consumed_at IS NOT NULL LIMIT 2`, [userId]);
+    if (rows.length !== 1 || !await issuer(connection, rows[0].created_by_id, now)) return null;
+    return rows[0].created_by_id;
+  }
+
+  async function activateVerifiedClient(connection, user, admissionIssuer, now, { verificationExpiresAt = null, sessionExpiresAt = null } = {}) {
+    if (user.status !== "pending") return true;
+    if (!admissionIssuer || user.email_verified_at === null || fromSqlDate(user.email_verified_at) > sessionNow(now)) return false;
+    const invitations = await connection.query(`SELECT access_days, consumed_at, created_by_id FROM invitations
+      WHERE consumed_by_id = ? AND consumed_at IS NOT NULL LIMIT 2 FOR UPDATE`, [user.id]);
+    now = sessionNow(now);
+    if (invitations.length !== 1 || !invitations[0].created_by_id.equals(admissionIssuer)
+      || fromSqlDate(invitations[0].consumed_at) > now) return false;
+    const existing = (await connection.query("SELECT id, admin_id, closed_at FROM conversations WHERE client_id = ? FOR UPDATE", [user.id]))[0];
+    if (existing && (existing.closed_at !== null || !existing.admin_id.equals(admissionIssuer))) return false;
+    now = sessionNow(now);
+    if (verificationExpiresAt !== null && now >= verificationExpiresAt || sessionExpiresAt !== null && now >= sessionExpiresAt) return false;
+    if (verificationExpiresAt !== null) user.email_verified_at = sqlDate(now);
+    const accessDays = invitations[0].access_days === null ? null : Number(invitations[0].access_days);
+    const expiresAt = accessDays === null ? null : instant(now + accessDaysValue(accessDays) * 86400000);
+    await connection.query(`UPDATE users SET status = 'active', email_verified_at = ?, access_approved_at = ?,
+      access_expires_at = ?, updated_at = ? WHERE id = ?`, [user.email_verified_at, sqlDate(now),
+      expiresAt === null ? null : sqlDate(expiresAt), sqlDate(now), user.id]);
+    if (!existing) await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)",
+      [randomBytes(16), user.id, admissionIssuer, sqlDate(now)]);
+    user.status = "active"; user.access_approved_at = sqlDate(now);
+    user.access_expires_at = expiresAt === null ? null : sqlDate(expiresAt);
+    return true;
+  }
+
   async function lockedClientSession(connection, tokenHash, now, idleSeconds = CLIENT_IDLE_SECONDS) {
     const candidate = (await connection.query("SELECT user_id FROM sessions WHERE token_hash = ? LIMIT 1", [tokenHash]))[0];
     if (!candidate) return null;
+    const admissionIssuer = await pendingAdmissionIssuer(connection, candidate.user_id, now);
     const user = (await connection.query(`SELECT id, role, status, pseudonym, email_verified_at,
       age_assured_at, access_approved_at, access_expires_at, ${invitationConsumptionProjection()} FROM users WHERE id = ? FOR UPDATE`, [candidate.user_id]))[0];
     if (!user || user.role !== "client" || !["pending", "active"].includes(user.status)) return null;
@@ -98,6 +135,9 @@ export function createAccessStore(pool, { clock } = {}) {
     const lastSeen = fromSqlDate(row.last_seen_at);
     let expiresAt = fromSqlDate(row.expires_at);
     if (!sessionIsValid({ role: "client", createdAt, lastSeenAt: lastSeen, expiresAt, now, idleSeconds })) return null;
+    if (!await activateVerifiedClient(connection, user, admissionIssuer, now, { sessionExpiresAt: expiresAt })) return null;
+    now = sessionNow(now);
+    if (!sessionIsValid({ role: "client", createdAt, lastSeenAt: lastSeen, expiresAt, now, idleSeconds })) throw rollbackClientRequest;
     const emailVerified = user.email_verified_at !== null && fromSqlDate(user.email_verified_at) <= now;
     const ageAssured = user.age_assured_at !== null && fromSqlDate(user.age_assured_at) <= now;
     const approved = user.access_approved_at !== null && fromSqlDate(user.access_approved_at) <= now;
@@ -366,12 +406,14 @@ export function createAccessStore(pool, { clock } = {}) {
       if (session.expiresAt <= now) invalid();
       const lifetime = session.expiresAt - now;
       return withConnection(async (connection) => {
+        const admissionIssuer = await pendingAdmissionIssuer(connection, userId, now);
         const user = (await connection.query("SELECT role, status, password_hash, email_verified_at FROM users WHERE id = ? FOR UPDATE", [userId]))[0];
         now = sessionNow(now);
         if (!user || user.role !== "client" || !["pending", "active"].includes(user.status)
           || user.email_verified_at === null || fromSqlDate(user.email_verified_at) > now || user.password_hash !== expectedPasswordHash) return false;
         const state = (await connection.query("SELECT credential_version FROM client_auth_state WHERE user_id = ? FOR UPDATE", [userId]))[0];
         if (!state || storedVersion(state.credential_version) !== expectedVersion) return false;
+        if (!await activateVerifiedClient(connection, { ...user, id: userId }, admissionIssuer, now)) return false;
         now = sessionNow(now);
         await connection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [session.id, userId, session.tokenHash, sqlDate(now), sqlDate(instant(now + lifetime))]);
         await connection.query("INSERT INTO client_session_state (session_id, last_seen_at, credential_version) VALUES (?, ?, ?)", [session.id, sqlDate(now), expectedVersion]);
@@ -446,6 +488,7 @@ export function createAccessStore(pool, { clock } = {}) {
       return withConnection(async (connection) => {
         const candidate = (await connection.query("SELECT user_id FROM email_verifications WHERE token_hash = ? LIMIT 1", [tokenHash]))[0];
         if (!candidate) return false;
+        const admissionIssuer = await pendingAdmissionIssuer(connection, candidate.user_id, now);
         const user = (await connection.query("SELECT id, role, status, email_verified_at FROM users WHERE id = ? FOR UPDATE", [candidate.user_id]))[0];
         if (!user || user.role !== "client" || user.status !== "pending" || user.email_verified_at !== null) return false;
         const verification = (await connection.query(`SELECT id, user_id, created_at, expires_at, consumed_at,
@@ -453,7 +496,9 @@ export function createAccessStore(pool, { clock } = {}) {
         now = sessionNow(now);
         if (!verification || !verification.user_id.equals(user.id) || verification.consumed_at !== null
           || verification.revoked_at !== null || now < fromSqlDate(verification.created_at) || now >= fromSqlDate(verification.expires_at)) return false;
-        await connection.query("UPDATE users SET email_verified_at = ?, updated_at = ? WHERE id = ?", [sqlDate(now), sqlDate(now), user.id]);
+        user.email_verified_at = sqlDate(now);
+        if (!await activateVerifiedClient(connection, user, admissionIssuer, now, { verificationExpiresAt: fromSqlDate(verification.expires_at) })) return false;
+        now = fromSqlDate(user.email_verified_at);
         await connection.query("UPDATE email_verifications SET consumed_at = ? WHERE id = ?", [sqlDate(now), verification.id]);
         // Any older outstanding challenge is unusable once the mailbox is verified.
         await connection.query("UPDATE email_verifications SET revoked_at = ? WHERE user_id = ? AND consumed_at IS NULL AND revoked_at IS NULL AND created_at <= ?", [sqlDate(now), user.id, sqlDate(now)]);
@@ -541,8 +586,13 @@ export function createAccessStore(pool, { clock } = {}) {
         const actor = await administrator(connection, actorTokenHash, now);
         if (!actor) return false;
         now = actor.now;
-        const user = (await connection.query("SELECT role, status, email_verified_at FROM users WHERE id = ? FOR UPDATE", [userId]))[0];
+        const user = (await connection.query(`SELECT role, status, email_verified_at, access_approved_at, access_expires_at,
+          ${invitationConsumptionProjection()} FROM users WHERE id = ? FOR UPDATE`, [userId]))[0];
         now = sessionNow(now);
+        // Compatibility for an older admin page opened before automatic activation.
+        // Repeated approval never changes dates, extends access or reopens a chat.
+        if (now >= actor.expiresAt) return false;
+        if (user?.role === "client" && user.status === "active") return manuallyAdmittedClient(user, now, fromSqlDate);
         if (!user || user.role !== "client" || user.status !== "pending" || user.email_verified_at === null
           || fromSqlDate(user.email_verified_at) > now) return false;
         const invitations = await connection.query("SELECT access_days, consumed_at FROM invitations WHERE consumed_by_id = ? AND consumed_at IS NOT NULL LIMIT 2 FOR UPDATE", [userId]);

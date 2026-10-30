@@ -145,12 +145,12 @@ test("administrator language switches update static and loaded private UI in pla
   assert.equal(originalHeading.textContent, "Bienvenue, Jessie."); assert.equal(email.textContent, "private-client@example.invalid");
   assert.equal(clientList.children[0], originalCard); assert.equal(privateInput.value, "75");
   assert.match(originalCard.textContent, /Status: Access expired · Email: verified/);
-  assert.doesNotMatch(originalCard.textContent, /Manual admission/); assert.match(originalCard.textContent, /Access approved by Jessie/);
+  assert.doesNotMatch(originalCard.textContent, /Manual admission/); assert.match(originalCard.textContent, /Activation recorded/);
   assert.doesNotMatch(originalCard.textContent, /Age assurance/);
   assert.match(originalCard.textContent, /Renew expired access/);
   assert.equal(privateInput.getAttribute("aria-label"), "Duration to add for Bienvenue, Jessie., in days");
   assert.match(invitationList.textContent, /Invitation · Available/); assert.match(invitationList.textContent, /Invitation · Revoked/);
-  assert.match(invitationList.textContent, /Access for 3,650 days after approval/);
+  assert.match(invitationList.textContent, /Access for 3,650 days after email confirmation/);
   assert.match(invitationList.textContent, new RegExp(new Date(now - 1000).toLocaleString("en-US").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.match(f.nodes.get("clients-page-note").textContent, /Most recent client accounts · 2 on this page · end of the list/);
   f.language("fr");

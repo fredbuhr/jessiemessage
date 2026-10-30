@@ -1,13 +1,14 @@
 import { randomBytes } from "node:crypto";
 
 // Synthetic SQL fixtures only. Real accounts consume their invitation through
-// registration and receive a separate, explicit administrator approval.
-export async function consumeSyntheticInvitation(connection, clientId, at) {
+// registration; mailbox confirmation then activates that invitation automatically.
+export async function consumeSyntheticInvitation(connection, clientId, at, issuerId = null) {
   const date = new Date(at).toISOString().replace("T", " ").replace("Z", "000");
   const expires = new Date(at + 86400000).toISOString().replace("T", " ").replace("Z", "000");
   const result = await connection.query(`INSERT INTO invitations
     (id, token_hash, created_by_id, created_at, expires_at, consumed_at, consumed_by_id)
-    SELECT ?, ?, id, ?, ?, ?, ? FROM users WHERE role = 'admin' ORDER BY id LIMIT 1`,
-  [randomBytes(16), randomBytes(32), date, expires, date, clientId]);
+    SELECT ?, ?, id, ?, ?, ?, ? FROM users WHERE role = 'admin'
+      AND (? IS NULL OR id = ?) ORDER BY id LIMIT 1`,
+  [randomBytes(16), randomBytes(32), date, expires, date, clientId, issuerId, issuerId]);
   if (Number(result.affectedRows) !== 1) throw new Error("Synthetic admission requires a fixture administrator.");
 }

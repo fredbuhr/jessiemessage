@@ -1,0 +1,55 @@
+{
+  "format": "jessiemessage-native-ci-proof",
+  "run": 41143455149,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41143455149",
+  "event": "pull_request",
+  "attempt": 1,
+  "source": "b1d1ab234878734b9dc303ec65015219886b6d0a",
+  "tree": "232c76fc3e3bcdc547dbe09ce9e41ff6f0797d79",
+  "qualified": false,
+  "status": "completed_failure",
+  "jobs": [
+    {
+      "id": 124362931323,
+      "name": "verify",
+      "pass": 4114,
+      "fail": 1,
+      "skipped": 52,
+      "cause": "obsolete composer hint markup assertion"
+    },
+    {
+      "id": 124362931530,
+      "name": "MariaDB 11.4",
+      "pass": 604,
+      "fail": 7,
+      "skipped": 0,
+      "cause": "legacy broadcast fixtures incompatible with email-confirmed automatic admission; nondeterministic issuer without MFA"
+    },
+    {
+      "id": 124362931561,
+      "name": "MariaDB 10.11",
+      "pass": 606,
+      "fail": 5,
+      "skipped": 0,
+      "cause": "legacy broadcast fixtures incompatible with email-confirmed automatic admission; nondeterministic issuer without MFA"
+    },
+    {
+      "id": 124362931613,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "pass": 14,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "id": 124362931687,
+      "name": "Chrome keyboard and chat lifecycle",
+      "pass": 275,
+      "fail": 7,
+      "skipped": 0,
+      "cause": "mobile English placeholder width, native Enter now submits former multiline photo fixture, four obsolete post-confirmation text assertions and parent failure"
+    }
+  ],
+  "successful_new_case": "real Chrome prepares JPEG20MP above10MiB to2MiB target, server normalization and fallback image cases",
+  "productionActions": false,
+  "disposition": "Concrete corrections are required before qualifying a revised source; this failed run is preserved and not rerun."
+}

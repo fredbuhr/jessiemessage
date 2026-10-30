@@ -2,6 +2,14 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
+## Évolution1.12.0 — corrections groupées demandées le30octobre
+
+1. Supprimer l’attente artificielle de la file d’e-mails lors d’une nouvelle inscription, garder SMTP hors de la requête et les reprises bornées. Ne pas promettre un délai de réception externe non mesuré.
+2. Donner accès après invitation valide et confirmation e-mail, sans approbation manuelle supplémentaire ; conserver durées, suspensions/révocations et droits privés, traiter aussi les comptes déjà confirmés en attente.
+3. Corriger la préparation des photos volumineuses et les erreurs de format/envoi sur mobile, avec compression locale et protections serveur conservées.
+4. Entrée envoie dans les discussions admin/client ; bouton dédié de retour à la ligne, composition IME et états d’envoi protégés.
+5. Consolider les contrôles ciblés et CI PR/main, puis publier une seule version. Avant préparation hébergée, relever en lecture seule le checkpoint courant dont la finalisation1113 n’a pas été communiquée. Pas de rejeu de son writer.
+
 ## Correctif1.11.3 — démarrage rapporté, finalisation attendue
 
 L’utilisateur confirme désormais [sa connexion réussie](verification-proofs/jm1113/hosted-login-confirmation.json) après les instructions de récupération. Le relevé avait confirmé compte actif, e-mail et approbation valides, invitation consommée et horloges alignées ; l’ancien refus du mot de passe n’a pas été comparé ni attribué avec certitude. L’absence d’un nouveau mail de confirmation est expliquée par le compte déjà confirmé. Le diagnostic est clos, sans nouveau contrôle SQL/compte ou e-mail à déclencher.
@@ -12,8 +20,7 @@ Le [relevé après activation](verification-proofs/jm1113/hosted-identity.json) 
 
 Le writer final lié à cette seconde et aux reçus est désormais [qualifié17/17 natifs](verification-proofs/jm1113/writer-final-native.json), run40240046476,1/1, tentative1, sans omission. Opérateur `e3821d9231f0e7ead0a8eea7c3e1730aff0ea86e`, script SHA256 `a8904e91b394cf8a09f6a2a0b419fbfc45e590438da7ed5de18f24f36583b3f9`, source relue identique. Qualification acquise, aucune relance du même code.
 
-1. Exécuter une fois sa [commande de métadonnées](operations-release1113.md), puis recueillir le JSON final et le nouveau SHA256 de checkpoint. Aucun SQL ou redémarrage ; historiques et autres blocs préservés.
-2. Après succès du reçu, clore la livraison documentaire. Ne pas déplacer le tag ni rejouer1112, préparation/CHECK SSH1113, activation, diagnostics ou CI déjà acquis. [État courant](REPRISE.md).
+La commande de métadonnées a été fournie, mais son reçu n’a pas été communiqué. Ne pas la rejouer pour découvrir son résultat : relever en lecture seule le checkpoint courant avant la prochaine préparation1.12.0. Les étapes de code/publication1113 restent acquises ; [REPRISE](REPRISE.md) distingue le démarrage rapporté de cette finalisation non confirmée.
 
 ## Correctif 1.11.2 — audit et livraison terminés
 

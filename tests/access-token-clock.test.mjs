@@ -32,6 +32,9 @@ function fixture({ clock = true, invitationExpiresAt = NOW + 1000, verificationE
     if (sql.startsWith("SELECT enabled_at FROM admin_mfa")) return [{ enabled_at: new Date(NOW - 1000) }];
     if (sql.startsWith("SELECT id, created_by_id, created_at, expires_at")) return [invitation];
     if (sql.startsWith("SELECT user_id FROM email_verifications")) return [{ user_id: user.id }];
+    if (sql.startsWith("SELECT i.created_by_id FROM invitations i JOIN users")) return [{ created_by_id: invitation.created_by_id }];
+    if (sql.startsWith("SELECT access_days, consumed_at, created_by_id FROM invitations")) return [{ ...invitation, consumed_at: new Date(NOW - 1000) }];
+    if (sql.startsWith("SELECT id, admin_id, closed_at FROM conversations")) return [];
     if (sql.startsWith("SELECT id, role, status, email_verified_at FROM users")) return [user];
     if (sql.startsWith("SELECT id, user_id, created_at, expires_at")) return [verification];
     if (sql.startsWith("SELECT role, status, password_hash, email_verified_at FROM users")) return [user];
@@ -144,14 +147,21 @@ test("email verification consumes and revokes at the fresh time obtained after i
   const f = fixture(), at = NOW + 999;
   f.state.afterRead = sql => { if (lastVerificationLock(sql)) f.state.at = at; };
   assert.equal(await f.store.verifyEmail(hash(4), { now: NOW }), true);
-  const user = f.state.writes.find(write => write.sql.startsWith("UPDATE users SET email_verified_at"));
-  assert.deepEqual(user.parameters, [sqlDate(at), sqlDate(at), f.user.id]);
+  const user = f.state.writes.find(write => write.sql.startsWith("UPDATE users SET status = 'active', email_verified_at"));
+  assert.deepEqual(user.parameters, [sqlDate(at), sqlDate(at), sqlDate(at + 2 * 86400000), sqlDate(at), f.user.id]);
   const consumed = f.state.writes.find(write => write.sql.startsWith("UPDATE email_verifications SET consumed_at"));
   assert.deepEqual(consumed.parameters, [sqlDate(at), f.verification.id]);
   const revoked = f.state.writes.find(write => write.sql.startsWith("UPDATE email_verifications SET revoked_at"));
   assert.deepEqual(revoked.parameters, [sqlDate(at), f.user.id, sqlDate(at)]);
   assert.equal(f.state.writes.filter(write => write.sql.startsWith("UPDATE mail_outbox SET status = 'cancelled'")).length, 1);
   assert.equal(f.state.commits, 1);
+});
+
+test("automatic activation rechecks challenge expiry after waiting for its conversation lock", async () => {
+  const f = fixture();
+  f.state.afterRead = sql => { if (sql.startsWith("SELECT id, admin_id, closed_at FROM conversations")) f.state.at = NOW + 1000; };
+  assert.equal(await f.store.verifyEmail(hash(4), { now: NOW }), false);
+  assert.deepEqual(f.state.writes, []);
 });
 
 test("verification resend leaves old links and mail intact when its new challenge expired during the credential lock", async () => {

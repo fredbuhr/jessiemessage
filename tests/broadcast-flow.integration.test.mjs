@@ -20,7 +20,7 @@ import { createBroadcastService } from "../server/broadcast/service.mjs";
 import { createBroadcastHandler } from "../server/broadcast/http.mjs";
 import { createBroadcastWorker } from "../server/broadcast/worker.mjs";
 import { createAppServer } from "../server/index.mjs";
-import { createRecoveryCodes, hashPassword, makeTotpSecret, recoveryCodeDigest, sealTotpSecret, totpCode } from "../server/auth/crypto.mjs";
+import { createRecoveryCodes, hashPassword, makeTotpSecret, newToken, recoveryCodeDigest, sealTotpSecret, tokenDigest, totpCode } from "../server/auth/crypto.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 const sqlDate = (value) => new Date(value).toISOString().replace("T", " ").replace("Z", "000");
@@ -77,17 +77,19 @@ test("real HTTP targeted broadcasts require active access and retain durable ord
       pseudonym: `Synthetic broadcast ${kind}`,
     }]));
     const clientHash = await hashPassword(clientPassword);
-    // Synthetic consumed invitations, email and approval exercise current gates with no age stamp.
+    // The pending fixture has not confirmed its mailbox; confirmed invitees now activate automatically.
+    // The other fixtures exercise active and expired access with no age stamp.
     // No real client, email, age-proof endpoint, or production message is involved.
     for (const client of Object.values(clients)) {
       const active = client.kind !== "pending";
       await connection.query(`INSERT INTO users (id, role, status, pseudonym, email, password_hash,
         email_verified_at, age_assured_at, access_approved_at, access_expires_at, created_at, updated_at)
         VALUES (?, 'client', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [client.id, active ? "active" : "pending", client.pseudonym,
-        client.email, clientHash, sqlDate(now - 60000), null,
+        client.email, clientHash, active ? sqlDate(now - 60000) : null, null,
         active ? sqlDate(now - 60000) : null, client.kind === "expired" ? sqlDate(now - 1) : null, sqlDate(now - 60000), sqlDate(now - 60000)]);
       await connection.query("INSERT INTO client_auth_state (user_id, age_declared_at) VALUES (?, ?)", [client.id, sqlDate(now - 60000)]);
-      await consumeSyntheticInvitation(connection, client.id, now - 60000);
+      // Pin the authenticated MFA issuer instead of selecting the unrelated owner by random ID order.
+      await consumeSyntheticInvitation(connection, client.id, now - 60000, admin.id);
       await connection.query("INSERT INTO conversations (id, client_id, admin_id, created_at) VALUES (?, ?, ?, ?)",
         [client.conversationId, client.id, client.kind === "foreign" ? otherAdminId : admin.id, sqlDate(now - 60000)]);
     }
@@ -119,6 +121,14 @@ test("real HTTP targeted broadcasts require active access and retain durable ord
     const countMessages = async (client) => Number((await connection.query("SELECT COUNT(*) AS count FROM messages WHERE conversation_id = ?", [client.conversationId]))[0].count);
     let adminSession;
     const sessions = {};
+    // Deliberately ineligible persisted session: it must not bypass the pending client's unverified mailbox.
+    // Ordinary login below must refuse this account and issue no session.
+    const pendingToken = newToken(), pendingSessionId = randomBytes(16);
+    await connection.query("INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)",
+      [pendingSessionId, clients.pending.id, tokenDigest(pendingToken), sqlDate(now), sqlDate(now + 8 * 3600000)]);
+    await connection.query("INSERT INTO client_session_state (session_id, last_seen_at, credential_version) VALUES (?, ?, 1)",
+      [pendingSessionId, sqlDate(now)]);
+    sessions.pending = { cookie: `__Host-jessie_client=${pendingToken}`, csrf: "" };
     async function loginAdmin() {
       const result = await request("/api/auth/login", { method: "POST", body: { email: admin.email, password: adminPassword, factor: totpCode(admin.secret, { now }) } });
       assert.equal(result.status, 200);
@@ -142,9 +152,14 @@ test("real HTTP targeted broadcasts require active access and retain durable ord
       await loginAdmin();
       for (const client of Object.values(clients).filter((value) => value.kind !== "foreign")) {
         const result = await request("/api/access/login", { method: "POST", body: { email: client.email, password: clientPassword } });
-        assert.equal(result.status, 200);
-        assert.equal(result.body.access.state, ["pending", "expired"].includes(client.kind) ? client.kind : "active");
-        sessions[client.kind] = { cookie: result.headers.get("set-cookie").split(";")[0], csrf: result.body.csrf };
+        if (client.kind === "pending") {
+          assert.equal(result.status, 401);
+          assert.equal(result.headers.get("set-cookie"), null, "unverified clients must not receive a login session");
+        } else {
+          assert.equal(result.status, 200);
+          assert.equal(result.body.access.state, client.kind === "expired" ? "expired" : "active");
+          sessions[client.kind] = { cookie: result.headers.get("set-cookie").split(";")[0], csrf: result.body.csrf };
+        }
         const initial = await request(preferencePath, { headers: headersFor(sessions[client.kind]) });
         assert.equal(initial.status, 404);
       }
@@ -182,7 +197,8 @@ test("real HTTP targeted broadcasts require active access and retain durable ord
         for (const headers of [{}, headersFor(sessions.a), headersFor(adminSession)]) assert.equal((await request(path, { headers })).status, 404, path);
       }
       for (const client of [clients.pending, clients.expired]) {
-        assert.equal((await request("/api/chat/client/conversation", { headers: headersFor(sessions[client.kind]) })).status, 403);
+        assert.equal((await request("/api/chat/client/conversation", { headers: headersFor(sessions[client.kind]) })).status,
+          client.kind === "pending" ? 401 : 403);
       }
       const preview = await request(adminPath("preview"), { method: "POST", headers: headersFor(adminSession), body: {
         conversationIds: [clients.a, clients.pending, clients.expired].map((client) => hex(client.conversationId)), mediaId: null,

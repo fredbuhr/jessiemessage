@@ -248,16 +248,31 @@ test("upload abort discards partial data and absorbs a later transport error", a
   assert.equal(request.listenerCount("data"), 0); request.destroy();
 });
 
-test("slow binary uploads get a bounded thirty-second body budget and remove the body listeners", async (t) => {
+test("slow binary uploads get a bounded sixty-second body budget and remove the body listeners", async (t) => {
   const request = new PassThrough(); request.headers = {};
   t.mock.timers.enable({ apis: ["setTimeout"] });
   const result = readUpload(request);
-  t.mock.timers.tick(29_999);
+  t.mock.timers.tick(59_999);
   assert.equal(request.listenerCount("data"), 1);
   t.mock.timers.tick(1);
   try { await assert.rejects(result, (error) => error.httpStatus === 408 && error.publicCode === "request_timeout"); }
   finally { request.destroy(); }
   assert.equal(request.listenerCount("data"), 0);
+});
+
+test("a phone body arriving after thirty seconds still completes within the fixed photo deadline", async (t) => {
+  const request = new PassThrough(); request.headers = { "content-length": String(jpeg.length) };
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const result = readUpload(request);
+  t.mock.timers.tick(35_000);
+  request.write(jpeg.subarray(0, 2));
+  t.mock.timers.tick(24_999);
+  assert.equal(request.listenerCount("data"), 1);
+  request.end(jpeg.subarray(2));
+  assert.deepEqual(await result, jpeg);
+  assert.equal(request.listenerCount("data"), 0);
+  t.mock.timers.tick(1);
+  request.destroy();
 });
 
 test("queries reject unknown, duplicate and noncanonical IDs, limits and uint64 cursors", async (t) => {

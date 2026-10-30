@@ -152,7 +152,7 @@ test("real HTTP client recovery, encrypted mail, single use and unchanged access
       pendingSession = await login(clients.pending);
       expiredSession = await login(clients.expired);
       assert.equal(firstSession.access.state, "active");
-      assert.equal(pendingSession.access.state, "pending");
+      assert.equal(pendingSession.access.state, "active", "a verified legacy pending client activates at sign-in");
       assert.equal(expiredSession.access.state, "expired");
       assert.equal((await request("/api/chat/client/conversation", { headers: { Cookie: firstSession.cookie } })).status, 200);
       const before = await count("client_password_resets");
@@ -278,7 +278,7 @@ test("real HTTP client recovery, encrypted mail, single use and unchanged access
       assert.equal((await request("/api/chat/client/conversation", { headers: { Cookie: updated.cookie } })).status, 200);
     });
 
-    await t.test("racing HTTP completions have one winner and leave a verified pending client pending", async () => {
+    await t.test("racing HTTP completions have one winner and preserve the legacy client activated at sign-in", async () => {
       const client = clients.pending;
       const before = await unchangedFields(client);
       const results = await Promise.all([complete(tokenFor(client), newPassword), complete(tokenFor(client), alternatePassword)]);
@@ -288,11 +288,11 @@ test("real HTTP client recovery, encrypted mail, single use and unchanged access
       assert.equal((await connection.query("SELECT credential_version FROM client_auth_state WHERE user_id = ?", [client.id]))[0].credential_version, 2);
       assert.equal((await request("/api/access/session", { headers: { Cookie: pendingSession.cookie } })).status, 401);
       const updated = await login(client, winner);
-      assert.equal(updated.access.state, "pending");
+      assert.equal(updated.access.state, "active");
       assert.equal(updated.access.ageAssured, false);
-      assert.equal(updated.access.approved, false);
-      assert.equal((await request("/api/chat/client/conversation", { headers: { Cookie: updated.cookie } })).status, 403);
-      assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM conversations WHERE client_id = ?", [client.id]))[0].count), 0);
+      assert.equal(updated.access.approved, true);
+      assert.equal((await request("/api/chat/client/conversation", { headers: { Cookie: updated.cookie } })).status, 200);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS count FROM conversations WHERE client_id = ?", [client.id]))[0].count), 1);
     });
 
     await t.test("an expired active client can recover a password without extending or reopening access", async () => {
@@ -304,6 +304,13 @@ test("real HTTP client recovery, encrypted mail, single use and unchanged access
       const updated = await login(client, newPassword);
       assert.equal(updated.access.state, "expired");
       assert.equal((await request("/api/chat/client/conversation", { headers: { Cookie: updated.cookie } })).status, 403);
+      const messagesBefore = await count("messages");
+      assert.equal((await request(`/api/chat/client/conversations/${hex(client.conversationId)}/messages`, {
+        method: "POST", headers: { Cookie: updated.cookie, "X-CSRF-Token": updated.csrf },
+        body: { clientMessageId: hex(randomBytes(16)), body: "Synthetic expired send must be refused" },
+      })).status, 403);
+      assert.equal(await count("messages"), messagesBefore);
+      assert.equal(await unchangedFields(client), before);
     });
 
     let latestToken;

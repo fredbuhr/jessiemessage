@@ -84,11 +84,15 @@ export function startMailWorker(options = {}) {
   let stopping = null;
   let active = null;
   let timer = null;
+  let wakePending = false;
   function schedule(delay) {
     if (closed) return;
     timer = setTimeout(() => {
       timer = null;
+      wakePending = false;
+      let batchFull = false;
       active = runMailBatch({ ...options, signal: controller.signal }).then((counts) => {
+        batchFull = counts.sent + counts.failed >= (options.batchSize ?? 5);
         observe(options.onState, { state: "idle", counts: Object.freeze({ ...counts }) });
       }, () => {
         // Only a fixed code may be surfaced; never propagate SQL/SMTP details.
@@ -96,7 +100,9 @@ export function startMailWorker(options = {}) {
         observe(options.onError, { code: "MAIL_WORKER_FAILED" });
       }).finally(() => {
         active = null;
-        schedule(intervalMilliseconds);
+        // Drain a ready backlog without an artificial pause between five-mail
+        // batches. Idle/error polling remains bounded and recovers missed wakes.
+        schedule(wakePending || batchFull ? 0 : intervalMilliseconds);
       });
       observe(options.onState, { state: "running" });
     }, delay);
@@ -104,6 +110,13 @@ export function startMailWorker(options = {}) {
   }
   schedule(0);
   let closing;
+  function wake() {
+    if (closed) return;
+    if (active) { wakePending = true; return; }
+    if (timer) clearTimeout(timer);
+    timer = null;
+    schedule(0);
+  }
   function stop() {
     if (stopping) return stopping;
     // The flag and signal change before returning the drain promise. A caller
@@ -117,6 +130,7 @@ export function startMailWorker(options = {}) {
     return stopping;
   }
   return Object.freeze({
+    wake,
     stop,
     close() {
       if (closing) return closing;

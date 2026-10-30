@@ -233,6 +233,9 @@ export async function startWebDriver() {
           await request("POST", `${endpoint}/element/${element}/clear`, {});
           await request("POST", `${endpoint}/element/${element}/value`, { text });
         },
+        async append(selector, text) {
+          await request("POST", `${endpoint}/element/${await find(selector)}/value`, { text });
+        },
         cookies: () => request("GET", `${endpoint}/cookie`),
         screenshot: () => request("GET", `${endpoint}/screenshot`),
         key: (key) => request("POST", `${endpoint}/actions`, { actions: [{ type: "key", id: "keyboard", actions: [{ type: "keyDown", value: key }, { type: "keyUp", value: key }] }] }),

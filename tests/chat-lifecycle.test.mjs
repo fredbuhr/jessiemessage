@@ -7,6 +7,7 @@ import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "../p
 import { webcrypto } from "node:crypto";
 import { createChatDrafts } from "../public/chat-drafts.js";
 import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "../public/photo-batch.js";
+import { prepareImageUpload } from "../public/image-preparation.js";
 
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
 const sessionClockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
@@ -1814,4 +1815,180 @@ test("received pagination keeps one row per client when its latest message chang
     assert.equal(f.document.activeElement.dataset.receivedConversationId, id(151), "focus advances to a new client rather than the replaced preview");
     assert.equal(f.calls.some(call => /\/read$/.test(call.path)), false);
   } finally { await f.hide(); }
+});
+
+async function composerDraft(f, value, start = value.length, end = start) {
+  await readyDraftFixture(f);
+  if (!f.inspect().selected && f.state.currentSession?.user.role === "admin") await f.context.selectConversation(f.conversation().id);
+  const input = f.element("message-body"); input.value = value; input.setSelectionRange(start, end);
+  for (const handler of input.events.get("input") ?? []) handler({});
+  await flush(); return input;
+}
+async function composerEvent(f, name, properties = {}) {
+  let prevented = false;
+  for (const handler of f.element("message-body").events.get(name) ?? []) handler({ ...properties, preventDefault() { prevented = true; } });
+  await flush(); return prevented;
+}
+
+for (const role of ["client", "admin"]) {
+  test(`${role} composer Enter sends once, never adds a newline, and ignores held keys`, async () => {
+    const f = harness({ currentSession: session(1, "A".repeat(43), role) }); await flush();
+    await composerDraft(f, "Ready to send");
+    assert.equal(await composerEvent(f, "keydown", { key: "Enter", repeat: true }), true);
+    assert.equal(posts(f).length, 0);
+    assert.equal(await composerEvent(f, "keydown", { key: "Enter" }), true);
+    assert.equal(posts(f).length, 1);
+    assert.equal(JSON.parse(posts(f)[0].options.body).body, "Ready to send");
+    assert.equal(f.element("message-body").value, "");
+    assert.equal(await composerEvent(f, "beforeinput", { inputType: "insertLineBreak" }), true);
+    assert.equal(posts(f).length, 1, "a follow-up mobile input event cannot duplicate an already sent draft");
+  });
+
+  test(`${role} explicit newline replaces the selected range and persists the draft without sending`, async () => {
+    const store = persistentTabStore(), actor = session(1, "A".repeat(43), role);
+    const f = harness({ currentSession: actor, draftStorage: store }); await flush();
+    const input = await composerDraft(f, "Alpha selected Omega", 6, 15); input.focus();
+    await f.click("insert-line-break");
+    assert.equal(input.value, "Alpha \nOmega");
+    assert.equal(input.selectionStart, 7); assert.equal(input.selectionEnd, 7);
+    assert.equal(f.document.activeElement, input);
+    assert.equal(f.inspect().states.get(f.inspect().selected).draft, input.value);
+    assert.equal(posts(f).length, 0);
+    const reloaded = harness({ currentSession: actor, draftStorage: store, serverState: f.state });
+    await readyDraftFixture(reloaded);
+    if (role === "admin") await reloaded.context.selectConversation(reloaded.conversation().id);
+    assert.equal(reloaded.element("message-body").value, input.value, "newline insertion participates in same-tab draft restoration");
+    assert.equal(posts(reloaded).length, 0);
+    await composerEvent(f, "keydown", { key: "Enter" });
+    assert.equal(JSON.parse(posts(f)[0].options.body).body, "Alpha \nOmega");
+  });
+}
+
+test("phone beforeinput Enter sends text while composition confirmation does not", async () => {
+  const f = harness(); await flush(); await composerDraft(f, "Composition draft");
+  await composerEvent(f, "compositionstart");
+  assert.equal(await composerEvent(f, "keydown", { key: "Enter", isComposing: true, keyCode: 229 }), false);
+  assert.equal(await composerEvent(f, "beforeinput", { inputType: "insertLineBreak", isComposing: true }), false);
+  await composerEvent(f, "compositionend");
+  assert.equal(await composerEvent(f, "beforeinput", { inputType: "insertLineBreak" }), false, "IME completion is consumed without a send even after compositionend");
+  assert.equal(posts(f).length, 0);
+  assert.equal(await composerEvent(f, "beforeinput", { inputType: "insertLineBreak" }), true);
+  assert.equal(posts(f).length, 1, "the next deliberate soft Enter works even without a keyup");
+});
+
+test("newline and Enter respect disabled/pending composers without creating another send", async () => {
+  let release; const held = new Promise(resolve => { release = resolve; });
+  const f = harness({ intercept(path, options) { if (path.endsWith("/messages") && options.method === "POST") return held; } }); await flush();
+  await composerDraft(f, "One pending send"); await composerEvent(f, "keydown", { key: "Enter" });
+  assert.equal(posts(f).length, 1); assert.equal(f.element("insert-line-break").disabled, true);
+  await f.click("insert-line-break"); await composerEvent(f, "keydown", { key: "Enter" });
+  assert.equal(posts(f).length, 1); assert.equal(f.element("message-body").value, "One pending send");
+  const command = JSON.parse(posts(f)[0].options.body);
+  release(response(201, { message: { id: id(999), sequence: "2", sender: "me", body: command.body, createdAt: now, deletedAt: null, clientMessageId: command.clientMessageId } })); await flush();
+  assert.equal(f.element("message-body").value, "");
+});
+
+test("newline respects the message length cap and can replace selected text at the cap", async () => {
+  const f = harness(); await flush(); const input = await composerDraft(f, "a".repeat(4096));
+  await f.click("insert-line-break"); assert.equal(input.value.length, 4096);
+  input.setSelectionRange(10, 12); await f.click("insert-line-break");
+  assert.equal(input.value.length, 4095); assert.equal(input.value.slice(10, 11), "\n");
+  assert.equal(posts(f).length, 0);
+});
+
+
+test("photo picker retains camera originals and extensionless generic or empty MIME files without preparing or uploading", async () => {
+  let preparations = 0;
+  const f = harness({ prepare: async file => { preparations++; return file; },
+    intercept: path => path === "/api/media/client/capabilities" ? response(200, { enabled: true }) : undefined }); await flush();
+  const original = new Blob([new Uint8Array(12 * 1024 * 1024)], { type: "image/jpeg" });
+  f.element("message-body").value = "Keep my photo caption";
+  f.element("image-file").files = [original];
+  for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+  const state = f.inspect().states.get(f.inspect().selected);
+  assert.equal(state.imageDraft.file, original);
+  const generic = new Blob(["synthetic JPEG contents validated only on prepare"], { type: "application/octet-stream" });
+  Object.defineProperty(generic, "name", { value: "image" });
+  const unnamed = new Blob(["synthetic PNG contents validated only on prepare"]);
+  f.element("image-file").files = [generic, unnamed];
+  for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+  assert.equal(state.imageDraft, null);
+  assert.deepEqual([...state.photoBatch.items].map(item => item.file), [original, generic, unnamed]);
+  assert.equal(f.element("message-body").value, "Keep my photo caption");
+  assert.equal(preparations, 0);
+  assert.equal(f.calls.filter(call => call.options.method === "POST" && /\/(messages|assets)$/.test(call.path)).length, 0);
+});
+
+test("extensionless generic or empty MIME files still fail byte validation before any upload", async () => {
+  for (const type of ["", "application/octet-stream"]) {
+    let preparations = 0;
+    const f = harness({ prepare: async file => { preparations++; return prepareImageUpload(file); },
+      intercept: path => path === "/api/media/client/capabilities" ? response(200, { enabled: true }) : undefined }); await flush();
+    const invalid = new Blob(["GIF89a this is not a supported photo"], { type });
+    Object.defineProperty(invalid, "name", { value: "image" });
+    f.element("image-file").files = [invalid];
+    for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+    assert.equal(preparations, 0);
+    await f.send("Keep my caption");
+    const state = f.inspect().states.get(f.inspect().selected);
+    assert.equal(preparations, 1);
+    assert.equal(state.pending, null);
+    assert.equal(state.imageDraft.file, invalid);
+    assert.equal(f.element("message-body").value, "Keep my caption");
+    assert.match(f.element("chat-status").textContent, /format.*JPEG, PNG ou WebP/);
+    assert.equal(f.calls.filter(call => call.options.method === "POST" && /\/(messages|assets)$/.test(call.path)).length, 0);
+  }
+});
+
+test("photo picker gives an actionable HEIC explanation while retaining an existing selection", async () => {
+  const f = harness({ intercept: path => path === "/api/media/client/capabilities" ? response(200, { enabled: true }) : undefined }); await flush();
+  const ordinary = new Blob(["synthetic ordinary photo"], { type: "image/jpeg" });
+  f.element("image-file").files = [ordinary];
+  for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+  const state = f.inspect().states.get(f.inspect().selected);
+  const genericHeic = new Blob(["synthetic HEIC photo"], { type: "application/octet-stream" });
+  Object.defineProperty(genericHeic, "name", { value: "camera.HEIC" });
+  for (const file of [new Blob(["synthetic HEIC photo"], { type: "image/heic" }), genericHeic]) {
+    f.element("image-file").files = [file];
+    for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+    assert.equal(state.imageDraft.file, ordinary);
+    assert.match(f.element("chat-status").textContent, /HEIC ou HEIF.*JPEG/);
+  }
+  assert.equal(f.calls.filter(call => call.options.method === "POST" && /\/(messages|assets)$/.test(call.path)).length, 0);
+});
+
+test("an unidentified phone key does not suppress a later explicit soft Enter", async () => {
+  const f = harness(); await flush(); await composerDraft(f, "Phone draft");
+  assert.equal(await composerEvent(f, "keydown", { key: "Unidentified", keyCode: 229 }), false);
+  assert.equal(await composerEvent(f, "beforeinput", { inputType: "insertLineBreak" }), true);
+  assert.equal(posts(f).length, 1);
+});
+
+
+test("photo requests allow server reception and processing while text and archive deadlines keep their budgets", async () => {
+  const signals = new Map();
+  const f = harness({ intercept(path, options) {
+    if (!path.startsWith("/synthetic/deadline/")) return undefined;
+    signals.set(path, options.signal);
+    return new Promise((_resolve, reject) => options.signal.addEventListener("abort", () => reject(Object.assign(new Error("synthetic request aborted"), { name: "AbortError" })), { once: true }));
+  } }); await flush();
+  f.context.__photoBody = new Blob(["synthetic photo transfer"], { type: "image/jpeg" });
+  for (const [kind, options, expected] of [
+    ["photo", 'mutation:true,rawBody:__photoBody,contentType:"image/jpeg"', 90000],
+    ["text", 'mutation:true,body:{body:"ordinary text"}', 15000],
+    ["archive", 'archive:true', 65000],
+  ]) {
+    const before = new Set(f.timers.keys());
+    const path = `/synthetic/deadline/${kind}`;
+    const pending = vm.runInContext(`request(${JSON.stringify(path)},{${options},verifyOwner:false})`, f.context).then(() => null, error => error);
+    await flush();
+    const added = [...f.timers].filter(([id]) => !before.has(id));
+    assert.equal(added.length, 1, kind);
+    assert.equal(added[0][1].at - f.context.Date.now(), expected, kind);
+    assert.equal(signals.get(path).aborted, false);
+    added[0][1].handler();
+    assert.equal((await pending).name, "AbortError");
+    assert.equal(signals.get(path).aborted, true);
+    assert.equal(f.timers.has(added[0][0]), false, "request cleanup releases its deadline timer");
+  }
 });

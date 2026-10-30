@@ -1,9 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import vm from "node:vm";
 
 const html = await readFile(new URL("../public/chat.html", import.meta.url), "utf8");
 const css = await readFile(new URL("../public/chat.css", import.meta.url), "utf8");
+const translations = {};
+vm.runInNewContext(await readFile(new URL("../public/i18n-chat.js", import.meta.url), "utf8"), {
+  JessieI18n: { register(values) { Object.assign(translations, values); } },
+});
 
 function parseMarkup(source) {
   const root = { tag: "document", attributes: {}, children: [], parent: null, text: "" };
@@ -66,7 +71,27 @@ test("chat keyboard destinations and composer instructions keep their explicit r
   assert.equal(ids.get("inbox-title").attributes.tabindex, "-1");
   assert.equal(ids.get("message-body").attributes["aria-describedby"], "composer-help");
   assert.equal(ids.get("message-body").attributes["data-jm-i18n-placeholder"], "Message…");
-  assert.equal(ids.get("composer-help").attributes["data-jm-i18n"], "Message privé · 4 096 caractères maximum");
+  assert.equal(ids.get("message-body").attributes.enterkeyhint, "send");
+  const help = "Entrée pour envoyer · Bouton ↵ pour passer à la ligne · 4 096 caractères maximum";
+  assert.equal(ids.get("composer-help").attributes["data-jm-i18n"], help);
+  assert.equal(ids.get("composer-help").text.trim(), help);
+  assert.equal(translations[help], "Enter to send · ↵ button for a new line · 4,096 characters maximum");
+  const newline = ids.get("insert-line-break");
+  assert.equal(newline.tag, "button");
+  assert.equal(newline.attributes.type, "button", "inserting a newline must not submit the composer");
+  assert.equal(newline.parent, ids.get("message-body").parent);
+  assert.equal(newline.text, "↵");
+  assert.equal(newline.attributes["aria-label"], "Passer à la ligne");
+  assert.equal(newline.attributes["data-jm-i18n-aria-label"], "Passer à la ligne");
+  assert.equal(newline.attributes.title, "Passer à la ligne");
+  assert.equal(newline.attributes["data-jm-i18n-title"], "Passer à la ligne");
+  assert.equal(translations["Passer à la ligne"], "Insert a line break");
+  assert.equal(Object.hasOwn(newline.attributes, "disabled"), true, "the newline control waits for authorized bootstrap");
+  assert.equal(declarations("#insert-line-break").get("min-width"), "44px");
+  assert.equal(declarations("#insert-line-break").get("height"), "44px");
+  assert.equal(ids.get("send").attributes.type, "submit");
+  assert.equal(ids.get("send").attributes["aria-label"], "Envoyer");
+  assert.equal(ids.get("send").attributes["data-jm-i18n-aria-label"], "Envoyer");
 });
 
 test("account access stays in Options and the exclusive inbox/conversation buttons retain native relationships", () => {

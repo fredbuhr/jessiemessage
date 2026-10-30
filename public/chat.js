@@ -272,7 +272,7 @@ function clearChat() {
   clearImages();
   ui.forget(el("messages")); el("messages").replaceChildren(); ui.text(el("peer-name"), "Messages privés");
   ui.text(el("conversation-status"), "Choisis une conversation.");
-  el("message-body").value = ""; el("message-body").disabled = true; el("send").disabled = true;
+  el("message-body").value = ""; el("message-body").disabled = true; el("insert-line-break").disabled = true; el("send").disabled = true;
   el("open-emojis").disabled = true;
   el("open-composer-tools").disabled = true;
   ui.rawText(el("peer-avatar"), "");
@@ -476,7 +476,9 @@ async function request(path, { body, rawBody, contentType, mutation = false, sta
   const passwordChange = mutation && account && path === `/api/account/${role}/password`;
   controller.accountScope = account;
   const abort = () => controller.abort(); if (signal?.aborted) controller.abort(); else signal?.addEventListener("abort", abort, { once: true });
-  const timeout = setTimeout(() => controller.abort(), archive && videoEnabled ? 300000 : rawBody || archive ? 65000 : 15000);
+  // Photo reception can consume 60s; allow its bounded decoder and SQL reply
+  // to finish afterwards. Ordinary requests and archive/video budgets stay fixed.
+  const timeout = setTimeout(() => controller.abort(), archive && videoEnabled ? 300000 : rawBody ? 90000 : archive ? 65000 : 15000);
   const headers = mutation ? { "Content-Type": contentType ?? "application/json", "X-CSRF-Token": csrf ?? "" } : {};
   try {
     if (mutation && verifyOwner && owner) await confirmOwner(ticket, owner, account);
@@ -1111,10 +1113,17 @@ function discardPhotoBatch(state) { revokeBatchPreviews(state.photoBatch); state
 function chooseFile() {
   const state = currentState(), files = [...el("image-file").files ?? []]; el("image-file").value = "";
   if (!state || !files.length || state.pending || sendBusy || state.photoBatch?.started || !state.conversation?.canSend) return;
-  const accepted = files.filter(file => ["image/jpeg", "image/png", "image/webp"].includes(file.type) && file.size > 0 && file.size <= 10485760);
+  // This is the original on-device photo, not the prepared network body.
+  // The preparer independently bounds source pixels/bytes and targets 2 MiB.
+  const isHeic = file => ["image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence"].includes(file.type)
+    || /\.(?:heic|heif)$/i.test(file.name ?? "");
+  const accepted = files.filter(file => (["image/jpeg", "image/jpg", "image/pjpeg", "image/png", "image/webp"].includes(file.type)
+    || ["", "application/octet-stream"].includes(file.type))
+    && !isHeic(file) && file.size > 0 && file.size <= 50 * 1024 * 1024);
   const videoRefused = role === "client" && files.some(file => file.type.startsWith("video/"));
+  const heicRefused = files.some(isHeic);
   if (el("message-body").value.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant d’ajouter une photo.", true); return; }
-  if (!accepted.length) { notice(videoRefused ? "L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos." : "Choisis une photo JPEG, PNG ou WebP de 10 Mo maximum.", true); return; }
+  if (!accepted.length) { notice(videoRefused ? "L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos." : heicRefused ? "Pour une photo HEIC ou HEIF, choisis une copie JPEG depuis ton téléphone." : "Choisis une photo JPEG, PNG ou WebP de 50 Mo maximum. Elle sera allégée avant l’envoi.", true); return; }
   const previous = state.imageDraft?.file ? [state.imageDraft.file] : [];
   const available = MAX_PHOTO_BATCH - (state.photoBatch?.items.length ?? previous.length);
   const chosen = accepted.slice(0, available);
@@ -1126,7 +1135,7 @@ function chooseFile() {
     state.imageDraft = null; revokePreview();
   }
   renderMeta(state);
-  notice(videoRefused ? "L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos." : chosen.length !== accepted.length ? "Choisis au maximum 10 photos par envoi." : accepted.length !== files.length ? "Certaines photos ont été refusées. Les autres restent dans ta sélection." : "Photos choisies. Vérifie les aperçus avant d’envoyer.", videoRefused || accepted.length !== files.length || chosen.length !== accepted.length);
+  notice(videoRefused ? "L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos." : chosen.length !== accepted.length ? "Choisis au maximum 10 photos par envoi." : heicRefused ? "Pour une photo HEIC ou HEIF, choisis une copie JPEG depuis ton téléphone." : accepted.length !== files.length ? "Certaines photos ont été refusées. Les autres restent dans ta sélection." : "Photos choisies. Vérifie les aperçus avant d’envoyer.", videoRefused || accepted.length !== files.length || chosen.length !== accepted.length);
   focusComposer();
 }
 function renderPhotoBatch(state) {
@@ -1202,14 +1211,16 @@ async function sendPhotoSelection() {
 }
 
 function mediaErrorText(error) {
+  if (error.code === "media_heic") return "Pour une photo HEIC ou HEIF, choisis une copie JPEG depuis ton téléphone.";
+  if (error.code === "image_source_too_large") return "Cette photo dépasse 50 Mo. Choisis une version plus légère.";
   if (error.code === "media_format") return "Ce format n’est pas pris en charge. Choisis une photo JPEG, PNG ou WebP.";
   if (error.code === "media_dimensions") return "Cette photo est trop grande. Choisis une version plus petite.";
-  if (error.code === "request_too_large") return "Cette photo dépasse 10 Mo. Choisis une version plus légère.";
+  if (error.code === "request_too_large") return "Cette photo est trop volumineuse pour le transfert. Essaie une autre version.";
   if (error.code === "media_unavailable") return "La photo n’a pas pu être préparée. Essaie une autre photo.";
   if (error.status === 507 && error.code === "storage_limit") return "Le stockage des photos a atteint sa limite.";
   if (error.status === 409 && error.code === "media_in_use") return "Cette photo est utilisée dans une conversation ou comme avatar. Retire ces utilisations avant de la supprimer.";
   if (error.status === 404) return "Cette photo n’est plus disponible.";
-  if (error.status === 415 || error.status === 400 || error.status === 413) return "Photo refusée. Utilise une image JPEG, PNG ou WebP de 10 Mo maximum, avec une légende de 1 000 caractères maximum.";
+  if (error.status === 415 || error.status === 400 || error.status === 413) return "Photo refusée. Utilise une image JPEG, PNG ou WebP, avec une légende de 1 000 caractères maximum.";
   if (error.status === 429) return "Patiente un moment avant de réessayer cet envoi.";
   return "La photo n’a pas pu être chargée. Réessaie dans un moment.";
 }
@@ -1586,9 +1597,12 @@ function renderMeta(state) {
   if (el("open-client-profile")) el("open-client-profile").hidden = role !== "admin" || typeof crm?.openClientProfile !== "function";
   ui.text(el("conversation-status"), conversation.closedAt != null ? "Conversation fermée · historique disponible" : !conversation.canSend ? "Accès à l’envoi suspendu · historique disponible" : "Conversation privée");
   el("message-body").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy || Boolean(state.photoBatch?.started);
+  el("insert-line-break").disabled = el("message-body").disabled;
   const hasImage = Boolean(state.imageDraft || state.pending?.kind === "image" || state.photoBatch?.items.length);
   const hasVideo = Boolean(state.videoDraft || state.pending?.kind === "video");
-  ui.text(el("send"), state.photoBatch?.started ? "Réessayer les photos restantes" : "Envoyer");
+  const sendLabel = state.photoBatch?.started ? "Réessayer les photos restantes" : "Envoyer";
+  ui.text(el("send"), sendLabel); ui.attr(el("send"), "aria-label", sendLabel); ui.attr(el("send"), "title", sendLabel);
+  el("send").classList.toggle("is-photo-retry", Boolean(state.photoBatch?.started));
   el("send").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy || !(hasImage || hasVideo ? validCaption(el("message-body").value) : validBody(el("message-body").value))
     || hasVideo && (!videoCreationEnabled || state.videoDraft?.invalid || !state.videoDraft?.ready && !state.pending?.videoId);
   el("photo-tools").hidden = !mediaEnabled && !videoCreationEnabled && role !== "admin"; el("open-gallery").hidden = !mediaEnabled;
@@ -2333,6 +2347,46 @@ el("personal-reply-editor").addEventListener("submit", event => {
 el("close-quick-replies").addEventListener("click", () => closeQuickReplies(true));
 el("quick-replies-dialog").addEventListener("close", () => { if (quickReplyContext && !el("quick-replies-dialog").open) closeQuickReplies(true); });
 el("composer").addEventListener("submit", (event) => { event.preventDefault(); void sendWithFocus(false, el("send")); });
+let composerComposing = false, composerImeEnter = false;
+el("message-body").addEventListener("compositionstart", () => { composerComposing = true; });
+el("message-body").addEventListener("compositionend", () => { composerComposing = false; });
+el("message-body").addEventListener("blur", () => { composerComposing = false; composerImeEnter = false; });
+function sendComposerEnter(event) {
+  event.preventDefault();
+  if (event.repeat || !visible() || el("message-body").disabled || el("send").disabled) return;
+  void sendWithFocus(false, el("message-body"));
+}
+el("message-body").addEventListener("keydown", (event) => {
+  // IME Enter confirms a character/candidate. Safari can report keyCode229
+  // around compositionend, so retain that proof until the corresponding keyup.
+  if (event.isComposing || composerComposing || event.keyCode === 229) {
+    if (event.key === "Enter") composerImeEnter = true;
+    return;
+  }
+  if (event.key === "Enter") sendComposerEnter(event);
+});
+el("message-body").addEventListener("keyup", () => { composerImeEnter = false; });
+el("message-body").addEventListener("beforeinput", (event) => {
+  // Some phone keyboards issue beforeinput without a hardware keydown.
+  if (!["insertLineBreak", "insertParagraph"].includes(event.inputType) || event.isComposing || composerComposing) return;
+  if (composerImeEnter) { composerImeEnter = false; return; }
+  sendComposerEnter(event);
+});
+el("insert-line-break").addEventListener("pointerdown", (event) => {
+  if (!el("insert-line-break").disabled && document.activeElement === el("message-body")) event.preventDefault();
+});
+el("insert-line-break").addEventListener("click", () => {
+  const state = currentState(), textarea = el("message-body");
+  if (!state || !visible() || textarea.disabled || el("insert-line-break").disabled) return;
+  const value = textarea.value;
+  const start = Number.isInteger(textarea.selectionStart) ? textarea.selectionStart : value.length;
+  const end = Number.isInteger(textarea.selectionEnd) ? textarea.selectionEnd : start;
+  focusVisible(textarea);
+  if (value.length - (end - start) + 1 > 4096) return;
+  textarea.value = value.slice(0, start) + "\n" + value.slice(end);
+  textarea.setSelectionRange(start + 1, start + 1);
+  state.draft = textarea.value; renderMeta(state);
+});
 el("message-body").addEventListener("input", () => { const state = currentState(); if (state) { state.draft = el("message-body").value; renderMeta(state); } });
 el("retry-send").addEventListener("click", () => { void sendWithFocus(true, el("retry-send")); });
 el("pick-image").addEventListener("click", () => { if (!el("pick-image").disabled) { closeComposerTools(); el("image-file").click(); focusVisible(el("open-composer-tools")); } });

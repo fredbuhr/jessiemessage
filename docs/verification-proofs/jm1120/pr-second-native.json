@@ -1,0 +1,56 @@
+{
+  "format": "jessiemessage-native-ci-proof",
+  "run": 41145556419,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41145556419",
+  "event": "pull_request",
+  "attempt": 1,
+  "source": "b0e7c55c0e8d8332386a61fb6387309bfd4211fa",
+  "tree": "f15e194455f0091da5e3fe07a63a61ca9da08a7e",
+  "qualified": false,
+  "status": "completed_failure",
+  "jobs": [
+    {
+      "id": 124369699494,
+      "name": "verify",
+      "tests": 4168,
+      "pass": 4116,
+      "fail": 0,
+      "skipped": 52
+    },
+    {
+      "id": 124369699264,
+      "name": "MariaDB 11.4",
+      "tests": 611,
+      "pass": 611,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "id": 124369699500,
+      "name": "MariaDB 10.11",
+      "tests": 611,
+      "pass": 611,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "id": 124369699461,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "tests": 14,
+      "pass": 14,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "id": 124369699424,
+      "name": "Chrome keyboard and chat lifecycle",
+      "tests": 282,
+      "pass": 281,
+      "fail": 1,
+      "skipped": 0,
+      "cause": "English client placeholder at320px:109.90625px required,106px available."
+    }
+  ],
+  "disposition": "Replace English client placeholder with shorter Message…; retain width assertion,16px font,44px buttons and mobile/SQL guards. Qualify revised source, do not rerun successful jobs on old source.",
+  "productionActions": false
+}

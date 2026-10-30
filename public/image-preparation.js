@@ -1,10 +1,16 @@
 // All preparation stays on this device. The server still validates, rotates,
 // strips metadata and normalizes every uploaded image independently.
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+// Camera originals can be much larger than the upload. Inspect their compressed
+// headers first, then resize locally; the server's independent 10 MiB cap stays.
+export const MAX_SOURCE_IMAGE_BYTES = 50 * 1024 * 1024;
+export const TARGET_UPLOAD_BYTES = 2 * 1024 * 1024;
 export const MAX_SOURCE_IMAGE_PIXELS = 64_000_000;
 export const MAX_SOURCE_IMAGE_SIDE = 16_384;
 const MAX_PREPARED_IMAGE_SIDE = 2048;
 const TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const GENERIC_TYPES = new Set(["", "application/octet-stream"]);
+const JPEG_TYPES = new Set(["image/jpg", "image/pjpeg"]);
 
 export class ImagePreparationError extends Error {
   constructor(code) { super("Image preparation failed."); this.name = "ImagePreparationError"; this.code = code; }
@@ -105,12 +111,14 @@ function webpInfo(bytes, view) {
 // This does not trust the filename or MIME type as proof of an image format.
 export function inspectImageInput(bytes) {
   if (!(bytes instanceof Uint8Array) || bytes.length < 3) fail("media_format");
-  if (bytes.length > MAX_UPLOAD_BYTES) fail("request_too_large");
+  if (bytes.length > MAX_SOURCE_IMAGE_BYTES) fail("image_source_too_large");
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let info;
   if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) info = jpegInfo(bytes, view);
   else if (bytes.length >= 8 && ascii(bytes, 0, 8) === "\x89PNG\r\n\x1a\n") info = pngInfo(bytes, view);
   else if (bytes.length >= 12 && ascii(bytes, 0, 4) === "RIFF" && ascii(bytes, 8, 4) === "WEBP") info = webpInfo(bytes, view);
+  else if (bytes.length >= 12 && ascii(bytes, 4, 4) === "ftyp"
+    && ["heic", "heix", "hevc", "hevx", "mif1", "msf1"].includes(ascii(bytes, 8, 4))) fail("media_heic");
   else fail("media_format");
   if (![info.width, info.height].every((value) => Number.isSafeInteger(value) && value >= 1)) fail("media_format");
   if (info.width > MAX_SOURCE_IMAGE_SIDE || info.height > MAX_SOURCE_IMAGE_SIDE
@@ -129,22 +137,67 @@ function canvasBlob(canvas, type) {
   }, type, type === "image/jpeg" ? 0.88 : undefined));
 }
 
+async function decodedImage(file, target, signal) {
+  let bitmapError;
+  if (typeof globalThis.createImageBitmap === "function") {
+    try {
+      const image = await createImageBitmap(file, { imageOrientation: "from-image", resizeWidth: target.width,
+        resizeHeight: target.height, resizeQuality: "high" });
+      return { image, width: image.width, height: image.height, dispose: () => image.close?.() };
+    } catch (error) { bitmapError = error; aborted(signal); }
+  }
+  // Some phone browsers have no ImageBitmap API or reject its resize options.
+  // The source header/pixel guard has already run before this native decoder.
+  if (typeof globalThis.Image !== "function" || typeof globalThis.URL?.createObjectURL !== "function") {
+    if (bitmapError) throw bitmapError;
+    fail("media_unavailable");
+  }
+  const image = new Image(), url = URL.createObjectURL(file);
+  let disposed = false;
+  const dispose = () => {
+    if (disposed) return; disposed = true;
+    image.onload = image.onerror = null; image.src = ""; URL.revokeObjectURL(url);
+  };
+  try {
+    await new Promise((resolve, reject) => {
+      let done = false;
+      const finish = (error) => {
+        if (done) return; done = true;
+        clearTimeout(timer); signal?.removeEventListener("abort", cancel);
+        image.onload = image.onerror = null;
+        error ? reject(error) : resolve();
+      };
+      const cancel = () => finish(new DOMException("Aborted", "AbortError"));
+      const timer = setTimeout(() => finish(new ImagePreparationError("media_unavailable")), 15000);
+      image.onload = () => finish(); image.onerror = () => finish(new ImagePreparationError("media_format"));
+      signal?.addEventListener("abort", cancel, { once: true });
+      image.decoding = "async"; image.src = url;
+      if (signal?.aborted) cancel();
+    });
+    return { image, width: image.naturalWidth, height: image.naturalHeight, dispose };
+  } catch (error) { dispose(); throw error; }
+}
+
 export async function prepareImageUpload(file, { signal } = {}) {
   aborted(signal);
   if (!(file instanceof Blob) || file.size < 1) fail("media_format");
-  if (file.size > MAX_UPLOAD_BYTES) fail("request_too_large");
-  if (file.type && !TYPES.has(file.type)) fail("media_format");
+  if (file.size > MAX_SOURCE_IMAGE_BYTES) fail("image_source_too_large");
+  const declaredType = JPEG_TYPES.has(file.type) ? "image/jpeg" : file.type;
+  if (["image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence"].includes(declaredType)) fail("media_heic");
+  if (!GENERIC_TYPES.has(declaredType) && !TYPES.has(declaredType)) fail("media_format");
   let bitmap, canvas;
   try {
     const info = inspectImageInput(new Uint8Array(await file.arrayBuffer()));
-    if (file.type && file.type !== info.type) fail("media_format");
+    if (!GENERIC_TYPES.has(declaredType) && declaredType !== info.type) fail("media_format");
     aborted(signal);
-    if (typeof globalThis.createImageBitmap !== "function" || typeof globalThis.document?.createElement !== "function") fail("media_unavailable");
+    if (typeof globalThis.document?.createElement !== "function") fail("media_unavailable");
     const oriented = info.orientation >= 5 && info.orientation <= 8
       ? { width: info.height, height: info.width } : info;
     const target = dimensions(oriented.width, oriented.height);
-    bitmap = await createImageBitmap(file, { imageOrientation: "from-image", resizeWidth: target.width,
-      resizeHeight: target.height, resizeQuality: "high" });
+    // Some mobile file pickers report no MIME type (or a generic one). Decode
+    // with the format proved by the bytes rather than the picker's label.
+    const decodable = file.type === info.type ? file : new Blob([file], { type: info.type });
+    bitmap = await decodedImage(decodable, target, signal);
     aborted(signal);
     // Older decoders may ignore resize options; the header guard above still
     // bounds that fallback, and canvas dimensions remain independently bounded.
@@ -155,20 +208,20 @@ export async function prepareImageUpload(file, { signal } = {}) {
     const context = canvas.getContext("2d", { alpha: info.type !== "image/jpeg" });
     if (!context) fail("media_unavailable");
     // PNG also retains alpha from WebP, avoiding a hidden opaque background.
-    for (let attempt = 0; attempt < 3; attempt += 1) {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
       canvas.width = Math.max(1, Math.floor(target.width * 0.75 ** attempt));
       canvas.height = Math.max(1, Math.floor(target.height * 0.75 ** attempt));
-      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      context.drawImage(bitmap.image, 0, 0, canvas.width, canvas.height);
       const blob = await canvasBlob(canvas, info.type === "image/jpeg" ? "image/jpeg" : "image/png");
       aborted(signal);
-      if (blob.size > 0 && blob.size <= MAX_UPLOAD_BYTES) return blob;
+      if (blob.size > 0 && blob.size <= TARGET_UPLOAD_BYTES) return blob;
     }
     fail("request_too_large");
   } catch (error) {
     if (error instanceof ImagePreparationError || error?.name === "AbortError") throw error;
     fail("media_format");
   } finally {
-    bitmap?.close?.();
+    bitmap?.dispose?.();
     // Release the canvas backing store promptly, especially on phones.
     if (canvas) { canvas.width = 0; canvas.height = 0; }
   }

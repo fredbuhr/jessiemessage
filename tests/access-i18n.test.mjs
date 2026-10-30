@@ -354,11 +354,11 @@ test("an expired recovery link translates its error while preserving the submitt
 });
 
 
-test("pending access checks are visible, bounded and reveal approval without a manual refresh", async () => {
+test("legacy pending access checks are visible, bounded and reveal automatic activation", async () => {
   let current = user(); current.access.emailVerified = true;
   const f = controller("access", (path) => path === "/api/access/session" ? response(current) : capability());
   try {
-    await flush(); assert.match(f.get("client-access-state").textContent, /ma validation/);
+    await flush(); assert.match(f.get("client-access-state").textContent, /Reconnecte-toi pour activer/);
     const originalStateNode = f.get("client-access-state");
     await f.tick(15000); assert.equal(f.get("client-access-state"), originalStateNode);
     current = user("active"); Object.assign(current.access, { emailVerified: true, approved: true });

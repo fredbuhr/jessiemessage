@@ -139,7 +139,7 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
       assert.equal((await request("/api/access/login", { method: "POST", body: { email: clientEmail, password: clientPassword } })).status, 401);
     });
 
-    await t.test("only the delivered single-use email token permits client login; pending access remains isolated from administration", async () => {
+    await t.test("the delivered single-use email token activates messaging while client sessions remain isolated from administration", async () => {
       assert.deepEqual(await deliver(), { sent: 1, failed: 0 });
       assert.equal(inbox.length, 1);
       assert.equal(inbox[0].email, clientEmail);
@@ -156,7 +156,7 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
       clientCookie = login.headers.get("set-cookie").split(";")[0];
       clientCsrf = login.body.csrf;
       assert.deepEqual(login.body.user, { id: firstClientId, role: "client", pseudonym: "Synthetic first client" });
-      assert.deepEqual(login.body.access, { state: "pending", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: false, expiresAt: null });
+      assert.deepEqual(login.body.access, { state: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: true, expiresAt: now + 2 * 86400000 });
       assert.equal(Object.hasOwn(login.body, "token"), false);
       assert.equal(Object.hasOwn(login.body.user, "email"), false);
       assert.equal((await request("/api/admin/clients", { headers: { Cookie: clientCookie } })).status, 401);
@@ -164,26 +164,27 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
       assert.equal((await request("/api/admin/clients", { headers: { Cookie: forgedAdminCookie } })).status, 401);
       assert.equal((await request("/api/auth/session", { headers: { Cookie: forgedAdminCookie } })).status, 401);
       assert.equal((await request("/api/access/session", { headers: { Cookie: `__Host-jessie_client=${tokenFromCookie(adminCookie)}` } })).status, 401);
-      await assert.rejects(accessService.requireActiveClient(tokenFromCookie(clientCookie)));
+      assert.equal((await accessService.requireActiveClient(tokenFromCookie(clientCookie))).user.id, firstClientId);
       assert.equal((await request(`/api/admin/clients/${firstClientId}/approve`, { method: "POST", headers: { ...adminHeaders(), "X-CSRF-Token": clientCsrf }, body: {} })).status, 403);
-      assert.equal((await connection.query("SELECT status FROM users WHERE id = ?", [Buffer.from(firstClientId, "hex")]))[0].status, "pending");
-      assert.equal(await count("conversations"), 0);
+      assert.equal((await connection.query("SELECT status FROM users WHERE id = ?", [Buffer.from(firstClientId, "hex")]))[0].status, "active");
+      assert.equal(await count("conversations"), 1);
     });
 
-    await t.test("manual approval of the invited email-verified client opens exactly one conversation without inventing age evidence", async () => {
+    await t.test("an old admin approval request is idempotent after automatic activation and preserves its original access dates", async () => {
+      const activatedAt = now;
       now += 300000;
       const approved = await request(`/api/admin/clients/${firstClientId}/approve`, { method: "POST", headers: adminHeaders(), body: {} });
       assert.equal(approved.status, 200);
       const user = (await connection.query("SELECT status, age_assured_at, access_approved_at, access_expires_at FROM users WHERE id = ?", [Buffer.from(firstClientId, "hex")]))[0];
       assert.equal(user.status, "active"); assert.equal(user.age_assured_at, null);
-      assert.equal(instant(user.access_approved_at), now);
-      assert.equal(instant(user.access_expires_at), now + 2 * 86400000);
+      assert.equal(instant(user.access_approved_at), activatedAt);
+      assert.equal(instant(user.access_expires_at), activatedAt + 2 * 86400000);
       assert.ok(instant(user.access_expires_at) > Number(firstInvitation.expiresAt));
       const conversations = await connection.query("SELECT client_id, admin_id FROM conversations");
       assert.equal(conversations.length, 1);
       assert.ok(conversations[0].client_id.equals(Buffer.from(firstClientId, "hex")));
       assert.ok(conversations[0].admin_id.equals(adminId));
-      assert.notEqual((await request(`/api/admin/clients/${firstClientId}/approve`, { method: "POST", headers: adminHeaders(), body: {} })).status, 200);
+      assert.equal((await request(`/api/admin/clients/${firstClientId}/approve`, { method: "POST", headers: adminHeaders(), body: {} })).status, 200);
       assert.equal(await count("conversations"), 1);
       const active = await request("/api/access/session", { headers: clientHeaders() });
       assert.equal(active.status, 200);
@@ -232,7 +233,7 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
       assert.equal(second.body.user.id, secondClientId);
       assert.equal(JSON.stringify(second.body).includes(firstClientId), false);
       assert.equal(JSON.stringify(second.body).includes(clientEmail), false);
-      assert.equal(second.body.access.state, "pending");
+      assert.equal(second.body.access.state, "active");
       assert.equal((await request("/api/admin/clients", { headers: { Cookie: adminCookie } })).body.clients.length, 2);
     });
 
@@ -287,8 +288,8 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
       const before = { user: await preserved(), sessions: await sessions(), conversations: await conversations(), credentials: await credentials() };
       assert.equal((await request(path, { method: "POST", body, headers: { ...adminHeaders(), "X-CSRF-Token": clientCsrf } })).status, 403);
       assert.equal((await request(path, { method: "POST", body, headers: clientHeaders() })).status, 401);
-      const pending = await request(`/api/admin/clients/${secondClientId}/renew`, { method: "POST", body, headers: adminHeaders() });
-      assert.equal(pending.status, 409); assert.deepEqual(pending.body, { error: "verification_required" });
+      const unlimited = await request(`/api/admin/clients/${secondClientId}/renew`, { method: "POST", body, headers: adminHeaders() });
+      assert.equal(unlimited.status, 409); assert.deepEqual(unlimited.body, { error: "verification_required" });
       const attempts = await Promise.all([1, 2].map(() => request(path, { method: "POST", body, headers: adminHeaders() })));
       assert.deepEqual(attempts.map((result) => result.status).sort(), [200, 409]);
       const success = attempts.find((result) => result.status === 200), conflict = attempts.find((result) => result.status === 409);
@@ -335,7 +336,7 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
       assert.equal((await request("/api/access/session", { headers: clientHeaders() })).status, 401);
       const user = (await connection.query("SELECT status, access_expires_at FROM users WHERE id = ?", [Buffer.from(firstClientId, "hex")]))[0];
       assert.equal(user.status, "revoked"); assert.equal(instant(user.access_expires_at), renewedExpiry);
-      assert.equal(await count("conversations"), 1);
+      assert.equal(await count("conversations"), 2);
     });
 
     await t.test("revoking a client before email delivery cancels the private queued challenge without sending it", async () => {
