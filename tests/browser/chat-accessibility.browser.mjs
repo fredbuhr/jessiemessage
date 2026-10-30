@@ -494,7 +494,7 @@ test("Chrome mobile: compact messages reveal one accessible details area at a ti
       assert.equal(resting.visibleDetails, 0, `${context}: dates, receipts and deletion reserve no permanent row`);
       assert.equal(resting.selected, 0); assert.ok(resting.gap<=10, `${context}: compact message gap (${resting.gap}px)`);
       assert.ok(resting.bubbleHeight<=48, `${context}: one-line text bubble stays compact (${resting.bubbleHeight}px)`);
-      assert.equal(resting.placeholder, role === "client" ? language === "fr" ? "Écris-moi…" : "Write to me…" : "Message…");
+      assert.equal(resting.placeholder, role === "client" && language === "fr" ? "Écris-moi…" : "Message…");
       assert.equal(resting.placeholderFits, true, `${context}: the empty composer hint fits on one visible line (${resting.placeholderWidth}px in ${resting.placeholderRoom}px)`);
 
       await openMessageDetails(page, "2");

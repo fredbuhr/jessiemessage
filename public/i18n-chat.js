@@ -144,7 +144,7 @@ globalThis.JessieI18n?.register({
   "Photo indisponible": "Photo unavailable",
   "Légende…": "Caption…",
   "Message…": "Message…",
-  "Écris-moi…": "Write to me…",
+  "Écris-moi…": "Message…",
   "Détails du message du {date}": "Details of message from {date}",
   "Photo privée · légende facultative de 1 000 caractères maximum": "Private photo · optional caption up to 1,000 characters",
   "Message privé · 4 096 caractères maximum": "Private message · up to 4,096 characters",
