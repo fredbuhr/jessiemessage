@@ -6,6 +6,7 @@ The explicit native mode requires network access to the pinned Node archive and
 the registry. Its entire installation is removed with its synthetic directory.
 """
 import copy
+from contextlib import redirect_stderr
 import hashlib
 import io
 import json
@@ -233,7 +234,7 @@ class Staging(unittest.TestCase):
             self.assertEqual(stat.S_IMODE(receipt.stat().st_mode), 0o600)
             install_args, options = next((a, k) for a, k in f.calls if len(a) > 2 and a[2] == 'ci')
             self.assertEqual(options['cwd'], str(target)); self.assertEqual(options['timeout'], 300)
-            self.assertIn('--globalconfig=/dev/null', install_args)
+            self.assertIn('--globalconfig=' + str(Path(result['installer']['npmCli']).parents[2] / 'global.npmrc'), install_args)
             self.assertEqual(set(options['env']), {'PATH', 'LC_ALL', 'TMPDIR', 'NPM_CONFIG_USERCONFIG', 'NPM_CONFIG_GLOBALCONFIG', 'NPM_CONFIG_UPDATE_NOTIFIER'})
             self.assertTrue(all('--omit=optional' not in arg for arg in install_args))
             self.assertEqual(sum(args[0] == '/bin/bash' for args, _ in f.calls), 2)
@@ -244,6 +245,20 @@ class Staging(unittest.TestCase):
             with self.assertRaisesRegex(f.m.StagingRefused, 'existing_output'):
                 f.stage()
             self.assertEqual(Path(first['receipt']).read_bytes(), before); f.assert_preserved(self)
+    def test_distinct_private_empty_npm_configuration_files_bind_environment_and_cli(self):
+        with Fixture() as f:
+            result = f.stage(); tools = Path(result['installer']['npmCli']).parents[2]
+            args, options = next((a, k) for a, k in f.calls if len(a) > 2 and a[2] == 'ci')
+            paths = [tools / name for name in ('user.npmrc', 'global.npmrc')]
+            self.assertNotEqual(paths[0], paths[1])
+            self.assertNotEqual(paths[0].stat().st_ino, paths[1].stat().st_ino)
+            for kind, path in zip(('USER', 'GLOBAL'), paths):
+                self.assertEqual(path.read_bytes(), b'')
+                self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
+                self.assertEqual(path.stat().st_nlink, 1)
+                self.assertEqual(options['env']['NPM_CONFIG_' + kind + 'CONFIG'], str(path))
+                self.assertIn('--' + kind.lower() + 'config=' + str(path), args)
+            f.assert_preserved(self)
     def test_every_preexisting_output_including_a_dangling_symlink_refuses_before_new_checkout(self):
         for name in ('checkout', 'tools', 'start', 'check', 'log', 'prelog', 'receipt'):
             with self.subTest(name=name), Fixture() as f:
@@ -398,7 +413,8 @@ class Archive(unittest.TestCase):
                                         'HTTPS_PROXY': 'forbidden', 'NPM_TOKEN': 'synthetic-secret'}):
             env = m.npm_environment(Path('/private/node'), Path('/private/cache'), Path('/private/tmp'))
         self.assertNotIn('NODE_OPTIONS', env); self.assertNotIn('NPM_TOKEN', env); self.assertNotIn('HTTPS_PROXY', env)
-        self.assertEqual(env['NPM_CONFIG_USERCONFIG'], '/dev/null')
+        self.assertEqual(env['NPM_CONFIG_USERCONFIG'], '/private/user.npmrc')
+        self.assertEqual(env['NPM_CONFIG_GLOBALCONFIG'], '/private/global.npmrc')
     def test_archive_download_requires_exact_url_length_and_hash(self):
         m = helper()
         for kind in ('status', 'redirect', 'length', 'hash'):
@@ -413,6 +429,46 @@ class Archive(unittest.TestCase):
                      mock.patch.object(m.urllib.request, 'build_opener', return_value=opener):
                     with self.assertRaises(m.StagingRefused):
                         m.download_archive()
+
+
+def native_failure_logs(module, root, tools):
+    """Only the disposable native mode may expose its own bounded npm logs."""
+    module.require(root.parent == HERE.parent and root.name.startswith('prepare1140-native-')
+                   and tools == root / 'tools', 'synthetic_diagnostic_scope')
+    module.private_directory(root); module.private_directory(tools)
+    for name in ('stdout', 'stderr'):
+        path = tools / ('npm-' + name + '.log')
+        try:
+            info = path.lstat()
+            module.require(stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid()
+                           and info.st_nlink == 1 and stat.S_IMODE(info.st_mode) == 0o600, 'synthetic_log_metadata')
+            fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+            with os.fdopen(fd, 'rb') as source:
+                current = os.fstat(source.fileno())
+                module.require((info.st_dev, info.st_ino) == (current.st_dev, current.st_ino), 'synthetic_log_changed')
+                data = source.read(8193)
+            print(json.dumps(dict(scope='isolated_synthetic_npm_install_only', stream=name,
+                                  truncated=len(data) > 8192, text=data[:8192].decode('utf-8', errors='replace'))), file=sys.stderr)
+        except (OSError, module.StagingRefused):
+            print(json.dumps(dict(scope='isolated_synthetic_npm_install_only', stream=name, available=False)), file=sys.stderr)
+
+
+class NativeDiagnostics(unittest.TestCase):
+    def test_only_bounded_synthetic_logs_are_exposed(self):
+        module = helper()
+        with tempfile.TemporaryDirectory(prefix='prepare1140-native-', dir=HERE.parent) as temporary:
+            root = Path(temporary); root.chmod(0o700); tools = root / 'tools'; tools.mkdir(mode=0o700)
+            for name, content in [('stdout', b'x' * 9000), ('stderr', b'synthetic npm diagnostic')]:
+                path = tools / ('npm-' + name + '.log'); path.write_bytes(content); path.chmod(0o600)
+            output = io.StringIO()
+            with redirect_stderr(output):
+                native_failure_logs(module, root, tools)
+            records = [json.loads(line) for line in output.getvalue().splitlines()]
+            self.assertEqual(len(records), 2)
+            self.assertEqual(len(records[0]['text']), 8192); self.assertTrue(records[0]['truncated'])
+            self.assertEqual(records[1]['text'], 'synthetic npm diagnostic'); self.assertFalse(records[1]['truncated'])
+            with self.assertRaisesRegex(module.StagingRefused, 'synthetic_diagnostic_scope'):
+                native_failure_logs(module, HERE.parent, tools)
 
 
 def native_install():
@@ -434,7 +490,11 @@ def native_install():
             installer = m.extract_tools(archive, tools, include_node=True)
             node = tools / 'node'
             m.require(m.command([str(node), '--version']).decode().strip() == m.NODE_VERSION, 'native_node_version')
-            installation = m.install_dependencies(checkout, tools, node, package_bytes, lock_bytes)
+            try:
+                installation = m.install_dependencies(checkout, tools, node, package_bytes, lock_bytes)
+            except Exception:
+                native_failure_logs(m, root, tools)
+                raise
             print(json.dumps(dict(status='prepare1140_native_install_passed', nodeVersion=m.NODE_VERSION,
                 installer=installer, dependencies=installation, productionPathsAccessed=False,
                 checkExecuted=False, runtimeStarted=False, syntheticDirectoryRemovedOnExit=True), sort_keys=True))

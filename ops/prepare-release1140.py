@@ -324,7 +324,8 @@ def extract_tools(data, root, *, include_node=False):
 def npm_environment(node, cache, temporary):
     # No user/global npm configuration, inherited credentials, proxy or Node hooks.
     return dict(PATH=str(node.parent) + ':/usr/bin:/bin', LC_ALL='C', TMPDIR=str(temporary),
-                NPM_CONFIG_USERCONFIG='/dev/null', NPM_CONFIG_GLOBALCONFIG='/dev/null',
+                NPM_CONFIG_USERCONFIG=str(cache.parent / 'user.npmrc'),
+                NPM_CONFIG_GLOBALCONFIG=str(cache.parent / 'global.npmrc'),
                 NPM_CONFIG_UPDATE_NOTIFIER='false')
 
 
@@ -336,10 +337,12 @@ def install_dependencies(checkout, tools, node, package_bytes, lock_bytes, *, no
     absent(checkout / 'node_modules'); absent(checkout / '.npmrc')
     for name in ('cache', 'tmp'):
         make_private(tools / name)
+    for name in ('user.npmrc', 'global.npmrc'):
+        write_exclusive(tools / name, b'')
     cli = tools / 'npm/bin/npm-cli.js'
     args = [str(node), str(cli), 'ci', '--ignore-scripts', '--no-audit', '--no-fund',
             '--registry=https://registry.npmjs.org/', '--cache=' + str(tools / 'cache'),
-            '--userconfig=/dev/null', '--globalconfig=/dev/null']
+            '--userconfig=' + str(tools / 'user.npmrc'), '--globalconfig=' + str(tools / 'global.npmrc')]
     logs = [tools / ('npm-' + name + '.log') for name in ('stdout', 'stderr')]
     for path in logs:
         write_exclusive(path, b'')
