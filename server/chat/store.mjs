@@ -522,42 +522,45 @@ export function createChatStore(pool, { clock, enqueueNotification, decorateMess
         const mfa = await lockMfa(connection, admin, now);
         const actorProof = await actorSession(connection, tokenHash, admin, "admin", mfa, now);
         now = actorProof.now;
-        const unread = "(m.sequence_no > COALESCE(r.last_read_sequence, 0))";
-        const seek = position === null ? "" : `AND (${unread} < ? OR (${unread} = ? AND (m.created_at < ? OR (m.created_at = ? AND m.id < ?))))`;
-        // Select one current incoming preview per conversation before applying
-        // the global unread/date cursor and page limit.
-        const rows = await connection.query(`SELECT ${messageProjection}, ${unread} AS inbox_unread,
-          DATE_FORMAT(m.created_at, '%Y-%m-%d %H:%i:%s.%f') AS inbox_created
-          FROM messages m JOIN conversations c ON c.id = m.conversation_id
-          LEFT JOIN chat_receipts r ON r.conversation_id = c.id AND r.user_id = c.admin_id ${messageJoins}
-          WHERE c.admin_id = ? AND c.created_at <= ? AND m.created_at <= ?
-            AND m.sender_role = 'client' AND m.sender_id = c.client_id AND m.deleted_at IS NULL
+        const activity = "COALESCE(m.created_at, c.created_at)";
+        const seek = position === null ? "" : `AND (${activity} < ? OR (${activity} = ? AND c.id < ?))`;
+        // One latest visible exchange in either direction, including chats with
+        // no visible message. Deletion events and unread status never reorder
+        // this list; the exact SQL date and conversation ID form its keyset.
+        const rows = await connection.query(`SELECT ${messageProjection}, c.id AS inbox_conversation_id,
+          c.client_id AS inbox_client_id, DATE_FORMAT(${activity}, '%Y-%m-%d %H:%i:%s.%f') AS inbox_created
+          FROM conversations c LEFT JOIN messages m ON m.conversation_id = c.id
             AND m.sequence_no = (SELECT latest.sequence_no FROM messages latest
-              WHERE latest.conversation_id = c.id AND latest.sender_role = 'client' AND latest.sender_id = c.client_id
-                AND latest.deleted_at IS NULL AND latest.created_at <= ?
-              ORDER BY latest.sequence_no DESC LIMIT 1) ${seek}
-          ORDER BY inbox_unread DESC, m.created_at DESC, m.id DESC LIMIT ?`,
-        [admin.id, sqlDate(now), sqlDate(now), sqlDate(now), ...(position ? [position[0], position[0], position[1], position[1], Buffer.from(position[2], "hex")] : []), limit + 1]);
+              WHERE latest.conversation_id = c.id AND latest.deleted_at IS NULL AND latest.created_at <= ?
+                AND ((latest.sender_role = 'client' AND latest.sender_id = c.client_id)
+                  OR (latest.sender_role = 'admin' AND latest.sender_id = c.admin_id))
+              ORDER BY latest.sequence_no DESC LIMIT 1) ${messageJoins}
+          WHERE c.admin_id = ? AND c.created_at <= ? ${seek}
+          ORDER BY ${activity} DESC, c.id DESC LIMIT ?`,
+        [sqlDate(now), admin.id, sqlDate(now), ...(position ? [position[1], position[1], Buffer.from(position[2], "hex")] : []), limit + 1]);
         const selected = rows.slice(0, limit), items = [];
         for (const row of selected) {
           // The administrator, MFA and actor session remain exclusively locked,
           // as in listConversations. Recheck each current client and binding
           // after any lock wait, without repeating the same admin discovery.
-          const client = await lockUser(connection, row.sender_id);
+          const client = await lockUser(connection, row.inbox_client_id);
           await lockClientAuth(connection, client);
-          const conversation = (await connection.query("SELECT id, admin_id, client_id, created_at, closed_at FROM conversations WHERE id = ? FOR UPDATE", [row.conversation_id]))[0];
+          const conversation = (await connection.query("SELECT id, admin_id, client_id, created_at, closed_at FROM conversations WHERE id = ? FOR UPDATE", [row.inbox_conversation_id]))[0];
           if (!conversation || !conversation.admin_id.equals(admin.id) || !conversation.client_id.equals(client.id)
-            || !conversation.client_id.equals(row.sender_id)) fail("CHAT_NOT_FOUND");
+            || !conversation.client_id.equals(row.inbox_client_id)
+            || row.id !== null && (!row.conversation_id.equals(conversation.id)
+              || !row.sender_id.equals(row.sender_role === "admin" ? admin.id : client.id))) fail("CHAT_NOT_FOUND");
           now = sessionNow(now);
           if (now >= timestamp(actorProof.expires_at)) fail("CHAT_UNAUTHORIZED");
           if (timestamp(conversation.created_at) > now) fail("CHAT_FORBIDDEN");
           const context = { actor: admin, admin, client, conversation, now };
           const view = await summary(connection, context);
-          const message = (await decorated(connection, context, [rawMessage(row, admin.id)]))[0];
-          items.push({ conversation: view, message, unread: Number(row.inbox_unread) === 1 });
+          const message = row.id === null ? null : (await decorated(connection, context, [rawMessage(row, admin.id)]))[0];
+          if (sessionNow(now) >= timestamp(actorProof.expires_at)) fail("CHAT_UNAUTHORIZED");
+          items.push({ conversation: view, message, unread: view.unreadCount > 0 });
         }
         const hasMore = rows.length > limit, last = selected.at(-1);
-        return { items, hasMore, nextCursor: hasMore ? encodeInboxCursor([Number(last.inbox_unread), last.inbox_created, last.id.toString("hex")]) : null };
+        return { items, hasMore, nextCursor: hasMore ? encodeInboxCursor([2, last.inbox_created, last.inbox_conversation_id.toString("hex")]) : null };
       });
     },
 

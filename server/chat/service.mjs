@@ -163,7 +163,7 @@ export async function createChatService({ store, authStore, authService, accessS
         await readLimit(session.user.id, now, "admin");
         const result = await store.readInbox({ tokenHash: tokenDigest(token), now: nowValue(), cursor, limit });
         return { items: result.items.map(item => ({ conversation: conversationDTO(item.conversation, "admin"),
-          message: messageDTO(item.message, session), unread: item.unread })), hasMore: result.hasMore, nextCursor: result.nextCursor };
+          message: item.message === null ? null : messageDTO(item.message, session), unread: item.unread })), hasMore: result.hasMore, nextCursor: result.nextCursor };
       }),
     }),
     clientConversation: (token) => guarded(async () => {

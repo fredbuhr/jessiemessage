@@ -70,64 +70,96 @@ test("real MariaDB private text chat persistence (synthetic disposable database 
       events: Number((await connection.query("SELECT COUNT(*) AS value FROM chat_events WHERE conversation_id = ?", [fixture.conversationId]))[0].value),
     });
 
-    await t.test("received inbox selects only each client's latest visible incoming message before unread-first pagination", async () => {
-      const a = await pair(), b = await pair(a.admin), c = await pair(a.admin), other = await pair();
+    await t.test("conversation inbox selects the latest visible exchange in either direction independently of unread state", async () => {
+      const a = await pair(), b = await pair(a.admin), c = await pair(a.admin), d = await pair(a.admin), empty = await pair(a.admin), other = await pair();
       const a1 = (await send(a)).message, a2 = (await send(a)).message;
       const b1 = (await send(b)).message, b2 = (await send(b)).message;
       await send(c); const c2 = (await send(c)).message;
       const removed = (await send(b)).message;
-      await send(a, "admin"); await send(other);
+      const a3 = (await send(a, "admin")).message, d1 = (await send(d, "admin")).message;
+      await send(other);
       await store.deleteMessage({ ...request(b), messageId: removed.id });
       await store.markRead({ ...request(a, "admin"), through: a2.sequence });
       const stamp = sqlDate(now).slice(0, -6);
-      for (const [message, suffix] of [[a1, "000001"], [a2, "000006"], [b1, "000003"], [b2, "000004"], [c2, "000003"]]) {
+      for (const [message, suffix] of [[a1, "000001"], [a2, "000006"], [b1, "000003"], [b2, "000004"], [c2, "000003"], [a3, "000008"], [d1, "000009"]]) {
         await connection.query("UPDATE messages SET created_at = ? WHERE id = ?", [stamp + suffix, message.id]);
       }
-      // Advance only this read's wall clock beyond all microsecond fixtures.
+      // The read includes microsecond fixtures while wire dates remain milliseconds.
       const options = { tokenHash: a.admin.tokenHash, now: now + 1, limit: 1 };
-      const ids = [], clients = new Set(), cursors = new Set(); let cursor = null;
+      const ids = [], clients = new Set(), cursors = new Set(), unread = []; let cursor = null;
       do {
         const page = await store.readInbox({ ...options, cursor });
         assert.equal(page.items.length, 1);
-        ids.push(page.items[0].message.id.toString("hex"));
-        const clientId = page.items[0].conversation.clientId.toString("hex");
-        assert.ok(!clients.has(clientId), "a client appears once across all pages"); clients.add(clientId);
-        assert.equal(page.items[0].unread, ids.length <= 2);
-        assert.equal(page.items[0].message.senderRole, "client");
+        const item = page.items[0];
+        ids.push(item.message?.id.toString("hex") ?? null); unread.push(item.unread);
+        const clientId = item.conversation.clientId.toString("hex");
+        assert.ok(!clients.has(clientId), "a conversation appears once across all stable pages"); clients.add(clientId);
+        assert.equal(item.unread, item.conversation.unreadCount > 0);
         cursor = page.nextCursor;
-        if (cursor) { assert.ok(!cursors.has(cursor)); cursors.add(cursor); }
+        if (cursor) { assert.ok(cursor.length <= 160); assert.ok(!cursors.has(cursor)); cursors.add(cursor); }
         assert.equal(page.hasMore, cursor !== null);
       } while (cursor);
-      assert.deepEqual(ids, [b2, c2, a2].map(message => message.id.toString("hex")), "unread clients precede a more recent read message, preserving microseconds");
+      assert.deepEqual(ids, [d1, a3, b2, c2].map(message => message.id.toString("hex")).concat(null));
+      assert.deepEqual(unread, [false, false, true, true, false], "a newer read/admin exchange precedes older unread clients");
+      const first = await store.readInbox({ ...options, limit: 100 });
+      assert.equal(first.items[0].message.senderRole, "admin", "administrator-only conversation is present");
+      assert.equal(first.items[1].message.isMine, true);
+      assert.equal(first.items.at(-1).conversation.id.toString("hex"), empty.conversationId.toString("hex"));
+      assert.equal(first.items.at(-1).message, null);
       const check = await read(b, "admin"); assert.equal(check.conversation.unreadCount, 2, "overview never changes read receipts");
       await store.deleteMessage({ ...request(a, "client", { now: now + 1 }), messageId: a2.id });
-      assert.equal((await store.readInbox(options)).items[0].message.id.toString("hex"), b2.id.toString("hex"));
+      assert.equal((await store.readInbox({ ...options, limit: 100 })).items[1].message.id.toString("hex"), a3.id.toString("hex"), "deleting an earlier incoming does not replace the latest outgoing");
+      await store.deleteMessage({ ...request(a, "admin", { now: now + 1 }), messageId: a3.id });
       const fallback = await store.readInbox({ ...options, limit: 100 });
-      assert.deepEqual(fallback.items.map(item => item.message.id.toString("hex")), [b2, c2, a1].map(message => message.id.toString("hex")), "deleting the latest incoming message reveals its predecessor");
+      assert.deepEqual(fallback.items.map(item => item.message?.id.toString("hex") ?? null), [d1, b2, c2, a1].map(message => message.id.toString("hex")).concat(null), "deleting the latest exchange falls back to its visible predecessor, not the deletion event time");
       await store.deleteMessage({ ...request(b, "client", { now: now + 1 }), messageId: b2.id });
       await store.deleteMessage({ ...request(b, "client", { now: now + 1 }), messageId: b1.id });
-      assert.deepEqual((await store.readInbox({ ...options, limit: 100 })).items.map(item => item.message.id.toString("hex")), [c2, a1].map(message => message.id.toString("hex")), "clients without a visible incoming message are absent");
+      const allDeleted = await store.readInbox({ ...options, limit: 100 });
+      assert.equal(allDeleted.items.find(item => item.conversation.id.equals(b.conversationId)).message, null, "a fully deleted conversation remains available with an empty preview");
+      assert.equal(allDeleted.items.find(item => item.conversation.id.equals(b.conversationId)).unread, false);
       for (const status of ["suspended", "revoked", "deleted"]) {
         await connection.query("UPDATE users SET status = ? WHERE id = ?", [status, c.client.id]);
         const retained = (await store.readInbox({ ...options, limit: 100 })).items.find(item => item.conversation.clientId.equals(c.client.id));
-        assert.ok(retained.message.id.equals(c2.id), "the assigned administrator can retain an inactive client's received history");
+        assert.ok(retained.message.id.equals(c2.id), "the assigned administrator can retain inactive client history");
         assert.equal(retained.conversation.canSend, false);
       }
       await assert.rejects(store.readInbox({ ...options, tokenHash: a.client.tokenHash }), errorCode("CHAT_FORBIDDEN"));
       await assert.rejects(store.readInbox({ ...options, cursor: "bad" }), errorCode("CHAT_STORE_INPUT"));
     });
 
-    await t.test("received inbox rechecks the selected client and administrator assignment after a client-lock wait", async () => {
-      for (const field of ["admin_id", "client_id"]) {
+    await t.test("conversation inbox keeps unread incoming messages when an outgoing preview is newer and paginates exact date ties by conversation", async () => {
+      const a = await pair(), b = await pair(a.admin), emptyA = await pair(a.admin), emptyB = await pair(a.admin);
+      await send(a); const outgoing = (await send(a, "admin")).message;
+      const incoming = (await send(b)).message;
+      const stamp = sqlDate(now).slice(0, -6), earlier = stamp + "000007", later = stamp + "000008";
+      await connection.query("UPDATE messages SET created_at = ? WHERE id = ?", [earlier, incoming.id]);
+      await connection.query("UPDATE messages SET created_at = ? WHERE id = ?", [later, outgoing.id]);
+      const options = { tokenHash: a.admin.tokenHash, now: now + 1, limit: 1 };
+      const top = await store.readInbox(options);
+      assert.ok(top.items[0].conversation.id.equals(a.conversationId));
+      assert.ok(top.items[0].message.id.equals(outgoing.id)); assert.equal(top.items[0].unread, true, "outgoing preview does not clear an unread incoming message");
+      assert.equal((await store.readInbox({ ...options, cursor: top.nextCursor })).items[0].message.id.toString("hex"), incoming.id.toString("hex"), "microseconds survive cursor serialization");
+      await connection.query("UPDATE messages SET created_at = ? WHERE id = ?", [later, incoming.id]);
+      const actual = []; let cursor = null;
+      do {
+        const page = await store.readInbox({ ...options, cursor });
+        actual.push(page.items[0].conversation.id.toString("hex")); cursor = page.nextCursor;
+      } while (cursor);
+      const descending = values => values.map(value => value.conversationId.toString("hex")).sort().reverse();
+      assert.deepEqual(actual, [...descending([a, b]), ...descending([emptyA, emptyB])], "equal dates use a unique conversation ID tie-break, including empty previews");
+    });
+
+    await t.test("conversation inbox rechecks its client and administrator after a client-lock wait for incoming, outgoing and empty previews", async () => {
+      for (const preview of ["incoming", "outgoing", "empty"]) for (const field of ["admin_id", "client_id"]) {
         const fixture = await pair(), replacement = await user(field === "admin_id" ? "admin" : "client");
-        await send(fixture);
+        if (preview !== "empty") await send(fixture, preview === "outgoing" ? "admin" : "client");
         let selected;
         const selectedRows = new Promise(resolve => { selected = resolve; });
         const observedStore = createChatStore({ getConnection: async () => {
           const current = await pool.getConnection();
           return { ...current, query: async (...args) => {
             const result = await current.query(...args);
-            if (args[0].includes("AS inbox_unread")) selected();
+            if (args[0].includes("AS inbox_created")) selected();
             return result;
           } };
         } });
@@ -154,7 +186,7 @@ test("real MariaDB private text chat persistence (synthetic disposable database 
         const current = await pool.getConnection();
         return { ...current, query: async (...args) => {
           const result = await current.query(...args);
-          if (args[0].includes("AS inbox_unread")) selected();
+          if (args[0].includes("AS inbox_created")) selected();
           return result;
         } };
       } }, { clock: () => currentTime, decorateMessages: async (_connection, _context, rows) => { decorated = true; return rows; } });

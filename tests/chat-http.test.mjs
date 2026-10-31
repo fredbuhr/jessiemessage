@@ -599,7 +599,7 @@ test("reply state is private to admin and manual action is authenticated and CSR
   assert.equal((await response.json()).reply.needed, false);
 });
 
-test("received inbox is admin-only, never marks read, strips private data and rejects malformed pages", async t => {
+test("conversation inbox is admin-only, never marks read, strips private data and accepts own or empty previews", async t => {
   const item = { conversation: conversation("admin"), message: message({ sender: "peer", clientMessageId: null }), unread: true };
   let page = { items: [item], hasMore: false, nextCursor: null }, reads = 0;
   const { base, calls } = await fixture(t, { inbox: async () => { reads++; return page; } });
@@ -614,8 +614,28 @@ test("received inbox is admin-only, never marks read, strips private data and re
     assert.equal((await fetch(base + "/api/chat/admin/inbox?" + query, { headers: { Cookie: cookie("admin") } })).status, 400);
   }
   assert.equal(reads, 1);
-  for (const bad of [{ ...item, unread: false }, { ...item, message: message() }, { ...item, message: { ...item.message, deletedAt: now, body: null } }]) {
+  const own = { ...item, conversation: { ...item.conversation, latestSequence: "2" }, message: message({ sequence: "2" }) };
+  page = { items: [own], hasMore: false, nextCursor: null };
+  const ownResponse = await fetch(base + "/api/chat/admin/inbox", { headers: { Cookie: cookie("admin") } });
+  assert.equal(ownResponse.status, 200);
+  const ownBody = await ownResponse.json(); assert.equal(ownBody.items[0].message.sender, "me"); assert.equal(ownBody.items[0].unread, true);
+  for (const latest of ["0", "5"]) {
+    page = { items: [{ conversation: { ...item.conversation, latestSequence: latest, latestEventSequence: latest, unreadCount: 0 }, message: null, unread: false }], hasMore: false, nextCursor: null };
+    const emptyResponse = await fetch(base + "/api/chat/admin/inbox", { headers: { Cookie: cookie("admin") } });
+    assert.equal(emptyResponse.status, 200); assert.equal((await emptyResponse.json()).items[0].message, null, "new and fully deleted conversations retain empty previews");
+  }
+  for (const bad of [{ ...item, unread: false }, { ...item, message: null }, { ...item, message: undefined },
+    { ...item, message: { ...item.message, sequence: "2" } }, { ...item, message: { ...item.message, deletedAt: now, body: null } }]) {
     page = { items: [bad], hasMore: false, nextCursor: null };
     assert.equal((await fetch(base + "/api/chat/admin/inbox", { headers: { Cookie: cookie("admin") } })).status, 503);
   }
+  page = { items: [item, item], hasMore: false, nextCursor: null };
+  assert.equal((await fetch(base + "/api/chat/admin/inbox", { headers: { Cookie: cookie("admin") } })).status, 503, "one conversation cannot appear twice");
+  const older = { ...item, conversation: { ...item.conversation, id: "f".repeat(32), unreadCount: 0 }, message: { ...item.message, id: "e".repeat(32), createdAt: now - 1000 }, unread: false };
+  const recentRead = { ...own, conversation: { ...own.conversation, unreadCount: 0 }, unread: false };
+  const olderUnread = { ...older, conversation: { ...older.conversation, unreadCount: 1 }, unread: true };
+  page = { items: [recentRead, olderUnread], hasMore: false, nextCursor: null };
+  assert.equal((await fetch(base + "/api/chat/admin/inbox", { headers: { Cookie: cookie("admin") } })).status, 200, "recent exchanges are not sorted by unread status");
+  page = { items: [olderUnread, recentRead], hasMore: false, nextCursor: null };
+  assert.equal((await fetch(base + "/api/chat/admin/inbox", { headers: { Cookie: cookie("admin") } })).status, 503, "decreasing preview dates are enforced");
 });

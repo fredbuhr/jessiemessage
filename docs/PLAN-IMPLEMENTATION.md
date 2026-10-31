@@ -2,13 +2,24 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
+## Évolution 1.13.0 — conversations et listes
+
+Développement demandé le31octobre, branche `feat/conversation-lists-1130`, base5d51a4c. [Critères du résultat](conversation-lists-1130.md). Aucun jalon n'est une activation ; viser une seule livraison compatible une fois le candidat qualifié.
+
+1. **Messagerie** : dernier échange tous sens et tri global, ouverture récente/ciblée, historique progressif et fenêtre bornée protégeant suppressions/brouillons.
+2. **Listes** : accès compacts avec filtres globaux et navigation, tâches revalidées et listes CRM/diffusions bornées sans perdre sélection ou formulaire.
+3. **Backend et entretien** : lectures vidéo/inbox regroupées quand les gardes restent vérifiables, cadence push bornée, textes et références courantes cohérents. Pas de migration/index sans mesure justifiée.
+4. **Qualification** : tests ciblés utiles, revue, captures et suites natives CI du candidat stabilisé puis du SHA fusionné ; preuves exactes et omissions conservées. Vérifier en lecture seule le résultat durable1120 avant une future opération hébergée dépendante.
+
+Les gains facultatifs non mesurés, le juridique, les sauvegardes reportées et l'ancien CLI de données ne deviennent pas des prérequis. Ne pas rouvrir l'audit global à chaque jalon.
+
 ## Évolution1.12.0 — démarrage rapporté, reçu final attendu
 
 Les quatre demandes et l’ouverture automatique du lien sont qualifiées et publiées en une version : PR143/main1435/5, publication2/2 et39tests opérateur, source9bfdae07/tagv1.12.0. [Préparation/CHECK](verification-proofs/jm1120/hosted-preparation.json) réussis puis [identité1.12.0 reçue](verification-proofs/jm1120/hosted-identity.json) :31octobre02:29:16Paris, source9bfdae07, Node24.22.1. Ne rejouer aucune étape acquise.
 
 Le [writer final1120](verification-proofs/jm1120/writer-final-native.json) est qualifié24/24 natifs, run41155948468,1/1, tentative1 ; script relu identique à la source épinglée. Il accepte le véritable baseline privé1112/3f1ae16d et conserve les preuves1113 sans inventer sa finalisation.
 
-**Seule étape restante :** exécuter une fois la [commande d’enregistrement final](operations-release1120.md#enregistrement-final), recueillir son reçu et clore la livraison. Métadonnées seules ; aucun redémarrage, migration, mail ou compte réel à manipuler. Après résultat incertain, inspecter avant toute relance.
+**État documentaire restant :** le résultat de la [commande d'enregistrement final](operations-release1120.md#enregistrement-final) fournie n'est pas communiqué. Retrouver son reçu ou inspecter l'état durable en lecture seule avant toute opération dépendante. Ne pas rejouer la commande pour découvrir son résultat ; ne pas redémarrer. Le développement1.13.0 n'exige pas de nouvelle opération hébergée à ce stade.
 
 ## Correctif1.11.3 — historique, finalisation non confirmée
 
@@ -151,7 +162,7 @@ Les corrections des lots1 à3 étaient actives dès la1.8.2 selon son identité 
 
 **A10 mis de côté à la demande de l’utilisateur :** usage déclaré personnel et consenti, sans conclusion juridique ajoutée. Le [candidat556fc385](https://github.com/fredbuhr/jessiemessage/commit/556fc38573a97e52cecdf49fba1c25b7b2de5040), branche `docs/privacy-notice-refresh`, reste conservé sans fusion, qualification native ou activation. Le modèle privé est lu par le runtime ; ne pas le déployer pour clore artificiellement cette réserve. Les notes D01/D08 sont [enregistrées](verification-proofs/jm182-hosted-privacy-notes.json), sans accès aux valeurs ni nouvelle saisie à demander. Aucun questionnaire, mécanisme de consentement ou publication de notice n’est ouvert dans ce lot. Les [critères examinés antérieurement](verification-proofs/jm182-a10-purpose-review.json) restent une preuve historique, pas une question à répéter.
 
-À la clôture182, l’application et le checkpoint étaient en1.8.2/SQL36 selon son reçu final. À la clôture183, l’application, le checkpoint et latest étaient1.8.3 selon son reçu final. L’état courant1.11.1/SQL38 et sa publication sont consignés dans REPRISE. Les tests ciblés suivent les modifications ; une CI complète qualifie chaque source stabilisée, sans relancer des suites vertes identiques. Une éventuelle migration exigerait une qualification explicite et un repli compatible ; aucune n’est ajoutée à ce lot.
+À la clôture182, l’application et le checkpoint étaient en1.8.2/SQL36 selon son reçu final. À la clôture183, l’application, le checkpoint et latest étaient1.8.3 selon son reçu final. L’état actuellement rapporté et sa publication sont consignés dans REPRISE. Les tests ciblés suivent les modifications ; une CI complète qualifie chaque source stabilisée, sans relancer des suites vertes identiques. Une éventuelle migration exigerait une qualification explicite et un repli compatible ; aucune n’est ajoutée à ce lot.
 
 A12 décrit aussi de la dette de croissance, sans panne actuelle prouvée : fermeture au-delà de 10 000 campagnes globales, calcul de dernière activité désormais mesuré sur fixtures de 1 000/10 000 événements et budgets de polling. Les durées observées ne sont ni un benchmark ni une qualification de concurrence du mutualisé ; le parcours de l’historique reste une dette de croissance. Ne pas augmenter les plafonds, migrer SQL ou purger l’histoire par principe. Si un seuil ou une mesure démontre un blocage pour l’usage retenu, intégrer le correctif au lot concerné avant qualification. Les extractions générales de parseurs CHECK/contrôleurs restent facultatives après lancement ; retirer seulement les reliquats sans usage démontré.
 
@@ -182,7 +193,7 @@ La décision cite les fonctions abandonnées ci-dessus. Elle ne suffit pas à su
 | **Recherche de messages/notes** | Recherche de clients livrée ; recherche dans les contenus absente. | Périmètre à préciser, sans ajout au lot en cours. |
 | **Réactions** | Absentes. | Usage à préciser, sans engagement de développement automatique. |
 
-La **personnalisation des réponses**, intégrée depuis 1.8.0, est conservée dans la1.11.1 active ; l’utilisateur confirme le fonctionnement de la liste commune. Les sujets de cette table restent à préciser et non ouverts ; ils n’autorisent pas l’ouverture implicite d’autres évolutions.
+La **personnalisation des réponses**, intégrée depuis 1.8.0, reste conservée ; REPRISE donne la version active ; l’utilisateur confirme le fonctionnement de la liste commune. Les sujets de cette table restent à préciser et non ouverts ; ils n’autorisent pas l’ouverture implicite d’autres évolutions.
 
 ## Exploitation et limites conservées
 
@@ -198,7 +209,7 @@ La récupération autonome après perte totale de l’hôte, le témoin frais à
 
 Conserver des checkpoints Git reprenables et la preuve de chaque opération distante, tout en poursuivant plusieurs sous-tâches cohérentes d’un même livrable sans demander une nouvelle permission générale. Ne pas relancer les mêmes audits et suites vertes sans changement, échec ou préoccupation nouvelle. Regrouper les contrôles quand leurs dépendances le permettent ; ne jamais promouvoir une omission ou un test unitaire en essai réel sur téléphone, hébergement ou compte client.
 
-**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Les quatre lots de correction sont livrés ; aucun lot technique ne reste ouvert pour1.8.2, et les réserves conservent leur portée sans ouvrir automatiquement un travail. Conserver un checkpoint publié après chaque résultat cohérent : branche/commit/arbre, contrôles acquis, limites et prochaine action unique. Après interruption, lire le résultat durable avant toute nouvelle mutation. La livraison active rapportée1.11.1, sa publication et son checkpoint privé sont alignés selon le reçu final utilisateur ; ses preuves natives et hébergées restent distinctes des cas non essayés. La sauvegarde hébergée reste volontairement reportée. Les contrats et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) sont conservés sans réétiquetage.
+**À chaque étape, annoncer ce qui est fait et ce qui reste pour le résultat en cours.** Les quatre lots de correction sont livrés ; aucun lot technique ne reste ouvert pour1.8.2, et les réserves conservent leur portée sans ouvrir automatiquement un travail. Conserver un checkpoint publié après chaque résultat cohérent : branche/commit/arbre, contrôles acquis, limites et prochaine action unique. Après interruption, lire le résultat durable avant toute nouvelle mutation. Lors de sa clôture historique, la livraison1.11.1, sa publication et son checkpoint privé étaient alignés selon le reçu final utilisateur ; ses preuves natives et hébergées restent distinctes des cas non essayés. La sauvegarde hébergée reste volontairement reportée. Les contrats et preuves historiques du [cycle de vie vidéo](video-lifecycle-180.md) sont conservés sans réétiquetage.
 
 ## Livraisons closes
 

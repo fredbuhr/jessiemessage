@@ -250,15 +250,19 @@ export function createChatHandler(service, { origin, clientConversationExporter 
         const seen = new Set();
         const items = result.items.map(item => {
           const conversation = safeConversation(item?.conversation, "admin");
-          const message = safeMessage(item?.message, { role: "admin", conversationId: conversation.id });
-          if (typeof item.unread !== "boolean" || message.sender !== "peer" || message.deletedAt !== null || seen.has(message.id)
-            || item.unread !== (BigInt(message.sequence) > BigInt(conversation.lastReadSequence))) throw unavailable();
-          seen.add(message.id);
+          const message = item?.message === null ? null : safeMessage(item?.message, { role: "admin", conversationId: conversation.id });
+          if (typeof item.unread !== "boolean" || seen.has(conversation.id) || message === null && item.unread
+            || message !== null && (message.deletedAt !== null || message.createdAt < conversation.createdAt
+              || BigInt(message.sequence) > BigInt(conversation.latestSequence))
+            || item.unread !== (conversation.unreadCount > 0)) throw unavailable();
+          seen.add(conversation.id);
           return { conversation, message, unread: item.unread };
         });
         for (let i = 1; i < items.length; i++) {
           const a = items[i - 1], b = items[i];
-          if (Number(a.unread) < Number(b.unread) || a.unread === b.unread && (a.message.createdAt < b.message.createdAt)) throw unavailable();
+          // Wire dates have millisecond precision. Equal milliseconds may still
+          // differ in SQL microseconds, so only the store can validate that tie.
+          if ((a.message?.createdAt ?? a.conversation.createdAt) < (b.message?.createdAt ?? b.conversation.createdAt)) throw unavailable();
         }
         reply(response, method, 200, { items, hasMore: result.hasMore, nextCursor: result.nextCursor });
       } else if (route.kind === "conversation") {

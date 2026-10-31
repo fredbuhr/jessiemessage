@@ -23,7 +23,7 @@ export function createNotificationWorker({ store, transport, config, clock = Dat
     || !Number.isInteger(batchSize) || batchSize < 1 || batchSize > 5 || !Number.isInteger(pollMilliseconds) || pollMilliseconds < 1000 || pollMilliseconds > 300000
     || leaseMilliseconds !== 90000 || maxAttempts !== 6
     || [onError, onEvent, onState].some((callback) => callback !== undefined && typeof callback !== "function")) throw new NotificationWorkerError();
-  let active = null, timer = null, started = false, stopped = false, stopping = null, lastCleanupAt = null;
+  let active = null, timer = null, started = false, stopped = false, stopping = null, lastCleanupAt = null, fullBatch = false;
   const controller = new AbortController();
   function now() {
     const value = clock();
@@ -48,6 +48,9 @@ export function createNotificationWorker({ store, transport, config, clock = Dat
     if (stopped) return counts;
     const jobs = await store.claimDue({ now: now(), limit: batchSize, leaseMs: leaseMilliseconds });
     if (!Array.isArray(jobs) || jobs.length > batchSize) throw new NotificationWorkerError();
+    // Count claims rather than delivery counters: one retry is both failed and
+    // deferred. Only a genuinely full bounded batch can signal a ready backlog.
+    fullBatch = jobs.length === batchSize;
     for (const job of jobs) {
       // Claims are recoverable after their lease. On shutdown, return all jobs
       // we have not sent instead of spending the remainder of the lease.
@@ -107,7 +110,9 @@ export function createNotificationWorker({ store, transport, config, clock = Dat
   function runOnce() {
     if (stopped) return Promise.reject(new NotificationWorkerError());
     if (!active) {
+      fullBatch = false;
       active = Promise.resolve().then(batch).then((counts) => { state({ state: "idle", counts: Object.freeze({ ...counts }) }); return counts; }, () => {
+        fullBatch = false;
         state({ state: "error", code: "NOTIFICATIONS_WORKER_FAILED" });
         observe(onError, { code: "NOTIFICATIONS_WORKER_FAILED" });
         throw new NotificationWorkerError();
@@ -118,7 +123,7 @@ export function createNotificationWorker({ store, transport, config, clock = Dat
   }
   function schedule(delay) {
     if (!started || stopped) return;
-    timer = setTimeout(() => { timer = null; void runOnce().catch(() => {}).finally(() => schedule(pollMilliseconds)); }, delay);
+    timer = setTimeout(() => { timer = null; void runOnce().catch(() => {}).finally(() => schedule(fullBatch ? 0 : pollMilliseconds)); }, delay);
     timer.unref?.();
   }
   return Object.freeze({ runOnce,

@@ -1,6 +1,6 @@
 # Évolution 1.12.0 — inscription et échanges
 
-Les quatre demandes du30octobre et la simplification du31octobre sont implémentées dans une seule1.12.0 publiée, encore non activée : confirmations plus rapides, accès après confirmation sans approbation admin supplémentaire, grandes photos mobiles et Entrée pour envoyer avec bouton de retour à la ligne.
+Les quatre demandes du30octobre et la simplification du31octobre sont implémentées dans une seule1.12.0 publiée, dont le démarrage est rapporté dans REPRISE : confirmations plus rapides, accès après confirmation sans approbation admin supplémentaire, grandes photos mobiles et Entrée pour envoyer avec bouton de retour à la ligne.
 
 ## Confirmation automatique — état final du31octobre
 
