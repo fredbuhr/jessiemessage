@@ -277,11 +277,17 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       assert.equal((await connection.query("SELECT id FROM email_verifications WHERE id = ?", [collision.verification.id])).length, 0);
     });
 
-    await t.test("single-use email verification activates invited access and creates one conversation without inventing age assurance", async () => {
+    await t.test("email verification activates once and acknowledges repeated openings without changing access or sessions", async () => {
       const fixture = await registered();
       const results = await Promise.all([store.verifyEmail(fixture.verification.tokenHash, { now }), store.verifyEmail(fixture.verification.tokenHash, { now })]);
-      assert.equal(results.filter(Boolean).length, 1);
-      assert.equal(await store.verifyEmail(fixture.verification.tokenHash, { now }), false);
+      assert.deepEqual(results, [true, true]);
+      const before = (await connection.query("SELECT email_verified_at, access_approved_at, access_expires_at, updated_at FROM users WHERE id = ?", [fixture.user.id]))[0];
+      const beforeToken = (await connection.query("SELECT consumed_at, revoked_at FROM email_verifications WHERE id = ?", [fixture.verification.id]))[0];
+      assert.equal(await store.verifyEmail(fixture.verification.tokenHash, { now: now + 1000 }), true);
+      assert.deepEqual((await connection.query("SELECT email_verified_at, access_approved_at, access_expires_at, updated_at FROM users WHERE id = ?", [fixture.user.id]))[0], before);
+      assert.deepEqual((await connection.query("SELECT consumed_at, revoked_at FROM email_verifications WHERE id = ?", [fixture.verification.id]))[0], beforeToken);
+      assert.equal((await connection.query("SELECT id FROM sessions WHERE user_id = ?", [fixture.user.id])).length, 0, "a mailbox token does not open a client session");
+      assert.equal(await store.verifyEmail(fixture.verification.tokenHash, { now: fixture.verification.expiresAt }), false, "an expired link cannot be acknowledged");
       const record = await store.getClientLoginRecord(fixture.user.email);
       assert.deepEqual(record, { id: fixture.user.id, role: "client", status: "active", passwordHash, emailVerified: true, credentialVersion: 1 });
       const { accepted, session } = await login(fixture);
@@ -297,6 +303,12 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       assert.equal(row.status, "active"); assert.equal(row.age_assured_at, null); assert.equal(row.access_approved_at, sqlDate(now));
       const conversations = await connection.query("SELECT admin_id FROM conversations WHERE client_id = ?", [fixture.user.id]);
       assert.equal(conversations.length, 1); assert.ok(conversations[0].admin_id.equals(admin.id));
+      for (const status of ["suspended", "revoked", "deleted"]) {
+        await connection.query("UPDATE users SET status = ? WHERE id = ?", [status, fixture.user.id]);
+        assert.equal(await store.verifyEmail(fixture.verification.tokenHash, { now }), false, status + " remains blocked");
+        assert.equal((await connection.query("SELECT status FROM users WHERE id = ?", [fixture.user.id]))[0].status, status);
+      }
+      await connection.query("UPDATE users SET status = 'active' WHERE id = ?", [fixture.user.id]);
     });
 
     async function legacyConfirmedPending() {
@@ -351,7 +363,7 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
           assert.equal(user.email_verified_at, elapsed < 1000 ? sqlDate(at) : null);
           assert.equal(verification.consumed_at, elapsed < 1000 ? sqlDate(at) : null); assert.equal(verification.revoked_at, null);
           assert.equal(queued.status, elapsed < 1000 ? "cancelled" : "pending");
-          if (elapsed < 1000) assert.equal(await observed.store.verifyEmail(fixture.verification.tokenHash, { now }), false);
+          if (elapsed < 1000) assert.equal(await observed.store.verifyEmail(fixture.verification.tokenHash, { now }), true);
         } finally { try { await connection.rollback(); } catch {} if (pending) await pending.catch(() => {}); }
       }
     });

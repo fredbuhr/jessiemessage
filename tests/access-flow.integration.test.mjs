@@ -149,7 +149,9 @@ test("real HTTP invitation, encrypted verification mail and gated client access 
       const verified = await request("/api/access/verify-email", { method: "POST", body: { token: inbox[0].token } });
       assert.equal(verified.status, 200);
       assert.deepEqual(verified.body, { status: "email_verified" });
-      assert.equal((await request("/api/access/verify-email", { method: "POST", body: { token: inbox[0].token } })).status, 401);
+      const acknowledged = await request("/api/access/verify-email", { method: "POST", body: { token: inbox[0].token } });
+      assert.equal(acknowledged.status, 200); assert.deepEqual(acknowledged.body, { status: "email_verified" });
+      assert.equal(acknowledged.headers.get("set-cookie"), null, "reopening a confirmed link never opens a session");
       const login = await request("/api/access/login", { method: "POST", body: { email: clientEmail, password: clientPassword } });
       assert.equal(login.status, 200);
       assert.match(login.headers.get("set-cookie"), /^__Host-jessie_client=[A-Za-z0-9_-]{43}; Path=\/; Max-Age=\d+; Secure; HttpOnly; SameSite=Strict$/);

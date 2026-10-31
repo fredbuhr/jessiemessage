@@ -2,6 +2,9 @@
 
 // Only fixed interface sources belong in this catalog. Account fields stay raw.
 globalThis.JessieI18n?.register({
+  "La confirmation se fait automatiquement à l’ouverture du lien.": "Your email is confirmed automatically when this link opens.",
+  "Confirmation de ton e-mail en cours…": "Confirming your email…",
+  "Réessayer la confirmation": "Retry confirmation",
   "Mon espace est réservé aux adultes. Confirme ton e-mail pour activer automatiquement ton accès. Cette déclaration ne vérifie pas ta majorité.": "My space is for adults. Confirm your email to activate access automatically. This declaration does not verify your age.",
   "La messagerie sera disponible après confirmation de ton e-mail.": "Messaging will be available after you confirm your email.",
   "Ton e-mail est confirmé. Reconnecte-toi pour activer ton accès.": "Your email is confirmed. Sign in again to activate your access.",
