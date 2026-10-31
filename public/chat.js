@@ -1,4 +1,4 @@
-import { makeConversationState, belongsTo, orderedMessages, mergeMessages, mergeConversation, mergeEvents, sequence, compareSequence, maxSequence, validBody, validCaption, prepareSend, prepareImageSend, completeImageUpload, prepareVideoSend, completeVideoUpload, rejectPendingVideoSend, mediaStillCurrent, createObjectUrlCache, retrySend, rejectPendingSend, rejectPendingImageSend, nearBottom, shouldScroll, readableSequence, inboxRefreshPlan } from "/chat-model.js";
+import { makeConversationState, belongsTo, orderedMessages, mergeMessages, mergeConversation, mergeEvents, sequence, compareSequence, maxSequence, validBody, validCaption, prepareSend, prepareImageSend, completeImageUpload, prepareVideoSend, completeVideoUpload, rejectPendingVideoSend, mediaStillCurrent, createObjectUrlCache, retrySend, rejectPendingSend, rejectPendingImageSend, nearBottom, shouldScroll, readableSequence, inboxRefreshPlan, boundMessageWindow, currentHistoryPage } from "/chat-model.js";
 import { prepareImageUpload } from "/image-preparation.js";
 import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "/photo-batch.js";
 import { quickReplyOptions } from "/quick-replies.js";
@@ -38,8 +38,10 @@ let pollTimer = null; let cycleRunning = false; let retryDelay = 3000; let sessi
 let inboxCursor = null; let inboxMore = false; let inboxLoading = false;
 let inboxRefreshCursor = null; let lastInboxRefresh = 0;
 let receivedEnabled = false, receivedLoading = false, receivedCursor = null, receivedMore = false, receivedEpoch = 0, receivedRefreshedAt = 0;
-let receivedExpanded = false;
+let receivedExpanded = false; let receivedPages = [null]; let receivedPageIndex = 0;
 const receivedItems = new Map();
+let historyFillTimer = null; let historyAutoRemaining = 3; let historyAutoBlocked = false; let historyAutoArmed = false;
+let historyObserver = null; let photoObserver = null; const waitingPhotos = new Map();
 let olderBusy = false; let sendBusy = false; let logoutBusy = false; let loggingOut = false; let readBusy = false; let readTimer = null; let selectionLoading = false;
 const eventRequests = new Set();
 const imageUrls = createObjectUrlCache(); const imageRequests = new Map();
@@ -247,6 +249,7 @@ function closeMedia(restoreFocus = true) {
   dialogReturnFocus = null;
 }
 function clearImages() {
+  photoObserver?.disconnect(); waitingPhotos.clear();
   for (const value of states.values()) revokeBatchPreviews(value.photoBatch);
   videoVersion += 1; clearVideoPlayers(); revokeVideoPreview(); closeVideoGallery(false);
   mediaVersion += 1;
@@ -260,6 +263,8 @@ function clearImages() {
   for (const image of el("messages").querySelectorAll("img")) image.removeAttribute("src");
 }
 function clearChat() {
+  clearTimeout(historyFillTimer); historyFillTimer = null; historyAutoRemaining = 3; historyAutoBlocked = false; historyAutoArmed = false;
+  historyObserver?.disconnect();
   conversationLoading(false);
   followupUI?.clear();
   syncReceivedOverview();
@@ -450,7 +455,7 @@ async function resumeConnection({ reset = false } = {}) {
       if (crm) await crm.resume();
       if (!fresh(ticket, true) || !visible() || loggingOut) return;
       const state = currentState(); if (state) renderMessages(state);
-      el("workspace").hidden = false; profileUI?.resume(); conversationDownload?.update(); void mountConversationDownload(conversationDownloadCapability); void mountProfile(); void mountFollowup(); void mountAnnouncements(); notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
+      el("workspace").hidden = false; startVisiblePhotos(); profileUI?.resume(); conversationDownload?.update(); void mountConversationDownload(conversationDownloadCapability); void mountProfile(); void mountFollowup(); void mountAnnouncements(); notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
       reconnectAttempt = 0; stopReconnect(); retryDelay = 3000; schedulePolling(0);
       await openNotification();
     } catch (error) {
@@ -1414,9 +1419,10 @@ function clearReceivedRows() {
   ui.forget(el("received-list")); el("received-list").replaceChildren();
 }
 function clearReceived() {
-  receivedEpoch += 1; receivedLoading = false; receivedItems.clear(); receivedCursor = null; receivedMore = false; receivedRefreshedAt = 0; receivedExpanded = false;
+  receivedEpoch += 1; receivedLoading = false; receivedItems.clear(); receivedCursor = null; receivedMore = false; receivedRefreshedAt = 0; receivedExpanded = false; receivedPages = [null]; receivedPageIndex = 0;
   clearReceivedRows(); if (el("received-status")) ui.text(el("received-status"), "");
   if (el("more-received")) el("more-received").hidden = true;
+  if (el("previous-received")) el("previous-received").hidden = true;
 }
 function syncReceivedOverview() {
   if (!el("received-overview")) return;
@@ -1428,22 +1434,24 @@ function syncReceivedOverview() {
 function renderReceived() {
   const list = el("received-list"), focused = document.activeElement?.dataset?.receivedId, focusedProfile = document.activeElement?.dataset?.profileConversationId;
   clearReceivedRows();
-  for (const item of [...receivedItems.values()].sort((a, b) => Number(b.unread) - Number(a.unread) || b.message.createdAt - a.message.createdAt)) {
+  for (const item of [...receivedItems.values()].sort((a, b) => (b.message?.createdAt ?? b.conversation.createdAt) - (a.message?.createdAt ?? a.conversation.createdAt))) {
     const hasProfile = typeof crm?.openClientProfile === "function";
     const button = document.createElement(hasProfile ? "article" : "button"); if (!hasProfile) button.type = "button"; button.className = "received-item";
-    button.dataset.receivedId = item.message.id; button.dataset.receivedConversationId = item.conversation.id; button.classList.toggle("is-unread", item.unread);
+    button.dataset.receivedId = item.message?.id ?? item.conversation.id; button.dataset.receivedConversationId = item.conversation.id; button.classList.toggle("is-unread", item.unread);
     const head = document.createElement("span"); head.className = "received-item-head";
     const name = document.createElement("strong"); ui.rawText(name, crm?.displayName(item.conversation) ?? item.conversation.peerName);
-    const time = document.createElement("time"); time.dateTime = new Date(item.message.createdAt).toISOString();
-    ui.text(time, "{date}", { date: dateParameter(item.message.createdAt, true) }); head.append(name, time);
+    const time = document.createElement("time"); time.dateTime = new Date(item.message?.createdAt ?? item.conversation.createdAt).toISOString();
+    ui.text(time, "{date}", { date: dateParameter(item.message?.createdAt ?? item.conversation.createdAt, true) }); head.append(name, time);
     if (item.unread) { const badge = document.createElement("span"); badge.className = "received-badge"; ui.text(badge, "Non lu"); head.append(badge); }
     const body = document.createElement("span"); body.className = "received-body";
-    const kind = item.message.media ? "Photo" : item.message.video ? "Vidéo" : null;
+    if (item.message?.sender === "me") { const own = document.createElement("span"); ui.text(own, "Vous : "); body.append(own); }
+    const kind = item.message?.media ? "Photo" : item.message?.video ? "Vidéo" : null;
     if (kind) { const label = document.createElement("span"); ui.text(label, kind); body.append(label); }
-    if (item.message.body) { const text = document.createElement("span"); ui.rawText(text, (kind ? " · " : "") + item.message.body); body.append(text); }
+    if (item.message?.body) { const text = document.createElement("span"); ui.rawText(text, (kind ? " · " : "") + item.message.body); body.append(text); }
+    if (!item.message) ui.text(body, "Aucun message pour le moment.");
     if (hasProfile) {
       const open = document.createElement("button"); open.type = "button"; open.className = "received-open";
-      open.dataset.receivedId = item.message.id; open.dataset.receivedConversationId = item.conversation.id;
+      open.dataset.receivedId = item.message?.id ?? item.conversation.id; open.dataset.receivedConversationId = item.conversation.id;
       open.append(head, body);
       const profile = document.createElement("button"); profile.type = "button"; profile.className = "text-button received-profile";
       profile.dataset.profileConversationId = item.conversation.id;
@@ -1451,53 +1459,60 @@ function renderReceived() {
       profile.addEventListener("click", event => { event.stopPropagation(); void crm.openClientProfile(item.conversation.id, profile); });
       button.append(open, profile);
     } else button.append(head, body);
-    button.addEventListener("click", () => { void (async () => {
-      const target = { conversationId: item.conversation.id, sequence: item.message.sequence, messageId: item.message.id };
-      await selectConversation(target.conversationId, { focus: true, target });
-      if (ready && visible() && selected === target.conversationId) focusNotification(target);
-    })(); });
+    button.addEventListener("click", () => { void selectConversation(item.conversation.id, { focus: true }); });
     list.append(button);
   }
-  ui.text(el("received-status"), receivedItems.size ? "" : "Aucun message reçu pour le moment.");
+  ui.text(el("received-status"), receivedItems.size ? "" : "Aucune conversation pour le moment.");
   el("more-received").hidden = !receivedMore; el("more-received").disabled = receivedLoading;
+  el("previous-received").hidden = receivedPageIndex === 0; el("previous-received").disabled = receivedLoading;
   if (focusedProfile) focusVisible(list.querySelector(`[data-profile-conversation-id="${focusedProfile}"]`));
   else if (focused) { const row = [...list.children].find(node => node.dataset.receivedId === focused); focusVisible(row?.querySelector?.(".received-open") ?? row); }
 }
 async function loadReceived(more = false) {
-  if (!receivedEnabled || !ready || !visible() || selected !== null || receivedLoading || more && (!receivedMore || !receivedCursor)) return;
+  if (!receivedEnabled || !ready || !visible() || selected !== null || receivedLoading
+    || more === true && (!receivedMore || !receivedCursor) || more === "previous" && receivedPageIndex === 0) return;
+  const nextPage = more === true ? receivedPageIndex + 1 : more === "previous" ? receivedPageIndex - 1 : 0;
+  const pageCursor = more === true ? receivedCursor : receivedPages[nextPage] ?? null;
   const previousIds = new Set(receivedItems.keys()), restoreMore = more && document.activeElement === el("more-received");
   const ticket = snapshot(), epoch = ++receivedEpoch; receivedLoading = true;
-  el("refresh-received").disabled = true; el("more-received").disabled = true;
-  if (!receivedItems.size) ui.text(el("received-status"), "Chargement des messages reçus…");
+  el("refresh-received").disabled = true; el("more-received").disabled = true; el("previous-received").disabled = true;
+  if (!receivedItems.size) ui.text(el("received-status"), "Chargement des conversations…");
   try {
-    const result = await request(`${chatBase}/inbox?limit=50${more ? `&cursor=${encodeURIComponent(receivedCursor)}` : ""}`);
+    const result = await request(`${chatBase}/inbox?limit=50${pageCursor ? `&cursor=${encodeURIComponent(pageCursor)}` : ""}`);
     if (!fresh(ticket) || epoch !== receivedEpoch || selected !== null) return;
     if (!result || !Array.isArray(result.items) || result.items.length > 50 || typeof result.hasMore !== "boolean"
       || result.hasMore !== (result.nextCursor !== null) || result.hasMore && (result.items.length !== 50 || typeof result.nextCursor !== "string" || !/^[A-Za-z0-9_-]{1,160}$/.test(result.nextCursor))) throw new Error("invalid_received_page");
     const seen = new Set();
     for (const item of result.items) {
+      const message = item?.message;
       if (!item || !/^[a-f0-9]{32}$/.test(item.conversation?.id) || typeof item.conversation.peerName !== "string" || item.conversation.peerName.length > 64
-        || !/^[a-f0-9]{32}$/.test(item.message?.id) || item.message.sender !== "peer" || item.message.deletedAt !== null
-        || typeof item.message.body !== "string" || item.message.body.length > 4096 || !Number.isSafeInteger(item.message.createdAt)
-        || item.message.createdAt < 0 || item.message.createdAt > 253402300799999 || typeof item.unread !== "boolean" || seen.has(item.conversation.id)) throw new Error("invalid_received_item");
-      sequence(item.message.sequence); if (item.message.sequence === "0") throw new Error("invalid_received_item");
+        || typeof item.unread !== "boolean" || seen.has(item.conversation.id)
+        || !Number.isSafeInteger(message?.createdAt ?? item.conversation.createdAt)
+        || (message?.createdAt ?? item.conversation.createdAt) < 0 || (message?.createdAt ?? item.conversation.createdAt) > 253402300799999) throw new Error("invalid_received_item");
+      if (message !== null) {
+        if (!message || !/^[a-f0-9]{32}$/.test(message.id) || !["me", "peer"].includes(message.sender) || message.deletedAt !== null
+          || typeof message.body !== "string" || message.body.length > 4096 || sequence(message.sequence) === "0") throw new Error("invalid_received_item");
+      }
       seen.add(item.conversation.id);
     }
-    if (!more) receivedItems.clear();
-    receivedExpanded = more;
+    if (pageCursor && result.nextCursor === pageCursor) throw new Error("invalid_received_page");
+    receivedItems.clear();
+    if (!more) receivedPages = [null];
+    else if (more === true) receivedPages[nextPage] = pageCursor;
+    receivedPageIndex = nextPage; receivedExpanded = nextPage > 0;
     for (const item of result.items) receivedItems.set(item.conversation.id, item);
     receivedCursor = result.nextCursor; receivedMore = result.hasMore; receivedRefreshedAt = Date.now();
     renderReceived();
-    if (!more) el("received-list").parentElement.scrollTop = 0;
+    el("received-list").parentElement.scrollTop = 0;
     if (restoreMore && !receivedMore) { const row = [...el("received-list").children].find(node => !previousIds.has(node.dataset.receivedConversationId)); focusVisible(row?.querySelector?.(".received-open") ?? row ?? el("received-title")); }
   } catch (error) {
     if (error.stale || epoch !== receivedEpoch) return;
     if (error.status === 401 || error.status === 403) { await handleError(error); return; }
     // Do not retain a deleted message or an old owner's preview after a failed refresh.
     receivedItems.clear(); clearReceivedRows(); receivedCursor = null; receivedMore = false; el("more-received").hidden = true;
-    ui.text(el("received-status"), "Les messages reçus ne sont pas disponibles. Réessaie avec Actualiser.");
+    ui.text(el("received-status"), "Les conversations ne sont pas disponibles. Réessaie avec Actualiser.");
   } finally {
-    if (epoch === receivedEpoch) { receivedLoading = false; el("refresh-received").disabled = false; el("more-received").disabled = false; }
+    if (epoch === receivedEpoch) { receivedLoading = false; el("refresh-received").disabled = false; el("more-received").disabled = false; el("previous-received").disabled = false; }
   }
 }
 el("refresh-received")?.addEventListener("click", () => { void loadReceived(); });
@@ -1505,6 +1520,7 @@ el("open-client-profile")?.addEventListener("click", () => {
   if (role === "admin" && ready && visible() && selected && currentState()?.conversation?.id === selected) void crm?.openClientProfile?.(selected, el("open-client-profile"));
 });
 el("more-received")?.addEventListener("click", () => { void loadReceived(true); });
+el("previous-received")?.addEventListener("click", () => { void loadReceived("previous"); });
 el("show-clients")?.addEventListener("click", () => { el("workspace").classList.add("show-clients"); focusVisible(el("inbox-title")); });
 el("return-received")?.addEventListener("click", () => { el("workspace").classList.remove("show-clients"); focusVisible(el("received-title")); void loadReceived(); });
 ui.onChange(() => { if (role === "admin" && ready && visible() && selected === null && receivedItems.size) renderReceived(); });
@@ -1691,12 +1707,64 @@ function createMessageRow(state, message, contentKey) {
   article.append(meta);
   return row;
 }
+function startMessagePhoto(container) {
+  const record = waitingPhotos.get(container); if (!record) return;
+  const { row, message, state, version } = record;
+  if (!ready || !visible() || el("workspace").hidden || !belongsTo(currentState(), state.id, state.epoch) || messageRows.get(message.sequence) !== row || version !== mediaVersion) return;
+  waitingPhotos.delete(container); photoObserver?.unobserve(container);
+  const attempt = {}; row.mediaVersion = version; row.photoAttempt = attempt;
+  const ticket = { id: state.id, epoch: state.epoch, messageId: message.id, mediaId: message.media.id };
+  loadPhoto(container, message.media, state, { current: () => messageRows.get(message.sequence) === row
+    && version === mediaVersion && row.mediaVersion === version && row.photoAttempt === attempt && mediaStillCurrent(currentState(), ticket) });
+}
+function queueMessagePhoto(row, message, state) {
+  const previous = waitingPhotos.get(row.photo);
+  if (previous?.version === mediaVersion && previous.state === state && previous.message.id === message.id) return;
+  waitingPhotos.set(row.photo, { row, message, state, version: mediaVersion });
+  if (typeof IntersectionObserver === "function") {
+    photoObserver ??= new IntersectionObserver(entries => {
+      for (const entry of entries) if (entry.isIntersecting) startMessagePhoto(entry.target);
+    }, { root: el("message-scroll"), rootMargin: "240px 0px" });
+    photoObserver.observe(row.photo);
+  }
+}
+function startVisiblePhotos() {
+  if (!ready || !visible() || el("workspace").hidden) return;
+  const box = el("message-scroll").getBoundingClientRect();
+  if (box.bottom <= box.top) return;
+  for (const container of waitingPhotos.keys()) {
+    const rect = container.getBoundingClientRect();
+    if (rect.bottom > rect.top && rect.bottom >= box.top - 240 && rect.top <= box.bottom + 240) startMessagePhoto(container);
+  }
+}
+function watchHistory() {
+  if (typeof IntersectionObserver !== "function") return;
+  historyObserver ??= new IntersectionObserver(entries => {
+    if (entries.some(entry => entry.isIntersecting)) scheduleHistoryFill();
+  }, { root: el("message-scroll"), rootMargin: "100px 0px" });
+  historyObserver.disconnect();
+  if (currentState()?.hasMoreBefore) historyObserver.observe(el("older-messages"));
+}
+function scheduleHistoryFill() {
+  if (!historyAutoArmed && el("messages").children.length > 0) return;
+  if (historyFillTimer !== null || !ready || !visible() || selectionLoading || olderBusy || newerBusy || historyAutoBlocked || historyAutoRemaining <= 0) return;
+  historyFillTimer = setTimeout(() => {
+    historyFillTimer = null;
+    const state = currentState();
+    if (!state || !ready || !visible() || selectionLoading || olderBusy || newerBusy) return;
+    if (state.hasMoreBefore && el("message-scroll").scrollTop <= 120) void loadOlder({ automatic: true });
+    else if (state.trimmedAfter && state.hasMoreAfter && nearBottom(el("message-scroll"))) {
+      historyAutoRemaining -= 1; void loadNewer({ automatic: true });
+    }
+  }, 0);
+}
 function renderMessages(state, { initial = false, ownSend = false, prepend = false } = {}) {
   if (!belongsTo(currentState(), state.id, state.epoch)) return;
   const focused = document.activeElement;
   const focusedRow = [...messageRows.values()].find((row) => row.article.contains(focused));
   const scroll = el("message-scroll"); const atBottom = nearBottom(scroll); const anchor = viewportAnchor(); const oldTop = scroll.scrollTop;
   pruneDeletedPhotos(state);
+  boundMessageWindow(state, { retain: prepend ? "oldest" : "latest" });
   // Keep tombstones in state for event cursors and idempotent merging. They
   // have no row in the client view, including after a late history response.
   const messages = orderedMessages(state).filter(message => role === "admin" || message.deletedAt == null);
@@ -1704,13 +1772,15 @@ function renderMessages(state, { initial = false, ownSend = false, prepend = fal
   const retained = new Set(messages.map((message) => message.sequence));
   for (const [key, row] of messageRows) if (!retained.has(key)) {
     if (selectedMessageSequence === key) clearMessageSelection();
-    releaseVideoPlayer(row.video); row.article.remove(); messageRows.delete(key);
+    releaseVideoPlayer(row.video); if (row.photo) { photoObserver?.unobserve(row.photo); waitingPhotos.delete(row.photo); } row.article.remove(); messageRows.delete(key);
   }
   for (const [index, message] of messages.entries()) {
     const contentKey = messageContentKey(message); let row = messageRows.get(message.sequence);
     if (!row || row.contentKey !== contentKey) {
       if (selectedMessageSequence === message.sequence) clearMessageSelection();
-      releaseVideoPlayer(row?.video); row?.article.remove();
+      releaseVideoPlayer(row?.video);
+      if (row?.photo) { photoObserver?.unobserve(row.photo); waitingPhotos.delete(row.photo); }
+      row?.article.remove();
       row = createMessageRow(state, message, contentKey); messageRows.set(message.sequence, row);
     }
     row.article.classList.toggle("notification-target", state.notificationSequence === message.sequence);
@@ -1735,12 +1805,8 @@ function renderMessages(state, { initial = false, ownSend = false, prepend = fal
     if (row.photo && (row.mediaVersion !== mediaVersion || row.photo.dataset.failed === "true")) photos.push({ row, message });
   }
   el("empty-message").hidden = messages.length !== 0;
-  for (const { row, message } of photos) {
-    const version = mediaVersion; const attempt = {}; row.mediaVersion = version; row.photoAttempt = attempt;
-    const ticket = { id: state.id, epoch: state.epoch, messageId: message.id, mediaId: message.media.id };
-    loadPhoto(row.photo, message.media, state, { current: () => messageRows.get(message.sequence) === row
-      && version === mediaVersion && row.mediaVersion === version && row.photoAttempt === attempt && mediaStillCurrent(currentState(), ticket) });
-  }
+  ui.text(el("empty-message"), state.hasMoreBefore || state.hasMoreAfter ? "D’autres messages peuvent se trouver dans l’historique." : "Aucun message pour le moment.");
+  for (const { row, message } of photos) queueMessagePhoto(row, message, state);
   if (shouldScroll({ initial, ownSend, wasNearBottom: atBottom, prepend })) { scroll.scrollTop = scroll.scrollHeight; el("new-messages").hidden = true; }
   else if (anchor) {
     const item = [...container.children].find((node) => node.dataset.sequence === anchor.sequence);
@@ -1752,8 +1818,10 @@ function renderMessages(state, { initial = false, ownSend = false, prepend = fal
   if (state.hasMoreAfter) { el("new-messages").hidden = false; ui.text(el("new-messages"), "Messages récents ↓"); }
   else ui.text(el("new-messages"), "Nouveaux messages ↓");
   if (focusedRow && !focused.isConnected && focusWasLost(focused)) focusMessage(focusedRow.article.dataset.sequence);
+  startVisiblePhotos(); watchHistory(); scheduleHistoryFill();
 }
 function mergeMessagePage(state, result) {
+  if (!currentHistoryPage(state, result)) throw new Error("history_changed");
   const pending = state.pending;
   mergeConversation(state, result.conversation); mergeMessages(state, result.messages);
   // A history page can confirm an uncertain send just like an event. Clear
@@ -1765,7 +1833,7 @@ function mergeMessagePage(state, result) {
 }
 async function selectConversation(id, { focus = false, target = null } = {}) {
   if (focus && !target && pendingNotification) { pendingNotification = null; history.replaceState(null, "", location.pathname); }
-  if (id === selected && !currentState()?.selectionFailed && (!target || currentState()?.messages.get(target.sequence)?.id === target.messageId)) { if (focus) focusVisible(el("message-scroll")); return; }
+  if (id === selected && !currentState()?.selectionFailed && (target ? currentState()?.messages.get(target.sequence)?.id === target.messageId : !currentState()?.hasMoreAfter && !currentState()?.notificationSequence)) { if (focus) focusVisible(el("message-scroll")); return; }
   const previous = currentState(); if (previous) { previous.draft = el("message-body").value; if (previous.pending?.status === "sending") retrySend(previous); }
   selectionEpoch += 1; stopPolling(); abortRequests(true); inboxLoading = false; olderBusy = false; newerBusy = false; sendBusy = false; readBusy = false; selectionLoading = true;
   selected = id;
@@ -1773,37 +1841,42 @@ async function selectConversation(id, { focus = false, target = null } = {}) {
   crm?.selectConversation(id);
   const oldState = states.get(id);
   const state = oldState ? { ...oldState, epoch: selectionEpoch } : makeConversationState(id, selectionEpoch);
-  if (target) { state.messages = new Map(); state.conversation = null; state.notificationSequence = target.sequence; }
+  // Ordinary navigation always opens the current tail, even after this tab
+  // previously displayed an old notification window. Draft/pending state stays.
+  state.messages = new Map(); state.conversation = null; state.notificationSequence = target?.sequence ?? null;
   if (state.pending?.status === "sending") retrySend(state);
-  states.set(id, state);
+  states.delete(id); states.set(id, state);
+  // Keep a small cache of idle conversations. Drafts, attachments and uncertain
+  // sends are pinned until the user completes or discards them.
+  for (const [cachedId, cached] of states) {
+    if (states.size <= 8) break;
+    if (cachedId !== id && !cached.draft && !cached.pending && !cached.imageDraft && !cached.videoDraft && !cached.photoBatch) states.delete(cachedId);
+  }
   clearChat(); el("workspace").classList.add("selected"); document.querySelector(".page").classList.add("has-conversation"); el("message-body").value = state.draft;
   ui.rawText(el("peer-name"), inbox.get(id)?.peerName ?? "Jessie"); ui.text(el("conversation-status"), "Chargement de la conversation…");
   conversationLoading(true);
   renderInbox({ restoreFocus: !focus });
   if (focus) focusVisible(el("message-scroll"));
-  let moreHistory = false, selectionResolved = false;
+  let selectionResolved = false;
   try {
-    if (state.messages.size || state.conversation) { moreHistory = await fetchEvents(state); renderMessages(state, { initial: true }); }
-    else {
-      const anchor = target ? `&after=${(BigInt(target.sequence) - 1n).toString()}` : "";
-      const result = await request(`${conversationPath(state)}/messages?limit=50${anchor}`, { state });
-      const recovered = state.draftHydrated ? null : drafts.read(state.id);
-      state.draftHydrated = true;
-      if (recovered && !state.draft && !state.pending && !state.imageDraft && !state.videoDraft) {
-        state.draft = recovered.text;
-        if (recovered.pending) state.pending = { clientMessageId: recovered.pending.clientMessageId, body: recovered.text, status: "retry" };
-      }
-      mergeMessagePage(state, result);
-      el("message-body").value = state.draft;
-      state.eventCursor = sequence(result.eventCursor); state.hasMoreBefore = result.hasMoreBefore; state.nextBefore = result.nextBefore;
-      state.hasMoreAfter = result.hasMoreAfter === true; state.nextAfter = result.nextAfter ?? null;
-      inbox.set(id, result.conversation);
-      renderMessages(state, { initial: true });
-      if (recovered && state.pending) notice("Un envoi reste à confirmer. Réessaie cet envoi pour reprendre la même demande.");
-      else if (recovered && state.draft) notice(recovered.hadAttachment ? "Ton brouillon texte a été retrouvé. Ajoute à nouveau les pièces jointes." : "Ton brouillon texte a été retrouvé.");
+    const anchor = target ? `&after=${(BigInt(target.sequence) - 1n).toString()}` : "";
+    const result = await request(`${conversationPath(state)}/messages?limit=50${anchor}`, { state });
+    const recovered = state.draftHydrated ? null : drafts.read(state.id);
+    state.draftHydrated = true;
+    if (recovered && !state.draft && !state.pending && !state.imageDraft && !state.videoDraft) {
+      state.draft = recovered.text;
+      if (recovered.pending) state.pending = { clientMessageId: recovered.pending.clientMessageId, body: recovered.text, status: "retry" };
     }
+    mergeMessagePage(state, result);
+    el("message-body").value = state.draft;
+    state.eventCursor = sequence(result.eventCursor); state.hasMoreBefore = result.hasMoreBefore; state.nextBefore = result.nextBefore;
+    state.hasMoreAfter = result.hasMoreAfter === true; state.nextAfter = result.nextAfter ?? null;
+    inbox.set(id, result.conversation);
+    renderMessages(state, { initial: true });
+    if (recovered && state.pending) notice("Un envoi reste à confirmer. Réessaie cet envoi pour reprendre la même demande.");
+    else if (recovered && state.draft) notice(recovered.hadAttachment ? "Ton brouillon texte a été retrouvé. Ajoute à nouveau les pièces jointes." : "Ton brouillon texte a été retrouvé.");
     state.selectionFailed = false; selectionResolved = true;
-    if (!moreHistory) armMessageAnnouncement(state); schedulePolling(moreHistory ? 300 : retryDelay);
+    armMessageAnnouncement(state);
   } catch (error) {
     await handleError(error, state);
     if (!error.stale && belongsTo(currentState(), state.id, state.epoch)) {
@@ -1811,21 +1884,27 @@ async function selectConversation(id, { focus = false, target = null } = {}) {
       ui.text(el("conversation-status"), "La connexion est momentanément indisponible. Réessaie dans un instant.");
     }
   }
-  finally { if (belongsTo(currentState(), state.id, state.epoch)) { conversationLoading(false); selectionLoading = false; if (selectionResolved && state.conversation) renderMeta(state); schedulePolling(moreHistory ? 300 : retryDelay); } }
+  finally { if (belongsTo(currentState(), state.id, state.epoch)) { conversationLoading(false); selectionLoading = false; if (selectionResolved && state.conversation) renderMeta(state); scheduleHistoryFill(); schedulePolling(retryDelay); } }
 }
-async function loadNewer({ latest = false } = {}) {
-  const state = currentState(); if (!state || newerBusy || !latest && (!state.hasMoreAfter || !state.nextAfter)) return;
+async function loadNewer({ latest = false, automatic = false } = {}) {
+  const state = currentState(); if (!state || newerBusy || olderBusy || !visible() || !latest && (!state.hasMoreAfter || !state.nextAfter)) return;
+  if (!automatic) { historyAutoRemaining = 3; historyAutoBlocked = false; }
+  const boundary = state.nextAfter;
   const ticket = snapshot(state); newerBusy = true;
   try {
-    const result = await request(`${conversationPath(state)}/messages?limit=50${latest ? "" : `&after=${state.nextAfter}`}`, { state });
-    if (latest) { state.messages = new Map(); state.eventCursor = sequence(result.eventCursor); state.notificationSequence = null; }
+    const result = await request(`${conversationPath(state)}/messages?limit=50${latest ? "" : `&after=${boundary}`}`, { state });
+    // Validate against the event stream BEFORE discarding tombstones/cursor.
+    if (latest && compareSequence(result.eventCursor, state.eventCursor) < 0) throw new Error("history_changed");
+    if (!latest && (result.hasMoreAfter && (!result.nextAfter || compareSequence(result.nextAfter, boundary) <= 0)
+      || result.messages.some(message => compareSequence(message.sequence, boundary) <= 0))) throw new Error("invalid_history_progress");
+    if (latest) { state.messages = new Map(); state.eventCursor = sequence(result.eventCursor); state.notificationSequence = null; state.trimmedAfter = false; }
     mergeMessagePage(state, result);
     if (latest) { state.hasMoreBefore = result.hasMoreBefore; state.nextBefore = result.nextBefore; }
     state.hasMoreAfter = result.hasMoreAfter === true; state.nextAfter = result.nextAfter ?? null;
     renderMessages(state, { initial: latest });
     return true;
-  } catch (error) { await handleError(error, state); }
-  finally { if (fresh(ticket)) { newerBusy = false; if (el("newer-messages")) el("newer-messages").disabled = false; } }
+  } catch (error) { historyAutoBlocked = true; await handleError(error, state); }
+  finally { if (fresh(ticket)) { newerBusy = false; if (el("newer-messages")) el("newer-messages").disabled = false; scheduleHistoryFill(); } }
 }
 function focusNotification(target) {
   const state = currentState(), message = state?.messages.get(target.sequence);
@@ -1862,17 +1941,22 @@ async function openNotification() {
     if (pendingNotification && pendingNotification !== reference && ready && visible()) void openNotification();
   }
 }
-async function loadOlder() {
-  const state = currentState(); if (!state || olderBusy || !state.hasMoreBefore || !state.nextBefore) return;
+async function loadOlder({ automatic = false } = {}) {
+  const state = currentState(); if (!state || olderBusy || newerBusy || !ready || !visible() || !state.hasMoreBefore || !state.nextBefore) return;
+  if (automatic && (historyAutoBlocked || historyAutoRemaining <= 0)) return;
+  if (automatic) historyAutoRemaining -= 1; else { historyAutoRemaining = 3; historyAutoBlocked = false; }
+  const boundary = state.nextBefore;
   const ticket = snapshot(state); const paginator = el("older-messages"), restorePaginator = document.activeElement === paginator;
   olderBusy = true; renderMeta(state);
   try {
-    const result = await request(`${conversationPath(state)}/messages?before=${state.nextBefore}&limit=50`, { state });
+    const result = await request(`${conversationPath(state)}/messages?before=${boundary}&limit=50`, { state });
+    if (result.hasMoreBefore && (!result.nextBefore || compareSequence(result.nextBefore, boundary) >= 0)
+      || result.messages.some(message => compareSequence(message.sequence, boundary) >= 0)) throw new Error("invalid_history_progress");
     mergeMessagePage(state, result);
     state.hasMoreBefore = result.hasMoreBefore; state.nextBefore = result.nextBefore; renderMessages(state, { prepend: true });
-  } catch (error) { await handleError(error, state); }
+  } catch (error) { historyAutoBlocked = true; await handleError(error, state); }
   finally { if (fresh(ticket)) {
-    olderBusy = false; renderMeta(state);
+    olderBusy = false; renderMeta(state); scheduleHistoryFill();
     if (restorePaginator && focusWasLost(paginator) && !focusVisible(paginator)) focusVisible(el("message-scroll"));
   } }
 }
@@ -2447,7 +2531,13 @@ el("new-messages").addEventListener("click", () => {
   el("message-scroll").scrollTop = el("message-scroll").scrollHeight; el("new-messages").hidden = true;
   if (restoreFocus) focusVisible(el("message-scroll")); scheduleRead();
 });
-el("message-scroll").addEventListener("scroll", () => { if (nearBottom(el("message-scroll")) && !currentState()?.hasMoreAfter) el("new-messages").hidden = true; scheduleRead(); }, { passive: true });
+el("message-scroll").addEventListener("scroll", () => {
+  if (nearBottom(el("message-scroll")) && !currentState()?.hasMoreAfter) el("new-messages").hidden = true;
+  startVisiblePhotos(); scheduleHistoryFill(); scheduleRead();
+}, { passive: true });
+for (const event of ["wheel", "touchstart", "keydown", "pointerdown"]) el("message-scroll").addEventListener(event, () => {
+  historyAutoArmed = true; historyAutoRemaining = 3; historyAutoBlocked = false; scheduleHistoryFill();
+}, { passive: true });
 el("back-to-inbox").addEventListener("click", () => {
   const state = currentState(); const returnId = state?.id;
   if (state) { state.draft = el("message-body").value; if (state.pending?.status === "sending") retrySend(state); }
@@ -2595,14 +2685,18 @@ async function start({ session = null } = {}) {
         await selectConversation(conversation.id);
       }
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
-      ready = true; reconnectAttempt = 0; stopReconnect(); retryConnection(false); el("workspace").hidden = false; notice("", false, "session-status");
+      ready = true; reconnectAttempt = 0; stopReconnect(); retryConnection(false); el("workspace").hidden = false;
+      // The initial selection was rendered behind the connection shell, where
+      // display:none reports zero geometry. Anchor only after it has layout.
+      if (currentState()?.conversation) el("message-scroll").scrollTop = el("message-scroll").scrollHeight;
+      startVisiblePhotos(); notice("", false, "session-status");
       if (currentState()?.conversation) renderMeta(currentState());
       else if (role === "admin") { syncReceivedOverview(); await loadReceived(); }
       await mountProfile(); await mountFollowup();
       conversationDownloadCapability = capability.conversationExport;
       await mountConversationDownload(conversationDownloadCapability);
       if (!fresh(task.ticket, true) || !visible() || loggingOut) throw staleResponse();
-      mountNotificationSettings(); void mountAnnouncements(); scheduleRead(); schedulePolling();
+      mountNotificationSettings(); void mountAnnouncements(); scheduleRead(); scheduleHistoryFill(); schedulePolling();
       await openNotification();
     } catch (error) {
       if (error.stale || !fresh(task.ticket, true)) return;

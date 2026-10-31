@@ -48,8 +48,8 @@ let invitationCreationBlocked = false;
 const controllers = new Set();
 const accessTools = document.getElementById("access-tools");
 const accessPages = {
-  invitations: { cursor: null, nextCursor: null, hasMore: false, epoch: 0 },
-  clients: { cursor: null, nextCursor: null, hasMore: false, epoch: 0 },
+  invitations: { cursor: null, nextCursor: null, hasMore: false, epoch: 0, back: [], number: 1, state: "all" },
+  clients: { cursor: null, nextCursor: null, hasMore: false, epoch: 0, back: [], number: 1, state: "all" },
 };
 function updateHomeNavigation() {
   const home = location.pathname === "/admin";
@@ -87,8 +87,9 @@ function clearAccess() {
   }
   for (const kind of ["invitations", "clients"]) {
     const page = accessPages[kind];
-    page.cursor = null; page.nextCursor = null; page.hasMore = false; page.epoch += 1;
+    page.cursor = null; page.nextCursor = null; page.hasMore = false; page.back = []; page.number = 1; page.epoch += 1;
     document.getElementById(`${kind}-pagination`).hidden = true;
+    document.getElementById(`${kind}-pagination-top`).hidden = true;
     adminUI.rawText(document.getElementById(`${kind}-page-note`), "");
     updatePagination(kind);
   }
@@ -205,6 +206,7 @@ function setBusy(value) {
   for (const root of [accessTools, document.getElementById("devices-panel")]) for (const button of root.querySelectorAll("button")) button.disabled = value || button.dataset.unavailable === "true";
   document.getElementById("invitation-create").disabled = value || invitationCreationBlocked;
   document.getElementById("invitation-format").disabled = value;
+  document.getElementById("invitation-state").disabled = value;
 }
 
 async function request(path, { body, mutation = false, login = false } = {}) {
@@ -441,15 +443,22 @@ function actionButton(card, label, action, disabled = false) {
   button.dataset.unavailable = String(disabled);
   button.addEventListener("click", () => { void accessAction(action); }); card.append(button);
 }
+function compactItem(titleText, lines, options = {}) {
+  const full = item(titleText, lines, options), card = document.createElement("details"); card.className = "access-item";
+  const children = [...full.children], summary = document.createElement("summary"); summary.className = "access-summary"; summary.append(children[0]);
+  if (options.summary) { const note = document.createElement("span"); note.className = "access-summary-note"; if (typeof options.summary === "object") adminUI.text(note, options.summary.source, options.summary.params); else adminUI.text(note, options.summary); summary.append(note); }
+  card.append(summary, ...children.slice(1)); return card;
+}
 function paintInvitations(invitations) {
   const container = document.getElementById("invitations-list"); adminUI.forget(container); container.replaceChildren();
   if (!invitations.length) emptyList(container, "Aucune invitation sur cette page.");
   const states = { pending: "Disponible", used: "Utilisée", expired: "Expirée", revoked: "Révoquée" };
   for (const invitation of invitations) {
-    const card = item(`Invitation · ${states[invitation.state]}`, [
+    const card = compactItem(`Invitation · ${states[invitation.state]}`, [
       adminLine("Créée le {created} · valable jusqu’au {expires}", { created: adminUI.dateParam(invitation.createdAt), expires: adminUI.dateParam(invitation.expiresAt) }),
-      invitation.accessDays === null ? "Accès sans limite de durée après confirmation de l’e-mail." : adminLine("Accès de {days} jours après confirmation de l’e-mail.", { days: adminUI.numberParam(invitation.accessDays) }),
-    ]);
+      invitation.accessDays === null ? "Accès sans limite de durée après confirmation de l’e-mail." : adminLine(invitation.accessDays === 1 ? "Accès de {days} jour après confirmation de l’e-mail." : "Accès de {days} jours après confirmation de l’e-mail.", { days: adminUI.numberParam(invitation.accessDays) }),
+    ], { summary: adminLine("Créée le {date}", { date: adminUI.dateParam(invitation.createdAt) }) });
+    card.dataset.invitationId = invitation.id; card.dataset.invitationState = invitation.state;
     if (invitation.state === "pending") actionButton(card, "Révoquer l’invitation", async () => {
       await request(`/api/admin/invitations/${invitation.id}/revoke`, { mutation: true });
       clearInvitation();
@@ -464,12 +473,12 @@ function paintClients(clients, renewalDraft = null) {
   const states = { pending: "En attente", active: "Actif", suspended: "Suspendu", revoked: "Révoqué", deleted: "Supprimé" };
   for (const client of clients) {
     const expired = client.status === "active" && client.accessExpiresAt !== null && client.accessExpiresAt <= Date.now();
-    const card = item(client.pseudonym, [{ raw: client.email },
+    const card = compactItem(client.pseudonym, [{ raw: client.email },
       `État : ${expired ? "Accès expiré" : states[client.status]} · E-mail : ${client.emailVerified ? "vérifié" : "en attente"}`,
       client.invitationConsumed ? "Invitation utilisée" : "Invitation : en attente",
       client.approved ? "Activation enregistrée" : !client.emailVerified ? "Confirmation de l’e-mail attendue" : client.status === "pending" && client.invitationConsumed ? "Activation automatique à la connexion" : "Accès non activé",
       client.accessExpiresAt === null ? "Aucune date de fin d’accès." : adminLine("Fin d’accès : {date}", { date: adminUI.dateParam(client.accessExpiresAt) }),
-    ], { rawTitle: true });
+    ], { rawTitle: true, summary: expired ? "Accès expiré" : states[client.status] });
     if (client.status === "active" && client.admissionPolicy === "manual_invitation" && client.emailVerified && client.invitationConsumed && client.approved && Number.isSafeInteger(client.accessExpiresAt)) {
       const renewal = document.createElement("form"); renewal.className = "renewal-form";
       const label = document.createElement("label");
@@ -500,55 +509,59 @@ function paintClients(clients, renewalDraft = null) {
       closure.href = `/admin/closures?client=${encodeURIComponent(client.id)}`;
       adminUI.text(closure, "Fermer définitivement"); card.append(closure);
     }
+    if (renewalDraft?.id === client.id) card.open = true;
     container.append(card);
   }
 }
 function updatePagination(kind) {
   const page = accessPages[kind];
-  for (const [suffix, unavailable] of [["next", !page.hasMore], ["first", page.cursor === null]]) {
-    const button = document.getElementById(`${kind}-${suffix}`);
-    button.dataset.unavailable = String(unavailable); button.disabled = busy || unavailable;
+  for (const [suffix, unavailable] of [["next", !page.hasMore], ["previous", page.back.length === 0], ["first", page.cursor === null]]) {
+    for (const id of [`${kind}-${suffix}`, `${kind}-${suffix}-top`]) {
+      const button = document.getElementById(id); if (!button) continue;
+      button.dataset.unavailable = String(unavailable); button.disabled = busy || unavailable;
+    }
   }
 }
 function pagePath(kind, cursor) {
-  return `/api/admin/${kind}?limit=50${cursor === null ? "" : `&cursor=${encodeURIComponent(cursor)}`}`;
+  const state = accessPages[kind].state;
+  return `/api/admin/${kind}?limit=25${cursor === null ? "" : `&cursor=${encodeURIComponent(cursor)}`}${kind === "invitations" && state !== "all" ? `&state=${state}` : ""}`;
 }
 async function readAccessPage(kind, cursor) {
   const page = accessPages[kind], epoch = ++page.epoch;
   const result = await request(pagePath(kind, cursor));
   if (page.epoch !== epoch) throw stale();
   const entries = result?.[kind];
-  if (!Array.isArray(entries) || entries.length > 50 || typeof result.hasMore !== "boolean"
-    || (result.hasMore ? entries.length !== 50 || typeof result.nextCursor !== "string" || !/^[A-Za-z0-9_-]{1,256}$/.test(result.nextCursor) || result.nextCursor === cursor : result.nextCursor !== null)) throw new Error("invalid_page");
+  if (!Array.isArray(entries) || entries.length > 25 || typeof result.hasMore !== "boolean"
+    || (result.hasMore ? entries.length !== 25 || typeof result.nextCursor !== "string" || !/^[A-Za-z0-9_-]{1,256}$/.test(result.nextCursor) || result.nextCursor === cursor : result.nextCursor !== null)) throw new Error("invalid_page");
   if (kind === "clients" && entries.some((client) => client?.admissionPolicy !== "manual_invitation"
     || ["emailVerified", "invitationConsumed", "ageAssured", "approved"].some((key) => typeof client[key] !== "boolean"))) throw new Error("invalid_page");
-  return { kind, cursor, epoch, entries, nextCursor: result.nextCursor, hasMore: result.hasMore };
+  return { kind, cursor, epoch, state: page.state, entries, nextCursor: result.nextCursor, hasMore: result.hasMore };
 }
 function paintAccessPage(result, { renewalDraft = null } = {}) {
   const page = accessPages[result.kind];
-  if (page.epoch !== result.epoch) throw stale();
+  if (page.epoch !== result.epoch || page.state !== result.state) throw stale();
   page.cursor = result.cursor; page.nextCursor = result.nextCursor; page.hasMore = result.hasMore;
   if (result.kind === "clients") paintClients(result.entries, renewalDraft); else paintInvitations(result.entries);
-  const label = result.kind === "clients"
-    ? `Comptes clients ${result.cursor === null ? "les plus récents" : "plus anciens"}`
-    : `Invitations ${result.cursor === null ? "les plus récentes" : "plus anciennes"}`;
-  adminUI.text(document.getElementById(`${result.kind}-page-note`), `${label} · {count} sur cette page${result.hasMore ? "" : " · fin de la liste"}.`, { count: adminUI.numberParam(result.entries.length) });
+  for (const suffix of ["", "-top"]) adminUI.text(document.getElementById(`${result.kind}-page-note${suffix}`), "Page {page} · {count} sur cette page.", { page: adminUI.numberParam(page.number), count: adminUI.numberParam(result.entries.length) });
   document.getElementById(`${result.kind}-pagination`).hidden = false;
+  document.getElementById(`${result.kind}-pagination-top`).hidden = false;
   updatePagination(result.kind);
 }
-async function refreshAccessPage(kind, { cursor = accessPages[kind].cursor, afterMutation = false, renewalDraft = null } = {}) {
+async function refreshAccessPage(kind, { cursor = accessPages[kind].cursor, afterMutation = false, renewalDraft = null, back = accessPages[kind].back, number = accessPages[kind].number, navigate = false } = {}) {
   const ticket = generation;
   const result = await readAccessPage(kind, cursor);
   await verifyIdentity(ticket, { afterMutation });
   if (!current(ticket)) throw stale();
+  accessPages[kind].back = back; accessPages[kind].number = number;
   paintAccessPage(result, { renewalDraft });
+  if (navigate) { const list = document.getElementById(`${kind}-list`); list.scrollTop = 0; const heading = document.getElementById(`${kind}-title`); heading.focus({ preventScroll: true }); heading.scrollIntoView?.({ block: "nearest" }); }
 }
 async function refreshAccessLists({ afterMutation = false } = {}) {
   const ticket = generation;
   const results = await Promise.all([readAccessPage("invitations", null), readAccessPage("clients", null)]);
   await verifyIdentity(ticket, { afterMutation });
   if (!current(ticket)) throw stale();
-  for (const result of results) paintAccessPage(result);
+  for (const result of results) { accessPages[result.kind].back = []; accessPages[result.kind].number = 1; paintAccessPage(result); }
 }
 async function renewClient(client, accessDays, input) {
   // Keep a draft only for this pending action and this exact expiry snapshot.
@@ -680,16 +693,30 @@ document.getElementById("copy-invitation-code").addEventListener("click", () => 
 document.getElementById("refresh-access").addEventListener("click", () => { void accessAction(async () => { await refreshAccessLists(); invitationCreationBlocked = false; notice("Les accès sont actualisés."); }); });
 
 for (const kind of ["invitations", "clients"]) {
-  document.getElementById(`${kind}-next`).addEventListener("click", () => {
-    if (!accessPages[kind].hasMore) return;
-    const cursor = accessPages[kind].nextCursor;
-    void accessAction(() => refreshAccessPage(kind, { cursor }));
-  });
+  for (const suffix of ["", "-top"]) {
+    document.getElementById(`${kind}-next${suffix}`).addEventListener("click", () => {
+      const page = accessPages[kind]; if (!page.hasMore) return;
+      void accessAction(() => refreshAccessPage(kind, { cursor: page.nextCursor, back: [...page.back, page.cursor].slice(-100), number: page.number + 1, navigate: true }));
+    });
+    document.getElementById(`${kind}-previous${suffix}`).addEventListener("click", () => {
+      const page = accessPages[kind]; if (!page.back.length) return;
+      void accessAction(() => refreshAccessPage(kind, { cursor: page.back.at(-1), back: page.back.slice(0, -1), number: page.number - 1, navigate: true }));
+    });
+  }
   document.getElementById(`${kind}-first`).addEventListener("click", () => {
     if (accessPages[kind].cursor === null) return;
-    void accessAction(() => refreshAccessPage(kind, { cursor: null }));
+    void accessAction(() => refreshAccessPage(kind, { cursor: null, back: [], number: 1, navigate: true }));
   });
 }
+document.getElementById("invitation-state").addEventListener("change", event => {
+  if (busy || suspended || !csrf) return;
+  const page = accessPages.invitations, previous = page.state, next = event.target.value;
+  void accessAction(async () => {
+    page.state = next;
+    try { await refreshAccessPage("invitations", { cursor: null, back: [], number: 1, navigate: true }); }
+    catch (error) { page.state = previous; event.target.value = previous; throw error; }
+  }).finally(() => { event.target.value = page.state; });
+});
 
 function resetPasswordVisibility() {
   globalThis.JessiePasswordFields?.enhance(document.getElementById("password"), { button: document.getElementById("toggle-password") }).reset();

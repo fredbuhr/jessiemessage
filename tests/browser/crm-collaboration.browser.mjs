@@ -3,7 +3,7 @@
 // covered separately by the existing CRM store and HTTP integration groups.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { startWebDriver, tabUntil, waitUntil } from "./webdriver.mjs";
 
@@ -25,7 +25,7 @@ const crm = createCrmUI({ inboxHead: document.querySelector(".inbox-head"), chat
     const result = await response.json(); window.__responses.push({ name: options.body?.name, status: response.status });
     if (!response.ok) throw Object.assign(new Error("fixture_response"), { status: response.status, code: result.error }); return result;
   },
-  onContacts() {}, onError(error) { window.__authFailures.push(error.status); }
+  onContacts(rows) { window.__contactPage = rows.map(row => row.id); }, onError(error) { window.__authFailures.push(error.status); }
 });
 window.crmFixture = crm;
 await crm.initialize(); await crm.loadInbox(); crm.selectConversation("${conversationId}"); document.body.dataset.ready = "true";`;
@@ -34,7 +34,7 @@ const html = `<!doctype html><html lang=fr><head><meta charset=utf-8><meta name=
 <script src=/i18n.js defer></script><script src=/i18n-tools.js defer></script><script type=module src=/fixture.js></script></head>
 <body><main class=page><header class=inbox-head><h1>Jessie · fixture</h1></header><header class=chat-head><h2>AlexFixture</h2></header></main></body></html>`;
 
-async function fixture() {
+async function fixture({ contactCount = 0 } = {}) {
   const resources = new Map(await Promise.all(files.map(async name => [`/${name}`, await readFile(new URL(`../../public/${name}`, import.meta.url))])));
   const now = Date.now(), requests = [], writes = [], holds = new Set(), pending = new Map();
   let profile = { conversationId, client: { id: id(2), pseudonym: "AlexFixture", email: "synthetic@example.invalid", status: "active" },
@@ -51,7 +51,13 @@ async function fixture() {
       if (path === "/fixture") { send(200, html, "text/html"); return; }
       if (path === "/fixture.js") { send(200, bootstrap, "text/javascript"); return; }
       if (resources.has(path)) { send(200, resources.get(path), path.endsWith(".js") ? "text/javascript" : "text/css"); return; }
-      if (path === "/api/admin/crm/contacts") { send(200, { contacts: [], hasMore: false, nextCursor: null }); return; }
+      if (path === "/api/admin/crm/contacts") {
+        const after = new URL(request.url, "http://localhost").searchParams.get("afterId");
+        const start = after ? Number.parseInt(after, 16) + 1 : 1;
+        const contacts = Array.from({ length: Math.max(0, Math.min(50, contactCount - start + 1)) }, (_, index) => ({ id: id(start + index), peerName: `Synthetic client ${start + index}`, unreadCount: 0 }));
+        const hasMore = start + contacts.length <= contactCount;
+        send(200, { contacts, hasMore, nextCursor: hasMore ? contacts.at(-1).id : null }); return;
+      }
       if (path === "/api/admin/crm/labels" && request.method === "GET") { send(200, { labels: [...labels.values()], hasMore: false, nextCursor: null }); return; }
       if (path === `/api/admin/crm/conversations/${conversationId}` && request.method === "GET") { send(200, profile); return; }
       if (request.method === "POST") {
@@ -182,5 +188,39 @@ test("real Chrome: shared administrator CRM drafts, conflicts and paused label r
         assert.equal(source.requests.some(item => /smtp|mail|notification|broadcast/.test(item.path)), false);
       } finally { await page?.close(); await source.close(); }
     });
+  } finally { await driver.close(); }
+});
+
+
+test("real Chrome mobile FR/EN: CRM pages replace contacts and keep an open client's unsaved notes", { timeout: 90000 }, async () => {
+  const driver = await startWebDriver();
+  try {
+    for (const [language, width] of [["fr", 320], ["en", 390]]) {
+      const source = await fixture({ contactCount: 1000 }); let page;
+      try {
+        page = await openPage(driver, source, language, width);
+        assert.equal(await page.execute("return window.__contactPage.length"), 50);
+        await page.click(".crm-fiche-button");
+        await waitUntil(() => page.execute("return !document.querySelector('.crm-profile-form fieldset').hidden"), "CRM notes ready");
+        await page.type(profileSelector, "Unsent synthetic notes to preserve");
+        await page.key("\uE00C");
+        for (let index = 0; index < 5; index++) await page.executeAsync("window.crmFixture.loadInbox(true).then(arguments[arguments.length-1])");
+        assert.equal(await page.execute("return window.__contactPage.length"), 50);
+        assert.equal(await page.execute("return window.__contactPage[0]"), id(251));
+        await page.click(".crm-pagination button:nth-child(2)");
+        await waitUntil(() => page.execute("return window.__contactPage[0]===arguments[0]", id(201)), "previous CRM page replaces the current page");
+        assert.equal(await page.execute("return document.documentElement.scrollWidth <= innerWidth"), true);
+        assert.equal(await page.execute("return document.querySelector('.crm-page-label').textContent"), "Page 5");
+        await mkdir(new URL("../../artifacts/homepage/", import.meta.url), { recursive: true });
+        await writeFile(new URL(`../../artifacts/homepage/crm-pagination-${language}-${width}.png`, import.meta.url), Buffer.from(await page.screenshot(), "base64"));
+        await page.click(".crm-pagination button:first-child");
+        await waitUntil(() => page.execute("return window.__contactPage[0]===arguments[0]", id(1)), "first CRM page accessible");
+        await page.click(".crm-fiche-button");
+        await waitUntil(() => page.execute("return !document.querySelector('.crm-profile-form fieldset').hidden"), "pinned CRM notes reopened");
+        assert.equal(await page.execute("return document.querySelector(arguments[0]).value", profileSelector), "Unsent synthetic notes to preserve");
+        assert.equal(await page.execute("return window.crmFixture.hasUnsavedWork()"), true);
+        assert.equal(source.writes.length, 0); assert.deepEqual(await page.execute("return window.__errors"), []);
+      } finally { await page?.close(); await source.close(); }
+    }
   } finally { await driver.close(); }
 });

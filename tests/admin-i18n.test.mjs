@@ -135,7 +135,7 @@ test("backup settings translate the daily state and manual recovery limits witho
 test("administrator language switches update static and loaded private UI in place while names, values and requests remain unchanged", async () => {
   const f = await harness(), clientList = f.nodes.get("clients-list"), invitationList = f.nodes.get("invitations-list");
   assert.equal(clientList.children.length, 2); assert.equal(invitationList.children.length, 4);
-  const originalCard = clientList.children[0], originalHeading = originalCard.children[0], email = originalCard.children[1];
+  const originalCard = clientList.children[0], originalHeading = originalCard.children[0].children[0], email = originalCard.children[1];
   const privateInput = originalCard.querySelectorAll("input")[0]; privateInput.value = "75";
   const beforeCalls = f.calls.length;
   f.language("en");
@@ -152,7 +152,7 @@ test("administrator language switches update static and loaded private UI in pla
   assert.match(invitationList.textContent, /Invitation · Available/); assert.match(invitationList.textContent, /Invitation · Revoked/);
   assert.match(invitationList.textContent, /Access for 3,650 days after email confirmation/);
   assert.match(invitationList.textContent, new RegExp(new Date(now - 1000).toLocaleString("en-US").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-  assert.match(f.nodes.get("clients-page-note").textContent, /Most recent client accounts · 2 on this page · end of the list/);
+  assert.match(f.nodes.get("clients-page-note").textContent, /Page 1 · 2 on this page/);
   f.language("fr");
   assert.equal(f.nodes.get("login-button").textContent, "Se connecter"); assert.equal(originalHeading.textContent, "Bienvenue, Jessie.");
   assert.match(originalCard.textContent, /État : Accès expiré/); assert.equal(privateInput.value, "75");

@@ -76,3 +76,15 @@ test("task summary refuses malformed counts or time instead of presenting a fals
   assert.deepEqual(parseTaskSummary({ dueCount: 3, serverTime: now }), { dueCount: 3, serverTime: now });
   for (const value of [{ dueCount: -1, serverTime: now }, { dueCount: "0", serverTime: now }, { dueCount: 0, serverTime: -1 }]) assert.throws(() => parseTaskSummary(value));
 });
+
+
+test("a bounded task page replaces the previous page and can be refreshed without discarding the editor draft", () => {
+  const s = state(); editTask(s, task(1)); changeTaskDraft(s, { title: "Unsaved personal draft" }); const draft = s.draft;
+  applyTaskPage(s, page(Array.from({ length: 50 }, (_, index) => task(index + 1)), { hasMore: true, nextCursor: id(50) }), { replace: true });
+  applyTaskPage(s, page(Array.from({ length: 50 }, (_, index) => task(index + 51)), { hasMore: true, nextCursor: id(100) }), { afterId: id(50), replace: true });
+  assert.equal(s.tasks.size, 50); assert.equal(s.tasks.has(id(1)), false); assert.equal(s.tasks.has(id(100)), true);
+  applyTaskPage(s, page([task(51, { title: "Changed on another device", version: "2" })]), { afterId: id(50), replace: true });
+  assert.equal(s.tasks.size, 1); assert.equal(s.tasks.get(id(51)).title, "Changed on another device"); assert.equal(s.draft, draft); assert.equal(s.draft.title, "Unsaved personal draft");
+  s.pageAfter = id(50); s.pageBack = [null]; s.pageNumber = 2; setTaskFilter(s, "due");
+  assert.equal(s.pageAfter, null); assert.equal(s.pageBack.length, 0); assert.equal(s.pageNumber, 1);
+});

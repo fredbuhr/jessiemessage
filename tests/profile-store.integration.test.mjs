@@ -71,6 +71,10 @@ test("real MariaDB own profiles, bounded private avatars and simultaneous update
       const peer = await store.getPeerAvatar({ ...request(admin), conversationId, version: "1" }); assert.ok(peer.assetId.equals(own));
       const chat = await chatStore.readMessages({ ...request(admin), conversationId });
       assert.equal(chat.conversation.peerPseudonym, "Changed client"); assert.equal(chat.conversation.peerAvatarVersion, "1");
+      const inbox = await chatStore.readInbox({ tokenHash: admin.tokenHash, now });
+      const inboxConversation = inbox.items.find(item => item.conversation.id.equals(conversationId));
+      assert.equal(inboxConversation.conversation.peerAvatarVersion, "1", "the batched inbox scalar reads the same authorized avatar even without a visible message");
+      assert.equal(inboxConversation.message, null);
       await assert.rejects(store.getPeerAvatar({ ...request(second), conversationId, version: "1" }), error => error.code === "CHAT_NOT_FOUND");
       await store.saveProfile({ ...request(admin), expectedVersion: "0", pseudonym: "Changed Jessie", avatarId: adminAvatar });
       assert.ok((await store.getPeerAvatar({ ...request(first), conversationId, version: "1" })).assetId.equals(adminAvatar));
@@ -83,8 +87,15 @@ test("real MariaDB own profiles, bounded private avatars and simultaneous update
       }
       await connection.query("UPDATE media_assets SET deleted_at = ?, active_digest = NULL WHERE id = ?", [sql(now), own]);
       await assert.rejects(store.saveProfile({ ...request(first), expectedVersion: "1", pseudonym: "Must not be saved", avatarId: own }), rejects("PROFILE_NOT_FOUND"));
+      assert.equal((await chatStore.readInbox({ tokenHash: admin.tokenHash, now })).items.find(item => item.conversation.id.equals(conversationId)).conversation.peerAvatarVersion, undefined, "a deleted asset is absent from the batched inbox avatar projection");
       const content = (await connection.query("SELECT content_digest FROM media_assets WHERE id = ?", [own]))[0].content_digest;
       await connection.query("UPDATE media_assets SET deleted_at = NULL, active_digest = ? WHERE id = ?", [content, own]);
+      // A stale/manually corrupted reference must not expose another owner's
+      // asset through the new summary query, even though its FK still exists.
+      await connection.query("UPDATE user_profiles SET avatar_media_id = ? WHERE user_id = ?", [foreign, first.id]);
+      try {
+        assert.equal((await chatStore.readInbox({ tokenHash: admin.tokenHash, now })).items.find(item => item.conversation.id.equals(conversationId)).conversation.peerAvatarVersion, undefined, "a foreign owner's avatar is absent from the batched inbox projection");
+      } finally { await connection.query("UPDATE user_profiles SET avatar_media_id = ? WHERE user_id = ?", [own, first.id]); }
     });
     await t.test("simultaneous saves serialize on the current account and stale versions conflict", async () => {
       const saves = await Promise.allSettled(["First", "Second"].map(pseudonym => store.saveProfile({ ...request(first), expectedVersion: "1", pseudonym, avatarId: own })));

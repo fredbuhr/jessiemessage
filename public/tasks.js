@@ -89,7 +89,10 @@ function controls() {
   ui.text(el("new-task"), state.pending ? "Reprendre la demande" : state.draft?.dirty ? "Reprendre mon brouillon" : "Ajouter une tâche");
   el("new-task").disabled = busy || sessionPaused || state.csrfFailed;
   el("task-filter").disabled = listBusy || busy || sessionPaused; el("refresh-tasks").disabled = listBusy || busy || sessionPaused;
-  el("more-tasks").hidden = !state.hasMore; el("more-tasks").disabled = listBusy || busy || sessionPaused;
+  for (const suffix of ["", "-top"]) {
+    el(`more-tasks${suffix}`).hidden = !state.hasMore; el(`more-tasks${suffix}`).disabled = listBusy || busy || sessionPaused;
+    el(`previous-tasks${suffix}`).hidden = state.pageBack.length === 0; el(`previous-tasks${suffix}`).disabled = listBusy || busy || sessionPaused;
+  }
   el("reload").hidden = !sessionPaused && !state.csrfFailed;
   for (const button of el("task-list").querySelectorAll("button")) button.disabled = frozen;
 }
@@ -118,6 +121,7 @@ function renderList() {
     card.append(client, title, date, actions); nodes.push(card);
   }
   replace(el("task-list"), ...nodes);
+  for (const suffix of ["", "-top"]) notice("Page {page} · {count} sur cette page.", false, `task-page-note${suffix}`, { page: ui.numberParam(state.pageNumber), count: ui.numberParam(state.tasks.size) });
   if (focusedId && action && !document.activeElement?.closest?.(".task-card")) el("task-list").querySelector(`[data-task-id="${focusedId}"] [data-task-action="${action}"]`)?.focus({ preventScroll: true });
   controls();
 }
@@ -153,14 +157,18 @@ function readDraft() {
     changeTaskDraft(state, { title: el("task-title").value, dueAt }); return true;
   } catch { notice("Vérifie le texte de 500 caractères maximum et la date.", true, "task-status"); return false; }
 }
-async function loadList(more = false, afterSave = false) {
-  if (listBusy || busy && !afterSave || !state.session || sessionPaused || !visible() || more && !state.hasMore) return;
-  const ticket = taskTicket(state), requestId = ++listRequest, epoch = state.listEpoch, afterId = more ? state.cursor : null;
+async function loadList(more = false, afterSave = false, previous = false) {
+  if (listBusy || busy && !afterSave || !state.session || sessionPaused || !visible() || more && !state.hasMore || previous && !state.pageBack.length) return;
+  const ticket = taskTicket(state), requestId = ++listRequest, epoch = state.listEpoch, afterId = previous ? state.pageBack.at(-1) : more ? state.cursor : state.pageAfter;
+  const back = previous ? state.pageBack.slice(0, -1) : more ? [...state.pageBack, state.pageAfter].slice(-100) : state.pageBack;
+  const number = state.pageNumber + (previous ? -1 : more ? 1 : 0);
   listBusy = true; controls(); notice("Chargement des tâches…", false, "list-status");
   try {
     const page = await request(`${BASE}?${taskQuery(state, afterId)}`, { ticket });
-    if (requestId !== listRequest || !applyTaskPage(state, page, { epoch, afterId })) return;
-    serverOffset = page.serverTime - Date.now(); renderList(); notice(state.tasks.size ? "" : "Aucune tâche dans cette liste.", false, "list-status");
+    if (requestId !== listRequest || !applyTaskPage(state, page, { epoch, afterId, replace: true })) return;
+    state.pageAfter = afterId; state.pageBack = back; state.pageNumber = number;
+    serverOffset = page.serverTime - Date.now(); renderList(); notice(state.tasks.size ? "" : "Aucune tâche sur cette page.", false, "list-status");
+    if (more || previous) { el("task-list").scrollTop = 0; el("tasks-title").focus({ preventScroll: true }); el("task-list").scrollIntoView?.({ block: "nearest" }); }
   } catch (error) { if (requestId === listRequest) report(error, "list-status"); }
   finally { if (currentTaskTicket(state, ticket) && requestId === listRequest) { listBusy = false; controls(); } }
 }
@@ -228,7 +236,7 @@ function scheduleRefresh() {
   const ticket = taskTicket(state);
   pollTimer = setTimeout(async () => {
     if (!currentTaskTicket(state, ticket)) return;
-    try { await loadSummary(); if (state.tasks.size <= 50 && !el("task-dialog").open) await loadList(); }
+    try { await loadSummary(); await loadList(); }
     catch (error) { report(error, "list-status"); }
     if (currentTaskTicket(state, ticket)) scheduleRefresh();
   }, 30000);
@@ -265,7 +273,10 @@ el("reload-task").addEventListener("click", () => { const latest = state.draft?.
 el("overwrite-task").addEventListener("click", () => { void save({ overwrite: true }); });
 el("task-filter").addEventListener("change", () => { setTaskFilter(state, el("task-filter").value); listRequest += 1; listBusy = false; renderList(); void loadList(); });
 el("refresh-tasks").addEventListener("click", () => { void loadList(); void loadSummary().catch(error => report(error, "list-status")); });
-el("more-tasks").addEventListener("click", () => { void loadList(true); }); el("reload").addEventListener("click", () => { void bootstrap(); }); el("logout").addEventListener("click", () => { void logout(); });
+for (const suffix of ["", "-top"]) {
+  el(`more-tasks${suffix}`).addEventListener("click", () => { void loadList(true); });
+  el(`previous-tasks${suffix}`).addEventListener("click", () => { void loadList(false, false, true); });
+} el("reload").addEventListener("click", () => { void bootstrap(); }); el("logout").addEventListener("click", () => { void logout(); });
 ui.onChange(() => { if (!state.visible) return; renderSummary(); renderList(); renderDraft(); if (state.clientName) notice("Tâches de {name}", false, "client-context", { name: state.clientName }); });
 document.addEventListener("visibilitychange", () => {
   if (visible()) { void bootstrap(); return; }

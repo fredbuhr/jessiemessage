@@ -29,11 +29,13 @@ const unavailable = () => httpError(503, "authentication_unavailable");
 function pageQuery(url, kind) {
   const options = { cursor: null, limit: 50 }, seen = new Set();
   for (const [key, value] of url.searchParams) {
-    if (!["cursor", "limit"].includes(key) || seen.has(key)) throw httpError(400, "invalid_request");
+    if (!(kind === "invitations" ? ["cursor", "limit", "state"] : ["cursor", "limit"]).includes(key) || seen.has(key)) throw httpError(400, "invalid_request");
     seen.add(key);
     if (key === "cursor") {
       if (!value) throw httpError(400, "invalid_request");
       options.cursor = value;
+    } else if (key === "state") {
+      options.state = value;
     } else {
       if (!/^(?:[1-9]|[1-9][0-9]|100)$/.test(value)) throw httpError(400, "invalid_request");
       options.limit = Number(value);
@@ -93,11 +95,12 @@ function safeClient(value) {
 function safePage(value, kind, options, origin) {
   if (!value || !Array.isArray(value[kind]) || value[kind].length > options.limit || typeof value.hasMore !== "boolean"
     || value.hasMore !== (value.nextCursor !== null) || value.hasMore && value[kind].length !== options.limit) throw unavailable();
-  const incoming = options.cursor === null ? null : decodeAccessCursor(kind, options.cursor);
+  const incoming = options.cursor === null ? null : decodeAccessCursor(kind, options.cursor, options.state ?? "all");
   const incomingTime = incoming === null ? Infinity : Date.parse(`${incoming.createdAt.replace(" ", "T")}Z`);
   const seen = new Set(); let previous = Infinity;
   const rows = value[kind].map((row) => {
     const safe = kind === "clients" ? safeClient(row) : safeInvitation(row, false, origin);
+    if (options.state && options.state !== "all" && safe.state !== options.state) throw unavailable();
     const id = safe.id.toLowerCase();
     if (seen.has(id) || safe.createdAt > previous || safe.createdAt > incomingTime || incoming?.id === id) throw unavailable();
     seen.add(id); previous = safe.createdAt;
@@ -105,7 +108,7 @@ function safePage(value, kind, options, origin) {
   });
   if (value.nextCursor !== null) {
     let position;
-    try { position = decodeAccessCursor(kind, value.nextCursor); } catch { throw unavailable(); }
+    try { position = decodeAccessCursor(kind, value.nextCursor, options.state ?? "all"); } catch { throw unavailable(); }
     const last = rows.at(-1);
     if (!last || position.id !== last.id || Date.parse(`${position.createdAt.replace(" ", "T")}Z`) !== last.createdAt
       || incoming && (position.createdAt > incoming.createdAt || position.createdAt === incoming.createdAt && position.id >= incoming.id)) throw unavailable();

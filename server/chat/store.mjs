@@ -262,10 +262,47 @@ export function createChatStore(pool, { clock, enqueueNotification, decorateMess
     if (send && (!activeClient(client, now) || conversation.closed_at !== null)) fail("CHAT_FORBIDDEN");
     return { actor, admin, client, conversation, now };
   }
-  async function summary(connection, context) {
+  // Only readInbox supplies this private preload, after it has acquired every
+  // selected client/proof/conversation lock. Other paths keep their ordinary
+  // conversation-scoped reads and authorization unchanged.
+  async function inboxSummaries(connection, contexts, now) {
+    if (!Array.isArray(contexts) || contexts.length < 1 || contexts.length > 50) state();
+    const expected = new Map(contexts.map(context => [context.conversation.id.toString("hex"), context]));
+    if (expected.size !== contexts.length || contexts.some(context => context.actor.role !== "admin"
+      || !context.admin.id.equals(contexts[0].admin.id))) state();
+    const rows = await connection.query(`SELECT c.id AS inbox_summary_conversation_id,
+      c.admin_id AS inbox_summary_admin_id, c.client_id AS inbox_summary_client_id,
+      COALESCE((SELECT MAX(sequence_no) FROM messages WHERE conversation_id = c.id), 0) AS latestSequence,
+      COALESCE((SELECT MAX(event_sequence) FROM chat_events WHERE conversation_id = c.id), 0) AS latestEventSequence,
+      (SELECT MAX(occurred_at) FROM chat_events WHERE conversation_id = c.id) AS lastActivityAt,
+      COALESCE((SELECT last_read_sequence FROM chat_receipts WHERE conversation_id = c.id AND user_id = c.admin_id), 0) AS lastReadSequence,
+      COALESCE((SELECT last_read_sequence FROM chat_receipts WHERE conversation_id = c.id AND user_id = c.client_id), 0) AS peerReadSequence,
+      (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id <> c.admin_id AND deleted_at IS NULL
+        AND sequence_no > COALESCE((SELECT last_read_sequence FROM chat_receipts WHERE conversation_id = c.id AND user_id = c.admin_id), 0)) AS unreadCount,
+      (SELECT p.version FROM user_profiles p JOIN media_assets a ON a.id = p.avatar_media_id
+        WHERE p.user_id = c.client_id AND a.owner_id = c.client_id AND a.owner_role = 'client' AND a.deleted_at IS NULL
+          AND p.created_at <= ? AND p.updated_at <= ? AND a.created_at <= ?
+          AND a.width <= 512 AND a.height <= 512 AND a.full_bytes <= 262144 AND a.thumbnail_bytes <= 131072) AS peerAvatarVersion
+      FROM conversations c WHERE c.admin_id = ? AND c.id IN (${contexts.map(() => "?").join(", ")})`,
+    [sqlDate(now), sqlDate(now), sqlDate(now), contexts[0].admin.id, ...contexts.map(context => context.conversation.id)]);
+    if (!Array.isArray(rows) || rows.length !== contexts.length) state();
+    const result = new Map();
+    for (const row of rows) {
+      if (!Buffer.isBuffer(row?.inbox_summary_conversation_id) || !Buffer.isBuffer(row.inbox_summary_admin_id)
+        || !Buffer.isBuffer(row.inbox_summary_client_id)) state();
+      const key = row.inbox_summary_conversation_id.toString("hex"), context = expected.get(key);
+      if (!context || result.has(key) || !row.inbox_summary_admin_id.equals(context.admin.id)
+        || !row.inbox_summary_client_id.equals(context.client.id)) state();
+      result.set(key, row);
+    }
+    return result;
+  }
+  async function summary(connection, context, preloaded) {
     const { conversation, actor, admin, client, now } = context;
     const peer = actor.role === "admin" ? client : admin;
-    const row = (await connection.query(`SELECT
+    if (preloaded !== undefined && (actor.role !== "admin" || !preloaded.inbox_summary_conversation_id?.equals(conversation.id)
+      || !preloaded.inbox_summary_admin_id?.equals(admin.id) || !preloaded.inbox_summary_client_id?.equals(client.id))) state();
+    const row = preloaded ?? (await connection.query(`SELECT
       COALESCE((SELECT MAX(sequence_no) FROM messages WHERE conversation_id = ?), 0) AS latestSequence,
       COALESCE((SELECT MAX(event_sequence) FROM chat_events WHERE conversation_id = ?), 0) AS latestEventSequence,
       (SELECT MAX(occurred_at) FROM chat_events WHERE conversation_id = ?) AS lastActivityAt,
@@ -278,7 +315,7 @@ export function createChatStore(pool, { clock, enqueueNotification, decorateMess
     if (!Number.isSafeInteger(unreadCount) || unreadCount < 0) state();
     // A peer avatar is visible only through this already authorized private
     // conversation. Profile changes never create message/activity events.
-    const peerAvatar = (await connection.query(`SELECT p.version FROM user_profiles p JOIN media_assets a ON a.id = p.avatar_media_id
+    const peerAvatar = preloaded !== undefined ? (preloaded.peerAvatarVersion === null ? undefined : { version: preloaded.peerAvatarVersion }) : (await connection.query(`SELECT p.version FROM user_profiles p JOIN media_assets a ON a.id = p.avatar_media_id
       WHERE p.user_id = ? AND a.owner_id = ? AND a.owner_role = ? AND a.deleted_at IS NULL
         AND p.created_at <= ? AND p.updated_at <= ? AND a.created_at <= ?
         AND a.width <= 512 AND a.height <= 512 AND a.full_bytes <= 262144 AND a.thumbnail_bytes <= 131072`,
@@ -538,7 +575,7 @@ export function createChatStore(pool, { clock, enqueueNotification, decorateMess
           WHERE c.admin_id = ? AND c.created_at <= ? ${seek}
           ORDER BY ${activity} DESC, c.id DESC LIMIT ?`,
         [sqlDate(now), admin.id, sqlDate(now), ...(position ? [position[1], position[1], Buffer.from(position[2], "hex")] : []), limit + 1]);
-        const selected = rows.slice(0, limit), items = [];
+        const selected = rows.slice(0, limit), contexts = [], items = [];
         for (const row of selected) {
           // The administrator, MFA and actor session remain exclusively locked,
           // as in listConversations. Recheck each current client and binding
@@ -553,8 +590,26 @@ export function createChatStore(pool, { clock, enqueueNotification, decorateMess
           now = sessionNow(now);
           if (now >= timestamp(actorProof.expires_at)) fail("CHAT_UNAUTHORIZED");
           if (timestamp(conversation.created_at) > now) fail("CHAT_FORBIDDEN");
-          const context = { actor: admin, admin, client, conversation, now };
-          const view = await summary(connection, context);
+          contexts.push({ actor: admin, admin, client, conversation, now });
+        }
+        // Preserve all three live guards per item before sharing the summary
+        // read. A page of up to 100 items uses at most two 50-conversation SQL
+        // batches; no preload survives this transaction or crosses accounts.
+        const preloaded = new Map();
+        for (let start = 0; start < contexts.length; start += 50) {
+          now = sessionNow(now);
+          if (now >= timestamp(actorProof.expires_at)) fail("CHAT_UNAUTHORIZED");
+          const batch = await inboxSummaries(connection, contexts.slice(start, start + 50), now);
+          now = sessionNow(now);
+          if (now >= timestamp(actorProof.expires_at)) fail("CHAT_UNAUTHORIZED");
+          for (const [key, value] of batch) preloaded.set(key, value);
+        }
+        for (const [index, row] of selected.entries()) {
+          now = sessionNow(now);
+          if (now >= timestamp(actorProof.expires_at)) fail("CHAT_UNAUTHORIZED");
+          const context = { ...contexts[index], now }, preload = preloaded.get(context.conversation.id.toString("hex"));
+          if (preload === undefined) state();
+          const view = await summary(connection, context, preload);
           const message = row.id === null ? null : (await decorated(connection, context, [rawMessage(row, admin.id)]))[0];
           if (sessionNow(now) >= timestamp(actorProof.expires_at)) fail("CHAT_UNAUTHORIZED");
           items.push({ conversation: view, message, unread: view.unreadCount > 0 });

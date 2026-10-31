@@ -158,7 +158,7 @@ test("a successful POST followed by a failed session proof preserves the exact u
   });
 });
 
-test("activity refresh updates an old live campaign outside page one and discovers new random IDs from another window", async () => {
+test("activity snapshots discard obsolete live rows and discover new random IDs without accumulating archives", async () => {
   const old = campaign(25); const ended = campaign(25, { status: "completed", updatedAt: now, counts: counts("delivered") });
   let newest = campaign(500, { createdAt: now, updatedAt: now });
   const oldPage = Array.from({ length: 20 }, (_, index) => campaign(index + 1, { status: "completed", counts: counts("delivered") }));
@@ -173,7 +173,7 @@ test("activity refresh updates an old live campaign outside page one and discove
   try {
     for (const item of [...oldPage, old]) f.ui.campaigns.set(item.id, item);
     await f.ui.loadHistory();
-    assert.equal(f.ui.campaigns.get(old.id).status, "completed"); assert.equal(f.ui.campaigns.get(old.id).counts.delivered, 1);
+    assert.equal(f.ui.campaigns.has(old.id), false, "a formerly live campaign outside both current windows is released");
     assert.equal(f.ui.campaigns.has(id(500)), true); assert.equal(f.node("more-history").hidden, false);
     await f.ui.loadHistory(true); assert.equal(f.node("more-history").hidden, true);
     newest = campaign(21, { createdAt: now + 1, updatedAt: now + 1 });
@@ -184,18 +184,13 @@ test("activity refresh updates an old live campaign outside page one and discove
   } finally { f.close(); }
 });
 
-test("stale local live rows are resolved in bounded progressing batches instead of rejecting an eleven-row cache", async () => {
-  const f = fixture((path) => {
-    const match = /^\/api\/broadcast\/admin\/campaigns\/([a-f0-9]{32})\/summary$/.exec(path);
-    if (match) return response(detail(campaign(Number.parseInt(match[1], 16), { status: "completed", updatedAt: now, counts: counts("delivered") })));
-    return null;
-  });
+test("an authoritative activity snapshot releases stale local live rows without unbounded summary requests", async () => {
+  const f = fixture();
   try {
     for (let index = 10; index < 22; index += 1) f.ui.campaigns.set(id(index), campaign(index));
     await f.ui.loadHistory();
-    assert.equal([...f.ui.campaigns.values()].filter((item) => item.status === "queued").length, 2);
-    assert.equal(f.calls.filter((call) => /^\/api\/broadcast\/admin\/campaigns\/[a-f0-9]{32}\/summary$/.test(call.path)).length, 10);
-    await f.ui.loadHistory(); assert.equal([...f.ui.campaigns.values()].filter((item) => item.status === "queued").length, 0);
+    assert.equal(f.ui.campaigns.size, 0);
+    assert.equal(f.calls.filter(call => /\/summary$/.test(call.path)).length, 0);
   } finally { f.close(); }
 });
 
@@ -214,7 +209,7 @@ test("explicit history refresh restarts an exhausted archive so older additions 
     f.node("refresh-history").listeners.get("click")(); await flush();
     assert.equal(f.ui.campaigns.size, 25); assert.equal(f.node("more-history").hidden, false);
     assert.match(f.node("history-status").textContent, /parcours reprend au début/);
-    await f.ui.loadHistory(true); assert.equal(f.ui.campaigns.size, 25); assert.equal(f.node("more-history").hidden, true);
+    await f.ui.loadHistory(true); assert.equal(f.ui.campaigns.size, 20, "the final archive page replaces the preceding one and overlaps the recent snapshot"); assert.equal(f.node("more-history").hidden, true);
   } finally { f.close(); }
 });
 
@@ -723,5 +718,82 @@ test("a confirmed video survives suspension and local preview callbacks bind to 
     f.decode(); assert.equal(draft.ready, true); await f.ui.uploadVideo(); assert.equal(f.uploads.length, 1);
     assert.equal(f.ui.state.draft.videoId, id(77)); assert.equal(f.created.length, 2);
     f.ui.clearPrivate(); assert.equal(f.ui.videoState().videoDraft, null); assert.equal(f.ui.state.pending, null); assert.equal(f.revoked.length, 2);
+  } finally { f.close(); }
+});
+
+
+test("broadcast history replaces archive pages and polling windows while retaining the selected detail and composition", async () => {
+  let activityRound = 0;
+  const finished = value => campaign(value, { status: "completed", counts: counts("delivered") });
+  const f = fixture(path => {
+    if (path === "/api/broadcast/admin/activity") return response({ campaigns: Array.from({ length: 30 }, (_, index) => finished(10000 + activityRound * 30 + index)) });
+    if (path.startsWith("/api/broadcast/admin/campaigns?")) {
+      const after = new URL(path, "https://fixture.invalid").searchParams.get("afterId");
+      const start = after ? Number.parseInt(after, 16) + 1 : 1000;
+      const rows = Array.from({ length: 20 }, (_, index) => finished(start + index));
+      return response({ campaigns: rows, nextCursor: rows.at(-1).id, hasMore: true });
+    }
+    if (path === `/api/broadcast/admin/campaigns/${id(70000)}/summary`) return response(finished(70000));
+    return null;
+  });
+  try {
+    model.updateComposition(f.ui.state, { title: "Unsent title", body: "Unsent body" });
+    await f.ui.loadHistory(); await f.ui.showCampaign(id(70000));
+    assert.equal(f.ui.campaigns.size, 51);
+    for (let index = 0; index < 15; index++) {
+      await f.ui.loadHistory(true); assert.equal(f.ui.campaigns.size, 51);
+      activityRound++; await f.ui.loadHistory();
+      assert.equal(f.ui.campaigns.size, 51); assert.equal(f.node("history").children.length, 51);
+      assert.equal(f.ui.campaigns.has(id(70000)), true, "the selected detail remains pinned outside either window");
+    }
+    assert.equal(f.ui.campaigns.has(id(1000)), false); assert.equal(f.ui.campaigns.has(id(10000)), false);
+    assert.equal(f.ui.state.draft.body, "Unsent body");
+    await f.ui.loadHistory(true, { back: true });
+    assert.equal(f.ui.campaigns.has(id(1280)), true); assert.equal(f.ui.campaigns.has(id(1300)), false);
+    assert.match(f.node("history-page").textContent, /15/);
+    f.node("first-history").listeners.get("click")(); await flush();
+    assert.equal(f.ui.campaigns.has(id(1000)), true); assert.equal(f.node("previous-history").hidden, true);
+    assert.equal(f.ui.campaigns.has(id(70000)), true);
+  } finally { f.close(); }
+});
+
+test("the broadcast photo chooser keeps one replaceable page plus its selected photo without changing its preview", async () => {
+  const f = fixture(path => {
+    if (!path.startsWith("/api/media/admin/assets?")) return null;
+    const after = new URL(path, "https://fixture.invalid").searchParams.get("afterId"), start = after ? Number.parseInt(after, 16) + 1 : 2000;
+    const rows = Array.from({ length: 20 }, (_, index) => ({ id: id(start + index), createdAt: now, width: 640, height: 480, thumbnailUrl: `/api/media/admin/assets/${id(start + index)}/thumb` }));
+    return response({ assets: rows, nextCursor: rows.at(-1).id, hasMore: true });
+  });
+  try {
+    await f.ui.loadPhotos(); model.updateComposition(f.ui.state, { mediaId: id(2000) });
+    const preview = new FakeNode("img"); f.node("photo-preview").append(preview);
+    for (let index = 0; index < 15; index++) {
+      await f.ui.loadPhotos(true);
+      assert.equal(f.ui.assets.size, 21); assert.equal(f.node("photo-select").children.length, 22, "20 rows, selected photo and empty choice");
+      assert.equal(f.node("photo-select").value, id(2000)); assert.equal(f.ui.state.draft.mediaId, id(2000));
+      assert.strictEqual(f.node("photo-preview").children[0], preview);
+    }
+    assert.equal(f.ui.assets.has(id(2001)), false);
+    await f.ui.loadPhotos(true, true); assert.equal(f.ui.assets.has(id(2280)), true);
+    f.node("first-photos").listeners.get("click")(); await flush();
+    assert.equal(f.ui.assets.size, 20); assert.equal(f.node("previous-photos").hidden, true);
+    assert.equal(f.ui.state.draft.mediaId, id(2000));
+  } finally { f.close(); }
+});
+
+
+test("a completed campaign retained by the archive receives final counters when it leaves the activity window", async () => {
+  let ended = false;
+  const queued = campaign(10), completed = campaign(10, { status: "completed", updatedAt: now, counts: counts("delivered") });
+  const f = fixture(path => {
+    if (path === "/api/broadcast/admin/activity") return response({ campaigns: ended ? [] : [queued] });
+    if (path.startsWith("/api/broadcast/admin/campaigns?")) return response({ campaigns: [queued], hasMore: false, nextCursor: null });
+    if (path === `/api/broadcast/admin/campaigns/${queued.id}/summary`) return response(completed);
+    return null;
+  });
+  try {
+    await f.ui.loadHistory(); ended = true; await f.ui.loadHistory();
+    assert.equal(f.ui.campaigns.size, 1); assert.equal(f.ui.campaigns.get(queued.id).status, "completed");
+    assert.equal(f.ui.campaigns.get(queued.id).counts.delivered, 1);
   } finally { f.close(); }
 });

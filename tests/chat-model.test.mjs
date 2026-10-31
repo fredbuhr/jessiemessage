@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { sequence, compareSequence, makeConversationState, belongsTo, orderedMessages, mergeMessages, mergeEvents, mergeConversation, prepareSend, prepareImageSend, completeImageUpload, validCaption, mediaStillCurrent, createObjectUrlCache, retrySend, rejectPendingSend, rejectPendingImageSend, validBody, shouldScroll, readableSequence, inboxRefreshPlan } from "../public/chat-model.js";
+import { sequence, compareSequence, makeConversationState, belongsTo, orderedMessages, mergeMessages, mergeEvents, mergeConversation, prepareSend, prepareImageSend, completeImageUpload, validCaption, mediaStillCurrent, createObjectUrlCache, retrySend, rejectPendingSend, rejectPendingImageSend, validBody, shouldScroll, readableSequence, inboxRefreshPlan, boundMessageWindow, currentHistoryPage } from "../public/chat-model.js";
 
 const conversationId = "a".repeat(32);
 const message = (seq, extra = {}) => ({ id: seq.padStart(32, "0"), sequence: seq, sender: "peer", body: `Texte ${seq}`, deletedAt: null, clientMessageId: null, createdAt: 1, ...extra });
@@ -171,4 +171,17 @@ test("a definitive photo-dimension rejection allows replacing the file while pre
   prepareImageSend(state, { caption: state.draft, file: state.imageDraft.file }, "b".repeat(32));
   assert.equal(rejectPendingImageSend(state, 422), true); assert.equal(state.pending, null);
   assert.equal(state.draft, "Caption to keep"); assert.ok(state.imageDraft.file);
+});
+
+
+test("bounded history preserves contiguous forward/back cursors and independent drafts and uncertain sends", () => {
+  const state = makeConversationState(conversationId); state.draft = "Keep draft"; state.pending = { clientMessageId: "a".repeat(32), body: "Pending", status: "retry" };
+  state.eventCursor = "400";
+  mergeMessages(state, Array.from({ length: 400 }, (_, i) => ({ id: String(i + 1), sequence: String(i + 1), sender: "peer", body: "Synthetic", deletedAt: null })));
+  assert.equal(boundMessageWindow(state).length, 100); assert.equal(state.messages.size, 300);
+  assert.equal(state.nextBefore, "101"); assert.equal(state.hasMoreBefore, true); assert.equal(state.draft, "Keep draft"); assert.equal(state.pending.status, "retry");
+  mergeMessages(state, Array.from({ length: 50 }, (_, i) => ({ id: String(i + 51), sequence: String(i + 51), sender: "peer", body: "Earlier", deletedAt: null })));
+  assert.equal(boundMessageWindow(state, { retain: "oldest" }).length, 50); assert.equal(state.nextAfter, "350"); assert.equal(state.hasMoreAfter, true);
+  assert.equal(currentHistoryPage(state, { eventCursor: "399" }), false); assert.equal(currentHistoryPage(state, { eventCursor: "400" }), true);
+  assert.equal(state.messages.size, 300); assert.throws(() => boundMessageWindow(state, { limit: 1 }));
 });

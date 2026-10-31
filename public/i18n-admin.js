@@ -1,6 +1,19 @@
 "use strict";
 (() => {
   const dictionary = {
+    "Créée le {date}": "Created {date}",
+    "État des invitations": "Invitation status",
+    "Toutes": "All",
+    "Disponibles": "Available",
+    "Utilisées": "Used",
+    "Expirées": "Expired",
+    "Révoquées": "Revoked",
+    "Précédents": "Previous",
+    "Suivants": "Next",
+    "Page {page} · {count} sur cette page.": "Page {page} · {count} on this page.",
+    "L’accès s’active après utilisation de l’invitation et confirmation de l’e-mail.": "Access activates after the invitation is used and the email is confirmed.",
+    "Accès de {days} jour après confirmation de l’e-mail.": "Access for {days} day after email confirmation.",
+
     "Accès non activé": "Access not activated",
     "Inviter et gérer les accès.": "Invite clients and manage access.",
     "Activation enregistrée": "Activation recorded",

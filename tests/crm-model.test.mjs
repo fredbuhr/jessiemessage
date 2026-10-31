@@ -30,17 +30,17 @@ test("filter changes invalidate late pages while preserving the selected convers
   assert.equal(state.contacts.size, 0); assert.equal(state.selected, id(1)); assert.equal(state.drafts.get(id(1)).notes, "Brouillon privé");
   assert.equal(setFilters(state, { q: "un autre client" }), false);
 });
-test("an authoritative filtered page removes rows that no longer match only in its ID interval", () => {
+test("an authoritative filtered page replaces rows instead of retaining earlier intervals", () => {
   const state = createCrmState(); for (let value = 1; value <= 8; value += 1) state.contacts.set(id(value), contact(value));
   applyContactPage(state, { contacts: [contact(2), contact(4)], nextCursor: id(4), hasMore: true }, { epoch: 0 });
-  assert.deepEqual([...state.contacts.keys()], [id(2), id(4), id(5), id(6), id(7), id(8)]);
+  assert.deepEqual([...state.contacts.keys()], [id(2), id(4)]);
   applyContactPage(state, { contacts: [contact(6)], nextCursor: null, hasMore: false }, { epoch: 0, afterId: id(4) });
-  assert.deepEqual([...state.contacts.keys()], [id(2), id(4), id(6)]);
+  assert.deepEqual([...state.contacts.keys()], [id(6)]);
 });
-test("an empty final page removes stale unread contacts beyond a previous keyset cursor", () => {
+test("an empty final page clears stale rows from the displayed contact page", () => {
   const state = createCrmState(); state.contacts.set(id(2), contact(2)); state.contacts.set(id(8), contact(8));
   applyContactPage(state, { contacts: [], hasMore: false, nextCursor: null }, { epoch: 0, afterId: id(2) });
-  assert.deepEqual([...state.contacts.keys()], [id(2)]);
+  assert.deepEqual([...state.contacts.keys()], []);
 });
 test("chat polling updates matching rows without reinserting a selected filtered-out client or losing CRM metadata", () => {
   const state = createCrmState(); const stored = contact(1, { crm: { nickname: "Alias privé", labels: [{ id: id(30), name: "Régulier" }] } }); state.contacts.set(stored.id, stored); selectProfile(state, id(2));
@@ -101,4 +101,26 @@ test("logout clears notes, aliases, labels, filters and invalidates all queued r
   state.labels.set(id(5), { id: id(5), kind: "tag", name: "Privé" }); state.contacts.set(id(1), contact(1)); setFilters(state, { q: "contact@example.test" });
   clearCrmState(state); assert.equal(state.drafts.size, 0); assert.equal(state.contacts.size, 0); assert.equal(state.labels.size, 0); assert.equal(state.selected, null); assert.deepEqual(state.filters, emptyFilters());
   assert.equal(currentProfile(state, ticket), false); assert.equal(receiveProfile(state, profile(1), ticket), null);
+});
+
+
+test("replaceable CRM pages stay bounded while a selected client's unsaved profile remains pinned", () => {
+  const state = createCrmState(), ticket = selectProfile(state, id(1));
+  const draft = receiveProfile(state, profile(1), ticket); changeDraft(draft, { notes: "Keep these exact notes" });
+  for (let pageIndex = 0; pageIndex < 60; pageIndex++) {
+    const contacts = Array.from({ length: 50 }, (_, index) => contact(pageIndex * 50 + index + 1));
+    applyContactPage(state, { contacts, hasMore: true, nextCursor: contacts.at(-1).id }, { epoch: state.filterEpoch });
+    assert.equal(state.contacts.size, 50); assert.equal(state.contacts.has(id(pageIndex * 50 + 1)), true);
+  }
+  assert.equal(state.contacts.has(id(1)), false); assert.equal(state.selected, id(1));
+  assert.equal(state.drafts.get(id(1)).notes, "Keep these exact notes");
+});
+
+
+test("CRM page validation rejects oversized, duplicate and reversed output without replacing the current rows", () => {
+  const state = createCrmState(); state.contacts.set(id(100), contact(100));
+  for (const contacts of [Array.from({ length: 51 }, (_, index) => contact(index + 1)), [contact(1), contact(1)], [contact(2), contact(1)]]) {
+    assert.throws(() => applyContactPage(state, { contacts, nextCursor: null, hasMore: false }, { epoch: 0 }), /invalid_contact_page/);
+    assert.equal(state.contacts.get(id(100)).peerName, "Client 100");
+  }
 });

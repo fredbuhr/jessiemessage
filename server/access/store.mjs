@@ -328,25 +328,31 @@ export function createAccessStore(pool, { clock } = {}) {
       }, true);
     },
 
-    async listInvitations(actorTokenHash, { now, cursor = null, limit = 50 }) {
+    async listInvitations(actorTokenHash, { now, cursor = null, limit = 50, state = "all" }) {
       bytes(actorTokenHash, 32); instant(now);
-      const page = validateAccessPage("invitations", { cursor, limit });
+      const page = validateAccessPage("invitations", { cursor, limit, state });
       return withConnection(async (connection) => {
         const actor = await administrator(connection, actorTokenHash, now);
         if (!actor) return null;
         now = actor.now;
+        const where = [], parameters = [];
+        if (state === "used") where.push("consumed_at IS NOT NULL");
+        else if (state !== "all") {
+          where.push("consumed_at IS NULL", state === "revoked" ? "revoked_at IS NOT NULL" : "revoked_at IS NULL");
+          if (state === "pending" || state === "expired") { where.push(`expires_at ${state === "pending" ? ">" : "<="} ?`); parameters.push(sqlDate(now)); }
+        }
+        if (page.position) { where.push("(created_at < ? OR (created_at = ? AND id < ?))"); parameters.push(page.position.createdAt, page.position.createdAt, Buffer.from(page.position.id, "hex")); }
         const rows = await connection.query(`SELECT id, created_at, expires_at, access_days, consumed_at,
           consumed_by_id, revoked_at, DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s.%f') AS cursor_created_at
-          FROM invitations ${page.position ? "WHERE created_at < ? OR (created_at = ? AND id < ?)" : ""}
-          ORDER BY created_at DESC, id DESC LIMIT ?`, page.position
-          ? [page.position.createdAt, page.position.createdAt, Buffer.from(page.position.id, "hex"), page.limit + 1] : [page.limit + 1]);
+          FROM invitations ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
+          ORDER BY created_at DESC, id DESC LIMIT ?`, [...parameters, page.limit + 1]);
         const selected = rows.slice(0, page.limit), hasMore = rows.length > page.limit;
         const invitations = selected.map((row) => ({ id: row.id.toString("hex"), createdAt: fromSqlDate(row.created_at),
           expiresAt: fromSqlDate(row.expires_at), accessDays: row.access_days === null ? null : Number(row.access_days),
           state: row.consumed_at !== null ? "used" : row.revoked_at !== null ? "revoked" : now >= fromSqlDate(row.expires_at) ? "expired" : "pending",
           consumedById: row.consumed_by_id === null ? null : row.consumed_by_id.toString("hex") }));
         const last = selected.at(-1);
-        return { invitations, nextCursor: hasMore ? encodeAccessCursor("invitations", { createdAt: last.cursor_created_at, id: last.id.toString("hex") }) : null, hasMore };
+        return { invitations, nextCursor: hasMore ? encodeAccessCursor("invitations", { createdAt: last.cursor_created_at, id: last.id.toString("hex") }, state) : null, hasMore };
       }, true);
     },
 

@@ -84,3 +84,6 @@ h2 { font-size: 19px; line-height: 1.4; margin: 0 0 18px; color: #f5eef2; }
 .is-admin-clients #admin-session-note, .is-admin-clients .connection, .is-admin-clients #connected > .intro { display: none; }
 @media (max-width: 760px) { .admin-dashboard { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 480px) { .admin-dashboard { grid-template-columns: 1fr; gap: 12px; margin-top: 24px; } .dashboard-tool { min-height: 120px; padding: 20px; } .is-admin-home .access-main { margin-top: 8px; } }
+
+.access-list { max-height: min(65dvh, 640px); overflow-y: auto; overscroll-behavior: contain; padding: 3px; }
+details.access-item { padding: 0 14px; }.access-summary { cursor: pointer; min-height: 54px; padding: 12px 0; color: #f5eef2; }.access-summary h3 { display: inline; margin: 0; }.access-summary-note { display: block; margin: 4px 0 0 16px; color: #bcaebb; font-size: 12px; }.access-item[open] { padding-bottom: 14px; }.access-item[open] .access-summary { margin-bottom: 8px; border-bottom: 1px solid #423343; }.access-summary:focus-visible,.access-list:focus-visible { outline: 2px solid #d8b999; outline-offset: 2px; }.access-filter { display: grid; gap: 8px; max-width: 300px; margin-bottom: 18px; }.access-pagination { margin: 8px 0 12px; }.pagination-actions .button { flex-basis: 120px; }

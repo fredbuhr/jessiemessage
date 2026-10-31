@@ -43,5 +43,15 @@ globalThis.JessieI18n?.register({
   "Vidéo sans légende": "Video without a caption",
   "Une vidéo jointe": "A video attached",
   "Pièce jointe indisponible": "Attachment unavailable",
-  "Pièce jointe déjà partagée": "Attachment already shared"
+  "Pièce jointe déjà partagée": "Attachment already shared",
+  "Première page": "First page",
+  "Page {page}": "Page {page}",
+  "Pages de photos": "Photo pages",
+  "Photos suivantes": "Next photos",
+  "Photos précédentes": "Earlier photos",
+  "Pages des archives de diffusion": "Broadcast archive pages",
+  "Diffusions précédentes": "Previous broadcasts",
+  "Diffusions suivantes": "Next broadcasts",
+  "Les 20 diffusions les plus récentes et les envois en cours sont actualisés. Les pages d’archives remplacent la page affichée.": "The 20 latest broadcasts and ongoing deliveries are refreshed. Archive pages replace the displayed page.",
+  "Les 20 diffusions les plus récentes et les envois en cours sont actualisés. Les pages d’archives remplacent la page affichée. Le parcours reprend au début de l’historique.": "The 20 latest broadcasts and ongoing deliveries are refreshed. Archive pages replace the displayed page. Browsing starts again from the beginning."
 });

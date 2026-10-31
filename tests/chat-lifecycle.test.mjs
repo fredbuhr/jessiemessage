@@ -83,7 +83,7 @@ class Element {
     }
     return null;
   }
-  getBoundingClientRect() { return { top: 0, bottom: 100, height: 100 }; }
+  getBoundingClientRect() { return this.syntheticRect ?? { top: 0, bottom: 100, height: 100 }; }
   focus() { if (this.isConnected && this.registry?.document) this.registry.document.activeElement = this; }
   blur() { if (this.registry?.document.activeElement === this) this.registry.document.activeElement = this.registry.document.body; }
   setSelectionRange(start, end) { this.selectionStart = start; this.selectionEnd = end; }
@@ -1797,7 +1797,7 @@ test("failed received refresh clears old previews and explicit retry reuses only
   } finally { await f.hide(); }
 });
 
-test("received pagination keeps one row per client when its latest message changes between pages", async () => {
+test("conversation overview replaces each bounded page and restores previous pages", async () => {
   const item = (n, message = n) => ({ conversation: { id: id(100 + n), peerName: `Synthetic client ${n}` }, unread: true,
     message: { id: id(800 + message), sequence: String(message), sender: "peer", body: `Latest ${message}`, createdAt: now - n * 1000, deletedAt: null } });
   const { f } = receivedFixture(path => {
@@ -1809,11 +1809,15 @@ test("received pagination keeps one row per client when its latest message chang
     await flush(); assert.equal(f.element("received-list").children.length, 50);
     f.element("more-received").focus(); await f.click("more-received");
     const rows = f.element("received-list").children;
-    assert.equal(rows.length, 51);
-    assert.equal(new Set(rows.map(row => row.dataset.receivedConversationId)).size, 51);
+    assert.equal(rows.length, 2);
+    assert.equal(new Set(rows.map(row => row.dataset.receivedConversationId)).size, 2);
     assert.equal(rows.find(row => row.dataset.receivedConversationId === id(101)).dataset.receivedId, id(900));
     assert.equal(f.document.activeElement.dataset.receivedConversationId, id(151), "focus advances to a new client rather than the replaced preview");
     assert.equal(f.calls.some(call => /\/read$/.test(call.path)), false);
+    assert.equal(f.element("previous-received").hidden, false);
+    await f.click("previous-received");
+    assert.equal(f.element("received-list").children.length, 50);
+    assert.equal(f.element("previous-received").hidden, true);
   } finally { await f.hide(); }
 });
 
@@ -1991,4 +1995,191 @@ test("photo requests allow server reception and processing while text and archiv
     assert.equal(signals.get(path).aborted, true);
     assert.equal(f.timers.has(added[0][0]), false, "request cleanup releases its deadline timer");
   }
+});
+
+
+function windowedHistoryFixture({ count = 800, role = "client", deletedFrom = null, intercept: custom = null, overview = false, photoAt = null, offscreenPhotos = false } = {}) {
+  const cid = id(101), rows = Array.from({ length: count }, (_, i) => ({ id: id(10000 + i + 1), sequence: String(i + 1),
+    sender: i % 2 ? "me" : "peer", body: deletedFrom !== null && i + 1 >= deletedFrom ? null : `Synthetic window ${i + 1}`,
+    createdAt: now + i, deletedAt: deletedFrom !== null && i + 1 >= deletedFrom ? now + count + 1 : null, clientMessageId: null,
+    ...(photoAt === i + 1 ? { media: { id: id(50000 + i), mime: "image/jpeg", width: 40, height: 40, thumbnailWidth: 40, thumbnailHeight: 40,
+      thumbnailUrl: `/api/media/${role}/conversations/${cid}/messages/${id(10000 + i + 1)}/thumb`, fullUrl: `/api/media/${role}/conversations/${cid}/messages/${id(10000 + i + 1)}/full` } } : {}) }));
+  const meta = { id: cid, clientId: id(1), clientPseudonym: "Synthetic window", peerName: "Synthetic window", createdAt: now,
+    closedAt: null, lastActivityAt: now + count, latestSequence: String(count), latestEventSequence: String(count), lastReadSequence: "0", peerReadSequence: "0", unreadCount: 1, canSend: true };
+  const originalGeometry = Element.prototype.getBoundingClientRect;
+  if (offscreenPhotos) Element.prototype.getBoundingClientRect = function() { return this.syntheticRect ?? (this.classList.contains("photo-open") ? { top: 10000, bottom: 10100, height: 100 } : originalGeometry.call(this)); };
+  const f = harness({ currentSession: session(1, "A".repeat(43), role), intercept(path, options, server, calls) {
+    const override = custom?.(path, options, { rows, meta, server, calls }); if (override !== undefined) return override;
+    const u = new URL(path, "https://example.invalid");
+    if (path === `/api/chat/${role}/capabilities`) return response(200, { enabled: true, ...(overview ? { inbox: { enabled: true } } : {}) });
+    if (path === `/api/media/${role}/capabilities`) return response(photoAt ? 200 : 404, { enabled: Boolean(photoAt) });
+    if (path.endsWith("/conversation")) return response(200, structuredClone(meta));
+    if (/\/conversations\?/.test(path)) return response(200, { conversations: [structuredClone(meta)], nextCursor: null, hasMore: false });
+    if (u.pathname.endsWith("/inbox")) return response(200, { items: [{ conversation: structuredClone(meta), message: structuredClone(rows[0]), unread: true }], nextCursor: null, hasMore: false });
+    if (u.pathname.endsWith("/messages") && options.method !== "POST") {
+      const limit = Number(u.searchParams.get("limit") ?? 50), before = u.searchParams.get("before"), after = u.searchParams.get("after");
+      let page = rows.filter(row => before === null || BigInt(row.sequence) < BigInt(before)).filter(row => after === null || BigInt(row.sequence) > BigInt(after));
+      page = after === null ? page.slice(-limit) : page.slice(0, limit);
+      const hasMoreBefore = Number(page[0]?.sequence) > 1, hasMoreAfter = Number(page.at(-1)?.sequence) < rows.length;
+      return response(200, { conversation: structuredClone(meta), messages: structuredClone(page), eventCursor: meta.latestEventSequence,
+        hasMoreBefore, hasMoreAfter, nextBefore: hasMoreBefore ? page[0].sequence : null, nextAfter: hasMoreAfter ? page.at(-1).sequence : null });
+    }
+    if (u.pathname.endsWith("/events")) return response(200, { conversation: structuredClone(meta), events: [], nextCursor: meta.latestEventSequence, hasMore: false });
+    if (u.pathname.endsWith("/thumb")) return photoResponse();
+    return undefined;
+  } });
+  return { f, rows, meta, restoreGeometry() { Element.prototype.getBoundingClientRect = originalGeometry; } };
+}
+
+test("overview accepts own text/photo/video and empty conversations in recent order without changing unread state", async () => {
+  const make = (n, sender, extra = {}) => ({ conversation: { id: id(100 + n), peerName: `Client ${n}`, createdAt: now - 10000 }, unread: n === 4,
+    message: sender ? { id: id(800 + n), sequence: String(n), sender, body: `Preview ${n}`, createdAt: now - n * 1000, deletedAt: null, ...extra } : null });
+  const items = [make(1, "me"), make(2, "me", { media: {} }), make(3, "me", { video: {} }), make(4, "peer"), make(5, null)];
+  const { f } = receivedFixture(path => path.startsWith("/api/chat/admin/inbox?") ? response(200, { items, hasMore: false, nextCursor: null }) : undefined);
+  try {
+    await flush(); const rows = f.element("received-list").children;
+    assert.equal(rows.length, 5); assert.deepEqual(rows.map(row => row.dataset.receivedConversationId), items.map(item => item.conversation.id));
+    assert.match(contents(rows[0]), /Vous :.*Preview 1/); assert.match(contents(rows[1]), /Vous :.*Photo.*Preview 2/); assert.match(contents(rows[2]), /Vous :.*Vidéo/);
+    assert.match(contents(rows[4]), /Aucun message/); assert.equal(rows[3].classList.contains("is-unread"), true); assert.equal(rows[0].classList.contains("is-unread"), false);
+    assert.equal(f.calls.some(call => /\/read$/.test(call.path)), false);
+  } finally { await f.hide(); }
+});
+
+test("ordinary overview click opens the latest page and reopening an old cached target returns to the tail without losing a draft", async () => {
+  const { f } = windowedHistoryFixture({ count: 121, role: "admin", overview: true });
+  try {
+    await flush(); for (const h of f.element("received-list").children[0].events.get("click")) h({}); await flush();
+    let state = f.inspect().states.get(id(101)); assert.equal(state.messages.has("121"), true); assert.equal(state.hasMoreAfter, false);
+    await f.context.selectConversation(id(101), { target: { sequence: "1", messageId: id(10001), conversationId: id(101) } });
+    await flush(); state = f.inspect().states.get(id(101)); assert.equal(state.hasMoreAfter, true);
+    f.element("message-body").value = "Pinned draft";
+    await f.context.selectConversation(id(101), { focus: true }); await flush();
+    state = f.inspect().states.get(id(101)); assert.equal(state.messages.has("121"), true); assert.equal(state.hasMoreAfter, false);
+    assert.equal(state.notificationSequence, null); assert.equal(f.element("message-body").value, "Pinned draft");
+  } finally { await f.hide(); }
+});
+
+test("history scroll loads older pages automatically and keeps a bounded window over ten thousand messages navigable in both directions", async () => {
+  const { f } = windowedHistoryFixture({ count: 10000 });
+  try {
+    await flush(); const before = f.calls.filter(call => call.path.includes("/messages?")).length;
+    f.element("message-scroll").scrollTop = 0;
+    for (const h of f.element("message-scroll").events.get("wheel")) h({});
+    for (const h of f.element("message-scroll").events.get("scroll")) h({}); await f.advance(1);
+    assert.ok(f.calls.filter(call => call.path.includes("/messages?")).length > before);
+    for (let i = 0; i < 8; i++) await f.click("older-messages");
+    let state = f.inspect().states.get(id(101)); assert.equal(state.messages.size, 300); assert.equal(f.element("messages").children.length, 300);
+    assert.equal(state.hasMoreAfter, true); assert.equal(f.element("newer-messages").hidden, false);
+    const oldTail = BigInt([...state.messages.keys()].at(-1));
+    await f.click("newer-messages"); state = f.inspect().states.get(id(101));
+    assert.equal(state.messages.size, 300); assert.ok(BigInt([...state.messages.keys()].at(-1)) > oldTail);
+    assert.equal(state.hasMoreBefore, true); assert.equal(state.nextBefore, [...state.messages.keys()].sort((a,b) => Number(a)-Number(b))[0]);
+  } finally { await f.hide(); }
+});
+
+test("automatic history stops after three hidden pages, avoids false empty text and leaves an explicit retry", async () => {
+  const { f } = windowedHistoryFixture({ count: 1000, deletedFrom: 100 });
+  try {
+    await flush(); f.element("message-scroll").scrollTop = 0; await f.advance(1);
+    const historyCalls = f.calls.filter(call => /messages\?before=/.test(call.path));
+    assert.equal(historyCalls.length, 3); assert.equal(f.element("messages").children.length, 0);
+    assert.match(contents(f.element("empty-message")), /D’autres messages/);
+    await f.advance(500); assert.equal(f.calls.filter(call => /messages\?before=/.test(call.path)).length, 3);
+    await f.click("older-messages"); assert.equal(f.calls.filter(call => /messages\?before=/.test(call.path)).length, 4);
+  } finally { await f.hide(); }
+});
+
+test("an automatic history response with a repeated cursor stops and a changed conversation rejects its late page", async () => {
+  let delayed = false; const gate = pause();
+  const { f, meta } = windowedHistoryFixture({ intercept(path) {
+    if (path.includes("messages?before=")) {
+      if (delayed) return gate.promise;
+      const boundary = new URL(path, "https://example.invalid").searchParams.get("before");
+      return response(200, { conversation: meta, messages: [], eventCursor: "800", hasMoreBefore: true, nextBefore: boundary, hasMoreAfter: true, nextAfter: "800" });
+    }
+  } });
+  try {
+    await flush(); f.element("message-scroll").scrollTop = 0;
+    for (const h of f.element("message-scroll").events.get("wheel")) h({}); await f.advance(1);
+    assert.equal(f.calls.filter(call => /messages\?before=/.test(call.path)).length, 1);
+    await f.advance(500); assert.equal(f.calls.filter(call => /messages\?before=/.test(call.path)).length, 1);
+    delayed = true; await f.click("older-messages"); await f.hide();
+    gate.resolve(response(200, { conversation: meta, messages: [{ id: id(1), sequence: "1", sender: "peer", body: "Late private page", createdAt: now, deletedAt: null }], eventCursor: "800", hasMoreBefore: false, nextBefore: null })); await flush();
+    assert.equal(f.element("workspace").hidden, true);
+    assert.equal(contents(f.element("messages")).includes("Late private page"), false);
+  } finally { await f.hide(); }
+});
+
+test("a latest-page response older than an observed deletion cannot reset the window or resurrect its body", async () => {
+  const gate = pause(); let delay = false;
+  const { f, meta } = windowedHistoryFixture({ intercept(path) { if (delay && path.endsWith("messages?limit=50")) return gate.promise; } });
+  try {
+    await flush(); const state = f.inspect().states.get(id(101)); delay = true;
+    state.hasMoreAfter = true; state.nextAfter = "790"; await f.click("new-messages");
+    f.context.__deleted = { ...state.messages.get("800"), body: null, deletedAt: now + 1000 };
+    vm.runInContext('mergeEvents(currentState(), [{sequence:"801",kind:"delete",message:__deleted}],"801")', f.context);
+    gate.resolve(response(200, { conversation: { ...meta, latestEventSequence: "800" }, messages: [{ ...f.context.__deleted, body: "Must never return", deletedAt: null }], eventCursor: "800", hasMoreBefore: true, nextBefore: "800", hasMoreAfter: false, nextAfter: null }));
+    await flush(); assert.equal(state.eventCursor, "801"); assert.equal(state.messages.get("800").deletedAt, now + 1000);
+    assert.equal(contents(f.element("messages")).includes("Must never return"), false);
+  } finally { await f.hide(); }
+});
+
+test("offscreen message thumbnails wait for the viewport and are abandoned on hide", async () => {
+  const fixture = windowedHistoryFixture({ count: 3, photoAt: 3, offscreenPhotos: true }); const { f } = fixture;
+  try {
+    await flush(); assert.equal(f.calls.filter(call => call.path.endsWith("/thumb")).length, 0);
+    const photo = f.element("messages").querySelector(".photo-open"); assert.ok(photo);
+    photo.syntheticRect = { top: 10, bottom: 70, height: 60 };
+    for (const h of f.element("message-scroll").events.get("scroll")) h({}); await flush();
+    assert.equal(f.calls.filter(call => call.path.endsWith("/thumb")).length, 1);
+    await f.hide(); assert.equal(f.element("workspace").hidden, true);
+    assert.equal(photo.querySelector("img")?.getAttribute("src") ?? null, null);
+  } finally { fixture.restoreGeometry(); await f.hide(); }
+});
+
+
+test("a newer load cannot interleave with an unfinished older window request", async () => {
+  const gate = pause(); let hold = false;
+  const { f, meta } = windowedHistoryFixture({ intercept(path) { if (hold && path.includes("messages?before=")) return gate.promise; } });
+  try {
+    await flush(); const state = f.inspect().states.get(id(101)); state.hasMoreAfter = true; state.nextAfter = "800";
+    hold = true; await f.click("older-messages"); const before = f.calls.filter(call => call.path.endsWith("messages?limit=50")).length;
+    await f.click("new-messages");
+    assert.equal(f.calls.filter(call => call.path.endsWith("messages?limit=50")).length, before);
+    gate.resolve(response(200, { conversation: meta, messages: [{ id: id(10750), sequence: "750", sender: "peer", body: "Adjacent old row", createdAt: now, deletedAt: null }], eventCursor: "800", hasMoreBefore: true, nextBefore: "750", hasMoreAfter: true, nextAfter: "750" })); await flush();
+    assert.equal(state.messages.has("750"), true); assert.equal(state.messages.has("800"), true);
+  } finally { await f.hide(); }
+});
+
+test("an evicted deletion cannot be resurrected by a stale forward history page", async () => {
+  let stale = false;
+  const { f, meta } = windowedHistoryFixture({ intercept(path) {
+    if (stale && /messages\?limit=50&after=/.test(path)) return response(200, { conversation: meta,
+      messages: [{ id: id(10800), sequence: "800", sender: "me", body: "Deleted must stay absent", createdAt: now, deletedAt: null }],
+      eventCursor: "800", hasMoreBefore: true, nextBefore: "800", hasMoreAfter: false, nextAfter: null });
+  } });
+  try {
+    await flush(); const state = f.inspect().states.get(id(101));
+    f.context.__deleted = { ...state.messages.get("800"), body: null, deletedAt: now + 1000 };
+    vm.runInContext('mergeEvents(currentState(), [{sequence:"801",kind:"delete",message:__deleted}],"801")', f.context);
+    for (let i = 0; i < 6; i++) await f.click("older-messages");
+    assert.equal(state.messages.has("800"), false); assert.equal(state.historyTrimmed, true);
+    stale = true; await f.click("newer-messages");
+    assert.equal(state.messages.has("800"), false); assert.equal(state.eventCursor, "801");
+    assert.equal(contents(f.element("messages")).includes("Deleted must stay absent"), false);
+  } finally { await f.hide(); }
+});
+
+
+test("idle conversation cache is bounded while drafts and exact uncertain send identities stay pinned", async () => {
+  const { f } = windowedHistoryFixture();
+  try {
+    await flush(); const states = f.inspect().states, current = states.get(id(101));
+    const pending = { clientMessageId: "d".repeat(32), body: "Uncertain", status: "retry" };
+    states.set(id(999), { ...current, id: id(999), draft: "Keep private draft", pending });
+    for (let i = 200; i < 218; i++) states.set(id(i), { ...current, id: id(i), draft: "", pending: null });
+    await f.context.selectConversation(id(101), { target: { sequence: "1", messageId: id(10001), conversationId: id(101) } }); await flush();
+    assert.ok(states.size <= 8); assert.equal(states.get(id(999)).draft, "Keep private draft");
+    assert.equal(states.get(id(999)).pending.clientMessageId, pending.clientMessageId); assert.ok(states.has(id(101)));
+  } finally { await f.hide(); }
 });

@@ -15,6 +15,8 @@ const el = (id) => document.getElementById(id);
 const state = createBroadcastState(); const controllers = new Set(); const campaigns = new Map(); const assets = new Map();
 let cancelSessionCheck = null; let sessionPaused = false; let cookieRefreshAt = Date.now() + 300000; let pollTimer = null; let contactCursor = null; let contactMore = false; let contactsBusy = false;
 let historyCursor = null; let historyMore = false; let historyStarted = false; let historyBusy = false; let historyRetryAt = 0; let detailId = null; let detailEpoch = 0;
+let historyAfter = null; let historyBack = []; let historyNumber = 1; let activityIds = new Set(); let archiveIds = new Set();
+let photoAfter = null; let photoBack = []; let photoNumber = 1;
 let photoCursor = null; let photoMore = false; let photosBusy = false; let photoEpoch = 0; let photoUrl = null;
 let contactAfter = null; let contactBack = []; let selectedPage = 0; let contactsDirty = false;
 let recipientPage = null; let recipientAfter = null; let recipientBack = []; let recipientEpoch = 0; let recipientsBusy = false; let detailElements = null;
@@ -44,7 +46,7 @@ function clearDisplay() {
   for (const id of ["session-status", "contacts-status", "preview-status", "send-status", "history-status", "photo-status", "video-status"]) notice("", false, id);
   el("campaign-form").reset(); el("filters").reset(); replace(el("photo-select"), Object.assign(node("option", "Sans photo"), { value: "" }));
   for (const id of ["tag-filter", "group-filter"]) replace(el(id), Object.assign(node("option", id === "tag-filter" ? "Tous les tags" : "Tous les groupes"), { value: "" }));
-  for (const id of ["more-contacts", "more-history", "more-photos", "uncertain", "repeat-choice", "photo-field", "campaign-detail", "video-options", "video-progress", "upload-video", "remove-video", "cancel-video"]) el(id).hidden = true;
+  for (const id of ["more-contacts", "more-history", "previous-history", "first-history", "history-page", "more-photos", "previous-photos", "first-photos", "photo-page", "uncertain", "repeat-choice", "photo-field", "campaign-detail", "video-options", "video-progress", "upload-video", "remove-video", "cancel-video"]) el(id).hidden = true;
   el("audience-mode").value = "selected"; el("audience-options").hidden = true;
   el("composition").disabled = false; el("allow-repeat").checked = false; clearPhoto(); clearVideo();
 }
@@ -52,8 +54,8 @@ function clearPrivate(isVisible = false) {
   for (const controller of controllers) controller.abort(); controllers.clear(); cancelSessionCheck?.(); clearTimeout(pollTimer); cancelSessionCheck = null; pollTimer = null; sessionPaused = false;
   clearBroadcast(state, { visible: isVisible }); resumeTask = null; labelsLoaded = false; resumeContacts = false; detailEpoch += 1; detailId = null; campaigns.clear(); assets.clear();
   contactCursor = null; contactMore = false; contactsBusy = false; contactAfter = null; contactBack = []; selectedPage = 0; contactsDirty = false;
-  recipientPage = null; recipientAfter = null; recipientBack = []; recipientEpoch += 1; recipientsBusy = false; detailElements = null; historyCursor = null; historyMore = false; historyStarted = false; historyBusy = false; historyRetryAt = 0;
-  photoCursor = null; photoMore = false; photosBusy = false; previewBusy = false; sendBusy = false; clearDisplay();
+  recipientPage = null; recipientAfter = null; recipientBack = []; recipientEpoch += 1; recipientsBusy = false; detailElements = null; historyCursor = null; historyMore = false; historyStarted = false; historyBusy = false; historyRetryAt = 0; historyAfter = null; historyBack = []; historyNumber = 1; activityIds.clear(); archiveIds.clear();
+  photoAfter = null; photoBack = []; photoNumber = 1; photoCursor = null; photoMore = false; photosBusy = false; previewBusy = false; sendBusy = false; clearDisplay();
 }
 function suspendPrivate() {
   if (!state.visible) return;
@@ -224,7 +226,15 @@ function renderControls() {
   el("selected-page").hidden = !manual || state.selected.size <= 50;
   ui.text(el("selected-page"), "Page {page} / {pages}", { page: ui.numberParam(selectedPage + 1), pages: ui.numberParam(Math.max(1, Math.ceil(state.selected.size / 50))) });
   el("more-history").hidden = !historyMore; el("more-history").disabled = historyBusy;
+  el("previous-history").hidden = !historyBack.length; el("previous-history").disabled = historyBusy;
+  el("history-page").hidden = historyNumber === 1 && !historyMore;
+  el("first-history").hidden = historyNumber === 1; el("first-history").disabled = historyBusy;
+  ui.text(el("history-page"), "Page {page}", { page: ui.numberParam(historyNumber) });
   el("more-photos").hidden = !photoMore; el("more-photos").disabled = photosBusy || frozen;
+  el("previous-photos").hidden = !photoBack.length; el("previous-photos").disabled = photosBusy || frozen;
+  el("photo-page").hidden = photoNumber === 1 && !photoMore;
+  el("first-photos").hidden = photoNumber === 1; el("first-photos").disabled = photosBusy || frozen;
+  ui.text(el("photo-page"), "Page {page}", { page: ui.numberParam(photoNumber) });
   el("photo-select").disabled = frozen || !!videoTransfer || state.csrfFailed;
   el("load-photos").disabled = frozen || !!videoTransfer || state.csrfFailed;
   el("video-options").hidden = state.session?.videoEnabled !== true || state.session.videoCreationEnabled === false;
@@ -326,19 +336,33 @@ async function preview() {
   } catch (error) { report(error, "preview-status"); }
   finally { if (currentBroadcast(state, ticket)) { previewBusy = false; renderControls(); } }
 }
-async function loadPhotos(more = false) {
-  if (!state.session?.mediaEnabled || photosBusy || state.pending || more && !photoMore) return;
+async function loadPhotos(more = false, back = false) {
+  if (!state.session?.mediaEnabled || photosBusy || state.pending || more && (back ? !photoBack.length : !photoMore)) return;
+  const afterId = more ? back ? photoBack.at(-1) : photoCursor : null;
+  const nextBack = more ? back ? photoBack.slice(0, -1) : [...photoBack, photoAfter].slice(-100) : [];
+  const nextNumber = more ? photoNumber + (back ? -1 : 1) : 1;
   const ticket = broadcastTicket(state); photosBusy = true; renderControls(); notice("Chargement de tes photos…", false, "photo-status");
   try {
-    const page = await request(`/api/media/admin/assets?limit=20${more && photoCursor ? `&afterId=${photoCursor}` : ""}`, { ticket });
+    const page = await request(`/api/media/admin/assets?limit=20${afterId ? `&afterId=${afterId}` : ""}`, { ticket });
     if (!currentBroadcast(state, ticket)) return;
     if (!Array.isArray(page.assets) || page.assets.length > 20 || typeof page.hasMore !== "boolean" || page.nextCursor !== null && !validId(page.nextCursor)) throw new TypeError("invalid_assets");
+    const incoming = new Map(); let previous = afterId;
     for (const asset of page.assets) {
-      if (!validId(asset?.id) || !Number.isSafeInteger(asset.createdAt) || asset.thumbnailUrl !== `/api/media/admin/assets/${asset.id}/thumb` || !Number.isInteger(asset.width) || !Number.isInteger(asset.height)) throw new TypeError("invalid_asset");
-      if (!assets.has(asset.id)) { const option = textNode("option", "{date} · {width} × {height}", { date: ui.dateParam(asset.createdAt), width: ui.numberParam(asset.width), height: ui.numberParam(asset.height) }); option.value = asset.id; el("photo-select").append(option); }
-      assets.set(asset.id, { id: asset.id, thumbnailUrl: asset.thumbnailUrl });
+      if (!validId(asset?.id) || !Number.isSafeInteger(asset.createdAt) || asset.thumbnailUrl !== `/api/media/admin/assets/${asset.id}/thumb` || !Number.isInteger(asset.width) || !Number.isInteger(asset.height)
+        || previous !== null && asset.id <= previous) throw new TypeError("invalid_asset");
+      incoming.set(asset.id, { id: asset.id, thumbnailUrl: asset.thumbnailUrl, createdAt: asset.createdAt, width: asset.width, height: asset.height }); previous = asset.id;
     }
-    photoCursor = page.nextCursor; photoMore = page.hasMore; el("photo-field").hidden = false; notice(assets.size ? "Choisis une photo pour l’afficher avant de confirmer." : "Aucune photo dans ta bibliothèque. Ajoute d’abord une photo depuis Messages.", false, "photo-status");
+    if (page.hasMore && (!incoming.size || page.nextCursor !== previous)) throw new TypeError("invalid_assets");
+    const chosen = assets.get(state.draft.mediaId); assets.clear();
+    for (const [id, asset] of incoming) assets.set(id, asset);
+    if (chosen && !assets.has(chosen.id)) assets.set(chosen.id, chosen);
+    const options = [Object.assign(node("option", "Sans photo"), { value: "" })];
+    for (const asset of assets.values()) {
+      const option = textNode("option", "{date} · {width} × {height}", { date: ui.dateParam(asset.createdAt), width: ui.numberParam(asset.width), height: ui.numberParam(asset.height) }); option.value = asset.id; options.push(option);
+    }
+    replace(el("photo-select"), ...options); el("photo-select").value = state.draft.mediaId ?? "";
+    photoCursor = page.nextCursor; photoMore = page.hasMore; photoAfter = afterId; photoBack = nextBack; photoNumber = nextNumber;
+    el("photo-field").hidden = false; notice(assets.size ? "Choisis une photo pour l’afficher avant de confirmer." : "Aucune photo dans ta bibliothèque. Ajoute d’abord une photo depuis Messages.", false, "photo-status");
   } catch (error) { report(error, "photo-status"); }
   finally { if (currentBroadcast(state, ticket)) { photosBusy = false; renderControls(); } }
 }
@@ -485,21 +509,29 @@ function parseHistoryPage(page, afterId) {
   let previous = afterId; const parsed = page.campaigns.map((value) => { const campaign = parseSessionCampaign(value); if (previous !== null && campaign.id <= previous) throw new TypeError("invalid_history"); previous = campaign.id; return campaign; });
   if (page.hasMore && (!parsed.length || previous !== page.nextCursor)) throw new TypeError("invalid_history"); return parsed;
 }
-async function loadHistory(more = false, { restartArchive = false } = {}) {
-  if (historyBusy || more && !historyMore) return;
+function trimCampaigns() {
+  const retained = new Set([...activityIds, ...archiveIds, detailId]);
+  for (const id of campaigns.keys()) if (!retained.has(id)) campaigns.delete(id);
+}
+async function loadHistory(more = false, { restartArchive = false, back = false } = {}) {
+  if (historyBusy || more && (back ? !historyBack.length : !historyMore)) return;
   const ticket = broadcastTicket(state); historyBusy = true; renderControls();
   try {
-    const incoming = new Map(); let page = null;
+    const incoming = new Map(); let page = null, nextActivity = null, nextArchive = null;
+    let afterId = historyAfter, nextBack = historyBack, nextNumber = historyNumber;
     if (!more) {
-      // Recent campaigns and every current live campaign are independent of
-      // the historical ID cursor. An insertion in another window can have any ID.
-      const previousLive = [...campaigns.values()].filter((campaign) => ["queued", "running"].includes(campaign.status));
+      // The bounded activity snapshot is replaced on each poll. The complete
+      // archive and its cursor remain independent from newly created random IDs.
       const activity = await request("/api/broadcast/admin/activity", { ticket });
       if (!Array.isArray(activity?.campaigns) || activity.campaigns.length > 30) throw new TypeError("invalid_activity");
       for (const value of activity.campaigns) { const campaign = parseSessionCampaign(value); if (incoming.has(campaign.id)) throw new TypeError("invalid_activity"); incoming.set(campaign.id, campaign); }
-      // A campaign which just completed may have fallen outside the recent
-      // window. Resolve the previously live rows before accepting the snapshot.
-      for (const campaign of previousLive.filter((campaign) => !incoming.has(campaign.id)).slice(0, 10)) {
+      nextActivity = new Set(incoming.keys());
+      // Archive rows may still show a campaign that just left the live window.
+      // Refresh only retained live rows, in bounded batches, before releasing
+      // old activity rows. The selected detail is polled independently too.
+      const previousLive = [...campaigns.values()].filter(campaign => ["queued", "running"].includes(campaign.status)
+        && (archiveIds.has(campaign.id) || detailId === campaign.id) && !incoming.has(campaign.id)).slice(0, 10);
+      for (const campaign of previousLive) {
         try {
           const current = parseSessionCampaign(await request(`/api/broadcast/admin/campaigns/${campaign.id}/summary`, { ticket }));
           if (current.id !== campaign.id) throw new TypeError("invalid_history"); incoming.set(current.id, current);
@@ -507,14 +539,20 @@ async function loadHistory(more = false, { restartArchive = false } = {}) {
       }
     }
     if (more || !historyStarted || restartArchive) {
-      const afterId = more ? historyCursor : null;
+      afterId = more ? back ? historyBack.at(-1) : historyCursor : null;
+      nextBack = more ? back ? historyBack.slice(0, -1) : [...historyBack, historyAfter].slice(-100) : [];
+      nextNumber = more ? historyNumber + (back ? -1 : 1) : 1;
       page = await request(`/api/broadcast/admin/campaigns?limit=20${afterId ? `&afterId=${afterId}` : ""}`, { ticket });
-      for (const campaign of parseHistoryPage(page, afterId)) incoming.set(campaign.id, mergeCampaign(incoming.get(campaign.id), campaign));
+      const parsed = parseHistoryPage(page, afterId); nextArchive = new Set(parsed.map(campaign => campaign.id));
+      for (const campaign of parsed) incoming.set(campaign.id, mergeCampaign(incoming.get(campaign.id), campaign));
     }
     if (!currentBroadcast(state, ticket)) return;
     for (const campaign of incoming.values()) rememberCampaign(campaign);
-    if (page) { historyCursor = page.nextCursor; historyMore = page.hasMore; historyStarted = true; }
-    renderHistory(); notice(campaigns.size ? restartArchive ? "Les 20 diffusions les plus récentes et tous les envois en cours sont actualisés. « Autres diffusions » parcourt le reste de ton historique. Le parcours reprend au début de l’historique." : "Les 20 diffusions les plus récentes et tous les envois en cours sont actualisés. « Autres diffusions » parcourt le reste de ton historique." : "Aucune diffusion pour le moment.", false, "history-status");
+    if (nextActivity) activityIds = nextActivity;
+    if (nextArchive) archiveIds = nextArchive;
+    if (page) { historyCursor = page.nextCursor; historyMore = page.hasMore; historyStarted = true; historyAfter = afterId; historyBack = nextBack; historyNumber = nextNumber; }
+    trimCampaigns();
+    renderHistory(); notice(campaigns.size ? restartArchive ? "Les 20 diffusions les plus récentes et les envois en cours sont actualisés. Les pages d’archives remplacent la page affichée. Le parcours reprend au début de l’historique." : "Les 20 diffusions les plus récentes et les envois en cours sont actualisés. Les pages d’archives remplacent la page affichée." : "Aucune diffusion pour le moment.", false, "history-status");
   } catch (error) { report(error, "history-status"); }
   finally { if (currentBroadcast(state, ticket)) { historyBusy = false; renderControls(); } }
 }
@@ -528,7 +566,7 @@ function rememberCampaign(incoming) {
   return current;
 }
 function forgetCampaign(id) {
-  campaigns.delete(id);
+  campaigns.delete(id); activityIds.delete(id); archiveIds.delete(id);
   if (detailId === id) {
     detailEpoch += 1; recipientEpoch += 1; detailId = null; recipientPage = null; recipientAfter = null; recipientBack = []; recipientsBusy = false; detailElements = null;
     replace(el("campaign-detail"), node("p", "Cette diffusion n’est plus accessible.", "small-copy"));
@@ -584,7 +622,7 @@ async function loadRecipientPage(direction = "first") {
 async function showCampaign(id, refresh = false, refreshRecipients = false) {
   if (!validId(id)) return;
   if (!refresh) {
-    detailId = id; detailEpoch += 1; recipientEpoch += 1; recipientPage = null; recipientAfter = null; recipientBack = []; recipientsBusy = false; detailElements = null;
+    detailId = id; trimCampaigns(); detailEpoch += 1; recipientEpoch += 1; recipientPage = null; recipientAfter = null; recipientBack = []; recipientsBusy = false; detailElements = null;
     replace(el("campaign-detail"), node("p", "Chargement…", "status")); el("campaign-detail").hidden = false; renderHistory();
   }
   const epoch = detailEpoch;
@@ -670,10 +708,10 @@ el("upload-video").addEventListener("click", () => { void uploadVideo(); });
 el("remove-video").addEventListener("click", removeVideo);
 el("cancel-video").addEventListener("click", cancelVideoUpload);
 el("allow-repeat").addEventListener("change", () => { updateComposition(state, { allowRepeatMedia: el("allow-repeat").checked }); renderControls(); });
-el("load-photos").addEventListener("click", () => { void loadPhotos(); }); el("more-photos").addEventListener("click", () => { void loadPhotos(true); });
+el("load-photos").addEventListener("click", () => { void loadPhotos(); }); el("more-photos").addEventListener("click", () => { void loadPhotos(true); }); el("previous-photos").addEventListener("click", () => { void loadPhotos(true, true); }); el("first-photos").addEventListener("click", () => { void loadPhotos(); });
 el("preview").addEventListener("click", () => { void preview(); }); el("campaign-form").addEventListener("submit", (event) => { event.preventDefault(); void send(); });
 el("retry").addEventListener("click", () => { void send(true); }); el("refresh-history").addEventListener("click", () => { void loadHistory(false, { restartArchive: true }); if (detailId) void showCampaign(detailId, true, true); });
-el("more-history").addEventListener("click", () => { void loadHistory(true); }); el("reload").addEventListener("click", () => { suspendPrivate(); void resumePrivate(); }); el("logout").addEventListener("click", () => { void logout(); });
+el("more-history").addEventListener("click", () => { void loadHistory(true); }); el("previous-history").addEventListener("click", () => { void loadHistory(true, { back: true }); }); el("first-history").addEventListener("click", () => { void loadHistory(false, { restartArchive: true }); }); el("reload").addEventListener("click", () => { suspendPrivate(); void resumePrivate(); }); el("logout").addEventListener("click", () => { void logout(); });
 document.addEventListener("visibilitychange", () => { if (visible()) void resumePrivate(); else suspendPrivate(); }); window.addEventListener("pagehide", () => suspendPrivate()); window.addEventListener("pageshow", (event) => { if (event.persisted && visible()) void resumePrivate(); });
 window.addEventListener("online", () => { if (visible() && sessionPaused) void resumePrivate(); });
 if (visible()) void bootstrap(); else clearPrivate();

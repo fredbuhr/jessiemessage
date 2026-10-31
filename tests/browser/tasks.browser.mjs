@@ -2,7 +2,7 @@
 // No production data, SQL connection, push, mail or actual message send.
 import test, { before, after } from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { startWebDriver, waitUntil } from "./webdriver.mjs";
 
@@ -16,6 +16,7 @@ const bootstrap = `window.__taskErrors=[];window.__taskResponses=[];window.__tas
 addEventListener('error',event=>window.__taskErrors.push(String(event.message)));
 addEventListener('unhandledrejection',event=>window.__taskErrors.push(String(event.reason?.message??event.reason)));
 addEventListener('securitypolicyviolation',event=>window.__taskErrors.push('CSP:'+event.violatedDirective));
+const fixtureSetTimeout=globalThis.setTimeout.bind(globalThis);globalThis.setTimeout=(callback,delay,...args)=>{if(delay===30000)window.__taskRefresh=callback;return fixtureSetTimeout(callback,delay,...args)};
 const fixtureFetch=globalThis.fetch.bind(globalThis);globalThis.fetch=async(...args)=>{const path=new URL(args[0],location.origin).pathname;
 try{const response=await fixtureFetch(...args),read=response.json.bind(response);response.json=async()=>{const data=await read();window.__taskResponses.push({path,method:args[1]?.method??'GET',data});return data};return response}
 catch(error){if(error.name==='AbortError')window.__taskCancelled.push(path);throw error}};`;
@@ -197,8 +198,18 @@ test("Chrome: the common task view spans clients and paginates without truncatin
     assert.equal(await page.execute("return document.getElementById('new-task').hidden"), true);
     assert.equal(await page.execute("return document.getElementById('task-list').textContent.includes('Premier client synthétique') && document.getElementById('task-list').textContent.includes('Second client synthétique')"), true);
     await page.click("#more-tasks");
-    await waitUntil(() => page.execute("return document.querySelectorAll('.task-card').length===51 && document.getElementById('more-tasks').hidden"), "last task is accessible on the next page");
-    assert.equal(await page.execute("return new Set([...document.querySelectorAll('.task-card')].map(card=>card.dataset.taskId)).size"), 51);
+    await waitUntil(() => page.execute("return document.querySelectorAll('.task-card').length===1 && document.getElementById('more-tasks').hidden"), "last task is accessible on the next page");
+    assert.equal(await page.execute("return new Set([...document.querySelectorAll('.task-card')].map(card=>card.dataset.taskId)).size"), 1);
+    assert.equal(await page.execute("return document.getElementById('task-page-note').textContent.includes('Page 2')"), true);
+    await page.click('[data-task-action="edit"]'); await page.type("#task-title", "Keep this unsaved task draft");
+    const taskId = id(51); source.state.tasks.set(taskId, { ...source.state.tasks.get(taskId), title: "Changed on the other device", version: "2", updatedAt: Date.now() });
+    await page.execute("window.__taskRefresh()");
+    await waitUntil(() => page.execute("return document.querySelectorAll('.task-card').length===1 && document.getElementById('task-list').textContent.includes('Changed on the other device')"), "active later page revalidates while the editor stays open");
+    assert.equal(await page.execute("return document.getElementById('task-dialog').open && document.getElementById('task-title').value==='Keep this unsaved task draft' && document.getElementById('task-page-note').textContent.includes('Page 2')"), true);
+    await page.click("#close-task"); await page.click("#previous-tasks-top");
+    await waitUntil(() => page.execute("return document.querySelectorAll('.task-card').length===50 && document.getElementById('task-page-note').textContent.includes('Page 1')"), "previous task page replaces its rows");
+    const directory = new URL("../../artifacts/homepage/", import.meta.url); await mkdir(directory, { recursive: true });
+    await writeFile(new URL("tasks-pages-1130-fr-390.png", directory), Buffer.from(await page.screenshot(), "base64"));
     await chooseFilter(page, "due");
     await waitUntil(() => page.execute("return document.querySelectorAll('.task-card').length===1 && document.getElementById('task-list').textContent.includes('Synthetic private task 1')"), "common due filter preserves only actionable deadlines");
     assert.equal(source.state.writes.length, 0); await browserErrors(page, source);

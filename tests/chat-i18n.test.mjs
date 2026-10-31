@@ -203,7 +203,7 @@ test("chat HTML loads explicit catalogues before its controller and marks UI lea
     for (const attr of ["data-jm-i18n", "data-jm-i18n-placeholder", "data-jm-i18n-aria-label"]) {
       const source = node.getAttribute(attr); if (!source) continue;
       f.language("en"); const translated = f.context.JessieI18n.t(source);
-      if (!["Messages", "Message…", "Photos", "Contact", "Notifications", "Emojis", "Options", "Conversation"].includes(source)) assert.notEqual(translated, source, source);
+      if (!["Messages", "Message…", "Photos", "Contact", "Notifications", "Emojis", "Options", "Conversation", "Conversations"].includes(source)) assert.notEqual(translated, source, source);
     }
   }
   // The new gallery tab uses the same word in French and English; its sibling
