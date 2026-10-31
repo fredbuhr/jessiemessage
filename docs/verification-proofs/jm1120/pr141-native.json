@@ -1,0 +1,120 @@
+{
+  "format": "jessiemessage-1120-pr-native",
+  "source": "ff8ee0a724543270df858fb330e7c2b63abdf9bc",
+  "tree": "b20e09901a003c994c7aff43724580542c6a37de",
+  "pr": 141,
+  "run": 41146328131,
+  "attempt": 1,
+  "nodeVersion": "24.22.1",
+  "jobs": [
+    {
+      "id": 124372175156,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 14,
+      "pass": 14,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logFile": "qa1120/pr-final-124372175156.log",
+      "logBytes": 42099,
+      "logSHA256": "3dd083522e8c648e1e8e7ce80af357d0c1e68cd5a3bc3938c0b8b0ebf5fe35db",
+      "countEvidence": [
+        "2026-10-30T23:47:09.4922763Z ℹ tests 14",
+        "2026-10-30T23:47:09.4923350Z ℹ pass 14",
+        "2026-10-30T23:47:09.4923542Z ℹ fail 0",
+        "2026-10-30T23:47:09.4923938Z ℹ skipped 0"
+      ]
+    },
+    {
+      "id": 124372175417,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 282,
+      "pass": 282,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logFile": "qa1120/pr-final-124372175417.log",
+      "logBytes": 58048,
+      "logSHA256": "528fa4093335d62b032ad74654767788fb154df1e84ddba50b8baf922b34cc0e",
+      "countEvidence": [
+        "2026-10-30T23:50:50.8536645Z ℹ tests 282",
+        "2026-10-30T23:50:50.8537256Z ℹ pass 282",
+        "2026-10-30T23:50:50.8537524Z ℹ fail 0",
+        "2026-10-30T23:50:50.8538200Z ℹ skipped 0"
+      ]
+    },
+    {
+      "id": 124372175475,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 4168,
+      "pass": 4116,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 52,
+      "logFile": "qa1120/pr-final-124372175475.log",
+      "logBytes": 589938,
+      "logSHA256": "98a9d264a3395cf2f25ebc2dfe928e57c4d9fb720304ddd75070758f40ec6d77",
+      "countEvidence": [
+        "2026-10-30T23:47:21.9117887Z ℹ tests 4168",
+        "2026-10-30T23:47:21.9118251Z ℹ pass 4116",
+        "2026-10-30T23:47:21.9118429Z ℹ fail 0",
+        "2026-10-30T23:47:21.9118782Z ℹ skipped 52"
+      ]
+    },
+    {
+      "id": 124372175579,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 611,
+      "pass": 611,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logFile": "qa1120/pr-final-124372175579.log",
+      "logBytes": 361870,
+      "logSHA256": "123595d5e5e49f9bb63741fe8a7414c8f651c7fd3f0f8623f39e2bf3559dd3fb",
+      "countEvidence": [
+        "2026-10-30T23:52:38.9187472Z # tests 611",
+        "2026-10-30T23:52:38.9188191Z # pass 611",
+        "2026-10-30T23:52:38.9188518Z # fail 0",
+        "2026-10-30T23:52:38.9188967Z # skipped 0"
+      ]
+    },
+    {
+      "id": 124372175685,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 611,
+      "pass": 611,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logFile": "qa1120/pr-final-124372175685.log",
+      "logBytes": 361563,
+      "logSHA256": "f2fc27b4305cc6014406437e62cf00e36514f4aa864a7884d81b6a65060f57e4",
+      "countEvidence": [
+        "2026-10-30T23:52:30.4688246Z # tests 611",
+        "2026-10-30T23:52:30.4688752Z # pass 611",
+        "2026-10-30T23:52:30.4688972Z # fail 0",
+        "2026-10-30T23:52:30.4689397Z # skipped 0"
+      ]
+    }
+  ],
+  "checkedAt": "2026-10-30T23:54:54.716502Z",
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41146328131",
+  "event": "pull_request",
+  "status": "completed_success",
+  "allFiveJobsSuccessful": true,
+  "generalSkippedScope": "52 tests omitted by the general suite are excluded from its 4116 passes. Both native SQL suites, Chrome and HTTPS report zero omissions. Omissions are not successes.",
+  "productionChanged": false,
+  "productionActions": false,
+  "manualDirectLoginResult": "not_confirmed_by_this_ci_evidence"
+}

@@ -1,0 +1,107 @@
+{
+  "format": "jessiemessage-1120-final-main-native",
+  "source": "2e3504570c373463c6e0126d7c93dfbfb7ade300",
+  "tree": "2a6013bbf4d8fb06c74e660e03a0be9f57a56a80",
+  "PR": 142,
+  "qualifiedPRSource": "bbc17060bc814eaeba418acf4499bb1655bc4780",
+  "fullTreeSameAsQualifiedPR": true,
+  "run": 41149578038,
+  "attempt": 1,
+  "nodeVersion": "24.22.1",
+  "allFiveJobsSuccessful": true,
+  "jobs": [
+    {
+      "id": 124382624182,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 611,
+      "pass": 611,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logFile": "qa1120/main142-124382624182.log",
+      "logBytes": 361138,
+      "logSHA256": "c99ec9089e1ef8f1156711a06a036fd58aa93ae8e9997dabe30bdfcf68f9eab7"
+    },
+    {
+      "id": 124382624365,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 4168,
+      "pass": 4116,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 52,
+      "logFile": "qa1120/main142-124382624365.log",
+      "logBytes": 589136,
+      "logSHA256": "ee869ab38ea6842f0f0fd95ed3026c4865c93474e82fa6a868351ecf637ce4c8"
+    },
+    {
+      "id": 124382624415,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 611,
+      "pass": 611,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logFile": "qa1120/main142-124382624415.log",
+      "logBytes": 360912,
+      "logSHA256": "d10be848ca5f27e787d93acfd6c3d07dbfd6786f6526a8f658e5a4be7f2f4930"
+    },
+    {
+      "id": 124382624419,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 14,
+      "pass": 14,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logFile": "qa1120/main142-124382624419.log",
+      "logBytes": 41306,
+      "logSHA256": "4cc519bec81f0a3ea4cb15ff76cc45bfecad2b8bfcc6c3b88e6af84c13442b27"
+    },
+    {
+      "id": 124382624523,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 282,
+      "pass": 282,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logFile": "qa1120/main142-124382624523.log",
+      "logBytes": 57241,
+      "logSHA256": "3e8c912179f6d3421941b88f4f84b7ef5f338f9a724b6441319f63e5b53c7ea1"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 13022825617,
+      "name": "experience-https-render",
+      "expired": false
+    },
+    {
+      "id": 13022800648,
+      "name": "JessieMessage-apercu-779",
+      "expired": false
+    },
+    {
+      "id": 13021924109,
+      "name": "homepage-render",
+      "expired": false
+    },
+    {
+      "id": 13021864306,
+      "name": "public-profile-render",
+      "expired": false
+    }
+  ],
+  "productionChanged": false
+}

@@ -2,13 +2,13 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Évolution1.12.0 — corrections groupées demandées le30octobre
+## Évolution1.12.0 — code fusionné, relevé hébergé attendu
 
-1. Supprimer l’attente artificielle de la file d’e-mails lors d’une nouvelle inscription, garder SMTP hors de la requête et les reprises bornées. Ne pas promettre un délai de réception externe non mesuré.
-2. Donner accès après invitation valide et confirmation e-mail, sans approbation manuelle supplémentaire ; conserver durées, suspensions/révocations et droits privés, traiter aussi les comptes déjà confirmés en attente.
-3. Corriger la préparation des photos volumineuses et les erreurs de format/envoi sur mobile, avec compression locale et protections serveur conservées.
-4. Entrée envoie dans les discussions admin/client ; bouton dédié de retour à la ligne, composition IME et états d’envoi protégés.
-5. Consolider les contrôles ciblés et CI PR/main, puis publier une seule version. Avant préparation hébergée, relever en lecture seule le checkpoint courant dont la finalisation1113 n’a pas été communiquée. Pas de rejeu de son writer.
+Les quatre corrections du30octobre et la clarification du bouton de confirmation sont codées et fusionnées parPR141/142. [Rapport et preuves](onboarding-media-chat-1120.md). Les contrôles PR réussissent5/5 ; [CI main41149578038](verification-proofs/jm1120/main-native.json) réussie5/5, tentative1, sur le même arbre complet ; tous les journaux et compteurs sont conservés.. Aucun déploiement1120 effectué.
+
+1. Exploiter le [relevé client/checkpoint en lecture seule](operations-access-diagnostic1113.md) déjà fourni. La capture seule n’établit pas la confirmation en base. Ne pas forcer de compte ni renvoyer de mail automatiquement.
+2. Résoudre tout défaut réel révélé puis publier une seule1.12.0 sur la source finale qualifiée, préparer/CHECK l’hébergement avec son checkpoint exact et activer via le Manager personnel.
+3. Après identité de démarrage reçue, qualifier/enregistrer les métadonnées finales puis clore les preuves, sans rejouer les étapes réussies.
 
 ## Correctif1.11.3 — démarrage rapporté, finalisation attendue
 

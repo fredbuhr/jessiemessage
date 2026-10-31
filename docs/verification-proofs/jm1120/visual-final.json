@@ -1,0 +1,158 @@
+{
+  "run": 41148665207,
+  "source": "bbc17060bc814eaeba418acf4499bb1655bc4780",
+  "tree": "2a6013bbf4d8fb06c74e660e03a0be9f57a56a80",
+  "artifact": 13021887770,
+  "verificationCaptures": [
+    {
+      "name": "verification-open-conversation-fr-320.png",
+      "sha256": "2493d033f6f94b55098e9299b41957e0b10b8bd3e5a3a294f4a85dbcccfecb21",
+      "review": "root direct image inspection: clear success notice, reachable sign-in, no clipping"
+    },
+    {
+      "name": "verification-open-conversation-fr-1280.png",
+      "sha256": "63355406e13f4c01af21ebd8ae12693a19fa89899f7bd224a32a49fab074822b",
+      "review": "root direct image inspection: clear success notice, reachable sign-in, no clipping"
+    },
+    {
+      "name": "verification-open-conversation-en-320.png",
+      "sha256": "52cd494dd89ea259d1cdcd7ea8cbd394e7c193368b11541573a34d7f590fc4c0",
+      "review": "root direct image inspection: clear success notice, reachable sign-in, no clipping"
+    },
+    {
+      "name": "verification-open-conversation-en-1280.png",
+      "sha256": "16fd03bd3e3410fd77466a5340cf85eff492a109b9dd33b83fa79c491e3525eb",
+      "review": "root direct image inspection: clear success notice, reachable sign-in, no clipping"
+    }
+  ],
+  "priorComposerCapturesByteIdentical": [
+    "composer-enter-client-fr-320.png",
+    "composer-enter-client-fr-1280.png",
+    "composer-enter-client-en-320.png",
+    "composer-enter-admin-fr-320.png",
+    "composer-enter-admin-en-320.png",
+    "photo-caption-short-client.png",
+    "photo-caption-short-admin.png"
+  ],
+  "priorComposerCaptureCount": 10,
+  "priorVisualSource": "ff8ee0a724543270df858fb330e7c2b63abdf9bc",
+  "limitations": [
+    "SyntheticChrome; no physical phone/Safari proof."
+  ],
+  "files": [
+    {
+      "name": "composer-enter-client-fr-320.png",
+      "width": 320,
+      "height": 640,
+      "bytes": 35461,
+      "sha256": "ed97293409140dd8ee8c452fdc28d59111bec1457c0ed2f16b597e9cbd94aec1",
+      "review": "exact same bytes as prior inspected image"
+    },
+    {
+      "name": "composer-enter-client-fr-1280.png",
+      "width": 1280,
+      "height": 757,
+      "bytes": 186028,
+      "sha256": "7669c03b1aaf05842e438c0076c61b60dd0304123d996c8177b5061a854be003",
+      "review": "exact same bytes as prior inspected image"
+    },
+    {
+      "name": "composer-enter-client-en-320.png",
+      "width": 320,
+      "height": 640,
+      "bytes": 34703,
+      "sha256": "2493752907d29ab20dc1853a02044004faa47f31d31d086a7f7a9ca7368c1a80",
+      "review": "exact same bytes as prior inspected image"
+    },
+    {
+      "name": "composer-enter-client-en-1280.png",
+      "width": 1280,
+      "height": 757,
+      "bytes": 184259,
+      "sha256": "89105acd96d280f99b26297202f36bc2406e64fb30a94216da59016ad116d08f",
+      "review": "root direct inspection of current artifact"
+    },
+    {
+      "name": "composer-enter-admin-fr-320.png",
+      "width": 320,
+      "height": 640,
+      "bytes": 36438,
+      "sha256": "6c27ba856b08f61d6aace630c9ad529b0cbd8d0e37879b4db812878798ad579f",
+      "review": "exact same bytes as prior inspected image"
+    },
+    {
+      "name": "composer-enter-admin-fr-1280.png",
+      "width": 1280,
+      "height": 757,
+      "bytes": 107621,
+      "sha256": "f8bff892fc273ccb180e76d127e1a4ef328c0b652b01e6644f07474ddd587dff",
+      "review": "root direct inspection of current artifact"
+    },
+    {
+      "name": "composer-enter-admin-en-320.png",
+      "width": 320,
+      "height": 640,
+      "bytes": 35646,
+      "sha256": "b4fdef5b8395e0a707f03f0e19cf945db678f7828d31cdf4cf24789b8fc5989d",
+      "review": "exact same bytes as prior inspected image"
+    },
+    {
+      "name": "composer-enter-admin-en-1280.png",
+      "width": 1280,
+      "height": 757,
+      "bytes": 107292,
+      "sha256": "84231d4a6c2bdbd69130130396b0c1e6d2c2e77bd0b9fb25230be3974d1c75a6",
+      "review": "root direct inspection of current artifact"
+    },
+    {
+      "name": "photo-caption-short-client.png",
+      "width": 360,
+      "height": 360,
+      "bytes": 31279,
+      "sha256": "4e6b9fa6afe360e3ab5a2089238dbeb1576e2811901e0f916dd87232f5a1975a",
+      "review": "exact same bytes as prior inspected image"
+    },
+    {
+      "name": "photo-caption-short-admin.png",
+      "width": 360,
+      "height": 360,
+      "bytes": 29764,
+      "sha256": "5b13f375db7d05cbeaa3138c0a6c2d89d0f3f1c7204801a7877961dfae811343",
+      "review": "exact same bytes as prior inspected image"
+    },
+    {
+      "name": "verification-open-conversation-fr-320.png",
+      "width": 320,
+      "height": 844,
+      "bytes": 66149,
+      "sha256": "2493d033f6f94b55098e9299b41957e0b10b8bd3e5a3a294f4a85dbcccfecb21",
+      "review": "root direct inspection of current artifact"
+    },
+    {
+      "name": "verification-open-conversation-fr-1280.png",
+      "width": 1280,
+      "height": 757,
+      "bytes": 228967,
+      "sha256": "63355406e13f4c01af21ebd8ae12693a19fa89899f7bd224a32a49fab074822b",
+      "review": "root direct inspection of current artifact"
+    },
+    {
+      "name": "verification-open-conversation-en-320.png",
+      "width": 320,
+      "height": 844,
+      "bytes": 70339,
+      "sha256": "52cd494dd89ea259d1cdcd7ea8cbd394e7c193368b11541573a34d7f590fc4c0",
+      "review": "root direct inspection of current artifact"
+    },
+    {
+      "name": "verification-open-conversation-en-1280.png",
+      "width": 1280,
+      "height": 757,
+      "bytes": 227446,
+      "sha256": "16fd03bd3e3410fd77466a5340cf85eff492a109b9dd33b83fa79c491e3525eb",
+      "review": "root direct inspection of current artifact"
+    }
+  ],
+  "allFourteenReviewed": true,
+  "blockingVisualIssueObserved": false
+}

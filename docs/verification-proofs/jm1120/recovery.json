@@ -1,0 +1,10 @@
+{
+  "observations": [
+    "After prior interruption, local copy edits existed but no remote copy branch or PR had been created. Main331cc preserved and native5of5 confirmed.",
+    "Observed a later exec-server transport disconnected during a read-only date/status request; the next read-only command succeeded.",
+    "The available traces do not establish the earlier ChatGPT interruption cause."
+  ],
+  "sourceRecovered": true,
+  "productionChangedByAgent": false,
+  "clientSensitiveIdentifiersSavedInGit": false
+}

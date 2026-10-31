@@ -1,0 +1,52 @@
+{
+  "run": 41148965318,
+  "source": "eb3b0ce17e384c041d7e72abea848b6c5d1ca0a3",
+  "attempt": 1,
+  "jobs": [
+    {
+      "id": 124380638697,
+      "evidence": [
+        "2026-10-31T00:13:44.5743463Z \u2139 tests 15",
+        "2026-10-31T00:13:44.5744582Z \u2139 pass 15",
+        "2026-10-31T00:13:44.5745018Z \u2139 fail 0",
+        "2026-10-31T00:13:44.5746092Z \u2139 skipped 0"
+      ],
+      "logFile": "qa1120/access-diagnostic/native-124380638697.log",
+      "logBytes": 36026,
+      "logSHA256": "d01d82eadead8d175a3bb6c04b5b169c907da8c0e7a9343f5738dac0ccff0f62"
+    },
+    {
+      "id": 124380638842,
+      "evidence": [
+        "2026-10-31T00:13:35.7898697Z \u2139 tests 15",
+        "2026-10-31T00:13:35.7898995Z \u2139 pass 15",
+        "2026-10-31T00:13:35.7899117Z \u2139 fail 0",
+        "2026-10-31T00:13:35.7899392Z \u2139 skipped 0"
+      ],
+      "logFile": "qa1120/access-diagnostic/native-124380638842.log",
+      "logBytes": 35031,
+      "logSHA256": "019db4993e10cb9194ae88ba07eeb1fb9acabcd7a2de3ea4db212177cc984842"
+    },
+    {
+      "id": 124380638998,
+      "evidence": [
+        "2026-10-31T00:13:22.7340597Z Ran 16 tests in 0.209s",
+        "2026-10-31T00:13:22.7340931Z OK",
+        "2026-10-31T00:13:22.8980344Z Ran 10 tests in 0.062s",
+        "2026-10-31T00:13:22.8980734Z OK"
+      ],
+      "logFile": "qa1120/access-diagnostic/native-124380638998.log",
+      "logBytes": 17946,
+      "logSHA256": "44c9ad3c8d6a276d05bbe6c7c043bc1f8ead45287280615700d46499732157ae"
+    }
+  ],
+  "noHostedExecution": true,
+  "status": "native_qualified_hosted_observation_pending",
+  "tree": "cc218f8510e73c400f5957314d503fc7e40a61d2",
+  "pythonTests": 16,
+  "embeddedBaselineTests": 10,
+  "mariaDBTestsEach": 15,
+  "allThreeJobsSuccessful": true,
+  "diagnosticSHA256": "214471d2d65acacbc89ef1431853aedacb3fddaf818de8144bc9da705d9f5683",
+  "immutableSourceReadbackMatches": true
+}

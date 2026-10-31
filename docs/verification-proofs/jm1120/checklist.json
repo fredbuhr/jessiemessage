@@ -1,0 +1,197 @@
+{
+  "format": "jessiemessage-1120-delivery-checklist",
+  "taskDate": "2026-10-30",
+  "scope": "four requested onboarding/mail/photo/composer changes, one release",
+  "qualifiedPRSource": "bbc17060bc814eaeba418acf4499bb1655bc4780",
+  "qualifiedPRRun": 41148665207,
+  "mergedSource": "2e3504570c373463c6e0126d7c93dfbfb7ade300",
+  "tree": "2a6013bbf4d8fb06c74e660e03a0be9f57a56a80",
+  "checks": [
+    {
+      "id": "confirmationMail-1",
+      "check": "wake only after committed verification job",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "confirmationMail-2",
+      "check": "callback failure never blocks registration or resending",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "confirmationMail-3",
+      "check": "ready backlog drains without15second batch pauses",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "confirmationMail-4",
+      "check": "coalesced wakes do not overlap active batches",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "confirmationMail-5",
+      "check": "delivery errors retain bounded retry polling and shutdown guards",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "invitedAdmission-1",
+      "check": "invitation and confirmed mailbox required",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "invitedAdmission-2",
+      "check": "automatic activation creates one authorized conversation",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "invitedAdmission-3",
+      "check": "confirmed historical pending accounts activate at login/session validation",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "invitedAdmission-4",
+      "check": "suspended/revoked/expired accounts remain refused",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "invitedAdmission-5",
+      "check": "closed or foreign conversation is not reopened or reassigned",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "invitedAdmission-6",
+      "check": "session expiring during activation rolls transaction back",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "invitedAdmission-7",
+      "check": "old approve action is idempotent and cannot extend access",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "clientPhotos-1",
+      "check": "source file up to50MiB accepted before local reduction",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "clientPhotos-2",
+      "check": "predecode pixel/dimension bounds64MP/16384px retained",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "clientPhotos-3",
+      "check": "real20MP JPEG above10MiB reduced towards2MiB in nativeChrome",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "clientPhotos-4",
+      "check": "JPEG PNG WebP byte validation and MIMEaliases/generic/empty handling",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "clientPhotos-5",
+      "check": "extensionless generic or empty MIME passes picker then byte inspection",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "clientPhotos-6",
+      "check": "ImageBitmap fallback and EXIF/alpha handling exercised",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "clientPhotos-7",
+      "check": "HEIC/HEIF explains how to select JPEG copy",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "clientPhotos-8",
+      "check": "invalid input triggers no upload and preserves draft/caption",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "clientPhotos-9",
+      "check": "slow-network deadline and per-account/global admission bounds exercised",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "composer-1",
+      "check": "Enter sends for both roles and languages at320/1280px",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "composer-2",
+      "check": "explicit newline inserts at caret and replaces selection",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "composer-3",
+      "check": "IME composition/repeated keys/busy states prevent accidental double sending",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "composer-4",
+      "check": "mobile beforeinput fallback respects another textarea",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "composer-5",
+      "check": "ten final native screenshots reviewed with44px control requirements",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "composer-6",
+      "check": "photo caption uses explicit newline and controls remain reachable at360px height",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr-native.json and targeted tests; visual-review.json where applicable"
+    },
+    {
+      "id": "confirmationMail-6",
+      "check": "email and verification page explicitly instruct the final confirmation button; success opens conversation sign-in in FR/EN",
+      "status": "verified_on_final_PR_source",
+      "evidence": "pr142-native.json and visual-final.json"
+    }
+  ],
+  "reviewedAllRequestedAreas": true,
+  "pending": [
+    "hosted read-only client and private checkpoint observation",
+    "immutable tag/release publication after remaining diagnosis",
+    "hosted preparation/CHECK and activation after user execution"
+  ],
+  "limitations": [
+    "External SMTP/inbox delivery latency was not measured.",
+    "No physical client phone/Safari or original failed photo reproduced.",
+    "No real account/mail/media/SQL/backup manipulation.",
+    "General52intentional omissions are not successful tests."
+  ],
+  "productionChanged": false,
+  "mainNativeRun": 41149578038,
+  "mainNativeStatus": "success5of5",
+  "diagnosticNativeRun": 41148965318,
+  "hostedClientObservation": "awaiting_user_read_only_JSON",
+  "codeQualificationComplete": true
+}
