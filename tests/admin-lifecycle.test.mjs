@@ -17,7 +17,7 @@ const flush = async () => { for (let index = 0; index < 5; index += 1) await new
 class Element {
   constructor(tagName = "div") {
     this.tagName = tagName; this.value = ""; this.defaultValue = ""; this.textContent = ""; this.hidden = false;
-    this.disabled = false; this.checked = false; this.required = false; this.children = []; this.dataset = {}; this.events = new Map(); this.attributes = new Map();
+    this.disabled = false; this.checked = false; this.defaultChecked = false; this.required = false; this.children = []; this.dataset = {}; this.events = new Map(); this.attributes = new Map();
     const classes = new Set();
     this.classList = { add: (value) => classes.add(value), remove: (value) => classes.delete(value), contains: (value) => classes.has(value),
       toggle: (value, enabled) => { const include = enabled ?? !classes.has(value); if (include) classes.add(value); else classes.delete(value); return include; } };
@@ -32,7 +32,10 @@ class Element {
   append(...children) { for (const child of children) { child.remove(); child.parentElement = this; this.children.push(child); } }
   replaceChildren(...children) { this.children = [...children]; }
   querySelectorAll(selector) { return this.children.flatMap((child) => [selector === child.tagName ? child : null, ...child.querySelectorAll(selector)]).filter(Boolean); }
-  reset() { for (const field of this.querySelectorAll("input")) { field.value = field.defaultValue; field.checked = false; } }
+  reset() {
+    this.events.get("reset")?.({ target: this });
+    for (const field of this.querySelectorAll("input")) { field.value = field.defaultValue; field.checked = field.defaultChecked; }
+  }
   focus() { this.focused = true; }
   select() { this.selected = true; }
   setSelectionRange(start, end, direction = "none") { this.selectionStart = start; this.selectionEnd = end; this.selectionDirection = direction; }
@@ -57,6 +60,7 @@ function harness({ visible = true, currentSession = session(), intercept, clipbo
   const invitationFormatInput = element("invitation-format", "select"); invitationFormatInput.value = invitationFormat;
   const hours = element("invitation-hours", "input"), days = element("invitation-days", "input"), unlimited = element("invitation-unlimited", "input");
   hours.value = hours.defaultValue = "72"; days.value = days.defaultValue = "30";
+  unlimited.checked = unlimited.defaultChecked = true;
   invitationForm.append(invitationFormatInput, hours, days, unlimited, createButton);
   tools.append(invitationForm, element("copy-invitation", "button"), element("copy-invitation-code", "button"), element("refresh-access", "button"), element("clients-list"), element("invitations-list"));
   for (const kind of ["invitations", "clients"]) {
@@ -89,7 +93,7 @@ function harness({ visible = true, currentSession = session(), intercept, clipbo
       if (path === "/api/auth/session") return response(state.currentSession ? 200 : 401, state.currentSession ?? { error: "authentication_required" });
       if (path === "/api/admin/access") return response(200, { capabilities: {} });
       if (path === "/api/chat/admin/capabilities") return response(200, { enabled: true });
-      if (path === "/api/admin/invitations" && options.method === "POST") return response(201, { id: "2".repeat(32), expiresAt: initialTime + 3600000, accessDays: 30,
+      if (path === "/api/admin/invitations" && options.method === "POST") return response(201, { id: "2".repeat(32), expiresAt: initialTime + 3600000, accessDays: JSON.parse(options.body).accessDays,
         ...(JSON.parse(options.body).format === "code" ? { format: "code", code: "ABCD-EFGH-JKMN-PQRS-TVWX" } : { url: `https://example.invalid/access#invitation=${"B".repeat(43)}` }) });
       for (const kind of ["invitations", "clients"]) {
         if (!path.startsWith(`/api/admin/${kind}?`)) continue;
@@ -803,6 +807,23 @@ test("administrator login keeps a closed continue target including client manage
     const f = harness({ pathname: "/admin/login", search }); await flush();
     assert.deepEqual(f.navigations, [expected]); assert.equal(posts(f).length, 0);
   }
+});
+
+test("invitation creation defaults to unlimited and an explicit finite choice survives list refresh until form reset", async () => {
+  const f = harness({ invitationFormat: "code" }); await flush();
+  const unlimited = f.element("invitation-unlimited"), days = f.element("invitation-days");
+  assert.equal(unlimited.checked, true); assert.equal(days.disabled, true); assert.equal(days.required, false);
+  await f.submit("invitation-form");
+  assert.deepEqual(JSON.parse(posts(f).at(-1).options.body), { lifetimeHours: 72, accessDays: null, format: "code" });
+  unlimited.checked = false; unlimited.events.get("change")({ target: unlimited }); days.value = "17";
+  assert.equal(days.disabled, false); assert.equal(days.required, true);
+  await f.click("refresh-access");
+  assert.equal(unlimited.checked, false); assert.equal(days.value, "17"); assert.equal(days.disabled, false);
+  await f.submit("invitation-form");
+  assert.deepEqual(JSON.parse(posts(f).at(-1).options.body), { lifetimeHours: 72, accessDays: 17, format: "code" });
+  f.element("invitation-form").reset(); await f.advance(0);
+  assert.equal(unlimited.checked, true); assert.equal(days.disabled, true); assert.equal(days.required, false); assert.equal(days.value, "30");
+  assert.equal(posts(f).length, 2, "reset changes the form only and never creates an invitation");
 });
 
 test("individual invitation code is created and copied once, while link credentials stay empty and hide wipes the code", async () => {

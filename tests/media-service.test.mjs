@@ -192,8 +192,8 @@ test("upload quotas precede native processing and use scoped private HMAC bucket
   await assert.rejects(f.service.upload("admin", f.token, bytes), (error) => hasCode("MEDIA_RATE_LIMIT")(error) && error.retryAfter === 17);
   assert.equal(f.calls.length, 0);
   const [personal, , global] = f.rateCalls;
-  assert.deepEqual(global.options, { now, windowSeconds: 60, limit: 30 });
-  assert.deepEqual(personal.options, { now, windowSeconds: 60, limit: 10 });
+  assert.deepEqual(global.options, { now, windowSeconds: 60, limit: 240 });
+  assert.deepEqual(personal.options, { now, windowSeconds: 60, limit: 60 });
   for (const [call, name, identity] of [[global, "global-upload", "all"], [personal, "user-upload", adminHex]]) {
     assert.deepEqual(call.bucket, createHmac("sha256", f.key).update("jessiemessage:media-rate:v1:").update(name).update("\0").update(identity).digest());
     assert.equal(call.bucket.length, 32);
@@ -645,7 +645,7 @@ test("an exhausted upload or metadata account cannot spend the shared allowance 
   for (const operation of [(f) => f.service.admitUpload("admin", f.token), (f) => f.service.listAssets("admin", f.token), (f) => f.service.gallery("admin", f.token, conversationHex)]) {
     const f = await fixture(); f.state.rateResults = [{ allowed: false, retryAfter: 8 }];
     await assert.rejects(operation(f), hasCode("MEDIA_RATE_LIMIT")); assert.equal(f.rateCalls.length, 1); assert.equal(f.calls.length, 0);
-    const first = f.rateCalls[0]; assert.ok([10, 60].includes(first.options.limit));
+    const first = f.rateCalls[0]; assert.equal(first.options.limit, 60);
   }
 });
 

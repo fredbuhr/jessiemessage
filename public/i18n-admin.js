@@ -215,3 +215,5 @@ globalThis.JessieI18n?.register({
   "L’invitation a peut-être été créée. Consulte la liste puis actualise les accès avant d’en créer une autre.": "The invitation may have been created. Check the list and refresh access before creating another one.",
   "L’invitation est créée. Copie-la maintenant ; la liste n’a pas pu être actualisée.": "The invitation is created. Copy it now; the list could not be refreshed."
 });
+
+globalThis.JessieI18n?.register({"Médias":"Media","Voir, ajouter et gérer tes photos et vidéos.":"View, add and manage your photos and videos."});

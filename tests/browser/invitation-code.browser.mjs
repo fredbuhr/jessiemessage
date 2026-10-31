@@ -243,26 +243,36 @@ test("real Chrome: admin creates and copies only the selected invitation format,
         await page.navigate("/admin/clients");
         await waitUntil(() => page.execute("return !document.getElementById('access-tools').hidden && !document.getElementById('invitation-create').disabled"), "admin invitation tools");
         assert.equal(await page.execute("return document.getElementById('invitation-format').value"), "code");
+        assert.equal(await page.execute("return document.getElementById('invitation-unlimited').checked && document.getElementById('invitation-days').disabled && !document.getElementById('invitation-days').required"), true,
+          "new invitations default to unlimited access in either language");
         await page.execute("window.__clipboardWrites=[];Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async value=>{window.__clipboardWrites.push(value)}}})");
         const before = source.creations.length; await page.click("#invitation-create");
         await waitUntil(() => page.execute("return !document.getElementById('new-invitation').hidden && !document.getElementById('invitation-code-result-field').hidden && !document.getElementById('copy-invitation-code').disabled"), "one-time code result");
-        assert.deepEqual(source.creations.slice(before), [{ lifetimeHours: 72, accessDays: 30, format: "code" }]);
+        assert.deepEqual(source.creations.slice(before), [{ lifetimeHours: 72, accessDays: null, format: "code" }]);
         assert.equal(await page.execute("return document.getElementById('invitation-code-result').value===arguments[0] && document.getElementById('invitation-link-field').hidden && document.getElementById('invitation-link').value===''", code), true);
         await geometry(page); await capture(page, `invitation-code-admin-${language}-${width}`);
         await page.click("#copy-invitation-code");
         await waitUntil(() => page.execute("return window.__clipboardWrites.length===1"), "code copy action");
         assert.deepEqual(await page.execute("return window.__clipboardWrites"), [code]);
         await page.execute("const input=document.getElementById('invitation-format');input.value='link';input.dispatchEvent(new Event('change',{bubbles:true}))");
+        await page.execute("const unlimited=document.getElementById('invitation-unlimited');unlimited.checked=false;unlimited.dispatchEvent(new Event('change',{bubbles:true}));document.getElementById('invitation-days').value='17'");
+        assert.equal(await page.execute("return !document.getElementById('invitation-days').disabled && document.getElementById('invitation-days').required"), true,
+          "a finite duration remains an explicit choice");
         await waitUntil(() => page.execute("return !document.getElementById('invitation-create').disabled"), "format selection remains ready"); await page.click("#invitation-create");
         await waitUntil(() => page.execute("return !document.getElementById('new-invitation').hidden && !document.getElementById('invitation-link-field').hidden && !document.getElementById('copy-invitation').disabled"), "legacy link result");
         const url = `${source.origin}/access#invitation=${legacyToken}`;
-        assert.deepEqual(source.creations.at(-1), { lifetimeHours: 72, accessDays: 30, format: "link" });
+        assert.deepEqual(source.creations.at(-1), { lifetimeHours: 72, accessDays: 17, format: "link" });
         assert.equal(await page.execute("return document.getElementById('invitation-link').value===arguments[0] && document.getElementById('invitation-code-result-field').hidden && document.getElementById('invitation-code-result').value===''", url), true);
         await page.click("#copy-invitation"); await waitUntil(() => page.execute("return window.__clipboardWrites.length===2"), "link copy action");
         assert.deepEqual(await page.execute("return window.__clipboardWrites"), [code, url]);
+        await page.execute("document.getElementById('invitation-form').reset()");
+        await waitUntil(() => page.execute("return document.getElementById('invitation-unlimited').checked && document.getElementById('invitation-days').disabled && !document.getElementById('invitation-days').required"), "reset restores the unlimited default without creating anything");
+        assert.equal(source.creations.length, before + 2);
         await page.navigate("/admin/clients");
         await waitUntil(() => page.execute("return !document.getElementById('access-tools').hidden"), "reloaded admin access");
         assert.equal(await page.execute("return document.getElementById('new-invitation').hidden && document.getElementById('invitation-code-result').value==='' && document.getElementById('invitation-link').value===''"), true, "lists and reload do not recover either creation secret");
+        assert.equal(await page.execute("return document.getElementById('invitation-unlimited').checked && document.getElementById('invitation-days').disabled && !document.getElementById('invitation-days').required"), true,
+          "a fresh invitation form reloads with unlimited access selected");
       } finally { await page.close(); }
     });
     cleanFixture(source);

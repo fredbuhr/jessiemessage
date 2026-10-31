@@ -1,5 +1,6 @@
+import { readFile } from "node:fs/promises";
 import { CLIENT_ADMISSION_POLICY } from "../access/admission.mjs";
-import { checkMutation, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
+import { AUTH_HEADERS, checkMutation, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { safeMedia, safeMessage } from "../chat/http.mjs";
 import { validateMessageBody } from "../chat/crypto.mjs";
 
@@ -12,6 +13,14 @@ const COOKIES = Object.freeze({ admin: "__Host-jessie_session", client: "__Host-
 const MAX_SEQUENCE = 18446744073709551615n;
 const unavailable = () => httpError(503, "media_unavailable");
 const invalid = () => httpError(400, "invalid_request");
+const publicRoot = new URL("../../public/", import.meta.url);
+const libraryFiles = new Map([
+  ["/admin/media", ["media-library-page.html", "text/html; charset=utf-8"]],
+  ["/media-library-page.js", ["media-library-page.js", "text/javascript; charset=utf-8"]],
+  ["/media-library-model.js", ["media-library-model.js", "text/javascript; charset=utf-8"]],
+  ["/media-library-page.css", ["media-library-page.css", "text/css; charset=utf-8"]],
+  ["/i18n-media-library.js", ["i18n-media-library.js", "text/javascript; charset=utf-8"]],
+]);
 const id = (value) => typeof value === "string" && value.length === 32 && /^[a-f0-9]{32}$/.test(value);
 const date = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 8640000000000000;
 const sequence = (value, positive = false) => typeof value === "string" && /^(?:0|[1-9][0-9]{0,19})$/.test(value)
@@ -45,6 +54,7 @@ function query(url, allowed, defaultLimit) {
 }
 
 function routeFor(pathname) {
+  if (libraryFiles.has(pathname)) return { role: "admin", kind: pathname === "/admin/media" ? "page" : "pageAsset", methods: ["GET", "HEAD"] };
   let match = /^\/api\/media\/(admin|client)\/(capabilities|assets)$/.exec(pathname);
   if (match) return { role: match[1], kind: match[2], methods: match[2] === "assets" ? ["GET", "POST"] : ["GET"] };
   match = /^\/api\/media\/(admin|client)\/assets\/([a-f0-9]{32})\/(delete|full|thumb)$/.exec(pathname);
@@ -223,13 +233,22 @@ export function createMediaHandler(service, { origin }) {
       const actor = token ? await service.actor(route.role, token) : null;
       if (!actor) {
         const headers = {};
+        if (route.kind === "page") {
+          reply(response, method, 303, "", { Location: "/admin/login?continue=%2Fadmin%2Fmedia", "Content-Type": "text/html; charset=utf-8" });
+          return true;
+        }
         reply(response, method, 401, { error: "authentication_required" }, { ...headers, ...(method === "POST" ? { Connection: "close" } : {}) });
         if (method === "POST") request.resume();
         return true;
       }
       const authenticated = safeActor(actor, route.role);
       if (method === "POST" && !sameText(request.headers["x-csrf-token"], authenticated.csrf)) throw httpError(403, "csrf_failed");
-      if (route.kind === "capabilities") {
+      if (route.kind === "page" || route.kind === "pageAsset") {
+        query(url, []);
+        const [name, type] = libraryFiles.get(url.pathname);
+        reply(response, method, 200, await readFile(new URL(name, publicRoot)), { "Content-Type": type,
+          ...(route.kind === "page" ? { "Content-Security-Policy": AUTH_HEADERS["Content-Security-Policy"] + "; media-src 'self' blob:" } : {}) });
+      } else if (route.kind === "capabilities") {
         query(url, []);
         reply(response, method, 200, { enabled: true, maxUploadBytes: MAX_UPLOAD_BYTES, formats: [...FORMATS] });
       } else if (upload) {

@@ -16,12 +16,14 @@ const state = createBroadcastState(); const controllers = new Set(); const campa
 let cancelSessionCheck = null; let sessionPaused = false; let cookieRefreshAt = Date.now() + 300000; let pollTimer = null; let contactCursor = null; let contactMore = false; let contactsBusy = false;
 let historyCursor = null; let historyMore = false; let historyStarted = false; let historyBusy = false; let historyRetryAt = 0; let detailId = null; let detailEpoch = 0;
 let historyAfter = null; let historyBack = []; let historyNumber = 1; let activityIds = new Set(); let archiveIds = new Set();
-let photoAfter = null; let photoBack = []; let photoNumber = 1;
+let photoAfter = null; let photoBack = []; let photoNumber = 1; let photoPageIds = new Set();
 let photoCursor = null; let photoMore = false; let photosBusy = false; let photoEpoch = 0; let photoUrl = null;
 let contactAfter = null; let contactBack = []; let selectedPage = 0; let contactsDirty = false;
 let recipientPage = null; let recipientAfter = null; let recipientBack = []; let recipientEpoch = 0; let recipientsBusy = false; let detailElements = null;
 let previewBusy = false; let sendBusy = false; let logoutBusy = false;
-let videoDraft = null; let videoTransfer = null;
+let videoDraft = null; let videoTransfer = null; let photoTransfer = null;
+let photoPickerOwner = null; let photoSelection = null;
+let photoGridEpoch = 0; const photoThumbUrls = new Map(); const photoThumbControllers = new Set();
 let resumeTask = null;
 let labelsLoaded = false; let resumeContacts = false;
 const MAX_VIDEO_BYTES = 104857600;
@@ -33,6 +35,18 @@ const textNode = (tag, source, params = {}, className) => { const element = node
 const stale = () => Object.assign(new Error("stale_response"), { stale: true });
 function notice(text, error = false, target = "session-status", params = {}) { const element = el(target); ui.text(element, text, params); element.classList.toggle("is-error", error); }
 function clearPhoto() { photoEpoch += 1; if (photoUrl) URL.revokeObjectURL(photoUrl); photoUrl = null; replace(el("photo-preview")); }
+function clearPhotoGrid() {
+  photoGridEpoch += 1;
+  for (const controller of photoThumbControllers) { controller.abort(); controllers.delete(controller); }
+  photoThumbControllers.clear();
+  for (const url of photoThumbUrls.values()) URL.revokeObjectURL(url);
+  photoThumbUrls.clear(); replace(el("photo-grid"));
+}
+function stopPhotoUpload() {
+  const transfer = photoTransfer; photoTransfer = null;
+  if (transfer) { transfer.controller.abort(); controllers.delete(transfer.controller); }
+  el("photo-file").value = "";
+}
 function clearVideo() {
   const draft = videoDraft; videoDraft = null;
   if (videoTransfer) { videoTransfer.controller.abort(); videoTransfer = null; }
@@ -44,18 +58,19 @@ function clearDisplay() {
   el("broadcast-content").hidden = true; el("logout").hidden = true; el("reload").hidden = true;
   for (const id of ["contacts", "selected", "preview-list", "history", "campaign-detail"]) replace(el(id));
   for (const id of ["session-status", "contacts-status", "preview-status", "send-status", "history-status", "photo-status", "video-status"]) notice("", false, id);
-  el("campaign-form").reset(); el("filters").reset(); replace(el("photo-select"), Object.assign(node("option", "Sans photo"), { value: "" }));
+  el("campaign-form").reset(); el("filters").reset(); clearPhotoGrid(); stopPhotoUpload();
   for (const id of ["tag-filter", "group-filter"]) replace(el(id), Object.assign(node("option", id === "tag-filter" ? "Tous les tags" : "Tous les groupes"), { value: "" }));
-  for (const id of ["more-contacts", "more-history", "previous-history", "first-history", "history-page", "more-photos", "previous-photos", "first-photos", "photo-page", "uncertain", "repeat-choice", "photo-field", "campaign-detail", "video-options", "video-progress", "upload-video", "remove-video", "cancel-video"]) el(id).hidden = true;
+  for (const id of ["more-contacts", "more-history", "previous-history", "first-history", "history-page", "more-photos", "previous-photos", "first-photos", "photo-page", "uncertain", "repeat-choice", "photo-field", "campaign-detail", "video-options", "video-progress", "upload-video", "remove-video", "cancel-video", "cancel-photo-upload", "remove-photo"]) el(id).hidden = true;
   el("audience-mode").value = "selected"; el("audience-options").hidden = true;
   el("composition").disabled = false; el("allow-repeat").checked = false; clearPhoto(); clearVideo();
 }
 function clearPrivate(isVisible = false) {
+  photoPickerOwner = null; photoSelection = null;
   for (const controller of controllers) controller.abort(); controllers.clear(); cancelSessionCheck?.(); clearTimeout(pollTimer); cancelSessionCheck = null; pollTimer = null; sessionPaused = false;
   clearBroadcast(state, { visible: isVisible }); resumeTask = null; labelsLoaded = false; resumeContacts = false; detailEpoch += 1; detailId = null; campaigns.clear(); assets.clear();
   contactCursor = null; contactMore = false; contactsBusy = false; contactAfter = null; contactBack = []; selectedPage = 0; contactsDirty = false;
   recipientPage = null; recipientAfter = null; recipientBack = []; recipientEpoch += 1; recipientsBusy = false; detailElements = null; historyCursor = null; historyMore = false; historyStarted = false; historyBusy = false; historyRetryAt = 0; historyAfter = null; historyBack = []; historyNumber = 1; activityIds.clear(); archiveIds.clear();
-  photoAfter = null; photoBack = []; photoNumber = 1; photoCursor = null; photoMore = false; photosBusy = false; previewBusy = false; sendBusy = false; clearDisplay();
+  photoAfter = null; photoBack = []; photoNumber = 1; photoPageIds.clear(); photoCursor = null; photoMore = false; photosBusy = false; previewBusy = false; sendBusy = false; clearDisplay();
 }
 function suspendPrivate() {
   if (!state.visible) return;
@@ -66,7 +81,7 @@ function suspendPrivate() {
   if (videoTransfer) { videoTransfer.draft.failed = true; videoTransfer = null; notice("Le chargement n’a pas été confirmé. Choisis de nouveau la vidéo pour réessayer.", true, "video-status"); }
   for (const player of el("video-preview").querySelectorAll("video")) { player.pause?.(); player.removeAttribute("src"); player.load?.(); }
   replace(el("video-preview")); if (videoDraft?.url) { URL.revokeObjectURL(videoDraft.url); videoDraft.url = null; }
-  clearPhoto();
+  stopPhotoUpload(); clearPhotoGrid(); clearPhoto();
   el("broadcast-content").hidden = true; el("logout").hidden = true; el("reload").hidden = true;
 }
 async function resumePrivate() {
@@ -90,7 +105,9 @@ async function resumePrivate() {
       el("campaign-title").value = state.draft.title; el("campaign-body").value = state.draft.body;
       el("broadcast-content").hidden = false; el("logout").hidden = false; el("reload").hidden = false;
       notice(""); renderSelection(); renderPreview();
+      void resumePhotoSelection();
       if (videoDraft) renderVideoDraft();
+      if (assets.size) renderPhotoGrid();
       if (state.draft.mediaId) void showPhoto();
       if (resumeContacts && !state.pending) void loadContacts();
       if (!labelsLoaded) void loadLabels().catch(error => report(error, "contacts-status"));
@@ -171,7 +188,7 @@ async function checkSession(ticket) {
     cookieRefreshAt = Date.now() + 300000;
     await verifySession(ticket);
     const wasPaused = sessionPaused; sessionPaused = false;
-    if (wasPaused) { el("broadcast-content").hidden = false; notice(""); renderControls(); scheduleHistory(); }
+    if (wasPaused) { el("broadcast-content").hidden = false; notice(""); renderControls(); scheduleHistory(); void resumePhotoSelection(); }
   } catch (error) {
     if (error.stale) return;
     if (error.status === 401) { signOut(); return; }
@@ -195,9 +212,9 @@ function renderControls() {
   el("filters").hidden = state.audienceMode === "all";
   for (const tag of ["input", "select", "button"]) for (const input of el("filters").querySelectorAll(tag)) input.disabled = frozen || state.csrfFailed;
   const videoWaiting = !!videoDraft && (!videoDraft.id || !videoDraft.ready || videoDraft.invalid);
-  el("preview").disabled = frozen || previewBusy || !!videoTransfer || videoWaiting || state.csrfFailed || manual && state.selected.size === 0 || state.audienceMode === "filtered" && contactsDirty;
+  el("preview").disabled = frozen || previewBusy || !!photoTransfer || !!videoTransfer || videoWaiting || state.csrfFailed || manual && state.selected.size === 0 || state.audienceMode === "filtered" && contactsDirty;
   ui.text(el("preview"), previewBusy ? "Vérification…" : "Vérifier et préparer l’envoi");
-  el("confirm").disabled = sendBusy || previewBusy || !!videoTransfer || videoWaiting || !canReviewBroadcast(state);
+  el("confirm").disabled = sendBusy || previewBusy || !!photoTransfer || !!videoTransfer || videoWaiting || !canReviewBroadcast(state);
   ui.text(el("confirm"), selected ? selected > 1 ? "Envoyer à {count} clients" : "Envoyer à {count} client" : "Envoyer la diffusion", { count: ui.numberParam(selected) });
   ui.text(el("acknowledge-label"), state.preview ? selected > 1 ? "Envoi individuel préparé pour {count} clients." : selected === 1 ? "Envoi individuel préparé pour {count} client." : "Aucun destinataire éligible pour cet envoi."
     : manual && state.selected.size ? state.selected.size > 1 ? "{count} destinataires choisis · à vérifier." : "{count} destinataire choisi · à vérifier." : "Destinataires à vérifier.", { count: ui.numberParam(state.preview ? selected : state.selected.size) });
@@ -235,13 +252,17 @@ function renderControls() {
   el("photo-page").hidden = photoNumber === 1 && !photoMore;
   el("first-photos").hidden = photoNumber === 1; el("first-photos").disabled = photosBusy || frozen;
   ui.text(el("photo-page"), "Page {page}", { page: ui.numberParam(photoNumber) });
-  el("photo-select").disabled = frozen || !!videoTransfer || state.csrfFailed;
-  el("load-photos").disabled = frozen || !!videoTransfer || state.csrfFailed;
+  const photoFrozen = frozen || sendBusy || !!photoTransfer || !!videoTransfer || state.csrfFailed;
+  for (const id of ["load-photos", "pick-photo", "photo-file", "remove-photo"]) el(id).disabled = photoFrozen;
+  for (const button of el("photo-grid").querySelectorAll("button")) button.disabled = photoFrozen;
+  el("remove-photo").hidden = !state.draft.mediaId;
+  el("cancel-photo-upload").hidden = !photoTransfer; el("cancel-photo-upload").disabled = frozen;
+  for (const id of ["more-photos", "previous-photos", "first-photos"]) el(id).disabled = photoFrozen || photosBusy;
   el("video-options").hidden = state.session?.videoEnabled !== true || state.session.videoCreationEnabled === false;
-  el("pick-video").disabled = frozen || !!videoTransfer || state.csrfFailed || state.session?.videoCreationEnabled === false;
-  el("video-file").disabled = frozen || !!videoTransfer || state.csrfFailed || state.session?.videoCreationEnabled === false;
+  el("pick-video").disabled = frozen || !!photoTransfer || !!videoTransfer || state.csrfFailed || state.session?.videoCreationEnabled === false;
+  el("video-file").disabled = frozen || !!photoTransfer || !!videoTransfer || state.csrfFailed || state.session?.videoCreationEnabled === false;
   el("upload-video").hidden = !videoDraft || !!videoDraft.id || videoDraft.failed === true || !!videoTransfer;
-  el("upload-video").disabled = frozen || !videoDraft?.ready || videoDraft.invalid || state.csrfFailed || state.session?.videoCreationEnabled === false;
+  el("upload-video").disabled = frozen || !!photoTransfer || !videoDraft?.ready || videoDraft.invalid || state.csrfFailed || state.session?.videoCreationEnabled === false;
   el("remove-video").hidden = !videoDraft || !!videoTransfer; el("remove-video").disabled = frozen || state.csrfFailed;
   el("cancel-video").hidden = !videoTransfer; el("cancel-video").disabled = frozen;
   el("video-progress").hidden = !videoTransfer;
@@ -326,7 +347,7 @@ async function loadLabels() {
 }
 async function preview() {
   if (state.audienceMode === "selected" && !state.selected.size || state.audienceMode === "filtered" && contactsDirty || previewBusy || state.pending || state.csrfFailed
-    || videoTransfer || videoDraft && (!videoDraft.id || !videoDraft.ready || videoDraft.invalid)) return;
+    || photoTransfer || videoTransfer || videoDraft && (!videoDraft.id || !videoDraft.ready || videoDraft.invalid)) return;
   previewBusy = true; state.preview = null; state.acknowledged = false;
   const ticket = previewTicket(state); renderPreview();
   notice(ticket.videoId ? "Vérification des accès et de la vidéo…" : "Vérification des accès et de la photo…", false, "preview-status"); renderControls();
@@ -337,7 +358,7 @@ async function preview() {
   finally { if (currentBroadcast(state, ticket)) { previewBusy = false; renderControls(); } }
 }
 async function loadPhotos(more = false, back = false) {
-  if (!state.session?.mediaEnabled || photosBusy || state.pending || more && (back ? !photoBack.length : !photoMore)) return;
+  if (!state.session?.mediaEnabled || photosBusy || photoTransfer || state.pending || more && (back ? !photoBack.length : !photoMore)) return;
   const afterId = more ? back ? photoBack.at(-1) : photoCursor : null;
   const nextBack = more ? back ? photoBack.slice(0, -1) : [...photoBack, photoAfter].slice(-100) : [];
   const nextNumber = more ? photoNumber + (back ? -1 : 1) : 1;
@@ -347,24 +368,157 @@ async function loadPhotos(more = false, back = false) {
     if (!currentBroadcast(state, ticket)) return;
     if (!Array.isArray(page.assets) || page.assets.length > 20 || typeof page.hasMore !== "boolean" || page.nextCursor !== null && !validId(page.nextCursor)) throw new TypeError("invalid_assets");
     const incoming = new Map(); let previous = afterId;
-    for (const asset of page.assets) {
-      if (!validId(asset?.id) || !Number.isSafeInteger(asset.createdAt) || asset.thumbnailUrl !== `/api/media/admin/assets/${asset.id}/thumb` || !Number.isInteger(asset.width) || !Number.isInteger(asset.height)
-        || previous !== null && asset.id <= previous) throw new TypeError("invalid_asset");
-      incoming.set(asset.id, { id: asset.id, thumbnailUrl: asset.thumbnailUrl, createdAt: asset.createdAt, width: asset.width, height: asset.height }); previous = asset.id;
+    for (const value of page.assets) {
+      const asset = parsePhotoAsset(value);
+      if (previous !== null && asset.id <= previous) throw new TypeError("invalid_asset");
+      incoming.set(asset.id, asset); previous = asset.id;
     }
     if (page.hasMore && (!incoming.size || page.nextCursor !== previous)) throw new TypeError("invalid_assets");
-    const chosen = assets.get(state.draft.mediaId); assets.clear();
+    const chosen = assets.get(state.draft.mediaId); assets.clear(); photoPageIds = new Set(incoming.keys());
     for (const [id, asset] of incoming) assets.set(id, asset);
     if (chosen && !assets.has(chosen.id)) assets.set(chosen.id, chosen);
-    const options = [Object.assign(node("option", "Sans photo"), { value: "" })];
-    for (const asset of assets.values()) {
-      const option = textNode("option", "{date} · {width} × {height}", { date: ui.dateParam(asset.createdAt), width: ui.numberParam(asset.width), height: ui.numberParam(asset.height) }); option.value = asset.id; options.push(option);
-    }
-    replace(el("photo-select"), ...options); el("photo-select").value = state.draft.mediaId ?? "";
     photoCursor = page.nextCursor; photoMore = page.hasMore; photoAfter = afterId; photoBack = nextBack; photoNumber = nextNumber;
-    el("photo-field").hidden = false; notice(assets.size ? "Choisis une photo pour l’afficher avant de confirmer." : "Aucune photo dans ta bibliothèque. Ajoute d’abord une photo depuis Messages.", false, "photo-status");
+    el("photo-field").hidden = false; renderPhotoGrid();
+    notice(assets.size ? "Choisis une photo dans les aperçus." : "Aucune photo dans ta bibliothèque. Ajoute une photo avec le bouton ci-dessus.", false, "photo-status");
   } catch (error) { report(error, "photo-status"); }
   finally { if (currentBroadcast(state, ticket)) { photosBusy = false; renderControls(); } }
+}
+function parsePhotoAsset(value) {
+  if (!validId(value?.id) || !Number.isSafeInteger(value.createdAt) || value.createdAt < 0
+    || value.thumbnailUrl !== `/api/media/admin/assets/${value.id}/thumb`
+    || ![value.width, value.height].every(number => Number.isInteger(number) && number >= 1 && number <= 2048)) throw new TypeError("invalid_asset");
+  return { id: value.id, thumbnailUrl: value.thumbnailUrl, createdAt: value.createdAt, width: value.width, height: value.height };
+}
+function selectPhoto(mediaId) {
+  if (!state.visible || sessionPaused || state.pending || sendBusy || photoTransfer || videoTransfer || state.csrfFailed || !visible() || mediaId !== null && !assets.has(mediaId)) return;
+  if (mediaId) { clearVideo(); notice("", false, "video-status"); }
+  if (!updateComposition(state, { mediaId })) return;
+  compositionChanged(); updatePhotoSelection(); void showPhoto();
+}
+function updatePhotoSelection() {
+  for (const button of el("photo-grid").querySelectorAll("button")) {
+    const chosen = button.getAttribute("data-photo-id") === state.draft.mediaId;
+    button.setAttribute("aria-pressed", String(chosen));
+    ui.text(button.children[1], chosen ? "Photo choisie" : "Choisir cette photo");
+  }
+  renderControls();
+}
+function renderPhotoGrid() {
+  clearPhotoGrid();
+  const rows = [];
+  for (const asset of assets.values()) {
+    const button = node("button", undefined, "photo-option"); button.type = "button";
+    button.setAttribute("data-photo-id", asset.id); button.setAttribute("aria-pressed", String(asset.id === state.draft.mediaId));
+    const image = node("img"); image.alt = ""; image.width = 160; image.height = 120; image.decoding = "async"; image.hidden = true;
+    const label = node("span", asset.id === state.draft.mediaId ? "Photo choisie" : "Choisir cette photo");
+    const date = textNode("small", "{date} · {width} × {height}", { date: ui.dateParam(asset.createdAt), width: ui.numberParam(asset.width), height: ui.numberParam(asset.height) });
+    const loading = node("small", "Chargement de l’aperçu…", "photo-loading");
+    button.append(image, label, date, loading); button.addEventListener("click", () => selectPhoto(asset.id)); rows.push(button);
+  }
+  replace(el("photo-grid"), ...rows); renderControls();
+  if (rows.length) void loadPhotoThumbnails([...assets.values()], rows);
+}
+async function loadPhotoThumbnails(page, buttons) {
+  const ticket = broadcastTicket(state), epoch = photoGridEpoch;
+  const current = () => currentBroadcast(state, ticket) && !sessionPaused && visible() && epoch === photoGridEpoch;
+  const downloaded = new Map(); let cursor = 0;
+  try {
+    await verifySession(ticket); if (!current()) return;
+    // A page holds at most twenty rows plus the selected asset. Four readers
+    // bound traffic; no private blob is adopted before the closing owner proof.
+    async function worker() {
+      while (current() && cursor < page.length) {
+        const asset = page[cursor++], controller = new AbortController();
+        controllers.add(controller); photoThumbControllers.add(controller);
+        const timer = setTimeout(() => controller.abort(), 15000);
+        try {
+          const response = await fetch(asset.thumbnailUrl, { credentials: "same-origin", cache: "no-store", signal: controller.signal });
+          if (!response.ok || response.headers.get("content-type")?.split(";")[0] !== "image/jpeg") throw new Error("photo_unavailable");
+          const blob = await response.blob(); if (!blob.size || blob.size > 524288) throw new Error("photo_unavailable");
+          if (current()) downloaded.set(asset.id, blob);
+        } catch { /* Keep each failed cell usable, without exposing a stale URL. */ }
+        finally { clearTimeout(timer); photoThumbControllers.delete(controller); controllers.delete(controller); }
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(4, page.length) }, worker));
+    if (!current()) return; await verifySession(ticket); if (!current()) return;
+    for (const button of buttons) {
+      const assetId = button.getAttribute("data-photo-id"), blob = downloaded.get(assetId);
+      if (!blob) { ui.text(button.children[3], "Aperçu indisponible"); continue; }
+      const url = URL.createObjectURL(blob); photoThumbUrls.set(assetId, url);
+      button.children[0].src = url; button.children[0].hidden = false; button.children[3].hidden = true;
+    }
+  } catch (error) { if (current()) report(error, "photo-status"); }
+}
+function openPhotoPicker() {
+  if (el("pick-photo").disabled || !state.visible || sessionPaused || !visible() || !state.session?.mediaEnabled) return;
+  photoPickerOwner = { id: state.session.id, csrf: state.session.csrf };
+  el("photo-file").click();
+}
+async function choosePhotoFile() {
+  const file = el("photo-file").files?.[0], owner = photoPickerOwner;
+  el("photo-file").value = ""; photoPickerOwner = null;
+  if (!file || !owner || owner.id !== state.session?.id || owner.csrf !== state.session?.csrf
+    || state.pending || sendBusy || photoTransfer || videoTransfer || state.csrfFailed) return;
+  // A native mobile picker can hide this page. Retain only an explicit,
+  // unstarted selection until the same owner passes both resume proofs.
+  photoSelection = { file, ...owner };
+  if (!state.visible || sessionPaused || !visible()) { if (visible()) await resumePrivate(); return; }
+  await resumePhotoSelection();
+}
+async function resumePhotoSelection() {
+  if (!state.visible || sessionPaused || !visible()) return;
+  const selection = photoSelection; photoSelection = null;
+  if (selection && selection.id === state.session?.id && selection.csrf === state.session?.csrf) await uploadPhoto(selection.file);
+}
+async function uploadPhoto(file = el("photo-file").files?.[0]) {
+  el("photo-file").value = "";
+  if (!file || !state.visible || sessionPaused || !state.session?.mediaEnabled || state.pending || sendBusy || photoTransfer || videoTransfer || state.csrfFailed || !visible()) return;
+  if (state.draft.body.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant d’ajouter une photo.", true, "photo-status"); return; }
+  const ticket = broadcastTicket(state), transfer = { controller: new AbortController() }; photoTransfer = transfer; controllers.add(transfer.controller);
+  const timer = setTimeout(() => transfer.controller.abort(), 120000);
+  const current = () => currentBroadcast(state, ticket) && !sessionPaused && visible() && photoTransfer === transfer && !transfer.controller.signal.aborted;
+  notice("Préparation et ajout de la photo…", false, "photo-status"); renderControls();
+  try {
+    const { prepareImageUpload, MAX_UPLOAD_BYTES } = await import("/image-preparation.js");
+    if (!current()) throw stale();
+    const prepared = await prepareImageUpload(file, { signal: transfer.controller.signal });
+    if (!current()) throw stale();
+    if (!prepared || !Number.isSafeInteger(prepared.size) || prepared.size < 1 || prepared.size > MAX_UPLOAD_BYTES || typeof prepared.type !== "string" || !prepared.type.startsWith("image/")) throw new Error("invalid_prepared_photo");
+    await verifySession(ticket); if (!current()) throw stale();
+    transfer.posted = true;
+    const response = await fetch("/api/media/admin/assets", { method: "POST", credentials: "same-origin", cache: "no-store", signal: transfer.controller.signal,
+      headers: { "Content-Type": prepared.type, "X-CSRF-Token": state.session.csrf }, body: prepared });
+    transfer.rejected = response.status >= 400 && response.status < 500;
+    let value; try { value = await response.json(); } catch { value = {}; }
+    if (!current()) throw stale(); await verifySession(ticket); if (!current()) throw stale();
+    if (!response.ok) throw Object.assign(new Error("photo_upload_failed"), { status: response.status, code: value.error });
+    if (typeof value.duplicate !== "boolean") throw new TypeError("invalid_asset");
+    const asset = parsePhotoAsset(value.asset);
+    // Keep one bounded library page and this explicit new selection.
+    const pageAssets = [...assets.values()].filter(value => photoPageIds.has(value.id)); assets.clear();
+    for (const row of pageAssets) assets.set(row.id, row);
+    assets.set(asset.id, asset); clearVideo();
+    if (!updateComposition(state, { mediaId: asset.id })) throw stale();
+    photoTransfer = null; attachmentChanged(); renderPhotoGrid(); el("photo-field").hidden = false; void showPhoto();
+    notice("Photo ajoutée et choisie. Vérifie les destinataires avant de confirmer la diffusion.", false, "photo-status");
+  } catch (error) {
+    if (error.stale) return;
+    if (currentBroadcast(state, ticket) && visible() && photoTransfer === transfer && transfer.posted && !transfer.rejected) {
+      if (error.status === 401) { signOut(); return; }
+      if (error.status === 403) { state.csrfFailed = true; el("reload").hidden = false; }
+      notice("L’ajout de la photo n’a pas été confirmé. Ta sélection précédente est conservée ; consulte la bibliothèque avant de réessayer.", true, "photo-status");
+    } else if (error.status === 401 || error.status === 403) report(error, "photo-status");
+    else if (currentBroadcast(state, ticket) && visible() && photoTransfer === transfer) notice(error.status === 429 ? "Trop de demandes. Patiente un moment avant de réessayer." : "La photo n’a pas été ajoutée. Ta sélection précédente est conservée ; choisis de nouveau une photo pour réessayer.", true, "photo-status");
+  } finally {
+    clearTimeout(timer); controllers.delete(transfer.controller);
+    if (photoTransfer === transfer) { photoTransfer = null; renderControls(); }
+  }
+}
+function cancelPhotoUpload() {
+  if (!photoTransfer) return;
+  const uncertain = photoTransfer.posted && !photoTransfer.rejected;
+  stopPhotoUpload(); renderControls(); notice(uncertain ? "L’ajout de la photo n’a pas été confirmé. Ta sélection précédente est conservée ; consulte la bibliothèque avant de réessayer." : "Ajout de photo annulé. Ta sélection précédente est conservée.", !!uncertain, "photo-status");
 }
 async function showPhoto() {
   clearPhoto(); const asset = assets.get(state.draft.mediaId); if (!asset) return;
@@ -387,12 +541,12 @@ function attachmentChanged() {
 }
 function chooseVideo() {
   const file = el("video-file").files?.[0]; el("video-file").value = "";
-  if (!file || state.session?.videoEnabled !== true || state.session.videoCreationEnabled === false || state.pending || sendBusy || videoTransfer || state.csrfFailed || !visible()) return;
+  if (!file || state.session?.videoEnabled !== true || state.session.videoCreationEnabled === false || state.pending || sendBusy || photoTransfer || videoTransfer || state.csrfFailed || !visible()) return;
   if (file.type !== "video/mp4" || !Number.isSafeInteger(file.size) || file.size < 1 || file.size > MAX_VIDEO_BYTES) {
     notice("Choisis une vidéo MP4 de 100 Mo maximum.", true, "video-status"); return;
   }
   if (state.draft.body.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant d’ajouter une vidéo.", true, "video-status"); return; }
-  clearVideo(); clearPhoto(); el("photo-select").value = ""; updateComposition(state, { mediaId: null, videoId: null });
+  clearVideo(); clearPhoto(); updateComposition(state, { mediaId: null, videoId: null }); updatePhotoSelection();
   videoDraft = { file, url: null, ready: false, invalid: false, id: null };
   renderVideoDraft(); attachmentChanged();
 }
@@ -415,12 +569,12 @@ function renderVideoDraft() {
   replace(el("video-preview"), player); if (!draft.failed) notice("Préparation de l’aperçu vidéo…", false, "video-status"); renderControls();
 }
 function removeVideo() {
-  if (state.pending || sendBusy || videoTransfer) return;
+  if (state.pending || sendBusy || photoTransfer || videoTransfer) return;
   clearVideo(); updateComposition(state, { videoId: null }); attachmentChanged(); notice("", false, "video-status");
 }
 async function uploadVideo() {
   const draft = videoDraft;
-  if (!draft?.ready || draft.invalid || draft.id || draft.failed || videoTransfer || state.session?.videoEnabled !== true || state.session.videoCreationEnabled === false || state.pending || sendBusy || state.csrfFailed || !visible()) return;
+  if (!draft?.ready || draft.invalid || draft.id || draft.failed || photoTransfer || videoTransfer || state.session?.videoEnabled !== true || state.session.videoCreationEnabled === false || state.pending || sendBusy || state.csrfFailed || !visible()) return;
   const ticket = broadcastTicket(state), transfer = { controller: new AbortController(), cancelled: false, draft };
   videoTransfer = transfer; controllers.add(transfer.controller); el("video-progress").value = 0;
   notice("Chargement de la vidéo… {percent} %", false, "video-status", { percent: ui.numberParam(0) }); renderControls();
@@ -476,7 +630,7 @@ function cancelVideoUpload() {
 }
 function newId() { return [...crypto.getRandomValues(new Uint8Array(16))].map((value) => value.toString(16).padStart(2, "0")).join(""); }
 async function send(retry = false) {
-  if (!state.visible || !visible() || sessionPaused || sendBusy || videoTransfer || !retry && videoDraft && (!videoDraft.id || !videoDraft.ready || videoDraft.invalid)) return;
+  if (!state.visible || !visible() || sessionPaused || sendBusy || photoTransfer || videoTransfer || !retry && videoDraft && (!videoDraft.id || !videoDraft.ready || videoDraft.invalid)) return;
   // Only this explicit final action acknowledges the prepared snapshot. The
   // eligibility request never queues a campaign and an uncertain retry keeps
   // its original payload and identifier.
@@ -486,7 +640,7 @@ async function send(retry = false) {
   try {
     const result = await request("/api/broadcast/admin/campaigns", { ticket, body: payload });
     const campaign = acceptCampaign(state, ticket, result); if (!campaign) return;
-    rememberCampaign(campaign); el("campaign-form").reset(); el("photo-select").value = ""; clearPhoto(); clearVideo(); notice("", false, "video-status"); compositionChanged();
+    rememberCampaign(campaign); el("campaign-form").reset(); updatePhotoSelection(); clearPhoto(); clearVideo(); notice("", false, "video-status"); compositionChanged();
     notice(campaign.counts.total > 1 ? "Diffusion enregistrée pour {count} clients. Suis les remises et les éventuels destinataires ignorés dans l’historique." : "Diffusion enregistrée pour {count} client. Suis les remises et les éventuels destinataires ignorés dans l’historique.", false, "send-status", { count: ui.numberParam(campaign.counts.total) });
     renderHistory(); await showCampaign(campaign.id); void loadHistory();
   } catch (error) {
@@ -697,11 +851,11 @@ el("selected-previous").addEventListener("click", () => { if (!state.pending && 
 el("selected-more").addEventListener("click", () => { if (!state.pending && (selectedPage + 1) * 50 < state.selected.size) { selectedPage += 1; renderSelection(); } });
 el("clear-selection").addEventListener("click", () => { if (clearSelection(state)) compositionChanged(); });
 for (const [element, key] of [["campaign-title", "title"], ["campaign-body", "body"]]) el(element).addEventListener("input", () => { updateComposition(state, { [key]: el(element).value }); compositionChanged(); });
-el("photo-select").addEventListener("change", () => {
-  if (state.pending || videoTransfer || state.csrfFailed) return;
-  const mediaId = el("photo-select").value || null; if (mediaId) { clearVideo(); notice("", false, "video-status"); }
-  updateComposition(state, { mediaId }); compositionChanged(); void showPhoto();
-});
+el("pick-photo").addEventListener("click", openPhotoPicker);
+el("photo-file").addEventListener("change", () => { void choosePhotoFile(); });
+el("photo-file").addEventListener("cancel", () => { photoPickerOwner = null; });
+el("cancel-photo-upload").addEventListener("click", cancelPhotoUpload);
+el("remove-photo").addEventListener("click", () => selectPhoto(null));
 el("pick-video").addEventListener("click", () => { if (!el("pick-video").disabled && state.session?.videoEnabled === true && state.session.videoCreationEnabled !== false) el("video-file").click(); });
 el("video-file").addEventListener("change", chooseVideo);
 el("upload-video").addEventListener("click", () => { void uploadVideo(); });

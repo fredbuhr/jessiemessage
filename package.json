@@ -1,6 +1,6 @@
 {
   "name": "jessiemessage",
-  "version": "1.13.0",
+  "version": "1.14.0",
   "private": true,
   "type": "module",
   "description": "Private invite-only messaging PWA for Jessie",
@@ -26,6 +26,7 @@
     "db:migrate:stdin": "node scripts/migrate-stdin.mjs"
   },
   "dependencies": {
+    "libheif-js": "1.23.5",
     "mariadb": "3.5.4",
     "nodemailer": "10.1.4",
     "otpauth": "9.5.2",

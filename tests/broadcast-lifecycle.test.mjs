@@ -5,7 +5,7 @@ import { Script, createContext } from "node:vm";
 import { webcrypto } from "node:crypto";
 import * as model from "../public/broadcast-model.js";
 
-const source = (await readFile(new URL("../public/broadcast.js", import.meta.url), "utf8")).replace(/^import .*;\n/, "");
+const source = (await readFile(new URL("../public/broadcast.js", import.meta.url), "utf8")).replace(/^import .*;\n/gm, "").replace('await import("/image-preparation.js")', 'await __imagePreparation()');
 const sessionClock = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
 const id = (value) => value.toString(16).padStart(32, "0");
 const now = Date.now();
@@ -37,16 +37,17 @@ class FakeNode {
   getAttribute(name) { return this.attributes.get(name) ?? null; }
   removeAttribute(name) { this.attributes.delete(name); }
   focus() { if (this.ownerDocument) this.ownerDocument.activeElement = this; }
+  click() { this.listeners.get("click")?.(); }
   reset() {}
   addEventListener(name, callback) { this.listeners.set(name, callback); }
   querySelectorAll(tag) { return this.children.flatMap((node) => node instanceof FakeNode ? [...(node.tagName === tag ? [node] : []), ...node.querySelectorAll(tag)] : []); }
 }
-function fixture(handler = () => null, initialOwner = actor(), { XMLHttpRequest, urlApi = URL } = {}) {
+function fixture(handler = () => null, initialOwner = actor(), { XMLHttpRequest, urlApi = URL, prepare = async file => file } = {}) {
   const nodes = new Map(), calls = [], timers = new Map(), documentEvents = new Map(), windowEvents = new Map(); let timerId = 0; let owner = initialOwner;
   const node = (name) => { if (!nodes.has(name)) nodes.set(name, Object.assign(new FakeNode(), { ownerDocument: document })); return nodes.get(name); };
   const document = { visibilityState: "hidden", getElementById: node, createElement: (tag) => Object.assign(new FakeNode(tag), { ownerDocument: document }), addEventListener(name, callback) { documentEvents.set(name, callback); } };
   const context = createContext({ ...model, document, window: { addEventListener(name, callback) { windowEvents.set(name, callback); } }, location: { replace() {} },
-    AbortController, URL: urlApi, URLSearchParams, TextEncoder, Date, console, crypto: webcrypto, XMLHttpRequest,
+    AbortController, Blob, __imagePreparation: async () => ({ prepareImageUpload: prepare, MAX_UPLOAD_BYTES: 10 * 1024 * 1024 }), URL: urlApi, URLSearchParams, TextEncoder, Date, console, crypto: webcrypto, XMLHttpRequest,
     setTimeout(callback, delay) { const timer = ++timerId; timers.set(timer, { callback, delay }); return timer; }, clearTimeout(timer) { timers.delete(timer); },
     fetch: async (path, options) => {
       calls.push({ path, options });
@@ -65,7 +66,7 @@ function fixture(handler = () => null, initialOwner = actor(), { XMLHttpRequest,
       return response({ error: "not_found" }, 404);
     } });
   new Script(sessionClock).runInContext(context);
-  new Script(`${source}\nglobalThis.controller = { state, campaigns, assets, chooseVideo, uploadVideo, removeVideo, cancelVideoUpload, videoState: () => ({videoDraft,videoTransfer}), request, loadHistory, loadContacts, preview, loadPhotos, showPhoto, showCampaign, cancelCampaign, send, bootstrap, clearPrivate, suspendPrivate, resumePrivate, scheduleHistory, renderSelection, renderControls, loadRecipientPage, rememberCampaign, detailState: () => ({ recipientPage, recipientAfter, recipientEpoch, detailElements }), busy: () => ({ historyBusy, sendBusy }) };`).runInContext(context);
+  new Script(`${source}\nglobalThis.controller = { state, campaigns, assets, chooseVideo, uploadVideo, removeVideo, cancelVideoUpload, videoState: () => ({videoDraft,videoTransfer}), request, loadHistory, loadContacts, preview, loadPhotos, showPhoto, selectPhoto, uploadPhoto, cancelPhotoUpload, renderPhotoGrid, showCampaign, cancelCampaign, send, bootstrap, clearPrivate, suspendPrivate, resumePrivate, scheduleHistory, renderSelection, renderControls, loadRecipientPage, rememberCampaign, detailState: () => ({ recipientPage, recipientAfter, recipientEpoch, detailElements }), busy: () => ({ historyBusy, sendBusy }) };`).runInContext(context);
   const ui = context.controller;
   document.visibilityState = "visible";
   model.acceptBroadcastSession(ui.state, model.clearBroadcast(ui.state, { visible: true }), owner);
@@ -769,8 +770,8 @@ test("the broadcast photo chooser keeps one replaceable page plus its selected p
     const preview = new FakeNode("img"); f.node("photo-preview").append(preview);
     for (let index = 0; index < 15; index++) {
       await f.ui.loadPhotos(true);
-      assert.equal(f.ui.assets.size, 21); assert.equal(f.node("photo-select").children.length, 22, "20 rows, selected photo and empty choice");
-      assert.equal(f.node("photo-select").value, id(2000)); assert.equal(f.ui.state.draft.mediaId, id(2000));
+      assert.equal(f.ui.assets.size, 21); assert.equal(f.node("photo-grid").children.length, 21, "20 thumbnail rows plus selected photo");
+      assert.equal(f.ui.state.draft.mediaId, id(2000));
       assert.strictEqual(f.node("photo-preview").children[0], preview);
     }
     assert.equal(f.ui.assets.has(id(2001)), false);
@@ -795,5 +796,212 @@ test("a completed campaign retained by the archive receives final counters when 
     await f.ui.loadHistory(); ended = true; await f.ui.loadHistory();
     assert.equal(f.ui.campaigns.size, 1); assert.equal(f.ui.campaigns.get(queued.id).status, "completed");
     assert.equal(f.ui.campaigns.get(queued.id).counts.delivered, 1);
+  } finally { f.close(); }
+});
+
+test("broadcast photo library displays real thumbnails, uses pressed buttons and revokes private previews when hidden", async () => {
+  const created = [], revoked = [], picture = new Blob(["synthetic thumbnail"], { type: "image/jpeg" });
+  const photo = value => ({ id: id(value), createdAt: now, width: 640, height: 480, thumbnailUrl: `/api/media/admin/assets/${id(value)}/thumb` });
+  const f = fixture(path => {
+    if (path.startsWith("/api/media/admin/assets?")) return response({ assets: [photo(501), photo(502)], nextCursor: null, hasMore: false });
+    if (path.endsWith("/thumb")) return { ok: true, status: 200, headers: { get: () => "image/jpeg" }, blob: async () => picture };
+    return null;
+  }, actor(), { urlApi: { createObjectURL(blob) { created.push(blob); return `blob:photo-${created.length}`; }, revokeObjectURL(url) { revoked.push(url); } } });
+  try {
+    compose(f.ui); await f.ui.loadPhotos(); await flush();
+    const buttons = f.node("photo-grid").children;
+    assert.equal(buttons.length, 2);
+    assert.deepEqual(buttons.map(button => button.children[0].hidden), [false, false]);
+    assert.ok(buttons.every(button => button.children[0].src.startsWith("blob:photo-")));
+    assert.ok(buttons.every(button => button.getAttribute("aria-pressed") === "false"));
+    buttons[1].listeners.get("click")(); await flush();
+    assert.equal(f.ui.state.draft.mediaId, id(502)); assert.equal(buttons[1].getAttribute("aria-pressed"), "true");
+    assert.equal(f.ui.state.preview, null, "a new photo requires an explicit new recipient check");
+    assert.equal(f.calls.filter(call => call.options.method === "POST").length, 0, "choosing a thumbnail sends nothing");
+    f.document.visibilityState = "hidden"; f.ui.suspendPrivate();
+    assert.equal(f.node("photo-grid").children.length, 0); assert.equal(f.node("photo-preview").children.length, 0);
+    assert.equal(revoked.length, created.length);
+  } finally { f.close(); }
+});
+
+test("broadcast thumbnail pages use at most four readers and never adopt blobs belonging to a changed account", async () => {
+  let active = 0, maximum = 0, urls = 0; const held = [];
+  const rows = Array.from({ length: 8 }, (_, index) => ({ id: id(600 + index), createdAt: now, width: 640, height: 480, thumbnailUrl: `/api/media/admin/assets/${id(600 + index)}/thumb` }));
+  const f = fixture(async (path, _options, session) => {
+    if (path.startsWith("/api/media/admin/assets?")) return response({ assets: rows, nextCursor: null, hasMore: false });
+    if (path.endsWith("/thumb")) {
+      active++; maximum = Math.max(maximum, active); const gate = deferred(); held.push(gate); await gate.promise; active--;
+      if (path.includes(id(607))) session.setOwner(actor(2));
+      return { ok: true, status: 200, headers: { get: () => "image/jpeg" }, blob: async () => new Blob(["synthetic"], { type: "image/jpeg" }) };
+    }
+    return null;
+  }, actor(), { urlApi: { createObjectURL() { urls++; return "blob:forbidden"; }, revokeObjectURL() {} } });
+  try {
+    await f.ui.loadPhotos(); await flush(); assert.equal(held.length, 4); assert.equal(maximum, 4); assert.equal(urls, 0);
+    for (const item of held.slice()) item.resolve(); await flush(); assert.equal(held.length, 8); assert.equal(maximum, 4);
+    for (const item of held.slice(4)) item.resolve(); await flush();
+    assert.equal(urls, 0, "closing owner proof precedes every thumbnail object URL");
+    assert.equal(f.ui.state.session.id, id(2)); assert.equal(f.ui.assets.size, 0); assert.equal(f.node("photo-grid").children.length, 0);
+  } finally { for (const item of held) item.resolve(); f.close(); }
+});
+
+test("late thumbnails from a replaced photo page cannot create old object URLs", async () => {
+  const gate = deferred(), created = [];
+  const first = { id: id(701), createdAt: now, width: 640, height: 480, thumbnailUrl: `/api/media/admin/assets/${id(701)}/thumb` };
+  const second = { ...first, id: id(702), thumbnailUrl: `/api/media/admin/assets/${id(702)}/thumb` };
+  const old = new Blob(["old page"]), fresh = new Blob(["current page"]);
+  const f = fixture(async path => {
+    if (path === "/api/media/admin/assets?limit=20") return response({ assets: [first], nextCursor: first.id, hasMore: true });
+    if (path.startsWith("/api/media/admin/assets?limit=20&")) return response({ assets: [second], nextCursor: null, hasMore: false });
+    if (path === first.thumbnailUrl) { await gate.promise; return { ok: true, status: 200, headers: { get: () => "image/jpeg" }, blob: async () => old }; }
+    if (path === second.thumbnailUrl) return { ok: true, status: 200, headers: { get: () => "image/jpeg" }, blob: async () => fresh };
+    return null;
+  }, actor(), { urlApi: { createObjectURL(blob) { created.push(blob); return `blob:${created.length}`; }, revokeObjectURL() {} } });
+  try {
+    await f.ui.loadPhotos(); await flush(); await f.ui.loadPhotos(true); await flush(); gate.resolve(); await flush();
+    assert.deepEqual(created, [fresh]); assert.equal(f.node("photo-grid").children[0].getAttribute("data-photo-id"), second.id);
+  } finally { gate.resolve(); f.close(); }
+});
+
+test("adding a photo in broadcasts uploads the prepared image once, selects its preview and never sends a campaign", async () => {
+  const original = new Blob(["synthetic camera original"], { type: "image/png" });
+  const prepared = new Blob(["synthetic prepared pixels"], { type: "image/png" }); let preparations = 0;
+  const asset = { id: id(801), createdAt: now, width: 1024, height: 768, thumbnailUrl: `/api/media/admin/assets/${id(801)}/thumb` };
+  const f = fixture((path, options) => {
+    if (path === "/api/media/admin/assets" && options.method === "POST") return response({ asset, duplicate: false }, 201);
+    if (path.endsWith("/thumb")) return { ok: true, status: 200, headers: { get: () => "image/jpeg" }, blob: async () => new Blob(["thumbnail"], { type: "image/jpeg" }) };
+    return null;
+  }, actor(), { prepare: async file => { assert.strictEqual(file, original); preparations++; return prepared; } });
+  try {
+    compose(f.ui); const title = f.ui.state.draft.title, body = f.ui.state.draft.body;
+    await f.ui.uploadPhoto(original); await flush();
+    const writes = f.calls.filter(call => call.options.method === "POST");
+    assert.equal(preparations, 1); assert.equal(writes.length, 1); assert.equal(writes[0].path, "/api/media/admin/assets");
+    assert.strictEqual(writes[0].options.body, prepared); assert.equal(writes[0].options.headers["Content-Type"], "image/png");
+    assert.equal(writes[0].options.headers["X-CSRF-Token"], actor().csrf);
+    assert.equal(f.ui.state.draft.mediaId, asset.id); assert.equal(f.ui.state.draft.title, title); assert.equal(f.ui.state.draft.body, body);
+    assert.equal(f.ui.state.preview, null); assert.equal(f.ui.state.selected.size, 1);
+    assert.equal(f.node("photo-grid").children[0].getAttribute("aria-pressed"), "true");
+    assert.equal(f.node("photo-preview").children.length, 1); assert.equal(f.node("photo-file").value, "");
+  } finally { f.close(); }
+});
+
+test("a changed account after photo upload cannot adopt its asset or send a broadcast", async () => {
+  const asset = { id: id(901), createdAt: now, width: 640, height: 480, thumbnailUrl: `/api/media/admin/assets/${id(901)}/thumb` };
+  const f = fixture((path, options, session) => {
+    if (path === "/api/media/admin/assets" && options.method === "POST") { session.setOwner(actor(2)); return response({ asset, duplicate: false }, 201); }
+    return null;
+  });
+  try {
+    compose(f.ui); await f.ui.uploadPhoto(new Blob(["photo"], { type: "image/jpeg" })); await flush();
+    assert.equal(f.ui.state.session.id, id(2)); assert.equal(f.ui.assets.size, 0); assert.equal(f.ui.state.draft.mediaId, null);
+    assert.equal(f.calls.filter(call => call.options.method === "POST").length, 1);
+    assert.equal(f.node("photo-preview").children.length, 0);
+  } finally { f.close(); }
+});
+
+test("cancelling photo preparation retains the previous attachment and never uploads a late result", async () => {
+  const gate = deferred(); const f = fixture(() => null, actor(), { prepare: () => gate.promise });
+  try {
+    compose(f.ui); f.ui.state.draft.mediaId = id(1001); const preview = f.ui.state.preview;
+    const upload = f.ui.uploadPhoto(new Blob(["photo"], { type: "image/jpeg" })); await flush();
+    assert.equal(f.node("cancel-photo-upload").hidden, false); assert.equal(f.node("composition").disabled, false, "cancel stays operable");
+    assert.equal(f.node("confirm").disabled, true);
+    await f.ui.preview(); await f.ui.send();
+    assert.equal(f.calls.filter(call => call.options.method === "POST").length, 0, "preparing a photo cannot preview or send an old attachment");
+    f.ui.cancelPhotoUpload(); gate.resolve(new Blob(["prepared"], { type: "image/jpeg" })); await upload;
+    assert.equal(f.ui.state.draft.mediaId, id(1001)); assert.strictEqual(f.ui.state.preview, preview);
+    assert.equal(f.calls.filter(call => call.options.method === "POST").length, 0); assert.equal(f.node("cancel-photo-upload").hidden, true);
+  } finally { gate.resolve(); f.close(); }
+});
+
+test("failed photo uploads preserve the previous attachment and require an explicit retry", async () => {
+  const f = fixture((path, options) => path === "/api/media/admin/assets" && options.method === "POST" ? response({ error: "media_busy" }, 503) : null);
+  try {
+    compose(f.ui); f.ui.state.draft.mediaId = id(1101); const preview = f.ui.state.preview;
+    await f.ui.uploadPhoto(new Blob(["photo"], { type: "image/jpeg" })); await flush();
+    assert.equal(f.ui.state.draft.mediaId, id(1101)); assert.strictEqual(f.ui.state.preview, preview);
+    assert.equal(f.calls.filter(call => call.options.method === "POST").length, 1); assert.equal(f.node("pick-photo").disabled, false);
+  } finally { f.close(); }
+});
+
+test("a native photo picker keeps one explicit file through deferred resume proofs without replaying an interrupted upload", async () => {
+  const proof = deferred(), posted = deferred(), original = new Blob(["selected photo"], { type: "image/jpeg" });
+  let delayProof = true, preparations = 0;
+  const f = fixture(async (path, options) => {
+    if (path === "/api/auth/session" && delayProof) { await proof.promise; delayProof = false; }
+    if (path === "/api/media/admin/assets" && options.method === "POST") { await posted.promise; throw new Error("lost_upload_response"); }
+    return null;
+  }, actor(), { prepare: async file => { assert.strictEqual(file, original); preparations++; return file; } });
+  try {
+    compose(f.ui); f.node("pick-photo").click();
+    f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange");
+    f.document.visibilityState = "visible"; f.dispatchDocument("visibilitychange"); await flush();
+    f.node("photo-file").files = [original]; f.node("photo-file").value = "synthetic-picked.jpeg";
+    f.node("photo-file").listeners.get("change")(); await flush();
+    assert.equal(f.node("photo-file").value, ""); assert.equal(preparations, 0);
+    assert.equal(f.calls.filter(call => call.options.method === "POST").length, 0, "no upload before the closing resume proof");
+    proof.resolve(); await flush();
+    assert.equal(preparations, 1); assert.equal(f.calls.filter(call => call.options.method === "POST").length, 1);
+    f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange");
+    f.document.visibilityState = "visible"; await f.ui.resumePrivate(); await flush();
+    posted.resolve(); await flush();
+    assert.equal(preparations, 1); assert.equal(f.calls.filter(call => call.options.method === "POST").length, 1, "an interrupted POST never becomes a queued file");
+  } finally { proof.resolve(); posted.resolve(); f.close(); }
+});
+
+test("a native photo selection is discarded if either the owner or CSRF changes during deferred resume", async t => {
+  for (const next of [actor(2), { ...actor(), csrf: "z".repeat(43) }]) await t.test(next.user.id === id(2) ? "different account" : "new login for the same account", async () => {
+    const proof = deferred(); let delayProof = true, preparations = 0;
+    const f = fixture(async path => {
+      if (path === "/api/auth/session" && delayProof) { await proof.promise; delayProof = false; }
+      return null;
+    }, actor(), { prepare: async file => { preparations++; return file; } });
+    try {
+      compose(f.ui); f.node("pick-photo").click();
+      f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange");
+      f.document.visibilityState = "visible"; f.dispatchDocument("visibilitychange"); await flush();
+      f.node("photo-file").files = [new Blob(["private previous-owner photo"], { type: "image/jpeg" })];
+      f.node("photo-file").listeners.get("change")(); f.setOwner(next); proof.resolve(); await flush();
+      assert.equal(f.ui.state.session.id, next.user.id); assert.equal(f.ui.state.session.csrf, next.csrf);
+      assert.equal(preparations, 0); assert.equal(f.calls.filter(call => call.options.method === "POST").length, 0);
+      // A delayed native event after the account bootstrap has no original
+      // picker owner and cannot adopt the new account as a fallback.
+      f.node("photo-file").listeners.get("change")(); await flush();
+      assert.equal(preparations, 0); assert.equal(f.calls.filter(call => call.options.method === "POST").length, 0);
+    } finally { proof.resolve(); f.close(); }
+  });
+});
+
+test("photo POST uncertainty preserves the previous selection and never claims a confirmed failure or retries", async t => {
+  for (const failure of ["network", "proof", "server"]) await t.test(failure, async () => {
+    let posted = false;
+    const f = fixture((path, options) => {
+      if (path === "/api/media/admin/assets" && options.method === "POST") {
+        posted = true;
+        if (failure === "network") throw new Error("lost_upload_response");
+        return response({ error: "unconfirmed" }, failure === "server" ? 503 : 201);
+      }
+      if (path === "/api/broadcast/admin/session" && posted && failure === "proof") return response({ error: "unconfirmed_proof" }, 403);
+      return null;
+    });
+    try {
+      compose(f.ui); f.ui.state.draft.mediaId = id(1201); const preview = f.ui.state.preview;
+      await f.ui.uploadPhoto(new Blob(["photo"], { type: "image/jpeg" })); await flush();
+      assert.equal(f.ui.state.draft.mediaId, id(1201)); assert.strictEqual(f.ui.state.preview, preview);
+      assert.equal(f.calls.filter(call => call.options.method === "POST").length, 1);
+      assert.equal(f.node("photo-status").textContent, "L’ajout de la photo n’a pas été confirmé. Ta sélection précédente est conservée ; consulte la bibliothèque avant de réessayer.");
+      await f.ui.resumePrivate(); await flush();
+      assert.equal(f.calls.filter(call => call.options.method === "POST").length, 1);
+    } finally { f.close(); }
+  });
+});
+
+test("an explicit rejected photo POST remains a confirmed failure", async () => {
+  const f = fixture((path, options) => path === "/api/media/admin/assets" && options.method === "POST" ? response({ error: "invalid_media" }, 400) : null);
+  try {
+    compose(f.ui); await f.ui.uploadPhoto(new Blob(["photo"], { type: "image/jpeg" })); await flush();
+    assert.equal(f.node("photo-status").textContent, "La photo n’a pas été ajoutée. Ta sélection précédente est conservée ; choisis de nouveau une photo pour réessayer.");
+    assert.equal(f.calls.filter(call => call.options.method === "POST").length, 1);
   } finally { f.close(); }
 });

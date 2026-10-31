@@ -1,0 +1,68 @@
+{
+  "format": "jessiemessage-1140-development-checkpoint",
+  "base": "6506b757edfa6e8843343241bc77069332e8151c",
+  "branch": "feat/media-library-1140",
+  "applicationVersionPlanned": "1.14.0",
+  "activeHostedVersion": "1.13.0",
+  "activeHostedSource": "b9e2ad78b47dccb72b8e793cdc448e6b70424430",
+  "candidateQualified": false,
+  "applicationCIRun": null,
+  "steps": [
+    {
+      "scope": "Invitation default and preserved finite choice",
+      "tests": 133,
+      "passed": 133,
+      "skipped": 0,
+      "authority": "agent targeted service/HTTP/admin UI logs",
+      "status": "targeted_passed_native_pending"
+    },
+    {
+      "scope": "Broadcast thumbnails/direct upload",
+      "tests": 68,
+      "passed": 68,
+      "skipped": 0,
+      "status": "historical_targeted_passed_peer_review_fixes_pending",
+      "limit": "Native picker resume and uncertain-result copy fixes in progress; no full qualification inferred"
+    },
+    {
+      "scope": "Media library model/UI/catalog",
+      "status": "targeted_passed_peer_review_fixes_pending",
+      "limit": "Latest model5/UI12/catalog7 separately reported; not summed; picker resume/BFCache/deletion-refresh regressions being added"
+    },
+    {
+      "scope": "Root media page HTTP and feature-disabled server boundaries",
+      "tests": 46,
+      "passed": 46,
+      "skipped": 0,
+      "log": "implementation-notes/media-routing1140-local.log"
+    },
+    {
+      "scope": "Root administrator navigation",
+      "tests": 8,
+      "passed": 8,
+      "skipped": 0,
+      "log": "implementation-notes/admin-navigation1140-local.log"
+    },
+    {
+      "scope": "Root decoder static assets/feature gating/worker-only WASM policy",
+      "tests": 1,
+      "passed": 1,
+      "skipped": 0,
+      "log": "implementation-notes/heic-assets1140-local.log"
+    },
+    {
+      "scope": "Client photos/HEIC/native-picker/backpressure/batches",
+      "status": "implementation_and_targeted_tests_in_progress"
+    }
+  ],
+  "groupsOverlapNotSummed": true,
+  "nativeBrowserOrMariaDbExecuted": false,
+  "generalSuiteComplete": false,
+  "hostedOperationPerformed": false,
+  "realAccountsMediaOrMessagesUsed": false,
+  "limits": [
+    "No physical phone or Safari acceptance inferred",
+    "No release/publication/deployment performed",
+    "New HEIC dependency requires dedicated installation before any future hosted1140 CHECK"
+  ]
+}
