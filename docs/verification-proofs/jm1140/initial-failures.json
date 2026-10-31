@@ -1,0 +1,126 @@
+{
+  "format": "jessiemessage-1140-first-qualification",
+  "run": 41233803893,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41233803893",
+  "attempt": 1,
+  "source": "6aa9cbc769693491647e36c0fc1e5654c8c21fb2",
+  "tree": "80a1209dc2a2e07adb3d38595dad76863f5e27f3",
+  "status": "failed_then_corrected_on_next_revision",
+  "jobs": [
+    {
+      "id": 124633239975,
+      "name": "MariaDB 11.4",
+      "conclusion": "success",
+      "counts": {
+        "tests": 613,
+        "suites": 0,
+        "pass": 613,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 419628.979217
+      },
+      "logSha256": "cf397f8ebb76f388a15a27ef1874315c784b510ab73c20af5b5992527e14ec0d"
+    },
+    {
+      "id": 124633240106,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "conclusion": "failure",
+      "counts": {
+        "tests": 14,
+        "suites": 0,
+        "pass": 11,
+        "fail": 3,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 98995.506984
+      },
+      "logSha256": "3ff72b7dcd5b1003a10d88ed2602409a88244933cb49d14cd4c71db1df5864d9"
+    },
+    {
+      "id": 124633240124,
+      "name": "MariaDB 10.11",
+      "conclusion": "success",
+      "counts": {
+        "tests": 613,
+        "suites": 0,
+        "pass": 613,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 379956.393242
+      },
+      "logSha256": "9b658d3780b739721c711309934af1eaa4f251f23c41ad04b47c3a2707bb9436"
+    },
+    {
+      "id": 124633240130,
+      "name": "verify",
+      "conclusion": "success",
+      "counts": {
+        "tests": 4295,
+        "suites": 0,
+        "pass": 4243,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 52,
+        "todo": 0,
+        "duration_ms": 107354.299105
+      },
+      "logSha256": "09ccdc389594a23ca4fe81ec3a6039d389768e676a9ede0c23f6b844bdcc14e2"
+    },
+    {
+      "id": 124633240202,
+      "name": "Chrome keyboard and chat lifecycle",
+      "conclusion": "failure",
+      "counts": {
+        "tests": 296,
+        "pass": 295,
+        "fail": 1,
+        "skip": 0,
+        "cancelled": 0
+      },
+      "logSha256": "08c61776a3a992309243f8f2bebbcd4ba4b95e39a1f9c99b5e55f4379d456b34"
+    }
+  ],
+  "findings": [
+    {
+      "scope": "HTTPS",
+      "reason": "Old test demanded all five photo previews simultaneously; visible preparation now keeps at most four.",
+      "correction": "Scroll each of five selected cards, verify actual readable image and bounded cache; keep lost-ACK/retry/SQL idempotence assertions."
+    },
+    {
+      "scope": "Chrome media-library upload",
+      "reason": "Synthetic endpoint demanded JPEG although selected PNG is intentionally preserved.",
+      "correction": "Validate actual JPEG/PNG MIME/signature/Sharp dimensions and bytes; assert PNG result."
+    },
+    {
+      "scope": "Visual review",
+      "reason": "Broadcast photo metadata overflowed compressed grid rows.",
+      "correction": "Content-sized rows, no child shrinking and 2 mobile/3 desktop columns."
+    }
+  ],
+  "visualArtifact": {
+    "id": 13054568570,
+    "sha256": "6914b69935927662509ea95cc1d136bee3c94eeafcfb4a6efa2ba1b983c4eb40",
+    "newCapturesInspected": 5,
+    "correctedCapturesPending": true
+  },
+  "noGreenReruns": true,
+  "nativePhotoCasePassed": {
+    "name": "phone preparation really shrinks large JPEG, AVIF and HEIC locally under the isolated worker CSP",
+    "status": "pass",
+    "logLine": "2026-10-31T19:26:12.6006552Z ✔ phone preparation really shrinks large JPEG, AVIF and HEIC locally under the isolated worker CSP (27469.747577ms)",
+    "coverage": [
+      "real200MP JPEG native shrink",
+      "realJPEG above50MiB",
+      "nativeJPEG/PNG/WebP/AVIF and EXIF rotation",
+      "realHEVC fixture through fixed local moduleWorker and pinnedlibheif1.23.5",
+      "main-documentWASM forbidden; workeronlyWASM compilation; noCSP violations",
+      "server normalization strips sourceprivateEXIF/XMP"
+    ]
+  },
+  "hostedActions": false
+}

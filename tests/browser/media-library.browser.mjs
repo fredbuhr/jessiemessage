@@ -29,9 +29,13 @@ async function fixture() {
     if (url.pathname === "/api/media/admin/capabilities") { json(200, { enabled: true, formats: ["image/jpeg", "image/png", "image/webp"], maxUploadBytes: 10485760 }); return; }
     if (url.pathname === "/api/chat/admin/capabilities") { json(200, { enabled: true, video: { enabled: true, maxBytes: 104857600, mime: "video/mp4" } }); return; }
     if (url.pathname === "/api/media/admin/assets" && request.method === "POST") {
-      assert.equal(request.headers["content-type"], "image/jpeg"); assert.equal(request.headers["x-csrf-token"], session().csrf);
-      const chunks = []; for await (const chunk of request) chunks.push(chunk); const body = Buffer.concat(chunks); assert.deepEqual([...body.subarray(0, 3)], [255, 216, 255]);
-      state.uploads.push({ bytes: body.length, type: request.headers["content-type"] }); json(201, { asset: photo(99), duplicate: false }); return;
+      const type = request.headers["content-type"]; assert.ok(["image/jpeg", "image/png"].includes(type)); assert.equal(request.headers["x-csrf-token"], session().csrf);
+      const chunks = []; for await (const chunk of request) chunks.push(chunk); const body = Buffer.concat(chunks);
+      const metadata = await sharp(body).metadata(); assert.equal(metadata.format, type === "image/jpeg" ? "jpeg" : "png");
+      if (type === "image/jpeg") assert.deepEqual([...body.subarray(0, 3)], [255, 216, 255]);
+      else assert.deepEqual([...body.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+      assert.ok(body.length > 0 && body.length <= 2 * 1024 * 1024); assert.ok(metadata.width > 0 && metadata.width <= 2048 && metadata.height > 0 && metadata.height <= 2048);
+      state.uploads.push({ bytes: body.length, type, width: metadata.width, height: metadata.height }); json(201, { asset: photo(99), duplicate: false }); return;
     }
     if (url.pathname === "/api/media/admin/assets") {
       assert.equal(url.searchParams.get("limit"), "20"); const after = url.searchParams.get("afterId"), rows = state.owner === 1 ? photos.filter(row => !after || row.id > after) : [], page = rows.slice(0, 20), more = rows.length > 20;
@@ -82,13 +86,17 @@ test("Chrome media library FR320/EN1280: actual thumbnails, bounded pages, keybo
     } finally { await page?.close(); await source.close(); }
   }
 });
-test("Chrome media library: direct photo upload prepares a JPEG and never sends a message or campaign", { timeout: 60000 }, async () => {
+test("Chrome media library: direct photo upload preserves a prepared PNG and never sends a message or campaign", { timeout: 60000 }, async () => {
   const source = await fixture(); let page;
   try {
     page = await open(source, 390, "fr");
     await page.executeAsync("const done=arguments[arguments.length-1],canvas=document.createElement('canvas');canvas.width=120;canvas.height=80;canvas.getContext('2d').fillRect(0,0,120,80);canvas.toBlob(blob=>{const data=new DataTransfer();data.items.add(new File([blob],'synthetic-added-photo.png',{type:'image/png'}));const input=document.getElementById('photo-file');input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}));done(true)},'image/png')");
-    await waitUntil(() => source.state.uploads.length === 1 && page.execute("return document.getElementById('library-status').textContent==='Photo ajoutée à ta bibliothèque.' && document.querySelector('#media-preview img')?.naturalWidth>0 && !document.getElementById('photo-file').disabled"), "prepared upload shown in the selected preview");
-    assert.equal(source.state.uploads[0].type, "image/jpeg"); assert.equal(source.state.requests.filter(row => row.method === "POST").length, 1);
+    await waitUntil(() => {
+      assert.deepEqual(source.state.errors, [], "synthetic upload endpoint accepts the prepared image contract");
+      return source.state.uploads.length === 1 && page.execute("return document.getElementById('library-status').textContent==='Photo ajoutée à ta bibliothèque.' && document.querySelector('#media-preview img')?.naturalWidth>0 && !document.getElementById('photo-file').disabled");
+    }, "prepared upload shown in the selected preview");
+    assert.equal(source.state.uploads[0].type, "image/png"); assert.deepEqual([source.state.uploads[0].width, source.state.uploads[0].height], [120, 80]);
+    assert.equal(source.state.requests.filter(row => row.method === "POST").length, 1);
     assert.equal(await page.execute("return document.querySelectorAll('#media-grid button').length"), 20); await errors(page, source);
   } finally { await page?.close(); await source.close(); }
 });
