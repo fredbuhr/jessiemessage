@@ -1,6 +1,6 @@
 # Invitations et médias — évolution1.14.0
 
-**Codé, fusionné, qualifié et publié ; préparation/CHECK hébergés acquis, activation en attente.** La version active reste1.13.0/sourceb9e2ad78, finalisée selon les reçus utilisateur. [REPRISE](REPRISE.md) donne l’identité et le checkpoint actuels. Branche `feat/media-library-1140`, base documentaire `6506b757edfa6e8843343241bc77069332e8151c` ; code de départ identique au tagv1.13.0.
+**Codé, fusionné, qualifié et publié ; démarrage hébergé rapporté, enregistrement final qualifié en attente du reçu.** Le relevé utilisateur confirme désormais1.14.0/source4f3ce5de, Node24.22.1,31octobre21:16:02Paris ; métadonnées privées14 encore à enregistrer. [REPRISE](REPRISE.md) donne l’identité et le checkpoint actuels. Branche `feat/media-library-1140`, base documentaire `6506b757edfa6e8843343241bc77069332e8151c` ; code de départ identique au tagv1.13.0.
 
 ## Résultat demandé
 
@@ -55,6 +55,8 @@ La [checklist de couverture](verification-proofs/jm1140/coverage.json) distingue
 
 Sept [captures finales](verification-proofs/jm1140/visual-native.json) ont été inspectées et conservées, ainsi que les [journaux CI synthétiques](verification-proofs/jm1140/logs.json). Les premiers échecs d’attentes de tests et le débordement de texte des miniatures sont corrigés et conservés dans les preuves. Les durées finies explicites, les droits métier et les fonctionnalités existantes restent préservés ; aucune nouvelle table, suppression de module métier ou infrastructure ajoutée.
 
-[Publication1.14.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.14.0) et [préparateur dédié qualifié](verification-proofs/jm1140/preparation-native.json) acquis. La 1.13.0 reste active tant que les étapes personnelles du [guide1140](operations-release1140.md) ne sont pas attestées.
+[Publication1.14.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.14.0) et [préparateur dédié qualifié](verification-proofs/jm1140/preparation-native.json) acquis. L’activation14 est désormais rapportée ; le [guide1140](operations-release1140.md) distingue ce relevé des métadonnées privées encore13.
 
-La [préparation/CHECK1140](verification-proofs/jm1140/hosted-preparation.json) est désormais acquise selon le reçu utilisateur, SHA canonique2fe494a4 identique et sortie0. La prochaine étape est l’activation personnelle, puis l’identité réelle ; ne pas rejouer la préparation ni le CHECK.
+La [préparation/CHECK1140](verification-proofs/jm1140/hosted-preparation.json) est désormais acquise selon le reçu utilisateur, SHA canonique2fe494a4 identique et sortie0. Le [relevé d’activation14](verification-proofs/jm1140/hosted-identity.json) est reçu ; reste l’enregistrement final. Ne rejouer ni préparation, CHECK ou activation.
+
+Le [writer final14](verification-proofs/jm1140/writer-final-native.json) est qualifié29/29 natifs sans omission, source59e6f8cc, sans nouveau CHECK ou redémarrage. Son exécution et l’empreinte privée14 restent en attente du résultat utilisateur ; aucune finalisation n’est inventée.

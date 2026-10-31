@@ -1,6 +1,6 @@
-# Livraison 1.14.0 — préparation/CHECK acquis, activation en attente
+# Livraison 1.14.0 — démarrage rapporté, enregistrement final qualifié en attente du reçu
 
-État du 31 octobre 2026. [REPRISE](REPRISE.md) reste la référence. La 1.13.0 est toujours active et finalisée selon ses reçus ; aucune étape 1130 à rejouer. `recette.jessiemessage.com` et `jessiemessage.com` partagent le service Node239143 et la même base.
+État du 31 octobre 2026. [REPRISE](REPRISE.md) reste la référence. La 1.14.0 est démarrée selon le relevé utilisateur ; le checkpoint13 reste la dernière métadonnée privée acquise ; aucune étape 1130 à rejouer. `recette.jessiemessage.com` et `jessiemessage.com` partagent le service Node239143 et la même base.
 
 ## Résultat qualifié et publié
 
@@ -21,18 +21,41 @@ Le [reçu utilisateur](verification-proofs/jm1140/hosted-preparation.json) confi
 
 Préparateur immuable `10083087598a96248698cbe76309e1b3afda163c`, SHA256 `4b6d1b3d8212b107ccdfb7fa3a285e93b6936298f685b360423fa31a8ac18686`, déjà qualifié. Le [bloc utilisé est conservé dans l’historique](https://github.com/fredbuhr/jessiemessage/blob/f8b967f209949ae4d8b8787a61aec36cfeaab01b/docs/verification-proofs/jm1140/preparation-command.sh). **Ne rejouer ni préparation ni CHECK SSH1140.** Aucune action hébergée effectuée directement par l’agent.
 
-## Prochaine action unique : activation personnelle14
+## Activation personnelle14 — acquise, ne pas rejouer
 
-Le CHECK est confirmé. L’activation personnelle se fait dans le [Manager Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), application Node nommée `recette.jessiemessage.com`, qui dessert aussi le principal. Renseigner les valeurs suivantes :
+Le [relevé utilisateur](verification-proofs/jm1140/hosted-identity.json) confirme version1.14.0/source4f3ce5de/Node24.22.1, **31/10/2026 21:16:02 Europe/Paris (UTC+01)**, secondeUTC1793477762. Il ne contient ni millisecondes ni signal de disponibilité. Ne rejouer ni préparation, CHECK SSH, paramètres Manager ou redémarrage.
 
-| Champ | Valeur1140 après CHECK confirmé |
+| Champ | Valeur14 correspondant à l’activation rapportée |
 | --- | --- |
-| Commande d’exécution, champ du haut | `bash /srv/customer/jessiemessage-private/start-primary-release1140-4f3ce5de.sh` |
-| Commande de build, champ du bas | `bash /srv/customer/jessiemessage-private/check-primary-release1140-4f3ce5de.sh` |
+| Exécution, champ du haut | `bash /srv/customer/jessiemessage-private/start-primary-release1140-4f3ce5de.sh` |
+| Build, champ du bas | `bash /srv/customer/jessiemessage-private/check-primary-release1140-4f3ce5de.sh` |
 | Port | `3000` |
 
-Enregistrer les paramètres, puis ouvrir le [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) et cliquer sur **Redémarrer** pour appliquer la nouvelle livraison. Cette séparation enregistrement/redémarrage est décrite dans la [FAQ officielle Infomaniak2535](https://www.infomaniak.com/fr/support/faq/2535/modifier-la-configuration-dun-site-nodejs-infomaniak), relue le31octobre2026. Garder le port3000 et le Node privé épinglé ; les autres réglages ne font pas partie de cette activation.
+L’agent n’a ni ouvert le Manager ni inspecté directement les champs ou le processus. Le service Node239143 nommé recette dessert aussi le principal et sa base.
 
-Après activation, relever les quatre valeurs de l’identité dans [l’état du service](https://jessiemessage.com/admin/readiness) : version1.14.0, commit `4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd`, Nodev24.22.1 et date/heure réelle de démarrage. Aucun démarrage14 n’est encore attesté à l’enregistrement de ce guide. Préparer ensuite et qualifier l’enregistrement final lié à ce vrai démarrage et au staging acquis ; aucun writer14 n’est fourni avant cette identité. Le checkpoint13, ses historiques et les anciens replis restent préservés ; aucune qualification de downgrade nouvelle n’est inventée.
+## Enregistrement final14 — qualifié, en attente du reçu
 
-Téléphone physique, Safari et photo originale problématique restent non attestés. Les preuves Chrome et SQL utilisent exclusivement des fixtures synthétiques isolées. Aucun envoi réel, compte ou média client modifié, test de sauvegarde reporté, nouvelle opération PC ou chantier juridique.
+Le nouvel opérateur est [qualifié](verification-proofs/jm1140/writer-final-native.json) : [run41238866092](https://github.com/fredbuhr/jessiemessage/actions/runs/41238866092), tentative1, **1/1 job et29/29 tests natifs sans omission**, Nodev24.22.1. Opérateur **`59e6f8cc7f12d8b36e4c9bdbeec543d02becc9ff`**, arbre `edd28d9811263eae60ecd6408d218e3abdb4828b`, script SHA256 **`942429e1cfa44fd35dea8fd4cdae4319a5e1e7f5edbf0c756202f1dd3fd3faf1`**,34820octets, relu identique aux octets qualifiés ; tests et workflow également relus. Journal intégral synthétique conservé et empreinté. Aucun essai app vert répété.
+
+Il lie le démarrage réel1793477762, le staging2fe494a4 et le checkpoint13/cdcb ; vérifie sources/tags/versions, seul deltaHEIF, fichiers des six dépendances et inventaires distincts, Node/configuration/migrations, repli185 dans sa portéeSQL38 seule, précontrôles et unique démarrage avec millisecondes, puis HTTP publics et publication exacte. Écriture atomique et relecture des seules métadonnées, état actif13 intégral et section1130/historiques/autres blocs conservés. Aucun nouvel envoi, CHECK, migration ou redémarrage.
+
+Exécuter ce nouveau bloc dans le [terminal SSH personnel](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis transmettre le JSON. Le [fichier exact](verification-proofs/jm1140/record-command.sh) est conservé avec les preuves.
+
+```sh
+env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD1140'
+import hashlib, urllib.request
+
+url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/59e6f8cc7f12d8b36e4c9bdbeec543d02becc9ff/ops/record-release1140.py'
+with urllib.request.urlopen(url, timeout=30) as response:
+    if response.status != 200 or response.url != url:
+        raise SystemExit('URL_OUTIL_A_VERIFIER : arret.')
+    code = response.read(65537)
+if len(code) > 65536 or hashlib.sha256(code).hexdigest() != '942429e1cfa44fd35dea8fd4cdae4319a5e1e7f5edbf0c756202f1dd3fd3faf1':
+    raise SystemExit('EMPREINTE_OUTIL_INCORRECTE : aucun outil execute.')
+exec(compile(code, '<enregistrement1140>', 'exec'), {'__name__': '__main__'})
+PY_RECORD1140
+```
+
+Résultat attendu : `release1140_metadata_recorded`, identité14 exacte, `metadataOnly:true`, `noRestart:true`, `publicReady:true` et nouvelle empreinte du checkpoint. Aucun succès privé14 déduit avant réception. Si résultat absent ou refus, conserver les traces et inspecter l’état durable en lecture seule avant toute reprise ; ne jamais rejouer un outil pour découvrir son résultat.
+
+Téléphones physiques, Safari et photo originale problématique restent non attestés. Aucun compte ou média client modifié, test de sauvegarde reporté, nouveau parcours PC ou chantier juridique.

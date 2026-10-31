@@ -1,0 +1,53 @@
+{
+  "operator": {
+    "source": "59e6f8cc7f12d8b36e4c9bdbeec543d02becc9ff",
+    "tree": "edd28d9811263eae60ecd6408d218e3abdb4828b",
+    "path": ".github/workflows/record-release1140.yml"
+  },
+  "run": {
+    "id": 41238866092,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "event": "push",
+    "createdAt": "2026-10-31T20:25:50Z",
+    "updatedAt": "2026-10-31T20:26:02Z",
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41238866092"
+  },
+  "job": {
+    "id": 124648323963,
+    "headSha": "59e6f8cc7f12d8b36e4c9bdbeec543d02becc9ff",
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "startedAt": "2026-10-31T20:25:52Z",
+    "completedAt": "2026-10-31T20:26:01Z",
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41238866092/job/124648323963"
+  },
+  "nodeVersion": "v24.22.1",
+  "tests": {
+    "methods": 29,
+    "passed": 29,
+    "omitted": 0,
+    "durationSeconds": 1.384,
+    "footer": "Ran 29 tests in 1.384s; OK"
+  },
+  "log": {
+    "file": "record1140-native.log",
+    "bytes": 23223,
+    "sha256": "d5333f8d47a9a666cf9993bfe563f6c3623d0bb29378aaa74ab72ea0bb4dcea6",
+    "repositoryPath": "logs/record1140-native.log.gz",
+    "gzipSha256": "e9b86e5f69a707b23c55e919da9a690be064a0fb7b1ec9a8aafb6c179676e415"
+  },
+  "hostedRecordingExecuted": false,
+  "scope": "Native synthetic operator qualification only; no hosted execution.",
+  "scriptReadback": {
+    "path": "ops/record-release1140.py",
+    "sha256": "942429e1cfa44fd35dea8fd4cdae4319a5e1e7f5edbf0c756202f1dd3fd3faf1",
+    "bytes": 34820,
+    "identicalToQualifiedCommit": true
+  },
+  "reportedStartupSecond": 1793477762,
+  "stagingReceiptSha256": "2fe494a43a446c882ce509f4ecf51925bd5789a94bdbdf2ce6923d83e5ff7d72",
+  "priorCheckpointSha256": "cdcb3f8b35208ddfaff19009235f86d4dd23a10ac13b00c9c692daad2bbe496d"
+}

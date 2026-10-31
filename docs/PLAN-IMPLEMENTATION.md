@@ -8,10 +8,11 @@ Code, revue, PR/main5/5, sept captures, publication et nouvel opérateur d’ins
 
 **Préparation/CHECK1140 acquis** selon le [reçu utilisateur](verification-proofs/jm1140/hosted-preparation.json), empreinte canonique2fe494a4 identique, CHECK0 et marqueur final. Installation distincte qualifiée ; checkpoint13 et anciennes dépendances préservés selon le reçu. Aucun démarrage14 déduit. Ne rejouer ni préparation ni CHECK SSH1140.
 
-1. **Activation14** : consignes Manager précises avec les nouveaux lanceurs, puis identité réelle version/source/Node/démarrage. Aucun ancien outil13 à rejouer.
-2. **Enregistrement final14** : préparer et qualifier un writer lié au vrai démarrage et au staging reçu ; préserver l’état13 et les historiques, vérifier publication et résultat durable. Cette étape n’est pas encore exécutée.
+**Activation14 acquise selon le [relevé utilisateur](verification-proofs/jm1140/hosted-identity.json)** : version1.14.0/source4f3ce5de/Node24.22.1,31octobre21:16:02Paris, secondeUTC1793477762. Aucun nouveau redémarrage ni reprise de préparation/CHECK.
 
-La 1.13.0 reste active et finalisée. Les suites vertes du même code ne sont pas à rejouer. Essais physiques/Safari non attestés ; sauvegarde reportée, PC et juridique restent hors périmètre.
+**Seule étape restante : enregistrement final14.** Préparer et qualifier un writer de métadonnées lié au staging2fe494a4 et à la seconde réelle du démarrage ; vérifier source/tag/release, dépendances14 distinctes, précontrôles et HTTP publics avant écriture atomique. Préserver intégralement l’état13/cdcb et ses historiques. Writer désormais qualifié : [run41238866092](verification-proofs/jm1140/writer-final-native.json),1/1 et29/29 natifs sans omission sousNode24.22.1, source59e6f8cc. Aucune exécution hébergée déduite. Prochaine action : nouveau bloc final du guide, puis résultat durable ; ne rejouer aucune autre étape.
+
+Les suites app vertes ne sont pas à rejouer. Essais physiques/Safari non attestés ; sauvegarde reportée, PC et juridique restent hors périmètre.
 
 ## Évolution 1.13.0 — livraison terminée
 

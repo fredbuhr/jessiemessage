@@ -112,6 +112,12 @@
       "bytes": 17811,
       "sha256": "6462d528280a01017df4f9d801e09a289c5a3f939b4c4aa0908f25621bd7a7e0",
       "gzipSha256": "7398a862c61270e61e0a9b667478b1f447501a87d3d783a835b5ff94e097246a"
+    },
+    {
+      "path": "logs/record1140-native.log.gz",
+      "bytes": 23223,
+      "sha256": "d5333f8d47a9a666cf9993bfe563f6c3623d0bb29378aaa74ab72ea0bb4dcea6",
+      "gzipSha256": "e9b86e5f69a707b23c55e919da9a690be064a0fb7b1ec9a8aafb6c179676e415"
     }
   ]
 }

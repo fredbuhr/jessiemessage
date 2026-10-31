@@ -1,0 +1,23 @@
+{
+  "format": "jessiemessage-1140-hosted-startup-observation",
+  "authority": "user copied startup identity from application UI",
+  "reported": {
+    "version": "1.14.0",
+    "commit": "4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd",
+    "nodeVersion": "v24.22.1",
+    "startedAtLocal": "31/10/2026 21:16:02",
+    "timeZone": "Europe/Paris"
+  },
+  "interpretation": {
+    "isoLocal": "2026-10-31T21:16:02+01:00",
+    "utc": "2026-10-31T20:16:02+00:00",
+    "epochSecond": 1793477762,
+    "millisecondsReported": false,
+    "expectedPublishedTree": "e5a239eaf7b8c3395a843c9e0d600efeb7aa569b",
+    "matchesPublishedVersionSourceAndExpectedNode": true,
+    "availabilitySignalReported": false,
+    "privateCheckpoint1140Recorded": false,
+    "noNewRestartRequested": true
+  },
+  "next": "Qualify a new metadata-only writer pinned to this actual startup second and the acquired staging receipt; no replay of preparation, CHECK or activation."
+}
