@@ -160,7 +160,7 @@ export async function createVerificationTransport(config, {
           envelope: { from, to: [email] },
           messageId: `<verification-${jobId.toString("hex")}@${new URL(config.origin).hostname}>`,
           subject: "Confirme ton adresse e-mail — Jessie",
-          text: `Bonjour,\n\nPour confirmer ton adresse e-mail et me retrouver ici, ouvre ce lien :\n${link}\n\nCe lien est personnel, temporaire et utilisable une seule fois. Si tu n'as pas demandé cette inscription, ignore ce message.\n\nÀ bientôt,\nJessie`,
+          text: `Bonjour,\n\nPour confirmer ton adresse e-mail et me retrouver ici, ouvre ce lien :\n${link}\n\nSur la page qui s’ouvre, appuie sur « Vérifier mon e-mail » (« Verify my email » en anglais) pour terminer la confirmation. Tu pourras ensuite te connecter.\n\nCe lien est personnel, temporaire et utilisable une seule fois. Si tu n'as pas demandé cette inscription, ignore ce message.\n\nÀ bientôt,\nJessie`,
         }), "MAIL_DELIVERY_FAILED");
         const accepted = Array.isArray(result?.accepted) && result.accepted.some((address) => {
           try { return canonicalEmail(address) === email; } catch { return false; }

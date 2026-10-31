@@ -22,8 +22,8 @@ const verificationToken = Buffer.alloc(32, 24).toString("base64url");
 const password = "Synthetic invitation password", email = "invited@example.invalid";
 const screenshots = new URL("../../artifacts/homepage/", import.meta.url);
 const copy = {
-  fr: { invalid: "Ce code est invalide, expiré ou déjà utilisé.", created: "Ton compte est créé.", verificationRejected: "Ce lien de confirmation est invalide, expiré ou déjà utilisé. Connecte-toi si ton e-mail est confirmé, ou demande un nouvel e-mail ci-dessous.", verified: "Ton adresse e-mail est vérifiée.", signIn: "Aller à la connexion" },
-  en: { invalid: "This code is invalid, expired or already used.", created: "Your account is ready.", verificationRejected: "This confirmation link is invalid, expired or already used. Sign in if your email is confirmed, or request another email below.", verified: "Your email address is verified.", signIn: "Go to sign in" },
+  fr: { invalid: "Ce code est invalide, expiré ou déjà utilisé.", created: "Ton compte est créé.", verificationRejected: "Ce lien de confirmation est invalide, expiré ou déjà utilisé. Connecte-toi si ton e-mail est confirmé, ou demande un nouvel e-mail ci-dessous.", verified: "Ton adresse e-mail est vérifiée. Connecte-toi pour ouvrir ta conversation.", signIn: "Aller à la connexion" },
+  en: { invalid: "This code is invalid, expired or already used.", created: "Your account is ready.", verificationRejected: "This confirmation link is invalid, expired or already used. Sign in if your email is confirmed, or request another email below.", verified: "Your email address is verified. Sign in to open your conversation.", signIn: "Go to sign in" },
 };
 
 async function fixture() {
@@ -156,8 +156,9 @@ test("real Chrome: a used verification link opens sign-in, while a fresh link an
         await open(page, language, `/access#verification=${verificationToken}`);
         await waitUntil(() => page.execute("return document.getElementById('email-verification').hidden===false && !document.getElementById('verify-email-button').disabled"), "fresh verification view");
         await page.click("#verify-email-button"); await loginReady(page);
-        assert.equal(await page.execute("return document.getElementById('access-status').textContent.startsWith(arguments[0])", copy[language].verified), true);
+        assert.equal(await page.execute("return document.getElementById('access-status').textContent"), copy[language].verified);
         assert.equal(source.verifications.at(-1).accepted, true); await cleanClientSurfaces(page);
+        await geometry(page); await capture(page, `verification-open-conversation-${language}-${width}`);
       } finally { await page.close(); }
     });
     cleanFixture(source);

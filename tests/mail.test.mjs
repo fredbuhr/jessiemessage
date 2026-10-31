@@ -134,6 +134,7 @@ test("verification message is neutral, addresses only its intended recipient and
   assert.equal(captured[0].replyTo, config.smtp.from);
   assert.deepEqual(captured[0].envelope, { from: config.smtp.from, to: [email] });
   assert.ok(captured[0].text.includes(`${origin}/access#verification=${token}`));
+  assert.match(captured[0].text, /appuie sur « Vérifier mon e-mail ».*« Verify my email ».*terminer la confirmation/);
   assert.ok(!captured[0].text.includes(`?verification=${token}`));
   assert.ok(!/stripchat|porn|sexe|adulte|photo|conversation|mot de passe/i.test(captured[0].text + captured[0].subject));
   assert.equal(captured[0].html, undefined);
