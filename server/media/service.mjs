@@ -64,7 +64,7 @@ export async function createMediaService({ store, chatService, authStore, storag
   }
   async function consumeBudget(userId, kind, now) {
     // Reject an exhausted account before spending the shared allowance.
-    const budgets = kind === "upload" ? [["user-upload", userId, 10], ["global-upload", "all", 30]]
+    const budgets = kind === "upload" ? [["user-upload", userId, 60], ["global-upload", "all", 240]]
       : ["library", "gallery"].includes(kind) ? [[`user-${kind}`, userId, 60], ["global-read", "all", 300]]
       : [[`user-${kind}`, userId, kind === "full" ? 20 : kind === "thumb" ? 120 : 30]];
     for (const [name, identity, ceiling] of budgets) {

@@ -534,3 +534,30 @@ test("gallery validates date order and unique identities without inferring SQL m
     }
   }
 });
+
+test("admin media library page and assets require the administrator session and preserve private response policy", async (t) => {
+  const { base, calls } = await fixture(t);
+  const files = ["/admin/media", "/media-library-page.js", "/media-library-model.js", "/media-library-page.css", "/i18n-media-library.js"];
+  for (const path of files) {
+    const anonymous = await fetch(`${base}${path}`, { redirect: "manual" });
+    assert.equal(anonymous.status, path === "/admin/media" ? 303 : 401, path);
+    if (path === "/admin/media") assert.equal(anonymous.headers.get("location"), "/admin/login?continue=%2Fadmin%2Fmedia");
+    const wrongRole = await fetch(`${base}${path}`, { headers: { Cookie: cookie("client") }, redirect: "manual" });
+    assert.equal(wrongRole.status, path === "/admin/media" ? 303 : 401, path);
+    const response = await fetch(`${base}${path}`, { headers: { Cookie: cookie("admin") } });
+    assert.equal(response.status, 200, path);
+    assert.equal(response.headers.get("cache-control"), "no-store");
+    assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+    const csp = response.headers.get("content-security-policy");
+    assert.equal(csp, AUTH_HEADERS["Content-Security-Policy"] + (path === "/admin/media" ? "; media-src 'self' blob:" : ""));
+    assert.doesNotMatch(csp, /unsafe-eval|wasm-unsafe-eval/);
+    assert.ok((await response.text()).length > 0);
+  }
+  const head = await fetch(`${base}/admin/media`, { method: "HEAD", headers: { Cookie: cookie("admin") } });
+  assert.equal(head.status, 200); assert.equal(await head.text(), "");
+  assert.equal((await fetch(`${base}/admin/media?unexpected=1`, { headers: { Cookie: cookie("admin") } })).status, 400);
+  const before = calls.filter(call => call[0] !== "actor").length;
+  const post = await fetch(`${base}/admin/media`, { method: "POST", headers: mutation(), body: "{}" });
+  assert.equal(post.status, 405);
+  assert.equal(calls.filter(call => call[0] !== "actor").length, before, "opening the library never lists, uploads, sends or deletes by itself");
+});

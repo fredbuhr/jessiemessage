@@ -62,7 +62,10 @@ function parse() {
         node.setAttribute(name, attribute[2] ?? "");
       }
       const identifier = node.getAttribute("id"); if (identifier) nodes.set(identifier, node);
-      if (tag === "input") { node.value = node.defaultValue = node.getAttribute("value") ?? ""; }
+      if (tag === "input") {
+        node.value = node.defaultValue = node.getAttribute("value") ?? "";
+        node.checked = node.hasAttribute("checked"); node.disabled = node.hasAttribute("disabled");
+      }
       stack.at(-1).append(node);
       if (!voids.has(tag)) stack.push(node);
     } else stack.at(-1)._text += token;
@@ -138,6 +141,8 @@ test("administrator language switches update static and loaded private UI in pla
   const originalCard = clientList.children[0], originalHeading = originalCard.children[0].children[0], email = originalCard.children[1];
   const privateInput = originalCard.querySelectorAll("input")[0]; privateInput.value = "75";
   const beforeCalls = f.calls.length;
+  const unlimited = f.nodes.get("invitation-unlimited"), days = f.nodes.get("invitation-days");
+  assert.equal(unlimited.checked, true); assert.equal(days.disabled, true); assert.equal(days.required, false);
   f.language("en");
   assert.equal(f.nodes.get("login-button").textContent, "Sign in");
   assert.equal(f.nodes.get("factor-help").textContent, "The 6 digits from your authenticator app.");
@@ -153,6 +158,7 @@ test("administrator language switches update static and loaded private UI in pla
   assert.match(invitationList.textContent, /Access for 3,650 days after email confirmation/);
   assert.match(invitationList.textContent, new RegExp(new Date(now - 1000).toLocaleString("en-US").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.match(f.nodes.get("clients-page-note").textContent, /Page 1 · 2 on this page/);
+  assert.equal(unlimited.checked, true); assert.equal(days.disabled, true); assert.equal(days.required, false);
   f.language("fr");
   assert.equal(f.nodes.get("login-button").textContent, "Se connecter"); assert.equal(originalHeading.textContent, "Bienvenue, Jessie.");
   assert.match(originalCard.textContent, /État : Accès expiré/); assert.equal(privateInput.value, "75");

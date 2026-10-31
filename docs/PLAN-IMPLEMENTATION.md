@@ -2,6 +2,16 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
+## Évolution1.14.0 — invitations et médias
+
+Développement demandé après la clôture1130, branche `feat/media-library-1140`, base6506b757. [Objectif et critères](media-library-1140.md). Une seule livraison mineure compatible pour les quatre demandes, sans migration SQL.
+
+1. **Invitations et diffusion** : défaut illimité, grille de miniatures et ajout photo direct sans envoi automatique ; tests de parcours, brouillons, pagination et sessions.
+2. **Photos clients** : préparation élargie et conversion HEIC locale de secours, ressources et reprise bornées, lots conservant ordre/identifiants ; annoncer les limites effectivement qualifiées.
+3. **Bibliothèque et qualification** : accès dashboard, gestion des assets propres sous ACL existantes, revue et intégration, CI native PR/main, captures et preuves exactes avant publication. Préparer les nouvelles dépendances1140 uniquement après qualification ; ne pas réutiliser les anciens outils1130.
+
+Aucune opération hébergée1140 exécutée. La1.13.0 reste active et finalisée ; ses étapes et CI acquises ne sont pas à rejouer. Sauvegarde reportée et limites antérieures conservent leur portée.
+
 ## Évolution 1.13.0 — livraison terminée
 
 Les corrections de messagerie, listes, lectures backend, cadence Push et textes courants sont terminées. [Résultat et bornes](conversation-lists-1130.md), [couverture F01–F09](verification-proofs/jm1130/coverage.json). PR144 fusionnée, PR/main5/5, douze captures inspectées ; tagv1.13.0/release430071184 publiés surb9e2ad78 après publication2/2. Aucune migration ou dépendance nouvelle. Les contrôles verts du même code ne sont pas à rejouer.

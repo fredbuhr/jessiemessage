@@ -2,6 +2,14 @@
 
 **31 octobre 2026 — livraison1.13.0 terminée selon les reçus utilisateur.** Application, checkpoint et publication/latest1.13.0 alignés : source **`b9e2ad78b47dccb72b8e793cdc448e6b70424430`**, arbre `dc8933723a54c0307a3fd52719bdd4fd3ac3f96a`, Nodev24.22.1, SQL38/37tables attendues. [Reçu final](verification-proofs/jm1130/hosted-metadata.json) `release1130_metadata_recorded`, `publicReady:true`, métadonnées seules et aucun redémarrage. Démarrage réel **31/10/2026 19:13:58.163 Paris (UTC+01)**,1793470438163ms, concordant avec le relevé UI à la seconde. Checkpoint1130 SHA256 **`cdcb3f8b35208ddfaff19009235f86d4dd23a10ac13b00c9c692daad2bbe496d`**. État antérieur1112, historiques, autres blocs et reçus1120/1113 préservés selon le reçu, sans finalisations absentes inventées. Aucun nouveau test ou action de livraison restant à lancer.
 
+## Évolution1.14.0 — invitations et médias en développement
+
+Nouvelle demande utilisateur : accès illimité par défaut aux nouvelles invitations, sélecteur visuel de photos pour les diffusions avec ajout direct, fiabilité des photos clients et bibliothèque de médias depuis le dashboard. Branche **`feat/media-library-1140`**, base documentaire `6506b757edfa6e8843343241bc77069332e8151c`, source applicative de départ identique au tag1.13.0. [Périmètre, critères et limites](media-library-1140.md).
+
+Les corrections sont développées en un seul lot compatible1.14.0. Les essais ciblés et scénarios natifs nouveaux sont en cours ; aucune qualification complète, publication ou activation1140 déduite. Une dépendance de conversion HEIC navigateur1.23.5 est ajoutée paresseusement et localement ; Node24.22.1 et schéma38 restent inchangés. Les protections d’accès, propriété, sessions et stockage restent conservées. Aucun compte/message/média réel modifié, aucun envoi réel, redémarrage ou ancien outil rejoué. La livraison1130 reste close.
+
+Candidat fonctionnel intégré et relu ; défauts de revue corrigés et tests ciblés verts, avec groupes recoupants non additionnés. Dernier checkpoint durable préalable : `52645bdff8af387bae668ab37946f6d67568c0f7`, arbre `af5eec9c5d8daf5a585d2d111fa38f1884703760` ; corrections finales et bornes consignées dans le bilan. Prochaine étape : qualifier le candidat stabilisé sur PR puis main avec les preuves et bornes réelles. Ne lancer aucune opération hébergée avant ce résultat concret.
+
 ## Évolution 1.13.0 — déployée et finalisée
 
 Les corrections demandées le31octobre sont codées, revues, fusionnées dans la [PR144](https://github.com/fredbuhr/jessiemessage/pull/144) et publiées en un seul lot compatible. Source/tag **`b9e2ad78b47dccb72b8e793cdc448e6b70424430`**, arbre **`dc8933723a54c0307a3fd52719bdd4fd3ac3f96a`**. `main` peut avancer ensuite uniquement pour cette passation ; ne pas confondre ce commit documentaire avec le code publié ou actif. [Périmètre, bornes et bilan](conversation-lists-1130.md), [couverture](verification-proofs/jm1130/coverage.json).

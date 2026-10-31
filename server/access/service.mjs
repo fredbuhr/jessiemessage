@@ -177,7 +177,7 @@ export async function createAccessService({ store, authStore, authService, totpK
     await limit("inspect", hash.toString("hex"), peerAddress, 20);
     return database(() => store.inspectInvitation(hash, { now: clock() }));
   }
-  async function createInvitation(raw, { lifetimeHours = 72, accessDays = 30, format = "link" } = {}) {
+  async function createInvitation(raw, { lifetimeHours = 72, accessDays = null, format = "link" } = {}) {
     if (!Number.isSafeInteger(lifetimeHours) || lifetimeHours < 1 || lifetimeHours > 720
       || (accessDays !== null && (!Number.isSafeInteger(accessDays) || accessDays < 1 || accessDays > 3650))
       || !["link", "code"].includes(format)) throw invalid();

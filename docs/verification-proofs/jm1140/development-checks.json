@@ -1,0 +1,103 @@
+{
+  "format": "jessiemessage-1140-development-checkpoint",
+  "base": "6506b757edfa6e8843343241bc77069332e8151c",
+  "branch": "feat/media-library-1140",
+  "applicationVersionPlanned": "1.14.0",
+  "activeHostedVersion": "1.13.0",
+  "activeHostedSource": "b9e2ad78b47dccb72b8e793cdc448e6b70424430",
+  "candidateQualified": false,
+  "applicationCIRun": null,
+  "steps": [
+    {
+      "scope": "Invitation default and preserved finite choice",
+      "tests": 133,
+      "passed": 133,
+      "skipped": 0,
+      "authority": "agent targeted service/HTTP/admin UI logs",
+      "status": "targeted_passed_native_pending"
+    },
+    {
+      "scope": "Broadcast thumbnails/direct upload",
+      "tests": 77,
+      "passed": 77,
+      "skipped": 0,
+      "status": "targeted_passed_peer_findings_closed",
+      "limit": "Native Chrome still pending"
+    },
+    {
+      "scope": "Media library model/UI/catalog",
+      "status": "targeted_passed_peer_findings_closed",
+      "limit": "Model5/UI18/catalog7; native Chrome still pending",
+      "tests": 30,
+      "passed": 30,
+      "skipped": 0
+    },
+    {
+      "scope": "Root media page HTTP and feature-disabled server boundaries",
+      "tests": 46,
+      "passed": 46,
+      "skipped": 0,
+      "log": "implementation-notes/media-routing1140-local.log"
+    },
+    {
+      "scope": "Root administrator navigation",
+      "tests": 8,
+      "passed": 8,
+      "skipped": 0,
+      "log": "implementation-notes/admin-navigation1140-local.log"
+    },
+    {
+      "scope": "Root decoder static assets/feature gating/worker-only WASM policy",
+      "tests": 1,
+      "passed": 1,
+      "skipped": 0,
+      "log": "implementation-notes/heic-assets1140-local.log"
+    },
+    {
+      "scope": "Client photos/HEIC/native-picker/backpressure/batches",
+      "status": "targeted_passed_peer_findings_closed",
+      "groups": [
+        {
+          "scope": "chat/accessibility/i18n/backoff",
+          "tests": 176,
+          "passed": 176,
+          "skipped": 0
+        },
+        {
+          "scope": "image preparation/read aborts",
+          "tests": 18,
+          "passed": 18,
+          "skipped": 0
+        },
+        {
+          "scope": "real HEIC decoder security/opaque pointer bridge",
+          "tests": 8,
+          "passed": 8,
+          "skipped": 0
+        },
+        {
+          "scope": "photo batches/service admission",
+          "tests": 70,
+          "passed": 70,
+          "skipped": 0
+        }
+      ]
+    }
+  ],
+  "groupsOverlapNotSummed": true,
+  "nativeBrowserOrMariaDbExecuted": false,
+  "generalSuiteComplete": false,
+  "hostedOperationPerformed": false,
+  "realAccountsMediaOrMessagesUsed": false,
+  "limits": [
+    "No physical phone or Safari acceptance inferred",
+    "No release/publication/deployment performed",
+    "New HEIC dependency requires dedicated installation before any future hosted1140 CHECK"
+  ],
+  "peerReview": [
+    "native picker same owner and CSRF resumption, uncertain POST copy",
+    "BFCache reproof, deletion ACK and refresh failure",
+    "cloud image read abort/timeout and late byte clearing",
+    "thumbnail retry on explicit render without automatic retry loop"
+  ]
+}

@@ -5,7 +5,7 @@ const clientsPage = location.pathname === "/admin/clients";
 const adminContinueTarget = (() => {
   if (!location.search) return null;
   const query = new URLSearchParams(location.search);
-  const allowed = new Set(["/admin/clients", "/admin/messages", "/admin/broadcasts", "/admin/announcements", "/admin/tasks", "/admin/readiness", "/admin/backups", "/admin/privacy", "/admin/closures"]);
+  const allowed = new Set(["/admin/clients", "/admin/messages", "/admin/broadcasts", "/admin/media", "/admin/announcements", "/admin/tasks", "/admin/readiness", "/admin/backups", "/admin/privacy", "/admin/closures"]);
   return query.size === 1 && query.getAll("continue").length === 1 && allowed.has(query.get("continue")) ? query.get("continue") : null;
 })();
 
@@ -624,10 +624,15 @@ async function accessAction(action) {
     else notice(errorMessage(error), true);
   } finally { if (current(ticket)) setBusy(false); }
 }
-document.getElementById("invitation-unlimited").addEventListener("change", (event) => {
-  document.getElementById("invitation-days").disabled = event.target.checked;
-  document.getElementById("invitation-days").required = !event.target.checked;
-});
+function syncInvitationDuration() {
+  const unlimited = document.getElementById("invitation-unlimited").checked;
+  document.getElementById("invitation-days").disabled = unlimited;
+  document.getElementById("invitation-days").required = !unlimited;
+}
+document.getElementById("invitation-unlimited").addEventListener("change", syncInvitationDuration);
+// Native form reset restores checked/value after dispatching its reset event.
+document.getElementById("invitation-form").addEventListener("reset", () => { setTimeout(syncInvitationDuration, 0); });
+syncInvitationDuration();
 function clearInvitation() {
   document.getElementById("new-invitation").hidden = true;
   for (const id of ["invitation-link", "invitation-code-result"]) document.getElementById(id).value = "";

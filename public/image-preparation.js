@@ -3,14 +3,16 @@
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 // Camera originals can be much larger than the upload. Inspect their compressed
 // headers first, then resize locally; the server's independent 10 MiB cap stays.
-export const MAX_SOURCE_IMAGE_BYTES = 50 * 1024 * 1024;
+export const MAX_SOURCE_IMAGE_BYTES = 128 * 1024 * 1024;
 export const TARGET_UPLOAD_BYTES = 2 * 1024 * 1024;
-export const MAX_SOURCE_IMAGE_PIXELS = 64_000_000;
-export const MAX_SOURCE_IMAGE_SIDE = 16_384;
+export const MAX_SOURCE_IMAGE_PIXELS = 256_000_000;
+// Full-resolution native fallback and software HEVC decoding need an explicit
+// allocation bound. High-definition JPEG uses native decoder shrink first.
+export const MAX_HEIC_IMAGE_PIXELS = 64_000_000;
+const MAX_NATIVE_FALLBACK_PIXELS = 64_000_000;
+export const MAX_SOURCE_IMAGE_SIDE = 32_768;
 const MAX_PREPARED_IMAGE_SIDE = 2048;
-const TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
-const GENERIC_TYPES = new Set(["", "application/octet-stream"]);
-const JPEG_TYPES = new Set(["image/jpg", "image/pjpeg"]);
+
 
 export class ImagePreparationError extends Error {
   constructor(code) { super("Image preparation failed."); this.name = "ImagePreparationError"; this.code = code; }
@@ -107,6 +109,75 @@ function webpInfo(bytes, view) {
   return { width: imageWidth, height: imageHeight, type: "image/webp", orientation: exif };
 }
 
+// Inspect only the container metadata, never search compressed image payloads
+// for a magic word. Every walked ISO-BMFF box is range/depth/count bounded.
+function heifInfo(bytes, view) {
+  let count = 0;
+  const boxes = (start, end) => {
+    const result = [];
+    while (start < end) {
+      if (++count > 4096 || end - start < 8) fail("media_format");
+      let size = view.getUint32(start), header = 8;
+      if (size === 1) {
+        if (end - start < 16 || view.getUint32(start + 8) !== 0) fail("media_format");
+        size = view.getUint32(start + 12); header = 16;
+      } else if (size === 0) size = end - start;
+      if (size < header || size > end - start) fail("media_format");
+      result.push({ type: ascii(bytes, start + 4, 4), start: start + header, end: start + size });
+      start += size;
+    }
+    return result;
+  };
+  const top = boxes(0, bytes.length), ftyp = top.find(box => box.type === "ftyp");
+  if (!ftyp || ftyp.end - ftyp.start < 8 || (ftyp.end - ftyp.start) % 4) fail("media_format");
+  const brands = [ascii(bytes, ftyp.start, 4)];
+  for (let start = ftyp.start + 8; start < ftyp.end; start += 4) brands.push(ascii(bytes, start, 4));
+  if (brands.some(brand => ["avis", "msf1", "hevc", "hevx"].includes(brand))) fail("media_format");
+  const type = brands.includes("avif") ? "image/avif"
+    : brands.some(brand => ["heic", "heix", "mif1"].includes(brand)) ? "image/heic" : null;
+  if (!type) fail("media_format");
+  const meta = top.filter(box => box.type === "meta");
+  if (meta.length !== 1 || meta[0].end - meta[0].start < 4) fail("media_format");
+  const children = boxes(meta[0].start + 4, meta[0].end), pitm = children.find(box => box.type === "pitm");
+  if (!pitm || pitm.end - pitm.start < 6) fail("media_format");
+  const version = bytes[pitm.start];
+  if (version > 1 || pitm.end - pitm.start < (version ? 8 : 6)) fail("media_format");
+  const primary = version ? view.getUint32(pitm.start + 4) : view.getUint16(pitm.start + 4);
+  const iprp = children.find(box => box.type === "iprp");
+  if (!iprp) fail("media_format");
+  const propertyBoxes = boxes(iprp.start, iprp.end), ipco = propertyBoxes.find(box => box.type === "ipco");
+  if (!ipco) fail("media_format");
+  const properties = boxes(ipco.start, ipco.end), associations = [];
+  for (const ipma of propertyBoxes.filter(box => box.type === "ipma")) {
+    if (ipma.end - ipma.start < 8 || bytes[ipma.start] > 1) fail("media_format");
+    const version = bytes[ipma.start], flags = view.getUint32(ipma.start) & 0xffffff;
+    if (flags & ~1) fail("media_format");
+    const entries = view.getUint32(ipma.start + 4); if (entries > 1024) fail("media_format");
+    let cursor = ipma.start + 8;
+    for (let entry = 0; entry < entries; entry += 1) {
+      const idBytes = version ? 4 : 2;
+      if (cursor + idBytes + 1 > ipma.end) fail("media_format");
+      const id = version ? view.getUint32(cursor) : view.getUint16(cursor); cursor += idBytes;
+      const amount = bytes[cursor++], associationBytes = flags & 1 ? 2 : 1;
+      if (cursor + amount * associationBytes > ipma.end) fail("media_format");
+      for (let index = 0; index < amount; index += 1) {
+        const property = associationBytes === 2 ? view.getUint16(cursor) & 0x7fff : bytes[cursor] & 0x7f;
+        cursor += associationBytes;
+        if (property > properties.length) fail("media_format");
+        if (id === primary && property) associations.push(properties[property - 1]);
+      }
+    }
+    if (cursor !== ipma.end) fail("media_format");
+  }
+  const sizes = associations.filter(box => box.type === "ispe");
+  if (sizes.length !== 1 || sizes[0].end - sizes[0].start !== 12) fail("media_format");
+  const rotations = associations.filter(box => box.type === "irot");
+  if (rotations.length > 1 || rotations.some(box => box.end - box.start !== 1 || bytes[box.start] > 3)) fail("media_format");
+  const rotated = rotations.length && bytes[rotations[0].start] % 2;
+  const width = view.getUint32(sizes[0].start + 4), height = view.getUint32(sizes[0].start + 8);
+  return { width: rotated ? height : width, height: rotated ? width : height, type, orientation: 1 };
+}
+
 // Inspect bounded compressed bytes before calling any browser image decoder.
 // This does not trust the filename or MIME type as proof of an image format.
 export function inspectImageInput(bytes) {
@@ -117,8 +188,7 @@ export function inspectImageInput(bytes) {
   if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) info = jpegInfo(bytes, view);
   else if (bytes.length >= 8 && ascii(bytes, 0, 8) === "\x89PNG\r\n\x1a\n") info = pngInfo(bytes, view);
   else if (bytes.length >= 12 && ascii(bytes, 0, 4) === "RIFF" && ascii(bytes, 8, 4) === "WEBP") info = webpInfo(bytes, view);
-  else if (bytes.length >= 12 && ascii(bytes, 4, 4) === "ftyp"
-    && ["heic", "heix", "hevc", "hevx", "mif1", "msf1"].includes(ascii(bytes, 8, 4))) fail("media_heic");
+  else if (bytes.length >= 12 && ascii(bytes, 4, 4) === "ftyp") info = heifInfo(bytes, view);
   else fail("media_format");
   if (![info.width, info.height].every((value) => Number.isSafeInteger(value) && value >= 1)) fail("media_format");
   if (info.width > MAX_SOURCE_IMAGE_SIDE || info.height > MAX_SOURCE_IMAGE_SIDE
@@ -131,6 +201,38 @@ function dimensions(width, height, maximum = MAX_PREPARED_IMAGE_SIDE) {
   return { width: Math.max(1, Math.floor(width * ratio)), height: Math.max(1, Math.floor(height * ratio)) };
 }
 function aborted(signal) { if (signal?.aborted) throw new DOMException("Aborted", "AbortError"); }
+function readImageBytes(file, signal) {
+  return new Promise((resolve, reject) => {
+    let reader, done = false;
+    const finish = (error, buffer) => {
+      if (done) {
+        // arrayBuffer() itself has no abort API. Discard and clear a late
+        // result after the caller has already abandoned this private read.
+        if (buffer) { try { new Uint8Array(buffer).fill(0); } catch {} }
+        return;
+      }
+      done = true; clearTimeout(timer); signal?.removeEventListener("abort", cancel);
+      if (reader) {
+        reader.onload = reader.onerror = reader.onabort = null;
+        if (error) { try { reader.abort(); } catch {} }
+      }
+      error ? reject(error) : resolve(new Uint8Array(buffer));
+    };
+    const cancel = () => finish(new DOMException("Aborted", "AbortError"));
+    const timer = setTimeout(() => finish(new ImagePreparationError("media_unavailable")), 60000);
+    signal?.addEventListener("abort", cancel, { once: true });
+    if (signal?.aborted) { cancel(); return; }
+    try {
+      if (typeof globalThis.FileReader === "function") {
+        reader = new FileReader();
+        reader.onload = () => finish(null, reader.result);
+        reader.onerror = () => finish(new ImagePreparationError("media_unavailable"));
+        reader.onabort = cancel;
+        reader.readAsArrayBuffer(file);
+      } else Promise.resolve(file.arrayBuffer()).then(buffer => finish(null, buffer), () => finish(new ImagePreparationError("media_unavailable")));
+    } catch { finish(new ImagePreparationError("media_unavailable")); }
+  });
+}
 function canvasBlob(canvas, type) {
   return new Promise((resolve, reject) => canvas.toBlob((blob) => {
     if (blob && blob.type === type) resolve(blob); else reject(new ImagePreparationError("media_unavailable"));
@@ -141,8 +243,22 @@ async function decodedImage(file, target, signal) {
   let bitmapError;
   if (typeof globalThis.createImageBitmap === "function") {
     try {
-      const image = await createImageBitmap(file, { imageOrientation: "from-image", resizeWidth: target.width,
-        resizeHeight: target.height, resizeQuality: "high" });
+      const image = await new Promise((resolve, reject) => {
+        let done = false;
+        const finish = (error, bitmap) => {
+          if (done) { bitmap?.close?.(); return; } done = true;
+          clearTimeout(timer); signal?.removeEventListener("abort", cancel);
+          error ? reject(error) : resolve(bitmap);
+        };
+        const cancel = () => finish(new DOMException("Aborted", "AbortError"));
+        const timer = setTimeout(() => finish(new ImagePreparationError("media_unavailable")), 60000);
+        signal?.addEventListener("abort", cancel, { once: true });
+        if (signal?.aborted) { cancel(); return; }
+        try {
+          Promise.resolve(createImageBitmap(file, { imageOrientation: "from-image", resizeWidth: target.width,
+            resizeHeight: target.height, resizeQuality: "high" })).then(bitmap => finish(null, bitmap), error => finish(error));
+        } catch (error) { finish(error); }
+      });
       return { image, width: image.width, height: image.height, dispose: () => image.close?.() };
     } catch (error) { bitmapError = error; aborted(signal); }
   }
@@ -152,6 +268,7 @@ async function decodedImage(file, target, signal) {
     if (bitmapError) throw bitmapError;
     fail("media_unavailable");
   }
+  if (target.sourcePixels > MAX_NATIVE_FALLBACK_PIXELS) fail("media_unavailable");
   const image = new Image(), url = URL.createObjectURL(file);
   let disposed = false;
   const dispose = () => {
@@ -178,41 +295,86 @@ async function decodedImage(file, target, signal) {
   } catch (error) { dispose(); throw error; }
 }
 
+let heicTail = Promise.resolve();
+async function decodeHeic(bytes, signal) {
+  const prior = heicTail; let release;
+  const turn = new Promise(resolve => { release = resolve; });
+  heicTail = prior.then(() => turn);
+  try {
+    await new Promise((resolve, reject) => {
+      const cancel = () => { signal?.removeEventListener("abort", cancel); reject(new DOMException("Aborted", "AbortError")); };
+      signal?.addEventListener("abort", cancel, { once: true });
+      prior.then(() => { signal?.removeEventListener("abort", cancel); resolve(); });
+      if (signal?.aborted) cancel();
+    });
+    aborted(signal);
+    if (typeof globalThis.Worker !== "function") fail("media_heic");
+    return await new Promise((resolve, reject) => {
+      let worker, timer, settled = false;
+      const finish = (error, blob) => {
+        if (settled) return; settled = true;
+        clearTimeout(timer); signal?.removeEventListener("abort", cancel);
+        if (worker) { worker.onmessage = worker.onerror = worker.onmessageerror = null; worker.terminate(); }
+        error ? reject(error) : resolve(blob);
+      };
+      const cancel = () => finish(new DOMException("Aborted", "AbortError"));
+      try {
+        worker = new Worker("/heic-decoder-worker.js", { type: "module", name: "JessieMessage photo" });
+        timer = setTimeout(() => finish(new ImagePreparationError("media_unavailable")), 60000);
+        signal?.addEventListener("abort", cancel, { once: true });
+        worker.onerror = worker.onmessageerror = () => finish(new ImagePreparationError("media_heic"));
+        worker.onmessage = event => {
+          const message = event.data;
+          if (message?.ok !== true) return finish(new ImagePreparationError(message?.code === "media_dimensions" ? "media_dimensions" : "media_heic"));
+          const blob = message.blob;
+          if (!(blob instanceof Blob) || blob.type !== "image/jpeg" || blob.size < 1 || blob.size > TARGET_UPLOAD_BYTES) {
+            finish(new ImagePreparationError("media_unavailable")); return;
+          }
+          finish(null, blob);
+        };
+        aborted(signal); worker.postMessage({ bytes: bytes.buffer }, [bytes.buffer]);
+      } catch (error) { finish(error?.name === "AbortError" ? error : new ImagePreparationError("media_heic")); }
+    });
+  } finally { release(); }
+}
+
 export async function prepareImageUpload(file, { signal } = {}) {
   aborted(signal);
   if (!(file instanceof Blob) || file.size < 1) fail("media_format");
   if (file.size > MAX_SOURCE_IMAGE_BYTES) fail("image_source_too_large");
-  const declaredType = JPEG_TYPES.has(file.type) ? "image/jpeg" : file.type;
-  if (["image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence"].includes(declaredType)) fail("media_heic");
-  if (!GENERIC_TYPES.has(declaredType) && !TYPES.has(declaredType)) fail("media_format");
-  let bitmap, canvas;
+  let bitmap, canvas, bytes;
   try {
-    const info = inspectImageInput(new Uint8Array(await file.arrayBuffer()));
-    if (!GENERIC_TYPES.has(declaredType) && declaredType !== info.type) fail("media_format");
+    bytes = await readImageBytes(file, signal);
+    const info = inspectImageInput(bytes);
+    if (info.type === "image/heic" && info.width * info.height > MAX_HEIC_IMAGE_PIXELS) fail("media_dimensions");
     aborted(signal);
     if (typeof globalThis.document?.createElement !== "function") fail("media_unavailable");
     const oriented = info.orientation >= 5 && info.orientation <= 8
       ? { width: info.height, height: info.width } : info;
-    const target = dimensions(oriented.width, oriented.height);
-    // Some mobile file pickers report no MIME type (or a generic one). Decode
-    // with the format proved by the bytes rather than the picker's label.
+    const target = { ...dimensions(oriented.width, oriented.height), sourcePixels: info.width * info.height };
+    // The bytes prove the format. Camera/cloud pickers often supply a generic
+    // or simply incorrect MIME label; that label must not reject a real photo.
     const decodable = file.type === info.type ? file : new Blob([file], { type: info.type });
-    bitmap = await decodedImage(decodable, target, signal);
+    try { bitmap = await decodedImage(decodable, target, signal); }
+    catch (error) {
+      aborted(signal);
+      if (info.type !== "image/heic") throw error;
+      if (info.width * info.height > MAX_HEIC_IMAGE_PIXELS) fail("media_dimensions");
+      return await decodeHeic(bytes, signal);
+    }
     aborted(signal);
-    // Older decoders may ignore resize options; the header guard above still
-    // bounds that fallback, and canvas dimensions remain independently bounded.
     if (!Number.isInteger(bitmap.width) || !Number.isInteger(bitmap.height) || bitmap.width < 1 || bitmap.height < 1
       || bitmap.width > MAX_SOURCE_IMAGE_SIDE || bitmap.height > MAX_SOURCE_IMAGE_SIDE
-      || bitmap.width * bitmap.height > MAX_SOURCE_IMAGE_PIXELS) fail("media_dimensions");
+      || bitmap.width * bitmap.height > MAX_NATIVE_FALLBACK_PIXELS) fail("media_dimensions");
     canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d", { alpha: info.type !== "image/jpeg" });
+    const context = canvas.getContext("2d", { alpha: !["image/jpeg", "image/heic"].includes(info.type) });
     if (!context) fail("media_unavailable");
-    // PNG also retains alpha from WebP, avoiding a hidden opaque background.
+    const actual = dimensions(bitmap.width, bitmap.height);
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      canvas.width = Math.max(1, Math.floor(target.width * 0.75 ** attempt));
-      canvas.height = Math.max(1, Math.floor(target.height * 0.75 ** attempt));
+      canvas.width = Math.max(1, Math.floor(actual.width * 0.75 ** attempt));
+      canvas.height = Math.max(1, Math.floor(actual.height * 0.75 ** attempt));
       context.drawImage(bitmap.image, 0, 0, canvas.width, canvas.height);
-      const blob = await canvasBlob(canvas, info.type === "image/jpeg" ? "image/jpeg" : "image/png");
+      const blob = await canvasBlob(canvas, ["image/jpeg", "image/heic"].includes(info.type) ? "image/jpeg" : "image/png");
       aborted(signal);
       if (blob.size > 0 && blob.size <= TARGET_UPLOAD_BYTES) return blob;
     }
@@ -221,8 +383,7 @@ export async function prepareImageUpload(file, { signal } = {}) {
     if (error instanceof ImagePreparationError || error?.name === "AbortError") throw error;
     fail("media_format");
   } finally {
-    bitmap?.dispose?.();
-    // Release the canvas backing store promptly, especially on phones.
+    bitmap?.dispose?.(); bytes = null;
     if (canvas) { canvas.width = 0; canvas.height = 0; }
   }
 }

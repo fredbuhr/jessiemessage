@@ -2,13 +2,14 @@
 // synthetic fixture. No account, message, database, mail or push provider is used.
 import test, { before, after } from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, mkdir, writeFile } from "node:fs/promises";
+import sharp from "sharp";
 import { createServer } from "node:http";
 import { startWebDriver, waitUntil } from "./webdriver.mjs";
 
 const id = number => number.toString(16).padStart(32, "0");
 const publicRoot = new URL("../../public/", import.meta.url);
-const assets = ["broadcast.html", "broadcast.js", "broadcast-model.js", "broadcast.css", "admin-navigation.css", "session-clock.js", "i18n.js", "i18n.css", "i18n-tools.js", "i18n-broadcast.js", "help-link.js",
+const assets = ["image-preparation.js", "broadcast.html", "broadcast.js", "broadcast-model.js", "broadcast.css", "admin-navigation.css", "session-clock.js", "i18n.js", "i18n.css", "i18n-tools.js", "i18n-broadcast.js", "help-link.js",
   "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png", "brand/brand.css", "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png",
   "brand/icon-128.png", "brand/icon-192.png", "brand/icon-512.png", "brand/icon-maskable-512.png"];
 const videoBytes = Buffer.from(await readFile(new URL("../fixtures/video-decodable.mp4.base64", import.meta.url), "utf8"), "base64");
@@ -39,16 +40,19 @@ window.clearTimeout=handle=>{polls.delete(handle);return nativeClearTimeout(hand
 window.__runScalePoll=async()=>{const entry=[...polls].at(-1);if(!entry)throw Error('No product history poll');nativeClearTimeout(entry[0]);polls.delete(entry[0]);await entry[1]();};
 `;
 
-async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed = false, videoEnabled = false, videoCreationEnabled = true, seedVideo = false, holdVideoUpload = false } = {}) {
+async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed = false, videoEnabled = false, videoCreationEnabled = true, seedVideo = false, holdVideoUpload = false, mediaEnabled = false } = {}) {
   const files = new Map(await Promise.all(assets.map(async name => ["/" + name, await readFile(new URL(name, publicRoot))])));
   const html = files.get("/broadcast.html").toString().replace("<head>", '<head><script src="/scale-fixture.js"></script>');
   const contacts = Array.from({ length: 2500 }, (_, index) => ({ id: id(index + 1), client: { id: id(10000 + index), pseudonym: `Scale client ${String(index + 1).padStart(4, "0")}` }, crm: { nickname: "" }, canSend: true }));
   const contactsById = new Map(contacts.map(contact => [contact.id, contact]));
   const state = { owner: 1, requests: [], creates: [], campaigns: new Map(), dropped: false, ownerByCampaign: new Map(), previewInputs: [], delivered: 0, uploads: [], uploadAttempts: [], blockSessionProofs: false, heldSessionProofs: 0 };
+  state.photoUploads = [];
+  const photoBytes = mediaEnabled ? await sharp({ create: { width: 96, height: 64, channels: 3, background: { r: 157, g: 56, b: 94 } } }).jpeg().toBuffer() : null;
+  const photoRows = Array.from({ length: mediaEnabled ? 45 : 0 }, (_, index) => ({ id: id(6001 + index), createdAt: Date.now(), width: 96, height: 64, thumbnailUrl: `/api/media/admin/assets/${id(6001 + index)}/thumb` }));
   const sessionResponses = [];
   const releaseSessionProofs = () => { state.blockSessionProofs = false; for (const send of sessionResponses.splice(0)) send(); };
   const session = () => ({ user: { id: id(8000 + state.owner), role: "admin", pseudonym: `Synthetic Jessie ${state.owner}` }, csrf: state.owner === 1 ? "A".repeat(43) : "B".repeat(42) + "A",
-    expiresAt: Date.now() + 8 * 3600000, mediaEnabled: false, ...(largeAudiencesEnabled ? { largeAudiencesEnabled: true } : {}), ...(videoEnabled ? { videoEnabled: true, ...(videoCreationEnabled === false ? { videoCreationEnabled: false } : {}) } : {}) });
+    expiresAt: Date.now() + 8 * 3600000, mediaEnabled, ...(largeAudiencesEnabled ? { largeAudiencesEnabled: true } : {}), ...(videoEnabled ? { videoEnabled: true, ...(videoCreationEnabled === false ? { videoCreationEnabled: false } : {}) } : {}) });
   const targets = audience => audience?.mode === "all" ? contacts : audience?.mode === "filtered" ? contacts.slice(0, 175)
     : contacts.filter(contact => audience.conversationIds.includes(contact.id));
   function makeCampaign(input, selected) {
@@ -82,6 +86,24 @@ async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed =
     if (url.pathname === "/api/admin/crm/contacts") {
       const rows = state.owner === 1 ? url.searchParams.get("q") ? contacts.slice(0, 175) : contacts : [], selected = page(rows);
       json(200, { contacts: selected.values, hasMore: selected.hasMore, nextCursor: selected.nextCursor }); return;
+    }
+    if (mediaEnabled && url.pathname === "/api/media/admin/assets" && request.method === "GET") {
+      const selected = page(state.owner === 1 ? photoRows : []); json(200, { assets: selected.values, nextCursor: selected.nextCursor, hasMore: selected.hasMore }); return;
+    }
+    if (mediaEnabled && /^\/api\/media\/admin\/assets\/[a-f0-9]{32}\/thumb$/.test(url.pathname)) {
+      const match = photoRows.find(row => row.thumbnailUrl === url.pathname);
+      if (!match || state.owner !== 1) { json(404, { error: "not_found" }); return; }
+      response.writeHead(200, { "Content-Type": "image/jpeg" }); response.end(photoBytes); return;
+    }
+    if (mediaEnabled && url.pathname === "/api/media/admin/assets" && request.method === "POST") {
+      assert.equal(request.headers["x-csrf-token"], session().csrf);
+      assert.ok(["image/jpeg", "image/png", "image/webp"].includes(request.headers["content-type"]));
+      const chunks = []; for await (const chunk of request) chunks.push(chunk); const bytes = Buffer.concat(chunks);
+      const metadata = await sharp(bytes).metadata(); assert.ok(metadata.width > 0 && metadata.width <= 2048 && metadata.height > 0 && metadata.height <= 2048);
+      assert.ok(bytes.length > 0 && bytes.length <= 10 * 1024 * 1024);
+      const assetId = id(6100 + state.photoUploads.length), asset = { id: assetId, createdAt: Date.now(), width: metadata.width, height: metadata.height, thumbnailUrl: `/api/media/admin/assets/${assetId}/thumb` };
+      state.photoUploads.push({ bytes: bytes.length, type: request.headers["content-type"], assetId }); photoRows.push(asset);
+      json(201, { asset, duplicate: false }); return;
     }
     if (url.pathname === "/api/video/admin/assets" && request.method === "POST" && videoEnabled) {
       const attempt = { contentTypeMatches: request.headers["content-type"] === "video/mp4", csrfMatches: request.headers["x-csrf-token"] === session().csrf, bytes: null, bodyMatches: null };
@@ -402,4 +424,37 @@ test("Chrome compatibility preserves existing v3 video campaign details while hi
     assert.equal(await page.execute("return document.querySelectorAll('#video-preview video').length"), 0); assert.equal(source.state.uploads.length, 0); assert.equal(source.state.creates.length, 0);
     await errors(page);
   } finally { await page?.close(); await source.close(); }
+});
+
+
+test("Chrome broadcast photos FR/EN mobile/desktop: thumbnail pages, keyboard selection and direct upload never send a campaign", { timeout: 120000 }, async () => {
+  for (const [width, language] of [[320, "fr"], [390, "en"], [1280, "fr"]]) {
+    const source = await fixture({ mediaEnabled: true }); let page;
+    try {
+      page = await open(source, width, language); await compose(page, "Photo library draft", "Private photo caption");
+      await page.click("#contacts input[type=checkbox]"); await page.click("#load-photos");
+      await waitUntil(() => page.execute("return document.querySelectorAll('#photo-grid button').length===20 && [...document.querySelectorAll('#photo-grid img')].every(image=>!image.hidden && image.complete && image.naturalWidth>0)"), "twenty actual normalized thumbnail images");
+      assert.equal(await page.execute("return document.querySelector('#photo-grid select')===null && document.documentElement.scrollWidth<=innerWidth"), true);
+      await page.execute("document.querySelector('#photo-grid button').focus()"); await page.key("\uE007");
+      await waitUntil(() => page.execute("return document.querySelector('#photo-grid button')?.getAttribute('aria-pressed')==='true' && document.querySelector('#photo-preview img')?.naturalWidth>0"), "native keyboard choice displays its image preview");
+      const selectedPreview = await page.execute("return document.querySelector('#photo-preview img').src");
+      await page.click("#more-photos");
+      await waitUntil(() => page.execute("return document.querySelector('#photo-grid button')?.getAttribute('data-photo-id')===arguments[0] && document.querySelectorAll('#photo-grid button').length===21", id(6021)), "next photo page retains the selected image as its only extra row");
+      assert.equal(await page.execute("return document.querySelector('#photo-preview img').src"), selectedPreview);
+      assert.equal(source.state.photoUploads.length, 0); assert.equal(source.state.creates.length, 0); assert.equal(source.state.previewInputs.length, 0);
+      await page.executeAsync("const done=arguments[arguments.length-1],canvas=document.createElement('canvas');canvas.width=120;canvas.height=80;const ctx=canvas.getContext('2d');ctx.fillStyle='#95415d';ctx.fillRect(0,0,120,80);canvas.toBlob(blob=>{const selection=new DataTransfer();selection.items.add(new File([blob],'synthetic-new-photo.png',{type:'image/png'}));const input=document.getElementById('photo-file'),nativeClick=input.click;input.click=()=>{};document.getElementById('pick-photo').click();input.click=nativeClick;input.files=selection.files;input.dispatchEvent(new Event('change',{bubbles:true}));done(true)},'image/png')");
+      await waitUntil(() => source.state.photoUploads.length === 1 && page.execute("return document.querySelector('#photo-grid button[aria-pressed=true]')?.getAttribute('data-photo-id')===arguments[0] && document.querySelector('#photo-preview img')?.naturalWidth>0 && !document.getElementById('pick-photo').disabled", source.state.photoUploads[0].assetId), "one prepared raw photo upload becomes the selected thumbnail");
+      assert.equal(source.state.creates.length, 0); assert.equal(source.state.previewInputs.length, 0);
+      assert.equal(await page.execute("return document.getElementById('campaign-title').value==='Photo library draft' && document.getElementById('campaign-body').value==='Private photo caption' && document.querySelectorAll('#selected li').length===1 && document.querySelectorAll('#photo-grid button').length<=21 && document.documentElement.scrollWidth<=innerWidth"), true);
+      await page.execute("document.getElementById('photo-options').scrollIntoView({block:'start',behavior:'auto'})");
+      const screenshots = new URL("../../artifacts/homepage/", import.meta.url); await mkdir(screenshots, { recursive: true });
+      await writeFile(new URL(`broadcast-photos-1140-${language}-${width}.png`, screenshots), Buffer.from(await page.screenshot(), "base64"));
+      await preview(page, 1);
+      assert.equal(source.state.previewInputs.at(-1).mediaId, source.state.photoUploads[0].assetId);
+      assert.equal(source.state.creates.length, 0, "checking the uploaded image and recipients still needs the explicit final send");
+      await page.execute("document.getElementById('remove-photo').focus()"); await page.key("\uE007");
+      assert.equal(await page.execute("return document.querySelector('#photo-preview img')===null && document.querySelector('#photo-grid button[aria-pressed=true]')===null && document.getElementById('confirm').disabled"), true);
+      assert.equal(source.state.photoUploads.length, 1); assert.equal(source.state.creates.length, 0); await errors(page);
+    } finally { await page?.close(); await source.close(); }
+  }
 });

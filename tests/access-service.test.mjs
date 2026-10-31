@@ -140,6 +140,17 @@ test("only a current administrator can obtain invitation links and stored lists 
   await assert.rejects(service.createInvitation(token, { lifetimeHours: 0, accessDays: 30 }), { code: "AUTH_INVALID" });
 });
 
+test("new invitations default to unlimited access while redemption validity and explicit finite access remain distinct", async () => {
+  const unlimited = await service.createInvitation(token);
+  assert.equal(unlimited.accessDays, null);
+  assert.equal(state.createdInvitation.accessDays, null);
+  assert.equal(unlimited.expiresAt, now + 72 * 3600000);
+  const finite = await service.createInvitation(token, { lifetimeHours: 24, accessDays: 17, format: "code" });
+  assert.equal(finite.accessDays, 17);
+  assert.equal(state.createdInvitation.accessDays, 17);
+  assert.equal(finite.expiresAt, now + 24 * 3600000);
+});
+
 test("code invitations store only their namespaced digest and expose the secret only on creation", async () => {
   state.admin = false;
   await assert.rejects(service.createInvitation(token, { format: "code" }), { code: "ACCESS_FORBIDDEN" });

@@ -9,7 +9,7 @@ import { startWebDriver, waitUntil } from "./webdriver.mjs";
 
 const id = number => number.toString(16).padStart(32, "0"), publicRoot = new URL("../../public/", import.meta.url);
 const assets = ["announcements.html", "announcements.js", "announcements-model.js", "announcements.css", "admin-navigation.css", "announcement-banner.js", "announcement-banner.css",
-  "chat.html", "chat.js", "photo-batch.js", "chat-model.js", "chat-drafts.js", "chat.css", "image-preparation.js", "quick-replies.js", "emoji-catalog.js", "emoji.css",
+  "chat.html", "chat.js", "photo-batch.js", "photo-upload.js", "chat-model.js", "chat-drafts.js", "chat.css", "image-preparation.js", "quick-replies.js", "emoji-catalog.js", "emoji.css",
   "profile.js", "password-change.js", "recover-model.js", "preferences.js", "preferences-model.js", "i18n-preferences.js", "preferences.css", "preferences-catalogue.json", "profile.css", "i18n-profile.js", "notification-link.js", "notifications.js", "notifications.css", "session-clock.js",
   "password-fields.js", "password-fields.css", "i18n.js", "i18n.css", "i18n-tools.js", "i18n-chat.js", "help-link.js", "manifest.webmanifest", "favicon.ico", "apple-touch-icon.png",
   "brand/brand.css", "brand/icon-16.png", "brand/icon-32.png", "brand/icon-48.png", "brand/icon-64.png", "brand/icon-128.png",

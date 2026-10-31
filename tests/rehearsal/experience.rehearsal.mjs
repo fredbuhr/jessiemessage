@@ -158,6 +158,23 @@ async function selectPhotos(page, bytes, count, offset = 0) {
       }finally{bitmap.close();}})().then(done,()=>done(false));`, bytes, count, offset);
   assert.equal(added, count, "each synthetic photo has distinct pixels so existing content deduplication remains meaningful");
 }
+async function inspectPhotoPreviews(page, count, description) {
+  await waitUntil(() => page.execute("return document.querySelectorAll('.photo-batch-item').length===arguments[0]", count), description);
+  const ids = await page.execute("return [...document.querySelectorAll('.photo-batch-item')].map(node=>node.dataset.photoId)");
+  for (const id of ids) {
+    await page.execute(`const list=document.getElementById('photo-batch-list'),card=[...list.children].find(node=>node.dataset.photoId===arguments[0]);
+      card.scrollIntoView({block:'nearest',inline:'center',behavior:'instant'});list.dispatchEvent(new Event('scroll'));`, id);
+    await waitUntil(() => page.executeAsync(`const id=arguments[0],done=arguments[arguments.length-1],list=document.getElementById('photo-batch-list'),
+      card=[...list.children].find(node=>node.dataset.photoId===id),image=card?.querySelector('img'),bounds=list.getBoundingClientRect(),rect=card?.getBoundingClientRect(),src=image?.getAttribute('src');
+      if(!src||!rect||rect.right<=bounds.left||rect.left>=bounds.right||!image.complete||image.naturalWidth!==96){done(false);return;}
+      // A revoked offscreen URL can leave decoded pixels in an <img>. Verify
+      // the currently displayed preview is still live before moving onward.
+      const probe=new Image(),finish=readable=>{probe.onload=probe.onerror=null;probe.src='';done(readable&&image.getAttribute('src')===src&&image.complete&&image.naturalWidth===96);};
+      probe.onload=()=>finish(probe.naturalWidth===96);probe.onerror=()=>finish(false);probe.src=src;`, id), `${description}: visible JPEG ${id}`);
+    assert.ok(await page.execute("return [...document.querySelectorAll('.photo-batch-item img')].filter(image=>image.getAttribute('src')).length<=4"),
+      "browsing every photo retains at most four displayed previews");
+  }
+}
 async function waitReplyUI(page, needed) {
   await waitUntil(() => page.execute(`const section=document.querySelector('.reply-followup'),text=section?.querySelector('p')?.textContent;
     return !!section&&!section.hidden&&[...section.querySelectorAll('button')].every(button=>!button.disabled)
@@ -349,12 +366,12 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
       const bytes = await client.execute(`const canvas=document.createElement('canvas');canvas.width=96;canvas.height=64;const context=canvas.getContext('2d');
         context.fillStyle='#b52f68';context.fillRect(0,0,96,64);context.fillStyle='#153f68';context.fillRect(48,0,48,64);return canvas.toDataURL('image/jpeg').split(',')[1];`);
       await selectPhotos(client, bytes, 5);
-      await waitUntil(() => client.execute("return document.querySelectorAll('.photo-batch-item').length===5&&[...document.querySelectorAll('.photo-batch-item img')].every(image=>image.complete&&image.naturalWidth===96)"), "five real JPEG previews before sending");
+      await inspectPhotoPreviews(client, 5, "five real JPEG previews inspected before sending");
       assert.equal(await client.execute("const input=document.getElementById('message-body'),style=getComputedStyle(input),context=document.createElement('canvas').getContext('2d');context.font=style.font;return input.placeholder==='Légende…'&&context.measureText(input.placeholder).width<=input.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight)+1"), true, "the optional caption hint stays readable on a 320px composer");
       const initial = await client.execute("return [...document.querySelectorAll('.photo-batch-item')].map(node=>node.dataset.photoId)");
       await client.click(".photo-batch-item:nth-child(2) button"); assert.equal(await client.execute("return document.querySelectorAll('.photo-batch-item').length"), 4);
       await selectPhotos(client, bytes, 1, 5);
-      await waitUntil(() => client.execute("return document.querySelectorAll('.photo-batch-item').length===5&&[...document.querySelectorAll('.photo-batch-item img')].every(image=>image.complete&&image.naturalWidth===96)"), "one replacement photo joins the existing preview selection");
+      await inspectPhotoPreviews(client, 5, "one replacement photo joins the existing preview selection");
       const selected = await client.execute("return [...document.querySelectorAll('.photo-batch-item')].map(node=>node.dataset.photoId)");
       assert.deepEqual(selected.slice(0, 4), [initial[0], ...initial.slice(2)]); assert.equal(selected.includes(initial[1]), false); assert.equal(new Set(selected).size, 5);
       const batchCaption = "Synthetic one-caption five-photo selection"; await client.type("#message-body", batchCaption);

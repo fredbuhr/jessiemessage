@@ -9,6 +9,7 @@ import { createChatDrafts } from "../public/chat-drafts.js";
 import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "../public/photo-batch.js";
 
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
+const photoUploadSource = await readFile(new URL("../public/photo-upload.js", import.meta.url), "utf8");
 const sessionClockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
 const modelSource = await readFile(new URL("../public/chat-model.js", import.meta.url), "utf8");
 const modelExports = [...modelSource.matchAll(/export function ([a-zA-Z0-9_]+)\(/g)].map((match) => match[1]);
@@ -158,7 +159,8 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   vm.runInContext(catalogueSource, context, { filename: "public/i18n-chat.js" });
   vm.runInContext(sessionClockSource, context, { filename: "public/session-clock.js" });
   vm.runInContext(`globalThis.__model = (() => {${modelSource.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}};})();`, context, { filename: "public/chat-model.js" });
-  const executable = source.replace('import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "/photo-batch.js";', 'const {createPhotoBatch,removePhoto,runPhotoBatch,MAX_PHOTO_BATCH} = __photoBatch;').replace('import { createChatDrafts } from "/chat-drafts.js";', 'const {createChatDrafts} = __chatDrafts;').replace('import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,emojiSkinTones,insertEmoji} = __emojis;').replace('import { quickReplyOptions } from "/quick-replies.js";', 'const {quickReplyOptions} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = async (file) => file;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
+  vm.runInContext(photoUploadSource.replace("export async function ", "async function "), context);
+  const executable = source.replace('import { uploadPhotoWithBackoff } from "/photo-upload.js";', "").replace('import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "/photo-batch.js";', 'const {createPhotoBatch,removePhoto,runPhotoBatch,MAX_PHOTO_BATCH} = __photoBatch;').replace('import { createChatDrafts } from "/chat-drafts.js";', 'const {createChatDrafts} = __chatDrafts;').replace('import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,emojiSkinTones,insertEmoji} = __emojis;').replace('import { quickReplyOptions } from "/quick-replies.js";', 'const {quickReplyOptions} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = async (file) => file;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
     "\nglobalThis.__inspect = () => ({ready, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration});";
   vm.runInContext(executable, context, { filename: "public/chat.js", importModuleDynamically: async () => { throw new Error("Optional feature disabled in fixture"); } });
   return { element, document, state, calls, redirects, timers, revoked, createdUrls, context, conversation, inspect: () => context.__inspect(),

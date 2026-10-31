@@ -12,6 +12,13 @@ import { getProcessRelease } from "./release.mjs";
 import { VIDEO_CREATION_ENABLED, QUICK_REPLIES_WRITABLE } from "./release-features.mjs";
 
 const publicRoot = fileURLToPath(new URL("../public/", import.meta.url));
+// Fixed, public decoder code only. The optional codec is requested lazily and
+// never receives a client photo over the network.
+const heicDecoderFiles = new Map([
+  ["/heic-decoder-worker.js", { path: new URL("../public/heic-decoder-worker.js", import.meta.url), type: "text/javascript; charset=utf-8", worker: true }],
+  ["/heic-codec-1.23.5.mjs", { path: new URL("../node_modules/libheif-js/libheif-wasm/libheif-bundle.mjs", import.meta.url), type: "text/javascript; charset=utf-8", versioned: true }],
+  ["/heic-codec-1.23.5-LICENSE.txt", { path: new URL("../node_modules/libheif-js/libheif-wasm/LICENSE", import.meta.url), type: "text/plain; charset=utf-8", versioned: true }],
+]);
 const PRIMARY_ORIGIN = "https://jessiemessage.com";
 const RECIPE_ORIGIN = "https://recette.jessiemessage.com";
 // Release gate: compatibility 1.4.1 reads schema 32; 1.5.0 offers announcement creation.
@@ -32,6 +39,7 @@ const publicFiles = new Map([
   ["/help-link.js", ["help-link.js", "text/javascript; charset=utf-8"]],
   ["/followup.js", ["followup.js", "text/javascript; charset=utf-8"]],
   ["/photo-batch.js", ["photo-batch.js", "text/javascript; charset=utf-8"]],
+  ["/photo-upload.js", ["photo-upload.js", "text/javascript; charset=utf-8"]],
   ["/notifications.js", ["notifications.js", "text/javascript; charset=utf-8"]],
   ["/notifications.css", ["notifications.css", "text/css; charset=utf-8"]],
   ["/session-clock.js", ["session-clock.js", "text/javascript; charset=utf-8"]],
@@ -117,15 +125,15 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   if (typeof entryHandler !== "function") throw new TypeError("An entry handler is required.");
   const privateHandlers = [closureHandler, privacyHandler, backupHandler, notificationsHandler, quickRepliesHandler, tasksHandler, announcementsHandler, broadcastHandler, readinessHandler, resetHandler, passwordHandler, crmHandler, profileHandler, videoHandler, mediaHandler, chatHandler, accessHandler, authHandler].filter(Boolean);
   const handlers = [transitionHandler, entryHandler, ...privateHandlers].filter(Boolean);
-  const adminPages = new Map([["/admin", "authHandler"], ["/admin/clients", "authHandler"], ["/admin/messages", "chatHandler"], ["/admin/broadcasts", "broadcastHandler"], ["/admin/announcements", "announcementsHandler"], ["/admin/tasks", "tasksHandler"],
+  const adminPages = new Map([["/admin", "authHandler"], ["/admin/clients", "authHandler"], ["/admin/messages", "chatHandler"], ["/admin/broadcasts", "broadcastHandler"], ["/admin/media", "mediaHandler"], ["/admin/announcements", "announcementsHandler"], ["/admin/tasks", "tasksHandler"],
     ["/admin/readiness", "readinessHandler"], ["/admin/backups", "backupHandler"], ["/admin/privacy", "privacyHandler"], ["/admin/closures", "closureHandler"]]);
-  const primaryPageHandlers = { authHandler, chatHandler, broadcastHandler, announcementsHandler, tasksHandler, readinessHandler, backupHandler, privacyHandler, closureHandler };
+  const primaryPageHandlers = { authHandler, chatHandler, broadcastHandler, mediaHandler, announcementsHandler, tasksHandler, readinessHandler, backupHandler, privacyHandler, closureHandler };
   const protectedFiles = new Set(["/admin", "/admin/clients", "/messages", "/admin/messages", "/admin/broadcasts", "/admin/readiness", "/admin/backups", "/backups.js", "/backups.css", "/i18n-backups.js",
     "/manual-backups.js", "/manual-backups.css", "/i18n-manual-backups.js",
     "/admin/privacy", "/privacy.js", "/privacy.css", "/i18n-privacy.js", "/admin/closures", "/closures.js", "/closures.css", "/i18n-closures.js", "/broadcast.js", "/broadcast-model.js", "/broadcast.css", "/i18n-broadcast.js",
     "/crm.js", "/crm-model.js", "/crm.css", "/private-archive.js", "/client-archive.js", "/conversation-download.js", "/readiness.js", "/readiness-model.js", "/readiness.css",
     "/admin/announcements", "/announcements.js", "/announcements-model.js", "/announcements.css", "/announcement-banner.js", "/announcement-banner.css",
-    "/admin/tasks", "/tasks.js", "/tasks-model.js", "/tasks.css"]);
+    "/admin/tasks", "/tasks.js", "/tasks-model.js", "/tasks.css", "/admin/media", "/media-library-page.js", "/media-library-model.js", "/media-library-page.css", "/i18n-media-library.js", ...heicDecoderFiles.keys()]);
   let draining = false;
   let pendingRequests = 0;
   const requestWaiters = new Set();
@@ -234,6 +242,18 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
       // Authentication is registered only by explicit private configuration.
       // Private routes require their explicitly configured feature handlers.
       // Never serve arbitrary file paths from the filesystem.
+      const activeMedia = activeHandlers === legacyChain ? legacyHandlers?.mediaHandler : mediaHandler;
+      const decoder = activeMedia && heicDecoderFiles.get(pathname);
+      if (decoder) {
+        try {
+          const bytes = await readFile(decoder.path);
+          reply(response, method, 200, decoder.type, bytes, {
+            ...(decoder.versioned ? { "Cache-Control": "public, max-age=31536000, immutable" } : {}),
+            ...(decoder.worker ? { "Content-Security-Policy": "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'none'; worker-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'" } : {}),
+          });
+        } catch { reply(response, method, 503, "text/plain; charset=utf-8", "Decoder unavailable"); }
+        return;
+      }
       const clientEntry = activeHandlers !== legacyChain && accessHandler && ["/", "/index.html", "/app"].includes(pathname);
       const file = clientEntry ? ["access.html", "text/html; charset=utf-8"]
         : pathname === "/sw.js" && activeNotifications ? ["sw.js", "text/javascript; charset=utf-8"] : publicFiles.get(pathname);
