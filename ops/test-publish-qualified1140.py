@@ -1,0 +1,217 @@
+"""Publication API simulation; no remote mutation, Git tag or real token."""
+import base64
+import copy
+import importlib.util
+import json
+from pathlib import Path
+import unittest
+from unittest import mock
+
+HERE=Path(__file__).resolve().parent
+
+
+def helper():
+    spec=importlib.util.spec_from_file_location('publish1140_synthetic',HERE/'publish-qualified1140.py')
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);return module
+
+
+class Api:
+    def __init__(self,module):
+        self.m=module;self.writes=[];self.tags={};self.releases={};self.reads=[];self.fault=None
+        self.latest=dict(id=module.BASE_RELEASE_ID,tag_name='v1.13.0',target_commitish=module.BASE_SOURCE)
+        self.by_source={release['source']:release for release in module.RELEASES}
+        self.by_ci={release['ci']:release for release in module.RELEASES}
+        self.tree_sources={release['tree']:release['source'] for release in module.RELEASES}
+        self.tree_sources[module.BASE_TREE]=module.BASE_SOURCE
+        self.environment=dict(GITHUB_REPOSITORY=module.REPOSITORY,GITHUB_REF='refs/heads/ops/publish-v1.14.0',GITHUB_EVENT_NAME='push')
+
+    def lock(self,version):
+        value = dict(name='jessiemessage',version=version,lockfileVersion=3,requires=True,packages={
+            '':dict(name='jessiemessage',version=version,engines={'node':'>=24 <25'},dependencies={
+                'mariadb':'3.5.4','nodemailer':'10.1.4','otpauth':'9.5.2','sharp':'0.35.5','web-push':'3.6.7'}),
+            'node_modules/mariadb':dict(version='3.5.4',integrity='synthetic-old-integrity'),
+            'node_modules/existing-transitive':dict(version='2.0.0',integrity='synthetic-transitive'),
+        })
+        if version == '1.14.0':
+            value['packages']['']['dependencies'][self.m.HEIC_DEPENDENCY] = self.m.HEIC_LOCK_ENTRY['version']
+            value['packages']['node_modules/'+self.m.HEIC_DEPENDENCY] = copy.deepcopy(self.m.HEIC_LOCK_ENTRY)
+        return value
+
+    def contents(self,path,source):
+        release=self.by_source.get(source);version=release['version'] if release else '1.13.0'
+        if path=='package-lock.json':
+            value=self.lock(version)
+            if self.fault=='dependencies' and version=='1.14.0':value['packages']['']['dependencies']['mariadb']='different'
+            if self.fault=='transitive_lock' and version=='1.14.0':value['packages']['node_modules/unreviewed']=dict(version='0.0.0',integrity='synthetic-changed-lock')
+            if version=='1.14.0':
+                entry=value['packages']['node_modules/'+self.m.HEIC_DEPENDENCY]
+                if self.fault=='heic_missing':del value['packages']['node_modules/'+self.m.HEIC_DEPENDENCY]
+                if self.fault=='heic_version':entry['version']='1.23.6'
+                if self.fault=='heic_integrity':entry['integrity']='sha512-unreviewed'
+                if self.fault=='heic_resolved':entry['resolved']='https://example.invalid/changed.tgz'
+                if self.fault=='heic_extra':entry['hasInstallScript']=True
+                if self.fault=='root_dependency':value['packages']['']['dependencies'][self.m.HEIC_DEPENDENCY]='^1.23.5'
+                if self.fault=='old_transitive':value['packages']['node_modules/existing-transitive']['integrity']='changed'
+                if self.fault=='removed_transitive':del value['packages']['node_modules/existing-transitive']
+                if self.fault=='lock_metadata':value['lockfileVersion']=4
+            text=json.dumps(value)
+        elif path=='package.json':text=json.dumps(self.lock(version)['packages'][''])
+        else:
+            counts=dict(self.m.ACTION_COUNTS,**{self.m.ARTIFACT_ACTION:release['artifacts']})
+            text='\n'.join('      uses: '+name for name,count in counts.items() for _ in range(count))
+            text+='\n'+('\n'.join(['      node-version: "24.22.1"','      persist-credentials: false','      package-manager-cache: false'])+'\n')*4
+            if self.fault=='workflow' and version=='1.14.0':text=text.replace(self.m.ARTIFACT_ACTION,'actions/upload-artifact@untrusted')
+        return dict(type='file',encoding='base64',content=base64.b64encode(text.encode()).decode())
+
+    def tree(self,source):
+        paths={f'db/migrations/{i:04d}_fixture.sql':str(i).rjust(40,'0') for i in range(1,34)}
+        paths.update({name:'7'*40 for name in self.m.VIDEO_NAMES})
+        paths.update({name:'8'*40 for name in self.m.EXPERIENCE_NAMES})
+        if self.fault=='sql33' and source==self.m.RELEASES[0]['source']:paths['db/migrations/0001_fixture.sql']='9'*40
+        if self.fault=='sql36' and source==self.m.RELEASES[0]['source']:paths[next(iter(self.m.VIDEO_NAMES))]='9'*40
+        if self.fault=='rollback38' and source==self.m.RELEASES[0]['source']:paths[next(iter(self.m.EXPERIENCE_NAMES))]='9'*40
+        if self.fault=='extra_sql' and source==self.m.RELEASES[0]['source']:paths['other/unreviewed.sql']='a'*40
+        return dict(truncated=self.fault=='truncated',tree=[dict(path=path,sha=sha,mode='100644',type='blob') for path,sha in paths.items()])
+
+    def request(self,path,data=None,optional=False):
+        if data is not None:
+            self.writes.append((path,copy.deepcopy(data)))
+            if path=='git/refs':
+                tag=data['ref'].removeprefix('refs/tags/');assert tag not in self.tags
+                self.tags[tag]=dict(ref=data['ref'],object=dict(type='commit',sha=data['sha']));return copy.deepcopy(self.tags[tag])
+            assert path=='releases';tag=data['tag_name'];assert tag not in self.releases
+            value={key:item for key,item in data.items() if key!='make_latest'};value.update(id=1140000+len(self.releases),html_url='https://example.invalid/'+tag)
+            self.releases[tag]=value
+            if data['make_latest']=='true':self.latest=value
+            return copy.deepcopy(value)
+        self.reads.append(path)
+        if path=='releases/latest':return copy.deepcopy(self.latest)
+        if path.startswith('git/ref/tags/'):
+            value=self.tags.get(path.removeprefix('git/ref/tags/'))
+            if value is None:assert optional
+            return copy.deepcopy(value)
+        if path.startswith('releases/tags/'):
+            value=self.releases.get(path.removeprefix('releases/tags/'))
+            if value is None:assert optional
+            return copy.deepcopy(value)
+        if path.startswith('git/commits/'):
+            source=path.removeprefix('git/commits/');tree=self.m.BASE_TREE if source==self.m.BASE_SOURCE else self.by_source[source]['tree']
+            if self.fault=='tree' and source==self.m.RELEASES[0]['source']:tree='f'*40
+            return dict(tree=dict(sha=tree))
+        if path.startswith('git/trees/'):return self.tree(self.tree_sources[path.removeprefix('git/trees/').removesuffix('?recursive=1')])
+        if path.startswith('compare/'):
+            before,_after=path.removeprefix('compare/').split('...')
+            return dict(merge_base_commit=dict(sha='f'*40 if self.fault=='ancestry' else before),status='ahead')
+        if path.startswith('contents/'):
+            selected,source=path.removeprefix('contents/').split('?ref=');return self.contents(selected,source)
+        if path.startswith('actions/runs/'):
+            selected=path.removeprefix('actions/runs/').split('/');release=self.by_ci[selected[0]];ci=int(release['ci'])
+            if len(selected)==1:
+                return dict(head_sha='f'*40 if self.fault=='ci_sha' else release['source'],
+                    head_branch='feature' if self.fault=='ci_branch' else 'main', event='pull_request' if self.fault=='ci_event' else 'push',
+                    path='.github/workflows/other.yml' if self.fault=='ci_path' else '.github/workflows/ci.yml',
+                    status='in_progress' if self.fault=='ci_status' else 'completed',
+                    conclusion='failure' if self.fault=='ci' else 'success',run_attempt=2 if self.fault=='rerun' else release['attempt'])
+            jobs=[dict(name=name,status='completed',conclusion='success',head_sha=release['source'],run_id=ci,run_attempt=release['attempt']) for name in self.m.EXPECTED_JOBS]
+            if self.fault=='jobs':jobs[0]['conclusion']='skipped'
+            if self.fault=='job_sha':jobs[0]['head_sha']='f'*40
+            if self.fault=='job_run':jobs[0]['run_id']=ci+1
+            if self.fault=='job_attempt':jobs[0]['run_attempt']=release['attempt']+1
+            if self.fault=='job_duplicate':jobs[0]['name']=jobs[1]['name']
+            if self.fault=='job_missing':jobs.pop()
+            return dict(total_count=len(jobs),jobs=jobs)
+        raise AssertionError('unexpected synthetic API '+path)
+
+    def publish(self):return self.m.publish(request=self.request,environment=self.environment,node_version='v24.22.1')
+
+
+class Publication(unittest.TestCase):
+    def setUp(self):
+        self.m=helper();self.m.RELEASES=(dict(version='1.14.0',source='c'*40,tree='d'*40,ci='1140001',attempt=1,artifacts=4),)
+        self.api=Api(self.m)
+
+    def test_exact_source_qualified_before_writes_and_1140_becomes_latest(self):
+        result=self.api.publish();self.assertEqual(result['created'],['v1.14.0'])
+        releases=[value for path,value in self.api.writes if path=='releases']
+        self.assertEqual([row['make_latest'] for row in releases],['true'])
+        self.assertEqual(self.api.latest['tag_name'],'v1.14.0');self.assertFalse(result['deploymentPerformed'])
+        self.assertEqual(result['schemaMigrations'],38);self.assertEqual(result['applicationTables'],37)
+
+    def test_dependency_delta_accepts_only_exact_reviewed_addition_without_mutating_inputs(self):
+        before,after=self.api.lock('1.13.0'),self.api.lock('1.14.0')
+        copies=copy.deepcopy((before,after))
+        self.m.verify_locked_dependency_delta(before,after)
+        self.assertEqual((before,after),copies)
+        self.assertEqual(self.api.publish()['latest']['tag'],'v1.14.0')
+
+    def test_existing_heic_in_baseline_refuses_without_any_write(self):
+        before=self.api.lock('1.14.0');after=self.api.lock('1.14.0')
+        with self.assertRaisesRegex(self.m.PublicationRefused,'BASELINE_LOCK_IDENTITY'):
+            self.m.verify_locked_dependency_delta(before,after)
+        self.assertEqual(self.api.writes,[])
+
+    def test_identical_retry_verifies_existing_objects_without_any_mutation(self):
+        self.api.publish();self.api.writes=[]
+        result=self.api.publish();self.assertEqual(result['publicationMode'],'verified_existing_read_only');self.assertEqual(self.api.writes,[])
+
+    def test_interruption_after_tag_creation_resumes_only_release(self):
+        self.api.publish();del self.api.releases['v1.14.0'];self.api.latest=dict(id=self.m.BASE_RELEASE_ID,tag_name='v1.13.0',target_commitish=self.m.BASE_SOURCE)
+        self.api.writes=[];result=self.api.publish()
+        self.assertEqual(result['created'],['v1.14.0']);self.assertEqual([path for path,_ in self.api.writes],['releases'])
+
+    def test_every_native_or_schema_gate_refuses_before_mutation(self):
+        for fault in ['ci','ci_sha','ci_branch','ci_event','ci_path','ci_status','rerun','jobs','job_sha','job_run','job_attempt','job_duplicate','job_missing','tree','ancestry','workflow','dependencies','transitive_lock','sql33','sql36','rollback38','extra_sql','truncated','heic_missing','heic_version','heic_integrity','heic_resolved','heic_extra','root_dependency','old_transitive','removed_transitive','lock_metadata']:
+            with self.subTest(fault=fault):
+                api=Api(self.m);api.fault=fault
+                with self.assertRaises(self.m.PublicationRefused):api.publish()
+                self.assertEqual(api.writes,[])
+
+    def test_wrong_latest_or_existing_conflict_is_never_repaired_by_a_write(self):
+        for fault in ['latest','tag','release']:
+            with self.subTest(fault=fault):
+                api=Api(self.m)
+                if fault=='latest':api.latest=dict(id=999,tag_name='v1.8.5',target_commitish='a'*40)
+                if fault=='tag':api.tags['v1.14.0']=dict(ref='refs/tags/v1.14.0',object=dict(type='commit',sha='f'*40))
+                if fault=='release':
+                    api.tags['v1.14.0']=dict(ref='refs/tags/v1.14.0',object=dict(type='commit',sha='c'*40))
+                    api.releases['v1.14.0']=dict(self.m.metadata(self.m.RELEASES[0]),id=1140001,name='modified existing release')
+                with self.assertRaises(self.m.PublicationRefused):api.publish()
+                self.assertEqual(api.writes,[])
+
+    def test_unexpected_workflow_context_or_node_version_never_accesses_api(self):
+        for environment,node in [(dict(self.api.environment,GITHUB_EVENT_NAME='pull_request'),'v24.22.1'),
+                (dict(self.api.environment,GITHUB_REPOSITORY='other/repository'),'v24.22.1'),
+                (dict(self.api.environment,GITHUB_REF='refs/heads/main'),'v24.22.1'),(self.api.environment,'v24.19.0')]:
+            with self.subTest(node=node),mock.patch.object(self.m,'github',side_effect=AssertionError('no network')):
+                with self.assertRaises(self.m.PublicationRefused):self.m.publish(request=lambda *_args,**_kwargs:(_ for _ in ()).throw(AssertionError('no API')),environment=environment,node_version=node)
+
+    def test_each_pending_pin_refuses_before_node_or_api(self):
+        for name in ['source','tree','ci','attempt']:
+            with self.subTest(pin=name):
+                release=dict(self.m.RELEASES[0],**{name:'QUALIFICATION_PENDING'})
+                with mock.patch.object(self.m,'RELEASES',(release,)), \
+                        mock.patch.object(self.m.subprocess,'check_output',side_effect=AssertionError('no process')):
+                    with self.assertRaisesRegex(self.m.PublicationRefused,'QUALIFICATION_PINS_REQUIRED'):
+                        self.m.publish(request=lambda *_args,**_kwargs:(_ for _ in ()).throw(AssertionError('no API')))
+
+    def test_pinned_attempt_is_checked_for_the_run_and_each_job(self):
+        release=dict(self.m.RELEASES[0],attempt=2)
+        with mock.patch.object(self.m,'RELEASES',(release,)):
+            api=Api(self.m)
+            result=api.publish()
+            self.assertEqual(result['releases'][0]['ciAttempt'],2)
+            self.assertIn('tentative 2',api.latest['body'])
+            api=Api(self.m);api.fault='job_attempt'
+            with self.assertRaisesRegex(self.m.PublicationRefused,'FIVE_NATIVE_JOBS_REQUIRED'):api.publish()
+            self.assertEqual(api.writes,[])
+
+    def test_pending_pins_refuse_before_node_or_api(self):
+        module=helper()
+        pending=tuple(dict(release,source='QUALIFICATION_PENDING',tree='QUALIFICATION_PENDING',ci='QUALIFICATION_PENDING') for release in module.RELEASES)
+        with mock.patch.object(module,'RELEASES',pending), \
+                mock.patch.object(module.subprocess,'check_output',side_effect=AssertionError('no process')):
+            with self.assertRaisesRegex(module.PublicationRefused,'QUALIFICATION_PINS_REQUIRED'):
+                module.publish(request=lambda *_args,**_kwargs:(_ for _ in ()).throw(AssertionError('no API')))
+
+
+if __name__=='__main__':unittest.main(verbosity=2)
