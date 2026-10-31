@@ -1,0 +1,49 @@
+{
+  "format": "jessiemessage-release1120-metadata-operator-verification",
+  "operator": "e2828cb96e8831ce5b01900380705f0666137d17",
+  "tree": "d23d6f35d853bf91271e8215db8283549d8926c7",
+  "script": "ops/record-release1120.py",
+  "scriptSha256": "b0e7b06b18f4215412e06a0f2551fd02d5c31fc7a643ca58dc6ee0ce745408b7",
+  "sourceReadbackMatchesQualifiedBytes": true,
+  "source": "9bfdae07797f4e848964422471da67560c7d94eb",
+  "sourceTree": "4aef91b8aea6e811af74b28a52e69f9481f62592",
+  "reportedStartupUtcSecond": 1793410156,
+  "reportedStartupTimezone": "Europe/Paris",
+  "reportedStartupDisplay": "31/10/2026 02:29:16",
+  "stagingReceiptSha256": "692d55985dbdb4c76d066fe90d434f35d17266c6b59ea25124725cc024751578",
+  "priorMetadataRelease": "1.11.2",
+  "priorCheckpointSha256": "3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf72aa26cd080b5a0ac2f400f",
+  "priorHostedStagingRelease": "1.11.3",
+  "priorHostedStagingSha256": "7c1a51e0033e329b3daaf3ee8895a989f67e13c42199f7c4e6ac2907afbd8282",
+  "workflowRun": 41155948468,
+  "workflowUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/41155948468",
+  "runAttempt": 1,
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 124402649248,
+      "name": "operator-tests",
+      "conclusion": "success"
+    }
+  ],
+  "nativeNodeVersion": "v24.22.1",
+  "tests": 24,
+  "pass": 24,
+  "fail": 0,
+  "skipped": 0,
+  "qualificationScope": "synthetic isolated receipts/files/permissions/atomic checkpoint transition; source inventory and public HTTP faked",
+  "hostedExecution": false,
+  "metadataOnly": true,
+  "noRestart": true,
+  "noMigration": true,
+  "noRealAccountMailOrMediaMutation": true,
+  "scopeNotes": [
+    "The actual metadata checkpoint is1112; no final1113 block is invented.",
+    "Existing full prior checkpoint and historical blocks survive the reversible1120 transition.",
+    "Identical successful record retry performs no replacement; an uncertain run must first be inspected.",
+    "Hosted journal/public GET/readiness are verified only when user executes the pinned operator.",
+    "No live SQL inventory or direct PID/socket/binary identity is established by synthetic tests."
+  ],
+  "logSha256": "dfe35aa55bdfa77e9f990ce007ef3343a8e7e980294fad757c319ae3288286e9"
+}

@@ -196,8 +196,7 @@
   ],
   "reviewedAllRequestedAreas": true,
   "pending": [
-    "single Manager activation and startup identity",
-    "qualified final metadata writer and receipt"
+    "execute qualified metadata1120 operator and collect final receipt"
   ],
   "limitations": [
     "External SMTP/inbox delivery latency was not measured.",
@@ -205,7 +204,7 @@
     "No real account/mail/media/SQL/backup manipulation.",
     "General52intentional omissions are not successful tests."
   ],
-  "productionChanged": false,
+  "productionChanged": true,
   "mainNativeRun": 41153045628,
   "mainNativeStatus": "success5of5",
   "diagnosticNativeRun": 41148965318,
@@ -216,5 +215,14 @@
   "published": true,
   "hostedPreparationReceiptSha256": "692d55985dbdb4c76d066fe90d434f35d17266c6b59ea25124725cc024751578",
   "hostedCheckPassedReported": true,
-  "hostedPreparationCanonicalReceiptVerified": true
+  "hostedPreparationCanonicalReceiptVerified": true,
+  "runtimeActivationReported": true,
+  "hostedIdentity": "hosted-identity.json",
+  "reportedStartupUtcSecond": 1793410156,
+  "writerOperator": "e2828cb96e8831ce5b01900380705f0666137d17",
+  "writerNativeRun": 41155948468,
+  "writerNativeTests": 24,
+  "writerNativeStatus": "success24of24_no_skips",
+  "writerSourceReadbackVerified": true,
+  "metadataRecorded": false
 }

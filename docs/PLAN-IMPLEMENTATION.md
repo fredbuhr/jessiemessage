@@ -2,16 +2,15 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Évolution1.12.0 — préparée, activation Manager à effectuer
+## Évolution1.12.0 — démarrage rapporté, reçu final attendu
 
-Le clic du mail confirme et active le compte sans bouton supplémentaire ni approbation admin, selon l’instruction KISS du31octobre. Le diagnostic individuel est remplacé par cette correction. Les quatre demandes initiales restent dans le même lot. [Rapport](onboarding-media-chat-1120.md) : PR143/main1435/5, publication2/2 et39tests opérateur ; source9bfdae07, tag/release/latest1.12.0 publiés. Aucun déploiement1120 effectué.
+Les quatre demandes et l’ouverture automatique du lien sont qualifiées et publiées en une version : PR143/main1435/5, publication2/2 et39tests opérateur, source9bfdae07/tagv1.12.0. [Préparation/CHECK](verification-proofs/jm1120/hosted-preparation.json) réussis puis [identité1.12.0 reçue](verification-proofs/jm1120/hosted-identity.json) :31octobre02:29:16Paris, source9bfdae07, Node24.22.1. Ne rejouer aucune étape acquise.
 
-[Préparation/CHECK1120 reçus](verification-proofs/jm1120/hosted-preparation.json) : SHA canonique692d5598 vérifié, CHECK0 et marqueur final. Baseline privé1112/3f1ae16d observé/préservé. Ne pas répéter préparation/CHECK SSH.
+Le [writer final1120](verification-proofs/jm1120/writer-final-native.json) est qualifié24/24 natifs, run41155948468,1/1, tentative1 ; script relu identique à la source épinglée. Il accepte le véritable baseline privé1112/3f1ae16d et conserve les preuves1113 sans inventer sa finalisation.
 
-1. Appliquer les [réglages Manager1120 exacts](operations-release1120.md#activation-personnelle) et activer une seule fois. Recueillir l’identité1.12.0/source9bfdae07/Node24.22.1 et son heure de démarrage.
-2. Qualifier puis exécuter le writer final lié à cette preuve et au baseline réel3f1ae16d ; préserver l’état antérieur intégral et clore les reçus sans répéter les étapes réussies.
+**Seule étape restante :** exécuter une fois la [commande d’enregistrement final](operations-release1120.md#enregistrement-final), recueillir son reçu et clore la livraison. Métadonnées seules ; aucun redémarrage, migration, mail ou compte réel à manipuler. Après résultat incertain, inspecter avant toute relance.
 
-## Correctif1.11.3 — démarrage rapporté, finalisation attendue
+## Correctif1.11.3 — historique, finalisation non confirmée
 
 L’utilisateur confirme désormais [sa connexion réussie](verification-proofs/jm1113/hosted-login-confirmation.json) après les instructions de récupération. Le relevé avait confirmé compte actif, e-mail et approbation valides, invitation consommée et horloges alignées ; l’ancien refus du mot de passe n’a pas été comparé ni attribué avec certitude. L’absence d’un nouveau mail de confirmation est expliquée par le compte déjà confirmé. Le diagnostic est clos, sans nouveau contrôle SQL/compte ou e-mail à déclencher.
 
@@ -21,7 +20,7 @@ Le [relevé après activation](verification-proofs/jm1113/hosted-identity.json) 
 
 Le writer final lié à cette seconde et aux reçus est désormais [qualifié17/17 natifs](verification-proofs/jm1113/writer-final-native.json), run40240046476,1/1, tentative1, sans omission. Opérateur `e3821d9231f0e7ead0a8eea7c3e1730aff0ea86e`, script SHA256 `a8904e91b394cf8a09f6a2a0b419fbfc45e590438da7ed5de18f24f36583b3f9`, source relue identique. Qualification acquise, aucune relance du même code.
 
-La commande de métadonnées a été fournie, mais son reçu n’a pas été communiqué. Ne pas la rejouer pour découvrir son résultat : relever en lecture seule le checkpoint courant avant la prochaine préparation1.12.0. Les étapes de code/publication1113 restent acquises ; [REPRISE](REPRISE.md) distingue le démarrage rapporté de cette finalisation non confirmée.
+La commande de métadonnées avait été fournie sans reçu communiqué. La préparation1120 a depuis observé le checkpoint1112 intact3f1ae16d, sans transition1113 ; ne pas rejouer le writer1113. Les étapes1113 restent historiques et acquises ; la seule suite est désormais l’enregistrement1120 indiqué ci-dessus.
 
 ## Correctif 1.11.2 — audit et livraison terminés
 
