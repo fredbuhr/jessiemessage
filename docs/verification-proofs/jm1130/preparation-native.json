@@ -1,0 +1,95 @@
+{
+  "format": "jessiemessage-release1130-preparation-operator-verification",
+  "operator": "7f2051b75c24bf6ec947349205070e62fbeb8aa0",
+  "tree": "b1499dab714e606f7741e93abc4d1e96a83a89a1",
+  "script": "ops/prepare-release1130.py",
+  "scriptBytes": 19215,
+  "scriptSha256": "0be0e7c51836a9c0576e785fc56373b1b60ea98564a473fd628fadda09e52980",
+  "testsScript": "ops/test-prepare-release1130.py",
+  "testsScriptBytes": 44816,
+  "testsScriptSha256": "8b1d882aa23211f8563e806597479c80be1578182550c8f1b752bc52af3f9399",
+  "workflow": ".github/workflows/prepare-qualified1130.yml",
+  "workflowBytes": 1180,
+  "workflowSha256": "c284e96bf004393b676f30cc4afe9f0511e089eab2c30b9e93132f1cb802b22c",
+  "sourceReadbackVerifiedByRoot": true,
+  "source": "b9e2ad78b47dccb72b8e793cdc448e6b70424430",
+  "sourceTree": "dc8933723a54c0307a3fd52719bdd4fd3ac3f96a",
+  "baselineApplication": {
+    "release": "1.12.0",
+    "source": "9bfdae07797f4e848964422471da67560c7d94eb",
+    "tree": "4aef91b8aea6e811af74b28a52e69f9481f62592",
+    "stagingSha256": "692d55985dbdb4c76d066fe90d434f35d17266c6b59ea25124725cc024751578"
+  },
+  "requiredMetadataBaseline": {
+    "release": "1.11.2",
+    "checkpointSha256": "3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf72aa26cd080b5a0ac2f400f",
+    "release1120Present": false,
+    "scope": "exact baseline confirmed by separate user read-only receipt; no historical transition accepted"
+  },
+  "run": 41226621742,
+  "attempt": 1,
+  "branch": "ops/prepare-v1.13.0",
+  "event": "push",
+  "status": "completed",
+  "conclusion": "success",
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41226621742",
+  "jobs": [
+    {
+      "id": 124612004973,
+      "name": "operator-tests",
+      "sha": "7f2051b75c24bf6ec947349205070e62fbeb8aa0",
+      "runId": 41226621742,
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-31T17:52:25Z",
+      "completedAt": "2026-10-31T17:52:46Z",
+      "logFile": "job-124612004973.log",
+      "logBytes": 52230,
+      "logSha256": "7b24c6fe66df88ff6cc421c0aec43995f9b901305d700d984633da988acc3a39"
+    }
+  ],
+  "nativeNodeVersion": "v24.22.1",
+  "tests": 33,
+  "skipped": 0,
+  "nativeDurationSeconds": 14.56,
+  "nativeFooter": "Ran 33 tests in 14.560s; OK",
+  "countScope": "33 unittest methods; subcases are not added again and local executions are not summed with native execution",
+  "qualificationScope": "synthetic local Git/files/permissions/exclusive staging/refusal/preservation; read-only comparison of real published1120/1130 Git blobs, locked dependencies and38migration files",
+  "localQualification": {
+    "tests": 33,
+    "pass": 33,
+    "fail": 0,
+    "skipped": 0,
+    "nodeVersion": "v24.22.1",
+    "durationSeconds": 20.554,
+    "exitCode": 0,
+    "log": "prepare1130-verified-local.log",
+    "logBytes": 5676,
+    "logSha256": "f024837eb3ada2f6492ce2f5a033084d879d2b62ea4e7d33fec228d7090af81f",
+    "scope": "synthetic local Git/files/permissions/command limits plus read-only comparison of real published Git blobs; no hosted operation"
+  },
+  "incompleteLocalLogs": {
+    "countedAsSuccess": false,
+    "logs": [
+      "prepare1130-first.log",
+      "prepare1130-qualified-local.log"
+    ],
+    "scope": "local asynchronous runs without a complete unittest footer"
+  },
+  "hostedExecution": false,
+  "hostedCheckPerformed": false,
+  "sqlOperationPerformed": false,
+  "managerChanged": false,
+  "runtimeStarted": false,
+  "checkpointChanged": false,
+  "deploymentPerformed": false,
+  "scopeNotes": [
+    "Only the operator test job ran; no application CI rerun or hosted preparation occurs.",
+    "This native qualification is not a hosted staging receipt. The helper creates1130outputs only when separately executed.",
+    "Active1120 logs/configurations are not opened by staging, no old CHECK/start/writer is invoked and no1120 finalization is synthesized."
+  ],
+  "pass": 33,
+  "fail": 0,
+  "rootIndependentLogReadback": true
+}

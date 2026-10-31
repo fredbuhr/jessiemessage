@@ -6,11 +6,13 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 Les corrections de messagerie, listes, lectures backend, cadence Push et textes courants sont terminées. [Résultat et bornes](conversation-lists-1130.md), [couverture F01–F09](verification-proofs/jm1130/coverage.json). PR144 fusionnée, PR/main5/5, douze captures inspectées ; tagv1.13.0/release430071184 publiés surb9e2ad78 après publication2/2. Aucune migration ou dépendance nouvelle. Les contrôles verts du même code ne sont pas à rejouer.
 
-**Inspection acquise :** le [reçu utilisateur](verification-proofs/jm1130/hosted-checkpoint-inspection.json) retrouve exactement le checkpoint1112/3f1ae16d, sans section1120, distinct du démarrage1120 confirmé. Aucun ancien writer à rejouer. **Étape en cours :** développer et qualifier le nouvel opérateur1130 depuis le checkout actif1120 en préservant ce checkpoint et les reçus antérieurs ; branche `ops/prepare-v1.13.0`. Critère de fin : tests synthétiques de préservation et qualification native de l’opérateur exact, puis une seule commande de préparation à exécuter par l’utilisateur. Aucun lancement de1130 ni modification Manager à cette étape.
+**Inspection acquise :** le [reçu utilisateur](verification-proofs/jm1130/hosted-checkpoint-inspection.json) retrouve exactement le checkpoint1112/3f1ae16d, sans section1120, distinct du démarrage1120 confirmé. Aucun ancien writer à rejouer. **Opérateur1130 qualifié :** [run41226621742](verification-proofs/jm1130/preparation-native.json),1/1,33/33 natifs ; source `7f2051b75c24bf6ec947349205070e62fbeb8aa0`, préparateur relu identique aux octets qualifiés.
+
+**Étape restante immédiate :** exécuter une fois le [bloc préparation/CHECK1130](operations-release1130.md#préparation-et-check-1130--à-exécuter-une-fois). Critère de fin : reçu du staging exact, CHECK0 et marqueur final. Les flags faux et logs vides du reçu décrivent le staging avant ce CHECK séparé. Le nouveau CHECK effectue des lectures SQL/verrous de préflight ; il n’active pas le runtime et ne modifie pas de compte. Examiner le résultat avant toute instruction Manager. Préparation/CHECK/démarrage1120 acquis : aucun replay.
 
 La1.13.0 est publiée mais n'est pas préparée ni activée sur l'hébergement. Les gains facultatifs non mesurés, migrations d'index sans preuve, juridique, sauvegarde reportée et ancien CLI de données ne deviennent pas des prérequis. Ne pas rouvrir l'audit global ni les suites vertes à chaque étape.
 
-## Évolution1.12.0 — démarrage rapporté, reçu final attendu
+## Évolution1.12.0 — démarrage rapporté, checkpoint1112 relu
 
 Les quatre demandes et l’ouverture automatique du lien sont qualifiées et publiées en une version : PR143/main1435/5, publication2/2 et39tests opérateur, source9bfdae07/tagv1.12.0. [Préparation/CHECK](verification-proofs/jm1120/hosted-preparation.json) réussis puis [identité1.12.0 reçue](verification-proofs/jm1120/hosted-identity.json) :31octobre02:29:16Paris, source9bfdae07, Node24.22.1. Ne rejouer aucune étape acquise.
 

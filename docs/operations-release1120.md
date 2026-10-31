@@ -1,6 +1,6 @@
-# Finaliser la1.12.0 démarrée sur l’hébergement
+# Historique 1.12.0 — démarrage acquis, enregistrement final absent du checkpoint
 
-La [release v1.12.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.12.0), ID429632868, est publiée/latest sur la source **`9bfdae07797f4e848964422471da67560c7d94eb`**, arbre **`4aef91b8aea6e811af74b28a52e69f9481f62592`**. [PR143](verification-proofs/jm1120/one-click-pr-native.json) puis [main41153045628](verification-proofs/jm1120/one-click-main-native.json)5/5, tentative1. La publication ne constitue pas un déploiement.
+La [release v1.12.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.12.0), ID429632868, a été publiée, latest à cette livraison, sur la source **`9bfdae07797f4e848964422471da67560c7d94eb`**, arbre **`4aef91b8aea6e811af74b28a52e69f9481f62592`**. [PR143](verification-proofs/jm1120/one-click-pr-native.json) puis [main41153045628](verification-proofs/jm1120/one-click-main-native.json)5/5, tentative1. La publication ne constitue pas un déploiement.
 
 Opérateur **`d7896b6c5fa67dc8e0002f7d7ef86d96e5b506af`**, arbre `644c887f9614d84edbd9f0d0f3f09cca8628a78a`, préparateur SHA256 **`fae7a8bb007edf368df29e135faa7d2582ef65645fcef68a70565e3a272a013c`**. Source relue identique aux octets qualifiés. [Workflow41153760698](https://github.com/fredbuhr/jessiemessage/actions/runs/41153760698)2/2 :32tests de préparation/préservation,7de publication, sans omission. [Preuve](verification-proofs/jm1120/publication-native.json).
 
@@ -60,13 +60,15 @@ Le préparateur n’installe aucune dépendance et ne démarre pas l’applicati
 
 Le reçu final1113 n’a pas été rapporté. Le préparateur accepte uniquement les octets connus1112SHA256`3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf72aa26cd080b5a0ac2f400f`, ou la transition1113 dont l’identité source/arbre/lanceurs/Node/profile/SQL est exacte et dont l’inversion en mémoire restitue ce SHA connu. Clés ambiguës, identité inattendue ou dérive d’un autre bloc refusent avant création. Les octets observés sont revérifiés avant/après préparation et leur véritable SHA est enregistré dans le reçu. Le checkpoint, les anciens lanceurs, journaux et configurations restent inchangés. Aucun ancien writer à rejouer.
 
-## Enregistrement final
+## Enregistrement final — historique, ne pas rejouer
+
+La [lecture seule acquise pour1130](verification-proofs/jm1130/hosted-checkpoint-inspection.json) retrouve exactement le checkpoint1112, sans section1120. La commande ci-dessous avait été fournie mais son résultat n’avait pas été communiqué ; elle est conservée comme historique et ne doit pas être rejouée. La suite actuelle est uniquement décrite dans [REPRISE](REPRISE.md) et le [guide1130](operations-release1130.md). Le démarrage1120 reste acquis.
 
 L’activation est rapportée :1.12.0, source9bfdae07, Node24.22.1,31octobre2026 **02:29:16 Europe/Paris**, secondeUTC1793410156. Ne pas redémarrer.
 
 Le [writer1120](https://github.com/fredbuhr/jessiemessage/blob/e2828cb96e8831ce5b01900380705f0666137d17/ops/record-release1120.py) est [qualifié24/24 natifs](verification-proofs/jm1120/writer-final-native.json), run41155948468,1/1, tentative1, sans omission. Source relue identique aux octets qualifiés, SHA256 `b0e7b06b18f4215412e06a0f2551fd02d5c31fc7a643ca58dc6ee0ce745408b7`. Qualification sur fichiers synthétiques : elle n’est pas son exécution sur l’hôte.
 
-Ouvrir le [terminal Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), coller ce bloc entier **une seule fois**, puis transmettre uniquement son JSON :
+Le bloc ancien fourni était le suivant ; **ne pas l’exécuter** pour découvrir ou corriger le résultat absent :
 
 ```bash
 env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD1120'
@@ -85,4 +87,4 @@ PY_RECORD1120
 
 Le script vérifie les sources/tags/versions, dépendances et migrations inchangées, reçus/lanceurs/Node/configuration épinglés, précontrôles acquis, unique démarrage1120 à la seconde rapportée, GET publics health/ready/home/entry et release/latest. Il enregistre ensuite atomiquement les seules métadonnées1120 dans le checkpoint privé ; aucun accès SQL, démarrage, Manager, mail ou compte réel modifié. Le baseline1112 exact et tous ses anciens blocs sont préservés, ainsi que les reçus1113 ; aucune finalisation1113 absente n’est inventée. Le repli185 reste qualifiéSQL seulement, snapshot publicformat2 non qualifié.
 
-Le reçu final1120 reste attendu. Un résultat incomplet ou `metadata_unconfirmed` exige de conserver les traces et transmettre le code, sans relance automatique ni journal privé. Les GET publics ne prouvent pas le commit du processus ; PID/socket/binaire exécuté et appareils physiques restent non qualifiés.
+La lecture durable ne contient pas d’enregistrement1120. Conserver cet état et les traces historiques ; aucun ancien writer à rejouer. Les GET publics ne prouvent pas le commit du processus ; PID/socket/binaire exécuté et appareils physiques restent non qualifiés.

@@ -17,10 +17,50 @@ Le [reçu transmis par l’utilisateur](verification-proofs/jm1130/hosted-checkp
 
 L’enregistrement final1120 n’est pas présent dans le fichier relu. Le démarrage1120 reste confirmé séparément ; l’inspection ne décrit ni le processus, ni le Manager, ni la disponibilité HTTP. Elle ne permet pas de conclure au déroulement de l’ancienne commande. Ne rejouer aucun writer1120/1113 et ne pas refaire cette lecture sans élément nouveau. Le [bloc de lecture qualifié sur sept cas synthétiques](verification-proofs/jm1130/checkpoint-inspection-command.json) et son historique sont préservés dans Git.
 
-## Préparation 1.13.0 — opérateur en développement
+## Préparation et CHECK 1.13.0 — à exécuter une fois
 
-Branche `ops/prepare-v1.13.0`, base documentaire `b9fb83461e25c32daccdb64c859bcb22ba00bca1`. Le nouvel opérateur doit préparer uniquement le checkout exact1130 et ses nouveaux lanceurs/logs, réutiliser Node24.22.1 et les dépendances inchangées, préserver le checkout/lanceurs/staging1120 ainsi que le checkpoint1112 exact. Il doit refuser toute sortie préexistante ou partielle sans nettoyage ni relance automatique. Aucun SQL, migration, écriture de configuration, CHECK, lancement du runtime ou modification Manager.
+Le nouvel opérateur est qualifié : [run41226621742](verification-proofs/jm1130/preparation-native.json), tentative1, **1/1 job et33/33 tests natifs sans omission** sousNodev24.22.1. Source **`7f2051b75c24bf6ec947349205070e62fbeb8aa0`**, arbre **`b1499dab714e606f7741e93abc4d1e96a83a89a1`**. Préparateur SHA256 **`0be0e7c51836a9c0576e785fc56373b1b60ea98564a473fd628fadda09e52980`**,19215octets, relu au commit qualifié. Tests SHA256 `8b1d882aa23211f8563e806597479c80be1578182550c8f1b752bc52af3f9399`, workflow `c284e96bf004393b676f30cc4afe9f0511e089eab2c30b9e93132f1cb802b22c`.
 
-Les instructions de préparation seront fournies après revue et qualification native de l’opérateur exact. Aucune commande hébergée1130 n’a encore été fournie ou exécutée. Le service Node239143, nommé `recette.jessiemessage.com`, dessert aussi le principal : il ne s’agit pas d’une cible isolée.
+Le préparateur crée exclusivement le checkout `/srv/customer/jessiemessage-operator/production-1130-b9e2ad78`, ses deux lanceurs et ses nouveaux journaux. Il réutilise Node24.22.1 et les dépendances1101 inchangées ; il préserve les sources, lanceurs et staging1120 ainsi que le checkpoint1112 exact. Toute sortie préexistante ou partielle refuse sans nettoyage ni relance automatique. Aucun ancien outil1120/1113 n’est appelé et aucun enregistrement final absent n’est fabriqué.
 
-Accès personnel : [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal). Aucun nouveau test de sauvegarde, téléphone réel, SMTP/Push réel ou chantier juridique n’est ouvert automatiquement.
+Le bloc appelle ensuite une fois le **nouveau** lanceur CHECK1130. C’est un préflight avec lectures SQL et verrous, assertions des38migrations et lectures de capacité/journaux ; il revient avant le démarrage des workers et du runtime. Il ne fait ni migration, modification de compte, envoi SMTP/Push, écriture de configuration ni changement Manager. Ses sorties sont conservées dans les nouveaux journaux privés. Ce CHECK ne qualifie pas un téléphone physique ou une livraison réelle de message.
+
+1. Ouvrir le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), pour le service JessieMessage.
+2. Coller le bloc entier une seule fois. Aucune modification Run/Build ni activation à ce stade.
+3. Transmettre uniquement le JSON, `CHECK1130_EXIT` et le marqueur final. Ne pas transmettre de journal privé.
+
+```bash
+env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_PREPARE1130'
+import hashlib, json, subprocess, urllib.request
+
+url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/7f2051b75c24bf6ec947349205070e62fbeb8aa0/ops/prepare-release1130.py'
+with urllib.request.urlopen(url, timeout=30) as response:
+    if response.status != 200 or response.url != url:
+        raise SystemExit('URL_OUTIL_A_VERIFIER')
+    code = response.read(65537)
+if len(code) > 65536 or hashlib.sha256(code).hexdigest() != '0be0e7c51836a9c0576e785fc56373b1b60ea98564a473fd628fadda09e52980':
+    raise SystemExit('OUTIL1130_A_VERIFIER : aucun outil execute.')
+ns = {'__name__': 'jm1130_preparation'}
+exec(compile(code, '<preparation1130>', 'exec'), ns)
+try:
+    result = ns['stage'](ns['RELEASE_SOURCE'], ns['RELEASE_TREE'])
+except (Exception, KeyboardInterrupt):
+    raise SystemExit('PREPARATION1130_NON_CONFIRMEE : conserver les traces, ne pas relancer.') from None
+print(json.dumps(result, separators=(',', ':')), flush=True)
+try:
+    check = subprocess.run(['/bin/bash', result['checkLauncher']], env=ns['clean_environment'](),
+        stdin=subprocess.DEVNULL, capture_output=True, timeout=180, check=False)
+except (OSError, subprocess.TimeoutExpired, KeyboardInterrupt):
+    raise SystemExit('CHECK1130_NON_CONFIRME : conserver les traces, ne pas relancer.') from None
+print('CHECK1130_EXIT=' + str(check.returncode), flush=True)
+if check.returncode != 0:
+    raise SystemExit('CHECK1130_REFUSE : conserver les traces, ne pas relancer.')
+print('PREPARATION_1130_CHECK_OK')
+PY_PREPARE1130
+```
+
+Attendu : reçu `release1130_sources_staged_not_qualified` sur sourceb9e2ad78/arbre dc893372, checkpoint préservé3f1ae16d et `baselineMetadataRelease:1.11.2`, puis `CHECK1130_EXIT=0` et `PREPARATION_1130_CHECK_OK`. Les flags `precheckPassed:false` et logs vides du reçu décrivent le staging **avant** le CHECK exécuté ensuite ; ils ne doivent pas être réécrits pour fabriquer une qualification. Un résultat absent, interrompu ou refusé exige une inspection durable avant toute suite ; ne pas relancer le bloc.
+
+## Activation 1.13.0 — pas encore effectuée
+
+Examiner le reçu de préparation/CHECK avant de fournir les réglages Manager. Le service239143, nommé `recette.jessiemessage.com`, dessert aussi `jessiemessage.com` et sa base ; il ne s’agit pas d’une cible isolée. La dernière version démarrée rapportée reste1.12.0. Aucun nouveau redémarrage1120, ancien writer, test de sauvegarde, SMTP/Push réel, compte réel ou chantier juridique n’est demandé.
