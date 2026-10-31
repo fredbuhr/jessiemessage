@@ -1,0 +1,83 @@
+{
+  "format": "jessiemessage-1120-one-click-pr-native",
+  "source": "973b065d9dc2f0b0cf6ca731bbb69c247c7abd8f",
+  "tree": "4aef91b8aea6e811af74b28a52e69f9481f62592",
+  "PR": 143,
+  "run": 41152297091,
+  "attempt": 1,
+  "nodeVersion": "24.22.1",
+  "allFiveJobsSuccessful": true,
+  "jobs": [
+    {
+      "id": 124391345704,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 14,
+      "pass": 14,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logFile": "qa1120/pr143-124391345704.log",
+      "logBytes": 42238,
+      "logSHA256": "754bc10e575ce5575ce2db4fb73bbdddb95a426733416db4383c2bec6e64ea69"
+    },
+    {
+      "id": 124391345852,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 282,
+      "pass": 282,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logFile": "qa1120/pr143-124391345852.log",
+      "logBytes": 58018,
+      "logSHA256": "143aedcd56a08241b176dc6121cccf57e5a9f399abfa147188b05588e2479d83"
+    },
+    {
+      "id": 124391345927,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 4171,
+      "pass": 4119,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 52,
+      "logFile": "qa1120/pr143-124391345927.log",
+      "logBytes": 590029,
+      "logSHA256": "2874e4930443f9c6c4a1e67021fee757ab4ab9dac0ad8f827895d3b7ebb26c0c"
+    },
+    {
+      "id": 124391345959,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 611,
+      "pass": 611,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logFile": "qa1120/pr143-124391345959.log",
+      "logBytes": 361671,
+      "logSHA256": "5716e0092502f64e3d16dbf99db7a6b396dd3982c3233e845086a0c11a944eeb"
+    },
+    {
+      "id": 124391345979,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 611,
+      "pass": 611,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logFile": "qa1120/pr143-124391345979.log",
+      "logBytes": 361502,
+      "logSHA256": "44cde15ed03e4cc3f1321d54b91097fc40bc72753e87378109bf8c8581969fe1"
+    }
+  ],
+  "productionChanged": false
+}

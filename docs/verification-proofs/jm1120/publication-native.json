@@ -1,0 +1,43 @@
+{
+  "format": "jessiemessage-1120-publication-native",
+  "run": 41153760698,
+  "attempt": 1,
+  "operator": "d7896b6c5fa67dc8e0002f7d7ef86d96e5b506af",
+  "operatorTree": "644c887f9614d84edbd9f0d0f3f09cca8628a78a",
+  "source": "9bfdae07797f4e848964422471da67560c7d94eb",
+  "tree": "4aef91b8aea6e811af74b28a52e69f9481f62592",
+  "mainRun": 41153045628,
+  "allTwoJobsSuccessful": true,
+  "preparationTests": 32,
+  "publisherTests": 7,
+  "releaseId": 429632868,
+  "tag": "v1.12.0",
+  "latest": "v1.12.0",
+  "preparerSHA256": "fae7a8bb007edf368df29e135faa7d2582ef65645fcef68a70565e3a272a013c",
+  "sourceReadbackMatches": true,
+  "publishedVerified": true,
+  "deploymentPerformed": false,
+  "jobs": [
+    {
+      "id": 124395907403,
+      "evidence": [
+        "2026-10-31T01:07:45.6573622Z Ran 32 tests in 16.124s",
+        "2026-10-31T01:07:45.6573989Z OK",
+        "2026-10-31T01:07:45.7890830Z Ran 7 tests in 0.023s",
+        "2026-10-31T01:07:45.7891209Z OK"
+      ],
+      "logFile": "qa1120/release-final-candidate/native-124395907403.log",
+      "logBytes": 53133,
+      "logSHA256": "1aa5a9e90a49d37faafb75a9e799c319f781e1720d00f420449621d165de2b41"
+    },
+    {
+      "id": 124396025280,
+      "evidence": [
+        "2026-10-31T01:08:04.3279036Z {\"status\":\"published_verified\",\"nodeVersion\":\"24.22.1\",\"schemaMigrations\":38,\"applicationTables\":37,\"normalMigrations\":33,\"videoMigrations\":3,\"experienceMigrations\":2,\"releases\":[{\"tag\":\"v1.12.0\",\"source\":\"9bfdae07797f4e848964422471da67560c7d94eb\",\"tree\":\"4aef91b8aea6e811af74b28a52e69f9481f62592\",\"ciRun\":\"41153045628\",\"releaseId\":429632868}],\"latest\":{\"tag\":\"v1.12.0\",\"source\":\"9bfdae07797f4e848964422471da67560c7d94eb\",\"id\":429632868},\"publicationMode\":\"created\",\"created\":[\"v1.12.0\"],\"deploymentPerformed\":false}"
+      ],
+      "logFile": "qa1120/release-final-candidate/native-124396025280.log",
+      "logBytes": 17740,
+      "logSHA256": "78d10315549034bf735e4811bd7ccb63ae475e674cbd8216613cfeef8376685e"
+    }
+  ]
+}

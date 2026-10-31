@@ -1,0 +1,41 @@
+{
+  "source": "973b065d9dc2f0b0cf6ca731bbb69c247c7abd8f",
+  "tree": "4aef91b8aea6e811af74b28a52e69f9481f62592",
+  "run": 41152297091,
+  "artifact": 13023199401,
+  "reviewer": "root direct image inspection",
+  "files": [
+    {
+      "name": "verification-one-click-fr-320.png",
+      "width": 320,
+      "height": 844,
+      "bytes": 66149,
+      "sha256": "2493d033f6f94b55098e9299b41957e0b10b8bd3e5a3a294f4a85dbcccfecb21"
+    },
+    {
+      "name": "verification-one-click-fr-1280.png",
+      "width": 1280,
+      "height": 757,
+      "bytes": 228967,
+      "sha256": "63355406e13f4c01af21ebd8ae12693a19fa89899f7bd224a32a49fab074822b"
+    },
+    {
+      "name": "verification-one-click-en-320.png",
+      "width": 320,
+      "height": 844,
+      "bytes": 70339,
+      "sha256": "52cd494dd89ea259d1cdcd7ea8cbd394e7c193368b11541573a34d7f590fc4c0"
+    },
+    {
+      "name": "verification-one-click-en-1280.png",
+      "width": 1280,
+      "height": 757,
+      "bytes": 227446,
+      "sha256": "16fd03bd3e3410fd77466a5340cf85eff492a109b9dd33b83fa79c491e3525eb"
+    }
+  ],
+  "result": "Confirmed status and reachable sign-in; no confirmation button in the normal path; no clipping inFR/EN320/1280.",
+  "limits": [
+    "Native syntheticChrome, not a physical smartphone orSafari."
+  ]
+}

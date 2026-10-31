@@ -1,16 +1,22 @@
 # Évolution 1.12.0 — inscription et échanges
 
-Les quatre demandes du 30 octobre sont implémentées dans une seule version encore non publiée ni activée : confirmations plus rapides, accès après confirmation sans approbation admin supplémentaire, grandes photos mobiles et Entrée pour envoyer avec bouton de retour à la ligne.
+Les quatre demandes du30octobre et la simplification du31octobre sont implémentées dans une seule1.12.0 publiée, encore non activée : confirmations plus rapides, accès après confirmation sans approbation admin supplémentaire, grandes photos mobiles et Entrée pour envoyer avec bouton de retour à la ligne.
 
-## Nouvelle simplification demandée le31octobre
+## Confirmation automatique — état final du31octobre
 
-Le premier client a créé son compte avec une nouvelle invitation selon l’utilisateur. Celui-ci remplace le diagnostic individuel proposé par une demande KISS : ouverture du lien = adresse confirmée et accès activé, sans second clic et sans approbation admin. Implémentation sur `fix/one-click-confirmation-1120`,144contrôles ciblés réussis ; CI native du nouveau code encore attendue. Les preuves ci-dessous qualifient l’étape antérieure, elles ne qualifient pas automatiquement cette dernière modification. Aucun compte des captures modifié ; aucun diagnostic hébergé exigé pour ces clients.
+Le premier client a créé son compte avec une nouvelle invitation selon l’utilisateur. Celui-ci remplace le diagnostic individuel proposé par une demande KISS : ouvrir le lien = adresse confirmée et accès activé, sans second clic ni approbation admin. Le parcours automatique est fusionné par [PR143](https://github.com/fredbuhr/jessiemessage/pull/143), source `9bfdae07797f4e848964422471da67560c7d94eb`, arbre `4aef91b8aea6e811af74b28a52e69f9481f62592`, identique au candidat973b065d. [PR](verification-proofs/jm1120/one-click-pr-native.json) puis [main](verification-proofs/jm1120/one-click-main-native.json)5/5, tentative1 ; général4171tests/4119réussis/52omissions, Chrome282/282, HTTPS14/14, MariaDB611/611 chacune sans omission.144contrôles ciblés passent ; les52omissions générales ne sont pas des réussites.
 
-## État vérifié au 31 octobre
+Le POST démarre à l’ouverture de la page visible. Le jeton reste en mémoire après effacement du fragment, hors query/referrer/stockage. Les reprises après masquage ou réponse perdue reconnaissent la même confirmation accomplie pendant la validité du lien, sans nouvelle activation, session ou prolongation. Les comptes suspendus/révoqués/supprimés et liens expirés restent refusés. La connexion n’adopte aucune autre session cliente. Un bouton de reprise apparaît uniquement sur erreur temporaire ;15secondes bornent l’attente. Les [quatre captures automatiques](verification-proofs/jm1120/one-click-visual.json) FR/EN320/1280 sont inspectées. Aucun compte des captures modifié et aucun diagnostic client supplémentaire demandé.
+
+[Publication v1.12.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.12.0)429632868/latest acquise après [workflow41153760698](verification-proofs/jm1120/publication-native.json)2/2 :32tests de préparation/préservation et7de publication. Préparateur relu identique aux octets qualifiés. [Prochaine commande : préparation/CHECK](operations-release1120.md), sans redémarrage. Le même lot contient les améliorations mail/photos/Entrée ; aucune migration/dépendance nouvelle.
+
+Les sections suivantes et leurs preuves décrivent les qualifications antérieures, conservées sans publication/activation séparée.
+
+## Étapes antérieures PR141/142
 
 La [PR141](https://github.com/fredbuhr/jessiemessage/pull/141) est fusionnée sur `331cc1b79a76da4f846f7bd5c1b370c1d5766a3f`, arbre `b20e09901a003c994c7aff43724580542c6a37de`, avec [PR](verification-proofs/jm1120/pr141-native.json) puis [main](verification-proofs/jm1120/main141-native.json) 5/5. La dernière clarification du parcours e-mail est fusionnée par [PR142](https://github.com/fredbuhr/jessiemessage/pull/142) sur `2e3504570c373463c6e0126d7c93dfbfb7ade300`, arbre `2a6013bbf4d8fb06c74e660e03a0be9f57a56a80`, identique au candidat `bbc17060bc814eaeba418acf4499bb1655bc4780`. Sa [CI PR41148665207](verification-proofs/jm1120/pr142-native.json) est réussie 5/5. [CI main41149578038](verification-proofs/jm1120/main-native.json) réussie5/5, tentative1, sur le même arbre complet ; tous les journaux et compteurs sont conservés.
 
-Les [28 contrôles du périmètre](verification-proofs/jm1120/checklist.json) ont une disposition ; le cas client réel reste en attente de son relevé. Les deux premiers runs échoués sont conservés : [premier](verification-proofs/jm1120/pr-first-native.json), [second](verification-proofs/jm1120/pr-second-native.json). Ils ne qualifient aucune livraison.
+Les [31 contrôles du périmètre](verification-proofs/jm1120/checklist.json) ont une disposition ; le relevé client a ensuite été abandonné sur instruction utilisateur au profit du parcours automatique. Les deux premiers runs échoués sont conservés : [premier](verification-proofs/jm1120/pr-first-native.json), [second](verification-proofs/jm1120/pr-second-native.json). Ils ne qualifient aucune livraison.
 
 ## Changements et preuves
 
@@ -24,10 +30,10 @@ Les suites finales PR comprennent général4168tests/4116réussis/52omissions ex
 
 ## Client signalé et interruption
 
-La capture utilisateur montre invitation utilisée, e-mail en attente et approbation désactivée. Elle ne prouve pas l’état actuel de la base. Une ouverture de lien sans le bouton final, un lien ancien/expiré ou un affichage périmé restent possibles. Le [relevé en lecture seule](operations-access-diagnostic1113.md) est qualifié 3/3 : 26 tests Python et 15 tests JS/SQL sur chacune des deux MariaDB. Aucun compte, mot de passe, e-mail ou média réel n’a été modifié par l’agent ; son résultat hébergé n’est pas encore reçu.
+La capture utilisateur montre invitation utilisée, e-mail en attente et approbation désactivée. Elle ne prouve pas l’état actuel de la base. Une ouverture de lien sans le bouton final, un lien ancien/expiré ou un affichage périmé restent possibles. L’ancien [relevé en lecture seule](operations-access-diagnostic1113.md), désormais non demandé, est qualifié3/3 : 26 tests Python et 15 tests JS/SQL sur chacune des deux MariaDB. Aucun compte, mot de passe, e-mail ou média réel n’a été modifié par l’agent ; son exécution hébergée n’a pas été demandée de nouveau.
 
 La [reprise](verification-proofs/jm1120/recovery.json) confirme les sources intactes et l’absence de copie poussée au point de l’interruption antérieure. Une coupure ultérieure du transport exec-server a été observée pendant une simple lecture, puis le canal s’est rétabli. La cause précise de l’interruption ChatGPT antérieure n’est pas établie.
 
 ## Limites et prochaine étape
 
-La production reste 1.11.3 selon le dernier relevé utilisateur. La finalisation privée1113 est inconnue ; le même relevé observe son empreinte sans rejouer le writer. La qualification décrite ici est acquise pour le code antérieur. Le diagnostic client a depuis été remplacé par la simplification du31octobre : qualifier celle-ci puis publier/préparer une seule mise à jour. Aucun nouveau schéma ou dépendance. Smartphone physique, Safari et fichier original du client restent non reproduits ; tests de sauvegarde reportés et réserves antérieures inchangés.
+La production reste1.11.3 selon le dernier relevé utilisateur. La finalisation privée1113 est inconnue ; sa lecture/préservation est intégrée au préparateur1120 sans ancien writer. Le diagnostic client a été remplacé par la simplification du31octobre, désormais qualifiée et publiée ; sa préparation hébergée reste à exécuter. Aucun nouveau schéma ou dépendance. Smartphone physique, Safari et fichier original du client restent non reproduits ; tests de sauvegarde reportés et réserves antérieures inchangés.

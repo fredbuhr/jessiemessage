@@ -2,10 +2,10 @@
   "format": "jessiemessage-1120-delivery-checklist",
   "taskDate": "2026-10-30",
   "scope": "four requested onboarding/mail/photo/composer changes, one release",
-  "qualifiedPRSource": "bbc17060bc814eaeba418acf4499bb1655bc4780",
-  "qualifiedPRRun": 41148665207,
-  "mergedSource": "2e3504570c373463c6e0126d7c93dfbfb7ade300",
-  "tree": "2a6013bbf4d8fb06c74e660e03a0be9f57a56a80",
+  "qualifiedPRSource": "973b065d9dc2f0b0cf6ca731bbb69c247c7abd8f",
+  "qualifiedPRRun": 41152297091,
+  "mergedSource": "9bfdae07797f4e848964422471da67560c7d94eb",
+  "tree": "4aef91b8aea6e811af74b28a52e69f9481f62592",
   "checks": [
     {
       "id": "confirmationMail-1",
@@ -171,16 +171,34 @@
     },
     {
       "id": "confirmationMail-6",
-      "check": "email and verification page explicitly instruct the final confirmation button; success opens conversation sign-in in FR/EN",
+      "check": "opening the visible email link automatically confirms and activates without a second button",
       "status": "verified_on_final_PR_source",
-      "evidence": "pr142-native.json and visual-final.json"
+      "evidence": "one-click-pr-native.json and one-click-visual.json"
+    },
+    {
+      "id": "oneClick-1",
+      "check": "repeated valid confirmation acknowledges success without changing timestamps, access duration, conversation count or sessions",
+      "status": "verified_on_final_PR_source",
+      "evidence": "one-click-pr-native.json native SQL and HTTP assertions"
+    },
+    {
+      "id": "oneClick-2",
+      "check": "hidden-page/resume, concurrent events,15second timeout, network retry and other-client cookie separation",
+      "status": "verified_on_final_PR_source",
+      "evidence": "144targeted tests and one-click-pr-native.json"
+    },
+    {
+      "id": "operator-1",
+      "check": "known1112 or reversible1113 checkpoint preserved; other identity/configuration drift refused before new outputs",
+      "status": "native_qualified",
+      "evidence": "publication-native.json32staging tests and7publisher tests"
     }
   ],
   "reviewedAllRequestedAreas": true,
   "pending": [
-    "hosted read-only client and private checkpoint observation",
-    "immutable tag/release publication after remaining diagnosis",
-    "hosted preparation/CHECK and activation after user execution"
+    "hosted preparation/CHECK1120 and its receipt",
+    "single Manager activation and startup identity",
+    "qualified final metadata writer and receipt"
   ],
   "limitations": [
     "External SMTP/inbox delivery latency was not measured.",
@@ -189,9 +207,12 @@
     "General52intentional omissions are not successful tests."
   ],
   "productionChanged": false,
-  "mainNativeRun": 41149578038,
+  "mainNativeRun": 41153045628,
   "mainNativeStatus": "success5of5",
   "diagnosticNativeRun": 41148965318,
-  "hostedClientObservation": "awaiting_user_read_only_JSON",
-  "codeQualificationComplete": true
+  "hostedClientObservation": "cancelled_by_user_in_favor_of_zero_extra_click_flow",
+  "codeQualificationComplete": true,
+  "publicationRun": 41153760698,
+  "releaseId": 429632868,
+  "published": true
 }
