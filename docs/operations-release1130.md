@@ -1,4 +1,4 @@
-# Livraison 1.13.0 — démarrage acquis, métadonnées finales à préparer
+# Livraison 1.13.0 — démarrage acquis, enregistrement final prêt
 
 État du31octobre2026. [REPRISE](REPRISE.md) reste la référence courante ; ce guide distingue la publication de l'installation sur le service Node239143. `recette.jessiemessage.com` et `jessiemessage.com` partagent ce service et sa base.
 
@@ -42,10 +42,29 @@ Le [relevé utilisateur](verification-proofs/jm1130/hosted-identity.json) confir
 
 Service Node239143, nommé `recette.jessiemessage.com`, desservant aussi le principal avec la même base. L’agent n’a inspecté ni les champs Manager ni le processus. L’UI ne fournit pas les millisecondes ni une vérification indépendante du HTTP public.
 
-## Enregistrement final — opérateur en développement
+## Enregistrement final — à exécuter une fois
 
-Développer et qualifier un nouveau writer1130 lié au démarrage rapporté, au staging SHA08eb6309 et au checkpoint1112 exact3f1ae16d. Branche `ops/record-v1.13.0`, base documentaire `b5be1e7cf5e748c7be30775d32df3bc69d92a35d`. Il doit relire les identités/sources/lanceurs/Node/migrations/dépendances/configuration épinglées, le préflight réussi, le journal de démarrage à la seconde exacte et les GET publics/tag/release/latest, puis enregistrer atomiquement les seules métadonnées1130.
+Le nouveau writer1130 est [qualifié27/27 natifs](verification-proofs/jm1130/writer-final-native.json), [run41229293876](https://github.com/fredbuhr/jessiemessage/actions/runs/41229293876),1/1 job, tentative1, sans omission sousNodev24.22.1. Opérateur **`13848dce9ec0d15969bb2cf33675de00dfc2abc7`**, arbre **`9c332fedc2358c834d3fe7364b41a05b0421ece1`**. Script SHA256 **`49bb739b62564b559cde7c67b4f1c8140d6c75adbce7aece7ef0bd7dbf686c8a`**,30728octets, relu identique aux octets qualifiés ; journal natif complet relu indépendamment. La qualification synthétique n’est pas un reçu d’exécution hébergée.
 
-Aucune section1120 ou1113 absente ne sera inventée ; préserver le baseline complet, les anciens blocs et reçus, le repli185 et ses limites SQL38/snapshot publicformat2. Aucun ancien writer, préparation, CHECK SSH ou redémarrage à rejouer. Aucune commande de métadonnées1130 n’a encore été fournie ou exécutée.
+Le script lie le démarrage1130 à la secondeUTC1793470438 et récupère les millisecondes réelles depuis l’unique ligne de démarrage ; il vérifie les sources/tags/versions, dépendances et38migrations inchangées, reçus/lanceurs/Node/configuration épinglés, précontrôles acquis, GET publics health/ready/home/entry et release/latest430071184. Il enregistre ensuite atomiquement les seules métadonnées1130 dans le checkpoint privé. Le baseline1112 complet est préservé, avec les reçus1120/1113 et leurs liens ; aucune section finale1120/1113 absente n’est inventée. Repli185 toujours SQL38 seul, snapshot publicformat2 non qualifié au downgrade. Aucun SQL, démarrage, Manager, mail ou compte réel modifié.
+
+Dans le [terminal Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), coller ce bloc entier **une seule fois**, puis transmettre uniquement son JSON :
+
+```bash
+env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD1130'
+import hashlib, urllib.request
+
+url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/13848dce9ec0d15969bb2cf33675de00dfc2abc7/ops/record-release1130.py'
+with urllib.request.urlopen(url, timeout=30) as response:
+    if response.status != 200 or response.url != url:
+        raise SystemExit('URL_OUTIL_A_VERIFIER : arret.')
+    code = response.read(65537)
+if len(code) > 65536 or hashlib.sha256(code).hexdigest() != '49bb739b62564b559cde7c67b4f1c8140d6c75adbce7aece7ef0bd7dbf686c8a':
+    raise SystemExit('EMPREINTE_OUTIL_INCORRECTE : aucun outil execute.')
+exec(compile(code, '<enregistrement1130>', 'exec'), {'__name__': '__main__'})
+PY_RECORD1130
+```
+
+Le reçu final1130 reste attendu. Un résultat perdu, interrompu ou `metadata_unconfirmed` exige de conserver les traces et lire l’état durable avant toute suite ; ne pas rejouer le writer pour découvrir son résultat et ne pas transmettre de journal privé. Les GET publics ne prouvent pas le commit du processus ; PID/socket/binaire exécuté et appareils physiques restent non qualifiés. L’identité déclarée par l’UI est acquise séparément et ne demande aucun nouveau redémarrage.
 
 Aucun nouveau test de sauvegarde, SMTP/Push réel, modification de compte, essai client ou chantier juridique n’est demandé.

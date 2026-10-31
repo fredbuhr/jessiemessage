@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "scope": "Native CI qualification of the final 1.13.0 metadata operator against isolated synthetic files; no hosted recording execution.",
+  "operator": {
+    "branch": "ops/record-v1.13.0",
+    "sourceCommit": "13848dce9ec0d15969bb2cf33675de00dfc2abc7",
+    "tree": "9c332fedc2358c834d3fe7364b41a05b0421ece1",
+    "workflowPath": ".github/workflows/record-release1130.yml"
+  },
+  "nativeQualification": {
+    "runId": 41229293876,
+    "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/41229293876",
+    "attempt": 1,
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "createdAt": "2026-10-31T18:24:50Z",
+    "completedAt": "2026-10-31T18:25:01Z",
+    "jobsTotal": 1,
+    "jobsSucceeded": 1,
+    "job": {
+      "id": 124619901347,
+      "name": "operator-tests",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41229293876/job/124619901347",
+      "headSha": "13848dce9ec0d15969bb2cf33675de00dfc2abc7",
+      "runAttempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-31T18:24:52Z",
+      "completedAt": "2026-10-31T18:25:01Z"
+    },
+    "nodeVersion": "v24.22.1",
+    "tests": {
+      "methods": 27,
+      "passed": 27,
+      "omitted": 0,
+      "durationSeconds": 0.715,
+      "footer": "Ran 27 tests in 0.715s; OK"
+    },
+    "log": {
+      "file": "writer-final-native.log",
+      "format": "Full decoded UTF-8 job log preserved as returned by the GitHub connector, including BOM and timestamps.",
+      "bytes": 22858,
+      "sha256": "abd1811cb65ae2973b9e7e88b04620ddb2f4e50f0a4a04cf32d3d2520d30f2a4"
+    }
+  },
+  "frozenFiles": {
+    "ops/record-release1130.py": {
+      "sha256": "49bb739b62564b559cde7c67b4f1c8140d6c75adbce7aece7ef0bd7dbf686c8a",
+      "bytes": 30728
+    },
+    "ops/test-record-release1130.py": {
+      "sha256": "fe8d4486fd587e3a3df588774aad9de097849d73d66e2a4742cbf87c5f41e2ac",
+      "bytes": 30276
+    },
+    ".github/workflows/record-release1130.yml": {
+      "sha256": "2c70c0f40922c712491c9244699356138ba6cc45995d4f1cfc552c364aa48ae9",
+      "bytes": 1254
+    }
+  },
+  "localQualification": {
+    "reportedSeparately": true,
+    "tests": 27,
+    "durationSeconds": 0.45,
+    "logFile": "../record1130-final-local.log",
+    "countsNotAddedToNativeTests": true
+  },
+  "targetApplication": {
+    "version": "1.13.0",
+    "source": "b9e2ad78b47dccb72b8e793cdc448e6b70424430",
+    "tree": "dc8933723a54c0307a3fd52719bdd4fd3ac3f96a",
+    "releaseId": 430071184,
+    "tag": "v1.13.0",
+    "reportedStartupSecond": 1793470438
+  },
+  "privateBaseline": {
+    "version": "1.11.2",
+    "sha256": "3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf72aa26cd080b5a0ac2f400f",
+    "release1120FinalMetadataAbsent": true
+  },
+  "hostedRecordingExecuted": false,
+  "applicationCIReplayed": false,
+  "hostedCheckOrStartExecuted": false,
+  "githubMutationPerformedDuringCollection": false,
+  "interpretation": "This success qualifies the new writer; it is not a receipt of executing that writer on the hosted checkpoint. The already reported application startup remains distinct.",
+  "rootIndependentRunJobsAndFullLogReadback": true,
+  "rootExactCommitFilesReadbackVerified": true
+}

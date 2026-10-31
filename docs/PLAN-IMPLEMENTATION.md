@@ -12,7 +12,9 @@ Les corrections de messagerie, listes, lectures backend, cadence Push et textes 
 
 **Activation1130 acquise :** [relevé utilisateur](verification-proofs/jm1130/hosted-identity.json),1.13.0/sourceb9e2ad78/Node24.22.1,31octobre19:13:58Paris, seconde1793470438, signal disponible. Ne rejouer ni préparation, CHECK SSH, réglages Manager ou redémarrage.
 
-**Étape en cours :** développer et qualifier le nouveau writer final1130, branche `ops/record-v1.13.0`, baseb5be1e7c. Critère de fin : contrôles synthétiques de la transition depuis le checkpoint1112 exact, source/démarrage/staging/HTTP/publication épinglés, préservation de tous les anciens blocs et reçus, CI native de l’opérateur exact. Fournir ensuite une seule commande de métadonnées ; aucun SQL, compte ou redémarrage. Aucun ancien writer1120/1113 à rejouer.
+**Writer final1130 qualifié :** [run41229293876](verification-proofs/jm1130/writer-final-native.json),1/1,27/27 natifs sans omission, tentative1, source `13848dce9ec0d15969bb2cf33675de00dfc2abc7`. Il lie la seconde réelle rapportée1793470438, le staging08eb6309 et le baseline1112 exact3f1ae16d ; scripts relus identiques aux octets qualifiés. Aucun test vert à répéter.
+
+**Étape restante immédiate :** exécuter une seule fois la [commande de métadonnées1130](operations-release1130.md#enregistrement-final--à-exécuter-une-fois) puis transmettre son JSON. Critère de fin : reçu final1130, identité exacte et `publicReady:true`, checkpoint et anciens blocs préservés selon le reçu. Aucun SQL, compte ou redémarrage. Si le résultat est perdu ou incertain, lire l’état durable avant toute suite, sans rejouer une commande pour découvrir son résultat.
 
 La1.13.0 est publiée, préparée et démarrée selon les reçus utilisateur ; les métadonnées finales ne sont pas encore enregistrées. Les gains facultatifs non mesurés, migrations d'index sans preuve, juridique, sauvegarde reportée et ancien CLI de données ne deviennent pas des prérequis. Ne pas rouvrir l'audit global ni les suites vertes à chaque étape.
 
