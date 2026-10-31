@@ -6,9 +6,10 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 Code, revue, PR/main5/5, sept captures, publication et nouvel opérateur d’installation sont terminés. [Bilan et couverture](media-library-1140.md), [guide courant](operations-release1140.md). Une seule livraison compatible ; Node24.22.1 et schéma 38 inchangés.
 
-1. **Préparation/CHECK1140** : nouveau bloc immuable du guide, reçu de staging exact puis `CHECK1140_EXIT=0` et marqueur final. Installation privée distincte ; préservation du checkpoint13 et des anciennes dépendances. En cas de résultat absent/refus, lecture seule avant suite, jamais de replay exploratoire.
-2. **Activation14** : seulement après le reçu précédent, consignes Manager précises puis identité réelle source/version/Node/démarrage. Aucun redémarrage13 ni ancien outil.
-3. **Enregistrement final14** : préparer et qualifier un writer lié au vrai démarrage et au staging reçu ; préserver l’état13 et les historiques, vérifier publication et résultat durable. Cette étape n’est pas encore exécutée.
+**Préparation/CHECK1140 acquis** selon le [reçu utilisateur](verification-proofs/jm1140/hosted-preparation.json), empreinte canonique2fe494a4 identique, CHECK0 et marqueur final. Installation distincte qualifiée ; checkpoint13 et anciennes dépendances préservés selon le reçu. Aucun démarrage14 déduit. Ne rejouer ni préparation ni CHECK SSH1140.
+
+1. **Activation14** : consignes Manager précises avec les nouveaux lanceurs, puis identité réelle version/source/Node/démarrage. Aucun ancien outil13 à rejouer.
+2. **Enregistrement final14** : préparer et qualifier un writer lié au vrai démarrage et au staging reçu ; préserver l’état13 et les historiques, vérifier publication et résultat durable. Cette étape n’est pas encore exécutée.
 
 La 1.13.0 reste active et finalisée. Les suites vertes du même code ne sont pas à rejouer. Essais physiques/Safari non attestés ; sauvegarde reportée, PC et juridique restent hors périmètre.
 

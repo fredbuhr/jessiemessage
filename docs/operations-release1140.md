@@ -1,4 +1,4 @@
-# Livraison 1.14.0 — publiée, hébergement en attente
+# Livraison 1.14.0 — préparation/CHECK acquis, activation en attente
 
 État du 31 octobre 2026. [REPRISE](REPRISE.md) reste la référence. La 1.13.0 est toujours active et finalisée selon ses reçus ; aucune étape 1130 à rejouer. `recette.jessiemessage.com` et `jessiemessage.com` partagent le service Node239143 et la même base.
 
@@ -10,54 +10,29 @@ Publication [41235813737](verification-proofs/jm1140/publication-native.json) : 
 
 Node24.22.1 et schéma 38/37tables attendues inchangés. Seule nouvelle dépendance : `libheif-js@1.23.5`. Les dépendances anciennes restent préservées ; le nouveau préparateur installe un `node_modules` séparé avec npm11.19.1 extrait de l’archive officielle Node déjà épinglée. [Qualification opérateur](verification-proofs/jm1140/preparation-native.json), run41235719521, **23/23 tests et une installation réelle isolée**, versions, Sharp et fichiers HEIC vérifiés ; aucune action hébergée. L’échec initial de configuration npm est conservé et corrigé, sans ancien outil rejoué.
 
-## Prochaine action unique : préparation puis CHECK depuis le terminal personnel
+## Préparation et CHECK1140 — acquis, ne pas rejouer
 
-[Terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal). Le bloc suivant vise uniquement cette nouvelle livraison, sans redémarrage, migration ni modification du checkpoint actif13. Il vérifie d’abord les préconditions durables : checkpoint13 `cdcb3f8b35208ddfaff19009235f86d4dd23a10ac13b00c9c692daad2bbe496d`, staging13 `08eb630927a84cc63c0b552fa9f729ab7ee2433f6c3fc8aca1466c007f021ecd`, sources/lanceurs et dépendances actives.
+Le [reçu utilisateur](verification-proofs/jm1140/hosted-preparation.json) confirme les sources exactes et la préparation séparée des dépendances. Empreinte canonique **`2fe494a43a446c882ce509f4ecf51925bd5789a94bdbdf2ce6923d83e5ff7d72`**, recalculée identique ; `CHECK1140_EXIT=0` puis `PREPARATION_1140_CHECK_OK`.
 
-Préparateur immuable **`10083087598a96248698cbe76309e1b3afda163c`**, arbre `220cb24da7a78a14b627032d668f6fd08a1cbe28`, SHA256 **`4b6d1b3d8212b107ccdfb7fa3a285e93b6936298f685b360423fa31a8ac18686`**, 30 093 octets, relu identique. Le bloc exact est aussi conservé en [fichier](verification-proofs/jm1140/preparation-command.sh).
+- Checkout `/srv/customer/jessiemessage-operator/production-1140-4f3ce5de`, mode0700 ; dépendances distinctes, six versions verrouillées et inventaire1082entrées/914fichiers/SHA547c6ec0 identiques à la qualification native. Sharp et les deux fichiers HEIC vérifiés selon le reçu.
+- Lanceur SHA256 `12f9b0c634c89912eb15ca02244c76f14694a84a3e8499051e52e4988c316635`, CHECK SHA256 `ae4999d70f15be6cd1491c30ac5ad99494e5f0d35a3fcc1b3e0daf3748424419`, tous deux mode0700.
+- Checkpoint13/cdcb3f8b, staging13/08eb6309, lanceurs et anciennes dépendances préservés selon le reçu. Ancien inventaire1109entrées/937fichiers conservé, sans confusion avec le nouveau.
+- Les flags faux et journaux vides décrivent l’état avant le CHECK séparé ; ne pas les réécrire pour fabriquer une qualification ni déduire un démarrage14 ou un inventaire SQL physique indépendant.
 
-```sh
-env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_PREPARE1140'
-import hashlib, json, subprocess, urllib.request
+Préparateur immuable `10083087598a96248698cbe76309e1b3afda163c`, SHA256 `4b6d1b3d8212b107ccdfb7fa3a285e93b6936298f685b360423fa31a8ac18686`, déjà qualifié. Le [bloc utilisé est conservé dans l’historique](https://github.com/fredbuhr/jessiemessage/blob/f8b967f209949ae4d8b8787a61aec36cfeaab01b/docs/verification-proofs/jm1140/preparation-command.sh). **Ne rejouer ni préparation ni CHECK SSH1140.** Aucune action hébergée effectuée directement par l’agent.
 
-url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/10083087598a96248698cbe76309e1b3afda163c/ops/prepare-release1140.py'
-with urllib.request.urlopen(url, timeout=30) as response:
-    if response.status != 200 or response.url != url:
-        raise SystemExit('URL_OUTIL_A_VERIFIER : aucun outil execute.')
-    code = response.read(65537)
-if len(code) > 65536 or hashlib.sha256(code).hexdigest() != '4b6d1b3d8212b107ccdfb7fa3a285e93b6936298f685b360423fa31a8ac18686':
-    raise SystemExit('OUTIL1140_A_VERIFIER : aucun outil execute.')
-ns = {'__name__': 'jm1140_preparation'}
-exec(compile(code, '<preparation1140>', 'exec'), ns)
-try:
-    result = ns['stage'](ns['RELEASE_SOURCE'], ns['RELEASE_TREE'])
-except (Exception, KeyboardInterrupt):
-    raise SystemExit('PREPARATION1140_NON_CONFIRMEE : conserver les traces, ne pas relancer.') from None
-print(json.dumps(result, separators=(',', ':')), flush=True)
-try:
-    check = subprocess.run(['/bin/bash', result['checkLauncher']], env=ns['clean_environment'](),
-        stdin=subprocess.DEVNULL, capture_output=True, timeout=180, check=False)
-except (OSError, subprocess.TimeoutExpired, KeyboardInterrupt):
-    raise SystemExit('CHECK1140_NON_CONFIRME : conserver les traces, ne pas relancer.') from None
-print('CHECK1140_EXIT=' + str(check.returncode), flush=True)
-if check.returncode != 0:
-    raise SystemExit('CHECK1140_REFUSE : conserver les traces, ne pas relancer.')
-print('PREPARATION_1140_CHECK_OK')
-PY_PREPARE1140
-```
+## Prochaine action unique : activation personnelle14
 
-Attendre le JSON de staging, `CHECK1140_EXIT=0` puis `PREPARATION_1140_CHECK_OK`. Les flags du staging décrivent l’état avant le CHECK séparé ; ne pas les réécrire comme preuve de réussite. En cas d’absence de résultat, interruption ou refus, conserver le candidat, ses journaux et reçus ; inspecter en lecture seule avant toute suite, sans rejouer le bloc pour découvrir son résultat.
+Le CHECK est confirmé. L’activation personnelle se fait dans le [Manager Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), application Node nommée `recette.jessiemessage.com`, qui dessert aussi le principal. Renseigner les valeurs suivantes :
 
-## Étapes suivantes — non effectuées, dépendantes du reçu précédent
-
-Après réception du CHECK, l’activation personnelle se fera dans le [Manager Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), application Node nommée `recette.jessiemessage.com`, qui dessert aussi le principal. Les valeurs prévues sont :
-
-| Champ | Valeur1140 à utiliser seulement après CHECK confirmé |
+| Champ | Valeur1140 après CHECK confirmé |
 | --- | --- |
 | Commande d’exécution, champ du haut | `bash /srv/customer/jessiemessage-private/start-primary-release1140-4f3ce5de.sh` |
 | Commande de build, champ du bas | `bash /srv/customer/jessiemessage-private/check-primary-release1140-4f3ce5de.sh` |
 | Port | `3000` |
 
-Ne déduire aucun démarrage14 de ces valeurs. Après activation, relever l’identité affichée dans [l’état du service](https://jessiemessage.com/admin/readiness), puis préparer et qualifier l’enregistrement final lié au véritable démarrage et aux reçus. Aucun writer14 n’est fourni à ce stade. Le checkpoint13, ses historiques et les anciens replis doivent rester préservés ; aucune nouvelle qualification de downgrade n’est inventée.
+Enregistrer les paramètres, puis ouvrir le [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) et cliquer sur **Redémarrer** pour appliquer la nouvelle livraison. Cette séparation enregistrement/redémarrage est décrite dans la [FAQ officielle Infomaniak2535](https://www.infomaniak.com/fr/support/faq/2535/modifier-la-configuration-dun-site-nodejs-infomaniak), relue le31octobre2026. Garder le port3000 et le Node privé épinglé ; les autres réglages ne font pas partie de cette activation.
+
+Après activation, relever les quatre valeurs de l’identité dans [l’état du service](https://jessiemessage.com/admin/readiness) : version1.14.0, commit `4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd`, Nodev24.22.1 et date/heure réelle de démarrage. Aucun démarrage14 n’est encore attesté à l’enregistrement de ce guide. Préparer ensuite et qualifier l’enregistrement final lié à ce vrai démarrage et au staging acquis ; aucun writer14 n’est fourni avant cette identité. Le checkpoint13, ses historiques et les anciens replis restent préservés ; aucune qualification de downgrade nouvelle n’est inventée.
 
 Téléphone physique, Safari et photo originale problématique restent non attestés. Les preuves Chrome et SQL utilisent exclusivement des fixtures synthétiques isolées. Aucun envoi réel, compte ou média client modifié, test de sauvegarde reporté, nouvelle opération PC ou chantier juridique.

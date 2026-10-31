@@ -1,0 +1,116 @@
+{
+  "format": "jessiemessage-1140-hosted-preparation-observation",
+  "authority": "user terminal output; no direct hosting access by agent",
+  "stageResult": {
+    "format": "jessiemessage-release1140-staging",
+    "version": 1,
+    "status": "release1140_sources_staged_not_qualified",
+    "release": "1.14.0",
+    "source": "4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd",
+    "tree": "e5a239eaf7b8c3395a843c9e0d600efeb7aa569b",
+    "checkout": "/srv/customer/jessiemessage-operator/production-1140-4f3ce5de",
+    "checkoutMode": "0700",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-release1140-4f3ce5de.sh",
+    "launcherSha256": "12f9b0c634c89912eb15ca02244c76f14694a84a3e8499051e52e4988c316635",
+    "launcherMode": "0700",
+    "checkLauncher": "/srv/customer/jessiemessage-private/check-primary-release1140-4f3ce5de.sh",
+    "checkLauncherSha256": "ae4999d70f15be6cd1491c30ac5ad99494e5f0d35a3fcc1b3e0daf3748424419",
+    "checkLauncherMode": "0700",
+    "log": "/srv/customer/jessiemessage-private/jm1140-node24221.log",
+    "logMode": "0600",
+    "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "precheckLog": "/srv/customer/jessiemessage-private/jm1140-preflight-node24221-4f3ce5de.log",
+    "precheckLogMode": "0600",
+    "precheckLogSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "nodeVersion": "v24.22.1",
+    "nodeBinarySha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb",
+    "profile": "photos-notify-recovery-crm-broadcast-video",
+    "expectedActiveServiceVersion": "1.13.0",
+    "baselineMetadataRelease": "1.13.0",
+    "preservedActiveCheckpointSha256": "cdcb3f8b35208ddfaff19009235f86d4dd23a10ac13b00c9c692daad2bbe496d",
+    "priorActiveStagingSha256": "08eb630927a84cc63c0b552fa9f729ab7ee2433f6c3fc8aca1466c007f021ecd",
+    "priorActivePreserved": true,
+    "existingConfigurationUntouched": true,
+    "baselineMigrationFiles": 33,
+    "schemaMigrationsExpected": 38,
+    "applicationTablesExpected": 37,
+    "experienceEnabled": true,
+    "experienceMigrationFiles": 2,
+    "experienceMigrationsIdentical": true,
+    "normalMigrationsPreserved": true,
+    "videoMigrationsIdentical": true,
+    "sqlStatusChecked": false,
+    "configurationPrepared": false,
+    "hostedQualified": false,
+    "precheckPassed": false,
+    "started": false,
+    "migrated": false,
+    "runtimeStarted": false,
+    "noRestart": true,
+    "managerChanged": false,
+    "checkpointChanged": false,
+    "dependenciesReused": false,
+    "dependencyDirectory": "/srv/customer/jessiemessage-operator/production-1140-4f3ce5de/node_modules",
+    "dependencies": {
+      "strategy": "private-npm-ci-ignore-scripts",
+      "directory": "/srv/customer/jessiemessage-operator/production-1140-4f3ce5de/node_modules",
+      "lockSha256": "623e3be5057fd8d348d9363d30afef93c6e26dc8cd6df3b8150116c5f17c8e5b",
+      "inventory": {
+        "sha256": "547c6ec03aa29027264dbb848e7830df0cb615a1eb92710498bc94d988897c37",
+        "entries": 1082,
+        "files": 914
+      },
+      "directVersions": {
+        "libheif-js": "1.23.5",
+        "mariadb": "3.5.4",
+        "nodemailer": "10.1.4",
+        "otpauth": "9.5.2",
+        "sharp": "0.35.5",
+        "web-push": "3.6.7"
+      },
+      "codecSha256": {
+        "libheif-wasm/libheif-bundle.mjs": "095194187be00d3e36335b8ad7f5552d70655e5e2159486d7d36cd4daa47bba9",
+        "libheif-wasm/LICENSE": "fa81ce652315b013359d6e8e4744335f31a50c7c192907176d3632f78a3b4596"
+      },
+      "sharpSyntheticSmoke": true,
+      "stdoutSha256": "db5d30a8f769bf65e16136e302f924e0dd0c657dfb4d5fa4188f2f40b6bb4bf8",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "scriptsExecuted": false
+    },
+    "installer": {
+      "npmVersion": "11.19.1",
+      "npmCli": "/srv/customer/jessiemessage-private/install-1140-4f3ce5de/npm/bin/npm-cli.js",
+      "archiveSha256": "6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6",
+      "archiveBytes": 32026916
+    },
+    "priorDependencyInventory": {
+      "sha256": "fb8475d083ebad41e9ac866568e33027da8fea1af48510bbf62fb355b45f2ca8",
+      "entries": 1109,
+      "files": 937
+    },
+    "videoConfigurationDirectory": "/srv/customer/jessiemessage-private/runtime-video-180",
+    "operationsDirectory": "/srv/customer/jessiemessage-private/recurring-backup-052",
+    "nextCheckCommand": "bash /srv/customer/jessiemessage-private/check-primary-release1140-4f3ce5de.sh",
+    "receipt": "/srv/customer/jessiemessage-private/jm1140-staging.json",
+    "receiptSha256": "2fe494a43a446c882ce509f4ecf51925bd5789a94bdbdf2ce6923d83e5ff7d72"
+  },
+  "checkResult": {
+    "exitCode": 0,
+    "marker": "PREPARATION_1140_CHECK_OK"
+  },
+  "verification": {
+    "canonicalReceiptSha256": "2fe494a43a446c882ce509f4ecf51925bd5789a94bdbdf2ce6923d83e5ff7d72",
+    "matchesReportedReceipt": true,
+    "newDependencyInventoryMatchesNativeQualification": true,
+    "sourceAndTreeMatchPublishedRelease": true
+  },
+  "interpretation": {
+    "stagingFlagsAndEmptyLogsDescribeBeforeCheck": true,
+    "preparationAndCheckAcquired": true,
+    "activation1140Attested": false,
+    "activeCheckpointStill1130AccordingToReceipt": true,
+    "schemaInventoryIndependentlyRead": false,
+    "operatorReplayedByAgent": false
+  },
+  "next": "Personal Manager activation of the qualified1140 launchers; then read real startup identity."
+}
