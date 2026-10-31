@@ -10,6 +10,7 @@ import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from ".
 import { prepareImageUpload } from "../public/image-preparation.js";
 
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
+const photoUploadSource = await readFile(new URL("../public/photo-upload.js", import.meta.url), "utf8");
 const sessionClockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
 const notificationLinkSource = await readFile(new URL("../public/notification-link.js", import.meta.url), "utf8");
 const modelSource = await readFile(new URL("../public/chat-model.js", import.meta.url), "utf8");
@@ -117,7 +118,7 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   const history = { replaceState(_state, _title, path) { const next = new URL(path, location.origin); location.pathname = next.pathname; location.hash = next.hash; } };
   const context = vm.createContext({ __photoBatch: { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH }, __chatDrafts: { createChatDrafts }, __loadProfile: async () => { if (profileLoader) return profileLoader(); if (!profileFactory) throw new Error("Optional profile disabled in fixture"); return { createProfileUI: profileFactory }; }, __emojis: { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji }, __quickReplies: { quickReplyOptions }, __prepareImageUpload: prepare, document, window: { addEventListener: (name, handler) => windowEvents.set(name, handler) },
     matchMedia: () => ({ matches: coarse }), location, history, sessionStorage: draftStorage, navigator: { serviceWorker: { controller: worker, addEventListener: (name, handler) => workerEvents.set(name, handler) } },
-    Date: class extends Date { static now() { return time; } }, AbortController, TextEncoder, Uint8Array, Blob, crypto: webcrypto, queueMicrotask,
+    Date: class extends Date { static now() { return time; } }, AbortController, DOMException, TextEncoder, Uint8Array, Blob, crypto: webcrypto, queueMicrotask,
     URL: { createObjectURL: () => { const value = `blob:synthetic-${++blobId}`; createdUrls.push(value); return value; }, revokeObjectURL: (url) => revoked.push(url) },
     setTimeout: (handler, delay) => { const value = ++timerId; timers.set(value, { handler, at: time + delay }); return value; }, clearTimeout: (value) => timers.delete(value),
     fetch: async (path, options = {}) => {
@@ -157,7 +158,8 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   vm.runInContext(sessionClockSource, context, { filename: "public/session-clock.js" });
   vm.runInContext(notificationLinkSource, context, { filename: "public/notification-link.js" });
   vm.runInContext(`globalThis.__model = (() => {${modelSource.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}};})();`, context, { filename: "public/chat-model.js" });
-  const executable = source.replace('import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "/photo-batch.js";', 'const {createPhotoBatch,removePhoto,runPhotoBatch,MAX_PHOTO_BATCH} = __photoBatch;').replace('import { createChatDrafts } from "/chat-drafts.js";', 'const {createChatDrafts} = __chatDrafts;').replace('await import("/profile.js")', 'await __loadProfile()').replace('import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,emojiSkinTones,insertEmoji} = __emojis;').replace('import { quickReplyOptions } from "/quick-replies.js";', 'const {quickReplyOptions} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = __prepareImageUpload;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
+  vm.runInContext(photoUploadSource.replace("export async function ", "async function "), context);
+  const executable = source.replace('import { uploadPhotoWithBackoff } from "/photo-upload.js";', "").replace('import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "/photo-batch.js";', 'const {createPhotoBatch,removePhoto,runPhotoBatch,MAX_PHOTO_BATCH} = __photoBatch;').replace('import { createChatDrafts } from "/chat-drafts.js";', 'const {createChatDrafts} = __chatDrafts;').replace('await import("/profile.js")', 'await __loadProfile()').replace('import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,emojiSkinTones,insertEmoji} = __emojis;').replace('import { quickReplyOptions } from "/quick-replies.js";', 'const {quickReplyOptions} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = __prepareImageUpload;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
     "\nglobalThis.__inspect = () => ({ready, bootstrapTask, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration, pendingNotification, fetchProfileBinary, avatarImageUrl, avatarContainers});";
   vm.runInContext(executable, context, { filename: "public/chat.js", importModuleDynamically: async () => { throw new Error("Optional feature disabled in fixture"); } });
   return { element, document, state, calls, redirects, timers, revoked, createdUrls, context, conversation, inspect: () => context.__inspect(),
@@ -1228,12 +1230,12 @@ test("a local image preparation failure releases the untouched send for correcti
   const f = harness({ prepare: async () => { throw Object.assign(new Error("synthetic oversized dimensions"), { code: "media_dimensions" }); },
     intercept: (path) => path === "/api/media/client/capabilities" ? response(200, { enabled: true }) : undefined }); await flush();
   const file = new Blob(["synthetic photo"], { type: "image/jpeg" });
-  f.element("image-file").files = [file]; for (const handler of f.element("image-file").events.get("change")) handler({});
+  f.element("image-file").files = [file]; for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
   await f.send("Keep the caption");
   const state = f.inspect().states.get(f.inspect().selected);
   assert.equal(state.pending, null); assert.equal(state.imageDraft.file, file); assert.equal(state.draft, "Keep the caption");
   assert.equal(f.element("pick-image").disabled, false); assert.equal(f.element("message-body").disabled, false);
-  assert.match(f.element("chat-status").textContent, /Cette photo est trop grande/);
+  assert.match(f.element("chat-status").textContent, /définition de cette photo dépasse/);
   assert.equal(f.calls.filter((call) => call.options.method === "POST" && /\/(messages|assets)$/.test(call.path)).length, 0);
 });
 
@@ -1901,7 +1903,7 @@ test("newline respects the message length cap and can replace selected text at t
 });
 
 
-test("photo picker retains camera originals and extensionless generic or empty MIME files without preparing or uploading", async () => {
+test("photo picker retains camera originals and generic MIME files with bounded local previews and no upload", async () => {
   let preparations = 0;
   const f = harness({ prepare: async file => { preparations++; return file; },
     intercept: path => path === "/api/media/client/capabilities" ? response(200, { enabled: true }) : undefined }); await flush();
@@ -1919,7 +1921,7 @@ test("photo picker retains camera originals and extensionless generic or empty M
   assert.equal(state.imageDraft, null);
   assert.deepEqual([...state.photoBatch.items].map(item => item.file), [original, generic, unnamed]);
   assert.equal(f.element("message-body").value, "Keep my photo caption");
-  assert.equal(preparations, 0);
+  assert.equal(preparations, 3);
   assert.equal(f.calls.filter(call => call.options.method === "POST" && /\/(messages|assets)$/.test(call.path)).length, 0);
 });
 
@@ -1932,32 +1934,31 @@ test("extensionless generic or empty MIME files still fail byte validation befor
     Object.defineProperty(invalid, "name", { value: "image" });
     f.element("image-file").files = [invalid];
     for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
-    assert.equal(preparations, 0);
+    assert.equal(preparations, 1);
     await f.send("Keep my caption");
     const state = f.inspect().states.get(f.inspect().selected);
-    assert.equal(preparations, 1);
+    assert.equal(preparations, 2);
     assert.equal(state.pending, null);
     assert.equal(state.imageDraft.file, invalid);
     assert.equal(f.element("message-body").value, "Keep my caption");
-    assert.match(f.element("chat-status").textContent, /format.*JPEG, PNG ou WebP/);
+    assert.match(f.element("chat-status").textContent, /image ne peut pas être lue/);
     assert.equal(f.calls.filter(call => call.options.method === "POST" && /\/(messages|assets)$/.test(call.path)).length, 0);
   }
 });
 
-test("photo picker gives an actionable HEIC explanation while retaining an existing selection", async () => {
+test("photo picker keeps HEIC and mislabeled originals for local conversion rather than refusing their names", async () => {
   const f = harness({ intercept: path => path === "/api/media/client/capabilities" ? response(200, { enabled: true }) : undefined }); await flush();
   const ordinary = new Blob(["synthetic ordinary photo"], { type: "image/jpeg" });
-  f.element("image-file").files = [ordinary];
-  for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
-  const state = f.inspect().states.get(f.inspect().selected);
   const genericHeic = new Blob(["synthetic HEIC photo"], { type: "application/octet-stream" });
   Object.defineProperty(genericHeic, "name", { value: "camera.HEIC" });
-  for (const file of [new Blob(["synthetic HEIC photo"], { type: "image/heic" }), genericHeic]) {
+  const heic = new Blob(["synthetic HEIC photo"], { type: "image/heic" });
+  for (const file of [ordinary, heic, genericHeic]) {
     f.element("image-file").files = [file];
     for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
-    assert.equal(state.imageDraft.file, ordinary);
-    assert.match(f.element("chat-status").textContent, /HEIC ou HEIF.*JPEG/);
   }
+  const state = f.inspect().states.get(f.inspect().selected);
+  assert.deepEqual([...state.photoBatch.items].map(item => item.file), [ordinary, heic, genericHeic]);
+  assert.doesNotMatch(f.element("chat-status").textContent, /copie JPEG/);
   assert.equal(f.calls.filter(call => call.options.method === "POST" && /\/(messages|assets)$/.test(call.path)).length, 0);
 });
 
@@ -2217,4 +2218,136 @@ test("history gestures leave IME, browser shortcuts, descendant fields and pinch
     for (const h of scroll.events.get("keydown")) h({ key: "Home", target: scroll, preventDefault() { prevented++; } });
     await f.advance(1); assert.equal(prevented, 1); assert.ok(f.calls.some(call => /messages\?before=/.test(call.path)));
   } finally { await f.hide(); }
+});
+
+test("a mobile native photo picker retains the explicit choice through a delayed resume proof", async () => {
+  for (const changeWhileHidden of [false, true]) {
+    const proof = pause(); let holdProof = false, preparations = 0;
+    const prepared = new Blob(["normalized small JPEG"], { type: "image/jpeg" });
+    const f = harness({ prepare: async () => { preparations++; return prepared; }, intercept(path) {
+      if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+      if (holdProof && path === "/api/access/session") return proof.promise;
+    } }); await flush();
+    f.element("image-file").click = () => {}; await f.click("pick-image");
+    const original = new Blob(["phone HEIC original"], { type: "image/heic" });
+    await f.hide(); holdProof = true;
+    if (!changeWhileHidden) await f.show();
+    f.element("image-file").files = [original];
+    for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+    const state = f.inspect().states.get(f.inspect().selected);
+    assert.equal(state.imageDraft, null); assert.equal(preparations, 0);
+    assert.equal(f.element("image-file").value, "");
+    if (changeWhileHidden) await f.show();
+    await f.send("Caption waits for selected photo"); assert.equal(posts(f).length, 0);
+    holdProof = false; proof.resolve(response(200, structuredClone(f.state.currentSession))); await flush();
+    assert.equal(state.imageDraft.file, original); assert.equal(state.imageDraft.prepared, prepared);
+    assert.equal(preparations, 1); assert.ok(f.element("image-preview").querySelector("img"));
+    assert.equal(f.calls.filter(call => call.options.method === "POST").length, 0);
+  }
+});
+
+test("a native picker choice is discarded when resume proves another CSRF owner even for the same user", async () => {
+  const proof = pause(); let holdProof = false, preparations = 0;
+  const f = harness({ prepare: async file => { preparations++; return file; }, intercept(path) {
+    if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+    if (holdProof && path === "/api/access/session") return proof.promise;
+  } }); await flush();
+  f.element("image-file").click = () => {}; await f.click("pick-image"); await f.hide(); holdProof = true; await f.show();
+  f.element("image-file").files = [new Blob(["selected by the prior owner"], { type: "image/heic" })];
+  for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+  f.state.currentSession = session(1, "B".repeat(43)); holdProof = false;
+  proof.resolve(response(200, structuredClone(f.state.currentSession))); await flush();
+  assert.equal(f.inspect().sessionOwner.csrf, "B".repeat(43));
+  assert.equal(f.inspect().states.get(f.inspect().selected).imageDraft, null);
+  assert.equal(preparations, 0); assert.equal(f.calls.filter(call => call.options.method === "POST").length, 0);
+});
+
+test("a fifty-photo selection prepares only four visible previews and releases them when scrolling", async () => {
+  let preparations = 0;
+  const f = harness({ prepare: async () => { preparations++; return new Blob(["small prepared preview"], { type: "image/jpeg" }); },
+    intercept: path => path === "/api/media/client/capabilities" ? response(200, { enabled: true }) : undefined }); await flush();
+  f.element("image-file").files = Array.from({ length: 51 }, (_, index) => new Blob([`original ${index}`], { type: "image/heic" }));
+  for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+  const batch = f.inspect().states.get(f.inspect().selected).photoBatch;
+  assert.equal(batch.items.length, 50); assert.equal(preparations, 4); assert.equal(batch.items.filter(item => item.prepared).length, 4);
+  const list = f.element("photo-batch-list"); list.syntheticRect = { left: 0, right: 400 };
+  for (const [index, card] of [...list.children].entries()) card.syntheticRect = { left: (index - 10) * 100, right: (index - 9) * 100 };
+  for (const handler of list.events.get("scroll")) handler({}); await flush();
+  assert.equal(preparations, 8); assert.equal(batch.items.filter(item => item.prepared).length, 4);
+  assert.deepEqual(batch.items.flatMap((item, index) => item.prepared ? [index] : []), [10, 11, 12, 13]);
+  assert.equal(f.revoked.length, 4); assert.equal(f.calls.filter(call => call.options.method === "POST").length, 0);
+});
+
+test("an explicit upload429 uses bounded Retry-After while an uncertain message is never automatically repeated", async () => {
+  let uploads = 0, sends = 0; const keys = [];
+  const f = harness({ intercept(path, options) {
+    if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+    if (path === "/api/media/client/assets" && options.method === "POST") {
+      uploads++;
+      return uploads < 3 ? { ...response(429, { error: "try_again_later" }), headers: { get: name => name === "Retry-After" ? "1" : null } }
+        : response(201, { asset: { id: id(909), thumbnailUrl: "/api/media/client/assets/" + id(909) + "/thumb" } });
+    }
+    if (path.startsWith("/api/media/client/conversations/") && path.endsWith("/messages") && options.method === "POST") {
+      sends++; keys.push(JSON.parse(options.body).clientMessageId); throw new Error("message response lost");
+    }
+  } }); await flush();
+  f.element("image-file").files = [new Blob(["original"], { type: "image/jpeg" })];
+  for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+  await f.send("Caption"); assert.equal(uploads, 1); assert.equal(sends, 0);
+  await f.advance(1000); assert.equal(uploads, 2); assert.equal(sends, 0);
+  await f.advance(1000); assert.equal(uploads, 3); assert.equal(sends, 1);
+  const pending = f.inspect().states.get(f.inspect().selected).pending;
+  assert.equal(pending.mediaId, id(909)); assert.equal(pending.status, "retry");
+  await f.advance(60000); assert.equal(uploads, 3); assert.equal(sends, 1);
+  await f.click("retry-send"); assert.equal(uploads, 3); assert.equal(sends, 2); assert.equal(keys[0], keys[1]);
+});
+
+test("abandoning a stalled cloud photo read releases the preview queue for a newly proved owner", async () => {
+  const read = pause(), input = new Uint8Array([11, 22, 33]);
+  class CloudPhoto extends Blob { arrayBuffer() { return read.promise; } }
+  const cloud = new CloudPhoto(["cloud placeholder"], { type: "image/jpeg" });
+  const prepared = new Blob(["new owner normalized JPEG"], { type: "image/jpeg" });
+  const f = harness({ prepare: (file, options) => file === cloud ? prepareImageUpload(file, options) : Promise.resolve(prepared),
+    intercept: path => path === "/api/media/client/capabilities" ? response(200, { enabled: true }) : undefined }); await flush();
+  f.element("image-file").files = [cloud]; for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+  await f.hide(); f.state.currentSession = session(2, "B".repeat(43)); await f.show();
+  const next = new Blob(["new owner original"], { type: "image/png" });
+  f.element("image-file").files = [next]; for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
+  const state = f.inspect().states.get(f.inspect().selected);
+  assert.equal(state.imageDraft.file, next); assert.equal(state.imageDraft.prepared, prepared);
+  read.resolve(input.buffer); await flush();
+  assert.deepEqual([...input], [0, 0, 0]); assert.equal(state.imageDraft.file, next);
+  assert.equal(f.calls.filter(call => call.options.method === "POST").length, 0);
+});
+
+test("a failed uploaded-selection thumbnail retries only on a later render and rejects a late hidden request", async () => {
+  const late = pause(); let attempts = 0, mode = "fail";
+  const path = "/api/media/client/assets/" + id(1201) + "/thumb";
+  const f = harness({ intercept(requestPath) {
+    if (requestPath === "/api/media/client/capabilities") return response(200, { enabled: true });
+    if (requestPath === path) {
+      attempts++;
+      if (mode === "fail") throw new Error("synthetic thumbnail network error");
+      if (mode === "late") return late.promise;
+      return photoResponse();
+    }
+  } }); await flush();
+  const state = f.inspect().states.get(f.inspect().selected);
+  state.photoBatch = createPhotoBatch([new Blob(["already acknowledged"])] , () => id(1200));
+  const item = state.photoBatch.items[0]; item.file = null; item.mediaId = id(1201); item.asset = { id: id(1201), thumbnailUrl: path };
+  vm.runInContext("renderMeta(currentState())", f.context); await flush();
+  let image = f.element("photo-batch-list").querySelector("img");
+  assert.equal(attempts, 1); assert.equal(image.dataset.assetId, undefined);
+  await flush(); assert.equal(attempts, 1, "failure never schedules another attempt by itself");
+  mode = "success"; vm.runInContext("renderMeta(currentState())", f.context); await flush();
+  assert.equal(attempts, 2); assert.match(image.src, /^blob:/);
+  // Clear the cached body, then leave one old request outstanding across hide.
+  vm.runInContext("imageUrls.clear(); delete document.getElementById('photo-batch-list').querySelector('img').dataset.assetId", f.context);
+  mode = "late"; vm.runInContext("renderMeta(currentState())", f.context); await flush(); assert.equal(attempts, 3);
+  await f.hide(); assert.equal(image.dataset.assetId, undefined); assert.equal(image.src, "");
+  mode = "success"; await f.show();
+  image = f.element("photo-batch-list").querySelector("img");
+  const resumedSource = image.src; assert.match(resumedSource, /^blob:/); assert.equal(attempts, 4);
+  late.reject(new Error("old hidden request failed")); await flush();
+  assert.equal(image.dataset.assetId, item.asset.id); assert.equal(image.src, resumedSource);
 });

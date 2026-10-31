@@ -8,6 +8,17 @@ const fail = code => { throw Object.assign(new Error("Photo decoding failed."), 
 const validSize = (width, height) => Number.isInteger(width) && Number.isInteger(height)
   && width > 0 && height > 0 && width <= MAX_SIDE && height <= MAX_SIDE && width * height <= MAX_HEIC_IMAGE_PIXELS;
 
+// The pinned 1.23.5 package mixes Embind handles and raw C exports. This one
+// raw setter needs the opaque numeric pointer, never the Embind object. Set
+// only the codec's pixel-area limit; preserve every other native security cap.
+export function limitHeicDecoder(context, lib, maximumWidth = 8000) {
+  const pointer = context?.$$?.ptr;
+  if (lib.heif_get_version?.() !== "1.23.5" || typeof lib._heif_context_set_maximum_image_size_limit !== "function"
+    || !Number.isSafeInteger(pointer) || pointer < 1 || pointer > 0xffffffff
+    || !Number.isSafeInteger(maximumWidth) || maximumWidth < 1 || maximumWidth > 8000) fail("media_heic");
+  lib._heif_context_set_maximum_image_size_limit(pointer, maximumWidth);
+}
+
 // The pinned libheif API returns its RGBA plane. Sample it directly into the
 // small output; never copy the full plane into another RGBA buffer or canvas.
 export function shrinkHeicPlane(channel) {
@@ -42,6 +53,7 @@ export async function decodeHeicPixels(bytes, lib) {
   let context, handle, decoded;
   try {
     context = lib.heif_context_alloc(); if (!context) fail("media_heic");
+    limitHeicDecoder(context, lib);
     const parsed = lib.heif_context_read_from_memory(context, bytes);
     if (!parsed || parsed.code !== lib.heif_error_code.heif_error_Ok) fail("media_heic");
     if (lib.heif_context_get_number_of_items(context) > 1024) fail("media_heic");

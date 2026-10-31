@@ -8,7 +8,7 @@ Nouvelle demande utilisateur : accès illimité par défaut aux nouvelles invita
 
 Les corrections sont développées en un seul lot compatible1.14.0. Les essais ciblés et scénarios natifs nouveaux sont en cours ; aucune qualification complète, publication ou activation1140 déduite. Une dépendance de conversion HEIC navigateur1.23.5 est ajoutée paresseusement et localement ; Node24.22.1 et schéma38 restent inchangés. Les protections d’accès, propriété, sessions et stockage restent conservées. Aucun compte/message/média réel modifié, aucun envoi réel, redémarrage ou ancien outil rejoué. La livraison1130 reste close.
 
-Prochaine étape de développement : terminer conversion et envois photos, intégrer/revoir les quatre parcours, qualifier le candidat stabilisé sur PR puis main avec les preuves et bornes réelles. Ne lancer aucune opération hébergée avant ce résultat concret.
+Candidat fonctionnel intégré et relu ; défauts de revue corrigés et tests ciblés verts, avec groupes recoupants non additionnés. Dernier checkpoint durable préalable : `52645bdff8af387bae668ab37946f6d67568c0f7`, arbre `af5eec9c5d8daf5a585d2d111fa38f1884703760` ; corrections finales et bornes consignées dans le bilan. Prochaine étape : qualifier le candidat stabilisé sur PR puis main avec les preuves et bornes réelles. Ne lancer aucune opération hébergée avant ce résultat concret.
 
 ## Évolution 1.13.0 — déployée et finalisée
 

@@ -1,5 +1,6 @@
 import { makeConversationState, belongsTo, orderedMessages, mergeMessages, mergeConversation, mergeEvents, sequence, compareSequence, maxSequence, validBody, validCaption, prepareSend, prepareImageSend, completeImageUpload, prepareVideoSend, completeVideoUpload, rejectPendingVideoSend, mediaStillCurrent, createObjectUrlCache, retrySend, rejectPendingSend, rejectPendingImageSend, nearBottom, shouldScroll, readableSequence, inboxRefreshPlan, boundMessageWindow, currentHistoryPage } from "/chat-model.js";
 import { prepareImageUpload } from "/image-preparation.js";
+import { uploadPhotoWithBackoff } from "/photo-upload.js";
 import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "/photo-batch.js";
 import { quickReplyOptions } from "/quick-replies.js";
 import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";
@@ -46,6 +47,7 @@ let olderBusy = false; let sendBusy = false; let logoutBusy = false; let logging
 const eventRequests = new Set();
 const imageUrls = createObjectUrlCache(); const imageRequests = new Map();
 let mediaEnabled = false; let mediaVersion = 0; let previewUrl = null; let previewIdentity = null;
+let photoPickerContext = null, pendingPhotoSelection = null, photoSelectionTask = null, photoPreviewJob = null;
 let videoEnabled = false, videoCreationEnabled = false, videoVersion = 0, videoPreviewUrl = null, videoPreviewIdentity = null, videoTransfer = null;
 let videoGallery = null, videoGalleryBusy = false, videoGalleryVersion = 0, videoGalleryReturnFocus = null;
 const videoPlayers = new Map();
@@ -251,10 +253,12 @@ function closeMedia(restoreFocus = true) {
 function clearImages() {
   photoObserver?.disconnect(); waitingPhotos.clear();
   for (const value of states.values()) revokeBatchPreviews(value.photoBatch);
+  for (const image of el("photo-batch-list").querySelectorAll("img")) { image.removeAttribute("src"); delete image.dataset.assetId; }
   videoVersion += 1; clearVideoPlayers(); revokeVideoPreview(); closeVideoGallery(false);
   mediaVersion += 1;
   for (const record of imageRequests.values()) record.controller.abort(); imageRequests.clear();
   imageUrls.clear(); revokePreview(); closeLightbox(false); closeMedia(false);
+  photoPreviewJob?.controller.abort();
   for (const [container, record] of avatarContainers) {
     if (container.isConnected) ui.rawText(container, record.initials);
   }
@@ -263,6 +267,7 @@ function clearImages() {
   for (const image of el("messages").querySelectorAll("img")) image.removeAttribute("src");
 }
 function clearChat() {
+  photoPickerContext = pendingPhotoSelection = null;
   clearTimeout(historyFillTimer); historyFillTimer = null; historyAutoRemaining = 3; historyAutoBlocked = false; historyAutoArmed = false;
   historyObserver?.disconnect();
   conversationLoading(false);
@@ -381,6 +386,7 @@ function mountNotificationSettings() {
   });
 }
 function clearPrivate({ purgeDrafts = false } = {}) {
+  photoPickerContext = pendingPhotoSelection = photoSelectionTask = null;
   if (purgeDrafts) drafts.clear(role);
   else {
     for (const state of states.values()) if (state.conversation) drafts.write(state, { selected: state.id === selected });
@@ -456,6 +462,7 @@ async function resumeConnection({ reset = false } = {}) {
       if (!fresh(ticket, true) || !visible() || loggingOut) return;
       const state = currentState(); if (state) renderMessages(state);
       el("workspace").hidden = false; startVisiblePhotos(); profileUI?.resume(); conversationDownload?.update(); void mountConversationDownload(conversationDownloadCapability); void mountProfile(); void mountFollowup(); void mountAnnouncements(); notice("", false, "session-status"); retryConnection(false); mountNotificationSettings();
+      void applyPhotoSelection();
       reconnectAttempt = 0; stopReconnect(); retryDelay = 3000; schedulePolling(0);
       await openNotification();
     } catch (error) {
@@ -505,7 +512,11 @@ async function request(path, { body, rawBody, contentType, mutation = false, sta
         || data.user.id !== owner.id || data.user.role !== owner.role) throw new Error("invalid_password_response");
     } else if (verifyOwner && owner && path !== `${sessionBase}/session`) await confirmOwner(ticket, owner, account);
     if (!fresh(ticket, account)) throw staleResponse();
-    if (!response.ok) throw Object.assign(new Error("request_failed"), { status: response.status, code: data.error });
+    if (!response.ok) {
+      const retry = response.headers?.get?.("Retry-After");
+      throw Object.assign(new Error("request_failed"), { status: response.status, code: data.error,
+        retryAfter: typeof retry === "string" && /^[1-9][0-9]{0,3}$/.test(retry) ? Number(retry) : undefined });
+    }
     return data;
   } catch (error) {
     if (!fresh(ticket, account)) throw Object.assign(new Error("stale_response"), { stale: true });
@@ -804,10 +815,13 @@ function renderImageDraft(state) {
   ui.text(el("image-draft-status"), pending?.stage === "uploading" ? "Préparation de la photo…" : draft?.asset?.sharedHere ? "Déjà envoyée ici · nouvel envoi" : "Une photo à envoyer");
   if (!visible()) return;
   const identity = draft?.file ?? draft?.asset?.id ?? pending?.mediaId;
-  if (identity && identity === previewIdentity) return;
+  if (identity && identity === previewIdentity && (!draft?.prepared || previewUrl)) { queueMicrotask(() => startSelectedPhotoPreview(state)); return; }
   revokePreview(); previewIdentity = identity;
   if (draft?.file) {
-    previewUrl = URL.createObjectURL(draft.file); const image = document.createElement("img"); image.alt = ""; ui.attr(image, "aria-label", "Aperçu de la photo choisie"); image.src = previewUrl; el("image-preview").append(image);
+    if (draft.prepared) {
+      previewUrl = URL.createObjectURL(draft.prepared); const image = document.createElement("img"); image.alt = ""; image.decoding = "async"; ui.attr(image, "aria-label", "Aperçu de la photo choisie"); image.src = previewUrl; el("image-preview").append(image);
+    } else ui.text(el("image-preview"), draft.previewError ? mediaErrorText(draft.previewError) : "Préparation de l’aperçu…");
+    queueMicrotask(() => startSelectedPhotoPreview(state));
   } else if (draft?.asset) {
     const id = draft.asset.id; loadPhoto(el("image-preview"), draft.asset, state, { current: () => belongsTo(currentState(), state.id, state.epoch) && state.imageDraft?.asset?.id === id });
   } else ui.text(el("image-preview"), "Photo prête");
@@ -1112,36 +1126,118 @@ async function refreshCrmCapability() {
   }
 }
 function revokeBatchPreviews(batch) {
-  for (const item of batch?.items ?? []) { if (item.previewUrl) URL.revokeObjectURL(item.previewUrl); item.previewUrl = null; }
+  for (const item of batch?.items ?? []) { if (item.previewUrl) URL.revokeObjectURL(item.previewUrl); item.previewUrl = null; if (!batch.busy) item.prepared = null; }
 }
 function discardPhotoBatch(state) { revokeBatchPreviews(state.photoBatch); state.photoBatch = null; }
+function photoSelectionContext() {
+  const state = currentState();
+  return state && sessionOwner ? { state, owner: sessionOwner, generation, selectionEpoch, visibilityGeneration } : null;
+}
+function photoSelectionCurrent(context) {
+  return context && !loggingOut && context.generation === generation && context.selectionEpoch === selectionEpoch
+    && currentState() === context.state && sameOwner(context.owner, sessionOwner);
+}
 function chooseFile() {
-  const state = currentState(), files = [...el("image-file").files ?? []]; el("image-file").value = "";
+  const files = [...el("image-file").files ?? []], context = photoPickerContext ?? photoSelectionContext();
+  el("image-file").value = ""; photoPickerContext = null;
+  if (!files.length || !photoSelectionCurrent(context)) return;
+  if (visible() && context.visibilityGeneration === visibilityGeneration && !resumeTask && !el("workspace").hidden) {
+    adoptPhotoSelection(context.state, files); return;
+  }
+  // A phone's native picker may hide this document. Keep the explicit choice
+  // tied to its original account and conversation until the resume proof ends.
+  pendingPhotoSelection = { files, context }; renderMeta(context.state); void applyPhotoSelection();
+}
+async function applyPhotoSelection() {
+  const selection = pendingPhotoSelection;
+  if (!selection || photoSelectionTask === selection) return;
+  if (!photoSelectionCurrent(selection.context)) { pendingPhotoSelection = null; return; }
+  if (!visible()) return;
+  photoSelectionTask = selection;
+  try {
+    if (resumeTask) await resumeTask.promise;
+    if (pendingPhotoSelection !== selection || !photoSelectionCurrent(selection.context) || !visible()) return;
+    const ticket = snapshot(selection.context.state);
+    await confirmOwner(ticket, selection.context.owner);
+    if (pendingPhotoSelection !== selection || !photoSelectionCurrent(selection.context) || !visible()) return;
+    pendingPhotoSelection = null; adoptPhotoSelection(selection.context.state, selection.files);
+  } catch (error) {
+    if (pendingPhotoSelection !== selection || !photoSelectionCurrent(selection.context) || error.stale) return;
+    if (error.status === 401 || error.status === 403) signOut();
+    else { notice("La connexion est momentanément indisponible. Tes brouillons restent dans cet onglet.", true, "session-status"); retryConnection(); }
+  } finally {
+    if (photoSelectionTask === selection) photoSelectionTask = null;
+    if (photoSelectionCurrent(selection.context) && visible()) renderMeta(selection.context.state);
+  }
+}
+function adoptPhotoSelection(state, files) {
   if (!state || !files.length || state.pending || sendBusy || state.photoBatch?.started || !state.conversation?.canSend) return;
-  // This is the original on-device photo, not the prepared network body.
-  // The preparer independently bounds source pixels/bytes and targets 2 MiB.
-  const isHeic = file => ["image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence"].includes(file.type)
-    || /\.(?:heic|heif)$/i.test(file.name ?? "");
-  const accepted = files.filter(file => (["image/jpeg", "image/jpg", "image/pjpeg", "image/png", "image/webp"].includes(file.type)
-    || ["", "application/octet-stream"].includes(file.type))
-    && !isHeic(file) && file.size > 0 && file.size <= 50 * 1024 * 1024);
+  // MIME labels and filenames from camera/cloud pickers are unreliable. The
+  // preparer inspects actual bytes before decoding and bounds each allocation.
+  const accepted = files.filter(file => file instanceof Blob && file.size > 0 && !file.type.startsWith("video/"));
   const videoRefused = role === "client" && files.some(file => file.type.startsWith("video/"));
-  const heicRefused = files.some(isHeic);
   if (el("message-body").value.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant d’ajouter une photo.", true); return; }
-  if (!accepted.length) { notice(videoRefused ? "L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos." : heicRefused ? "Pour une photo HEIC ou HEIF, choisis une copie JPEG depuis ton téléphone." : "Choisis une photo JPEG, PNG ou WebP de 50 Mo maximum. Elle sera allégée avant l’envoi.", true); return; }
-  const previous = state.imageDraft?.file ? [state.imageDraft.file] : [];
+  if (!accepted.length) { notice(videoRefused ? "L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos." : "Choisis une photo. Elle sera préparée sur cet appareil avant l’envoi.", true); return; }
+  const previousDraft = state.imageDraft, previous = previousDraft?.file ? [previousDraft.file] : [];
   const available = MAX_PHOTO_BATCH - (state.photoBatch?.items.length ?? previous.length);
   const chosen = accepted.slice(0, available);
-  if (!chosen.length) { notice("Choisis au maximum 10 photos par envoi.", true); return; }
+  if (!chosen.length) { notice("Choisis au maximum 50 photos par envoi.", true); return; }
   state.videoDraft = null; revokeVideoPreview();
   if (!state.photoBatch && !state.imageDraft && chosen.length === 1) state.imageDraft = { file: chosen[0], asset: null };
   else {
     state.photoBatch = createPhotoBatch([...previous, ...chosen], newClientId, state.photoBatch);
+    if (previous.length && previousDraft.prepared) state.photoBatch.items[0].prepared = previousDraft.prepared;
     state.imageDraft = null; revokePreview();
   }
   renderMeta(state);
-  notice(videoRefused ? "L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos." : chosen.length !== accepted.length ? "Choisis au maximum 10 photos par envoi." : heicRefused ? "Pour une photo HEIC ou HEIF, choisis une copie JPEG depuis ton téléphone." : accepted.length !== files.length ? "Certaines photos ont été refusées. Les autres restent dans ta sélection." : "Photos choisies. Vérifie les aperçus avant d’envoyer.", videoRefused || accepted.length !== files.length || chosen.length !== accepted.length);
+  notice(videoRefused ? "L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos." : chosen.length !== accepted.length ? "Choisis au maximum 50 photos par envoi." : accepted.length !== files.length ? "Certaines photos ont été refusées. Les autres restent dans ta sélection." : "Photos choisies. Vérifie les aperçus avant d’envoyer.", videoRefused || accepted.length !== files.length || chosen.length !== accepted.length);
   focusComposer();
+}
+function visiblePhotoItems(state) {
+  const items = state.photoBatch?.items ?? [], list = el("photo-batch-list"), bounds = list.getBoundingClientRect();
+  return items.filter((item, index) => {
+    const card = [...list.children].find(node => node.dataset.photoId === item.clientMessageId), rect = card?.getBoundingClientRect();
+    return rect && Number.isFinite(rect.left) && Number.isFinite(rect.right) && Number.isFinite(bounds.left) && Number.isFinite(bounds.right)
+      ? rect.right > bounds.left && rect.left < bounds.right : index < 4;
+  }).slice(0, 4);
+}
+function startSelectedPhotoPreview(state) {
+  if (!visible() || currentState() !== state || sendBusy || photoPreviewJob) return;
+  const candidates = state.imageDraft?.file ? [state.imageDraft] : visiblePhotoItems(state);
+  // Retain at most four small prepared previews while browsing a selection.
+  // Offscreen originals are never handed directly to an <img> decoder.
+  for (const item of state.photoBatch?.items ?? []) {
+    if (candidates.includes(item) || state.photoBatch.busy) continue;
+    if (item.previewUrl) URL.revokeObjectURL(item.previewUrl); item.previewUrl = null; item.prepared = null;
+  }
+  for (const item of candidates) {
+    if (!item.asset) continue;
+    const image = [...el("photo-batch-list").children].find(node => node.dataset.photoId === item.clientMessageId)?.querySelector("img");
+    if (!image || image.dataset.assetId === item.asset.id) continue;
+    const ticket = snapshot(state); image.dataset.assetId = item.asset.id;
+    void imageUrl(item.asset.thumbnailUrl, state).then(url => {
+      if (fresh(ticket) && visible() && image.isConnected && state.photoBatch?.items.includes(item) && image.dataset.assetId === item.asset.id) image.src = url;
+    }).catch(() => {
+      // A later explicit render/scroll can retry a refused thumbnail. This
+      // failure alone never schedules another request or alters the send key.
+      if (fresh(ticket) && image.isConnected && state.photoBatch?.items.includes(item) && image.dataset.assetId === item.asset.id) delete image.dataset.assetId;
+    });
+  }
+  const holder = candidates.find(item => item.file && !item.prepared && !item.previewError);
+  if (!holder) return;
+  const ticket = snapshot(state), controller = new AbortController(), job = { holder, controller, promise: null }; photoPreviewJob = job; controllers.add(controller);
+  job.promise = (async () => {
+    try {
+      const prepared = await prepareImageUpload(holder.file, { signal: controller.signal });
+      if (!fresh(ticket) || !visible() || controller.signal.aborted || state.imageDraft !== holder && !state.photoBatch?.items.includes(holder)) return;
+      holder.prepared = prepared;
+    } catch (error) {
+      if (fresh(ticket) && !controller.signal.aborted && (state.imageDraft === holder || state.photoBatch?.items.includes(holder))) holder.previewError = error;
+    } finally {
+      controllers.delete(controller); if (photoPreviewJob === job) photoPreviewJob = null;
+      if (fresh(ticket) && visible()) { renderMeta(state); queueMicrotask(() => startSelectedPhotoPreview(state)); }
+    }
+  })();
 }
 function renderPhotoBatch(state) {
   const batch = state.photoBatch, host = el("photo-batch"); host.hidden = !batch?.items.length;
@@ -1154,7 +1250,7 @@ function renderPhotoBatch(state) {
     let card = previous.get(item.clientMessageId);
     if (!card) {
       card = document.createElement("div"); card.className = "photo-batch-item"; card.dataset.photoId = item.clientMessageId;
-      const image = document.createElement("img"); image.alt = ""; ui.attr(image, "aria-label", "Aperçu de la photo choisie");
+      const image = document.createElement("img"); image.alt = ""; image.loading = "lazy"; image.decoding = "async"; ui.attr(image, "aria-label", "Aperçu de la photo choisie");
       card.append(image, document.createElement("span"));
       const remove = document.createElement("button"); remove.type = "button"; remove.className = "text-button"; ui.text(remove, "Retirer la photo");
       remove.addEventListener("click", () => {
@@ -1167,14 +1263,24 @@ function renderPhotoBatch(state) {
         renderMeta(state); focusVisible(el("pick-image"));
       }); card.append(remove);
     }
-    if (!item.previewUrl && item.file && visible()) item.previewUrl = URL.createObjectURL(item.prepared ?? item.file);
+    if (item.mediaId && item.previewUrl) { URL.revokeObjectURL(item.previewUrl); item.previewUrl = null; }
+    if (!item.previewUrl && item.prepared && visible()) item.previewUrl = URL.createObjectURL(item.prepared);
     const image = card.querySelector("img"); if (item.previewUrl && image.getAttribute("src") !== item.previewUrl) image.src = item.previewUrl;
+    if (!item.previewUrl && !item.asset) image.removeAttribute("src");
     const label = item.status === "sent" ? "Photo envoyée" : item.status === "preparing" ? "Préparation de la photo…" : item.status === "uploading" ? "Transfert de la photo…" : item.status === "sending" ? "Envoi de la photo…" : ["failed", "uncertain"].includes(item.status) ? "À réessayer" : "Photo prête";
-    ui.text(card.querySelector("span"), item.status === "failed" && item.error ? mediaErrorText(item.error) : label);
+    ui.text(card.querySelector("span"), item.status === "failed" && item.error ? mediaErrorText(item.error) : item.status === "ready" && item.previewError ? mediaErrorText(item.previewError) : label);
     card.querySelector("button").disabled = sendBusy || batch.started && !(item.status === "failed" && (!item.mediaId || [400,404,413,415,422].includes(item.error?.status)));
     list.append(card); previous.delete(item.clientMessageId);
   }
   for (const card of previous.values()) { ui.forget(card); card.remove(); }
+  queueMicrotask(() => startSelectedPhotoPreview(state));
+}
+async function uploadPhoto(file, state, ticket) {
+  const controller = new AbortController(); controllers.add(controller);
+  try {
+    return await uploadPhotoWithBackoff(() => request(`${mediaBase}/assets`, { state, mutation: true, rawBody: file, contentType: file.type, signal: controller.signal }),
+      { signal: controller.signal, current: () => fresh(ticket) && visible() });
+  } finally { controllers.delete(controller); }
 }
 function captureReply(state, holder = {}) {
   if (!state || role !== "admin" || Object.hasOwn(holder, "replyThrough")) return holder;
@@ -1198,10 +1304,14 @@ async function sendPhotoSelection() {
     const complete = await runPhotoBatch(batch, {
       current: () => fresh(ticket) && visible() && state.photoBatch === batch,
       prepare: async file => {
+        const holder = batch.items.find(item => item.file === file);
+        if (photoPreviewJob?.holder === holder) await photoPreviewJob.promise;
+        if (!fresh(ticket) || !visible()) throw staleResponse();
+        if (holder?.prepared) return holder.prepared;
         const controller = new AbortController(); controllers.add(controller);
         try { return await prepareImageUpload(file, { signal: controller.signal }); } finally { controllers.delete(controller); }
       },
-      upload: async file => (await request(`${mediaBase}/assets`, { state, mutation: true, rawBody: file, contentType: file.type })).asset,
+      upload: async file => (await uploadPhoto(file, state, ticket)).asset,
       send: messages => request(`${mediaBase}/conversations/${state.id}/messages/batch`, { state, mutation: true, body: { messages } }),
       changed: () => { if (fresh(ticket)) renderMeta(state); }
     });
@@ -1216,16 +1326,16 @@ async function sendPhotoSelection() {
 }
 
 function mediaErrorText(error) {
-  if (error.code === "media_heic") return "Pour une photo HEIC ou HEIF, choisis une copie JPEG depuis ton téléphone.";
-  if (error.code === "image_source_too_large") return "Cette photo dépasse 50 Mo. Choisis une version plus légère.";
-  if (error.code === "media_format") return "Ce format n’est pas pris en charge. Choisis une photo JPEG, PNG ou WebP.";
-  if (error.code === "media_dimensions") return "Cette photo est trop grande. Choisis une version plus petite.";
+  if (error.code === "media_heic") return "Cet appareil n’a pas pu convertir cette photo HEIC ou HEIF. Essaie de la réexporter depuis ton application Photos.";
+  if (error.code === "image_source_too_large") return "Cette photo dépasse la capacité de préparation de cet appareil. Essaie de la réexporter depuis ton application Photos.";
+  if (error.code === "media_format") return "Cette image ne peut pas être lue. Essaie de la réexporter depuis ton application Photos.";
+  if (error.code === "media_dimensions") return "La définition de cette photo dépasse la capacité de préparation de cet appareil. Essaie de la réexporter depuis ton application Photos.";
   if (error.code === "request_too_large") return "Cette photo est trop volumineuse pour le transfert. Essaie une autre version.";
   if (error.code === "media_unavailable") return "La photo n’a pas pu être préparée. Essaie une autre photo.";
   if (error.status === 507 && error.code === "storage_limit") return "Le stockage des photos a atteint sa limite.";
   if (error.status === 409 && error.code === "media_in_use") return "Cette photo est utilisée dans une conversation ou comme avatar. Retire ces utilisations avant de la supprimer.";
   if (error.status === 404) return "Cette photo n’est plus disponible.";
-  if (error.status === 415 || error.status === 400 || error.status === 413) return "Photo refusée. Utilise une image JPEG, PNG ou WebP, avec une légende de 1 000 caractères maximum.";
+  if (error.status === 415 || error.status === 400 || error.status === 413) return "La photo n’a pas pu être transférée. Réessaie avec une légende de 1 000 caractères maximum.";
   if (error.status === 429) return "Patiente un moment avant de réessayer cet envoi.";
   return "La photo n’a pas pu être chargée. Réessaie dans un moment.";
 }
@@ -1619,7 +1729,7 @@ function renderMeta(state) {
   const sendLabel = state.photoBatch?.started ? "Réessayer les photos restantes" : "Envoyer";
   ui.text(el("send"), sendLabel); ui.attr(el("send"), "aria-label", sendLabel); ui.attr(el("send"), "title", sendLabel);
   el("send").classList.toggle("is-photo-retry", Boolean(state.photoBatch?.started));
-  el("send").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy || !(hasImage || hasVideo ? validCaption(el("message-body").value) : validBody(el("message-body").value))
+  el("send").disabled = !conversation.canSend || Boolean(state.pending) || sendBusy || Boolean(pendingPhotoSelection) || !(hasImage || hasVideo ? validCaption(el("message-body").value) : validBody(el("message-body").value))
     || hasVideo && (!videoCreationEnabled || state.videoDraft?.invalid || !state.videoDraft?.ready && !state.pending?.videoId);
   el("photo-tools").hidden = !mediaEnabled && !videoCreationEnabled && role !== "admin"; el("open-gallery").hidden = !mediaEnabled;
   el("open-video-gallery").hidden = !videoEnabled;
@@ -2007,6 +2117,7 @@ async function poll() {
 }
 function newClientId() { return [...crypto.getRandomValues(new Uint8Array(16))].map((byte) => byte.toString(16).padStart(2, "0")).join(""); }
 async function sendMessage(retry = false) {
+  if (pendingPhotoSelection) return;
   if (currentState()?.photoBatch?.items.length) { await sendPhotoSelection(); return; }
   const state = currentState(); if (!state || sendBusy || !state.conversation?.canSend || (retry && !state.pending) || (!retry && state.pending)) return;
   const reply = {}; captureReply(state, reply);
@@ -2048,12 +2159,16 @@ async function sendImage(retry = false, reply = null) {
     if (!pending.mediaId) {
       const preparation = new AbortController(); controllers.add(preparation); let prepared;
       preparing = true;
-      try { prepared = await prepareImageUpload(pending.file, { signal: preparation.signal }); }
+      try {
+        if (photoPreviewJob?.holder === draft) await photoPreviewJob.promise;
+        if (!fresh(ticket) || !visible()) throw staleResponse();
+        prepared = draft?.prepared ?? await prepareImageUpload(pending.file, { signal: preparation.signal });
+      }
       finally { controllers.delete(preparation); }
       preparing = false;
       if (!fresh(ticket) || !visible() || state.pending !== pending) return;
       pending.file = prepared;
-      const result = await request(`${mediaBase}/assets`, { state, mutation: true, rawBody: prepared, contentType: prepared.type });
+      const result = await uploadPhoto(prepared, state, ticket);
       if (!completeImageUpload(state, pending.clientMessageId, result.asset.id)) return;
       state.imageDraft = { file: null, asset: result.asset }; renderMeta(state);
     }
@@ -2473,8 +2588,9 @@ el("insert-line-break").addEventListener("click", () => {
 });
 el("message-body").addEventListener("input", () => { const state = currentState(); if (state) { state.draft = el("message-body").value; renderMeta(state); } });
 el("retry-send").addEventListener("click", () => { void sendWithFocus(true, el("retry-send")); });
-el("pick-image").addEventListener("click", () => { if (!el("pick-image").disabled) { closeComposerTools(); el("image-file").click(); focusVisible(el("open-composer-tools")); } });
+el("pick-image").addEventListener("click", () => { if (!el("pick-image").disabled) { photoPickerContext = photoSelectionContext(); closeComposerTools(); el("image-file").click(); focusVisible(el("open-composer-tools")); } });
 el("image-file").addEventListener("change", chooseFile);
+el("photo-batch-list").addEventListener("scroll", () => { const state = currentState(); if (state) startSelectedPhotoPreview(state); });
 el("pick-video").addEventListener("click", () => { if (role === "admin" && videoCreationEnabled && !el("pick-video").disabled) { closeComposerTools(); el("video-file").click(); focusVisible(el("open-composer-tools")); } });
 el("video-file").addEventListener("change", chooseVideo);
 el("cancel-video").addEventListener("click", () => {

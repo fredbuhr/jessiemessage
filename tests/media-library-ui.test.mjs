@@ -39,11 +39,11 @@ function parse(html) {
 }
 function response(status, body, { binary = false } = {}) { return { ok: status >= 200 && status < 300, status, headers: { get: name => name === "content-type" ? binary ? "image/jpeg" : "application/json" : name === "content-length" && binary ? "3" : null }, json: async () => body, blob: async () => new Blob([new Uint8Array([255, 216, 255])], { type: "image/jpeg" }) }; }
 function harness({ respond, prepare = async file => file } = {}) {
-  const parsed = parse(files["media-library-page.html"]), documentEvents = new Map(), calls = [], created = [], revoked = [], timers = new Map(); let timer = 0, owner = 1;
+  const parsed = parse(files["media-library-page.html"]), documentEvents = new Map(), windowEvents = new Map(), calls = [], created = [], revoked = [], timers = new Map(); let timer = 0, owner = 1;
   const session = () => ({ user: { id: id(owner), role: "admin", pseudonym: "Synthetic Jessie" }, csrf: (owner === 1 ? "a" : "b").repeat(43), expiresAt: Date.now() + 3600000 });
   const rows = Array.from({ length: 45 }, (_, i) => photo(i + 1));
   const document = { visibilityState: "hidden", documentElement: parsed.root.querySelectorAll("html")[0], body: parsed.root.querySelectorAll("body")[0], getElementById: name => parsed.ids.get(name), createElement: tag => new Element(tag), querySelectorAll: selector => parsed.root.querySelectorAll(selector), addEventListener: (name, callback) => documentEvents.set(name, callback) };
-  const context = vm.createContext({ document, window: { addEventListener() {} }, navigator: { language: "fr-FR" }, sessionStorage: { getItem() { return null; }, setItem() {} }, location: { replace(value) { context.redirect = value; } }, Blob, AbortController, URL: { createObjectURL(blob) { const value = "blob:synthetic-" + created.length; created.push({ value, blob }); return value; }, revokeObjectURL(value) { revoked.push(value); } }, console,
+  const context = vm.createContext({ document, window: { addEventListener(name, callback) { if (!windowEvents.has(name)) windowEvents.set(name, []); windowEvents.get(name).push(callback); } }, navigator: { language: "fr-FR" }, sessionStorage: { getItem() { return null; }, setItem() {} }, location: { replace(value) { context.redirect = value; } }, Blob, AbortController, URL: { createObjectURL(blob) { const value = "blob:synthetic-" + created.length; created.push({ value, blob }); return value; }, revokeObjectURL(value) { revoked.push(value); } }, console,
     __model: model, __prepare: prepare, JessieSessionClock: { scheduleSessionCheck() { return () => {}; } },
     setTimeout(callback, delay) { timers.set(++timer, { callback, delay }); return timer; }, clearTimeout(value) { timers.delete(value); },
     fetch: async (path, options = {}) => {
@@ -63,6 +63,8 @@ function harness({ respond, prepare = async file => file } = {}) {
     async start() { document.visibilityState = "visible"; await context.tools.bootstrap(); await flush(); },
     async hide() { document.visibilityState = "hidden"; documentEvents.get("visibilitychange")(); await flush(); },
     async show() { document.visibilityState = "visible"; documentEvents.get("visibilitychange")(); await flush(); },
+    async pageHide() { for (const callback of windowEvents.get("pagehide") ?? []) callback({ persisted: true }); await flush(); },
+    async pageShow() { for (const callback of windowEvents.get("pageshow") ?? []) callback({ persisted: true }); await flush(); },
     async language(value) { vm.runInContext(`JessieI18n.setLanguage(${JSON.stringify(value)})`, context); await flush(); } };
 }
 test("media library starts only after a valid admin session and clears on refusal", async () => {
@@ -134,4 +136,63 @@ test("every static media-library marker has a registered bilingual interface tra
   for (const element of parsed.querySelectorAll("[data-jm-i18n],[data-jm-i18n-title],[data-jm-i18n-aria-label]")) {
     for (const name of ["data-jm-i18n", "data-jm-i18n-title", "data-jm-i18n-aria-label"]) { const source = element.getAttribute(name); if (source !== null) assert.ok(dictionary.has(source), "Missing library translation " + source); }
   }
+});
+
+test("native picker return waits for deferred bootstrap proofs, then uploads the original owner's file exactly once", async () => {
+  let holding = false, release = null, prepared = 0;
+  const h = harness({ prepare: async file => { prepared++; return file; }, respond: (path, options, f) => {
+    if (path === "/api/auth/session" && holding) return new Promise(resolve => { release = () => resolve(response(200, f.session())); });
+    if (path === "/api/media/admin/assets" && options.method === "POST") return response(201, { asset: photo(99), duplicate: false });
+    return null;
+  } });
+  await h.start(); await h.ids.get("photo-file").trigger("click"); await h.hide(); holding = true; await h.show(); assert.ok(release);
+  h.ids.get("photo-file").files = [new Blob(["picker photo"], { type: "image/jpeg" })]; await h.ids.get("photo-file").trigger("change");
+  assert.equal(prepared, 0); assert.equal(h.calls.filter(call => call.options.method === "POST").length, 0);
+  holding = false; release(); await flush(); await flush();
+  assert.equal(prepared, 1); assert.equal(h.calls.filter(call => call.options.method === "POST").length, 1); assert.equal(h.context.tools.state.selected.id, id(99));
+});
+test("native picker intent never adopts another owner's session, even when change arrives after its bootstrap completed", async () => {
+  let prepared = 0;
+  const h = harness({ prepare: async file => { prepared++; return file; } });
+  await h.start(); await h.ids.get("photo-file").trigger("click"); await h.hide(); h.setOwner(2); await h.show();
+  assert.equal(h.context.tools.state.session.user.id, id(2));
+  h.ids.get("photo-file").files = [new Blob(["old owner selection"], { type: "image/jpeg" })]; await h.ids.get("photo-file").trigger("change");
+  assert.equal(prepared, 0); assert.equal(h.calls.filter(call => call.options.method === "POST").length, 0); assert.match(h.ids.get("library-status").textContent, /Choisis de nouveau la photo/);
+});
+test("owner change while picker bootstrap proof is deferred drops the queued file before preparation or POST", async () => {
+  let holding = false, release = null, prepared = 0;
+  const h = harness({ prepare: async file => { prepared++; return file; }, respond: (path, _options, f) => {
+    if (path === "/api/auth/session" && holding) return new Promise(resolve => { release = () => resolve(response(200, f.session())); }); return null;
+  } });
+  await h.start(); await h.ids.get("photo-file").trigger("click"); await h.hide(); holding = true; await h.show();
+  h.ids.get("photo-file").files = [new Blob(["queued owner photo"], { type: "image/jpeg" })]; await h.ids.get("photo-file").trigger("change");
+  h.setOwner(2); holding = false; release(); await flush(); await flush();
+  assert.equal(prepared, 0); assert.equal(h.calls.filter(call => call.options.method === "POST").length, 0); assert.equal(h.context.tools.state.session.user.id, id(2));
+});
+test("BFCache pageshow restores a cleared library through a fresh session bootstrap", async () => {
+  const h = harness(); await h.start(); await h.context.tools.selectAsset(h.context.tools.state.rows[0]);
+  await h.pageHide(); assert.equal(h.ids.get("library-content").hidden, true); assert.equal(h.ids.get("media-grid").children.length, 0);
+  const priorProofs = h.calls.filter(call => call.path === "/api/auth/session").length;
+  await h.pageShow(); assert.equal(h.ids.get("library-content").hidden, false); assert.equal(h.ids.get("media-grid").children.length, 20); assert.equal(h.context.tools.state.selected, null);
+  assert.ok(h.calls.filter(call => call.path === "/api/auth/session").length > priorProofs); assert.equal(h.calls.some(call => call.options.method === "POST"), false);
+});
+test("DELETE acknowledgement retires its local row even when the following list refresh fails", async () => {
+  let refreshFailed = false;
+  const h = harness({ respond: (path, options, f) => {
+    if (path.endsWith("/delete") && options.method === "POST") { f.rows.splice(0, 1); refreshFailed = true; return response(200, { deleted: true }); }
+    if (refreshFailed && path.startsWith("/api/media/admin/assets?")) return response(503, { error: "media_unavailable" }); return null;
+  } });
+  await h.start(); await h.context.tools.selectAsset(h.context.tools.state.rows[0]); await h.ids.get("delete-media").trigger("click"); await h.ids.get("confirm-delete").trigger("click");
+  assert.equal(h.context.tools.state.selected, null); assert.equal(h.context.tools.state.rows.some(row => row.id === id(1)), false); assert.equal(h.ids.get("media-grid").children.length, 19);
+  assert.match(h.ids.get("library-status").textContent, /connexion est momentanément indisponible/); assert.notEqual(h.ids.get("library-status").textContent, "Média supprimé.");
+  assert.equal(h.calls.filter(call => call.options.method === "POST").length, 1);
+});
+test("an already attempted photo upload interrupted by hiding is never placed back in the picker queue", async () => {
+  let release = null;
+  const h = harness({ respond: (path, options) => {
+    if (path === "/api/media/admin/assets" && options.method === "POST") return new Promise(resolve => { release = () => resolve(response(201, { asset: photo(99), duplicate: false })); }); return null;
+  } });
+  await h.start(); await h.ids.get("photo-file").trigger("click"); h.ids.get("photo-file").files = [new Blob(["attempted upload"], { type: "image/jpeg" })]; await h.ids.get("photo-file").trigger("change"); assert.ok(release);
+  await h.hide(); await h.show(); release(); await flush();
+  assert.equal(h.calls.filter(call => call.options.method === "POST").length, 1); assert.equal(h.context.tools.state.selected, null); assert.equal(h.ids.get("library-content").hidden, false);
 });

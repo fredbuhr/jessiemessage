@@ -9,6 +9,7 @@ import { createChatDrafts } from "../public/chat-drafts.js";
 import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "../public/photo-batch.js";
 
 const source = await readFile(new URL("../public/chat.js", import.meta.url), "utf8");
+const photoUploadSource = await readFile(new URL("../public/photo-upload.js", import.meta.url), "utf8");
 const sessionClockSource = await readFile(new URL("../public/session-clock.js", import.meta.url), "utf8");
 const modelSource = await readFile(new URL("../public/chat-model.js", import.meta.url), "utf8");
 const modelExports = [...modelSource.matchAll(/export function ([a-zA-Z0-9_]+)\(/g)].map((match) => match[1]);
@@ -163,7 +164,8 @@ function harness({ currentSession = session(), visible = true, intercept = null,
   vm.runInContext(catalogueSource, context, { filename: "public/i18n-chat.js" });
   vm.runInContext(sessionClockSource, context, { filename: "public/session-clock.js" });
   vm.runInContext(`globalThis.__model = (() => {${modelSource.replaceAll("export function ", "function ")}\nreturn {${modelExports.join(",")}};})();`, context, { filename: "public/chat-model.js" });
-  const executable = source.replace('import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "/photo-batch.js";', 'const {createPhotoBatch,removePhoto,runPhotoBatch,MAX_PHOTO_BATCH} = __photoBatch;').replace('import { createChatDrafts } from "/chat-drafts.js";', 'const {createChatDrafts} = __chatDrafts;').replace('import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,emojiSkinTones,insertEmoji} = __emojis;').replace('import { quickReplyOptions } from "/quick-replies.js";', 'const {quickReplyOptions} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = async (file) => file;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
+  vm.runInContext(photoUploadSource.replace("export async function ", "async function "), context);
+  const executable = source.replace('import { uploadPhotoWithBackoff } from "/photo-upload.js";', "").replace('import { createPhotoBatch, removePhoto, runPhotoBatch, MAX_PHOTO_BATCH } from "/photo-batch.js";', 'const {createPhotoBatch,removePhoto,runPhotoBatch,MAX_PHOTO_BATCH} = __photoBatch;').replace('import { createChatDrafts } from "/chat-drafts.js";', 'const {createChatDrafts} = __chatDrafts;').replace('import { emojiCategories, emojiOptions, emojiSkinTones, insertEmoji } from "/emoji-catalog.js";', 'const {emojiCategories,emojiOptions,emojiSkinTones,insertEmoji} = __emojis;').replace('import { quickReplyOptions } from "/quick-replies.js";', 'const {quickReplyOptions} = __quickReplies;').replace('import { prepareImageUpload } from "/image-preparation.js";', 'const prepareImageUpload = async (file) => file;').replace(/^import \{([^\n]+)\} from "\/chat-model\.js";/, "const {$1} = __model;") +
     "\nglobalThis.__inspect = () => ({ready, sessionOwner, selected, states, inbox, sendBusy, cycleRunning, generation, visibilityGeneration});";
   vm.runInContext(executable, context, { filename: "public/chat.js", importModuleDynamically: async () => { throw new Error("Optional feature disabled in fixture"); } });
   return { element, document, state, calls, redirects, timers, revoked, createdUrls, context, conversation, inspect: () => context.__inspect(),
@@ -318,7 +320,7 @@ test("image draft captions and uploading state remain unchanged while UI labels 
     return undefined;
   } }); await flush();
   const file = new Blob(["synthetic upload"], { type: "image/png" });
-  f.element("image-file").files = [file]; for (const handler of f.element("image-file").events.get("change")) handler({});
+  f.element("image-file").files = [file]; for (const handler of f.element("image-file").events.get("change")) handler({}); await flush();
   const preview = f.element("image-preview").querySelector("img"); assert.ok(preview);
   f.element("message-body").value = "Envoyer";
   for (const handler of f.element("composer").events.get("submit")) handler({ preventDefault() {} }); await flush();
@@ -433,9 +435,9 @@ test("all controller message and photo error variants retain reactive translated
     ["mediaErrorText", { status: 507, code: "storage_limit" }, "Le stockage des photos a atteint sa limite."],
     ["mediaErrorText", { status: 409, code: "media_in_use" }, "Cette photo est utilisée dans une conversation ou comme avatar. Retire ces utilisations avant de la supprimer."],
     ["mediaErrorText", { status: 404 }, "Cette photo n’est plus disponible."],
-    ["mediaErrorText", { status: 415 }, "Photo refusée. Utilise une image JPEG, PNG ou WebP, avec une légende de 1 000 caractères maximum."],
-    ["mediaErrorText", { code: "image_source_too_large" }, "Cette photo dépasse 50 Mo. Choisis une version plus légère."],
-    ["mediaErrorText", { code: "media_heic" }, "Pour une photo HEIC ou HEIF, choisis une copie JPEG depuis ton téléphone."],
+    ["mediaErrorText", { status: 415 }, "La photo n’a pas pu être transférée. Réessaie avec une légende de 1 000 caractères maximum."],
+    ["mediaErrorText", { code: "image_source_too_large" }, "Cette photo dépasse la capacité de préparation de cet appareil. Essaie de la réexporter depuis ton application Photos."],
+    ["mediaErrorText", { code: "media_heic" }, "Cet appareil n’a pas pu convertir cette photo HEIC ou HEIF. Essaie de la réexporter depuis ton application Photos."],
     ["mediaErrorText", { status: 429 }, "Patiente un moment avant de réessayer cet envoi."],
     ["mediaErrorText", {}, "La photo n’a pas pu être chargée. Réessaie dans un moment."],
   ];
