@@ -1,0 +1,19 @@
+{
+  "reportedBy": "user application startup UI",
+  "reportedDate": "2026-10-31",
+  "version": "1.13.0",
+  "commit": "b9e2ad78b47dccb72b8e793cdc448e6b70424430",
+  "nodeVersion": "v24.22.1",
+  "startedAtDisplayed": "31/10/2026 19:13:58",
+  "timezone": "Europe/Paris",
+  "utcOffset": "+01:00",
+  "startedAtUtcSecond": 1793470438,
+  "precision": "second",
+  "expectedTreeFromQualifiedSource": "dc8933723a54c0307a3fd52719bdd4fd3ac3f96a",
+  "serviceSignalAvailableReported": true,
+  "activationReported": true,
+  "metadataRecorded": false,
+  "directManagerInspectionByAgent": false,
+  "directProcessInspectionByAgent": false,
+  "scope": "Version, commit, Node, startup second and available service signal reported by user. Milliseconds, current independent HTTP and final private checkpoint1130 are not inferred."
+}

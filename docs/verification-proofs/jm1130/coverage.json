@@ -60,7 +60,7 @@
   "realAccountsMessagesMediaOrDeletionUsed": false,
   "cloudBrowserUsed": false,
   "privateAuditPublished": false,
-  "hostedDeploymentPerformed": false,
+  "hostedDeploymentPerformed": true,
   "preservedLimits": [
     "Phone and Safari behavior not attested",
     "Actual SMTP and Push delivery not re-tested",
@@ -68,5 +68,8 @@
     "Manual hosted backup test remains postponed",
     "A10/A11/A12 scope and historical limits preserved",
     "Read-only hosted inspection reported by user: exact checkpoint1112 unchanged, no release1120 section; new1130 staging must preserve it without replaying old writers"
-  ]
+  ],
+  "hostedDeploymentAuthority": "user startup UI; see hosted-identity.json, no direct process inspection",
+  "hostedDeploymentPerformedByAgent": false,
+  "final1130MetadataRecorded": false
 }

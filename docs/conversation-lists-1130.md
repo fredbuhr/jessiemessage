@@ -1,6 +1,6 @@
 # Conversations et listes — évolution 1.13.0
 
-**Implémentation, revues, qualification PR/main, publication et préparation/CHECK hébergés terminés ; activation1.13.0 non rapportée.** L'application active rapportée reste1.12.0 ; [REPRISE](REPRISE.md) donne son identité et les limites de reçu. Le développement demandé le31octobre part de5d51a4c, sur `feat/conversation-lists-1130`.
+**Implémentation, revues, qualification PR/main et publication terminées ; préparation/CHECK et activation1.13.0 rapportés.** L’application active rapportée est1.13.0 ; [REPRISE](REPRISE.md) donne son identité et les limites de reçu. Le développement demandé le31octobre part de5d51a4c, sur `feat/conversation-lists-1130`.
 
 ## Résultat demandé
 
@@ -75,7 +75,7 @@ Les52omissions ne sont pas des réussites. Les cinq suites ne s'additionnent pas
 
 **Douze captures finales effectivement inspectées** : invitations et aperçus FR/EN à320/1280, historique récentFR320, CRMFR320/EN390, tâchesFR390. [Inventaire et empreintes](verification-proofs/jm1130/visual-native.json). Les captures du run main ne sont pas revendiquées comme relues : la revue visuelle porte sur la PR corrective dont l'arbre complet est identique. Téléphone physique, Safari et lecteur d'écran ne sont pas qualifiés par ces captures synthétiques.
 
-[v1.13.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.13.0) est publiée surb9e2ad78, release/latest430071184 ; [publication41223112832](verification-proofs/jm1130/publication-native.json)2/2, tentative1, neuf tests natifs de l'opérateur. Aucun tag ancien déplacé ; aucune installation hébergée. La1.12.0 reste la dernière version active rapportée. [Guide opérateur1130](operations-release1130.md).
+[v1.13.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.13.0) est publiée surb9e2ad78, release/latest430071184 ; [publication41223112832](verification-proofs/jm1130/publication-native.json)2/2, tentative1, neuf tests natifs de l'opérateur. Aucun tag ancien déplacé ; le workflow de publication n’effectue aucune installation hébergée. La1.13.0 est depuis démarrée selon le [relevé utilisateur](verification-proofs/jm1130/hosted-identity.json) ; son enregistrement final reste à préparer. [Guide opérateur1130](operations-release1130.md).
 
 ## Bilan de couverture et simplicité
 

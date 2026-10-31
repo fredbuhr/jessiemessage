@@ -1,4 +1,4 @@
-# Livraison 1.13.0 — préparation et CHECK acquis, activation attendue
+# Livraison 1.13.0 — démarrage acquis, métadonnées finales à préparer
 
 État du31octobre2026. [REPRISE](REPRISE.md) reste la référence courante ; ce guide distingue la publication de l'installation sur le service Node239143. `recette.jessiemessage.com` et `jessiemessage.com` partagent ce service et sa base.
 
@@ -9,7 +9,7 @@
 - [Publication41223112832](verification-proofs/jm1130/publication-native.json), tentative1,2/2 ; neuf tests natifs de l'opérateur sans omission. Opérateur `01c448fb65432366acb8b07a5df2743053a5611e`, arbre `728079800a5d44ed8c729f647daca75ced4a0c5a`. Scripts et workflow relus aux octets qualifiés. [Tag/release/latestv1.13.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.13.0), release430071184, concordants.
 - Nodev24.22.1,38migrations/37tables attendues, dépendances inchangées. Aucun inventaire physique de production nouveau déduit de la CI.
 
-**Préparation et CHECK1130 acquis selon le reçu utilisateur ; activation1130 non rapportée.** La dernière identité active rapportée reste1.12.0/source9bfdae07, arbre4aef91b8, démarrée le31octobre02:29:16Europe/Paris. Sa préparation/CHECK et son démarrage sont acquis et ne sont pas à répéter.
+**Préparation, CHECK et activation1130 acquis selon les reçus utilisateur.** L’[identité active rapportée](verification-proofs/jm1130/hosted-identity.json) est1.13.0/sourceb9e2ad78/Node24.22.1, démarrée le31octobre19:13:58Europe/Paris, signal disponible déclaré. Aucune étape acquise à répéter.
 
 ## Inspection en lecture seule — acquise
 
@@ -30,20 +30,22 @@ La [préparation/CHECK hébergés](verification-proofs/jm1130/hosted-preparation
 
 **Ne rejouer ni préparation ni CHECK SSH1130.** Le bloc fourni est conservé dans l’[historique Git](https://github.com/fredbuhr/jessiemessage/blob/2ab91097a800d956eb2a1da56dc22801eaf3befd/docs/operations-release1130.md). Aucun démarrage1130, relevé direct du Manager ou du processus, inventaire SQL physique nouveau ou essai sur téléphone n’est déduit de ce résultat.
 
-## Activation personnelle — à effectuer une fois
+## Activation personnelle — acquise, ne pas rejouer
 
-1. Ouvrir [Run/Build du service Node239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), nommé **recette.jessiemessage.com**, qui dessert aussi **jessiemessage.com** et la même base.
-2. Renseigner les valeurs suivantes :
+Le [relevé utilisateur](verification-proofs/jm1130/hosted-identity.json) confirme1.13.0, commit `b9e2ad78b47dccb72b8e793cdc448e6b70424430`, Nodev24.22.1, démarrage **31/10/2026 19:13:58 Europe/Paris**, secondeUTC1793470438, signal disponible. Aucun nouveau redémarrage demandé. Les valeurs suivantes documentent l’activation déjà effectuée, pas une nouvelle instruction Manager :
 
-| Champ | Valeur1130 |
+| Champ | Valeur1130 acquise selon le relevé |
 | --- | --- |
 | Commande d’exécution — champ du haut | `bash /srv/customer/jessiemessage-private/start-primary-release1130-b9e2ad78.sh` |
 | Commande de build — champ du bas | `bash /srv/customer/jessiemessage-private/check-primary-release1130-b9e2ad78.sh` |
 | Port | `3000` |
 
-3. Enregistrer. Si cela relance déjà l’application, attendre sans cliquer à nouveau sur Redémarrer. Sinon cliquer **Redémarrer** une seule fois dans le [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard).
-4. Ouvrir [État du service](https://jessiemessage.com/admin/readiness) et transmettre **Version de l’application**, **Commit au démarrage**, **Version Node.js** et **Relevé au démarrage**. Attendus :1.13.0, `b9e2ad78b47dccb72b8e793cdc448e6b70424430`, `v24.22.1` et nouvelle date de démarrage.
+Service Node239143, nommé `recette.jessiemessage.com`, desservant aussi le principal avec la même base. L’agent n’a inspecté ni les champs Manager ni le processus. L’UI ne fournit pas les millisecondes ni une vérification indépendante du HTTP public.
 
-L’enregistrement peut appeler le CHECK via la commande de build ; ce n’est pas une nouvelle commande SSH à exécuter manuellement. Ne répéter aucune activation si son résultat est incertain : examiner l’identité durable avant toute suite. Le writer final1130 sera défini et qualifié après le relevé réel, sans rejouer un ancien writer1120/1113.
+## Enregistrement final — opérateur en développement
+
+Développer et qualifier un nouveau writer1130 lié au démarrage rapporté, au staging SHA08eb6309 et au checkpoint1112 exact3f1ae16d. Branche `ops/record-v1.13.0`, base documentaire `b5be1e7cf5e748c7be30775d32df3bc69d92a35d`. Il doit relire les identités/sources/lanceurs/Node/migrations/dépendances/configuration épinglées, le préflight réussi, le journal de démarrage à la seconde exacte et les GET publics/tag/release/latest, puis enregistrer atomiquement les seules métadonnées1130.
+
+Aucune section1120 ou1113 absente ne sera inventée ; préserver le baseline complet, les anciens blocs et reçus, le repli185 et ses limites SQL38/snapshot publicformat2. Aucun ancien writer, préparation, CHECK SSH ou redémarrage à rejouer. Aucune commande de métadonnées1130 n’a encore été fournie ou exécutée.
 
 Aucun nouveau test de sauvegarde, SMTP/Push réel, modification de compte, essai client ou chantier juridique n’est demandé.

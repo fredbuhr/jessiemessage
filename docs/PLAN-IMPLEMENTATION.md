@@ -10,9 +10,11 @@ Les corrections de messagerie, listes, lectures backend, cadence Push et textes 
 
 **Préparation/CHECK1130 acquis :** [reçu utilisateur](verification-proofs/jm1130/hosted-preparation.json), SHA canonique08eb6309 identique, source/arbre exacts, CHECK0 et marqueur final. Checkpoint1112 et staging1120 préservés. Les flags faux et journaux vides du reçu décrivent l’étape avant le CHECK séparé ; ne pas les réécrire ni rejouer le bloc.
 
-**Étape restante immédiate :** [activation personnelle1130](operations-release1130.md#activation-personnelle--à-effectuer-une-fois), une seule fois, puis relevé version/commit/Node/nouvelle date. Critère de fin : identité1.13.0/sourceb9e2ad78/Node24.22.1 rapportée après activation. Définir le writer final seulement à partir de cette identité réelle ; aucun ancien writer1120/1113 à rejouer.
+**Activation1130 acquise :** [relevé utilisateur](verification-proofs/jm1130/hosted-identity.json),1.13.0/sourceb9e2ad78/Node24.22.1,31octobre19:13:58Paris, seconde1793470438, signal disponible. Ne rejouer ni préparation, CHECK SSH, réglages Manager ou redémarrage.
 
-La1.13.0 est publiée, préparée et son CHECK est rapporté réussi ; son activation n’est pas encore rapportée. Les gains facultatifs non mesurés, migrations d'index sans preuve, juridique, sauvegarde reportée et ancien CLI de données ne deviennent pas des prérequis. Ne pas rouvrir l'audit global ni les suites vertes à chaque étape.
+**Étape en cours :** développer et qualifier le nouveau writer final1130, branche `ops/record-v1.13.0`, baseb5be1e7c. Critère de fin : contrôles synthétiques de la transition depuis le checkpoint1112 exact, source/démarrage/staging/HTTP/publication épinglés, préservation de tous les anciens blocs et reçus, CI native de l’opérateur exact. Fournir ensuite une seule commande de métadonnées ; aucun SQL, compte ou redémarrage. Aucun ancien writer1120/1113 à rejouer.
+
+La1.13.0 est publiée, préparée et démarrée selon les reçus utilisateur ; les métadonnées finales ne sont pas encore enregistrées. Les gains facultatifs non mesurés, migrations d'index sans preuve, juridique, sauvegarde reportée et ancien CLI de données ne deviennent pas des prérequis. Ne pas rouvrir l'audit global ni les suites vertes à chaque étape.
 
 ## Évolution1.12.0 — démarrage rapporté, checkpoint1112 relu
 
