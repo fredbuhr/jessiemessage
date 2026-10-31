@@ -583,3 +583,23 @@ test("access routes enforce methods and HEAD never includes JSON or file content
   assert.equal(calls.length, 0);
   for (const path of ["/access", "/access.js", "/access.css", "/api/access/login", "/api/access/session"]) assert.equal(await (await fetch(`${base}${path}`, { method: "HEAD" })).text(), "");
 });
+
+
+test("administrator invitation filters are global service options and cursor bindings cannot cross states", async t => {
+  for (const state of ["pending", "used", "expired", "revoked"]) {
+    const row = { ...invitation(), state, consumedById: state === "used" ? clientId : null };
+    const { base, calls } = await fixture(t, { listInvitations: () => page("invitations", [row]) });
+    const result = await fetch(`${base}/api/admin/invitations?limit=25&state=${state}`, { headers: { Cookie: adminCookie } });
+    assert.equal(result.status, 200); assert.equal((await result.json()).invitations[0].state, state);
+    assert.deepEqual(calls.find(call => call[0] === "listInvitations")[2], { cursor: null, limit: 25, state });
+  }
+  const position = { createdAt: "2026-10-14 12:00:00.000000", id: invitationId };
+  const { base, calls } = await fixture(t);
+  for (const query of ["state=unknown", "state=pending&state=used", `state=used&cursor=${encodeAccessCursor("invitations", position, "pending")}`, `state=pending&cursor=${encodeAccessCursor("invitations", position)}`]) {
+    const result = await fetch(`${base}/api/admin/invitations?${query}`, { headers: { Cookie: adminCookie } }); assert.equal(result.status, 400);
+  }
+  assert.equal(calls.filter(call => call[0] === "listInvitations").length, 0);
+  assert.equal((await fetch(`${base}/api/admin/clients?state=pending`, { headers: { Cookie: adminCookie } })).status, 400);
+  const forged = await fixture(t, { listInvitations: () => page("invitations", [invitation()]) });
+  assert.equal((await fetch(`${forged.base}/api/admin/invitations?state=used`, { headers: { Cookie: adminCookie } })).status, 503);
+});

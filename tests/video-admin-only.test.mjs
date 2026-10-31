@@ -38,7 +38,8 @@ test("the video message adapter blocks an authenticated client before the ordina
           () => { appends++; assert.fail("No message may be appended"); });
       },
     },
-    videoStore: { async assertSchema() {}, async getCommittedAsset() { lookups++; assert.fail("No video lookup expected"); } },
+    videoStore: { async assertSchema() {}, async getCommittedAsset() { lookups++; assert.fail("No video lookup expected"); },
+      async getCommittedAssets() { lookups++; assert.fail("No video batch expected"); } },
   });
   await assert.rejects(store.sendMessage({ ...request, conversationId: id(2), message: { videoId: id(3) } }), code("VIDEO_ADMIN_ONLY"));
   assert.equal(authorizations, 1); assert.equal(appends, 0); assert.equal(lookups, 0);

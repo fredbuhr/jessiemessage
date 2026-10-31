@@ -737,6 +737,28 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       }
     });
 
+    await t.test("invitation status filters cover the whole data set with scoped date cursors", async () => {
+      const expired = await invitation(), revoked = await invitation();
+      await connection.query("UPDATE invitations SET created_at = ?, expires_at = ? WHERE id = ?", [sqlDate(now - 7200000), sqlDate(now - 1), expired.id]);
+      await connection.query("UPDATE invitations SET revoked_at = ? WHERE id = ?", [sqlDate(now), revoked.id]);
+      const predicates = { pending: ["consumed_at IS NULL AND revoked_at IS NULL AND expires_at > ?", [sqlDate(now)]],
+        used: ["consumed_at IS NOT NULL", []], expired: ["consumed_at IS NULL AND revoked_at IS NULL AND expires_at <= ?", [sqlDate(now)]], revoked: ["consumed_at IS NULL AND revoked_at IS NOT NULL", []] };
+      for (const [state, [where, args]] of Object.entries(predicates)) {
+        const expected = (await connection.query(`SELECT id FROM invitations WHERE ${where} ORDER BY created_at DESC, id DESC`, args)).map(row => row.id.toString("hex"));
+        const seen = []; let cursor = null;
+        do {
+          const page = await store.listInvitations(admin.tokenHash, { now, state, cursor, limit: 25 });
+          assert.ok(page.invitations.length <= 25); assert.ok(page.invitations.every(row => row.state === state));
+          seen.push(...page.invitations.map(row => row.id)); cursor = page.nextCursor;
+          if (cursor) assert.equal(decodeAccessCursor("invitations", cursor, state).id, page.invitations.at(-1).id);
+        } while (cursor);
+        assert.deepEqual(seen, expected); assert.equal(new Set(seen).size, seen.length);
+      }
+      const pending = await store.listInvitations(admin.tokenHash, { now, state: "pending", limit: 1 });
+      assert.equal(pending.hasMore, true);
+      await assert.rejects(store.listInvitations(admin.tokenHash, { now, state: "used", cursor: pending.nextCursor, limit: 1 }), error => error.code === "ACCESS_INPUT");
+    });
+
     await t.test("new database constraints reject role confusion, malformed tokens, invalid lifetimes and zero versions", async () => {
       await assert.rejects(connection.query("INSERT INTO client_auth_state (user_id, age_declared_at) VALUES (?, ?)", [admin.id, sqlDate(now)]));
       const fixture = await registered();

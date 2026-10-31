@@ -42,7 +42,7 @@ async function fixture() {
   state.rows = [row(adminId, "Synthetic admin text"), row(clientId, "Synthetic client text", { sequence: maximumSequence })];
   const record = (name, options) => { calls.push({ name, options }); if (state.rawError) throw state.rawError; };
   const store = {
-    readInbox: async (options) => { record("readInbox", options); return { items: [{ conversation: conversation(), message: state.rows[1], unread: true }], hasMore: false, nextCursor: null }; },
+    readInbox: async (options) => { record("readInbox", options); return state.inboxPage ?? { items: [{ conversation: conversation(), message: state.rows[1], unread: true }], hasMore: false, nextCursor: null }; },
     listConversations: async (options) => { record("listConversations", options); return { conversations: [conversation()], nextCursor: conversationId, hasMore: true }; },
     getClientConversation: async (options) => { record("getClientConversation", options); return state.noConversation ? null : conversation(); },
     readMessages: async (options) => {
@@ -656,7 +656,7 @@ test("client video sends refuse before persistence and never consume shared send
   assert.equal(writes, 0); assert.equal(f.rateCalls.length, 0);
 });
 
-test("received inbox decrypts only administrator-authorized incoming items and keeps existing read quotas", async () => {
+test("conversation inbox decrypts authorized exchanges in either direction and keeps existing read quotas", async () => {
   const f = await fixture();
   const page = await f.service.inbox(f.token);
   assert.equal(page.items.length, 1); assert.equal(page.items[0].message.sender, "peer");
@@ -664,7 +664,40 @@ test("received inbox decrypts only administrator-authorized incoming items and k
   assert.equal(page.items[0].unread, true);
   const text = JSON.stringify(page); assert.ok(!text.includes("bodyEncrypted") && !text.includes("bodyFingerprint") && !text.includes("private-client@example.invalid"));
   assert.equal(f.calls.filter(call => call.name === "readInbox").length, 1);
+  f.state.inboxPage = { items: [{ conversation: conversation(), message: f.state.rows[0], unread: true }], hasMore: false, nextCursor: null };
+  const outgoing = await f.service.inbox(f.token);
+  assert.equal(outgoing.items[0].message.sender, "me"); assert.equal(outgoing.items[0].message.body, "Synthetic admin text");
+  assert.equal(outgoing.items[0].unread, true, "a later own preview does not change incoming unread state");
+  f.state.inboxPage = { items: [{ conversation: { ...conversation(), unreadCount: 0 }, message: null, unread: false }], hasMore: false, nextCursor: null };
+  const empty = await f.service.inbox(f.token);
+  assert.equal(empty.items[0].message, null, "an empty preview does not enter the decryption path");
+  assert.equal(empty.items[0].unread, false);
   await assert.rejects(f.service.inbox(f.token, { cursor: "invalid" }), hasCode("CHAT_INPUT"));
   await assert.rejects(f.service.inbox(f.token, { limit: 101 }), hasCode("CHAT_INPUT"));
   f.state.admin = false; await assert.rejects(f.service.inbox(f.token), hasCode("CHAT_UNAUTHORIZED"));
+});
+
+test("conversation inbox builds message-scoped photo and video previews without leaking their private descriptors", async () => {
+  const f = await fixture(), assetId = Buffer.alloc(16, 0xee);
+  for (const senderId of [adminId, clientId]) {
+    const payload = JSON.stringify({ mediaId: assetId.toString("hex"), caption: "Photo caption" });
+    const row = f.row(senderId, payload);
+    row.media = { id: assetId, width: 100, height: 150, thumbnailWidth: 100, thumbnailHeight: 150,
+      fullBytes: 1000, thumbnailBytes: 500, storageKey: "private-storage-key" };
+    f.state.inboxPage = { items: [{ conversation: conversation(), message: row, unread: true }], hasMore: false, nextCursor: null };
+    const preview = (await f.service.inbox(f.token)).items[0].message;
+    assert.equal(preview.body, "Photo caption"); assert.equal(preview.sender, senderId.equals(adminId) ? "me" : "peer");
+    assert.equal(preview.media.fullUrl, `/api/media/admin/conversations/${conversationHex}/messages/${row.id.toString("hex")}/full`);
+    assert.doesNotMatch(JSON.stringify(preview), /private-storage-key|bodyEncrypted|bodyFingerprint/);
+  }
+  const payload = JSON.stringify({ videoId: assetId.toString("hex"), caption: "Video caption" });
+  const row = f.row(adminId, payload);
+  row.bodyFingerprint = videoMessageFingerprint(payload, f.key, { messageId: row.id, conversationId, senderId: adminId });
+  row.video = { id: assetId, bytes: 1234, mime: "video/mp4", storageKey: "private-video-key" };
+  f.state.inboxPage = { items: [{ conversation: conversation(), message: row, unread: true }], hasMore: false, nextCursor: null };
+  const service = await createChatService({ ...f.options, videoMessages: { async sendMessage() { assert.fail("reading never sends a video"); } } });
+  const preview = (await service.inbox(f.token)).items[0].message;
+  assert.equal(preview.sender, "me"); assert.equal(preview.body, "Video caption");
+  assert.equal(preview.video.contentUrl, `/api/video/admin/conversations/${conversationHex}/messages/${row.id.toString("hex")}/content`);
+  assert.doesNotMatch(JSON.stringify(preview), /private-video-key|bodyEncrypted|bodyFingerprint/);
 });

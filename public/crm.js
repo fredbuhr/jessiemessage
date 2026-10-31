@@ -28,7 +28,7 @@ export function createCrmUI(adapter) {
   // Reading a profile from the received overview must not select its chat or
   // consume unread messages. Detail tickets have their own target and epochs.
   const profileState = { selected: null, selectionEpoch: 0, detailEpoch: 0, drafts: state.drafts };
-  let life = 0; let loading = false; let pageRequest = 0; let refreshAfter = null; let refreshTarget = null;
+  let life = 0; let loading = false; let pageRequest = 0; let pageAfter = null; let pageBack = []; let pageNumber = 1;
   let debounce = null; let detailBusy = false; let detailRequest = 0; let profileOpen = false; let managerBusy = false;
   let profileReturnFocus = null; let labelsReturnFocus = null; let suspended = false; let deletedCandidate = null;
   let labelsRequest = 0; let managerOpening = 0; let cleared = false;
@@ -48,7 +48,12 @@ export function createCrmUI(adapter) {
   filterActions.append(unreadLabel, replyLabel, resetButton, managerButton); filters.append(field("Rechercher un client", search), filterGrid, filterActions);
   const filterStatus = node("p", null, "crm-filter-status"); filterStatus.setAttribute("role", "status"); filterStatus.setAttribute("aria-live", "polite"); filters.append(filterStatus);
   const selectionStatus = node("p", null, "crm-selection-status"); selectionStatus.hidden = true; selectionStatus.setAttribute("role", "status");
-  adapter.inboxHead.after(filters, selectionStatus); owned.push(filters, selectionStatus);
+  const pagination = node("nav", null, "crm-pagination"); ui.attr(pagination, "aria-label", "Pages de clients");
+  const previousPage = button("Clients précédents", () => { void loadInbox(true, false, true); });
+  const pageLabel = node("span", null, "crm-page-label"); pageLabel.setAttribute("role", "status");
+  const firstPage = button("Première page", () => { void loadInbox(); });
+  pagination.append(firstPage, previousPage, pageLabel); pagination.hidden = true;
+  adapter.inboxHead.after(filters, selectionStatus, pagination); owned.push(filters, selectionStatus, pagination);
   const ficheButton = button("Profil du client", () => { void openProfile(ficheButton); }, "button secondary crm-fiche-button"); ficheButton.hidden = true; adapter.chatHead.append(ficheButton); owned.push(ficheButton);
 
   const profileDialog = node("dialog", null, "crm-dialog"); profileDialog.setAttribute("aria-labelledby", "crm-profile-title");
@@ -132,7 +137,11 @@ export function createCrmUI(adapter) {
     }
   }
   function publish() {
-    adapter.onContacts([...state.contacts.values()], { cursor: state.cursor, hasMore: state.hasMore, loading });
+    for (const [id, draft] of state.drafts) if (!draft.dirty && id !== state.selected && id !== profileState.selected && !state.contacts.has(id)) state.drafts.delete(id);
+    adapter.onContacts([...state.contacts.values()], { cursor: state.cursor, hasMore: state.hasMore, loading, replace: true });
+    pagination.hidden = pageNumber === 1 && !state.hasMore; previousPage.hidden = !pageBack.length; previousPage.disabled = loading;
+    firstPage.hidden = pageNumber === 1; firstPage.disabled = loading;
+    ui.text(pageLabel, "Page {page}", { page: ui.numberParam(pageNumber) });
     selectionStatus.hidden = !state.selected || state.contacts.has(state.selected);
     ui.text(selectionStatus, selectionStatus.hidden ? "" : "La conversation ouverte est hors des résultats actuels.");
   }
@@ -151,31 +160,25 @@ export function createCrmUI(adapter) {
   async function applyFilters() {
     clearTimeout(debounce); if (!setFilters(state, currentFilters())) return;
     inboxAbort?.abort();
-    pageRequest += 1; loading = false; refreshAfter = null; refreshTarget = null; publish();
+    pageRequest += 1; loading = false; pageAfter = null; pageBack = []; pageNumber = 1; publish();
     await loadInbox();
   }
   filters.addEventListener("submit", (event) => { event.preventDefault(); void applyFilters(); });
   search.addEventListener("input", () => { clearTimeout(debounce); debounce = setTimeout(() => { void applyFilters(); }, 300); });
   for (const element of [tagFilter, groupFilter, accessFilter, reminderFilter, unreadFilter, replyFilter]) element.addEventListener("change", () => { void applyFilters(); });
-  async function loadInbox(more = false, refresh = false) {
-    if (suspended || loading || (more && (!state.hasMore || !state.cursor))) return;
+  async function loadInbox(more = false, refresh = false, back = false) {
+    if (suspended || loading || (more && (back ? !pageBack.length : !state.hasMore || !state.cursor))) return;
+    const afterId = more ? back ? pageBack.at(-1) : state.cursor : refresh ? pageAfter : null;
+    const nextBack = more ? back ? pageBack.slice(0, -1) : [...pageBack, pageAfter].slice(-100) : refresh ? pageBack : [];
+    const nextNumber = more ? pageNumber + (back ? -1 : 1) : refresh ? pageNumber : 1;
     const requestId = ++pageRequest; const epoch = state.filterEpoch; loading = true; publish();
     const controller = new AbortController(); inboxAbort = controller;
     status(filterStatus, state.contacts.size ? "Actualisation…" : "Recherche…");
     try {
-      if (refresh && refreshTarget === null) refreshTarget = [...state.contacts.keys()].sort().at(-1) ?? null;
-      let afterId = more ? state.cursor : refresh ? refreshAfter : null;
-      // Bounded refresh covers loaded intervals; a removed filtered client
-      // cannot remain indefinitely just because pages are merged in memory.
-      for (let pageIndex = 0; pageIndex < (refresh ? 3 : 1); pageIndex += 1) {
-        const result = await ask(`/contacts?${contactQuery(state.filters, afterId)}`, { signal: controller.signal });
-        if (requestId !== pageRequest || epoch !== state.filterEpoch) return;
-        applyContactPage(state, result, { epoch, afterId });
-        const continueRefresh = refresh && result.hasMore && refreshTarget && result.nextCursor < refreshTarget;
-        if (continueRefresh) { afterId = result.nextCursor; refreshAfter = afterId; }
-        else { refreshAfter = null; refreshTarget = null; state.cursor = result.nextCursor ?? [...state.contacts.keys()].sort().at(-1) ?? null; state.hasMore = result.hasMore; }
-        if (!continueRefresh) break;
-      }
+      const result = await ask(`/contacts?${contactQuery(state.filters, afterId)}`, { signal: controller.signal });
+      if (requestId !== pageRequest || epoch !== state.filterEpoch) return;
+      applyContactPage(state, result, { epoch, afterId });
+      state.cursor = result.nextCursor; state.hasMore = result.hasMore; pageAfter = afterId; pageBack = nextBack; pageNumber = nextNumber;
       status(filterStatus, state.contacts.size ? "" : "Aucun client ne correspond à ces filtres.");
     } catch (error) {
       if (requestId === pageRequest && epoch === state.filterEpoch) {
@@ -423,7 +426,7 @@ export function createCrmUI(adapter) {
   });
   function clear() {
     if (cleared) return; cleared = true; suspended = true;
-    life += 1; pageRequest += 1; inboxAbort?.abort(); inboxAbort = null; clearTimeout(debounce); loading = false; detailBusy = false; managerBusy = false; refreshAfter = null; refreshTarget = null;
+    life += 1; pageRequest += 1; inboxAbort?.abort(); inboxAbort = null; clearTimeout(debounce); loading = false; detailBusy = false; managerBusy = false; pageAfter = null; pageBack = []; pageNumber = 1;
     closeProfile(false); closeManager(false); clearCrmState(state); renameDrafts.clear(); labelConflicts.clear();
     createName.value = ""; search.value = ""; replace(tagFilter); replace(groupFilter); replace(labelList); status(managerStatus, ""); status(filterStatus, "");
     for (const element of owned) { ui.forget(element); element.remove(); }

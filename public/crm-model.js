@@ -27,15 +27,20 @@ export function contactQuery(filters, afterId = null) {
   if (afterId) query.set("afterId", afterId);
   return query.toString();
 }
-// A keyset page is authoritative for its covered ID interval. Missing rows
-// must disappear when their unread count, access or label no longer matches.
+// Only the current keyset page is retained. Selection and unsaved profile
+// drafts are independent from these replaceable contact rows.
 export function applyContactPage(state, page, { epoch, afterId = null } = {}) {
   if (epoch !== state.filterEpoch) return false;
-  const end = page.hasMore ? page.nextCursor : null;
-  if (!Array.isArray(page.contacts) || (end !== null && (typeof end !== "string" || end.length !== 32 || !ID.test(end)))) throw new TypeError("invalid_contact_page");
-  const incoming = new Map(page.contacts.map((contact) => [contact.id, contact]));
-  for (const id of state.contacts.keys()) if ((!afterId || id > afterId) && (!end || id <= end) && !incoming.has(id)) state.contacts.delete(id);
-  for (const [id, contact] of incoming) state.contacts.set(id, contact);
+  if (!Array.isArray(page?.contacts) || page.contacts.length > 50 || typeof page.hasMore !== "boolean"
+    || page.nextCursor !== null && (typeof page.nextCursor !== "string" || !ID.test(page.nextCursor))) throw new TypeError("invalid_contact_page");
+  let previous = afterId;
+  for (const contact of page.contacts) {
+    if (typeof contact?.id !== "string" || !ID.test(contact.id) || previous !== null && contact.id <= previous) throw new TypeError("invalid_contact_page");
+    previous = contact.id;
+  }
+  if (page.hasMore && (!page.contacts.length || page.nextCursor !== previous)) throw new TypeError("invalid_contact_page");
+  state.contacts.clear();
+  for (const contact of page.contacts) state.contacts.set(contact.id, contact);
   return true;
 }
 export function updateContact(state, conversation) {

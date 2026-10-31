@@ -213,7 +213,7 @@ function milliseconds(value, maximum) {
   return value;
 }
 
-/** Dormant transport: the caller must supply live authorization and durable admission. */
+/** Private video routes require live authorization and durable admission. */
 export function createVideoHandler(service, { origin, uploadTimeoutMs = 300000, readTimeoutMs = 30000, transferTimeoutMs = 300000, creationEnabled = service?.creationEnabled ?? true } = {}) {
   const configured = new URL(origin);
   if (configured.protocol !== "https:" || configured.origin !== origin || typeof creationEnabled !== "boolean") throw new TypeError("A canonical HTTPS origin and creation capability are required.");

@@ -33,7 +33,7 @@ export function parseTaskSummary(value) {
 export function createTasksState(conversationId = null) {
   if (conversationId !== null && !taskId(conversationId)) invalid();
   return { generation: 0, visible: false, session: null, filter: "open", conversationId, clientName: "", tasks: new Map(),
-    cursor: null, hasMore: false, listEpoch: 0, serverTime: null, dueCount: 0, draft: null, pending: null, csrfFailed: false };
+    cursor: null, hasMore: false, pageAfter: null, pageBack: [], pageNumber: 1, listEpoch: 0, serverTime: null, dueCount: 0, draft: null, pending: null, csrfFailed: false };
 }
 export function clearTasks(state) {
   const next = createTasksState(state.conversationId); next.generation = state.generation + 1; Object.assign(state, next);
@@ -56,16 +56,16 @@ export function taskQuery(state, afterId = null) {
 }
 export function setTaskFilter(state, filter) {
   if (!["open", "due", "done"].includes(filter)) invalid();
-  state.filter = filter; state.listEpoch += 1; state.tasks.clear(); state.cursor = null; state.hasMore = false;
+  state.filter = filter; state.listEpoch += 1; state.tasks.clear(); state.cursor = null; state.hasMore = false; state.pageAfter = null; state.pageBack = []; state.pageNumber = 1;
 }
-export function applyTaskPage(state, input, { epoch = state.listEpoch, afterId = null } = {}) {
+export function applyTaskPage(state, input, { epoch = state.listEpoch, afterId = null, replace = false } = {}) {
   const page = parseTaskPage(input, afterId);
   if (epoch !== state.listEpoch) return false;
   for (const task of page.tasks) {
     if (state.conversationId && task.conversationId !== state.conversationId || state.filter === "done" && !task.done
       || state.filter !== "done" && task.done || state.filter === "due" && (task.dueAt === null || task.dueAt > page.serverTime)) invalid();
   }
-  if (afterId === null) state.tasks.clear();
+  if (afterId === null || replace) state.tasks.clear();
   for (const task of page.tasks) {
     const prior = state.tasks.get(task.id);
     if (!prior || BigInt(prior.version) <= BigInt(task.version)) state.tasks.set(task.id, task);

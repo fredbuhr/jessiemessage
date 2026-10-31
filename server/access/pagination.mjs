@@ -23,32 +23,39 @@ function positionValue(position) {
   return { createdAt: position.createdAt, id: position.id };
 }
 
-export function encodeAccessCursor(kind, position) {
-  kindValue(kind);
-  const { createdAt, id } = positionValue(position);
-  return Buffer.from(JSON.stringify([1, kind, createdAt, id]), "utf8").toString("base64url");
+function stateValue(kind, state) {
+  if (typeof state !== "string" || !(kind === "invitations" ? ["all", "pending", "used", "expired", "revoked"] : ["all"]).includes(state)) invalid();
+  return state;
 }
 
-export function decodeAccessCursor(kind, cursor) {
-  kindValue(kind);
+export function encodeAccessCursor(kind, position, state = "all") {
+  kindValue(kind); stateValue(kind, state);
+  const { createdAt, id } = positionValue(position);
+  return Buffer.from(JSON.stringify(state === "all" ? [1, kind, createdAt, id] : [2, kind, state, createdAt, id]), "utf8").toString("base64url");
+}
+
+export function decodeAccessCursor(kind, cursor, state = "all") {
+  kindValue(kind); stateValue(kind, state);
   if (typeof cursor !== "string" || !cursor.length || cursor.length > 256 || !/^[A-Za-z0-9_-]+$/.test(cursor)) invalid();
   const decoded = Buffer.from(cursor, "base64url");
   if (decoded.toString("base64url") !== cursor) invalid();
   let value;
   try { value = JSON.parse(decoded.toString("utf8")); } catch { invalid(); }
-  if (!Array.isArray(value) || value.length !== 4 || value[0] !== 1 || value[1] !== kind) invalid();
-  const position = positionValue({ createdAt: value[2], id: value[3] });
+  if (!Array.isArray(value) || (state === "all" ? value.length !== 4 || value[0] !== 1 || value[1] !== kind : value.length !== 5 || value[0] !== 2 || value[1] !== kind || value[2] !== state)) invalid();
+  const offset = state === "all" ? 2 : 3;
+  const position = positionValue({ createdAt: value[offset], id: value[offset + 1] });
   // One spelling avoids padded Base64, trailing JSON whitespace, alternate
   // escapes and malformed UTF-8 aliases for the same pagination position.
-  if (encodeAccessCursor(kind, position) !== cursor) invalid();
+  if (encodeAccessCursor(kind, position, state) !== cursor) invalid();
   return position;
 }
 
 export function validateAccessPage(kind, options = {}) {
   kindValue(kind);
   if (!options || typeof options !== "object" || Array.isArray(options)
-    || Object.keys(options).some((key) => key !== "cursor" && key !== "limit")) invalid();
-  const { cursor = null, limit = 50 } = options;
+    || Object.keys(options).some((key) => key !== "cursor" && key !== "limit" && !(kind === "invitations" && key === "state"))) invalid();
+  const { cursor = null, limit = 50, state = "all" } = options;
+  stateValue(kind, state);
   if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) invalid();
-  return { limit, position: cursor === null ? null : decodeAccessCursor(kind, cursor) };
+  return { limit, position: cursor === null ? null : decodeAccessCursor(kind, cursor, state), ...(state === "all" ? {} : { state }) };
 }

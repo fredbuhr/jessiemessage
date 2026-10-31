@@ -1,6 +1,15 @@
 (() => {
   "use strict";
   const messages = {
+    "Première page": "First page",
+    "Précédents": "Previous",
+    "Suivants": "Next",
+    "Pagination des tâches": "Task pagination",
+    "Page {page} · {count} sur cette page.": "Page {page} · {count} on this page.",
+    "Aucune tâche sur cette page.": "No tasks on this page.",
+    "Pages de clients": "Client pages",
+    "Page {page}": "Page {page}",
+
     "Accueil admin": "Admin home", "Messages": "Messages",
     "Choisis quelques clients, tous tes clients ou tous les résultats de tes filtres.": "Choose a few clients, all your clients or all results matching your filters.",
     "Cette diffusion n’est plus accessible.": "This broadcast is no longer available.",

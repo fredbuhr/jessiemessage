@@ -60,9 +60,12 @@ function harness({ visible = true, currentSession = session(), intercept, clipbo
   invitationForm.append(invitationFormatInput, hours, days, unlimited, createButton);
   tools.append(invitationForm, element("copy-invitation", "button"), element("copy-invitation-code", "button"), element("refresh-access", "button"), element("clients-list"), element("invitations-list"));
   for (const kind of ["invitations", "clients"]) {
-    const navigation = element(`${kind}-pagination`);
-    navigation.append(element(`${kind}-page-note`), element(`${kind}-next`, "button"), element(`${kind}-first`, "button"));
-    tools.append(navigation);
+    for (const suffix of ["", "-top"]) {
+      const navigation = element(`${kind}-pagination${suffix}`);
+      navigation.append(element(`${kind}-page-note${suffix}`), element(`${kind}-next${suffix}`, "button"), element(`${kind}-previous${suffix}`, "button"));
+      if (!suffix) navigation.append(element(`${kind}-first`, "button"));
+      tools.append(navigation);
+    }
   }
   connected.append(tools, element("logout-button", "button"), element("logout-all-button", "button"));
   const document = { readyState: "loading", visibilityState: visible ? "visible" : "hidden", body: new Element("body"), getElementById: element,
@@ -92,7 +95,8 @@ function harness({ visible = true, currentSession = session(), intercept, clipbo
         if (!path.startsWith(`/api/admin/${kind}?`)) continue;
         const url = new URL(path, "https://example.invalid"), cursor = url.searchParams.get("cursor");
         const offset = cursor === null ? 0 : Number(cursor.slice(`${kind}_`.length));
-        const rows = state[kind].slice(offset, offset + 50), hasMore = offset + rows.length < state[kind].length;
+        const filtered = kind === "invitations" && url.searchParams.has("state") ? state[kind].filter(row => row.state === url.searchParams.get("state")) : state[kind];
+        const limit = Number(url.searchParams.get("limit")), rows = filtered.slice(offset, offset + limit), hasMore = offset + rows.length < filtered.length;
         return response(200, { [kind]: rows, hasMore, nextCursor: hasMore ? `${kind}_${offset + rows.length}` : null });
       }
       if (path.startsWith("/api/auth/logout")) return response(200, { status: "signed_out" });
@@ -203,7 +207,7 @@ test("initial visibility and pageshow notifications share one administrator boot
   await f.event("pageshow", { persisted: false }); await f.event("visibilitychange");
   assert.equal(f.calls.length, 1); assert.equal(f.element("connected").hidden, true);
   gate.resolve(response(200, session())); await flush();
-  assert.equal(f.element("access-tools").hidden, false); assert.equal(f.calls.filter((call) => call.path === "/api/admin/clients?limit=50").length, 1);
+  assert.equal(f.element("access-tools").hidden, false); assert.equal(f.calls.filter((call) => call.path === "/api/admin/clients?limit=25").length, 1);
 });
 
 test("an anonymous login keeps its in-memory fields across the authenticator app switch and proves the session before return", async () => {
@@ -268,8 +272,8 @@ test("visibility hide and pagehide erase administrator identity, clients, invita
 });
 
 test("late client-list and capability responses cannot repopulate an administrator page after hide", async () => {
-  const clients = pause(), capability = pause(), f = harness({ intercept: (path) => path === "/api/admin/clients?limit=50" ? clients.promise : path === "/api/chat/admin/capabilities" ? capability.promise : undefined });
-  await flush(); const active = f.calls.filter((call) => ["/api/admin/clients?limit=50", "/api/chat/admin/capabilities"].includes(call.path));
+  const clients = pause(), capability = pause(), f = harness({ intercept: (path) => path === "/api/admin/clients?limit=25" ? clients.promise : path === "/api/chat/admin/capabilities" ? capability.promise : undefined });
+  await flush(); const active = f.calls.filter((call) => ["/api/admin/clients?limit=25", "/api/chat/admin/capabilities"].includes(call.path));
   await f.hide(); assert.ok(active.every((call) => call.options.signal.aborted));
   clients.resolve(response(200, { clients: [{ pseudonym: "Late private", email: "late-private@example.invalid", status: "active", emailVerified: true, ageAssured: true, accessExpiresAt: null }] }));
   capability.resolve(response(200, { enabled: true })); await flush(); privateCleared(f);
@@ -278,7 +282,7 @@ test("late client-list and capability responses cannot repopulate an administrat
 test("return validates a fresh administrator session before loading any new private data and ignores the old list", async () => {
   const oldClients = pause(), newSession = pause(); let clientCalls = 0, sessionCalls = 0, waitingForReturn = false;
   const f = harness({ intercept: (path) => {
-    if (path === "/api/admin/clients?limit=50" && ++clientCalls === 1) return oldClients.promise;
+    if (path === "/api/admin/clients?limit=25" && ++clientCalls === 1) return oldClients.promise;
     if (path === "/api/auth/session") { sessionCalls += 1; if (waitingForReturn) return newSession.promise; }
     return undefined;
   } });
@@ -361,7 +365,7 @@ test("administrator request security options remain intact for login and authent
 test("cookie actor changes during private reads discard the old audience before rebuilding from GET proof", async () => {
   for (const change of ["user", "csrf"]) {
     const oldClients = pause(); let clientCalls = 0;
-    const f = harness({ intercept: (path) => path === "/api/admin/clients?limit=50" && ++clientCalls === 1 ? oldClients.promise : undefined });
+    const f = harness({ intercept: (path) => path === "/api/admin/clients?limit=25" && ++clientCalls === 1 ? oldClients.promise : undefined });
     await flush();
     f.state.currentSession = session("Session actuelle", change === "user"
       ? { user: { id: "9".repeat(32), role: "admin", pseudonym: "Session actuelle" } }
@@ -432,7 +436,7 @@ test("repeated final proof failures permit only one GET recovery per visible int
     return undefined;
   } });
   await flush();
-  assert.equal(sessions, 4); assert.equal(f.calls.filter((call) => call.path === "/api/admin/clients?limit=50").length, 2);
+  assert.equal(sessions, 4); assert.equal(f.calls.filter((call) => call.path === "/api/admin/clients?limit=25").length, 2);
   privateCleared(f); assert.equal(f.element("login-form").hidden, true); assert.equal(f.element("session-retry").hidden, false); assert.match(f.element("auth-status").textContent, /Réessaie la connexion/);
   assert.equal(posts(f).length, 0);
 });
@@ -448,47 +452,47 @@ test("administrator lists traverse 650 entries independently with only one page 
   const f = harness({ clients: Array.from({ length: 650 }, (_, index) => clientRow(index + 1)), invitations: Array.from({ length: 120 }, (_, index) => invitationRow(index + 1)) });
   await flush();
   assert.equal(listCalls(f, "clients").length, 1); assert.equal(listCalls(f, "invitations").length, 1);
-  assert.equal(f.element("clients-list").children.length, 50); assert.equal(f.element("clients-first").disabled, true);
+  assert.equal(f.element("clients-list").children.length, 25); assert.equal(f.element("clients-first").disabled, true);
   await f.click("invitations-next"); const invitationPage = contents(f.element("invitations-list"));
-  for (let index = 1; index < 13; index += 1) {
+  for (let index = 1; index < 26; index += 1) {
     await f.click("clients-next");
-    assert.equal(f.element("clients-list").children.length, 50);
-    assert.equal(contents(f.element("clients-list")).includes(`client-${index * 50}@example.invalid`), false);
+    assert.equal(f.element("clients-list").children.length, 25);
+    assert.equal(contents(f.element("clients-list")).includes(`client-${index * 25}@example.invalid`), false);
     assert.equal(contents(f.element("invitations-list")), invitationPage);
   }
   assert.match(contents(f.element("clients-list")), /client-650@example\.invalid/);
-  assert.equal(listCalls(f, "clients").length, 13); assert.equal(listCalls(f, "invitations").length, 2);
-  assert.equal(f.element("clients-next").disabled, true); assert.match(f.element("clients-page-note").textContent, /fin de la liste/);
-  await f.click("clients-next"); assert.equal(listCalls(f, "clients").length, 13);
+  assert.equal(listCalls(f, "clients").length, 26); assert.equal(listCalls(f, "invitations").length, 2);
+  assert.equal(f.element("clients-next").disabled, true); assert.match(f.element("clients-page-note").textContent, /Page 26 · 25/);
+  await f.click("clients-next"); assert.equal(listCalls(f, "clients").length, 26);
   await f.click("clients-first"); assert.match(contents(f.element("clients-list")), /client-1@example\.invalid/);
   assert.equal(contents(f.element("invitations-list")), invitationPage);
-  assert.equal(listCalls(f, "clients").at(-1).path, "/api/admin/clients?limit=50");
+  assert.equal(listCalls(f, "clients").at(-1).path, "/api/admin/clients?limit=25");
   await f.click("refresh-access");
-  assert.equal(listCalls(f, "clients").at(-1).path, "/api/admin/clients?limit=50");
-  assert.equal(listCalls(f, "invitations").at(-1).path, "/api/admin/invitations?limit=50");
+  assert.equal(listCalls(f, "clients").at(-1).path, "/api/admin/clients?limit=25");
+  assert.equal(listCalls(f, "invitations").at(-1).path, "/api/admin/invitations?limit=25");
   assert.equal(f.element("invitations-first").disabled, true); assert.equal(posts(f).length, 0);
 });
 
 test("an older page is painted only after its final current-session proof", async () => {
   const proof = pause(); let pendingProof = false;
-  const f = harness({ clients: Array.from({ length: 60 }, (_, index) => clientRow(index + 1)), intercept: (path) => {
-    if (path === "/api/admin/clients?limit=50&cursor=clients_50") pendingProof = true;
+  const f = harness({ clients: Array.from({ length: 35 }, (_, index) => clientRow(index + 1)), intercept: (path) => {
+    if (path === "/api/admin/clients?limit=25&cursor=clients_25") pendingProof = true;
     if (path === "/api/auth/session" && pendingProof) return proof.promise;
     return undefined;
   } });
   await flush(); await f.click("clients-next");
   assert.match(contents(f.element("clients-list")), /client-1@example\.invalid/);
-  assert.doesNotMatch(contents(f.element("clients-list")), /client-60@example\.invalid/);
+  assert.doesNotMatch(contents(f.element("clients-list")), /client-35@example\.invalid/);
   assert.equal(f.element("clients-next").disabled, true);
   proof.resolve(response(200, session())); await flush();
-  assert.match(contents(f.element("clients-list")), /client-60@example\.invalid/); assert.equal(f.element("clients-list").children.length, 10);
+  assert.match(contents(f.element("clients-list")), /client-35@example\.invalid/); assert.equal(f.element("clients-list").children.length, 10);
   assert.equal(f.element("clients-first").disabled, false);
 });
 
 test("late older-page data and errors after hide cannot replace a new account or its cursor", async () => {
   for (const status of [200, 401]) {
     const older = pause();
-    const f = harness({ clients: Array.from({ length: 60 }, (_, index) => clientRow(index + 1)), intercept: (path) => path.includes("cursor=clients_50") ? older.promise : undefined });
+    const f = harness({ clients: Array.from({ length: 60 }, (_, index) => clientRow(index + 1)), intercept: (path) => path.includes("cursor=clients_25") ? older.promise : undefined });
     await flush(); await f.click("clients-next"); await f.hide();
     assert.equal(f.element("clients-page-note").textContent, ""); assert.equal(f.element("clients-pagination").hidden, true);
     f.state.currentSession = session("Nouvelle Jessie", { csrf: "J".repeat(43), user: { id: "9".repeat(32), role: "admin", pseudonym: "Nouvelle Jessie" } });
@@ -496,13 +500,13 @@ test("late older-page data and errors after hide cannot replace a new account or
     older.resolve(response(status, status === 200 ? { clients: [clientRow(60)] } : { error: "authentication_required" })); await flush();
     assert.equal(f.element("connected-name").textContent, "Nouvelle Jessie");
     assert.match(contents(f.element("clients-list")), /client-900@example\.invalid/); assert.doesNotMatch(contents(f.element("clients-list")), /client-60@example\.invalid/);
-    assert.equal(f.element("clients-first").disabled, true); assert.equal(listCalls(f, "clients").at(-1).path, "/api/admin/clients?limit=50");
+    assert.equal(f.element("clients-first").disabled, true); assert.equal(listCalls(f, "clients").at(-1).path, "/api/admin/clients?limit=25");
   }
 });
 
 test("a changed actor during pagination discards the returned page and rebuilds both first pages", async () => {
   const older = pause();
-  const f = harness({ clients: Array.from({ length: 60 }, (_, index) => clientRow(index + 1)), intercept: (path) => path.includes("cursor=clients_50") ? older.promise : undefined });
+  const f = harness({ clients: Array.from({ length: 60 }, (_, index) => clientRow(index + 1)), intercept: (path) => path.includes("cursor=clients_25") ? older.promise : undefined });
   await flush(); await f.click("clients-next");
   f.state.currentSession = session("Session B", { csrf: "K".repeat(43) }); f.state.clients = [clientRow(901)];
   older.resolve(response(200, { clients: [clientRow(60)] })); await flush();
@@ -517,9 +521,9 @@ test("invalid pagination metadata never advances or replaces an already verified
     { clients: [clientRow(60)], hasMore: false, nextCursor: "clients_60" },
     { clients: Array.from({ length: 51 }, (_, index) => clientRow(index + 51)) },
   ]) {
-    const f = harness({ clients: Array.from({ length: 60 }, (_, index) => clientRow(index + 1)), intercept: (path) => path.includes("cursor=clients_50") ? response(200, data) : undefined });
+    const f = harness({ clients: Array.from({ length: 60 }, (_, index) => clientRow(index + 1)), intercept: (path) => path.includes("cursor=clients_25") ? response(200, data) : undefined });
     await flush(); await f.click("clients-next");
-    assert.match(contents(f.element("clients-list")), /client-1@example\.invalid/); assert.equal(f.element("clients-list").children.length, 50);
+    assert.match(contents(f.element("clients-list")), /client-1@example\.invalid/); assert.equal(f.element("clients-list").children.length, 25);
     assert.equal(f.element("clients-first").disabled, true); assert.equal(f.element("clients-next").disabled, false); assert.equal(posts(f).length, 0);
   }
 });
@@ -567,14 +571,14 @@ test("renewal snapshots the chosen duration and expiry, preserves the busy draft
   await flush(); await f.click("clients-next"); const invitationsBefore = listCalls(f, "invitations").length;
   const form = renewForms(f)[0], input = form.querySelectorAll("input")[0]; input.value = "45";
   await submitNode(form); const post = posts(f).at(-1);
-  assert.equal(post.path, `/api/admin/clients/${clients[50].id}/renew`);
-  assert.deepEqual(JSON.parse(post.options.body), { accessDays: 45, expectedExpiresAt: clients[50].accessExpiresAt });
+  assert.equal(post.path, `/api/admin/clients/${clients[25].id}/renew`);
+  assert.deepEqual(JSON.parse(post.options.body), { accessDays: 45, expectedExpiresAt: clients[25].accessExpiresAt });
   assert.equal(form.querySelectorAll("button")[0].disabled, true); assert.equal(input.value, "45");
   input.value = "60"; await submitNode(form); assert.equal(posts(f).length, 1);
-  const newExpiry = clients[50].accessExpiresAt + 45 * 86400000; f.state.clients[50] = clientRow(51, { accessExpiresAt: newExpiry });
-  pending.resolve(response(200, { status: "renewed", client: { id: clients[50].id, accessExpiresAt: newExpiry } })); await flush();
+  const newExpiry = clients[25].accessExpiresAt + 45 * 86400000; f.state.clients[25] = clientRow(26, { accessExpiresAt: newExpiry });
+  pending.resolve(response(200, { status: "renewed", client: { id: clients[25].id, accessExpiresAt: newExpiry } })); await flush();
   assert.equal(posts(f).length, 1); assert.equal(listCalls(f, "invitations").length, invitationsBefore);
-  assert.equal(listCalls(f, "clients").at(-1).path, "/api/admin/clients?limit=50&cursor=clients_50");
+  assert.equal(listCalls(f, "clients").at(-1).path, "/api/admin/clients?limit=25&cursor=clients_25");
   assert.equal(f.element("clients-first").disabled, false); assert.match(f.element("auth-status").textContent, /prolongée/);
   assert.equal(renewForms(f)[0].querySelectorAll("button")[0].disabled, false);
 });
@@ -622,7 +626,7 @@ test("a failed list read after successful renewal keeps the mutation unconfirmed
   let committed = false;
   const f = harness({ clients: [clientRow(1)], intercept: (path) => {
     if (path.endsWith("/renew")) { committed = true; return response(200, { status: "renewed", client: { id: clientRow(1).id, accessExpiresAt: initialTime + 31 * 86400000 } }); }
-    if (path === "/api/admin/clients?limit=50" && committed) return response(503, { error: "unavailable" });
+    if (path === "/api/admin/clients?limit=25" && committed) return response(503, { error: "unavailable" });
     return undefined;
   } });
   await flush(); const form = renewForms(f)[0]; form.querySelectorAll("input")[0].value = "30"; await submitNode(form);
@@ -656,7 +660,7 @@ test("a cookie change during renewal reconciliation clears the previous client a
   const finalPage = pause(); let renewed = false;
   const f = harness({ clients: Array.from({ length: 60 }, (_, index) => clientRow(index + 1)), intercept: (path) => {
     if (path.endsWith("/renew")) { renewed = true; return response(200, { status: "renewed", client: { id: clientRow(51).id, accessExpiresAt: initialTime + 31 * 86400000 } }); }
-    if (path.includes("cursor=clients_50") && renewed) return finalPage.promise;
+    if (path.includes("cursor=clients_25") && renewed) return finalPage.promise;
     return undefined;
   } });
   await flush(); await f.click("clients-next"); await submitNode(renewForms(f)[0]);
@@ -672,7 +676,7 @@ test("an unconfirmed renewal preserves an edited duration when GET finds the exa
     const pending = pause(), read = pause(); let attempted = false;
     const f = harness({ clients: [clientRow(1)], intercept: (path) => {
       if (path.endsWith("/renew")) { attempted = true; return pending.promise; }
-      if (path === "/api/admin/clients?limit=50" && attempted) return read.promise;
+      if (path === "/api/admin/clients?limit=25" && attempted) return read.promise;
       return undefined;
     } });
     await flush(); const form = renewForms(f)[0], input = form.querySelectorAll("input")[0]; input.value = "97"; await submitNode(form);
@@ -852,4 +856,22 @@ test("a new administrator session after code creation cannot see the previous ad
   } });
   await flush(); await f.submit("invitation-form"); assert.equal(posts(f).length, 1);
   assert.equal(f.element("invitation-code-result").value, ""); assert.equal(f.element("new-invitation").hidden, true); assert.equal(f.element("connected-name").textContent, "Other administrator");
+});
+
+
+test("invitation status filtering searches the entire list and previous/next preserve creation fields and a revealed code", async () => {
+  const states = ["pending", "used", "expired", "revoked"];
+  const f = harness({ invitations: Array.from({ length: 120 }, (_, index) => ({ ...invitationRow(index + 1), state: states[index % states.length] })) });
+  await flush();
+  f.element("invitation-hours").value = "48"; f.element("invitation-days").value = "17";
+  f.element("invitation-code-result").value = "synthetic-code-kept"; f.element("new-invitation").hidden = false;
+  const filter = f.element("invitation-state"); filter.value = "expired";
+  filter.events.get("change")({ target: filter }); await flush();
+  assert.equal(listCalls(f, "invitations").at(-1).path, "/api/admin/invitations?limit=25&state=expired");
+  assert.equal(f.element("invitations-list").children.length, 25); assert.doesNotMatch(contents(f.element("invitations-list")), /Invitation · Disponible/);
+  await f.click("invitations-next-top"); assert.equal(f.element("invitations-list").children.length, 5);
+  assert.match(f.element("invitations-page-note").textContent, /Page 2/); assert.equal(f.element("invitations-title").focused, true);
+  await f.click("invitations-previous"); assert.equal(f.element("invitations-list").children.length, 25); assert.match(f.element("invitations-page-note").textContent, /Page 1/);
+  assert.equal(f.element("invitation-hours").value, "48"); assert.equal(f.element("invitation-days").value, "17");
+  assert.equal(f.element("invitation-code-result").value, "synthetic-code-kept"); assert.equal(f.element("new-invitation").hidden, false); assert.equal(posts(f).length, 0);
 });

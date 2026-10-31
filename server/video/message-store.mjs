@@ -35,12 +35,12 @@ const foreignKeys = [
 ];
 const checks = ["message_video_message_size", "message_video_conversation_size", "message_video_asset_size"];
 
-/** Candidate composition only. Authorization and appends use the ordinary chat
- * transaction; production composition does not import or install this adapter. */
+/** Production video composition. Authorization, reads and appends stay inside
+ * the ordinary chat transaction; catalog batches grant no separate authority. */
 export function createVideoMessageStore({ pool, chatStore, videoStore } = {}) {
   if (typeof pool?.getConnection !== "function" || typeof chatStore?.withConversation !== "function"
     || typeof chatStore?.withConversationAppend !== "function" || typeof videoStore?.getCommittedAsset !== "function"
-    || typeof videoStore?.assertSchema !== "function") input();
+    || typeof videoStore?.getCommittedAssets !== "function" || typeof videoStore?.assertSchema !== "function") input();
   function request(value) {
     if (!["admin", "client"].includes(value?.role)) input();
     bytes(value.tokenHash, 32); bytes(value.conversationId, 16); instant(value.now); return value;
@@ -69,6 +69,27 @@ export function createVideoMessageStore({ pool, chatStore, videoStore } = {}) {
       || !asset.ownerId.equals(row.sender_id) || asset.deletedAt !== null || asset.createdAt > createdAt) state();
     return asset;
   }
+  const assetKey = row => `${row.video_id.toString("hex")}:${row.sender_id.toString("hex")}:${row.sender_role}`;
+  async function committedBatch(connection, context, rows) {
+    const requested = new Map();
+    for (const row of rows) {
+      link(row, context);
+      if (row.deleted_at === null) requested.set(assetKey(row), { assetId: row.video_id, ownerId: row.sender_id, ownerRole: row.sender_role });
+    }
+    if (requested.size === 0) return new Map();
+    const values = await videoStore.getCommittedAssets(connection, { assets: [...requested.values()], now: context.now });
+    if (!Array.isArray(values) || values.length !== requested.size) state();
+    const originals = new Map();
+    [...requested.keys()].forEach((key, index) => originals.set(key, values[index]));
+    // A reused original never replaces validation of its individual delivery.
+    for (const row of rows) {
+      if (row.deleted_at !== null) continue;
+      const asset = originals.get(assetKey(row)), createdAt = timestamp(row.message_created_at).millis;
+      if (!sized(asset?.id, 16) || !asset.id.equals(row.video_id) || !sized(asset.ownerId, 16)
+        || !asset.ownerId.equals(row.sender_id) || asset.deletedAt !== null || asset.createdAt > createdAt) state();
+    }
+    return originals;
+  }
   async function decorateMessages(connection, context, rows) {
     if (typeof connection?.query !== "function" || !Array.isArray(rows) || rows.length > 100) input();
     if (rows.length === 0) return rows;
@@ -81,12 +102,13 @@ export function createVideoMessageStore({ pool, chatStore, videoStore } = {}) {
     // every original position survives in the result.
     const links = await connection.query(`SELECT ${projection} FROM message_video mv ${joins}
       WHERE mv.message_id IN (${[...ids].map(() => "?").join(", ")}) FOR UPDATE`, [...ids.values()]);
-    const found = new Map(), assets = new Map();
+    const found = new Map();
     for (const row of links) {
       const createdAt = link(row, context), key = row.message_id.toString("hex");
       if (!ids.has(key) || found.has(key)) state();
       found.set(key, { row, createdAt });
     }
+    const assets = await committedBatch(connection, context, links);
     const result = [];
     for (const raw of rows) {
       const key = raw.id.toString("hex"), selected = found.get(key);
@@ -97,8 +119,7 @@ export function createVideoMessageStore({ pool, chatStore, videoStore } = {}) {
         || (raw.deletedAt === null) !== (row.deleted_at === null)
         || raw.deletedAt !== null && raw.deletedAt !== timestamp(row.deleted_at).millis) state();
       if (raw.deletedAt !== null) { result.push(raw); continue; }
-      if (!assets.has(key)) assets.set(key, await committed(connection, context, row));
-      const asset = assets.get(key);
+      const asset = assets.get(assetKey(row));
       result.push({ ...raw, video: { id: asset.id, bytes: asset.bytes, mime: asset.mime } });
     }
     return result;
@@ -156,10 +177,12 @@ export function createVideoMessageStore({ pool, chatStore, videoStore } = {}) {
           ${before === null ? "" : "AND m.sequence_no < ?"} ORDER BY m.sequence_no DESC LIMIT ? FOR UPDATE`,
         [value.conversationId, sqlDate(context.now), ...(before === null ? [] : [before]), limit + 1]);
         const selected = rows.slice(0, limit), hasMore = rows.length > limit, items = [];
+        const assets = await committedBatch(connection, context, selected);
         let previous = before === null ? 18446744073709551616n : BigInt(before);
         for (const row of selected) {
           const current = storedSequence(row.sequence_no); if (BigInt(current) >= previous || current === "0") state(); previous = BigInt(current);
-          const asset = await committed(connection, context, row);
+          link(row, context);
+          const asset = assets.get(assetKey(row));
           items.push({ messageId: row.message_id, sequence: current, senderId: row.sender_id,
             createdAt: timestamp(row.message_created_at).millis, asset });
         }

@@ -1,3 +1,6 @@
+// Historical offline CLI: SQL33, or SQL36 for its explicit video export.
+// It intentionally refuses the SQL38 experience profile. Do not use it as
+// the current hosted data operator or weaken its schema guard.
 import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runtimeDatabaseOptions } from "../server/db/runtime.mjs";

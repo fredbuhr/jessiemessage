@@ -120,3 +120,78 @@ test("reentrant observers see one run and one stop promise without starting SQL 
   await worker.runOnce(); await worker.stop();
   assert.equal(claims, 0); assert.equal(runningStates, 1); assert.equal(stoppingStates, 1);
 });
+
+function scheduledFixture(t, { count = 10, response = { statusCode: 201 }, claimError = false } = {}) {
+  const originalSetTimeout = globalThis.setTimeout, originalClearTimeout = globalThis.clearTimeout;
+  const timers = [], settlements = [], sent = [];
+  let claims = 0, concurrentSends = 0, maximumConcurrentSends = 0;
+  const pending = Array.from({ length: count }, (_, index) => ({ ...job(), jobId: (() => { const id = Buffer.alloc(16); id.writeUInt32BE(index + 1, 12); return id; })(), availableAt: current }));
+  globalThis.setTimeout = (callback, delay) => { const timer = { callback, delay, cancelled: false, unref() {} }; timers.push(timer); return timer; };
+  globalThis.clearTimeout = timer => { if (timer) timer.cancelled = true; };
+  const worker = createNotificationWorker({ config: { enabled: true }, clock: () => current, random: () => 0.5,
+    store: {
+      async claimDue({ limit }) {
+        claims++; if (claimError) throw new Error("Synthetic claim error");
+        const selected = [];
+        for (let index = pending.length - 1; index >= 0 && selected.length < limit; index--) {
+          if (pending[index].availableAt <= current) selected.push(...pending.splice(index, 1));
+        }
+        return selected;
+      },
+      async prepareDelivery() { return { subscription: {}, locale: "fr", expiresAt: current + 86400000 }; },
+      async settleDelivery(value) {
+        settlements.push(value);
+        if (value.result.status === "retry") pending.push({ ...job(), jobId: value.jobId, availableAt: value.result.nextAttemptAt });
+        return true;
+      },
+    },
+    transport: { async send(...args) {
+      sent.push(args); concurrentSends++; maximumConcurrentSends = Math.max(maximumConcurrentSends, concurrentSends);
+      await new Promise(setImmediate); concurrentSends--; return response;
+    } },
+  });
+  t.after(async () => { try { await worker.stop(); } finally { globalThis.setTimeout = originalSetTimeout; globalThis.clearTimeout = originalClearTimeout; } });
+  worker.start();
+  async function tick() {
+    const timer = timers.shift(); assert.ok(timer && !timer.cancelled); timer.callback();
+    // The fake clock does not advance: wait only for the bounded asynchronous
+    // operations of this batch, without waiting for the next scheduled timer.
+    for (let index = 0; index < 20 && timers.length === 0; index++) await new Promise(setImmediate);
+    return timer.delay;
+  }
+  return { worker, tick, timers, sent, settlements, get claims() { return claims; }, get maxSends() { return maximumConcurrentSends; } };
+}
+
+test("full notification backlogs drain in serialized five-job batches without the fixed polling pause", async t => {
+  for (const count of [10, 1000]) {
+    await t.test(String(count), async t => {
+      const f = scheduledFixture(t, { count });
+      for (let index = 0; index < count / 5; index++) {
+        assert.equal(await f.tick(), 0); assert.equal(f.sent.length, (index + 1) * 5);
+      }
+      assert.equal(await f.tick(), 0, "one bounded probe after the final full batch finds the empty queue");
+      assert.equal(f.timers[0].delay, 2000); assert.equal(f.claims, count / 5 + 1);
+      assert.equal(f.maxSends, 1); assert.equal(f.settlements.length, count);
+      await f.worker.stop(); assert.equal(f.timers[0].cancelled, true);
+    });
+  }
+});
+
+test("empty, partial, failed and future-retry queues retain bounded idle polling", async t => {
+  for (const options of [{ count: 0 }, { count: 3 }, { count: 0, claimError: true }, { count: 3, response: { statusCode: 429, retryAfterSeconds: 120 } }]) {
+    await t.test(JSON.stringify(options), async t => {
+      const f = scheduledFixture(t, options);
+      assert.equal(await f.tick(), 0); assert.equal(f.timers[0].delay, 2000);
+      if (options.response) {
+        assert.equal(f.settlements.length, 3);
+        assert.ok(f.settlements.every(value => value.result.status === "retry" && value.result.nextAttemptAt === current + 120000));
+      }
+    });
+  }
+  await t.test("full retry batch", async t => {
+    const f = scheduledFixture(t, { count: 5, response: { statusCode: 429, retryAfterSeconds: 120 } });
+    await f.tick(); assert.equal(f.timers[0].delay, 0);
+    await f.tick(); assert.equal(f.timers[0].delay, 2000, "future retries are not immediately reclaimed");
+    assert.equal(f.sent.length, 5); assert.equal(f.claims, 2);
+  });
+});

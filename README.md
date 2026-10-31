@@ -2,9 +2,9 @@
 
 Messagerie privée sur invitation entre Jessie et chaque personne invitée : texte, photos, vidéos, notifications, sessions indépendantes et outils d’administration. Elle utilise l’unique service Node sur l’hébergement mutualisé existant.
 
-**[REPRISE — état réellement déployé, sources, preuves, accès et repli](docs/REPRISE.md)** est l’unique référence de production. **1.11.1 déployée et finalisée selon les reçus utilisateur**, source `80b7fbf5f9b5ba32ac1aae817043126e93025946`, Nodev24.22.1, démarrage le24octobre2026 à **19:31:34.521 à Paris**. Codes individuels d’invitation et Messages reçus avec une seule ligne par client, dernier message reçu et non lus en premier. PR/main5/5 et release/latest422839761 acquis. [Reçu final](docs/verification-proofs/jm1111/hosted-metadata.json).
+**[REPRISE — état réellement déployé, sources, preuves, accès et repli](docs/REPRISE.md)** est l’unique référence de production. Elle distingue le code démarré, son tag, la qualification et le reçu privé de métadonnées. Une publication ou un commit documentaire ne prouve pas une activation ; une absence de reçu ne remet pas en cause un démarrage rapporté.
 
-**Application, publication et checkpoint privé alignés en1.11.1**, `publicReady:true`. Métadonnées seules enregistrées, sans nouveau redémarrage ; historiques et autres blocs préservés. [Livraison close](docs/operations-release1111.md) : aucune préparation, CHECK, activation ou écriture à rejouer. SQL38 inchangé, aucune migration ni nouvelle dépendance. Repli185 compatibleSQL38, jamais démarré ;184/172 interdits. L’[audit prépublic de134points](docs/AUDIT-PUBLIC-1100-20261023.md) conserve sa portée et ses limites physiques explicites.
+Les anciennes livraisons et leurs reçus restent historiques. Ne rejouer aucune préparation, migration, activation ou commande d’enregistrement pour découvrir si elle a réussi ; relire d’abord son résultat durable.
 
 La [livraison1.9.0](docs/experience190.md) est close ; aucune ancienne préparation, migration, CHECK, activation ou écriture de métadonnées n’est à rejouer. Les [preuves natives1.10.0](docs/verification-proofs/jm1100/main-native.json) restent distinctes des reçus hébergés acquis ensuite. Les reçus des versions précédentes restent historiques. Téléphone, clavier et réception des notifications système réels conservent leurs limites explicites.
 
@@ -48,7 +48,9 @@ npm run build
 
 Le build inclut le contrôle syntaxique et produit l’atelier autonome ; il ne déploie pas l’application. `npm run check` permet le contrôle syntaxique seul. `npm run test:browser` exige Chrome ; `npm run test:db` et `npm run test:auth-browser` exigent leurs bases jetables, clients natifs et navigateurs configurés. La [CI](.github/workflows/ci.yml) décrit ces environnements synthétiques. Une omission locale reste distincte d’une qualification native. Ne pas réexécuter les mêmes suites vertes sans changement ou question nouvelle.
 
-Le chargeur SQL normal conserve ses **33 migrations** ; le profil vidéo ajoute **3 migrations** (SQL36), et le profil expérience actif depuis1.9.0 en ajoute **2**, soit **SQL38**. Les1.10.0 et1.10.1 conservent exactement ces migrations. Identités SQL d’exécution et de migration sont séparées ; aucune migration au démarrage. Les contraintes d’exploitation et pins de REPRISE remplacent tout démarrage de développement du service existant.
+La commande historique `npm run data` couvre seulement ses profils SQL33/SQL36 ; elle refuse le profil expérience SQL38 et ne constitue pas l’outil de données courant de l’hôte. Les parcours d’export intégrés restent distincts, avec leurs contrôles d’accès.
+
+Le chargeur SQL normal conserve ses **33 migrations** ; le profil vidéo ajoute **3 migrations** (SQL36), et le profil expérience actif depuis1.9.0 en ajoute **2**, soit **SQL38**. Identités SQL d’exécution et de migration sont séparées ; aucune migration au démarrage. Les contraintes d’exploitation et pins de REPRISE remplacent tout démarrage de développement du service existant.
 
 ## Aperçu sans terminal
 

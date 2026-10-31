@@ -58,3 +58,17 @@ test("access cursor ids and position shapes have one canonical representation", 
   invalid(() => decodeAccessCursor("clients", encoded([1, "clients", position.createdAt + "\n", position.id])));
   for (const value of [null, [], { ...position, token: "private" }, { id: position.id }]) invalid(() => encodeAccessCursor("clients", value));
 });
+
+
+test("invitation status cursors remain scoped to their global filter and reject cross-filter reuse", () => {
+  for (const state of ["pending", "used", "expired", "revoked"]) {
+    const cursor = encodeAccessCursor("invitations", position, state);
+    assert.deepEqual(validateAccessPage("invitations", { cursor, state, limit: 25 }), { position, state, limit: 25 });
+    assert.deepEqual(decodeAccessCursor("invitations", cursor, state), position);
+    invalid(() => decodeAccessCursor("invitations", cursor));
+    for (const other of ["pending", "used", "expired", "revoked"].filter(value => value !== state)) invalid(() => decodeAccessCursor("invitations", cursor, other));
+    invalid(() => validateAccessPage("clients", { state, cursor }));
+    invalid(() => validateAccessPage("invitations", { state, cursor: encodeAccessCursor("invitations", position) }));
+  }
+  for (const state of ["", "available", "Pending", null, 1, [], "all\n"]) invalid(() => validateAccessPage("invitations", { state }));
+});

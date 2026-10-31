@@ -28,7 +28,7 @@ function inputOptions(value, keys) {
   if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).some((key) => !keys.includes(key))) throw rejected("ACCESS_INPUT");
 }
 function pageInput(kind, input) {
-  inputOptions(input, ["cursor", "limit"]);
+  inputOptions(input, kind === "invitations" ? ["cursor", "limit", "state"] : ["cursor", "limit"]);
   try { return validateAccessPage(kind, input); } catch { throw rejected("ACCESS_INPUT"); }
 }
 function invitationDTO(row) {
@@ -51,9 +51,10 @@ function clientDTO(row) {
     emailVerified: row.emailVerified, ageAssured: row.ageAssured, approved: row.approved,
     accessExpiresAt: nullableInstant(row.accessExpiresAt) };
 }
-function pageDTO(result, kind, { limit, position }, rebuild) {
+function pageDTO(result, kind, { limit, position, state = "all" }, rebuild) {
   if (!result || !Array.isArray(result[kind]) || result[kind].length > limit || typeof result.hasMore !== "boolean") throw unavailable();
   const rows = result[kind].map(rebuild);
+  if (state !== "all" && rows.some(row => row.state !== state)) throw unavailable();
   if (new Set(rows.map((row) => row.id)).size !== rows.length || position !== null && rows.some((row) => row.id === position.id)) throw unavailable();
   // Public dates use milliseconds, while cursors retain all six SQL digits.
   // IDs cannot break same-millisecond ties here: earlier microseconds may have a larger ID.
@@ -64,7 +65,7 @@ function pageDTO(result, kind, { limit, position }, rebuild) {
   } else {
     if (rows.length !== limit || typeof result.nextCursor !== "string") throw unavailable();
     let next;
-    try { next = decodeAccessCursor(kind, result.nextCursor); } catch { throw unavailable(); }
+    try { next = decodeAccessCursor(kind, result.nextCursor, state); } catch { throw unavailable(); }
     const last = rows.at(-1);
     if (next.id !== last.id || Date.parse(`${next.createdAt.replace(" ", "T")}Z`) !== last.createdAt
       || position !== null && (next.createdAt > position.createdAt || next.createdAt === position.createdAt && next.id >= position.id)) throw unavailable();
@@ -188,9 +189,9 @@ export async function createAccessService({ store, authStore, authService, totpK
     return { id: result.id.toString("hex"), expiresAt: result.expiresAt, accessDays: result.accessDays, url: `${origin}/access#invitation=${token}` };
   }
   async function listInvitations(raw, input = {}) {
-    const page = pageInput("invitations", input), cursor = page.position === null ? null : encodeAccessCursor("invitations", page.position);
+    const page = pageInput("invitations", input), cursor = page.position === null ? null : encodeAccessCursor("invitations", page.position, page.state ?? "all");
     const { actorTokenHash, now } = await administration(raw);
-    const result = await database(() => store.listInvitations(actorTokenHash, { now, cursor, limit: page.limit }));
+    const result = await database(() => store.listInvitations(actorTokenHash, { now, cursor, limit: page.limit, ...(page.state ? { state: page.state } : {}) }));
     if (!result) throw rejected("ACCESS_FORBIDDEN");
     return pageDTO(result, "invitations", page, invitationDTO);
   }

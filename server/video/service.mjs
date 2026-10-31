@@ -93,9 +93,9 @@ async function inspectSource(source, bytes, signal) {
 }
 
 /**
- * Dormant transport foundation. A future production catalog MUST enforce live
- * actor/owner ACL and durable capacity in each transaction. No in-memory or SQL
- * production adapter is provided by this lot, and no route is registered.
+ * Private production video transport. The catalog enforces live actor/owner
+ * ACL and durable capacity in the current transaction; message delivery uses
+ * the separately authorized conversation adapter supplied by composition.
  */
 export async function createVideoService({ store, chatService, authStore, storage, key, messages = null, minimumFreeBytes = 536870912, clock = Date.now, creationEnabled = true } = {}) {
   if (!sized(key, 32) || typeof clock !== "function" || !Number.isSafeInteger(minimumFreeBytes) || minimumFreeBytes < 0 || typeof creationEnabled !== "boolean") fail("VIDEO_CONFIG");

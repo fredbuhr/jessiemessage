@@ -51,6 +51,8 @@ function galleryPhoto(role, seq) {
 function message(sequence, role) {
   const sent = fixture.sent.find(message => message.sequence === String(sequence)); if (sent) return { ...sent };
   const number = Number(sequence);
+  if (fixture.allPhotos) return { id: id(200 + number), sequence: String(number), sender: "peer", body: `Fictional photo ${number}`,
+    createdAt: fixture.now + number * 1000, deletedAt: null, clientMessageId: null, media: galleryPhoto(role, number).media };
   if (fixture.deletedSequences?.includes(String(sequence))) return { id: id(200 + number), sequence: String(number), sender: number === 2 ? "me" : "peer", body: null, createdAt: fixture.now + number * 1000, deletedAt: fixture.now + 5000, clientMessageId: null };
   return { id: id(200 + number), sequence: String(number), sender: number === 2 || number === 3 && fixture.ownPhoto ? "me" : "peer",
     body: number === 1 ? "Earlier fictional message" : number === 2 ? fixture.longPhotoHistory ? "Fictional long history. ".repeat(120) : "Fictional message from me" : number === 3 ? fixture.photoWithoutCaption ? "" : "Fictional photo caption" : `Fictional incoming body ${number}`,
@@ -275,13 +277,23 @@ async function startFixtureServer() {
           if (suffix === "/inbox" && role === "admin" && fixture.receivedEnabled) {
             fixture.receivedReads = (fixture.receivedReads ?? 0) + 1;
             if (fixture.receivedFailure) { sendJson(503, { error: "messaging_unavailable" }); return; }
-            const items = [3, 1, 2].map(n => ({ conversation: n === 3 ? conversation("admin") : { ...conversation("admin"), id: id(100+n), peerName: n === 2 ? "Read client" : "Other unread client", lastReadSequence: n === 2 ? "2" : "0" }, unread: n !== 2,
-              message: { ...message(n, "admin"), sender: "peer", body: n === 3 ? "<b>Fictional received photo</b>" : `Fictional received ${n}` } }));
+            const items = [3, 2, 1].map(n => ({ conversation: n === 3 ? conversation("admin") : { ...conversation("admin"), id: id(100+n), peerName: n === 2 ? "Read client" : "Other unread client", lastReadSequence: n === 2 ? "2" : "0" }, unread: n === 1,
+              message: { ...message(n, "admin"), sender: n === 1 ? "peer" : "me", body: n === 3 ? "<b>Fictional sent photo</b>" : `Fictional conversation ${n}` } }));
+            items.push({ conversation: { ...conversation("admin"), id: id(104), peerName: "New invited client", createdAt: fixture.now - 10000 }, message: null, unread: false });
             sendJson(200, { items, nextCursor: null, hasMore: false }); return;
           }
           if (suffix === "/conversation") { sendJson(200, { id: conversationId }); return; }
           if (suffix === "/conversations") { sendJson(200, { conversations: [conversation(role)], nextCursor: null, hasMore: false }); return; }
           if (suffix === `/conversations/${conversationId}/messages`) {
+            if (fixture.windowedHistory) {
+              (fixture.historyReads ??= []).push(url.search);
+              const before = url.searchParams.get("before"), after = url.searchParams.get("after"), limit = Number(url.searchParams.get("limit") ?? 50);
+              let rows = Array.from({ length: fixture.latest }, (_, i) => i + 1).filter(n => before === null || n < Number(before)).filter(n => after === null || n > Number(after));
+              rows = after === null ? rows.slice(-limit) : rows.slice(0, limit);
+              const hasMoreBefore = rows[0] > 1, hasMoreAfter = rows.at(-1) < fixture.latest;
+              sendJson(200, { conversation: conversation(role), messages: rows.map(n => message(n, role)), eventCursor: String(fixture.latest),
+                hasMoreBefore, nextBefore: hasMoreBefore ? String(rows[0]) : null, hasMoreAfter, nextAfter: hasMoreAfter ? String(rows.at(-1)) : null }); return;
+            }
             const older = url.searchParams.has("before");
             const numbers = url.searchParams.has("after") ? [1, 2, 3, ...(fixture.historyAcknowledgement ? fixture.sent.map(item => Number(item.sequence)) : [])] : older ? [1] : [2, 3];
             if (role === "admin" && fixture.holdInitialAdminMessages && !older && !url.searchParams.has("after")) {
@@ -346,6 +358,10 @@ async function startFixtureServer() {
           sendJson(200, { lastReadSequence: fixture.read[role] }); return;
         }
         if (feature === "media" && request.method === "GET") {
+          if (fixture.allPhotos && new RegExp(`^/conversations/${conversationId}/messages/[a-f0-9]{32}/thumb$`).test(suffix)) {
+            (fixture.thumbnailReads ??= []).push(suffix);
+            response.writeHead(200, { "Content-Type": "image/jpeg" }); response.end(jpeg); return;
+          }
           if (suffix === `/conversations/${conversationId}/gallery`) {
             fixture.galleryRequests ??= []; fixture.galleryRequests.push(url.search);
             if (fixture.photoNeighbor && (url.searchParams.has("before") || url.searchParams.has("after"))) {
@@ -1722,23 +1738,25 @@ test("Chrome photo neighbors use authorized server order within a millisecond wh
   }
 });
 
-test("Chrome: unselected admin has one latest received message per client, unread-first at320/1280px", { timeout: 120000 }, async t => {
-  for (const [width, language] of [[320, "en"], [1280, "fr"]]) await t.test(`${language} ${width}px`, async () => {
+test("Chrome: recent conversation previews show outgoing and empty states in FR/EN at320/1280px", { timeout: 120000 }, async t => {
+  for (const [width, language] of [[320, "fr"], [320, "en"], [1280, "fr"], [1280, "en"]]) await t.test(`${language} ${width}px`, async () => {
     resetFixture(); fixture.receivedEnabled = true;
     const page = await browser(width, 800);
     try {
       await loaded(page, "/admin/messages");
       if (language === "en") await toggleChatLanguage(page);
-      await waitUntil(() => page.execute("return document.querySelectorAll('.received-item').length===3"), "all incoming messages shown without choosing a client");
+      await waitUntil(() => page.execute("return document.querySelectorAll('.received-item').length===4"), "recent conversations shown without choosing a client");
       assert.equal(await page.execute("return document.getElementById('composer').checkVisibility() || document.querySelector('.chat-head').checkVisibility()"), false);
-      assert.deepEqual(await page.execute("return [...document.querySelectorAll('.received-item')].map(node=>({id:node.dataset.receivedId,unread:node.classList.contains('is-unread')}))"), [3,1,2].map(n => ({ id:id(200+n), unread:n!==2 })));
-      assert.equal(await page.execute("return new Set([...document.querySelectorAll('.received-item')].map(node=>node.dataset.receivedConversationId)).size"), 3);
+      assert.deepEqual(await page.execute("return [...document.querySelectorAll('.received-item')].map(node=>({id:node.dataset.receivedId,unread:node.classList.contains('is-unread')}))"), [3,2,1,4].map(n => ({ id:n===4?id(104):id(200+n), unread:n===1 })));
+      assert.equal(await page.execute("return new Set([...document.querySelectorAll('.received-item')].map(node=>node.dataset.receivedConversationId)).size"), 4);
       assert.equal(fixture.read.admin, "0", "the overview must never mark messages read");
       assert.equal(await page.execute("return !!document.querySelector('.received-body b')"), false, "message body remains literal text");
       assert.equal(await page.execute("return document.documentElement.scrollWidth<=innerWidth+1"), true);
-      assert.equal(await page.execute("return document.getElementById('received-title').textContent"), language === "en" ? "Received messages" : "Messages reçus");
+      assert.equal(await page.execute("return document.getElementById('received-title').textContent"), "Conversations");
+      assert.match(await page.execute("return document.querySelector('.received-body').textContent"), language === "en" ? /You:.*Photo/ : /Vous :.*Photo/);
+      assert.match(await page.execute("return document.querySelectorAll('.received-body')[3].textContent"), language === "en" ? /no messages/i : /Aucun message/);
       await mkdir(new URL("../../artifacts/homepage/", import.meta.url), { recursive: true });
-      await writeFile(new URL(`../../artifacts/homepage/received-inbox-${language}-${width}.png`, import.meta.url), Buffer.from(await page.screenshot(), "base64"));
+      await writeFile(new URL(`../../artifacts/homepage/conversation-list1130-${language}-${width}.png`, import.meta.url), Buffer.from(await page.screenshot(), "base64"));
       if (width === 320) {
         await page.click("#show-clients"); await waitUntil(() => page.execute("return document.getElementById('inbox').checkVisibility()"), "mobile client filters");
         await page.click("#return-received"); await waitUntil(() => page.execute("return document.querySelector('.received-item').checkVisibility()"), "mobile back to all received messages");
@@ -1746,11 +1764,11 @@ test("Chrome: unselected admin has one latest received message per client, unrea
       fixture.receivedFailure = true; await page.click("#refresh-received");
       await waitUntil(() => page.execute("return document.querySelectorAll('.received-item').length===0 && !document.getElementById('refresh-received').disabled"), "a failed refresh purges old previews");
       fixture.receivedFailure = false; await page.click("#refresh-received");
-      await waitUntil(() => page.execute("return document.querySelectorAll('.received-item').length===3 && !document.getElementById('refresh-received').disabled"), "explicit refresh recovers the overview");
+      await waitUntil(() => page.execute("return document.querySelectorAll('.received-item').length===4 && !document.getElementById('refresh-received').disabled"), "explicit refresh recovers the overview");
       await page.click(".received-item"); await loadedPhoto(page);
       assert.equal(await page.execute("return document.getElementById('received-overview').hidden && document.getElementById('composer').checkVisibility()"), true);
       await page.click("#back-to-inbox");
-      await waitUntil(() => page.execute("return document.querySelectorAll('.received-item').length===3 && !document.getElementById('received-overview').hidden"), "back returns to the received overview");
+      await waitUntil(() => page.execute("return document.querySelectorAll('.received-item').length===4 && !document.getElementById('received-overview').hidden"), "back returns to the received overview");
       assert.deepEqual(await page.execute("return window.__browserErrors"), []);
     } finally { await page.close(); }
   });
@@ -1859,6 +1877,60 @@ test("Chrome composer: mobile beforeinput fallback does not send an IME confirma
     assert.equal(await page.execute("return document.getElementById('message-body').dispatchEvent(new InputEvent('beforeinput',{inputType:'insertLineBreak',bubbles:true,cancelable:true}))"), false);
     await waitUntil(() => fixture.sent.length === 1, "soft Enter submits after composition confirmation");
     assert.equal(fixture.sent[0].body, "日本語");
+    await noJavascriptErrors(page);
+  } finally { await page.close(); }
+});
+
+
+test("Chrome: keyboard history loads on upward navigation and keeps a bounded contiguous two-way window", { timeout: 90000 }, async () => {
+  resetFixture(); fixture.windowedHistory = true; fixture.latest = 800; fixture.mediaDisabled = true;
+  const page = await browser(320, 800); let phase = "initial";
+  try {
+    await loaded(page, "/messages");
+    await waitUntil(() => page.execute("const scroll=document.getElementById('message-scroll'),last=document.querySelector('#messages .message:last-child');if(!last||last.dataset.sequence!=='800')return false;const box=scroll.getBoundingClientRect(),row=last.getBoundingClientRect();return scroll.scrollHeight-scroll.scrollTop-scroll.clientHeight<10&&row.bottom>box.top&&row.top<box.bottom"), "latest message is in the initial viewport at the conversation tail");
+    for (let i = 0; i < 8; i++) {
+      phase = `Home ${i + 1}`;
+      const before = fixture.historyReads.length;
+      await page.execute("document.getElementById('message-scroll').focus()"); await page.key("\uE011");
+      await waitUntil(() => fixture.historyReads.length > before, "Home loads older history without its button");
+      await waitUntil(() => page.execute("return !document.getElementById('older-messages').disabled"), "history load completes");
+    }
+    const window = await page.execute("return [...document.querySelectorAll('#messages .message')].map(node=>Number(node.dataset.sequence))");
+    assert.equal(window.length, 300); assert.equal(window.every((seq, index) => !index || seq === window[index - 1] + 1), true);
+    const tail = window.at(-1); phase = "End after window trim";
+    await page.execute("document.getElementById('message-scroll').focus()"); await page.key("\uE010");
+    await waitUntil(() => page.execute(`return Number(document.querySelector('#messages .message:last-child')?.dataset.sequence)>${tail}`), "End restores an evicted newer portion");
+    assert.equal(await page.execute("return document.querySelectorAll('#messages .message').length<=300"), true);
+    assert.equal(await page.execute("return document.documentElement.scrollWidth<=innerWidth+1"), true);
+    await mkdir(new URL("../../artifacts/homepage/", import.meta.url), { recursive: true });
+    await writeFile(new URL("../../artifacts/homepage/conversation-history1130-fr-320.png", import.meta.url), Buffer.from(await page.screenshot(), "base64"));
+    await noJavascriptErrors(page);
+  } catch (error) {
+    try {
+      const state = await page.execute("const scroll=document.getElementById('message-scroll'),rows=[...document.querySelectorAll('#messages .message')];return {active:document.activeElement.id,scrollTop:scroll.scrollTop,scrollHeight:scroll.scrollHeight,clientHeight:scroll.clientHeight,first:rows[0]?.dataset.sequence,last:rows.at(-1)?.dataset.sequence,rows:rows.length,older:{hidden:document.getElementById('older-messages').hidden,disabled:document.getElementById('older-messages').disabled},status:document.getElementById('chat-status').textContent,errors:window.__browserErrors}");
+      console.error("history1130_diagnostic " + JSON.stringify({ phase, reads: fixture.historyReads, ...state }));
+      await mkdir(new URL("../../artifacts/homepage/", import.meta.url), { recursive: true });
+      await writeFile(new URL("../../artifacts/homepage/debug1130-history.png", import.meta.url), Buffer.from(await page.screenshot(), "base64"));
+    } catch {}
+    throw error;
+  } finally { await page.close(); }
+});
+
+
+test("Chrome mobile: fifty photo placeholders only fetch thumbnails around the visible history", { timeout: 60000 }, async () => {
+  resetFixture(); fixture.windowedHistory = true; fixture.latest = 50; fixture.allPhotos = true;
+  const page = await browser(320, 800);
+  try {
+    await loaded(page, "/messages");
+    await waitUntil(() => (fixture.thumbnailReads?.length ?? 0) > 0, "visible tail thumbnails start");
+    await delay(150);
+    const initial = fixture.thumbnailReads.length;
+    assert.ok(fixture.thumbnailReads.some(path=>path.includes(id(250))), "the initial viewport fetches the latest photo");
+    assert.ok(initial < 20, `initial viewport fetched ${initial} of 50 thumbnails`);
+    assert.equal(await page.execute("return document.querySelectorAll('#messages .photo-open').length"), 50);
+    await page.execute("document.getElementById('message-scroll').focus()"); await page.key("\uE011");
+    await waitUntil(() => fixture.thumbnailReads.length > initial, "scrolling exposes earlier thumbnails");
+    assert.ok(fixture.thumbnailReads.length < 40);
     await noJavascriptErrors(page);
   } finally { await page.close(); }
 });

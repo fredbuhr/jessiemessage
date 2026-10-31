@@ -346,6 +346,39 @@ export function createVideoStore({ pool, chatStore, capacity, experience = false
       if (row.state !== "committed") fail("VIDEO_NOT_FOUND");
       return result;
     },
+    // One currently authorized chat operation owns this bounded batch and its
+    // transaction. Reuse originals only within that operation; every requested
+    // owner/role remains independently checked against the locked catalog row.
+    async getCommittedAssets(connection, { assets, now } = {}) {
+      if (typeof connection?.query !== "function" || !Array.isArray(assets) || assets.length > 100) input();
+      instant(now);
+      const wanted = new Map();
+      for (const value of assets) {
+        bytes(value?.assetId, 16); bytes(value.ownerId, 16); requestRole(value.ownerRole);
+        wanted.set(value.assetId.toString("hex"), value.assetId);
+      }
+      if (assets.length === 0) return [];
+      await lockCapacity(connection);
+      const ids = [...wanted.values()].sort(Buffer.compare);
+      const rows = await connection.query(`SELECT ${COLUMNS} FROM video_assets
+        WHERE id IN (${ids.map(() => "?").join(", ")}) ORDER BY id FOR UPDATE`, ids);
+      if (!Array.isArray(rows) || rows.length > wanted.size) state();
+      const found = new Map();
+      for (const row of rows) {
+        if (!sized(row?.id, 16)) state();
+        const key = row.id.toString("hex");
+        if (!wanted.has(key) || found.has(key)) state();
+        found.set(key, row);
+      }
+      const validated = new Map();
+      return assets.map(({ assetId, ownerId, ownerRole }) => {
+        const key = assetId.toString("hex"), row = found.get(key);
+        if (!row || !sized(row.owner_id, 16) || !row.owner_id.equals(ownerId) || row.owner_role !== ownerRole) fail("VIDEO_NOT_FOUND");
+        if (!validated.has(key)) validated.set(key, validateRow(row, now));
+        if (row.state !== "committed") fail("VIDEO_NOT_FOUND");
+        return validated.get(key);
+      });
+    },
     async deleteAsset(value) {
       request(value); bytes(value.assetId, 16);
       return chatStore.withActor(value, async (connection, context) => {

@@ -1,0 +1,84 @@
+{
+  "format": "jessiemessage-1130-development-checks",
+  "base": "5d51a4c60cc144f740e1b3d4ef922d0f2721dd2f",
+  "developmentCheckpoint": "0afb0f4ad03bab28298fb10f1e60c06c071c66a5",
+  "node": "v24.22.1",
+  "targetedGroupsOverlap": true,
+  "targeted": [
+    {
+      "group": "inbox backend",
+      "tests": 76,
+      "pass": 76,
+      "skipped": 0
+    },
+    {
+      "group": "chat frontend",
+      "tests": 264,
+      "pass": 264,
+      "skipped": 0
+    },
+    {
+      "group": "access backend",
+      "tests": 102,
+      "pass": 102,
+      "skipped": 0
+    },
+    {
+      "group": "access/tasks UI models and catalogs",
+      "tests": 85,
+      "pass": 85,
+      "skipped": 0
+    },
+    {
+      "group": "CRM and broadcasts",
+      "tests": 137,
+      "pass": 137,
+      "skipped": 0
+    },
+    {
+      "group": "video and Push",
+      "tests": 68,
+      "pass": 68,
+      "skipped": 0
+    }
+  ],
+  "syntax": {
+    "status": "passed",
+    "sources": 784
+  },
+  "offlineWorkbench": "built",
+  "localGeneral": {
+    "status": "not_conclusive",
+    "initialEnvironmentIssue": "TMPDIR default /tmp absent; two affected export/verification files pass 30/30 with workspace TMPDIR, without source modification",
+    "subsequentRun": "no final aggregate report available; not counted as a complete pass"
+  },
+  "nativeCI": "required_pending",
+  "nativeBrowsersLocal": false,
+  "nativeDatabaseLocal": false,
+  "schemaMigrationChanged": false,
+  "dependencyChanged": false,
+  "hostedActions": false,
+  "privateAuditIncluded": false,
+  "logs": {
+    "syntax": {
+      "sha256": "7cf39fa3b6165dc5b373bf40613cfd044f2f858a4c73226b3e6044c2f823152e",
+      "bytes": 426
+    },
+    "build": {
+      "sha256": "6db3ff6b52c60d51248bd0433e1e6476e13e1b1ea00b3ef0910e102085c23ab9",
+      "bytes": 80
+    },
+    "generalInitial": {
+      "sha256": "c95c51dfa85827e28fe63eacf72aad8594d680fd7bf972281f2f20800d707316",
+      "bytes": 216496
+    },
+    "generalCorrectedPartial": {
+      "sha256": "ed8fbdcde737398ebaa5bc55e5b9d3ace31a7498c23c69856418450cb6c4e911",
+      "bytes": 111811
+    },
+    "mediaTemporaryDirectoryResolution": {
+      "sha256": "bce53da98fc6555974d21e276199caa427ae8ff2df25b888921620a1fb837115",
+      "bytes": 1191
+    }
+  }
+}

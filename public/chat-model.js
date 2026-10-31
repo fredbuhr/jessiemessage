@@ -168,3 +168,22 @@ export function inboxRefreshPlan(loadedIds, page) {
     || page.nextCursor >= lastLoadedId || page.conversations.some((item) => item.id >= lastLoadedId);
   return { lastLoadedId, nextBoundary: reachedEnd ? null : page.nextCursor, probeTail: reachedEnd && lastLoadedId !== null };
 }
+
+// Only a contiguous presentation window is retained. Drafts and uncertain send
+// identities live outside this map, so trimming never changes their meaning.
+export function boundMessageWindow(state, { retain = "latest", limit = 300 } = {}) {
+  if (!["latest", "oldest"].includes(retain) || !Number.isSafeInteger(limit) || limit < 50) throw new TypeError("invalid_message_window");
+  const rows = orderedMessages(state);
+  if (rows.length <= limit) return [];
+  const removed = retain === "latest" ? rows.slice(0, -limit) : rows.slice(limit);
+  for (const row of removed) state.messages.delete(row.sequence);
+  const kept = orderedMessages(state); state.historyTrimmed = true;
+  if (retain === "latest") { state.hasMoreBefore = true; state.nextBefore = kept[0].sequence; }
+  else { state.hasMoreAfter = true; state.nextAfter = kept.at(-1).sequence; state.trimmedAfter = true; }
+  return removed;
+}
+export function currentHistoryPage(state, page) {
+  // A deletion already consumed by this window's event stream must not be
+  // undone by an older page after its tombstone has been evicted from memory.
+  return !state.historyTrimmed || compareSequence(page.eventCursor, state.eventCursor) >= 0;
+}

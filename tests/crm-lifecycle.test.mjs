@@ -43,7 +43,7 @@ class Element {
 
 async function harness(t, intercept = () => undefined, adapterOptions = {}) {
   const body = new Element("body"), inboxHead = new Element("header"), chatHead = new Element("header"); body.append(inboxHead, chatHead);
-  const calls = [], errors = []; let labels = [label()];
+  const calls = [], errors = [], contactSnapshots = []; let labels = [label()];
   const document = { body, visibilityState: "visible", createElement: tag => new Element(tag), addEventListener() {}, removeEventListener() {} };
   const context = vm.createContext({ document, Date, URLSearchParams, AbortController, setTimeout, clearTimeout, __catalogue: catalogue });
   // Exercise the real preferences UI while replacing only its module/catalogue
@@ -55,7 +55,7 @@ async function harness(t, intercept = () => undefined, adapterOptions = {}) {
   })();`, context);
   vm.runInContext(model.replace(/^export\s+/gm, ""), context);
   vm.runInContext(controller.replace(/^import[^\n]+\n/, "").replace(/^export\s+/gm, "").replace('await import("/preferences.js")', 'await Promise.resolve(__preferencesModule)'), context);
-  const ui = context.createCrmUI({ inboxHead, chatHead, ...adapterOptions, onContacts() {}, onError: error => errors.push(error),
+  const ui = context.createCrmUI({ inboxHead, chatHead, ...adapterOptions, onContacts(rows, metadata) { contactSnapshots.push({ rows, metadata }); }, onError: error => errors.push(error),
     async request(path, options) {
       const call = { path, options }; calls.push(call); const result = intercept(call, calls);
       if (result !== undefined) return result;
@@ -69,7 +69,7 @@ async function harness(t, intercept = () => undefined, adapterOptions = {}) {
   const manager = body.querySelectorAll(".crm-label-dialog")[0];
   const form = manager.querySelectorAll("form")[0], name = form.querySelectorAll("input")[0], create = form.querySelectorAll("button")[0];
   const emit = async (element, event) => { for (const fn of element.events.get(event) ?? []) fn({ preventDefault() {} }); await flush(); };
-  return { ui, calls, errors, manager, form, name, create, body, emit,
+  return { ui, calls, errors, contactSnapshots, manager, form, name, create, body, emit,
     async open() { const opener = body.querySelectorAll("button").find(button => button.textContent === "Tags et groupes"); await emit(opener, "click"); },
     async submit(value) { name.value = value; await emit(form, "submit"); },
     async settle() { await flush(); },
@@ -324,4 +324,49 @@ test("late profile and preference responses cannot replace the explicitly opened
   assert.equal(dialog.querySelectorAll(".preferences-selected")[0].textContent, catalogue.categories[0].preferences[1].fr);
   f.ui.suspend(); assert.equal(dialog.open, false); assert.equal(dialog.querySelectorAll(".crm-client-preferences")[0].textContent, "Goûts & fantasmes");
   assert.equal(f.calls.some(call => /\/read$/.test(call.path) || call.options.mutation), false); assert.deepEqual(f.errors, []);
+});
+
+
+test("CRM navigation replaces contact pages, refreshes the current cursor and keeps the selected unsaved profile", async t => {
+  const conversationId = id(1);
+  const profile = { conversationId, client: { id: id(9999), pseudonym: "Pinned client", email: "fixture@example.invalid", status: "active" }, access: { state: "active", expiresAt: null }, nickname: "", notes: "", reminderAt: null, labels: [], version: "1", updatedAt: 1 };
+  const f = await harness(t, call => {
+    if (call.path.endsWith(`/conversations/${conversationId}`)) return structuredClone(profile);
+    if (!call.path.includes("/contacts?")) return undefined;
+    const after = new URLSearchParams(call.path.split("?")[1]).get("afterId"), start = after ? Number.parseInt(after, 16) + 1 : 1;
+    const contacts = Array.from({ length: 50 }, (_, index) => ({ id: id(start + index), peerName: `Client ${start + index}`, unreadCount: 0 }));
+    return { contacts, hasMore: true, nextCursor: contacts.at(-1).id };
+  });
+  await f.ui.loadInbox(); f.ui.selectConversation(conversationId);
+  await f.ui.openSelectedProfile(f.body.querySelectorAll(".crm-fiche-button")[0]);
+  const notes = f.body.querySelectorAll("textarea").find(node => node.name === "notes"); notes.value = "Private draft to retain"; await f.emit(notes, "input");
+  for (let index = 0; index < 5; index++) { await f.ui.loadInbox(true); assert.equal(f.contactSnapshots.at(-1).rows.length, 50); }
+  assert.equal(f.ui.hasUnsavedWork(), true); assert.equal(notes.value, "Private draft to retain");
+  const before = f.calls.length; await f.ui.loadInbox(false, true);
+  assert.ok(f.calls.slice(before).find(call => call.path.includes(`afterId=${id(250)}`)), "poll refreshes page six instead of sweeping earlier pages");
+  const previous = f.body.querySelectorAll("button").find(node => node.textContent === "Clients précédents"); await f.emit(previous, "click");
+  assert.equal(f.contactSnapshots.at(-1).rows[0].id, id(201));
+  const first = f.body.querySelectorAll("button").find(node => node.textContent === "Première page"); await f.emit(first, "click");
+  assert.equal(f.contactSnapshots.at(-1).rows[0].id, id(1)); assert.equal(previous.hidden, true);
+  assert.equal(f.ui.hasUnsavedWork(), true); assert.equal(notes.value, "Private draft to retain");
+  assert.deepEqual(f.errors, []);
+});
+
+
+test("CRM keeps a bounded previous-page trail with an absolute page number and an explicit return to the beginning", async t => {
+  const f = await harness(t, call => {
+    if (!call.path.includes("/contacts?")) return undefined;
+    const after = new URLSearchParams(call.path.split("?")[1]).get("afterId"), start = after ? Number.parseInt(after, 16) + 1 : 1;
+    const contacts = Array.from({ length: 50 }, (_, index) => ({ id: id(start + index), peerName: `Client ${start + index}` }));
+    return { contacts, hasMore: true, nextCursor: contacts.at(-1).id };
+  });
+  await f.ui.loadInbox();
+  for (let index = 0; index < 125; index++) await f.ui.loadInbox(true);
+  const label = f.body.querySelectorAll(".crm-page-label")[0]; assert.equal(label.textContent, "Page 126");
+  for (let index = 0; index < 100; index++) await f.ui.loadInbox(true, false, true);
+  const previous = f.body.querySelectorAll("button").find(node => node.textContent === "Clients précédents");
+  assert.equal(label.textContent, "Page 26"); assert.equal(previous.hidden, true);
+  const first = f.body.querySelectorAll("button").find(node => node.textContent === "Première page"); assert.equal(first.hidden, false);
+  await f.emit(first, "click"); assert.equal(label.textContent, "Page 1"); assert.equal(f.contactSnapshots.at(-1).rows[0].id, id(1));
+  assert.equal(f.contactSnapshots.at(-1).rows.length, 50);
 });

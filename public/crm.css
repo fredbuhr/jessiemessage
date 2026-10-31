@@ -5,3 +5,5 @@
 .crm-client-identity{display:flex;align-items:center;gap:14px;min-width:0;border-bottom:1px solid var(--line);margin:8px 0 15px}.crm-client-identity .crm-client-info{flex:1;min-width:0;margin:0;border-bottom:0}.crm-profile-avatar{width:64px;height:64px;flex:0 0 64px;border-radius:50%;overflow:hidden}.crm-client-preferences{border:1px solid var(--line);border-radius:12px;padding:13px;margin:12px 0 20px;background:#211923}.crm-client-preferences>summary{cursor:pointer;color:var(--champagne);font-size:15px;font-weight:550;min-height:28px;line-height:1.6}.crm-client-preferences .preferences-section{border:0;padding:0;margin:10px 0 0}.crm-client-preferences .preferences-section>h3{display:none}.crm-client-preferences .preferences-selected{margin-bottom:10px}@media(max-width:600px){.crm-client-identity{gap:10px}.crm-profile-avatar{width:52px;height:52px;flex-basis:52px}.crm-client-preferences{padding:10px}}
 
 .crm-dialog .dialog-head button{min-width:44px;min-height:44px}
+
+.crm-pagination{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin:.5rem 0}.crm-page-label{color:var(--muted,#c4b8c7);font-size:.85rem}

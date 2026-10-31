@@ -13,6 +13,7 @@ import { createAppServer } from "../../server/index.mjs";
 import { createAuthHandler } from "../../server/auth/http.mjs";
 import { AuthError } from "../../server/auth/service.mjs";
 import { createAccessHandler } from "../../server/access/http.mjs";
+import { decodeAccessCursor, encodeAccessCursor } from "../../server/access/pagination.mjs";
 import { createEntryHandler } from "../../server/entry/http.mjs";
 import { startWebDriver, waitUntil } from "./webdriver.mjs";
 
@@ -26,7 +27,7 @@ const copy = {
   en: { invalid: "This code is invalid, expired or already used.", created: "Your account is ready.", verificationRejected: "This confirmation link is invalid, expired or already used. Sign in if your email is confirmed, or request another email below.", verified: "Your email address is verified. Sign in to open your conversation.", signIn: "Go to sign in" },
 };
 
-async function fixture() {
+async function fixture({ invitations = [] } = {}) {
   const directory = await mkdtemp(join(tmpdir(), "jessie-invitation-code-")); await chmod(directory, 0o700);
   const key = join(directory, "key.pem"), cert = join(directory, "cert.pem");
   let server;
@@ -36,7 +37,7 @@ async function fixture() {
     await chmod(key, 0o600); await chmod(cert, 0o600);
     const adminToken = Buffer.alloc(32, 22).toString("base64url");
     const admin = { user: { id: "2".repeat(32), role: "admin", pseudonym: "Jessie de test" }, csrf: Buffer.alloc(32, 23).toString("base64url"), expiresAt: Date.now() + 3600000 };
-    const requests = [], inspections = [], registrations = [], creations = [], verifications = [], failures = [];
+    const requests = [], inspections = [], registrations = [], creations = [], verifications = [], failures = [], listQueries = [];
     let app, registrationRefused = false, verificationRefused = false;
     server = createServer({ key: await readFile(key), cert: await readFile(cert), minVersion: "TLSv1.2" }, (request, response) => {
       const url = new URL(request.url, "https://localhost");
@@ -59,7 +60,15 @@ async function fixture() {
         return { status: "email_verified" };
       },
       listClients: async () => ({ clients: [], hasMore: false, nextCursor: null }),
-      listInvitations: async () => ({ invitations: [], hasMore: false, nextCursor: null }),
+      listInvitations: async (_token, { state = "all", cursor = null, limit = 50 } = {}) => {
+        const position = cursor === null ? null : decodeAccessCursor("invitations", cursor, state);
+        const before = position === null ? Infinity : Date.parse(position.createdAt.replace(" ", "T") + "Z");
+        const rows = invitations.filter(row => (state === "all" || row.state === state) && (position === null || row.createdAt < before || row.createdAt === before && row.id < position.id))
+          .sort((a, b) => b.createdAt - a.createdAt || b.id.localeCompare(a.id));
+        const selected = rows.slice(0, limit), hasMore = rows.length > limit, last = selected.at(-1);
+        listQueries.push({ state, cursor, limit, returned: selected.length });
+        return { invitations: selected, hasMore, nextCursor: hasMore ? encodeAccessCursor("invitations", { id: last.id, createdAt: new Date(last.createdAt).toISOString().replace("T", " ").replace("Z", "000") }, state) : null };
+      },
       async inspectInvitation(input) {
         const valid = input.token === compact || input.token === legacyToken;
         inspections.push({ valid, kind: input.token === legacyToken ? "link" : "code" });
@@ -84,7 +93,7 @@ async function fixture() {
     }, async logout() {}, async logoutAll() {} }, { origin });
     app = createAppServer({ authHandler, accessHandler: createAccessHandler(access, { origin }),
       entryHandler: createEntryHandler({ clientSession, adminSession, chatEnabled: true, deviceTransition: true }) });
-    return { origin, requests, inspections, registrations, creations, verifications, failures,
+    return { origin, requests, inspections, registrations, creations, verifications, failures, listQueries,
       setVerificationRefused(value) { verificationRefused = value; },
       refuseNextRegistration() { registrationRefused = true; },
       async close() { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); await rm(directory, { recursive: true, force: true }); } };
@@ -257,5 +266,49 @@ test("real Chrome: admin creates and copies only the selected invitation format,
       } finally { await page.close(); }
     });
     cleanFixture(source);
+  } finally { try { await source.close(); } finally { await driver?.close(); } }
+});
+
+
+test("real Chrome: invitation status pages stay compact and bounded with working previous/next in FR/EN at320/1280px", { timeout: 180000 }, async t => {
+  const now = Date.now(), states = ["pending", "used", "expired", "revoked"],
+    invitations = Array.from({ length: 2500 }, (_, index) => ({ id: (index + 100).toString(16).padStart(32, "0"), state: states[index % 4],
+      createdAt: now - index * 1000 - 60000, expiresAt: index % 4 === 2 ? now - 1000 : now + 3600000, accessDays: 1, consumedById: index % 4 === 1 ? (index + 3000).toString(16).padStart(32, "0") : null }));
+  const source = await fixture({ invitations }); let driver;
+  try {
+    driver = await startWebDriver();
+    for (const language of ["fr", "en"]) for (const width of [320, 1280]) await t.test(`${language}, ${width}px`, async () => {
+      const page = await driver.browser({ origin: source.origin, acceptInsecureCerts: true, width, height: 800 });
+      try {
+        await open(page, language, "/admin/login");
+        await waitUntil(() => page.execute("return !document.getElementById('login-form').hidden && !document.getElementById('login-button').disabled"), "admin MFA ready");
+        await page.type("#email", "admin@example.invalid"); await page.type("#password", password); await page.type("#factor", "123456"); await page.click("#login-button");
+        await waitUntil(() => page.execute("return location.pathname==='/admin' && !document.getElementById('connected').hidden"), "signed-in admin");
+        await page.navigate("/admin/clients");
+        await waitUntil(() => page.execute("return document.querySelectorAll('#invitations-list>details').length===25 && !document.getElementById('invitation-create').disabled"), "one bounded invitation page");
+        await page.click("#invitation-create");
+        await waitUntil(() => page.execute("return document.getElementById('invitation-code-result').value.length>0 && !document.getElementById('invitation-create').disabled"), "one-time code remains available");
+        await page.execute("document.getElementById('invitation-hours').value='48';const field=document.getElementById('invitation-state');field.value='expired';field.dispatchEvent(new Event('change',{bubbles:true}))");
+        await waitUntil(() => page.execute("return document.querySelectorAll('#invitations-list>details[data-invitation-state=expired]').length===25 && !document.getElementById('invitations-next-top').disabled"), "global status filter is loaded");
+        const firstIds = await page.execute("return [...document.querySelectorAll('#invitations-list>details')].map(node=>node.dataset.invitationId)");
+        await page.click("#invitations-next-top");
+        await waitUntil(() => page.execute("return document.getElementById('invitations-page-note').textContent.includes('Page 2') && !document.getElementById('invitations-previous-top').disabled"), "next invitation page");
+        assert.equal(await page.execute("return document.activeElement.id"), "invitations-title");
+        assert.equal(await page.execute("return document.querySelectorAll('#invitations-list>details').length"), 25);
+        assert.equal(await page.execute("return [...document.querySelectorAll('#invitations-list>details')].every(node=>!arguments[0].includes(node.dataset.invitationId))", firstIds), true);
+        await page.click("#invitations-previous-top");
+        await waitUntil(() => page.execute("return document.getElementById('invitations-page-note').textContent.includes('Page 1') && !document.getElementById('invitations-next-top').disabled"), "previous invitation page");
+        assert.deepEqual(await page.execute("return [...document.querySelectorAll('#invitations-list>details')].map(node=>node.dataset.invitationId)"), firstIds);
+        assert.equal(await page.execute("return document.getElementById('invitation-code-result').value===arguments[0] && document.getElementById('invitation-hours').value==='48'", code), true);
+        assert.equal(await page.execute("const list=document.getElementById('invitations-list');return document.documentElement.scrollWidth<=document.documentElement.clientWidth+1 && list.clientHeight<=innerHeight*.66 && list.scrollHeight>list.clientHeight"), true);
+        await page.execute("document.getElementById('invitations-title').scrollIntoView({block:'start'});document.querySelector('#invitations-list>details summary').focus()");
+        await page.key("\uE007");
+        assert.equal(await page.execute("return document.querySelector('#invitations-list>details').open"), true, "native details can be opened from the keyboard");
+        await capture(page, `admin-invitations-1130-${language}-${width}`);
+      } finally { await page.close(); }
+    });
+    assert.ok(source.listQueries.some(query => query.state === "expired" && query.cursor !== null));
+    assert.ok(source.listQueries.every(query => query.limit === 25 && query.returned <= 25));
+    assert.equal(source.creations.length, 4); cleanFixture(source);
   } finally { try { await source.close(); } finally { await driver?.close(); } }
 });

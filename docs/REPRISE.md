@@ -1,6 +1,12 @@
 # Reprendre JessieMessage
 
-**31 octobre 2026 —1.12.0 démarrée selon le relevé utilisateur ; enregistrement final des métadonnées à exécuter.** Source `9bfdae07797f4e848964422471da67560c7d94eb`, Nodev24.22.1, **31/10/2026 02:29:16Paris (UTC+01)**, seconde1793410156. [Identité rapportée](verification-proofs/jm1120/hosted-identity.json). Aucun nouveau redémarrage requis ; millisecondes et disponibilité HTTP courante attendent le writer.
+**31 octobre 2026 —1.12.0 démarrée selon le relevé utilisateur ; reçu final des métadonnées non communiqué.** Source `9bfdae07797f4e848964422471da67560c7d94eb`, Nodev24.22.1, **31/10/2026 02:29:16Paris (UTC+01)**, seconde1793410156. [Identité rapportée](verification-proofs/jm1120/hosted-identity.json). Aucun nouveau redémarrage requis. L'exécution de la dernière commande de métadonnées reste indéterminée : retrouver son reçu ou lire l'état durable avant une future opération dépendante, sans rejouer la commande pour découvrir son résultat. Millisecondes et disponibilité HTTP courante ne sont pas déduites.
+
+## Évolution 1.13.0 — développement en cours, non livrée
+
+L'utilisateur demande de commencer les corrections de conversations et de listes. Branche de développement `feat/conversation-lists-1130`, base documentaire `5d51a4c60cc144f740e1b3d4ef922d0f2721dd2f` ; le code applicatif de départ est identique au tag1.12.0. Objectif : dernier échange dans les deux sens, ouverture récente, historique progressif, listes administratives compactes et bornées, actualisation des tâches et lectures SQL regroupées. [Périmètre et critères](conversation-lists-1130.md), [jalons](PLAN-IMPLEMENTATION.md#évolution-1130--conversations-et-listes).
+
+Les jalons de développement ne sont pas des déploiements : la version active rapportée reste1.12.0. Les tests ciblés, revue et qualification native du candidat seront consignés avant publication. Aucun envoi réel, migration, modification de compte, essai de sauvegarde ou redémarrage n'est demandé par ce développement. Ne pas rejouer une préparation ou un writer1120/1113.
 
 ## Évolution1.12.0 — un clic sur le lien suffit
 
@@ -18,7 +24,7 @@ Les autres corrections du même lot sont incluses : confirmations mises en envoi
 
 **Writer1120 qualifié :** [run41155948468](verification-proofs/jm1120/writer-final-native.json)1/1, tentative1, **24/24 tests natifs**, sans omission. Opérateur `e2828cb96e8831ce5b01900380705f0666137d17`, arbre `d23d6f35d853bf91271e8215db8283549d8926c7`, script SHA256 `b0e7b06b18f4215412e06a0f2551fd02d5c31fc7a643ca58dc6ee0ce745408b7`, relu identique aux octets qualifiés. Ces essais synthétiques ne valent pas exécution hébergée. Le writer épingle la seconde1793410156, le staging692d5598 et le checkpoint1112/3f1ae16d ; il préserve la preuve de staging1113 sans inventer de finalisation1113.
 
-**Prochaine action unique :** exécuter une fois la [commande de métadonnées1120](operations-release1120.md#enregistrement-final) dans le terminal Infomaniak, puis recueillir son JSON. Aucun compte, mail, média, SQL, Manager ou runtime modifié. Le reçu final et les contrôles HTTP hébergés restent non rapportés.
+**Reçu manquant, pas de commande à relancer :** la [commande de métadonnées1120](operations-release1120.md#enregistrement-final) avait été fournie. Son résultat n'est pas communiqué. Avant une future opération qui en dépend, retrouver le reçu ou vérifier les fichiers durables en lecture seule. Cette absence ne remet pas en cause le démarrage rapporté et ne bloque pas le développement. Le reçu final et les contrôles HTTP hébergés restent non rapportés.
 
 Le checkpoint privé1112SHA256`3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf72aa26cd080b5a0ac2f400f` est désormais observé/préservé selon le reçu de préparation1120 (`baselineMetadataRelease:1.11.2`, transition1113false). Ne pas rejouer le writer1113 pour modifier cet état ; le writer1120 devra préserver ce baseline exact. Les anciens brouillons de publication non référencés sont dépassés : ne pas les promouvoir. La [reprise après interruption](verification-proofs/jm1120/recovery.json) a retrouvé les sources intactes ; une coupure du transport exec-server a été observée puis rétablie, sans cause certaine de l’ancienne interruption ChatGPT.
 
@@ -234,15 +240,9 @@ La [sauvegarde privée D01/D08](verification-proofs/jm182-hosted-privacy-notes.j
 
 Le service Node **239143**, nommé **recette.jessiemessage.com** dans le Manager, dessert aussi **jessiemessage.com**, avec **le même runtime et la même base**. Recette est une origine de compatibilité pour les anciens appareils/PWA/Push, jamais une cible de qualification destructive. Accès directs : [SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), [Run/Build](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard), [état du service](https://jessiemessage.com/admin/readiness), [tâches](https://jessiemessage.com/admin/tasks), [connexion admin directe](https://jessiemessage.com/admin/login).
 
-Les commandes ci-dessous étaient la cible1113 après préparation/CHECK réussis ; le [relevé après activation](verification-proofs/jm1113/hosted-identity.json) rapporte désormais1113 démarrée. Les champs du Manager et le processus n’ont pas été inspectés directement par l’agent. Ne pas redémarrer à nouveau.
+Les réglages1.12.0 appliqués selon les reçus utilisateur et leurs lanceurs exacts sont documentés dans [l'activation acquise1120](operations-release1120.md#activation-personnelle--acquise-ne-pas-rejouer). Ce lien est une référence de l'opération déjà effectuée, pas une demande de la rejouer. Le port reste3000. Les réglages Manager et le processus n'ont pas été inspectés directement par l'agent.
 
-| Champ Manager | Cible1113 appliquée selon la suite des reçus utilisateur |
-| --- | --- |
-| Commande d’exécution — champ du haut | `bash /srv/customer/jessiemessage-private/start-primary-release1113-89571636.sh` |
-| Commande de build — champ du bas | `bash /srv/customer/jessiemessage-private/check-primary-release1113-89571636.sh` |
-| Port | **3000**, inchangé |
-| Checkout préparé | `/srv/customer/jessiemessage-operator/production-1113-89571636` |
-| Journal1113 | `/srv/customer/jessiemessage-private/jm1113-node24221.log` — ne pas tronquer. |
+Les anciens réglages1113 restent dans leur [guide historique](operations-release1113.md) ; ils ne sont plus les commandes de la version active rapportée. Ne pas redémarrer ni modifier le Manager pour harmoniser la documentation.
 
 Les lanceurs184/181/172 et les autres versions historiques restent conservés.184/172 ne sont pas utilisables sur SQL38. Le repli185 compatible38 conserve ses propres scripts, sources et reçus : il est précontrôlé, jamais démarré, et son activation n’est pas demandée. Le Node privé officiel reste épinglé ; ne pas remplacer le binaire système du fournisseur.
 
