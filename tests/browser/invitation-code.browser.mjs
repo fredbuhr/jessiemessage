@@ -37,7 +37,7 @@ async function fixture() {
     const adminToken = Buffer.alloc(32, 22).toString("base64url");
     const admin = { user: { id: "2".repeat(32), role: "admin", pseudonym: "Jessie de test" }, csrf: Buffer.alloc(32, 23).toString("base64url"), expiresAt: Date.now() + 3600000 };
     const requests = [], inspections = [], registrations = [], creations = [], verifications = [], failures = [];
-    let app, registrationRefused = false, verificationUsed = false;
+    let app, registrationRefused = false, verificationRefused = false;
     server = createServer({ key: await readFile(key), cert: await readFile(cert), minVersion: "TLSv1.2" }, (request, response) => {
       const url = new URL(request.url, "https://localhost");
       requests.push({ path: url.pathname, method: request.method, noQuery: !url.search,
@@ -53,10 +53,9 @@ async function fixture() {
     Object.assign(access, {
       session: clientSession, adminSession,
       async verifyEmail({ token }) {
-        const accepted = token === verificationToken && !verificationUsed;
+        const accepted = token === verificationToken && !verificationRefused;
         verifications.push({ accepted });
         if (!accepted) throw new AuthError("AUTH_INVALID");
-        verificationUsed = true;
         return { status: "email_verified" };
       },
       listClients: async () => ({ clients: [], hasMore: false, nextCursor: null }),
@@ -86,7 +85,7 @@ async function fixture() {
     app = createAppServer({ authHandler, accessHandler: createAccessHandler(access, { origin }),
       entryHandler: createEntryHandler({ clientSession, adminSession, chatEnabled: true, deviceTransition: true }) });
     return { origin, requests, inspections, registrations, creations, verifications, failures,
-      setVerificationUsed(value) { verificationUsed = value; },
+      setVerificationRefused(value) { verificationRefused = value; },
       refuseNextRegistration() { registrationRefused = true; },
       async close() { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); await rm(directory, { recursive: true, force: true }); } };
   } catch (error) {
@@ -127,38 +126,33 @@ function cleanFixture(source) {
   assert.equal(source.registrations.every(call => call.valid), true, "registration forwards the exact synthetic credentials and accepted invitation");
 }
 
-test("real Chrome: a used verification link opens sign-in, while a fresh link and explicit fallback remain usable inFR/EN at320/1280px", { timeout: 240000 }, async t => {
+test("real Chrome: opening an email link confirms automatically, and invalid links remain usable inFR/EN at320/1280px", { timeout: 240000 }, async t => {
   const source = await fixture(); let driver;
   try {
     driver = await startWebDriver();
     for (const language of ["fr", "en"]) for (const width of [320, 1280]) await t.test(`${language}, ${width}px`, async () => {
       const page = await driver.browser({ origin: source.origin, acceptInsecureCerts: true, width });
       try {
-        source.setVerificationUsed(true);
-        await open(page, language, `/access#verification=${verificationToken}`);
-        await waitUntil(() => page.execute("return document.getElementById('email-verification').hidden===false && !document.getElementById('verify-email-button').disabled"), "verification link view");
-        assert.equal(await page.execute("return document.getElementById('verification-login-button').textContent"), copy[language].signIn);
-        await cleanClientSurfaces(page); await geometry(page);
+        source.setVerificationRefused(true);
         const before = source.verifications.length;
-        await page.click("#verify-email-button"); await loginReady(page);
+        await open(page, language, `/access#verification=${verificationToken}`); await loginReady(page);
         assert.equal(await page.execute("return document.getElementById('access-status').textContent"), copy[language].verificationRejected);
         assert.equal(await page.execute("return document.getElementById('email-verification').hidden && !document.getElementById('resend-section').hidden && document.activeElement?.id==='login-email'"), true);
         assert.deepEqual(source.verifications.slice(before), [{ accepted: false }]);
         await geometry(page); await capture(page, `verification-used-${language}-${width}`); await cleanClientSurfaces(page);
 
-        source.setVerificationUsed(false);
-        await open(page, language, `/access#verification=${verificationToken}`);
-        await waitUntil(() => page.execute("return document.getElementById('email-verification').hidden===false && !document.getElementById('verification-login-button').disabled"), "explicit sign-in alternative");
-        const beforeChoice = source.verifications.length;
-        await page.click("#verification-login-button"); await loginReady(page);
-        assert.equal(source.verifications.length, beforeChoice, "choosing sign-in neither submits nor consumes a verification token");
-
-        await open(page, language, `/access#verification=${verificationToken}`);
-        await waitUntil(() => page.execute("return document.getElementById('email-verification').hidden===false && !document.getElementById('verify-email-button').disabled"), "fresh verification view");
-        await page.click("#verify-email-button"); await loginReady(page);
+        source.setVerificationRefused(false);
+        const beforeSuccess = source.verifications.length;
+        await open(page, language, `/access#verification=${verificationToken}`); await loginReady(page);
         assert.equal(await page.execute("return document.getElementById('access-status').textContent"), copy[language].verified);
-        assert.equal(source.verifications.at(-1).accepted, true); await cleanClientSurfaces(page);
-        await geometry(page); await capture(page, `verification-open-conversation-${language}-${width}`);
+        assert.deepEqual(source.verifications.slice(beforeSuccess), [{ accepted: true }], "opening the link is enough: no confirmation-button click");
+        assert.equal(await page.execute("return document.getElementById('email-verification').hidden && document.getElementById('verify-email-button').hidden"), true);
+        await cleanClientSurfaces(page); await geometry(page); await capture(page, `verification-one-click-${language}-${width}`);
+
+        const beforeRepeat = source.verifications.length;
+        await open(page, language, `/access#verification=${verificationToken}`); await loginReady(page);
+        assert.equal(await page.execute("return document.getElementById('access-status').textContent"), copy[language].verified);
+        assert.deepEqual(source.verifications.slice(beforeRepeat), [{ accepted: true }], "reopening the same successful link does not show an approval or another confirmation step");
       } finally { await page.close(); }
     });
     cleanFixture(source);

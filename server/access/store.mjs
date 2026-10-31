@@ -490,12 +490,18 @@ export function createAccessStore(pool, { clock } = {}) {
         if (!candidate) return false;
         const admissionIssuer = await pendingAdmissionIssuer(connection, candidate.user_id, now);
         const user = (await connection.query("SELECT id, role, status, email_verified_at FROM users WHERE id = ? FOR UPDATE", [candidate.user_id]))[0];
-        if (!user || user.role !== "client" || user.status !== "pending" || user.email_verified_at !== null) return false;
+        if (!user || user.role !== "client" || !["pending", "active"].includes(user.status)) return false;
         const verification = (await connection.query(`SELECT id, user_id, created_at, expires_at, consumed_at,
           revoked_at FROM email_verifications WHERE token_hash = ? FOR UPDATE`, [tokenHash]))[0];
         now = sessionNow(now);
-        if (!verification || !verification.user_id.equals(user.id) || verification.consumed_at !== null
+        if (!verification || !verification.user_id.equals(user.id)
           || verification.revoked_at !== null || now < fromSqlDate(verification.created_at) || now >= fromSqlDate(verification.expires_at)) return false;
+        // A lost response or a repeated opening acknowledges the same completed
+        // confirmation. It never creates a session or repeats the activation.
+        if (verification.consumed_at !== null) return user.status === "active" && user.email_verified_at !== null
+          && fromSqlDate(user.email_verified_at) <= now && fromSqlDate(verification.consumed_at) <= now
+          && fromSqlDate(verification.consumed_at) >= fromSqlDate(verification.created_at);
+        if (user.status !== "pending" || user.email_verified_at !== null) return false;
         user.email_verified_at = sqlDate(now);
         if (!await activateVerifiedClient(connection, user, admissionIssuer, now, { verificationExpiresAt: fromSqlDate(verification.expires_at) })) return false;
         now = fromSqlDate(user.email_verified_at);

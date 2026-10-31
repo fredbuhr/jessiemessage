@@ -85,6 +85,7 @@ function signedOut(message = "", { allowRecovery = true } = {}) {
   registrationForm.hidden = !invitationToken;
   invitationCodeForm.hidden = !codeEntry || Boolean(invitationToken || verificationToken);
   verificationSection.hidden = !verificationToken;
+  element("verify-email-button").hidden = true;
   connected.hidden = true;
   element("entry-role-choice").hidden = true;
   element("resend-section").hidden = codeEntry;
@@ -297,18 +298,24 @@ invitationCodeForm.addEventListener("submit", (event) => {
     invitationToken = code; codeEntry = false; invitationCodeForm.reset(); signedOut(); element("registration-email").focus();
   });
 });
-element("verify-email-button").addEventListener("click", () => { void submit(async () => {
+async function confirmEmailFromLink() {
   if (!verificationToken) return;
-  try { await request("/api/access/verify-email", { mutation: true, body: { token: verificationToken } }); }
-  catch (error) {
-    if (error.stale || ![400, 401].includes(error.status)) throw error;
+  await submit(async () => {
+    element("verify-email-button").hidden = true;
+    notice("Confirmation de ton e-mail en cours…");
+    try { await request("/api/access/verify-email", { mutation: true, body: { token: verificationToken } }); }
+    catch (error) {
+      if (error.stale) throw error;
+      if (![400, 401].includes(error.status)) { element("verify-email-button").hidden = false; throw error; }
+      returnToLogin();
+      notice("Ce lien de confirmation est invalide, expiré ou déjà utilisé. Connecte-toi si ton e-mail est confirmé, ou demande un nouvel e-mail ci-dessous.", true);
+      return;
+    }
     returnToLogin();
-    notice("Ce lien de confirmation est invalide, expiré ou déjà utilisé. Connecte-toi si ton e-mail est confirmé, ou demande un nouvel e-mail ci-dessous.", true);
-    return;
-  }
-  returnToLogin();
-  notice("Ton adresse e-mail est vérifiée. Connecte-toi pour ouvrir ta conversation.");
-}); });
+    notice("Ton adresse e-mail est vérifiée. Connecte-toi pour ouvrir ta conversation.");
+  });
+}
+element("verify-email-button").addEventListener("click", () => { void confirmEmailFromLink(); });
 element("resend-form").addEventListener("submit", (event) => {
   event.preventDefault(); void submit(async () => {
     await request("/api/access/resend-verification", { mutation: true, body: { email: element("resend-email").value, password: element("resend-password").value } });
@@ -341,7 +348,7 @@ async function refreshSession() {
   if (busy || checkingSession || !visible()) return;
   // A mailbox link can belong to a different client than the existing cookie.
   // Keep its explicit sign-in intent until credentials and current owner pass.
-  if (verificationFlow) { signedOut(); return; }
+  if (verificationFlow) { signedOut(); if (verificationToken) await confirmEmailFromLink(); return; }
   checkingSession = true;
   const epoch = ++sessionRefreshEpoch;
   try {

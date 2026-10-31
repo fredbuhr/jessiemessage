@@ -2,13 +2,13 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Évolution1.12.0 — code fusionné, relevé hébergé attendu
+## Évolution1.12.0 — confirmation automatique, une seule mise à jour
 
-Les quatre corrections du30octobre et la clarification du bouton de confirmation sont codées et fusionnées parPR141/142. [Rapport et preuves](onboarding-media-chat-1120.md). Les contrôles PR réussissent5/5 ; [CI main41149578038](verification-proofs/jm1120/main-native.json) réussie5/5, tentative1, sur le même arbre complet ; tous les journaux et compteurs sont conservés.. Aucun déploiement1120 effectué.
+Instruction du31octobre : l’ouverture du lien confirme l’adresse et active l’accès, sans bouton supplémentaire ni approbation admin. Le diagnostic individuel demandé auparavant est remplacé par cette correction de parcours ; le premier client a réussi avec une nouvelle invitation selon l’utilisateur.
 
-1. Exploiter le [relevé client/checkpoint en lecture seule](operations-access-diagnostic1113.md) déjà fourni. La capture seule n’établit pas la confirmation en base. Ne pas forcer de compte ni renvoyer de mail automatiquement.
-2. Résoudre tout défaut réel révélé puis publier une seule1.12.0 sur la source finale qualifiée, préparer/CHECK l’hébergement avec son checkpoint exact et activer via le Manager personnel.
-3. Après identité de démarrage reçue, qualifier/enregistrer les métadonnées finales puis clore les preuves, sans rejouer les étapes réussies.
+1. Qualifier le code automatique de `fix/one-click-confirmation-1120`, PR puis commit main, avec répétition idempotente, reprise réseau/mobile et séparation des sessions. Les144tests ciblés passent ; ancien lot PR141/142 déjà qualifié mais supersédé.
+2. Publier une seule1.12.0 ; préparer/CHECK l’hébergement par un outil qualifié qui inspecte/préserve le checkpoint connu1112 ou la transition1113, sans ancien writer ni test client supplémentaire.
+3. Activer via le Manager personnel, recueillir l’identité puis qualifier/enregistrer les métadonnées finales. Ne pas rejouer les étapes réussies.
 
 ## Correctif1.11.3 — démarrage rapporté, finalisation attendue
 
