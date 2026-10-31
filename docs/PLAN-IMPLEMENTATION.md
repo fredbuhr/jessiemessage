@@ -2,16 +2,13 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Évolution 1.13.0 — conversations et listes
+## Évolution 1.13.0 — publiée, suite opérateur bornée
 
-Développement demandé le31octobre, branche `feat/conversation-lists-1130`, base5d51a4c. [Critères du résultat](conversation-lists-1130.md). Aucun jalon n'est une activation ; viser une seule livraison compatible une fois le candidat qualifié.
+Les corrections de messagerie, listes, lectures backend, cadence Push et textes courants sont terminées. [Résultat et bornes](conversation-lists-1130.md), [couverture F01–F09](verification-proofs/jm1130/coverage.json). PR144 fusionnée, PR/main5/5, douze captures inspectées ; tagv1.13.0/release430071184 publiés surb9e2ad78 après publication2/2. Aucune migration ou dépendance nouvelle. Les contrôles verts du même code ne sont pas à rejouer.
 
-1. **Messagerie** : dernier échange tous sens et tri global, ouverture récente/ciblée, historique progressif et fenêtre bornée protégeant suppressions/brouillons.
-2. **Listes** : accès compacts avec filtres globaux et navigation, tâches revalidées et listes CRM/diffusions bornées sans perdre sélection ou formulaire.
-3. **Backend et entretien** : lectures vidéo/inbox regroupées quand les gardes restent vérifiables, cadence push bornée, textes et références courantes cohérents. Pas de migration/index sans mesure justifiée.
-4. **Qualification** : tests ciblés utiles, revue, captures et suites natives CI du candidat stabilisé puis du SHA fusionné ; preuves exactes et omissions conservées. Vérifier en lecture seule le résultat durable1120 avant une future opération hébergée dépendante.
+**Étape restante immédiate :** lire le checkpoint privé en lecture seule selon le [guide1130](operations-release1130.md#prochaine-action--inspection-en-lecture-seule), puisque le reçu final1120 n'a pas été communiqué. Critère de fin : relever l'empreinte et l'identité des seules métadonnées, sans les confondre avec le démarrage1120 déjà acquis. Examiner le reçu avant de définir et qualifier une préparation1130 adaptée à l'état observé. Ne pas relancer un ancien writer, CHECK ou redémarrage pour découvrir cet état.
 
-Les gains facultatifs non mesurés, le juridique, les sauvegardes reportées et l'ancien CLI de données ne deviennent pas des prérequis. Ne pas rouvrir l'audit global à chaque jalon.
+La1.13.0 est publiée mais n'est pas préparée ni activée sur l'hébergement. Les gains facultatifs non mesurés, migrations d'index sans preuve, juridique, sauvegarde reportée et ancien CLI de données ne deviennent pas des prérequis. Ne pas rouvrir l'audit global ni les suites vertes à chaque étape.
 
 ## Évolution1.12.0 — démarrage rapporté, reçu final attendu
 
@@ -31,7 +28,7 @@ Le [relevé après activation](verification-proofs/jm1113/hosted-identity.json) 
 
 Le writer final lié à cette seconde et aux reçus est désormais [qualifié17/17 natifs](verification-proofs/jm1113/writer-final-native.json), run40240046476,1/1, tentative1, sans omission. Opérateur `e3821d9231f0e7ead0a8eea7c3e1730aff0ea86e`, script SHA256 `a8904e91b394cf8a09f6a2a0b419fbfc45e590438da7ed5de18f24f36583b3f9`, source relue identique. Qualification acquise, aucune relance du même code.
 
-La commande de métadonnées avait été fournie sans reçu communiqué. La préparation1120 a depuis observé le checkpoint1112 intact3f1ae16d, sans transition1113 ; ne pas rejouer le writer1113. Les étapes1113 restent historiques et acquises ; la seule suite est désormais l’enregistrement1120 indiqué ci-dessus.
+La commande de métadonnées avait été fournie sans reçu communiqué. La préparation1120 a depuis observé le checkpoint1112 intact3f1ae16d, sans transition1113 ; ne pas rejouer le writer1113. Les étapes1113 restent historiques et acquises ; la seule suite immédiate est l’inspection en lecture seule indiquée ci-dessus, sans rejouer un writer.
 
 ## Correctif 1.11.2 — audit et livraison terminés
 

@@ -1,0 +1,72 @@
+{
+  "format": "jessiemessage-1130-scope-closure",
+  "source": "b9e2ad78b47dccb72b8e793cdc448e6b70424430",
+  "tree": "dc8933723a54c0307a3fd52719bdd4fd3ac3f96a",
+  "groups": [
+    {
+      "id": "F01",
+      "scope": "Latest exchange, outgoing/null previews, unread and global cursor order",
+      "status": "implemented_native_qualified"
+    },
+    {
+      "id": "F02",
+      "scope": "Ordinary tail navigation and separate targeted notifications/media origin",
+      "status": "implemented_native_qualified"
+    },
+    {
+      "id": "F03",
+      "scope": "Progressive two-way history, empty portions, deletion safety, rendering and thumbnails",
+      "status": "implemented_native_qualified",
+      "limit": "300 messages rendered; eight idle states plus deliberately pinned drafts/pending; visited overview cursors retained; no physical device test"
+    },
+    {
+      "id": "F04",
+      "scope": "Compact paginated invitation/account lists and global invitation state filters",
+      "status": "implemented_native_qualified"
+    },
+    {
+      "id": "F05",
+      "scope": "Current tasks refresh, bounded CRM/campaign/photo pages and preserved selections/drafts",
+      "status": "implemented_native_qualified",
+      "optionalDeferred": "Task ordering by due date, no new schema requirement"
+    },
+    {
+      "id": "F06",
+      "scope": "Bounded inbox summary/avatar reads and unique video originals",
+      "status": "implemented_native_qualified",
+      "limit": "Per-conversation guards and reply metadata remain; no constant total query count or hosting latency guarantee"
+    },
+    {
+      "id": "F07",
+      "scope": "Schema/index review",
+      "status": "no_schema_change",
+      "limit": "38 migrations and 37 expected tables; index changes only after justified native plans, no migration for the small redundant label index"
+    },
+    {
+      "id": "F08",
+      "scope": "Current UI text, comments and documentation",
+      "status": "implemented",
+      "limit": "Historical proofs preserved; data CLI33/36 explicitly distinguished from current conversation exports"
+    },
+    {
+      "id": "F09",
+      "scope": "Push drain",
+      "status": "implemented_native_qualified",
+      "optionalDeferred": "Unmeasured public asset caching and legacy import splitting; unused unserved icon is not a mobile performance fix"
+    }
+  ],
+  "dependencyChanges": false,
+  "databaseMigration": false,
+  "realAccountsMessagesMediaOrDeletionUsed": false,
+  "cloudBrowserUsed": false,
+  "privateAuditPublished": false,
+  "hostedDeploymentPerformed": false,
+  "preservedLimits": [
+    "Phone and Safari behavior not attested",
+    "Actual SMTP and Push delivery not re-tested",
+    "Original problematic photo not available",
+    "Manual hosted backup test remains postponed",
+    "A10/A11/A12 scope and historical limits preserved",
+    "Private checkpoint1120 execution remains unknown; read-only inspection required before a dependent hosted operation"
+  ]
+}

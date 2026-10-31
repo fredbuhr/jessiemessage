@@ -1,6 +1,6 @@
 # Conversations et listes — évolution 1.13.0
 
-**Implémentation locale terminée, qualification commune en cours ; non publiée et non déployée.** L'application active rapportée reste1.12.0 ; [REPRISE](REPRISE.md) donne son identité et les limites de reçu. Le développement demandé le31octobre part de5d51a4c, sur `feat/conversation-lists-1130`.
+**Implémentation, revues, qualification PR/main et publication terminées ; non préparée et non déployée sur l’hébergement.** L'application active rapportée reste1.12.0 ; [REPRISE](REPRISE.md) donne son identité et les limites de reçu. Le développement demandé le31octobre part de5d51a4c, sur `feat/conversation-lists-1130`.
 
 ## Résultat demandé
 
@@ -12,7 +12,7 @@
 - Coût backend : lectures groupées vérifiables pour les vidéos ; réduction des lectures inbox seulement si l'ordre des verrous et les preuves restent explicites. Drain Push borné d'un lot plein, repos/backoff et arrêt préservés.
 - Entretien : textes d'accès et références documentaires courantes cohérents ; anciens rapports et contrats de récupération conservés. Aucune nouvelle dépendance, infrastructure ou migration prévue par défaut.
 
-## Invariants à qualifier
+## Contrats qualifiés et limites
 
 | Contrat | Cas d'acceptation |
 | --- | --- |
@@ -29,7 +29,7 @@
 
 Les tests ciblés accompagnent chaque changement de contrat. La source stabilisée reçoit la CI requise sur PR puis SHA fusionné. Les résultats existants1.12.0 ne sont pas requalifiés par lecture ; les omissions restent des omissions. Aucune publication ou activation n'est déduite de l'implémentation locale.
 
-Les preuves de ce candidat, ses éventuelles limites et la prochaine action seront consignées après les contrôles. Toute opération hébergée dépendant du checkpoint1120 doit d'abord retrouver son reçu ou inspecter son état en lecture seule ; aucun ancien writer ne sera rejoué pour découvrir son résultat.
+Les preuves finales et limites sont consignées ci-dessous. Toute opération hébergée dépendant du checkpoint1120 doit d'abord retrouver son reçu ou inspecter son état en lecture seule ; aucun ancien writer ne sera rejoué pour découvrir son résultat.
 
 ## Révision implémentée et bornes
 
@@ -47,14 +47,40 @@ Aucun changement de dépendance, de migration ou de table. Les cinq dépendances
 
 ## Contrôles du développement
 
-Les groupes ciblés se recoupent et ne sont pas additionnés : backendinbox76/76, frontend264/264, accès102/102, UI/modèles/catalogues accès-tâches85/85, CRM/diffusions137/137, vidéo/Push68/68, sans omission dans ces exécutions. Les journaux de la suite générale et de syntaxe commune seront consignés après leur fin.
+Les groupes ciblés se recoupent et ne sont pas additionnés : backendinbox76/76, frontend264/264, accès102/102, UI/modèles/catalogues accès-tâches85/85, CRM/diffusions137/137, vidéo/Push68/68, sans omission dans ces exécutions. Les résultats natifs finaux sont consignés ci-dessous ; ces groupes ciblés ne sont pas un second total général.
 
-Nouveaux scénarios natifs ajoutés : messages récents dans le viewport après ouverture, défilement bidirectionnel et miniatures différées, invitations filtrées à320/1280FR/EN, revalidation de tâches sur une page ultérieure, navigationCRM avec notes non sauvegardées, nouveaux contrats SQL inbox/avatars/statuts. Ils ne sont pas déclarés réussis avant lecture de leur résultat CI. L'environnement local n'a ni Chrome/ChromeDriver ni MariaDB ; aucune omission artificielle n'est ajoutée pour masquer ces prérequis.
+Nouveaux scénarios natifs ajoutés : messages récents dans le viewport après ouverture, défilement bidirectionnel et miniatures différées, invitations filtrées à320/1280FR/EN, revalidation de tâches sur une page ultérieure, navigationCRM avec notes non sauvegardées, nouveaux contrats SQL inbox/avatars/statuts. Leurs résultats ont été lus dans les journaux natifs finaux et sont réussis sur PR puis main. L'environnement local n'a ni Chrome/ChromeDriver ni MariaDB ; aucune omission artificielle n'est ajoutée pour masquer ces prérequis.
 
 La syntaxe commune est vérifiée sur784sources, et l’atelier hors ligne est construit. La suite générale locale n’a pas fourni de bilan agrégé complet ; elle n’est pas comptée comme réussie. Le premier lancement a aussi identifié `/tmp` absent : les deux fichiers d’export concernés passent30/30 après configuration d’un TMPDIR privé, sans changement des sources ou gardes. La qualification complète relève de la CI native du candidat. [État des contrôles de développement](verification-proofs/jm1130/development-checks.json).
 
 ## Première qualification native — corrections requises
 
-La [PR144](https://github.com/fredbuhr/jessiemessage/pull/144), sourcea884bca7, arbre53ca0def, run41220376333, a terminé avec deux jobs réussis et trois en échec : général4220/4168réussis/52omissions et HTTPS14/14 ; Chrome289/292, trois échecs de navigation ; chaque MariaDB610/613, trois échecs liés à la fixture du profil. Cette exécution ne qualifie pas une livraison. Les corrections conservent les scénarios et les gardes : gestes de défilement distincts des contrôles au clavier/pointeur, navigation Home/End explicite, horloge updated_at de la fixture avatar épinglée. [Journaux empreintés et11captures inspectées](verification-proofs/jm1130/pr-first-native.json). Le cas natif d’historique n’a pas produit sa capture de succès et reste à requalifier.
+La [PR144](https://github.com/fredbuhr/jessiemessage/pull/144), sourcea884bca7, arbre53ca0def, run41220376333, a terminé avec deux jobs réussis et trois en échec : général4220/4168réussis/52omissions et HTTPS14/14 ; Chrome289/292, trois échecs de navigation ; chaque MariaDB610/613, trois échecs liés à la fixture du profil. Cette exécution ne qualifie pas une livraison. Les corrections conservent les scénarios et les gardes : gestes de défilement distincts des contrôles au clavier/pointeur, navigation Home/End explicite, horloge updated_at de la fixture avatar épinglée. [Journaux empreintés et11captures inspectées](verification-proofs/jm1130/pr-first-native.json). À cette première étape, le cas natif d’historique n’avait pas produit sa capture de succès ; la qualification corrective et sa capture sont acquises ci-dessous.
 
-La révision corrective ajoute aussi les garde-fous des gestes : Tab et actions des boutons gardent le repli accessible ; Home/End ne sont traités que sur la zone d’historique et sans modificateur. CompositionIME, raccourcis navigateur, sélectionShift, zoom et multitouch sont laissés au navigateur. Deux scénariosVM ciblés protègent ces cas. Les trois tests Chrome et les assertionsSQL initiaux restent présents. Nouvelle qualification native requise sur cette révision.
+La révision corrective ajoute aussi les garde-fous des gestes : Tab et actions des boutons gardent le repli accessible ; Home/End ne sont traités que sur la zone d’historique et sans modificateur. CompositionIME, raccourcis navigateur, sélectionShift, zoom et multitouch sont laissés au navigateur. Deux scénariosVM ciblés protègent ces cas. Les trois tests Chrome et les assertionsSQL initiaux restent présents. La qualification native de cette révision est acquise ci-dessous.
+
+## Qualification finale et publication
+
+La source finale de PR144 est `f79dca85df126fdd6677878f4e074a5d8ca6d9cc`. Son test de fusion `8bf953588410dfc835d0ee2a26de123c987b4757` et le commit main **`b9e2ad78b47dccb72b8e793cdc448e6b70424430`** possèdent le même arbre complet **`dc8933723a54c0307a3fd52719bdd4fd3ac3f96a`**. [CI PR41221505431](verification-proofs/jm1130/pr-native.json) et [CI main41222320731](verification-proofs/jm1130/main-native.json), tentative1, terminent chacune à **5/5 jobs réussis** sousNodev24.22.1.
+
+| Suite native | Résultat sur PR et main |
+| --- | --- |
+| Général | 4222tests,4170réussis,0échec,0annulation,52omissions explicites |
+| Chrome | 292/292, sans omission |
+| HTTPS | 14/14, sans omission |
+| MariaDB10.11 | 613/613, sans omission |
+| MariaDB11.4 | 613/613, sans omission |
+
+Les52omissions ne sont pas des réussites. Les cinq suites ne s'additionnent pas en un total de scénarios uniques. Syntaxe784sources et construction de l'atelier hors ligne réussies. Les journaux complets sont référencés par job et SHA256 dans les preuves ; les échecs initiaux restent conservés.
+
+**Douze captures finales effectivement inspectées** : invitations et aperçus FR/EN à320/1280, historique récentFR320, CRMFR320/EN390, tâchesFR390. [Inventaire et empreintes](verification-proofs/jm1130/visual-native.json). Les captures du run main ne sont pas revendiquées comme relues : la revue visuelle porte sur la PR corrective dont l'arbre complet est identique. Téléphone physique, Safari et lecteur d'écran ne sont pas qualifiés par ces captures synthétiques.
+
+[v1.13.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.13.0) est publiée surb9e2ad78, release/latest430071184 ; [publication41223112832](verification-proofs/jm1130/publication-native.json)2/2, tentative1, neuf tests natifs de l'opérateur. Aucun tag ancien déplacé ; aucune installation hébergée. La1.12.0 reste la dernière version active rapportée. [Guide opérateur1130](operations-release1130.md).
+
+## Bilan de couverture et simplicité
+
+Les neuf groupes F01–F09 ont une disposition dans la [checklist de clôture](verification-proofs/jm1130/coverage.json) : dernier échange, navigation, historique, accès, listes métier, lectures backend, schéma/index, entretien et Push. Les corrections sont regroupées en une version mineure compatible ; aucune dépendance, migration, table ou infrastructure ajoutée. Les protections d'accès, suspensions, révocations, expirations, MFA et propriété restent vérifiées côté serveur. Les médias et comptes utilisés pour les tests sont synthétiques.
+
+L'audit du schéma n'a pas justifié de migration :38migrations et37tables attendues, sans nouvel inventaire physique de production. Le petit index redondant des libellés, le tri facultatif des tâches par échéance, le découpage d'imports historiques, le cache des assets publics et une icône non servie ne deviennent pas des corrections urgentes ; pas de suppression à l'aveugle d'outils ou de contrats historiques. Les bornes réelles et états épinglés sont explicités plus haut, sans promesse de mémoire totale constante.
+
+Livraisons réelles SMTP/Push, photo originale problématique, essais téléphones/Safari et sauvegarde manuelle reportée restent non attestés. Aucun envoi réel, effacement, modification client, navigateur cloud ou opération hébergée n'a été effectué. Avant toute préparation dépendante, retrouver le reçu1120 ou lire son checkpoint en lecture seule ; l'absence de reçu ne remet pas en cause son démarrage confirmé.

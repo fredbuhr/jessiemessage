@@ -1,0 +1,117 @@
+{
+  "format": "jessiemessage-release1130-native-publication",
+  "operator": {
+    "source": "01c448fb65432366acb8b07a5df2743053a5611e",
+    "tree": "728079800a5d44ed8c729f647daca75ced4a0c5a",
+    "treeAuthority": "Root read-only git object readback after fetching exact connected GitHub operator commit; native jobs bind the same source",
+    "branch": "ops/publish-v1.13.0",
+    "filesReadBackAtExactCommit": {
+      "ops/publish-qualified1130.py": "83f2e45be4af87bf564219030ddbd4bf788bda4df930440c4df7bb2fbd89bde5",
+      "ops/test-publish-qualified1130.py": "863a1b6669d1badcddaee6682cb6aed035a8806318c0951f634ba7f975707f4b",
+      ".github/workflows/publish-qualified1130.yml": "ddefad9ed0400570f6e07fc2b47d6ccfc1f5805451c79fcb8c1bd4669e71cc34"
+    }
+  },
+  "source": "b9e2ad78b47dccb72b8e793cdc448e6b70424430",
+  "tree": "dc8933723a54c0307a3fd52719bdd4fd3ac3f96a",
+  "mainCiRun": 41222320731,
+  "mainCiAttempt": 1,
+  "run": 41223112832,
+  "attempt": 1,
+  "status": "completed",
+  "conclusion": "success",
+  "event": "push",
+  "path": ".github/workflows/publish-qualified1130.yml",
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41223112832",
+  "jobs": [
+    {
+      "id": 124601593946,
+      "name": "operator-tests",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "01c448fb65432366acb8b07a5df2743053a5611e",
+      "run": 41223112832,
+      "attempt": 1,
+      "startedAt": "2026-10-31T17:09:08Z",
+      "completedAt": "2026-10-31T17:09:16Z",
+      "logFile": "job-124601593946.log",
+      "logBytes": 47098,
+      "logSha256": "59f464936124d2b73390fa989de2d940111977d1a113ae07b83dc4aa30eef3bc"
+    },
+    {
+      "id": 124601635242,
+      "name": "publish",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "01c448fb65432366acb8b07a5df2743053a5611e",
+      "run": 41223112832,
+      "attempt": 1,
+      "startedAt": "2026-10-31T17:09:18Z",
+      "completedAt": "2026-10-31T17:09:32Z",
+      "logFile": "job-124601635242.log",
+      "logBytes": 17805,
+      "logSha256": "2b4593aff47d390fdc5463841aadb2a6e0a9151b058a8c9b2db0c25b46388ba9"
+    }
+  ],
+  "nativePublisherTests": {
+    "tests": 9,
+    "pass": 9,
+    "fail": 0,
+    "skipped": 0,
+    "nodeVersion": "v24.22.1",
+    "scope": "synthetic API and schema/source gates; no hosted application operation"
+  },
+  "receipt": {
+    "status": "published_verified",
+    "nodeVersion": "24.22.1",
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "normalMigrations": 33,
+    "videoMigrations": 3,
+    "experienceMigrations": 2,
+    "releases": [
+      {
+        "tag": "v1.13.0",
+        "source": "b9e2ad78b47dccb72b8e793cdc448e6b70424430",
+        "tree": "dc8933723a54c0307a3fd52719bdd4fd3ac3f96a",
+        "ciRun": "41222320731",
+        "ciAttempt": 1,
+        "releaseId": 430071184
+      }
+    ],
+    "latest": {
+      "tag": "v1.13.0",
+      "source": "b9e2ad78b47dccb72b8e793cdc448e6b70424430",
+      "id": 430071184
+    },
+    "publicationMode": "created",
+    "created": [
+      "v1.13.0"
+    ],
+    "deploymentPerformed": false
+  },
+  "tagReadback": {
+    "ref": "refs/tags/v1.13.0",
+    "type": "commit",
+    "source": "b9e2ad78b47dccb72b8e793cdc448e6b70424430"
+  },
+  "releaseReadback": {
+    "id": 430071184,
+    "tag": "v1.13.0",
+    "target": "b9e2ad78b47dccb72b8e793cdc448e6b70424430",
+    "name": "JessieMessage 1.13.0 — Conversations et listes fluides",
+    "draft": false,
+    "prerelease": false,
+    "publishedAt": "2026-10-31T17:09:29Z",
+    "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.13.0"
+  },
+  "latestReadback": {
+    "id": 430071184,
+    "tag": "v1.13.0",
+    "target": "b9e2ad78b47dccb72b8e793cdc448e6b70424430"
+  },
+  "observedBy": "GitHub connector GET and complete final decoded job logs",
+  "deploymentPerformed": false,
+  "hostedMetadata1120": "undetermined; no preparer, writer, CHECK, Manager or runtime operation performed",
+  "publicMetadataMatchesPreparedPublisher": true,
+  "rootIndependentTagReleaseLatestAndJobsReadback": true
+}

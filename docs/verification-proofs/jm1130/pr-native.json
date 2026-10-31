@@ -1,0 +1,100 @@
+{
+  "format": "jessiemessage-1130-pr-native",
+  "source": "f79dca85df126fdd6677878f4e074a5d8ca6d9cc",
+  "tree": "dc8933723a54c0307a3fd52719bdd4fd3ac3f96a",
+  "qualifiedPRMergeCommit": "8bf953588410dfc835d0ee2a26de123c987b4757",
+  "fullTreeSameAsQualifiedSource": true,
+  "PR": 144,
+  "run": 41221505431,
+  "attempt": 1,
+  "allFiveJobsSuccessful": true,
+  "nodeVersion": "v24.22.1",
+  "jobs": [
+    {
+      "id": 124596847151,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 4222,
+      "pass": 4170,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 52,
+      "logBytes": 598168,
+      "logSHA256": "0d477e5ab336dff965f77ca9b2b0c856037d697d624d5803dd2e1a54ad103ddf"
+    },
+    {
+      "id": 124596847118,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 292,
+      "pass": 292,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logBytes": 59115,
+      "logSHA256": "423069d5cd88eb0f20c87d3bfba5c2eaae7a47bcf704d168c90d30bb45afdb1a"
+    },
+    {
+      "id": 124596847168,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 14,
+      "pass": 14,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logBytes": 42159,
+      "logSHA256": "fefec9a44de00fc0c3593a1d066ffcab301348864b430e26950ae2830a082872"
+    },
+    {
+      "id": 124596846941,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 613,
+      "pass": 613,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logBytes": 362536,
+      "logSHA256": "b659ae573b97fdfc81b3d534fcf9a203b67eaacb4352e4eb366beecaa1e5084d"
+    },
+    {
+      "id": 124596847212,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 613,
+      "pass": 613,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logBytes": 362798,
+      "logSHA256": "a1273689a091dffce056f216edcf34826146fb6663d35be4703b0a1d3ae19832"
+    }
+  ],
+  "omissionsCountedAsPasses": false,
+  "hostedActions": false,
+  "firstNativeFailureProof": "pr-first-native.json",
+  "firstLogCollectionCorrection": [
+    {
+      "name": "Chrome",
+      "exactRemoteLogSHA256": "f957cb3bc9232ff48b26c7998bc189bf3014916b99b54ef961401265aceff4dc",
+      "exactRemoteLogBytes": 62629,
+      "priorCollectorFileSHA256": "2255a6ace7dde0f8f259977e15d6b3e54f0fc702c23a49c63cebe05762741f40",
+      "priorCollectorFileBytes": 62630,
+      "collectorDifference": "one additional trailing newline, original collector form retained"
+    },
+    {
+      "name": "HTTPS",
+      "exactRemoteLogSHA256": "ba63ed0d344ffe7753475b66bfc5736ec8cbfa44772397a5ce4017bbaa87bbc2",
+      "exactRemoteLogBytes": 42174,
+      "priorCollectorFileSHA256": "652c972ffeb50690cf5a688e4fa9f8ea5eaa34c7d472422ca90d1fdc90537ffe",
+      "priorCollectorFileBytes": 42175,
+      "collectorDifference": "one additional trailing newline, original collector form retained"
+    }
+  ]
+}

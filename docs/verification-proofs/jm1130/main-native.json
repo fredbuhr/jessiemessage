@@ -1,0 +1,91 @@
+{
+  "format": "jessiemessage-1130-main-native",
+  "source": "b9e2ad78b47dccb72b8e793cdc448e6b70424430",
+  "tree": "dc8933723a54c0307a3fd52719bdd4fd3ac3f96a",
+  "PR": 144,
+  "qualifiedPRSource": "f79dca85df126fdd6677878f4e074a5d8ca6d9cc",
+  "fullTreeSameAsQualifiedPR": true,
+  "run": 41222320731,
+  "event": "push",
+  "branch": "main",
+  "workflowPath": ".github/workflows/ci.yml",
+  "attempt": 1,
+  "allFiveJobsSuccessful": true,
+  "nodeVersion": "v24.22.1",
+  "jobs": [
+    {
+      "id": 124599294596,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 4222,
+      "pass": 4170,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 52,
+      "logBytes": 597218,
+      "logSHA256": "5df4a7dc9e7c23fab1007ea736b17ad7fcd2bc4d3816dae0c705952bc460dbea"
+    },
+    {
+      "id": 124599294317,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 292,
+      "pass": 292,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logBytes": 58328,
+      "logSHA256": "2f6ef3a8538138f9c7538975d065f9548ef62ae7b0ec7244cd7c3536170e154b"
+    },
+    {
+      "id": 124599294573,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 14,
+      "pass": 14,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logBytes": 41389,
+      "logSHA256": "a5bf20212f061000faeeecf9437a902551b1a2154d76b20a8d516d2cc05d325e"
+    },
+    {
+      "id": 124599294517,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 613,
+      "pass": 613,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logBytes": 361412,
+      "logSHA256": "89a0f2794d17698b95f6f77c81bbc0458aee8fce261d3122ba485318b1f0c99e"
+    },
+    {
+      "id": 124599294453,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "tests": 613,
+      "pass": 613,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logBytes": 361708,
+      "logSHA256": "4e8ebd1fe97a77426611b0ed201dfa76e77586ad4d20a46b2dfc2dd8505c730b"
+    }
+  ],
+  "omissionsCountedAsPasses": false,
+  "hostedActions": false,
+  "mainArtifact": {
+    "id": 13050508140,
+    "name": "homepage-render",
+    "bytes": 7932038,
+    "sha256": "d73120b7efa0b607a2df4dd54aeac0d765fc2d8614ba4da09f87cdd1ba00d10a",
+    "visualReview": "qualified PR full tree identical, see visual-native.json; main screenshots not re-inspected"
+  }
+}

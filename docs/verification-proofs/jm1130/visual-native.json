@@ -1,0 +1,105 @@
+{
+  "format": "jessiemessage-1130-native-visual-review",
+  "source": "f79dca85df126fdd6677878f4e074a5d8ca6d9cc",
+  "tree": "dc8933723a54c0307a3fd52719bdd4fd3ac3f96a",
+  "run": 41221505431,
+  "artifact": {
+    "id": 13050247366,
+    "name": "homepage-render",
+    "bytes": 7935307,
+    "sha256": "497ac69af1841a187061e08ac154fc22f3871598820726e68ec7eda1ec4a1816",
+    "downloadDigestVerified": true
+  },
+  "images": [
+    {
+      "name": "admin-invitations-1130-en-1280.png",
+      "sha256": "03c3750ec5772bd24dea8bdbf0fb31a7884b09fdad3df502ab6de109ed8e3a89",
+      "bytes": 128335,
+      "sameBytesAsInspectedFirstArtifact": false,
+      "inspected": true
+    },
+    {
+      "name": "admin-invitations-1130-en-320.png",
+      "sha256": "412a9ffd6d856dbe91ae93455675ddc0651c7655a8b98d5dfd17ee8b77e49afe",
+      "bytes": 56279,
+      "sameBytesAsInspectedFirstArtifact": false,
+      "inspected": true
+    },
+    {
+      "name": "admin-invitations-1130-fr-1280.png",
+      "sha256": "b3ea6160070672ff01528a9a872f05aa5e4a5e51ac060318e4ca95c1bee31470",
+      "bytes": 131337,
+      "sameBytesAsInspectedFirstArtifact": false,
+      "inspected": true
+    },
+    {
+      "name": "admin-invitations-1130-fr-320.png",
+      "sha256": "0e070c742986ae9179ead1016cdf85865a5693b52b141899b77d2ace52b2c43b",
+      "bytes": 59215,
+      "sameBytesAsInspectedFirstArtifact": false,
+      "inspected": true
+    },
+    {
+      "name": "conversation-history1130-fr-320.png",
+      "sha256": "cfc71b6c29968f737fc34d6236b1835823bd4e26eb37b6e21bf4f2deff2ac7b7",
+      "bytes": 73623,
+      "sameBytesAsInspectedFirstArtifact": false,
+      "inspected": true
+    },
+    {
+      "name": "conversation-list1130-en-1280.png",
+      "sha256": "4eecd430e5d421a28e9c90cb5c9333888b92790ea86f44201d2cd6d37a68b639",
+      "bytes": 89848,
+      "sameBytesAsInspectedFirstArtifact": false,
+      "inspected": true
+    },
+    {
+      "name": "conversation-list1130-en-320.png",
+      "sha256": "b7795b23bcfe60c0d951516f2fad9aba0c104e01ef449e8de275f40e825adca4",
+      "bytes": 46425,
+      "sameBytesAsInspectedFirstArtifact": false,
+      "inspected": true
+    },
+    {
+      "name": "conversation-list1130-fr-1280.png",
+      "sha256": "53eb180a2c1d01783301435bf508f1c09cfb6677b1160b4149f50fd321bc6426",
+      "bytes": 89258,
+      "sameBytesAsInspectedFirstArtifact": false,
+      "inspected": true
+    },
+    {
+      "name": "conversation-list1130-fr-320.png",
+      "sha256": "b980860af285f4078a6786d89e5cc6904cd351dfa58f1f8a8eb2c3cf27565a65",
+      "bytes": 46097,
+      "sameBytesAsInspectedFirstArtifact": false,
+      "inspected": true
+    },
+    {
+      "name": "crm-pagination-en-390.png",
+      "sha256": "cca44dfbef27d0e9f7d9ed8a9029ff034b44e74690845c6b2082c099ba7134fc",
+      "bytes": 63404,
+      "sameBytesAsInspectedFirstArtifact": false,
+      "inspected": true
+    },
+    {
+      "name": "crm-pagination-fr-320.png",
+      "sha256": "9e198a2719dae8df268ba06bfc83defdf798c5200090c14eba3d999066abc338",
+      "bytes": 62808,
+      "sameBytesAsInspectedFirstArtifact": false,
+      "inspected": true
+    },
+    {
+      "name": "tasks-pages-1130-fr-390.png",
+      "sha256": "416d7246f30578c9af917f93d9db36d878a2a57648f84341584acaec480e40ab",
+      "bytes": 50236,
+      "sameBytesAsInspectedFirstArtifact": false,
+      "inspected": true
+    }
+  ],
+  "totalInspected": 12,
+  "reviewScope": "Synthetic native Chrome screenshots: conversation overview FR/EN320/1280, history tail FR320, invitations FR/EN320/1280, CRM FR320/EN390, tasks FR390. Layout, text, bounds and visible current/history state inspected.",
+  "nativeHistoryTestPassed": true,
+  "physicalDevicesSafariOrScreenReaderTested": false,
+  "screenshotsPublishedToLibrary": false,
+  "hostedAccountsOrDataUsed": false
+}
