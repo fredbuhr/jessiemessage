@@ -1,6 +1,6 @@
 # Conversations et listes — évolution 1.13.0
 
-**Implémentation, revues, qualification PR/main et publication terminées ; non préparée et non déployée sur l’hébergement.** L'application active rapportée reste1.12.0 ; [REPRISE](REPRISE.md) donne son identité et les limites de reçu. Le développement demandé le31octobre part de5d51a4c, sur `feat/conversation-lists-1130`.
+**Implémentation, revues, qualification PR/main, publication et préparation/CHECK hébergés terminés ; activation1.13.0 non rapportée.** L'application active rapportée reste1.12.0 ; [REPRISE](REPRISE.md) donne son identité et les limites de reçu. Le développement demandé le31octobre part de5d51a4c, sur `feat/conversation-lists-1130`.
 
 ## Résultat demandé
 
@@ -83,4 +83,4 @@ Les neuf groupes F01–F09 ont une disposition dans la [checklist de clôture](v
 
 L'audit du schéma n'a pas justifié de migration :38migrations et37tables attendues, sans nouvel inventaire physique de production. Le petit index redondant des libellés, le tri facultatif des tâches par échéance, le découpage d'imports historiques, le cache des assets publics et une icône non servie ne deviennent pas des corrections urgentes ; pas de suppression à l'aveugle d'outils ou de contrats historiques. Les bornes réelles et états épinglés sont explicités plus haut, sans promesse de mémoire totale constante.
 
-Livraisons réelles SMTP/Push, photo originale problématique, essais téléphones/Safari et sauvegarde manuelle reportée restent non attestés. Aucun envoi réel, effacement, modification client, navigateur cloud ou opération hébergée n'a été effectué. La lecture seule acquise pour1130 retrouve le checkpoint1112 exact, sans section1120 ; ce baseline doit être préservé par le nouvel opérateur. Le démarrage1120 reste confirmé séparément.
+Livraisons réelles SMTP/Push, photo originale problématique, essais téléphones/Safari et sauvegarde manuelle reportée restent non attestés. Aucun envoi réel, effacement, modification client ou navigateur cloud n’a été utilisé pour le développement. La préparation et le CHECK1130 sont ensuite rapportés réussis dans leur [reçu séparé](verification-proofs/jm1130/hosted-preparation.json), sans identité démarrée1130 déduite. La lecture seule acquise pour1130 retrouve le checkpoint1112 exact, sans section1120 ; ce baseline doit être préservé par le nouvel opérateur. Le démarrage1120 reste confirmé séparément.

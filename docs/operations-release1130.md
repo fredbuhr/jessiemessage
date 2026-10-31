@@ -1,4 +1,4 @@
-# Livraison 1.13.0 — publication acquise, hébergement non préparé
+# Livraison 1.13.0 — préparation et CHECK acquis, activation attendue
 
 État du31octobre2026. [REPRISE](REPRISE.md) reste la référence courante ; ce guide distingue la publication de l'installation sur le service Node239143. `recette.jessiemessage.com` et `jessiemessage.com` partagent ce service et sa base.
 
@@ -9,7 +9,7 @@
 - [Publication41223112832](verification-proofs/jm1130/publication-native.json), tentative1,2/2 ; neuf tests natifs de l'opérateur sans omission. Opérateur `01c448fb65432366acb8b07a5df2743053a5611e`, arbre `728079800a5d44ed8c729f647daca75ced4a0c5a`. Scripts et workflow relus aux octets qualifiés. [Tag/release/latestv1.13.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.13.0), release430071184, concordants.
 - Nodev24.22.1,38migrations/37tables attendues, dépendances inchangées. Aucun inventaire physique de production nouveau déduit de la CI.
 
-**Aucune préparation1130, aucun CHECK, changement Manager, redémarrage ou writer n'a eu lieu.** La dernière identité active rapportée reste1.12.0/source9bfdae07, arbre4aef91b8, démarrée le31octobre02:29:16Europe/Paris. Sa préparation/CHECK et son démarrage sont acquis et ne sont pas à répéter.
+**Préparation et CHECK1130 acquis selon le reçu utilisateur ; activation1130 non rapportée.** La dernière identité active rapportée reste1.12.0/source9bfdae07, arbre4aef91b8, démarrée le31octobre02:29:16Europe/Paris. Sa préparation/CHECK et son démarrage sont acquis et ne sont pas à répéter.
 
 ## Inspection en lecture seule — acquise
 
@@ -17,50 +17,33 @@ Le [reçu transmis par l’utilisateur](verification-proofs/jm1130/hosted-checkp
 
 L’enregistrement final1120 n’est pas présent dans le fichier relu. Le démarrage1120 reste confirmé séparément ; l’inspection ne décrit ni le processus, ni le Manager, ni la disponibilité HTTP. Elle ne permet pas de conclure au déroulement de l’ancienne commande. Ne rejouer aucun writer1120/1113 et ne pas refaire cette lecture sans élément nouveau. Le [bloc de lecture qualifié sur sept cas synthétiques](verification-proofs/jm1130/checkpoint-inspection-command.json) et son historique sont préservés dans Git.
 
-## Préparation et CHECK 1.13.0 — à exécuter une fois
+## Préparation et CHECK 1.13.0 — acquis, ne pas rejouer
 
-Le nouvel opérateur est qualifié : [run41226621742](verification-proofs/jm1130/preparation-native.json), tentative1, **1/1 job et33/33 tests natifs sans omission** sousNodev24.22.1. Source **`7f2051b75c24bf6ec947349205070e62fbeb8aa0`**, arbre **`b1499dab714e606f7741e93abc4d1e96a83a89a1`**. Préparateur SHA256 **`0be0e7c51836a9c0576e785fc56373b1b60ea98564a473fd628fadda09e52980`**,19215octets, relu au commit qualifié. Tests SHA256 `8b1d882aa23211f8563e806597479c80be1578182550c8f1b752bc52af3f9399`, workflow `c284e96bf004393b676f30cc4afe9f0511e089eab2c30b9e93132f1cb802b22c`.
+Le nouvel opérateur est qualifié : [run41226621742](verification-proofs/jm1130/preparation-native.json), tentative1, **1/1 job et33/33 tests natifs sans omission** sousNodev24.22.1. Source **`7f2051b75c24bf6ec947349205070e62fbeb8aa0`**, arbre **`b1499dab714e606f7741e93abc4d1e96a83a89a1`**. Préparateur SHA256 **`0be0e7c51836a9c0576e785fc56373b1b60ea98564a473fd628fadda09e52980`**,19215octets, relu au commit qualifié. Les essais natifs restent acquis et ne sont pas à relancer.
 
-Le préparateur crée exclusivement le checkout `/srv/customer/jessiemessage-operator/production-1130-b9e2ad78`, ses deux lanceurs et ses nouveaux journaux. Il réutilise Node24.22.1 et les dépendances1101 inchangées ; il préserve les sources, lanceurs et staging1120 ainsi que le checkpoint1112 exact. Toute sortie préexistante ou partielle refuse sans nettoyage ni relance automatique. Aucun ancien outil1120/1113 n’est appelé et aucun enregistrement final absent n’est fabriqué.
+La [préparation/CHECK hébergés](verification-proofs/jm1130/hosted-preparation.json) sont désormais acquis selon le reçu utilisateur : sourceb9e2ad78/arbre dc893372, empreinte canonique **`08eb630927a84cc63c0b552fa9f729ab7ee2433f6c3fc8aca1466c007f021ecd`** recalculée identique, `CHECK1130_EXIT=0` et `PREPARATION_1130_CHECK_OK`.
 
-Le bloc appelle ensuite une fois le **nouveau** lanceur CHECK1130. C’est un préflight avec lectures SQL et verrous, assertions des38migrations et lectures de capacité/journaux ; il revient avant le démarrage des workers et du runtime. Il ne fait ni migration, modification de compte, envoi SMTP/Push, écriture de configuration ni changement Manager. Ses sorties sont conservées dans les nouveaux journaux privés. Ce CHECK ne qualifie pas un téléphone physique ou une livraison réelle de message.
+- Checkout `/srv/customer/jessiemessage-operator/production-1130-b9e2ad78`, mode0700, dépendances1101 réutilisées etNode24.22.1 inchangé.
+- Lanceur SHA256 `fb40a652f2400dfc4cc14d53fb8f3d9348dd95d703784e0b9a85c63f87666526`, CHECK SHA256 `97f15d145bb84f3e3a340d2a29fd43e5f0b64c9e6c0ea0e24a06d676b0ac2321`.
+- Checkpoint1112/3f1ae16d et staging1120/692d5598 préservés selon le reçu ; aucune ancienne finalisation inventée.
+- Les flags `precheckPassed:false` et journaux vides décrivent le staging **avant** le CHECK séparé réussi. Ils ne décrivent pas les journaux actuels et ne doivent pas être réécrits pour fabriquer une qualification.
 
-1. Ouvrir le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), pour le service JessieMessage.
-2. Coller le bloc entier une seule fois. Aucune modification Run/Build ni activation à ce stade.
-3. Transmettre uniquement le JSON, `CHECK1130_EXIT` et le marqueur final. Ne pas transmettre de journal privé.
+**Ne rejouer ni préparation ni CHECK SSH1130.** Le bloc fourni est conservé dans l’[historique Git](https://github.com/fredbuhr/jessiemessage/blob/2ab91097a800d956eb2a1da56dc22801eaf3befd/docs/operations-release1130.md). Aucun démarrage1130, relevé direct du Manager ou du processus, inventaire SQL physique nouveau ou essai sur téléphone n’est déduit de ce résultat.
 
-```bash
-env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_PREPARE1130'
-import hashlib, json, subprocess, urllib.request
+## Activation personnelle — à effectuer une fois
 
-url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/7f2051b75c24bf6ec947349205070e62fbeb8aa0/ops/prepare-release1130.py'
-with urllib.request.urlopen(url, timeout=30) as response:
-    if response.status != 200 or response.url != url:
-        raise SystemExit('URL_OUTIL_A_VERIFIER')
-    code = response.read(65537)
-if len(code) > 65536 or hashlib.sha256(code).hexdigest() != '0be0e7c51836a9c0576e785fc56373b1b60ea98564a473fd628fadda09e52980':
-    raise SystemExit('OUTIL1130_A_VERIFIER : aucun outil execute.')
-ns = {'__name__': 'jm1130_preparation'}
-exec(compile(code, '<preparation1130>', 'exec'), ns)
-try:
-    result = ns['stage'](ns['RELEASE_SOURCE'], ns['RELEASE_TREE'])
-except (Exception, KeyboardInterrupt):
-    raise SystemExit('PREPARATION1130_NON_CONFIRMEE : conserver les traces, ne pas relancer.') from None
-print(json.dumps(result, separators=(',', ':')), flush=True)
-try:
-    check = subprocess.run(['/bin/bash', result['checkLauncher']], env=ns['clean_environment'](),
-        stdin=subprocess.DEVNULL, capture_output=True, timeout=180, check=False)
-except (OSError, subprocess.TimeoutExpired, KeyboardInterrupt):
-    raise SystemExit('CHECK1130_NON_CONFIRME : conserver les traces, ne pas relancer.') from None
-print('CHECK1130_EXIT=' + str(check.returncode), flush=True)
-if check.returncode != 0:
-    raise SystemExit('CHECK1130_REFUSE : conserver les traces, ne pas relancer.')
-print('PREPARATION_1130_CHECK_OK')
-PY_PREPARE1130
-```
+1. Ouvrir [Run/Build du service Node239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), nommé **recette.jessiemessage.com**, qui dessert aussi **jessiemessage.com** et la même base.
+2. Renseigner les valeurs suivantes :
 
-Attendu : reçu `release1130_sources_staged_not_qualified` sur sourceb9e2ad78/arbre dc893372, checkpoint préservé3f1ae16d et `baselineMetadataRelease:1.11.2`, puis `CHECK1130_EXIT=0` et `PREPARATION_1130_CHECK_OK`. Les flags `precheckPassed:false` et logs vides du reçu décrivent le staging **avant** le CHECK exécuté ensuite ; ils ne doivent pas être réécrits pour fabriquer une qualification. Un résultat absent, interrompu ou refusé exige une inspection durable avant toute suite ; ne pas relancer le bloc.
+| Champ | Valeur1130 |
+| --- | --- |
+| Commande d’exécution — champ du haut | `bash /srv/customer/jessiemessage-private/start-primary-release1130-b9e2ad78.sh` |
+| Commande de build — champ du bas | `bash /srv/customer/jessiemessage-private/check-primary-release1130-b9e2ad78.sh` |
+| Port | `3000` |
 
-## Activation 1.13.0 — pas encore effectuée
+3. Enregistrer. Si cela relance déjà l’application, attendre sans cliquer à nouveau sur Redémarrer. Sinon cliquer **Redémarrer** une seule fois dans le [tableau de bord Node.js](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard).
+4. Ouvrir [État du service](https://jessiemessage.com/admin/readiness) et transmettre **Version de l’application**, **Commit au démarrage**, **Version Node.js** et **Relevé au démarrage**. Attendus :1.13.0, `b9e2ad78b47dccb72b8e793cdc448e6b70424430`, `v24.22.1` et nouvelle date de démarrage.
 
-Examiner le reçu de préparation/CHECK avant de fournir les réglages Manager. Le service239143, nommé `recette.jessiemessage.com`, dessert aussi `jessiemessage.com` et sa base ; il ne s’agit pas d’une cible isolée. La dernière version démarrée rapportée reste1.12.0. Aucun nouveau redémarrage1120, ancien writer, test de sauvegarde, SMTP/Push réel, compte réel ou chantier juridique n’est demandé.
+L’enregistrement peut appeler le CHECK via la commande de build ; ce n’est pas une nouvelle commande SSH à exécuter manuellement. Ne répéter aucune activation si son résultat est incertain : examiner l’identité durable avant toute suite. Le writer final1130 sera défini et qualifié après le relevé réel, sans rejouer un ancien writer1120/1113.
+
+Aucun nouveau test de sauvegarde, SMTP/Push réel, modification de compte, essai client ou chantier juridique n’est demandé.

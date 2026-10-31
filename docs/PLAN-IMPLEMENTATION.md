@@ -8,9 +8,11 @@ Les corrections de messagerie, listes, lectures backend, cadence Push et textes 
 
 **Inspection acquise :** le [reçu utilisateur](verification-proofs/jm1130/hosted-checkpoint-inspection.json) retrouve exactement le checkpoint1112/3f1ae16d, sans section1120, distinct du démarrage1120 confirmé. Aucun ancien writer à rejouer. **Opérateur1130 qualifié :** [run41226621742](verification-proofs/jm1130/preparation-native.json),1/1,33/33 natifs ; source `7f2051b75c24bf6ec947349205070e62fbeb8aa0`, préparateur relu identique aux octets qualifiés.
 
-**Étape restante immédiate :** exécuter une fois le [bloc préparation/CHECK1130](operations-release1130.md#préparation-et-check-1130--à-exécuter-une-fois). Critère de fin : reçu du staging exact, CHECK0 et marqueur final. Les flags faux et logs vides du reçu décrivent le staging avant ce CHECK séparé. Le nouveau CHECK effectue des lectures SQL/verrous de préflight ; il n’active pas le runtime et ne modifie pas de compte. Examiner le résultat avant toute instruction Manager. Préparation/CHECK/démarrage1120 acquis : aucun replay.
+**Préparation/CHECK1130 acquis :** [reçu utilisateur](verification-proofs/jm1130/hosted-preparation.json), SHA canonique08eb6309 identique, source/arbre exacts, CHECK0 et marqueur final. Checkpoint1112 et staging1120 préservés. Les flags faux et journaux vides du reçu décrivent l’étape avant le CHECK séparé ; ne pas les réécrire ni rejouer le bloc.
 
-La1.13.0 est publiée mais n'est pas préparée ni activée sur l'hébergement. Les gains facultatifs non mesurés, migrations d'index sans preuve, juridique, sauvegarde reportée et ancien CLI de données ne deviennent pas des prérequis. Ne pas rouvrir l'audit global ni les suites vertes à chaque étape.
+**Étape restante immédiate :** [activation personnelle1130](operations-release1130.md#activation-personnelle--à-effectuer-une-fois), une seule fois, puis relevé version/commit/Node/nouvelle date. Critère de fin : identité1.13.0/sourceb9e2ad78/Node24.22.1 rapportée après activation. Définir le writer final seulement à partir de cette identité réelle ; aucun ancien writer1120/1113 à rejouer.
+
+La1.13.0 est publiée, préparée et son CHECK est rapporté réussi ; son activation n’est pas encore rapportée. Les gains facultatifs non mesurés, migrations d'index sans preuve, juridique, sauvegarde reportée et ancien CLI de données ne deviennent pas des prérequis. Ne pas rouvrir l'audit global ni les suites vertes à chaque étape.
 
 ## Évolution1.12.0 — démarrage rapporté, checkpoint1112 relu
 
