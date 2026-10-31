@@ -1,0 +1,87 @@
+{
+  "format": "jessiemessage-1140-coverage",
+  "source": "4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd",
+  "tree": "e5a239eaf7b8c3395a843c9e0d600efeb7aa569b",
+  "points": [
+    {
+      "id": "F01",
+      "scope": "Invitation illimitée par défaut",
+      "status": "qualified_in_stated_scope",
+      "evidence": "service/HTTP/admin VM et Chrome FR/EN, finite explicit/reset/reload"
+    },
+    {
+      "id": "F02",
+      "scope": "Miniatures et choix de photo en diffusion",
+      "status": "qualified_in_stated_scope",
+      "evidence": "Chrome FR320/EN390/FR1280, choix clavier, pages20 et sélection conservée"
+    },
+    {
+      "id": "F03",
+      "scope": "Ajout direct sans campagne automatique",
+      "status": "qualified_in_stated_scope",
+      "evidence": "Chrome PNG préparée/upload, aperçu audience et confirmation séparés"
+    },
+    {
+      "id": "F04",
+      "scope": "Photos courantes et grandes images",
+      "status": "qualified_in_stated_scope",
+      "evidence": "vrais JPEG200MP, JPEG>50Mio, PNG/WebP/AVIF, rotation et métadonnées"
+    },
+    {
+      "id": "F05",
+      "scope": "HEIC local et CSP",
+      "status": "qualified_in_stated_scope",
+      "evidence": "vrai fichier HEVC synthétique, worker local, codec paresseux, document sans WASM"
+    },
+    {
+      "id": "F06",
+      "scope": "Bornes de ressources et annulation",
+      "status": "qualified_in_stated_scope",
+      "evidence": "lecture cloud interrompue/timeout, dimensions64MP codec natif, file sérialisée et cache4"
+    },
+    {
+      "id": "F07",
+      "scope": "Lots et absence de doublons",
+      "status": "qualified_in_stated_scope",
+      "evidence": "unités50 en lots10, HTTPS5photos avec ACK perdu et retry explicite sans upload/message doublé"
+    },
+    {
+      "id": "F08",
+      "scope": "Bibliothèque dashboard protégée",
+      "status": "qualified_in_stated_scope",
+      "evidence": "route/assets admin, bibliothèque propre, pagination20, photos/vidéos, miniature2 à la fois"
+    },
+    {
+      "id": "F09",
+      "scope": "Ajout et suppression média",
+      "status": "qualified_in_stated_scope",
+      "evidence": "API synthétique Chrome, contrôles HTTP/service et SQL existants, refus in-use, ACK suppression/GET503"
+    },
+    {
+      "id": "F10",
+      "scope": "Sessions et états périmés",
+      "status": "qualified_in_stated_scope",
+      "evidence": "propriétaire+CSRF, retour picker, BFCache, visibilité et résultat de POST incertain"
+    },
+    {
+      "id": "F11",
+      "scope": "Backend et simplicité",
+      "status": "qualified_in_stated_scope",
+      "evidence": "admission60/compte/min,240global/min ; concurrence3/1 et stockage conservés ; SQL38 inchangé"
+    },
+    {
+      "id": "F12",
+      "scope": "Livraison et preuves",
+      "status": "qualified_in_stated_scope",
+      "evidence": "PR/main5/5, publication immuable, préparation isolée23tests+vrai npmci ; pas de déploiement déduit"
+    }
+  ],
+  "count": 12,
+  "generalTests": 4295,
+  "generalPassed": 4243,
+  "generalExplicitOmissions": 52,
+  "physicalPhonesSafariAndOriginalProblematicPhoto": "not_attested",
+  "hosted1140": "not_executed",
+  "backupPcLegal": "out_of_scope_preserved",
+  "fullApplicationReaudit": "not reopened; earlier1130 audit remains historical"
+}

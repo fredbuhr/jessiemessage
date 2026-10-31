@@ -1,0 +1,91 @@
+{
+  "operator": {
+    "source": "10083087598a96248698cbe76309e1b3afda163c",
+    "tree": "220cb24da7a78a14b627032d668f6fd08a1cbe28",
+    "path": ".github/workflows/prepare-qualified1140.yml"
+  },
+  "run": {
+    "id": 41235719521,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "createdAt": "2026-10-31T19:45:43Z",
+    "updatedAt": "2026-10-31T19:46:09Z",
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41235719521"
+  },
+  "job": 124638960260,
+  "synthetic": {
+    "methods": 23,
+    "passedLines": 23,
+    "footer": [
+      "Ran 23 tests in 9.449s"
+    ],
+    "omittedLines": 0
+  },
+  "log": {
+    "bytes": 52142,
+    "sha256": "6c740006f8a5e402e31ba56886ab7dc3a646f49fc67e9607a236b2ec2128cfa7",
+    "file": "prepare1140-corrected-native.log"
+  },
+  "native": {
+    "checkExecuted": false,
+    "dependencies": {
+      "codecSha256": {
+        "libheif-wasm/LICENSE": "fa81ce652315b013359d6e8e4744335f31a50c7c192907176d3632f78a3b4596",
+        "libheif-wasm/libheif-bundle.mjs": "095194187be00d3e36335b8ad7f5552d70655e5e2159486d7d36cd4daa47bba9"
+      },
+      "directVersions": {
+        "libheif-js": "1.23.5",
+        "mariadb": "3.5.4",
+        "nodemailer": "10.1.4",
+        "otpauth": "9.5.2",
+        "sharp": "0.35.5",
+        "web-push": "3.6.7"
+      },
+      "directory": "/home/runner/work/jessiemessage/jessiemessage/prepare1140-native-9lr9tpv8/candidate/node_modules",
+      "inventory": {
+        "entries": 1082,
+        "files": 914,
+        "sha256": "547c6ec03aa29027264dbb848e7830df0cb615a1eb92710498bc94d988897c37"
+      },
+      "lockSha256": "623e3be5057fd8d348d9363d30afef93c6e26dc8cd6df3b8150116c5f17c8e5b",
+      "scriptsExecuted": false,
+      "sharpSyntheticSmoke": true,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutSha256": "8aa26dc0bc066e7d422a543a7c51b880452d6f8382cd03a620662cbe364ff62c",
+      "strategy": "private-npm-ci-ignore-scripts"
+    },
+    "installer": {
+      "archiveBytes": 32026916,
+      "archiveSha256": "6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6",
+      "npmCli": "/home/runner/work/jessiemessage/jessiemessage/prepare1140-native-9lr9tpv8/tools/npm/bin/npm-cli.js",
+      "npmVersion": "11.19.1"
+    },
+    "nodeVersion": "v24.22.1",
+    "productionPathsAccessed": false,
+    "runtimeStarted": false,
+    "status": "prepare1140_native_install_passed",
+    "syntheticDirectoryRemovedOnExit": true
+  },
+  "script": {
+    "path": "ops/prepare-release1140.py",
+    "bytes": 30093,
+    "sha256": "4b6d1b3d8212b107ccdfb7fa3a285e93b6936298f685b360423fa31a8ac18686",
+    "readbackIdentical": true
+  },
+  "hostedOperationPerformed": false,
+  "qualifiedMain": {
+    "source": "4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd",
+    "tree": "e5a239eaf7b8c3395a843c9e0d600efeb7aa569b"
+  },
+  "priorFailedAttempt": {
+    "source": "a819b4de4ddb07a3ae93bfcf11cc5dc2b1baff1c",
+    "run": 41235281857,
+    "conclusion": "failure",
+    "syntheticMethodsPassed": 21,
+    "nativeInstallPassed": false,
+    "logSha256": "0f31af002267816c302a02164e01d98cc08ea58c1d8216063584b964ae690756",
+    "reason": "npm ci returned nonzero; first native stderr was cleaned before publication of diagnostics. Distinct user/global config defect reproduced separately and corrected; missing original stderr is not reconstructed.",
+    "correction": "Two empty private 0600 npmrc files with distinct paths; only disposable native-install logs can be printed on failure, bounded to8192bytes per stream."
+  }
+}

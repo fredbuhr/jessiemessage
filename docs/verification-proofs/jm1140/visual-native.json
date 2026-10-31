@@ -1,0 +1,57 @@
+{
+  "artifact": 13054664757,
+  "run": 41234543057,
+  "source": "6b6b8e7982f68278b078b13d66872d0139e9a3fc",
+  "tree": "e5a239eaf7b8c3395a843c9e0d600efeb7aa569b",
+  "artifactSha256": "3df4fe16f039a00ca94493617a22b23ff9b4769532b75e21c0bfc0e04f01fe07",
+  "count": 71,
+  "newCaptures": [
+    {
+      "path": "broadcast-photos-1140-en-390.png",
+      "sha256": "a62b03b0254ae13faa73a30dd927fe2ec81dcce71e2c32ea86bd2364e4787b19",
+      "bytes": 37444,
+      "repositoryPath": "screenshots/broadcast-photos-1140-en-390.png"
+    },
+    {
+      "path": "broadcast-photos-1140-fr-1280.png",
+      "sha256": "4cea399983b3a9456cac60e751d9d150d0ab4fd2c3e060505934c48217556b59",
+      "bytes": 101797,
+      "repositoryPath": "screenshots/broadcast-photos-1140-fr-1280.png"
+    },
+    {
+      "path": "broadcast-photos-1140-fr-320.png",
+      "sha256": "502305d5760e3a54a38b418e3397cb4678ce739a260d61b75f4840d4e7631a5a",
+      "bytes": 34886,
+      "repositoryPath": "screenshots/broadcast-photos-1140-fr-320.png"
+    },
+    {
+      "path": "media-library-1140-en-1280.png",
+      "sha256": "fa19e549ea811f7dd3bdaaca54ad096e59f0436ed125c51aa94de298e32a6167",
+      "bytes": 65307,
+      "repositoryPath": "screenshots/media-library-1140-en-1280.png"
+    },
+    {
+      "path": "media-library-1140-fr-320.png",
+      "sha256": "0c5b2cc071452fc6f082a3264edff497a92a8ceb96596fd8175cc48c123bb77b",
+      "bytes": 41226,
+      "repositoryPath": "screenshots/media-library-1140-fr-320.png"
+    },
+    {
+      "path": "invitation-code-admin-fr-1280.png",
+      "sha256": "ee8e2aef628cc3c2836dcb2a5779d5dbb805ff320f0d050656b9d79d596855ef",
+      "bytes": 158955,
+      "repositoryPath": "screenshots/invitation-code-admin-fr-1280.png"
+    },
+    {
+      "path": "invitation-code-admin-en-320.png",
+      "sha256": "407c56f51c67c0eb07b453e27a7f06343f77160ed91b06201864467503df54a1",
+      "bytes": 63349,
+      "repositoryPath": "screenshots/invitation-code-admin-en-320.png"
+    }
+  ],
+  "inspected": true,
+  "review": "Broadcast FR320/EN390/FR1280 metadata now fits each card with bounded scrolling and no horizontal overflow; library FR320/EN1280 byte-identical to previously inspected captures. Invitation FR1280/EN320 shows unlimited selected, finite days disabled; native assertions cover default, explicit finite choice and reset/reload.",
+  "privateData": "synthetic fixtures only",
+  "physicalDevicesAttested": false,
+  "sameTreeQualifiedOnMain": "4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd"
+}

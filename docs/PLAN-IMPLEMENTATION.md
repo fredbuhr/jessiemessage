@@ -2,15 +2,15 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Évolution1.14.0 — invitations et médias
+## Évolution 1.14.0 — reste la mise en service personnelle
 
-Développement demandé après la clôture1130, branche `feat/media-library-1140`, base6506b757. [Objectif et critères](media-library-1140.md). Une seule livraison mineure compatible pour les quatre demandes, sans migration SQL.
+Code, revue, PR/main5/5, sept captures, publication et nouvel opérateur d’installation sont terminés. [Bilan et couverture](media-library-1140.md), [guide courant](operations-release1140.md). Une seule livraison compatible ; Node24.22.1 et schéma 38 inchangés.
 
-1. **Invitations et diffusion** : défaut illimité, grille de miniatures et ajout photo direct sans envoi automatique ; tests de parcours, brouillons, pagination et sessions.
-2. **Photos clients** : préparation élargie et conversion HEIC locale de secours, ressources et reprise bornées, lots conservant ordre/identifiants ; annoncer les limites effectivement qualifiées.
-3. **Bibliothèque et qualification** : accès dashboard, gestion des assets propres sous ACL existantes, revue et intégration, CI native PR/main, captures et preuves exactes avant publication. Préparer les nouvelles dépendances1140 uniquement après qualification ; ne pas réutiliser les anciens outils1130.
+1. **Préparation/CHECK1140** : nouveau bloc immuable du guide, reçu de staging exact puis `CHECK1140_EXIT=0` et marqueur final. Installation privée distincte ; préservation du checkpoint13 et des anciennes dépendances. En cas de résultat absent/refus, lecture seule avant suite, jamais de replay exploratoire.
+2. **Activation14** : seulement après le reçu précédent, consignes Manager précises puis identité réelle source/version/Node/démarrage. Aucun redémarrage13 ni ancien outil.
+3. **Enregistrement final14** : préparer et qualifier un writer lié au vrai démarrage et au staging reçu ; préserver l’état13 et les historiques, vérifier publication et résultat durable. Cette étape n’est pas encore exécutée.
 
-Aucune opération hébergée1140 exécutée. La1.13.0 reste active et finalisée ; ses étapes et CI acquises ne sont pas à rejouer. Sauvegarde reportée et limites antérieures conservent leur portée.
+La 1.13.0 reste active et finalisée. Les suites vertes du même code ne sont pas à rejouer. Essais physiques/Safari non attestés ; sauvegarde reportée, PC et juridique restent hors périmètre.
 
 ## Évolution 1.13.0 — livraison terminée
 

@@ -99,5 +99,7 @@
     "BFCache reproof, deletion ACK and refresh failure",
     "cloud image read abort/timeout and late byte clearing",
     "thumbnail retry on explicit render without automatic retry loop"
-  ]
+  ],
+  "historicalDevelopmentSnapshot": true,
+  "finalQualification": "main-native.json"
 }

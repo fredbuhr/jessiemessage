@@ -1,0 +1,111 @@
+{
+  "format": "jessiemessage-1140-publication-native",
+  "run": 41235813737,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41235813737",
+  "operator": "a051c7ebd821b76e9e8554481a91b89ea875b140",
+  "operatorTree": "4b622a58bb6d17258cf3372f913346281f924cf8",
+  "finalRunAttempt": 2,
+  "status": "completed",
+  "conclusion": "success",
+  "successfulFinalJobViews": 2,
+  "operatorTests": {
+    "executedAttempt": 1,
+    "originalJob": 124639247729,
+    "aliasInAttempt2": 124639860139,
+    "aliasIsReusedMetadata": true,
+    "originalStartedAt": "2026-10-31T19:47:00Z",
+    "originalCompletedAt": "2026-10-31T19:47:10Z",
+    "nodeVersion": "v24.22.1",
+    "tests": 11,
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "log": "publication1140-operator-native.log",
+    "logSha256": "2294c671282ba6bc7504b613fcf88ba447fe58459881fb8ec0474deca20b4e08"
+  },
+  "publication": {
+    "executedAttempt": 2,
+    "job": 124639859036,
+    "startedAt": "2026-10-31T19:49:42Z",
+    "completedAt": "2026-10-31T19:49:55Z",
+    "log": "publication1140-resume-native.log",
+    "logSha256": "6462d528280a01017df4f9d801e09a289c5a3f939b4c4aa0908f25621bd7a7e0",
+    "result": {
+      "status": "published_verified",
+      "nodeVersion": "24.22.1",
+      "schemaMigrations": 38,
+      "applicationTables": 37,
+      "normalMigrations": 33,
+      "videoMigrations": 3,
+      "experienceMigrations": 2,
+      "releases": [
+        {
+          "tag": "v1.14.0",
+          "source": "4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd",
+          "tree": "e5a239eaf7b8c3395a843c9e0d600efeb7aa569b",
+          "ciRun": "41235194387",
+          "ciAttempt": 1,
+          "releaseId": 430149586
+        }
+      ],
+      "latest": {
+        "tag": "v1.14.0",
+        "source": "4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd",
+        "id": 430149586
+      },
+      "publicationMode": "created",
+      "created": [
+        "v1.14.0"
+      ],
+      "deploymentPerformed": false
+    },
+    "resumptionReason": "Independently observed exact immutable tag already present,14 release absent and latest13; resumed only failed publish job to complete known missing release. Operator tests were not rerun."
+  },
+  "initialAttempt": {
+    "attempt": 1,
+    "runConclusion": "failure",
+    "operatorTests": "success",
+    "publishJob": 124639293102,
+    "publishConclusion": "failure",
+    "code": "API_HTTP_404",
+    "preciseEndpointUnknown": true,
+    "log": "publication1140-first-publish-failed.log",
+    "logSha256": "cb89124bf11a37b2c85c59f54c46ebe54586722cecd386bf83ad551d535a7ffc",
+    "proof": "publication1140-initial-failure.json"
+  },
+  "readOnlyRemoteVerification": {
+    "tag": {
+      "ref": "refs/tags/v1.14.0",
+      "type": "commit",
+      "sha": "4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd"
+    },
+    "release": {
+      "id": 430149586,
+      "tag": "v1.14.0",
+      "source": "4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd",
+      "url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.14.0",
+      "draft": false,
+      "prerelease": false,
+      "publishedAt": "2026-10-31T19:49:52Z"
+    },
+    "latest": {
+      "id": 430149586,
+      "tag": "v1.14.0",
+      "source": "4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd"
+    },
+    "observedAt": "2026-10-31T19:50:40.073672+00:00"
+  },
+  "applicationQualifiedSource": "4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd",
+  "applicationQualifiedTree": "e5a239eaf7b8c3395a843c9e0d600efeb7aa569b",
+  "applicationMainRun": 41235194387,
+  "applicationMainAttempt": 1,
+  "deploymentPerformed": false,
+  "hostedVersionStill": "1.13.0",
+  "realMessagesAccountsOrMediaUsed": false,
+  "scriptReadback": {
+    "path": "ops/publish-qualified1140.py",
+    "sha256": "dc6bbee951076f68422bc7cc0d233c130cd48198eaac03caa46071b02ed44251",
+    "bytes": 14659,
+    "identical": true
+  }
+}

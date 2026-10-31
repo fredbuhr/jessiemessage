@@ -1,0 +1,147 @@
+{
+  "format": "jessiemessage-native-application-qualification",
+  "scope": "pr",
+  "pr": 145,
+  "source": "6b6b8e7982f68278b078b13d66872d0139e9a3fc",
+  "tree": "e5a239eaf7b8c3395a843c9e0d600efeb7aa569b",
+  "run": 41234543057,
+  "attempt": 1,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41234543057",
+  "status": "completed",
+  "conclusion": "success",
+  "successfulJobs": 5,
+  "nodeVersion": "v24.22.1",
+  "jobs": [
+    {
+      "id": 124635451645,
+      "name": "MariaDB 10.11",
+      "conclusion": "success",
+      "counts": {
+        "tests": 613,
+        "suites": 0,
+        "pass": 613,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 409821.018023
+      },
+      "logSha256": "aca70209d2c0a024cb91689bba5692e81a20b95c1e7f3cf56959ef9f85a6699f",
+      "logBytes": 362597,
+      "footerSha256": "660d887a7806ebde18726db196f0d61db3a6459899f16bf587da2bf684a78262",
+      "footerComplete": true,
+      "durableLog": {
+        "job": 124635451645,
+        "path": "logs/pr-124635451645.log.gz",
+        "bytes": 362597,
+        "sha256": "aca70209d2c0a024cb91689bba5692e81a20b95c1e7f3cf56959ef9f85a6699f",
+        "gzipSha256": "b6409c3905340f2e2726ff33238e8a041c4c97b88556112d9d4028a5fd511e67"
+      }
+    },
+    {
+      "id": 124635451706,
+      "name": "MariaDB 11.4",
+      "conclusion": "success",
+      "counts": {
+        "tests": 613,
+        "suites": 0,
+        "pass": 613,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 402698.382445
+      },
+      "logSha256": "5b1ac1ab78c534c0b1b9340396920506e24ed7484e82abb0ec46658bc7233a22",
+      "logBytes": 363106,
+      "footerSha256": "61a517e125618fe9cde6bde22527c21ee7e9b71d3a90c1d2897a643a07cb44b7",
+      "footerComplete": true,
+      "durableLog": {
+        "job": 124635451706,
+        "path": "logs/pr-124635451706.log.gz",
+        "bytes": 363106,
+        "sha256": "5b1ac1ab78c534c0b1b9340396920506e24ed7484e82abb0ec46658bc7233a22",
+        "gzipSha256": "3aff0660f1ced6ab1b1897ebf8e2bdd635d03dcafc26804394c81fb22964b94a"
+      }
+    },
+    {
+      "id": 124635451737,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "conclusion": "success",
+      "counts": {
+        "tests": 14,
+        "suites": 0,
+        "pass": 14,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 108767.498782
+      },
+      "logSha256": "b785a7cd10b0f6edbfdf9876ad64fee84a7a4178db3425ae6d7bb50fccfc7ea2",
+      "logBytes": 42286,
+      "footerSha256": "b7d0af86449b3cb0fe4e7512f4308ac2dd5eec14c9b20d770872d4c282d58719",
+      "footerComplete": true,
+      "durableLog": {
+        "job": 124635451737,
+        "path": "logs/pr-124635451737.log.gz",
+        "bytes": 42286,
+        "sha256": "b785a7cd10b0f6edbfdf9876ad64fee84a7a4178db3425ae6d7bb50fccfc7ea2",
+        "gzipSha256": "9a80b3c705d2018dd64c41393ed4e121ea6b562f9c5f27db790a6442434547eb"
+      }
+    },
+    {
+      "id": 124635451740,
+      "name": "verify",
+      "conclusion": "success",
+      "counts": {
+        "tests": 4295,
+        "suites": 0,
+        "pass": 4243,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 52,
+        "todo": 0,
+        "duration_ms": 92887.54727
+      },
+      "logSha256": "e25432fc646a083bf0207ae69e972e4b4350586a9d647d5261e4eb12b3a27d46",
+      "logBytes": 607770,
+      "footerSha256": "487acef154e13901ecfce6b255b32687eee744b8fbe1d2f00a2771d71c5295ca",
+      "footerComplete": true,
+      "durableLog": {
+        "job": 124635451740,
+        "path": "logs/pr-124635451740.log.gz",
+        "bytes": 607770,
+        "sha256": "e25432fc646a083bf0207ae69e972e4b4350586a9d647d5261e4eb12b3a27d46",
+        "gzipSha256": "efd89a0a948a1bfbd49b916908f7c1746e0efecfe926c3d4d0414421f39aa1c3"
+      }
+    },
+    {
+      "id": 124635451566,
+      "name": "Chrome keyboard and chat lifecycle",
+      "conclusion": "success",
+      "counts": {
+        "tests": 296,
+        "pass": 296,
+        "fail": 0,
+        "skip": 0,
+        "cancelled": 0
+      },
+      "logSha256": "dbdecd4d97436e91d7b4cf9dd8eea7822363644071c34aa4da01414343a1f9f1",
+      "logBytes": 59710,
+      "footerComplete": true,
+      "durableLog": {
+        "job": 124635451566,
+        "path": "logs/pr-124635451566.log.gz",
+        "bytes": 59710,
+        "sha256": "dbdecd4d97436e91d7b4cf9dd8eea7822363644071c34aa4da01414343a1f9f1",
+        "gzipSha256": "fee78fa2faa0d7a298dc2a61967cf13cdcf3548cf2f5817eb580eb42236548d3"
+      }
+    }
+  ],
+  "omissionsAreNotSuccesses": true,
+  "originalLogEncoding": "exact UTF-8 decoded connector text including BOM/line endings; stored and verified by SHA-256",
+  "groupsNotSummed": true,
+  "productionTouched": false,
+  "physicalDevicesOrSafariAttested": false
+}

@@ -1,0 +1,117 @@
+{
+  "encoding": "gzip, exact decoded UTF-8 CI logs; synthetic fixtures only",
+  "entries": [
+    {
+      "job": 124635451645,
+      "path": "logs/pr-124635451645.log.gz",
+      "bytes": 362597,
+      "sha256": "aca70209d2c0a024cb91689bba5692e81a20b95c1e7f3cf56959ef9f85a6699f",
+      "gzipSha256": "b6409c3905340f2e2726ff33238e8a041c4c97b88556112d9d4028a5fd511e67"
+    },
+    {
+      "job": 124635451706,
+      "path": "logs/pr-124635451706.log.gz",
+      "bytes": 363106,
+      "sha256": "5b1ac1ab78c534c0b1b9340396920506e24ed7484e82abb0ec46658bc7233a22",
+      "gzipSha256": "3aff0660f1ced6ab1b1897ebf8e2bdd635d03dcafc26804394c81fb22964b94a"
+    },
+    {
+      "job": 124635451737,
+      "path": "logs/pr-124635451737.log.gz",
+      "bytes": 42286,
+      "sha256": "b785a7cd10b0f6edbfdf9876ad64fee84a7a4178db3425ae6d7bb50fccfc7ea2",
+      "gzipSha256": "9a80b3c705d2018dd64c41393ed4e121ea6b562f9c5f27db790a6442434547eb"
+    },
+    {
+      "job": 124635451740,
+      "path": "logs/pr-124635451740.log.gz",
+      "bytes": 607770,
+      "sha256": "e25432fc646a083bf0207ae69e972e4b4350586a9d647d5261e4eb12b3a27d46",
+      "gzipSha256": "efd89a0a948a1bfbd49b916908f7c1746e0efecfe926c3d4d0414421f39aa1c3"
+    },
+    {
+      "job": 124635451566,
+      "path": "logs/pr-124635451566.log.gz",
+      "bytes": 59710,
+      "sha256": "dbdecd4d97436e91d7b4cf9dd8eea7822363644071c34aa4da01414343a1f9f1",
+      "gzipSha256": "fee78fa2faa0d7a298dc2a61967cf13cdcf3548cf2f5817eb580eb42236548d3"
+    },
+    {
+      "job": 124637370858,
+      "path": "logs/main-124637370858.log.gz",
+      "bytes": 41313,
+      "sha256": "52a4af14b75aad2503400b38efd8f6991b08c33d80b4c6751b0850093253f0f5",
+      "gzipSha256": "ee673a828f929d53aad6e457fb1d590325914eefad198a4dd8f2d5cdf7b552f4"
+    },
+    {
+      "job": 124637370931,
+      "path": "logs/main-124637370931.log.gz",
+      "bytes": 361768,
+      "sha256": "74972085959f8d3d8967e78c1faf64996bbe9837673a37054ed0970ec7df0c1b",
+      "gzipSha256": "33e6e95b1ed80a1dc5dabbe3c41c867b63b8f8e24ef887526c1afcb890b799b4"
+    },
+    {
+      "job": 124637370961,
+      "path": "logs/main-124637370961.log.gz",
+      "bytes": 362419,
+      "sha256": "521a2cfb0415cac510c57e9a48aaea74782a3e7d721299f4ef72c759f7d1a3b4",
+      "gzipSha256": "0bf406f7d1392dee6ffe60ddccec64b0f818f7eb77074ff67e1551145cd7d30b"
+    },
+    {
+      "job": 124637371044,
+      "path": "logs/main-124637371044.log.gz",
+      "bytes": 607144,
+      "sha256": "baa3a0645a7a02385e1cecd468026759c7209f33401f821954c6d86645bcb483",
+      "gzipSha256": "aef09211fd089372907e869beb422732a6e04d54ab808d3abe3fe2929f2c2a4c"
+    },
+    {
+      "job": 124637370696,
+      "path": "logs/main-124637370696.log.gz",
+      "bytes": 58929,
+      "sha256": "ea96b983875f0c46739f618fb34fd1a66d5c202ed0a8eca6745ba8e0d758fbfd",
+      "gzipSha256": "4bc4edd940a2c190cc2eda7d6d3f471ebf9a4478f93015b0b0d8529dd817b10c"
+    },
+    {
+      "path": "logs/pr145-chrome-41233803893.log.gz",
+      "bytes": 60651,
+      "sha256": "08c61776a3a992309243f8f2bebbcd4ba4b95e39a1f9c99b5e55f4379d456b34",
+      "gzipSha256": "a588c7d2cf2edcebab764b11eb38b83042e49677296ca3c23662da13c5dc62ab"
+    },
+    {
+      "path": "logs/job-124633240106.log.gz",
+      "bytes": 44889,
+      "sha256": "3ff72b7dcd5b1003a10d88ed2602409a88244933cb49d14cd4c71db1df5864d9",
+      "gzipSha256": "ffb73fd8dd3638235113fe8b05ffccfd8975678e55b6901d1673f4c0ed46e0a8"
+    },
+    {
+      "path": "logs/prepare1140-first-native.log.gz",
+      "bytes": 51503,
+      "sha256": "0f31af002267816c302a02164e01d98cc08ea58c1d8216063584b964ae690756",
+      "gzipSha256": "ede88c8226cb00d2eef8d6d4539465d5380d7f221c9666a7090e432284302e8b"
+    },
+    {
+      "path": "logs/prepare1140-corrected-native.log.gz",
+      "bytes": 52142,
+      "sha256": "6c740006f8a5e402e31ba56886ab7dc3a646f49fc67e9607a236b2ec2128cfa7",
+      "gzipSha256": "75753e555b40b7eab28cdad1d368f201fb803801ff7a80a0b07c17234ec041d5"
+    },
+    {
+      "path": "logs/publication1140-operator-native.log.gz",
+      "bytes": 48106,
+      "sha256": "2294c671282ba6bc7504b613fcf88ba447fe58459881fb8ec0474deca20b4e08",
+      "gzipSha256": "022953fb2f1ea63a156bc5297f53e27cf45848c557e9449a1fa7ba92685a5c81"
+    },
+    {
+      "path": "logs/publication1140-first-publish-failed.log.gz",
+      "bytes": 17392,
+      "sha256": "cb89124bf11a37b2c85c59f54c46ebe54586722cecd386bf83ad551d535a7ffc",
+      "gzipSha256": "3ecf5dc9173675a38284d3f9988619c5a36ee6b3ae22e6e792d81a0d90e1bb32"
+    },
+    {
+      "path": "logs/publication1140-resume-native.log.gz",
+      "bytes": 17811,
+      "sha256": "6462d528280a01017df4f9d801e09a289c5a3f939b4c4aa0908f25621bd7a7e0",
+      "gzipSha256": "7398a862c61270e61e0a9b667478b1f447501a87d3d783a835b5ff94e097246a"
+    }
+  ]
+}
