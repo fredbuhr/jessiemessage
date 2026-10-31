@@ -1,0 +1,40 @@
+name: Qualify JessieMessage 1.14.0 preparation
+
+on:
+  push:
+    branches: ["ops/prepare-v1.14.0"]
+    paths:
+      - ".github/workflows/prepare-qualified1140.yml"
+      - "ops/prepare-release1140.py"
+      - "ops/test-prepare-release1140.py"
+
+permissions: {}
+
+concurrency:
+  group: prepare-jessiemessage-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  operator-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact operator commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Use qualified Node.js 24.22.1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+          package-manager-cache: false
+      - name: Record exact native Node version
+        run: node --version
+      - name: Test exclusive staging and exact1130 preservation with synthetic local repositories
+        run: PYTHONDONTWRITEBYTECODE=1 python3 ops/test-prepare-release1140.py
+      - name: Qualify one isolated fresh dependency installation with the pinned official Node and npm
+        run: PYTHONDONTWRITEBYTECODE=1 python3 ops/test-prepare-release1140.py --native-install
