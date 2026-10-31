@@ -307,7 +307,7 @@ element("verify-email-button").addEventListener("click", () => { void submit(asy
     return;
   }
   returnToLogin();
-  notice("Ton adresse e-mail est vérifiée. Connecte-toi pour suivre la validation de ton accès.");
+  notice("Ton adresse e-mail est vérifiée. Connecte-toi pour ouvrir ta conversation.");
 }); });
 element("resend-form").addEventListener("submit", (event) => {
   event.preventDefault(); void submit(async () => {

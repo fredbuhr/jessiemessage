@@ -142,6 +142,14 @@ for (const verifiedStatus of [200, 401]) test(`verification intent cannot adopt 
     assert.equal(f.calls.filter(call => call.path === "/api/access/session").length, 0, "a verification link does not select a pre-existing client session");
     f.get("verify-email-button").dispatchEvent(new Event("click")); await flush();
     assert.equal(f.get("client-login-form").hidden, false); assert.equal(f.get("client-connected").hidden, true);
+    if (verifiedStatus === 200) {
+      assert.equal(f.get("access-status").textContent, "Ton adresse e-mail est vérifiée. Connecte-toi pour ouvrir ta conversation.");
+      const count = f.calls.length;
+      f.language("en");
+      assert.equal(f.get("access-status").textContent, "Your email address is verified. Sign in to open your conversation.");
+      assert.equal(f.calls.length, count, "translating the verification result must not repeat a request");
+      f.language("fr");
+    }
     f.hide(); await f.show(); await f.online();
     assert.equal(f.get("client-login-form").hidden, false); assert.equal(f.calls.filter(call => call.path === "/api/access/session").length, 0);
     f.input("login-email", "new-client@example.invalid"); f.input("login-password", "synthetic password"); f.submit("client-login-form"); await flush();

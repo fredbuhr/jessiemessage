@@ -19,6 +19,7 @@ globalThis.JessieI18n?.register({
 
   "Mon espace est réservé aux adultes. Après ton inscription, confirme ton e-mail ; ton accès attendra ensuite ma validation. Cette déclaration ne vérifie pas ta majorité.": "My space is for adults. After signing up, confirm your email; your access will then await my approval. This declaration does not verify your age.",
   "Confirme ton e-mail pour me retrouver ici.": "Confirm your email to join me here.",
+  "Appuie sur « Vérifier mon e-mail » pour confirmer ton adresse.": "Press “Verify my email” to confirm your address.",
   "Vérifier mon accès": "Check my access",
   "M’écrire": "Write to me",
   "Ouvrir ma conversation": "Open my conversation",
@@ -99,6 +100,7 @@ globalThis.JessieI18n?.register({
   "Ton compte est créé. Consulte tes e-mails pour vérifier ton adresse, puis connecte-toi pour suivre la validation de ton accès.": "Your account has been created. Check your email to verify your address, then sign in to follow the approval of your access.",
   "Ton adresse e-mail est vérifiée.": "Your email address is verified.",
   "Ton adresse e-mail est vérifiée. Connecte-toi pour suivre la validation de ton accès.": "Your email address is verified. Sign in to follow the approval of your access.",
+  "Ton adresse e-mail est vérifiée. Connecte-toi pour ouvrir ta conversation.": "Your email address is verified. Sign in to open your conversation.",
   "Si les informations correspondent à un compte en attente, un nouvel e-mail de vérification sera envoyé.": "If these details match a pending account, another verification email will be sent.",
   "Toutes tes sessions sont déconnectées.": "All your sessions have been signed out.",
   "Tu es déconnecté.": "You are signed out.",
