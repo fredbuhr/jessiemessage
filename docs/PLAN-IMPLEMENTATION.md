@@ -2,7 +2,7 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Évolution 1.13.0 — publiée, suite opérateur bornée
+## Évolution 1.13.0 — livraison terminée
 
 Les corrections de messagerie, listes, lectures backend, cadence Push et textes courants sont terminées. [Résultat et bornes](conversation-lists-1130.md), [couverture F01–F09](verification-proofs/jm1130/coverage.json). PR144 fusionnée, PR/main5/5, douze captures inspectées ; tagv1.13.0/release430071184 publiés surb9e2ad78 après publication2/2. Aucune migration ou dépendance nouvelle. Les contrôles verts du même code ne sont pas à rejouer.
 
@@ -14,9 +14,11 @@ Les corrections de messagerie, listes, lectures backend, cadence Push et textes 
 
 **Writer final1130 qualifié :** [run41229293876](verification-proofs/jm1130/writer-final-native.json),1/1,27/27 natifs sans omission, tentative1, source `13848dce9ec0d15969bb2cf33675de00dfc2abc7`. Il lie la seconde réelle rapportée1793470438, le staging08eb6309 et le baseline1112 exact3f1ae16d ; scripts relus identiques aux octets qualifiés. Aucun test vert à répéter.
 
-**Étape restante immédiate :** exécuter une seule fois la [commande de métadonnées1130](operations-release1130.md#enregistrement-final--à-exécuter-une-fois) puis transmettre son JSON. Critère de fin : reçu final1130, identité exacte et `publicReady:true`, checkpoint et anciens blocs préservés selon le reçu. Aucun SQL, compte ou redémarrage. Si le résultat est perdu ou incertain, lire l’état durable avant toute suite, sans rejouer une commande pour découvrir son résultat.
+**Enregistrement final1130 acquis selon le [reçu utilisateur](verification-proofs/jm1130/hosted-metadata.json)** : `release1130_metadata_recorded`, source/arbre/Node exacts, `publicReady:true`, checkpoint1130 SHA256 `cdcb3f8b35208ddfaff19009235f86d4dd23a10ac13b00c9c692daad2bbe496d`. Démarrage réel1793470438163, soit31octobre19:13:58.163Paris, conforme à l’UI à la seconde. Historiques, état antérieur et autres blocs préservés, reçus1120/1113 conservés sans finalisations absentes inventées ; aucun redémarrage.
 
-La1.13.0 est publiée, préparée et démarrée selon les reçus utilisateur ; les métadonnées finales ne sont pas encore enregistrées. Les gains facultatifs non mesurés, migrations d'index sans preuve, juridique, sauvegarde reportée et ancien CLI de données ne deviennent pas des prérequis. Ne pas rouvrir l'audit global ni les suites vertes à chaque étape.
+**Aucune étape de livraison restante.** [Guide clos](operations-release1130.md). Ne rejouer ni préparation, CHECK, activation, writer ou CI verte.
+
+La1.13.0 est qualifiée, publiée, déployée et finalisée selon les reçus utilisateur. Les gains facultatifs non mesurés, migrations d'index sans preuve, juridique, sauvegarde reportée et ancien CLI de données ne deviennent pas des prérequis. Ne pas rouvrir l'audit global ni les suites vertes à chaque étape.
 
 ## Évolution1.12.0 — démarrage rapporté, checkpoint1112 relu
 
@@ -24,7 +26,7 @@ Les quatre demandes et l’ouverture automatique du lien sont qualifiées et pub
 
 Le [writer final1120](verification-proofs/jm1120/writer-final-native.json) est qualifié24/24 natifs, run41155948468,1/1, tentative1 ; script relu identique à la source épinglée. Il accepte le véritable baseline privé1112/3f1ae16d et conserve les preuves1113 sans inventer sa finalisation.
 
-**État durable relu pour1130 :** le reçu de l’ancienne commande1120 n’a pas été communiqué, mais la [lecture seule acquise](verification-proofs/jm1130/hosted-checkpoint-inspection.json) retrouve exactement le checkpoint1112, sans section1120. Aucun succès d’enregistrement1120 déduit, aucun replay requis. Le nouvel opérateur1130 préservera ce baseline. Le démarrage1120 ne doit pas être répété.
+**État durable relu pour1130 :** le reçu de l’ancienne commande1120 n’a pas été communiqué, mais la [lecture seule acquise](verification-proofs/jm1130/hosted-checkpoint-inspection.json) retrouve exactement le checkpoint1112, sans section1120. Aucun succès d’enregistrement1120 déduit, aucun replay requis. Le nouvel opérateur1130 a préservé ce baseline selon le reçu final1130. Le démarrage1120 ne doit pas être répété.
 
 ## Correctif1.11.3 — historique, finalisation non confirmée
 

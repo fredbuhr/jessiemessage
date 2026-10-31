@@ -67,9 +67,12 @@
     "Original problematic photo not available",
     "Manual hosted backup test remains postponed",
     "A10/A11/A12 scope and historical limits preserved",
-    "Read-only hosted inspection reported by user: exact checkpoint1112 unchanged, no release1120 section; new1130 staging must preserve it without replaying old writers"
+    "Final1130 metadata recorded according to user receipt; prior1112 baseline and1120/1113 staging preserved without inventing missing finalizations"
   ],
   "hostedDeploymentAuthority": "user startup UI; see hosted-identity.json, no direct process inspection",
   "hostedDeploymentPerformedByAgent": false,
-  "final1130MetadataRecorded": false
+  "final1130MetadataRecorded": true,
+  "hostedMetadataReceipt": "hosted-metadata.json",
+  "checkpointSha256": "cdcb3f8b35208ddfaff19009235f86d4dd23a10ac13b00c9c692daad2bbe496d",
+  "deliveryCompleteAccordingToReceipts": true
 }

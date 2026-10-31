@@ -29,7 +29,7 @@
 
 Les tests ciblés accompagnent chaque changement de contrat. La source stabilisée reçoit la CI requise sur PR puis SHA fusionné. Les résultats existants1.12.0 ne sont pas requalifiés par lecture ; les omissions restent des omissions. Aucune publication ou activation n'est déduite de l'implémentation locale.
 
-Les preuves finales et limites sont consignées ci-dessous. La lecture seule du checkpoint est désormais acquise pour1130 : état1112 exact, section1120 absente. Le nouvel opérateur préservera ce baseline ; aucun ancien writer ne sera rejoué.
+Les preuves finales et limites sont consignées ci-dessous. La lecture seule préalable1130 avait retrouvé l’état1112 exact, sans section1120. Ce baseline et les reçus antérieurs sont préservés dans le checkpoint final1130 ; aucun ancien writer ne doit être rejoué.
 
 ## Révision implémentée et bornes
 
@@ -75,7 +75,7 @@ Les52omissions ne sont pas des réussites. Les cinq suites ne s'additionnent pas
 
 **Douze captures finales effectivement inspectées** : invitations et aperçus FR/EN à320/1280, historique récentFR320, CRMFR320/EN390, tâchesFR390. [Inventaire et empreintes](verification-proofs/jm1130/visual-native.json). Les captures du run main ne sont pas revendiquées comme relues : la revue visuelle porte sur la PR corrective dont l'arbre complet est identique. Téléphone physique, Safari et lecteur d'écran ne sont pas qualifiés par ces captures synthétiques.
 
-[v1.13.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.13.0) est publiée surb9e2ad78, release/latest430071184 ; [publication41223112832](verification-proofs/jm1130/publication-native.json)2/2, tentative1, neuf tests natifs de l'opérateur. Aucun tag ancien déplacé ; le workflow de publication n’effectue aucune installation hébergée. La1.13.0 est depuis démarrée selon le [relevé utilisateur](verification-proofs/jm1130/hosted-identity.json) ; le [writer final est qualifié27/27](verification-proofs/jm1130/writer-final-native.json), son reçu d’exécution reste attendu. [Guide opérateur1130](operations-release1130.md).
+[v1.13.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.13.0) est publiée surb9e2ad78, release/latest430071184 ; [publication41223112832](verification-proofs/jm1130/publication-native.json)2/2, tentative1, neuf tests natifs de l'opérateur. Aucun tag ancien déplacé ; le workflow de publication n’effectue aucune installation hébergée. La1.13.0 est depuis démarrée selon le [relevé utilisateur](verification-proofs/jm1130/hosted-identity.json) ; le [reçu final](verification-proofs/jm1130/hosted-metadata.json) confirme l’enregistrement des métadonnées et `publicReady:true`, sans redémarrage. [Guide opérateur1130](operations-release1130.md).
 
 ## Bilan de couverture et simplicité
 
@@ -83,4 +83,6 @@ Les neuf groupes F01–F09 ont une disposition dans la [checklist de clôture](v
 
 L'audit du schéma n'a pas justifié de migration :38migrations et37tables attendues, sans nouvel inventaire physique de production. Le petit index redondant des libellés, le tri facultatif des tâches par échéance, le découpage d'imports historiques, le cache des assets publics et une icône non servie ne deviennent pas des corrections urgentes ; pas de suppression à l'aveugle d'outils ou de contrats historiques. Les bornes réelles et états épinglés sont explicités plus haut, sans promesse de mémoire totale constante.
 
-Livraisons réelles SMTP/Push, photo originale problématique, essais téléphones/Safari et sauvegarde manuelle reportée restent non attestés. Aucun envoi réel, effacement, modification client ou navigateur cloud n’a été utilisé pour le développement. La préparation et le CHECK1130 sont ensuite rapportés réussis dans leur [reçu séparé](verification-proofs/jm1130/hosted-preparation.json), sans identité démarrée1130 déduite. La lecture seule acquise pour1130 retrouve le checkpoint1112 exact, sans section1120 ; ce baseline doit être préservé par le nouvel opérateur. Le démarrage1120 reste confirmé séparément.
+Livraisons réelles SMTP/Push, photo originale problématique, essais téléphones/Safari et sauvegarde manuelle reportée restent non attestés. Aucun envoi réel, effacement, modification client ou navigateur cloud n’a été utilisé pour le développement. La préparation et le CHECK1130 sont ensuite rapportés réussis dans leur [reçu séparé](verification-proofs/jm1130/hosted-preparation.json), sans identité démarrée1130 déduite. La lecture seule préalable1130 avait retrouvé le checkpoint1112 exact, sans section1120 ; ce baseline est préservé dans l’enregistrement final1130. Les preuves de démarrage antérieures restent historiques.
+
+La livraison1.13.0 est close selon les reçus utilisateur : application, checkpoint et tag/latest alignés sur la source qualifiée, démarrage31octobre19:13:58.163Paris et métadonnées enregistrées. Aucun nouveau contrôle ou déploiement du même code à lancer automatiquement.
