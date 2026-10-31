@@ -2,13 +2,14 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Évolution1.12.0 — publiée, préparation hébergée à exécuter
+## Évolution1.12.0 — préparée, activation Manager à effectuer
 
 Le clic du mail confirme et active le compte sans bouton supplémentaire ni approbation admin, selon l’instruction KISS du31octobre. Le diagnostic individuel est remplacé par cette correction. Les quatre demandes initiales restent dans le même lot. [Rapport](onboarding-media-chat-1120.md) : PR143/main1435/5, publication2/2 et39tests opérateur ; source9bfdae07, tag/release/latest1.12.0 publiés. Aucun déploiement1120 effectué.
 
-1. Exécuter la [préparation/CHECK1120 qualifiée](operations-release1120.md) une fois et recueillir le JSON/code/marqueur. L’outil observe et préserve le checkpoint connu1112 ou la transition1113 ; aucun ancien writer ni diagnostic individuel à demander.
-2. Après succès confirmé, donner les réglages Manager exacts et activer une seule fois. Recueillir l’identité1.12.0/source9bfdae07/Node24.22.1 et son heure de démarrage.
-3. Qualifier puis exécuter le writer final lié à cette preuve ; préserver l’état antérieur intégral et clore les reçus sans répéter les étapes réussies.
+[Préparation/CHECK1120 reçus](verification-proofs/jm1120/hosted-preparation.json) : SHA canonique692d5598 vérifié, CHECK0 et marqueur final. Baseline privé1112/3f1ae16d observé/préservé. Ne pas répéter préparation/CHECK SSH.
+
+1. Appliquer les [réglages Manager1120 exacts](operations-release1120.md#activation-personnelle) et activer une seule fois. Recueillir l’identité1.12.0/source9bfdae07/Node24.22.1 et son heure de démarrage.
+2. Qualifier puis exécuter le writer final lié à cette preuve et au baseline réel3f1ae16d ; préserver l’état antérieur intégral et clore les reçus sans répéter les étapes réussies.
 
 ## Correctif1.11.3 — démarrage rapporté, finalisation attendue
 

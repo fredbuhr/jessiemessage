@@ -196,7 +196,6 @@
   ],
   "reviewedAllRequestedAreas": true,
   "pending": [
-    "hosted preparation/CHECK1120 and its receipt",
     "single Manager activation and startup identity",
     "qualified final metadata writer and receipt"
   ],
@@ -214,5 +213,8 @@
   "codeQualificationComplete": true,
   "publicationRun": 41153760698,
   "releaseId": 429632868,
-  "published": true
+  "published": true,
+  "hostedPreparationReceiptSha256": "692d55985dbdb4c76d066fe90d434f35d17266c6b59ea25124725cc024751578",
+  "hostedCheckPassedReported": true,
+  "hostedPreparationCanonicalReceiptVerified": true
 }
