@@ -1884,11 +1884,12 @@ test("Chrome composer: mobile beforeinput fallback does not send an IME confirma
 
 test("Chrome: keyboard history loads on upward navigation and keeps a bounded contiguous two-way window", { timeout: 90000 }, async () => {
   resetFixture(); fixture.windowedHistory = true; fixture.latest = 800; fixture.mediaDisabled = true;
-  const page = await browser(320, 800);
+  const page = await browser(320, 800); let phase = "initial";
   try {
     await loaded(page, "/messages");
     await waitUntil(() => page.execute("const scroll=document.getElementById('message-scroll'),last=document.querySelector('#messages .message:last-child');if(!last||last.dataset.sequence!=='800')return false;const box=scroll.getBoundingClientRect(),row=last.getBoundingClientRect();return scroll.scrollHeight-scroll.scrollTop-scroll.clientHeight<10&&row.bottom>box.top&&row.top<box.bottom"), "latest message is in the initial viewport at the conversation tail");
     for (let i = 0; i < 8; i++) {
+      phase = `Home ${i + 1}`;
       const before = fixture.historyReads.length;
       await page.execute("document.getElementById('message-scroll').focus()"); await page.key("\uE011");
       await waitUntil(() => fixture.historyReads.length > before, "Home loads older history without its button");
@@ -1896,7 +1897,7 @@ test("Chrome: keyboard history loads on upward navigation and keeps a bounded co
     }
     const window = await page.execute("return [...document.querySelectorAll('#messages .message')].map(node=>Number(node.dataset.sequence))");
     assert.equal(window.length, 300); assert.equal(window.every((seq, index) => !index || seq === window[index - 1] + 1), true);
-    const tail = window.at(-1);
+    const tail = window.at(-1); phase = "End after window trim";
     await page.execute("document.getElementById('message-scroll').focus()"); await page.key("\uE010");
     await waitUntil(() => page.execute(`return Number(document.querySelector('#messages .message:last-child')?.dataset.sequence)>${tail}`), "End restores an evicted newer portion");
     assert.equal(await page.execute("return document.querySelectorAll('#messages .message').length<=300"), true);
@@ -1904,6 +1905,14 @@ test("Chrome: keyboard history loads on upward navigation and keeps a bounded co
     await mkdir(new URL("../../artifacts/homepage/", import.meta.url), { recursive: true });
     await writeFile(new URL("../../artifacts/homepage/conversation-history1130-fr-320.png", import.meta.url), Buffer.from(await page.screenshot(), "base64"));
     await noJavascriptErrors(page);
+  } catch (error) {
+    try {
+      const state = await page.execute("const scroll=document.getElementById('message-scroll'),rows=[...document.querySelectorAll('#messages .message')];return {active:document.activeElement.id,scrollTop:scroll.scrollTop,scrollHeight:scroll.scrollHeight,clientHeight:scroll.clientHeight,first:rows[0]?.dataset.sequence,last:rows.at(-1)?.dataset.sequence,rows:rows.length,older:{hidden:document.getElementById('older-messages').hidden,disabled:document.getElementById('older-messages').disabled},status:document.getElementById('chat-status').textContent,errors:window.__browserErrors}");
+      console.error("history1130_diagnostic " + JSON.stringify({ phase, reads: fixture.historyReads, ...state }));
+      await mkdir(new URL("../../artifacts/homepage/", import.meta.url), { recursive: true });
+      await writeFile(new URL("../../artifacts/homepage/debug1130-history.png", import.meta.url), Buffer.from(await page.screenshot(), "base64"));
+    } catch {}
+    throw error;
   } finally { await page.close(); }
 });
 

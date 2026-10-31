@@ -90,12 +90,17 @@ test("real MariaDB own profiles, bounded private avatars and simultaneous update
       assert.equal((await chatStore.readInbox({ tokenHash: admin.tokenHash, now })).items.find(item => item.conversation.id.equals(conversationId)).conversation.peerAvatarVersion, undefined, "a deleted asset is absent from the batched inbox avatar projection");
       const content = (await connection.query("SELECT content_digest FROM media_assets WHERE id = ?", [own]))[0].content_digest;
       await connection.query("UPDATE media_assets SET deleted_at = NULL, active_digest = ? WHERE id = ?", [content, own]);
+      assert.equal((await chatStore.readInbox({ tokenHash: admin.tokenHash, now })).items.find(item => item.conversation.id.equals(conversationId)).conversation.peerAvatarVersion, "1", "restoring the own asset restores its authorized inbox avatar");
       // A stale/manually corrupted reference must not expose another owner's
       // asset through the new summary query, even though its FK still exists.
-      await connection.query("UPDATE user_profiles SET avatar_media_id = ? WHERE user_id = ?", [foreign, first.id]);
+      // Keep the fixture clock explicit: this column otherwise invokes its
+      // ON UPDATE wall clock and would invalidate later fixed-time requests.
+      await connection.query("UPDATE user_profiles SET avatar_media_id = ?, updated_at = ? WHERE user_id = ?", [foreign, sql(now), first.id]);
       try {
         assert.equal((await chatStore.readInbox({ tokenHash: admin.tokenHash, now })).items.find(item => item.conversation.id.equals(conversationId)).conversation.peerAvatarVersion, undefined, "a foreign owner's avatar is absent from the batched inbox projection");
-      } finally { await connection.query("UPDATE user_profiles SET avatar_media_id = ? WHERE user_id = ?", [own, first.id]); }
+      } finally { await connection.query("UPDATE user_profiles SET avatar_media_id = ?, updated_at = ? WHERE user_id = ?", [own, sql(now), first.id]); }
+      assert.equal((await store.getProfile(request(first))).version, "1", "the corruption fixture preserves the ordinary profile and its current clock");
+      assert.equal((await chatStore.readInbox({ tokenHash: admin.tokenHash, now })).items.find(item => item.conversation.id.equals(conversationId)).conversation.peerAvatarVersion, "1");
     });
     await t.test("simultaneous saves serialize on the current account and stale versions conflict", async () => {
       const saves = await Promise.allSettled(["First", "Second"].map(pseudonym => store.saveProfile({ ...request(first), expectedVersion: "1", pseudonym, avatarId: own })));

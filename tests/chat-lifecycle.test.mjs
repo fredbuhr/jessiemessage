@@ -2183,3 +2183,38 @@ test("idle conversation cache is bounded while drafts and exact uncertain send i
     assert.equal(states.get(id(999)).pending.clientMessageId, pending.clientMessageId); assert.ok(states.has(id(101)));
   } finally { await f.hide(); }
 });
+
+
+test("Tab and pointer activation preserve the history fallback while Home explicitly loads the focused history", async () => {
+  const { f } = windowedHistoryFixture();
+  try {
+    await flush(); const scroll = f.element("message-scroll"), older = f.element("older-messages"); scroll.scrollTop = 0;
+    for (const h of scroll.events.get("keydown")) h({ key: "Tab", target: scroll });
+    for (const h of scroll.events.get("pointerdown")) h({ target: older });
+    await f.advance(1);
+    assert.equal(f.calls.filter(call => /messages\?before=/.test(call.path)).length, 0);
+    assert.equal(older.hidden, false); assert.equal(older.disabled, false);
+    let prevented = false;
+    for (const h of scroll.events.get("keydown")) h({ key: "Home", target: scroll, preventDefault() { prevented = true; } });
+    await f.advance(1); assert.equal(prevented, true);
+    assert.ok(f.calls.some(call => /messages\?before=/.test(call.path)));
+  } finally { await f.hide(); }
+});
+
+
+test("history gestures leave IME, browser shortcuts, descendant fields and pinch zoom native", async () => {
+  const { f } = windowedHistoryFixture();
+  try {
+    await flush(); const scroll = f.element("message-scroll"); scroll.scrollTop = 77; let prevented = 0;
+    for (const extra of [{ altKey: true }, { ctrlKey: true }, { metaKey: true }, { shiftKey: true }, { isComposing: true }, { keyCode: 229 }, { defaultPrevented: true }, { target: f.element("message-body") }]) {
+      for (const h of scroll.events.get("keydown")) h({ key: "Home", target: scroll, preventDefault() { prevented++; }, ...extra });
+    }
+    for (const h of scroll.events.get("wheel")) { h({ ctrlKey: true }); h({ metaKey: true }); }
+    for (const h of scroll.events.get("touchmove")) h({ touches: [{}, {}] });
+    for (const h of scroll.events.get("pointerdown")) h({ target: scroll, pointerType: "touch" });
+    await f.advance(1); assert.equal(prevented, 0); assert.equal(scroll.scrollTop, 77);
+    assert.equal(f.calls.filter(call => /messages\?before=/.test(call.path)).length, 0);
+    for (const h of scroll.events.get("keydown")) h({ key: "Home", target: scroll, preventDefault() { prevented++; } });
+    await f.advance(1); assert.equal(prevented, 1); assert.ok(f.calls.some(call => /messages\?before=/.test(call.path)));
+  } finally { await f.hide(); }
+});

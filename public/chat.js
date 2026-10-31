@@ -2535,9 +2535,32 @@ el("message-scroll").addEventListener("scroll", () => {
   if (nearBottom(el("message-scroll")) && !currentState()?.hasMoreAfter) el("new-messages").hidden = true;
   startVisiblePhotos(); scheduleHistoryFill(); scheduleRead();
 }, { passive: true });
-for (const event of ["wheel", "touchstart", "keydown", "pointerdown"]) el("message-scroll").addEventListener(event, () => {
+for (const type of ["wheel", "touchmove", "keydown", "pointerdown"]) el("message-scroll").addEventListener(type, event => {
+  const scroll = el("message-scroll");
+  if (event.defaultPrevented || type === "wheel" && (event.ctrlKey || event.metaKey)
+    || type === "touchmove" && event.touches?.length !== 1
+    || type === "pointerdown" && event.pointerType === "touch") return;
+  if (type === "keydown") {
+    if (event.isComposing || event.keyCode === 229) return;
+    // Tab must be able to reach the explicit fallback without a scroll/focus
+    // side effect consuming it. Keys inside buttons keep their native action.
+    if (event.key === "Tab") {
+      historyAutoArmed = false; historyAutoBlocked = true;
+      clearTimeout(historyFillTimer); historyFillTimer = null; return;
+    }
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.target !== scroll
+      || !["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"].includes(event.key)) return;
+    // Home/End belong to this focusable history, including browsers that would
+    // otherwise move the outer document before settling the scroll callback.
+    if (event.key === "Home" || event.key === "End") {
+      event.preventDefault(); scroll.scrollTop = event.key === "Home" ? 0 : scroll.scrollHeight;
+    }
+  }
+  if (type === "pointerdown" && event.target !== scroll) {
+    clearTimeout(historyFillTimer); historyFillTimer = null; historyAutoBlocked = true; return;
+  }
   historyAutoArmed = true; historyAutoRemaining = 3; historyAutoBlocked = false; scheduleHistoryFill();
-}, { passive: true });
+}, { passive: type !== "keydown" });
 el("back-to-inbox").addEventListener("click", () => {
   const state = currentState(); const returnId = state?.id;
   if (state) { state.draft = el("message-body").value; if (state.pending?.status === "sending") retrySend(state); }

@@ -1,0 +1,130 @@
+{
+  "format": "jessiemessage-1130-first-native-qualification",
+  "source": "a884bca7015872368a35c52b8ef9f73d5021c350",
+  "tree": "53ca0def4451c49e3029ca500a8abe6889cb595a",
+  "pr": 144,
+  "run": 41220376333,
+  "attempt": 1,
+  "conclusion": "failure",
+  "jobs": [
+    {
+      "name": "verify",
+      "tests": 4220,
+      "pass": 4168,
+      "fail": 0,
+      "skipped": 52,
+      "logBytes": 597728,
+      "logSHA256": "1d2e0d908c8fe2802f099ad42b12b25ce3fa364232e262284c0c8c1b14aefd31"
+    },
+    {
+      "name": "Chrome",
+      "tests": 292,
+      "pass": 289,
+      "fail": 3,
+      "skipped": 0,
+      "logBytes": 62630,
+      "logSHA256": "2255a6ace7dde0f8f259977e15d6b3e54f0fc702c23a49c63cebe05762741f40"
+    },
+    {
+      "name": "HTTPS",
+      "tests": 14,
+      "pass": 14,
+      "fail": 0,
+      "skipped": 0,
+      "logBytes": 42175,
+      "logSHA256": "652c972ffeb50690cf5a688e4fa9f8ea5eaa34c7d472422ca90d1fdc90537ffe"
+    },
+    {
+      "name": "MariaDB 10.11",
+      "tests": 613,
+      "pass": 610,
+      "fail": 3,
+      "skipped": 0,
+      "logBytes": 365921,
+      "logSHA256": "af46b19c8cfeb05f747fc17d86e871de686d34a5590b541211c50e2fd860a34e"
+    },
+    {
+      "name": "MariaDB 11.4",
+      "tests": 613,
+      "pass": 610,
+      "fail": 3,
+      "skipped": 0,
+      "logBytes": 366436,
+      "logSHA256": "242019c8ae3a6080a171fad209f91b930e1338a4ce8765f5322c9c96136c16af"
+    }
+  ],
+  "correctionsRequired": [
+    "history auto-fill must not consume keyboard/pointer fallback controls; Home/End need explicit history navigation",
+    "profile fixture must pin updated_at while deliberately substituting avatar owner"
+  ],
+  "historyTestsRetained": true,
+  "sqlProductionGuardsRetained": true,
+  "artifact": {
+    "id": 13049354518,
+    "name": "homepage-render",
+    "sha256": "5118bf355038dba1c887c2aeef70a2e68e2273adf8a921da1f2c32b2aa94957c"
+  },
+  "visualInspection": {
+    "scope": "11 newly generated conversation, invitation, CRM and tasks captures from failing first qualification only",
+    "inspected": true,
+    "images": [
+      {
+        "name": "admin-invitations-1130-en-1280.png",
+        "bytes": 129115,
+        "sha256": "12f6abbd2f88b324d1c1acc83045bc2921c868ef3b353886ea6e7f8eab1a018a"
+      },
+      {
+        "name": "admin-invitations-1130-en-320.png",
+        "bytes": 56958,
+        "sha256": "74da5517060235eb2e323fb57a188fb8dfffee10ff3ba8c888ae847a7dbde478"
+      },
+      {
+        "name": "admin-invitations-1130-fr-1280.png",
+        "bytes": 132434,
+        "sha256": "7dfd0f527f12e8d0b6c0da7844c7e2db67926d79e610408ca38bc66c53058ed5"
+      },
+      {
+        "name": "admin-invitations-1130-fr-320.png",
+        "bytes": 59515,
+        "sha256": "1de290b23732e5d1357cca6f138c7c0322d4ab90b1c634b1af3d98e9fb05e434"
+      },
+      {
+        "name": "conversation-list1130-en-1280.png",
+        "bytes": 90295,
+        "sha256": "5d29890407d4b391fe02ad50f41a2764fde8a989c3a8317a620abfd8169bcadb"
+      },
+      {
+        "name": "conversation-list1130-en-320.png",
+        "bytes": 46828,
+        "sha256": "b1dacdda035abf9081825f938b074a7632f4f0e65a928bb3047a9f9618f71102"
+      },
+      {
+        "name": "conversation-list1130-fr-1280.png",
+        "bytes": 89845,
+        "sha256": "a07b2f28c7d7234654eefaf650363c73cbb1045d0193ab8851966520a8b60612"
+      },
+      {
+        "name": "conversation-list1130-fr-320.png",
+        "bytes": 46460,
+        "sha256": "df6b33529f1a8e8136465235d8814de15a682abb01f4231b1e47d1ad54e3ea58"
+      },
+      {
+        "name": "crm-pagination-en-390.png",
+        "bytes": 63374,
+        "sha256": "2dd06f28a869f97ddabac803af243a3bef41739e20f478d2d845c2c2aa072b7e"
+      },
+      {
+        "name": "crm-pagination-fr-320.png",
+        "bytes": 62757,
+        "sha256": "030270bcf74de38a7095ed35608e6dfcb6d527abf88eb54cf2e64d5fc0a4d4e9"
+      },
+      {
+        "name": "tasks-pages-1130-fr-390.png",
+        "bytes": 50507,
+        "sha256": "de267cdff100260de9e4515d2fcfc7a5a86931dcc5b5f69f5b2c30d34d437c8e"
+      }
+    ],
+    "historyCaptureAbsentBecauseTestFailed": true
+  },
+  "hostedActions": false
+}
