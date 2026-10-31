@@ -1,0 +1,56 @@
+{
+  "format": "jessiemessage-1140-hosted-metadata-observation",
+  "authority": "user terminal output from exact qualified writer; no direct hosting access by agent",
+  "result": {
+    "status": "release1140_metadata_recorded",
+    "version": "1.14.0",
+    "source": "4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd",
+    "tree": "e5a239eaf7b8c3395a843c9e0d600efeb7aa569b",
+    "metadataOnly": true,
+    "noRestart": true,
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "release": {
+      "version": "1.14.0",
+      "commit": "4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd",
+      "nodeVersion": "v24.22.1",
+      "startedAt": 1793477762343
+    },
+    "publicReady": true,
+    "rollbackRelease": "1.8.5",
+    "rollbackAfterMigrationQualified": true,
+    "rollbackQualificationScope": "sql38_precheck_only",
+    "publicProfileDowngradeQualified": false,
+    "restart184Allowed": false,
+    "restart172Allowed": false,
+    "historicalRelease1130Preserved": true,
+    "historicalRelease1112Preserved": true,
+    "historicalRelease1111Preserved": true,
+    "historicalRelease1110Preserved": true,
+    "historicalRelease1101Preserved": true,
+    "historicalRelease1100Preserved": true,
+    "historicalRelease190Preserved": true,
+    "historicalRelease184Preserved": true,
+    "priorHostedStaging1130Preserved": true,
+    "priorMetadataRelease": "1.13.0",
+    "priorActivePreserved": true,
+    "otherBlocksPreserved": true,
+    "checkpointSha256": "19ceaa7e91d32daba7da5b71d7dfe02ad964e8d9d2850ae016cfa732b8a9c6e0"
+  },
+  "verification": {
+    "sourceTreeVersionAndNodeMatchQualifiedPublication": true,
+    "startupSecondMatchesPriorUI": true,
+    "startedAtUTC": "2026-10-31T20:16:02.343+00:00",
+    "startedAtEuropeParis": "2026-10-31T21:16:02.343+01:00",
+    "stagingReceiptSha256": "2fe494a43a446c882ce509f4ecf51925bd5789a94bdbdf2ce6923d83e5ff7d72",
+    "previousCheckpointSha256": "cdcb3f8b35208ddfaff19009235f86d4dd23a10ac13b00c9c692daad2bbe496d",
+    "checkpointSha256Authority": "writer-reported after atomic metadata write and readback; private bytes not provided to agent"
+  },
+  "limits": {
+    "publicGETsDoNotExposeProcessCommit": true,
+    "pidSocketExecutedBinaryNotIndependentlyQualified": true,
+    "physicalPhonesSafariOriginalProblematicPhotoNotAttested": true,
+    "schemaPhysicalInventoryNotIndependentlyRead": true
+  },
+  "next": "Delivery closed. No preparation, CHECK, activation, writer, green CI, account/media/message, backup/PC/legal action to replay."
+}

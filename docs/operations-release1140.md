@@ -1,6 +1,6 @@
-# Livraison 1.14.0 — démarrage rapporté, enregistrement final qualifié en attente du reçu
+# Livraison 1.14.0 — terminée
 
-État du 31 octobre 2026. [REPRISE](REPRISE.md) reste la référence. La 1.14.0 est démarrée selon le relevé utilisateur ; le checkpoint13 reste la dernière métadonnée privée acquise ; aucune étape 1130 à rejouer. `recette.jessiemessage.com` et `jessiemessage.com` partagent le service Node239143 et la même base.
+État du 31 octobre 2026. [REPRISE](REPRISE.md) reste la référence. La 1.14.0 est démarrée et ses métadonnées sont alignées selon le reçu final utilisateur ; aucune étape 1130 à rejouer. `recette.jessiemessage.com` et `jessiemessage.com` partagent le service Node239143 et la même base.
 
 ## Résultat qualifié et publié
 
@@ -23,7 +23,7 @@ Préparateur immuable `10083087598a96248698cbe76309e1b3afda163c`, SHA256 `4b6d1b
 
 ## Activation personnelle14 — acquise, ne pas rejouer
 
-Le [relevé utilisateur](verification-proofs/jm1140/hosted-identity.json) confirme version1.14.0/source4f3ce5de/Node24.22.1, **31/10/2026 21:16:02 Europe/Paris (UTC+01)**, secondeUTC1793477762. Il ne contient ni millisecondes ni signal de disponibilité. Ne rejouer ni préparation, CHECK SSH, paramètres Manager ou redémarrage.
+Le [relevé utilisateur](verification-proofs/jm1140/hosted-identity.json) confirme version1.14.0/source4f3ce5de/Node24.22.1, **31/10/2026 21:16:02 Europe/Paris (UTC+01)**, secondeUTC1793477762. L’UI ne contenait ni millisecondes ni signal de disponibilité ; le reçu final ci-dessous les complète. Ne rejouer ni préparation, CHECK SSH, paramètres Manager ou redémarrage.
 
 | Champ | Valeur14 correspondant à l’activation rapportée |
 | --- | --- |
@@ -33,29 +33,16 @@ Le [relevé utilisateur](verification-proofs/jm1140/hosted-identity.json) confir
 
 L’agent n’a ni ouvert le Manager ni inspecté directement les champs ou le processus. Le service Node239143 nommé recette dessert aussi le principal et sa base.
 
-## Enregistrement final14 — qualifié, en attente du reçu
+## Enregistrement final14 — acquis, ne pas rejouer
 
 Le nouvel opérateur est [qualifié](verification-proofs/jm1140/writer-final-native.json) : [run41238866092](https://github.com/fredbuhr/jessiemessage/actions/runs/41238866092), tentative1, **1/1 job et29/29 tests natifs sans omission**, Nodev24.22.1. Opérateur **`59e6f8cc7f12d8b36e4c9bdbeec543d02becc9ff`**, arbre `edd28d9811263eae60ecd6408d218e3abdb4828b`, script SHA256 **`942429e1cfa44fd35dea8fd4cdae4319a5e1e7f5edbf0c756202f1dd3fd3faf1`**,34820octets, relu identique aux octets qualifiés ; tests et workflow également relus. Journal intégral synthétique conservé et empreinté. Aucun essai app vert répété.
 
 Il lie le démarrage réel1793477762, le staging2fe494a4 et le checkpoint13/cdcb ; vérifie sources/tags/versions, seul deltaHEIF, fichiers des six dépendances et inventaires distincts, Node/configuration/migrations, repli185 dans sa portéeSQL38 seule, précontrôles et unique démarrage avec millisecondes, puis HTTP publics et publication exacte. Écriture atomique et relecture des seules métadonnées, état actif13 intégral et section1130/historiques/autres blocs conservés. Aucun nouvel envoi, CHECK, migration ou redémarrage.
 
-Exécuter ce nouveau bloc dans le [terminal SSH personnel](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis transmettre le JSON. Le [fichier exact](verification-proofs/jm1140/record-command.sh) est conservé avec les preuves.
+**Exécution acquise selon le [reçu final utilisateur](verification-proofs/jm1140/hosted-metadata.json)** : `release1140_metadata_recorded`, version1.14.0/source4f3ce5de/arbre e5a239/Node24.22.1, `publicReady:true`, `metadataOnly:true`, `noRestart:true`, SQL38/37tables attendues. Checkpoint14 SHA256 **`19ceaa7e91d32daba7da5b71d7dfe02ad964e8d9d2850ae016cfa732b8a9c6e0`**. La ligne réelle de démarrage donne **1793477762343ms**, soit **31/10/2026 21:16:02.343 Europe/Paris**, conforme au relevé UI à la seconde.
 
-```sh
-env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD1140'
-import hashlib, urllib.request
+Le writer a vérifié les sources/tags/dépendances/Node/configuration, les reçus et précontrôles, l’unique démarrage et les GET publics avant l’écriture atomique et sa relecture. État actif13 intégral, section1130, historiques1112/1111/1110/1101/1100/190/184 et autres blocs préservés selon le résultat ; aucune section finale1120/1113 absente inventée. Ancien repli185 conservé dans sa portée SQL38 seulement, sans démarrage ;184/172 interdits et publicProfileDowngradeQualified:false conservé.
 
-url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/59e6f8cc7f12d8b36e4c9bdbeec543d02becc9ff/ops/record-release1140.py'
-with urllib.request.urlopen(url, timeout=30) as response:
-    if response.status != 200 or response.url != url:
-        raise SystemExit('URL_OUTIL_A_VERIFIER : arret.')
-    code = response.read(65537)
-if len(code) > 65536 or hashlib.sha256(code).hexdigest() != '942429e1cfa44fd35dea8fd4cdae4319a5e1e7f5edbf0c756202f1dd3fd3faf1':
-    raise SystemExit('EMPREINTE_OUTIL_INCORRECTE : aucun outil execute.')
-exec(compile(code, '<enregistrement1140>', 'exec'), {'__name__': '__main__'})
-PY_RECORD1140
-```
+Le [bloc exécuté reste dans l’historique Git](https://github.com/fredbuhr/jessiemessage/blob/96613e065e4b3b5067b4d79aa9313f485601f8df/docs/verification-proofs/jm1140/record-command.sh). **Ne rejouer aucune commande acquise.**
 
-Résultat attendu : `release1140_metadata_recorded`, identité14 exacte, `metadataOnly:true`, `noRestart:true`, `publicReady:true` et nouvelle empreinte du checkpoint. Aucun succès privé14 déduit avant réception. Si résultat absent ou refus, conserver les traces et inspecter l’état durable en lecture seule avant toute reprise ; ne jamais rejouer un outil pour découvrir son résultat.
-
-Téléphones physiques, Safari et photo originale problématique restent non attestés. Aucun compte ou média client modifié, test de sauvegarde reporté, nouveau parcours PC ou chantier juridique.
+**Aucune opération de livraison restante.** Les GET publics ne prouvent pas le commit du processus ; PID/socket/binaire exécuté et inventaire SQL physique nouveau non qualifiés indépendamment par l’agent. Téléphones physiques, Safari et photo originale problématique restent non attestés. Aucun nouvel envoi réel, compte/média client, test de sauvegarde reporté, parcours PC ou chantier juridique ouvert automatiquement.

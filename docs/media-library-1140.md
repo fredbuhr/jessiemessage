@@ -1,6 +1,7 @@
 # Invitations et médias — évolution1.14.0
 
-**Codé, fusionné, qualifié et publié ; démarrage hébergé rapporté, enregistrement final qualifié en attente du reçu.** Le relevé utilisateur confirme désormais1.14.0/source4f3ce5de, Node24.22.1,31octobre21:16:02Paris ; métadonnées privées14 encore à enregistrer. [REPRISE](REPRISE.md) donne l’identité et le checkpoint actuels. Branche `feat/media-library-1140`, base documentaire `6506b757edfa6e8843343241bc77069332e8151c` ; code de départ identique au tagv1.13.0.
+**Codé, fusionné, qualifié, publié, déployé et finalisé selon les reçus utilisateur.** Version1.14.0/source4f3ce5de, arbre e5a239, Node24.22.1 ; démarrage31octobre21:16:02.343Paris, conforme à l’UI. [Reçu final](verification-proofs/jm1140/hosted-metadata.json) `release1140_metadata_recorded`, `publicReady:true`, sans redémarrage ; checkpoint14/19ceaa7e, état13 et historiques préservés selon le résultat. [REPRISE](REPRISE.md) reste l’unique référence courante. Branche de développement `feat/media-library-1140`, base documentaire6506b757 ; code de départ identique au tagv1.13.0.
+
 
 ## Résultat demandé
 
@@ -18,7 +19,7 @@ Quatre demandes regroupées en une seule version mineure compatible :
 - Réutiliser les API de médias, la préparation d’images, les composants d’administration et la confirmation de diffusion existants. Aucune nouvelle table ni migration prévue.
 - Bibliothèque : pages remplaçables de 20 éléments, miniatures photos différées, aperçu vidéo chargé seulement après sélection. L’ajout vidéo renvoie vers le parcours d’envoi vidéo existant au lieu de dupliquer son transfert.
 - HEIC : ajout de `libheif-js` **1.23.5** verrouillé ; bundle local chargé uniquement si le décodage natif échoue, dans un worker jetable et borné. La permission WebAssembly est limitée à la réponse du worker ; aucune permission `unsafe-eval` générale, CDN d’exécution, conversion distante ou nouvelle bibliothèque native sur l’hébergement.
-- Les autres dépendances et Node24.22.1 restent inchangés. La dépendance HEIC supplémentaire exigera une préparation dédiée des dépendances1140 ; ne pas réutiliser à tort le `node_modules`1130 sans ce paquet.
+- Les autres dépendances et Node24.22.1 restent inchangés. La dépendance HEIC supplémentaire a reçu une préparation dédiée des dépendances1140 ; ne pas réutiliser à tort le `node_modules`1130 sans ce paquet.
 - Les suppressions réellement exercées pendant le développement utilisent seulement des données synthétiques. Aucune modification de compte, message ou média réel, sauvegarde reportée, opération d’hébergement ou chantier juridique à ouvrir.
 
 ## Critères de qualification
@@ -55,8 +56,4 @@ La [checklist de couverture](verification-proofs/jm1140/coverage.json) distingue
 
 Sept [captures finales](verification-proofs/jm1140/visual-native.json) ont été inspectées et conservées, ainsi que les [journaux CI synthétiques](verification-proofs/jm1140/logs.json). Les premiers échecs d’attentes de tests et le débordement de texte des miniatures sont corrigés et conservés dans les preuves. Les durées finies explicites, les droits métier et les fonctionnalités existantes restent préservés ; aucune nouvelle table, suppression de module métier ou infrastructure ajoutée.
 
-[Publication1.14.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.14.0) et [préparateur dédié qualifié](verification-proofs/jm1140/preparation-native.json) acquis. L’activation14 est désormais rapportée ; le [guide1140](operations-release1140.md) distingue ce relevé des métadonnées privées encore13.
-
-La [préparation/CHECK1140](verification-proofs/jm1140/hosted-preparation.json) est désormais acquise selon le reçu utilisateur, SHA canonique2fe494a4 identique et sortie0. Le [relevé d’activation14](verification-proofs/jm1140/hosted-identity.json) est reçu ; reste l’enregistrement final. Ne rejouer ni préparation, CHECK ou activation.
-
-Le [writer final14](verification-proofs/jm1140/writer-final-native.json) est qualifié29/29 natifs sans omission, source59e6f8cc, sans nouveau CHECK ou redémarrage. Son exécution et l’empreinte privée14 restent en attente du résultat utilisateur ; aucune finalisation n’est inventée.
+[Publication1.14.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.14.0), [préparation/CHECK](verification-proofs/jm1140/hosted-preparation.json), [activation](verification-proofs/jm1140/hosted-identity.json) et [enregistrement final](verification-proofs/jm1140/hosted-metadata.json) sont acquis dans leurs portées respectives. Le [writer final14](verification-proofs/jm1140/writer-final-native.json) a été qualifié29/29 natifs puis exécuté selon le reçu ; application, publication et métadonnées14 concordent. Le [guide1140](operations-release1140.md) est clos ; aucune commande, nouveau redémarrage ou suite verte à rejouer. Les limites d’appareils réels/Safari et de la photo originale restent explicites.

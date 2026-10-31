@@ -81,7 +81,16 @@
   "generalPassed": 4243,
   "generalExplicitOmissions": 52,
   "physicalPhonesSafariAndOriginalProblematicPhoto": "not_attested",
-  "hosted1140": "not_executed",
+  "hosted1140": {
+    "status": "finalized_per_user_receipts",
+    "metadataResult": "release1140_metadata_recorded",
+    "checkpointSha256": "19ceaa7e91d32daba7da5b71d7dfe02ad964e8d9d2850ae016cfa732b8a9c6e0",
+    "publicReady": true,
+    "startedAt": 1793477762343,
+    "receipt": "hosted-metadata.json",
+    "noRestart": true,
+    "priorActive1130Preserved": true
+  },
   "backupPcLegal": "out_of_scope_preserved",
   "fullApplicationReaudit": "not reopened; earlier1130 audit remains historical"
 }

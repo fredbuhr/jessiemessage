@@ -2,17 +2,13 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Évolution 1.14.0 — reste la mise en service personnelle
+## Évolution 1.14.0 — livraison terminée
 
-Code, revue, PR/main5/5, sept captures, publication et nouvel opérateur d’installation sont terminés. [Bilan et couverture](media-library-1140.md), [guide courant](operations-release1140.md). Une seule livraison compatible ; Node24.22.1 et schéma 38 inchangés.
+Code, revue, PR/main5/5, sept captures, publication, nouvel opérateur d’installation et writer final sont terminés. [Bilan et couverture](media-library-1140.md), [guide clos](operations-release1140.md). Une seule livraison compatible ; Node24.22.1 et schéma38 inchangés.
 
-**Préparation/CHECK1140 acquis** selon le [reçu utilisateur](verification-proofs/jm1140/hosted-preparation.json), empreinte canonique2fe494a4 identique, CHECK0 et marqueur final. Installation distincte qualifiée ; checkpoint13 et anciennes dépendances préservés selon le reçu. Aucun démarrage14 déduit. Ne rejouer ni préparation ni CHECK SSH1140.
+Préparation/CHECK1140 acquis, staging2fe494a4 exact et sortie0. Activation14 rapportée, source4f3ce5de/Node24.22.1,31octobre21:16:02Paris. Writer59e6f8cc qualifié29/29 natifs puis [exécuté selon le reçu final utilisateur](verification-proofs/jm1140/hosted-metadata.json) : `release1140_metadata_recorded`, `publicReady:true`, aucun redémarrage, checkpoint14 SHA256 **`19ceaa7e91d32daba7da5b71d7dfe02ad964e8d9d2850ae016cfa732b8a9c6e0`**. Démarrage réel1793477762343, soit21:16:02.343Paris, conforme à l’UI. État13 complet, historiques et autres blocs préservés selon ce reçu.
 
-**Activation14 acquise selon le [relevé utilisateur](verification-proofs/jm1140/hosted-identity.json)** : version1.14.0/source4f3ce5de/Node24.22.1,31octobre21:16:02Paris, secondeUTC1793477762. Aucun nouveau redémarrage ni reprise de préparation/CHECK.
-
-**Seule étape restante : enregistrement final14.** Préparer et qualifier un writer de métadonnées lié au staging2fe494a4 et à la seconde réelle du démarrage ; vérifier source/tag/release, dépendances14 distinctes, précontrôles et HTTP publics avant écriture atomique. Préserver intégralement l’état13/cdcb et ses historiques. Writer désormais qualifié : [run41238866092](verification-proofs/jm1140/writer-final-native.json),1/1 et29/29 natifs sans omission sousNode24.22.1, source59e6f8cc. Aucune exécution hébergée déduite. Prochaine action : nouveau bloc final du guide, puis résultat durable ; ne rejouer aucune autre étape.
-
-Les suites app vertes ne sont pas à rejouer. Essais physiques/Safari non attestés ; sauvegarde reportée, PC et juridique restent hors périmètre.
+**Aucune étape de livraison restante.** Ne rejouer ni préparation, CHECK, activation, writer ou CI verte. Les essais physiques/Safari, la photo originale non fournie et la sauvegarde reportée ne deviennent pas des prérequis ni des réussites inventées. Aucun nouveau test réel, manipulation PC, compte/média/message ou chantier juridique demandé.
 
 ## Évolution 1.13.0 — livraison terminée
 
