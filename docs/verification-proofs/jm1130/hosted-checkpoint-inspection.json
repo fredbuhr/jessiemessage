@@ -1,0 +1,23 @@
+{
+  "format": "jessiemessage-1130-hosted-checkpoint-inspection",
+  "reportedBy": "user terminal output in current conversation",
+  "reportedDate": "2026-10-31",
+  "receipt": {
+    "status": "checkpoint_read_only",
+    "readOnly": true,
+    "checkpointSha256": "3f1ae16dbadcee48643cbd2c0435b3eb5d36870cf72aa26cd080b5a0ac2f400f",
+    "metadataRelease": "1.11.2",
+    "source": "af352607ff7e12c41185f42b8232c72219a304cd",
+    "tree": "655f759079979d608b0ec1c62a7c892311899515",
+    "release1120Present": false
+  },
+  "matchesLastObserved1112Checkpoint": true,
+  "final1120MetadataPresentAtInspection": false,
+  "reportedRunningApplication": "1.12.0",
+  "reportedRunningApplicationSource": "9bfdae07797f4e848964422471da67560c7d94eb",
+  "scope": "Read-only private metadata file. Does not inspect running process, HTTP availability, SQL or Manager. Does not prove how or whether an earlier command ran.",
+  "commandProof": "checkpoint-inspection-command.json",
+  "writesPerformed": false,
+  "directHostInspectionByAgent": false,
+  "noReplayRequired": true
+}

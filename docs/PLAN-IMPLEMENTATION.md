@@ -6,7 +6,7 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 Les corrections de messagerie, listes, lectures backend, cadence Push et textes courants sont terminées. [Résultat et bornes](conversation-lists-1130.md), [couverture F01–F09](verification-proofs/jm1130/coverage.json). PR144 fusionnée, PR/main5/5, douze captures inspectées ; tagv1.13.0/release430071184 publiés surb9e2ad78 après publication2/2. Aucune migration ou dépendance nouvelle. Les contrôles verts du même code ne sont pas à rejouer.
 
-**Étape restante immédiate :** lire le checkpoint privé en lecture seule selon le [guide1130](operations-release1130.md#prochaine-action--inspection-en-lecture-seule), puisque le reçu final1120 n'a pas été communiqué. Critère de fin : relever l'empreinte et l'identité des seules métadonnées, sans les confondre avec le démarrage1120 déjà acquis. Examiner le reçu avant de définir et qualifier une préparation1130 adaptée à l'état observé. Ne pas relancer un ancien writer, CHECK ou redémarrage pour découvrir cet état.
+**Inspection acquise :** le [reçu utilisateur](verification-proofs/jm1130/hosted-checkpoint-inspection.json) retrouve exactement le checkpoint1112/3f1ae16d, sans section1120, distinct du démarrage1120 confirmé. Aucun ancien writer à rejouer. **Étape en cours :** développer et qualifier le nouvel opérateur1130 depuis le checkout actif1120 en préservant ce checkpoint et les reçus antérieurs ; branche `ops/prepare-v1.13.0`. Critère de fin : tests synthétiques de préservation et qualification native de l’opérateur exact, puis une seule commande de préparation à exécuter par l’utilisateur. Aucun lancement de1130 ni modification Manager à cette étape.
 
 La1.13.0 est publiée mais n'est pas préparée ni activée sur l'hébergement. Les gains facultatifs non mesurés, migrations d'index sans preuve, juridique, sauvegarde reportée et ancien CLI de données ne deviennent pas des prérequis. Ne pas rouvrir l'audit global ni les suites vertes à chaque étape.
 
@@ -16,7 +16,7 @@ Les quatre demandes et l’ouverture automatique du lien sont qualifiées et pub
 
 Le [writer final1120](verification-proofs/jm1120/writer-final-native.json) est qualifié24/24 natifs, run41155948468,1/1, tentative1 ; script relu identique à la source épinglée. Il accepte le véritable baseline privé1112/3f1ae16d et conserve les preuves1113 sans inventer sa finalisation.
 
-**État documentaire restant :** le résultat de la [commande d'enregistrement final](operations-release1120.md#enregistrement-final) fournie n'est pas communiqué. Retrouver son reçu ou inspecter l'état durable en lecture seule avant toute opération dépendante. Ne pas rejouer la commande pour découvrir son résultat ; ne pas redémarrer. Le développement1.13.0 n'exige pas de nouvelle opération hébergée à ce stade.
+**État durable relu pour1130 :** le reçu de l’ancienne commande1120 n’a pas été communiqué, mais la [lecture seule acquise](verification-proofs/jm1130/hosted-checkpoint-inspection.json) retrouve exactement le checkpoint1112, sans section1120. Aucun succès d’enregistrement1120 déduit, aucun replay requis. Le nouvel opérateur1130 préservera ce baseline. Le démarrage1120 ne doit pas être répété.
 
 ## Correctif1.11.3 — historique, finalisation non confirmée
 
@@ -28,7 +28,7 @@ Le [relevé après activation](verification-proofs/jm1113/hosted-identity.json) 
 
 Le writer final lié à cette seconde et aux reçus est désormais [qualifié17/17 natifs](verification-proofs/jm1113/writer-final-native.json), run40240046476,1/1, tentative1, sans omission. Opérateur `e3821d9231f0e7ead0a8eea7c3e1730aff0ea86e`, script SHA256 `a8904e91b394cf8a09f6a2a0b419fbfc45e590438da7ed5de18f24f36583b3f9`, source relue identique. Qualification acquise, aucune relance du même code.
 
-La commande de métadonnées avait été fournie sans reçu communiqué. La préparation1120 a depuis observé le checkpoint1112 intact3f1ae16d, sans transition1113 ; ne pas rejouer le writer1113. Les étapes1113 restent historiques et acquises ; la seule suite immédiate est l’inspection en lecture seule indiquée ci-dessus, sans rejouer un writer.
+La commande de métadonnées avait été fournie sans reçu communiqué. La préparation1120 a depuis observé le checkpoint1112 intact3f1ae16d, sans transition1113 ; ne pas rejouer le writer1113. Les étapes1113 restent historiques et acquises ; la lecture seule indiquée ci-dessus est acquise ; la suite est le nouvel opérateur1130, sans rejouer un writer.
 
 ## Correctif 1.11.2 — audit et livraison terminés
 

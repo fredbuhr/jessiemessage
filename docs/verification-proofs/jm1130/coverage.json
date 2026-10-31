@@ -67,6 +67,6 @@
     "Original problematic photo not available",
     "Manual hosted backup test remains postponed",
     "A10/A11/A12 scope and historical limits preserved",
-    "Private checkpoint1120 execution remains unknown; read-only inspection required before a dependent hosted operation"
+    "Read-only hosted inspection reported by user: exact checkpoint1112 unchanged, no release1120 section; new1130 staging must preserve it without replaying old writers"
   ]
 }

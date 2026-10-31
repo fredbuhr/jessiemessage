@@ -29,7 +29,7 @@
 
 Les tests ciblés accompagnent chaque changement de contrat. La source stabilisée reçoit la CI requise sur PR puis SHA fusionné. Les résultats existants1.12.0 ne sont pas requalifiés par lecture ; les omissions restent des omissions. Aucune publication ou activation n'est déduite de l'implémentation locale.
 
-Les preuves finales et limites sont consignées ci-dessous. Toute opération hébergée dépendant du checkpoint1120 doit d'abord retrouver son reçu ou inspecter son état en lecture seule ; aucun ancien writer ne sera rejoué pour découvrir son résultat.
+Les preuves finales et limites sont consignées ci-dessous. La lecture seule du checkpoint est désormais acquise pour1130 : état1112 exact, section1120 absente. Le nouvel opérateur préservera ce baseline ; aucun ancien writer ne sera rejoué.
 
 ## Révision implémentée et bornes
 
@@ -83,4 +83,4 @@ Les neuf groupes F01–F09 ont une disposition dans la [checklist de clôture](v
 
 L'audit du schéma n'a pas justifié de migration :38migrations et37tables attendues, sans nouvel inventaire physique de production. Le petit index redondant des libellés, le tri facultatif des tâches par échéance, le découpage d'imports historiques, le cache des assets publics et une icône non servie ne deviennent pas des corrections urgentes ; pas de suppression à l'aveugle d'outils ou de contrats historiques. Les bornes réelles et états épinglés sont explicités plus haut, sans promesse de mémoire totale constante.
 
-Livraisons réelles SMTP/Push, photo originale problématique, essais téléphones/Safari et sauvegarde manuelle reportée restent non attestés. Aucun envoi réel, effacement, modification client, navigateur cloud ou opération hébergée n'a été effectué. Avant toute préparation dépendante, retrouver le reçu1120 ou lire son checkpoint en lecture seule ; l'absence de reçu ne remet pas en cause son démarrage confirmé.
+Livraisons réelles SMTP/Push, photo originale problématique, essais téléphones/Safari et sauvegarde manuelle reportée restent non attestés. Aucun envoi réel, effacement, modification client, navigateur cloud ou opération hébergée n'a été effectué. La lecture seule acquise pour1130 retrouve le checkpoint1112 exact, sans section1120 ; ce baseline doit être préservé par le nouvel opérateur. Le démarrage1120 reste confirmé séparément.
