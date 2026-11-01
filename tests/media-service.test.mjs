@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash, createHmac, randomBytes } from "node:crypto";
 import sharp from "sharp";
+import { PassThrough, Readable } from "node:stream";
+import { readFile } from "node:fs/promises";
 import { createMediaService, MediaError } from "../server/media/service.mjs";
 import { newToken, tokenDigest } from "../server/auth/crypto.mjs";
 
@@ -11,6 +13,7 @@ const assetId = Buffer.alloc(16, 0x44), messageId = Buffer.alloc(16, 0x55);
 const adminHex = adminId.toString("hex"), clientHex = clientId.toString("hex"), conversationHex = conversationId.toString("hex");
 const assetHex = assetId.toString("hex"), messageHex = messageId.toString("hex"), maximumSequence = "18446744073709551615";
 const hasCode = (code) => (error) => error instanceof MediaError && error.code === code;
+const prepare = (service, role, token, bytes, ticket) => service.prepareStream(role, token, Readable.from([bytes]), ticket);
 const sourceImage = sharp({ create: { width: 12, height: 8, channels: 4, background: { r: 24, g: 60, b: 100, alpha: 0.75 } } }).png().toBuffer();
 
 async function fixture() {
@@ -640,6 +643,110 @@ test("an admitted phone upload is still usable after sixty seconds of body trans
   const result = await service.upload("admin", f.token, await sourceImage, ticket);
   assert.equal(result.duplicate, false);
   assert.ok(f.calls.some((call) => call.name === "registerAsset"));
+});
+
+test("original preparation returns a JPEG for either role without metadata, quota reservation or storage writes", async () => {
+  const f = await fixture();
+  const tiff = await sharp({ create: { width: 24, height: 16, channels: 3, background: "red" } }).tiff().toBuffer();
+  for (const role of ["admin", "client"]) {
+    const result = await prepare(f.service, role, f.token, tiff);
+    assert.equal(result.mime, "image/jpeg"); assert.ok(result.bytes.length <= 2097152);
+    assert.equal((await sharp(result.bytes).metadata()).format, "jpeg");
+  }
+  assert.equal(f.calls.length, 0); assert.equal(f.actorCalls.length, 6);
+  assert.deepEqual(f.rateCalls.map(entry => entry.options.limit), [60, 120, 60, 120]);
+  for (const [entry, name, identity] of [[f.rateCalls[0], "user-prepare", adminHex], [f.rateCalls[1], "global-prepare", "all"]]) {
+    assert.deepEqual(entry.bucket, createHmac("sha256", f.key).update("jessiemessage:media-rate:v1:").update(name).update("\0").update(identity).digest());
+  }
+});
+
+test("only one original preparation can be admitted globally while prepared uploads retain their account isolation", async () => {
+  const f = await fixture(), other = await fixture(); other.state.idOverride = clientHex;
+  const ticket = await f.service.admitPreparation("admin", f.token);
+  let uploadTicket;
+  try {
+    await assert.rejects(other.service.admitPreparation("admin", other.token), hasCode("MEDIA_BUSY"));
+    assert.equal(other.rateCalls.length, 0);
+    uploadTicket = await other.service.admitUpload("admin", other.token);
+    await assert.rejects(f.service.admitUpload("admin", newToken()), hasCode("MEDIA_BUSY"));
+  } finally { f.service.releaseUpload(ticket); other.service.releaseUpload(uploadTicket); }
+  const next = await other.service.admitPreparation("admin", other.token); other.service.releaseUpload(next);
+});
+
+test("original preparation tickets are distinct, one-shot and bound to role, token, account and their 125s transfer deadline", async () => {
+  const f = await fixture(), bytes = await sourceImage;
+  let ticket = await f.service.admitUpload("admin", f.token);
+  try { await assert.rejects(prepare(f.service, "admin", f.token, bytes, ticket), hasCode("MEDIA_INPUT")); }
+  finally { f.service.releaseUpload(ticket); }
+  ticket = await f.service.admitPreparation("admin", f.token);
+  try { await assert.rejects(f.service.upload("admin", f.token, bytes, ticket), hasCode("MEDIA_INPUT")); }
+  finally { f.service.releaseUpload(ticket); }
+  for (const [role, token] of [["client", f.token], ["admin", newToken()]]) {
+    ticket = await f.service.admitPreparation("admin", f.token);
+    await assert.rejects(prepare(f.service, role, token, bytes, ticket), hasCode("MEDIA_INPUT"));
+  }
+  ticket = await f.service.admitPreparation("admin", f.token); f.state.idOverride = clientHex;
+  await assert.rejects(prepare(f.service, "admin", f.token, bytes, ticket), hasCode("CHAT_UNAUTHORIZED")); f.state.idOverride = null;
+  let current = now; const service = await createMediaService({ ...f.options, clock: () => current });
+  ticket = await service.admitPreparation("admin", f.token); current += 120_000;
+  await prepare(service, "admin", f.token, bytes, ticket);
+  await assert.rejects(prepare(service, "admin", f.token, bytes, ticket), hasCode("MEDIA_INPUT"));
+  ticket = await service.admitPreparation("admin", f.token); current += 125_000;
+  await assert.rejects(prepare(service, "admin", f.token, bytes, ticket), hasCode("MEDIA_INPUT"));
+  assert.equal(f.calls.length, 0);
+});
+
+test("original preparation refusals remain paid and restore their global place", async () => {
+  const f = await fixture(); f.state.rateResults = [{ allowed: false, retryAfter: 9 }];
+  await assert.rejects(prepare(f.service, "admin", f.token, await sourceImage), error => hasCode("MEDIA_RATE_LIMIT")(error) && error.retryAfter === 9);
+  assert.equal(f.rateCalls.length, 1); assert.equal(f.calls.length, 0);
+  let ticket = await f.service.admitPreparation("admin", f.token);
+  await assert.rejects(prepare(f.service, "admin", f.token, Buffer.alloc(0), ticket), hasCode("MEDIA_INPUT"));
+  ticket = await f.service.admitPreparation("admin", f.token); f.state.actorEnabled = false;
+  await assert.rejects(prepare(f.service, "admin", f.token, await sourceImage, ticket), hasCode("CHAT_UNAUTHORIZED")); f.state.actorEnabled = true;
+  ticket = await f.service.admitPreparation("admin", f.token); f.service.releaseUpload(ticket);
+});
+
+test("original preparation retains its place through final authorization and withholds a revoked session's result", async () => {
+  const f = await fixture(), other = await fixture(); other.state.idOverride = clientHex;
+  const actor = f.chatService.actor; let count = 0, release, finalStarted;
+  const started = new Promise(resolve => { finalStarted = resolve; });
+  f.chatService.actor = async (...args) => {
+    if (++count === 3) { finalStarted(); await new Promise(resolve => { release = resolve; }); return null; }
+    return actor(...args);
+  };
+  const ticket = await f.service.admitPreparation("admin", f.token);
+  const pending = prepare(f.service, "admin", f.token, await sourceImage, ticket);
+  const denied = assert.rejects(pending, hasCode("CHAT_UNAUTHORIZED"));
+  try {
+    await started; f.service.releaseUpload(ticket);
+    await assert.rejects(other.service.admitPreparation("admin", other.token), hasCode("MEDIA_BUSY"));
+    await assert.rejects(prepare(f.service, "admin", f.token, await sourceImage, ticket), hasCode("MEDIA_INPUT"));
+  } finally { release?.(); await denied; }
+  const next = await other.service.admitPreparation("admin", other.token); other.service.releaseUpload(next);
+  assert.equal(f.calls.length, 0);
+});
+
+test("streamed originals retain global admission through an open body and cancel without any media writes", async () => {
+  const f = await fixture(), other = await fixture(); other.state.idOverride = clientHex;
+  const source = new PassThrough();
+  const listening = new Promise(resolve => source.on("newListener", name => { if (name === "data") setImmediate(resolve); }));
+  const ticket = await f.service.admitPreparation("admin", f.token);
+  const pending = f.service.prepareStream("admin", f.token, source, ticket);
+  const denied = assert.rejects(pending, hasCode("MEDIA_INPUT"));
+  try {
+    await listening; source.write((await sourceImage).subarray(0, 8)); f.service.releaseUpload(ticket);
+    await assert.rejects(other.service.admitPreparation("admin", other.token), hasCode("MEDIA_BUSY"));
+  } finally { source.destroy(); await denied; }
+  const next = await other.service.admitPreparation("admin", other.token); other.service.releaseUpload(next);
+  assert.equal(f.calls.length, 0);
+});
+
+test("photo preparation rejects a real MP4 before any asset, database media or storage operation", async () => {
+  const f = await fixture();
+  const bytes = Buffer.from(await readFile(new URL("./fixtures/video-decodable.mp4.base64", import.meta.url), "utf8"), "base64");
+  await assert.rejects(prepare(f.service, "client", f.token, bytes), hasCode("MEDIA_FORMAT"));
+  assert.equal(f.calls.length, 0);
 });
 
 test("library and gallery reads pay persistent global and account budgets before querying metadata", async () => {

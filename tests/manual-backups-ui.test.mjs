@@ -44,6 +44,15 @@ test("an explicit retry that discovers completion reads the result without reque
   await f.click("create-backup"); await f.tick(); input = snapshot(backupRequest(submitted, "complete"), archive());
   await f.click("create-backup"); assert.equal(posts(f).length, 1); assert.equal(f.get("capture-state").textContent, "Sauvegarde terminée.");
 });
+test("a backup format refusal explains the boundary and preserves the previous download", async () => {
+  const f = await harness({ summary: snapshot(null, archive()), post: () => response({ error: "backup_capacity_limit" }, 409) });
+  await f.click("create-backup");
+  assert.equal(posts(f).length, 1); assert.match(f.get("backup-status").textContent, /capacité du format de sauvegarde/);
+  assert.match(f.get("backup-status").textContent, /messagerie reste disponible/);
+  assert.equal(f.get("create-backup").disabled, false); assert.equal(f.get("download-backup").hidden, false);
+  f.language("en"); assert.match(f.get("backup-status").textContent, /backup format/);
+  await f.online(); assert.equal(posts(f).length, 1);
+});
 test("visibility hides private dates and the pending POST is not replayed on return", async () => {
   let release; const pending = new Promise(resolve => { release = resolve; }); let submitted;
   const f = await harness({ summary: snapshot(null, archive()), post(path, options) { submitted = JSON.parse(options.body).requestId; return pending; } });

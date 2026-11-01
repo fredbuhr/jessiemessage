@@ -1,6 +1,6 @@
 {
   "name": "jessiemessage",
-  "version": "1.14.1",
+  "version": "1.15.0",
   "private": true,
   "type": "module",
   "description": "Private invite-only messaging PWA for Jessie",
@@ -26,6 +26,9 @@
     "db:migrate:stdin": "node scripts/migrate-stdin.mjs"
   },
   "dependencies": {
+    "@imagemagick/magick-wasm": "0.0.45",
+    "@phenomen/libavif-wasm": "1.4.203",
+    "heic-to": "1.6.7",
     "libheif-js": "1.23.5",
     "mariadb": "3.5.4",
     "nodemailer": "10.1.4",

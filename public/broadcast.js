@@ -133,21 +133,56 @@ async function resumePrivate() {
   return task.promise;
 }
 function signOut() { clearPrivate(); location.replace("/admin/login"); }
-async function request(path, { ticket = broadcastTicket(state), body, timeout = 15000 } = {}) {
+async function jpegBlob(response, limit, signal) {
+  const length = response.headers.get("content-length");
+  if (response.headers.get("content-type")?.split(";")[0] !== "image/jpeg"
+    || length !== null && (!/^[1-9][0-9]*$/.test(length) || !Number.isSafeInteger(Number(length)) || Number(length) > limit)) throw new Error("invalid_media_response");
+  let blob;
+  if (response.body?.getReader) {
+    const reader = response.body.getReader(), bytes = new Uint8Array(limit); let size = 0;
+    try {
+      while (true) {
+        const chunk = await reader.read(); if (signal.aborted) throw stale(); if (chunk.done) break;
+        if (!(chunk.value instanceof Uint8Array) || chunk.value.byteLength > limit - size) { await reader.cancel(); throw new Error("invalid_media_response"); }
+        bytes.set(chunk.value, size); size += chunk.value.byteLength;
+      }
+      blob = new Blob([bytes.subarray(0, size)], { type: "image/jpeg" });
+    } finally { bytes.fill(0); reader.releaseLock(); }
+  } else {
+    if (length === null) throw new Error("invalid_media_response");
+    blob = await response.blob();
+  }
+  if (signal.aborted) throw stale();
+  if (!blob.size || blob.size > limit || blob.type.split(";")[0] !== "image/jpeg" || length !== null && blob.size !== Number(length)) throw new Error("invalid_media_response");
+  return blob;
+}
+async function request(path, { ticket = broadcastTicket(state), body, raw = null, binaryLimit = null, imageFormat, signal, timeout = 15000 } = {}) {
   const privateData = path !== "/api/broadcast/admin/session" && path !== "/api/auth/session";
   // Cookies can change in another window without a local visibility event.
   // Bind each private response to the account and CSRF proof that own this UI.
   if (privateData && sessionPaused) throw new Error("session_check_pending");
+  if (signal?.aborted) throw stale();
   if (privateData) await verifySession(ticket);
-  if (!currentBroadcast(state, ticket) || !visible()) throw stale();
-  const controller = new AbortController(); controllers.add(controller); const timer = setTimeout(() => controller.abort(), timeout);
+  if (!currentBroadcast(state, ticket) || !visible() || signal?.aborted) throw stale();
+  const controller = new AbortController(), abort = () => controller.abort(); controllers.add(controller); const timer = setTimeout(abort, timeout);
+  signal?.addEventListener("abort", abort, { once: true }); if (signal?.aborted) controller.abort();
   try {
-    const response = await fetch(path, { method: body === undefined ? "GET" : "POST", credentials: "same-origin", cache: "no-store", signal: controller.signal,
-      headers: body === undefined ? {} : { "Content-Type": "application/json", "X-CSRF-Token": state.session?.csrf ?? "" }, body: body === undefined ? undefined : JSON.stringify(body) });
-    let data; try { data = await response.json(); } catch { data = {}; }
+    if (controller.signal.aborted) throw stale();
+    const response = await fetch(path, { method: body === undefined && raw === null ? "GET" : "POST", credentials: "same-origin", cache: "no-store", signal: controller.signal,
+      headers: raw !== null ? { "Content-Type": raw.type || "application/octet-stream", "X-CSRF-Token": state.session?.csrf ?? "",
+        ...(imageFormat ? { "X-Image-Format": imageFormat } : {}) }
+        : body === undefined ? {} : { "Content-Type": "application/json", "X-CSRF-Token": state.session?.csrf ?? "" },
+      body: raw !== null ? raw : body === undefined ? undefined : JSON.stringify(body) });
+    let data;
+    if (response.ok && binaryLimit !== null) {
+      try { data = await jpegBlob(response, binaryLimit, controller.signal); }
+      catch (error) { controller.abort(); throw error; }
+    }
+    else { try { data = await response.json(); } catch { data = {}; } }
+    if (controller.signal.aborted) throw stale();
     if (!currentBroadcast(state, ticket) || !visible()) throw stale();
     if (privateData) await verifySession(ticket);
-    if (!currentBroadcast(state, ticket) || !visible()) throw stale();
+    if (!currentBroadcast(state, ticket) || !visible() || controller.signal.aborted) throw stale();
     if (!response.ok) {
       const retry = Number(response.headers?.get("retry-after"));
       throw Object.assign(new Error("request_failed"), { status: response.status, code: data.error,
@@ -155,7 +190,7 @@ async function request(path, { ticket = broadcastTicket(state), body, timeout = 
     }
     return data;
   } catch (error) { if (!currentBroadcast(state, ticket) || !visible()) throw stale(); throw error; }
-  finally { clearTimeout(timer); controllers.delete(controller); }
+  finally { clearTimeout(timer); controllers.delete(controller); signal?.removeEventListener("abort", abort); }
 }
 function errorText(error) {
   if (error.status === 429) return "Trop de demandes. Patiente un moment avant de réessayer.";
@@ -482,16 +517,32 @@ async function uploadPhoto(file = el("photo-file").files?.[0]) {
   if (!file || !state.visible || sessionPaused || !state.session?.mediaEnabled || state.pending || sendBusy || photoTransfer || videoTransfer || state.csrfFailed || !visible()) return;
   if (state.draft.body.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant d’ajouter une photo.", true, "photo-status"); return; }
   const ticket = broadcastTicket(state), transfer = { controller: new AbortController() }; photoTransfer = transfer; controllers.add(transfer.controller);
-  const timer = setTimeout(() => transfer.controller.abort(), 120000);
+  let timer = null;
   const current = () => currentBroadcast(state, ticket) && !sessionPaused && visible() && photoTransfer === transfer && !transfer.controller.signal.aborted;
   notice("Préparation et ajout de la photo…", false, "photo-status"); renderControls();
   try {
     const { prepareImageUpload, MAX_UPLOAD_BYTES } = await import("/image-preparation.js");
     if (!current()) throw stale();
-    const prepared = await prepareImageUpload(file, { signal: transfer.controller.signal });
+    const capabilities = await request("/api/media/admin/capabilities", { ticket, signal: transfer.controller.signal })
+      .catch(error => { if (error.status === 404) return null; throw error; });
+    if (!current()) throw stale();
+    const convert = capabilities?.preparation?.enabled === true ? async (original, { signal }) => {
+      if (!current() || signal.aborted) throw stale();
+      const capabilities = await request("/api/media/admin/capabilities", { ticket, signal });
+      if (!current() || signal.aborted) throw stale();
+      const preparation = capabilities?.preparation;
+      if (preparation?.enabled !== true) throw Object.assign(new Error("media_format"), { code: "media_format" });
+      if (!Number.isSafeInteger(preparation.maxOriginalBytes) || preparation.maxOriginalBytes < 1 || preparation.maxOriginalBytes > 134217728
+        || preparation.maxOutputBytes !== 2097152 || preparation.maxPixels !== 64000000) throw new Error("invalid_media_response");
+      if (original.size > preparation.maxOriginalBytes) throw Object.assign(new Error("request_too_large"), { status: 413, code: "request_too_large" });
+      const imageFormat = /\.(dng|nef|arw|cr2|cr3|raf|rw2|orf|pef|srw)$/i.exec(original.name ?? "")?.[1].toLowerCase();
+      return request("/api/media/admin/prepare", { ticket, raw: original, signal, imageFormat, binaryLimit: preparation.maxOutputBytes, timeout: 180000 });
+    } : undefined;
+    const prepared = await prepareImageUpload(file, { signal: transfer.controller.signal, convert });
     if (!current()) throw stale();
     if (!prepared || !Number.isSafeInteger(prepared.size) || prepared.size < 1 || prepared.size > MAX_UPLOAD_BYTES || typeof prepared.type !== "string" || !prepared.type.startsWith("image/")) throw new Error("invalid_prepared_photo");
     await verifySession(ticket); if (!current()) throw stale();
+    timer = setTimeout(() => transfer.controller.abort(), 120000);
     transfer.posted = true;
     const response = await fetch("/api/media/admin/assets", { method: "POST", credentials: "same-origin", cache: "no-store", signal: transfer.controller.signal,
       headers: { "Content-Type": prepared.type, "X-CSRF-Token": state.session.csrf }, body: prepared });

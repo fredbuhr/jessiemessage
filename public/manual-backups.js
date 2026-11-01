@@ -149,6 +149,7 @@ async function createBackup() {
       pending = null;
       await bootstrap(error.code === "backup_in_progress" ? "Une sauvegarde est déjà demandée. Son état va être actualisé."
         : error.code === "request_changed" ? "La demande a changé. Consulte son état avant une nouvelle action."
+        : error.code === "backup_capacity_limit" ? "Les médias dépassent la capacité du format de sauvegarde actuel. La messagerie reste disponible."
         : "La demande a été refusée. Actualise l’état avant de réessayer.");
     } else {
       const uncertain = waiting(); clearPrivate();

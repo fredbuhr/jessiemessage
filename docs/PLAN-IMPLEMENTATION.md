@@ -2,6 +2,14 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
+## Évolution1.15.0 — suppression des refus photo injustifiés
+
+[Diagnostic et périmètre](photo-acceptance-1150.md). Refus synthétiques établis sur formats courants, JPEG valides, capacité couplée aux archives et reprise/erreurs masquées. Original client non attesté.
+
+1. Qualifier le candidat gelé sur les cinq jobs natifs de PR, puis sur le SHA exact fusionné sur main : navigateur, HTTPS, deux MariaDB et général. Les contrôles locaux et contre-revues sont acquis ; omissions locales conservées et groupes recoupants non additionnés.
+2. Conserver couverture formats/variantes, captures et journaux ; publier un seul tag immuable1.15.0 au SHA qualifié.
+3. Qualifier les nouveaux opérateurs de publication/préparation et une installation fraîche réellement isolée avec smoke six familles. Fournir ensuite la commande hébergée exacte ; attendre les reçus utilisateur de préparation et activation avant toute métadonnée finale. Production1141 inchangée à ce jalon.
+
 ## Correctif 1.14.1 — livraison terminée
 
 [Bilan et couverture12domaines](media-reliability-1141.md). Corrections médias regroupées, PR146/main5/5 et cinq captures acquises ; source/tagc803c2c9/arbre f391b5ce, publication/latestv1.14.1/release430681218. Node24.22.1, six dépendances et SQL38/37tables attendues inchangés. Échecs initiaux et52omissions explicites conservés.

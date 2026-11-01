@@ -21,6 +21,8 @@ ui.register({
   "Un envoi reste à confirmer. Réessaie cet envoi pour reprendre la même demande.": "A send still needs confirmation. Retry this send to resume the same request.",
   "Ce navigateur ne peut pas garder ce brouillon après rechargement. Il reste dans cet onglet.": "This browser cannot keep this draft after reloading. It remains in this tab.",
   "Cet envoi n’a pas commencé. Réessaie sans recharger la page pour conserver ton brouillon.": "This send has not started. Retry without reloading the page to keep your draft.",
+  "La photo n’a pas pu être préparée sur cet appareil. Réessaie cet envoi.": "The photo could not be prepared on this device. Retry this send.",
+  "Le service photo est momentanément indisponible. Réessaie cet envoi dans un moment.": "The photo service is temporarily unavailable. Retry this send shortly.",
 });
 
 const el = (id) => document.getElementById(id);
@@ -29,6 +31,7 @@ const sessionBase = role === "admin" ? "/api/auth" : "/api/access";
 const chatBase = `/api/chat/${role}`;
 const mediaBase = `/api/media/${role}`;
 const videoBase = "/api/video/" + role;
+const MAX_PREPARED_PHOTO_BYTES = 2097152;
 const states = new Map(); const inbox = new Map(); const controllers = new Set();
 const drafts = createChatDrafts({ storage: () => globalThis.sessionStorage, clock: () => Date.now(), digest: bytes => crypto.subtle.digest("SHA-256", bytes) });
 const messageRows = new Map();
@@ -46,7 +49,7 @@ let historyObserver = null; let photoObserver = null; const waitingPhotos = new 
 let olderBusy = false; let sendBusy = false; let logoutBusy = false; let loggingOut = false; let readBusy = false; let readTimer = null; let selectionLoading = false;
 const eventRequests = new Set();
 const imageUrls = createObjectUrlCache(); const imageRequests = new Map();
-let mediaEnabled = false; let mediaVersion = 0; let previewUrl = null; let previewIdentity = null;
+let mediaEnabled = false; let photoPreparationCapability = null; let mediaVersion = 0; let previewUrl = null; let previewIdentity = null;
 let photoPickerContext = null, pendingPhotoSelection = null, photoSelectionTask = null, photoPreviewJob = null;
 let videoEnabled = false, videoCreationEnabled = false, videoVersion = 0, videoPreviewUrl = null, videoPreviewIdentity = null, videoTransfer = null;
 let videoGallery = null, videoGalleryBusy = false, videoGalleryVersion = 0, videoGalleryReturnFocus = null;
@@ -339,8 +342,15 @@ async function mountProfile() {
   try {
     const { createProfileUI } = await import("/profile.js");
     if (profileMount !== mounting || !fresh(ticket, true) || !ready || !visible() || !sameOwner(owner, sessionOwner) || loggingOut) return;
+    const profileCurrent = () => generation === lifetime && sameOwner(owner, sessionOwner) && ready && visible() && !el("workspace").hidden && !loggingOut;
     profileUI = createProfileUI({ role, button: el("open-profile"), request, fetchBinary: fetchProfileBinary,
       avatarsEnabled: profileCapability.avatars === true,
+      convertImage: photoPreparationCapability ? (file, { signal } = {}) => {
+        if (!profileCurrent()) throw staleResponse();
+        const convert = photoConverter(null, snapshot(), signal, profileCurrent, true);
+        if (!convert) throw unavailablePhotoPreparation();
+        return convert(file, { signal });
+      } : undefined,
       passwordEnabled: profileCapability.passwordEnabled === true,
       preferencesEnabled: profileCapability.preferencesEnabled === true,
       publicationEnabled: profileCapability.publicationEnabled === true,
@@ -351,7 +361,7 @@ async function mountProfile() {
           ? "Mot de passe modifié. Cet appareil reste connecté." : "Ta connexion a été actualisée.");
       },
       getReturnFocus: menuReturnFocus,
-      isCurrent: () => generation === lifetime && sameOwner(owner, sessionOwner) && ready && visible() && !el("workspace").hidden && !loggingOut,
+      isCurrent: profileCurrent,
       onError: error => handleError(error) });
     el("open-profile").hidden = false;
   } catch (error) {
@@ -406,7 +416,7 @@ function clearPrivate({ purgeDrafts = false } = {}) {
   clearReceived(); receivedEnabled = false;
   sessionOwner = null; ownerCheck = null; bootstrapTask = null; pollEpoch += 1; cycleRunning = false;
   olderBusy = false; newerBusy = false; sendBusy = false; readBusy = false; selectionLoading = false; eventRequests.clear();
-  mediaEnabled = false; videoEnabled = false; videoCreationEnabled = false;
+  mediaEnabled = false; photoPreparationCapability = null; videoEnabled = false; videoCreationEnabled = false;
   conversationDownload?.clear(); conversationDownload = null; conversationDownloadCapability = null;
   crm?.clear(); crm = null; document.getElementById("crm-style")?.remove();
   stopPolling(); abortRequests(); expiryTimer?.(); expiryTimer = null;
@@ -483,27 +493,38 @@ function signOut() {
 }
 function snapshot(state = null) { return { generation, visibilityGeneration, selectionEpoch, id: state?.id, epoch: state?.epoch }; }
 function fresh(ticket, account = false) { return ticket.generation === generation && ticket.visibilityGeneration === visibilityGeneration && (account || (ticket.selectionEpoch === selectionEpoch && (!ticket.id || belongsTo(currentState(), ticket.id, ticket.epoch)))); }
-async function request(path, { body, rawBody, contentType, mutation = false, state = null, account = false, signal = null, verifyOwner = true, archive = false } = {}) {
+async function request(path, { body, rawBody, contentType, mutation = false, state = null, account = false, signal = null, verifyOwner = true, archive = false, photoPreparation = false, guard = null } = {}) {
   const owner = sessionOwner; const ticket = snapshot(state); const controller = new AbortController(); controllers.add(controller);
   const passwordChange = mutation && account && path === `/api/account/${role}/password`;
   controller.accountScope = account;
   const abort = () => controller.abort(); if (signal?.aborted) controller.abort(); else signal?.addEventListener("abort", abort, { once: true });
-  // Photo reception can consume 60s; allow its bounded decoder and SQL reply
-  // to finish afterwards. Ordinary requests and archive/video budgets stay fixed.
-  const timeout = setTimeout(() => controller.abort(), archive && videoEnabled ? 300000 : rawBody ? 90000 : archive ? 65000 : 15000);
+  // Original preparation may receive for 120s, then decode for 30s.
+  // Stored uploads, ordinary requests and archive/video budgets stay fixed.
+  const timeout = setTimeout(() => controller.abort(), photoPreparation ? 180000 : archive && videoEnabled ? 300000 : rawBody ? 90000 : archive ? 65000 : 15000);
   const headers = mutation ? { "Content-Type": contentType ?? "application/json", "X-CSRF-Token": csrf ?? "" } : {};
+  const rawFormat = photoPreparation && typeof rawBody?.name === "string" ? /\.(dng|nef|arw|cr2|cr3|raf|rw2|orf|pef|srw)$/i.exec(rawBody.name)?.[1].toLowerCase() : null;
+  if (rawFormat) headers["X-Image-Format"] = rawFormat;
   try {
     if (mutation && verifyOwner && owner) await confirmOwner(ticket, owner, account);
-    if (!fresh(ticket, account)) throw staleResponse();
+    if (!fresh(ticket, account) || guard && !guard()) throw staleResponse();
+    if (photoPreparation && controller.signal.aborted) throw new DOMException("Aborted", "AbortError");
     const response = await fetch(path, { method: mutation ? "POST" : "GET", credentials: "same-origin", cache: "no-store", headers, body: mutation ? rawBody ?? JSON.stringify(body ?? {}) : undefined, signal: controller.signal });
-    let data;
-    if (archive && response.ok) {
+    let data, preparationError;
+    if (photoPreparation && response.ok) {
+      try {
+        const type = response.headers?.get?.("Content-Type")?.split(";")[0]?.trim().toLowerCase();
+        const length = response.headers?.get?.("Content-Length");
+        if (type !== "image/jpeg" || length != null && (!/^[1-9][0-9]*$/.test(length) || Number(length) > MAX_PREPARED_PHOTO_BYTES)) throw unavailablePhotoPreparation();
+        data = await response.blob();
+        if (!(data instanceof Blob) || data.type.split(";")[0] !== "image/jpeg" || data.size < 1 || data.size > MAX_PREPARED_PHOTO_BYTES) throw unavailablePhotoPreparation();
+      } catch (error) { controller.abort(); preparationError = error; }
+    } else if (archive && response.ok) {
       try {
         const reader = await import(role === "client" ? "/client-archive.js" : "/private-archive.js");
         data = await (videoEnabled ? reader.readVideoArchive : reader.readPrivateArchive)(response, controller.signal);
       } catch (error) { controller.abort(); throw error; }
     } else { try { data = await response.json(); } catch { data = {}; } }
-    if (!fresh(ticket, account)) throw staleResponse();
+    if (!fresh(ticket, account) || guard && !guard()) throw staleResponse();
     // This one authenticated operation intentionally rotates the cookie. Prove
     // its old owner before POST, then let its callback verify the current cookie
     // by GET before adopting the new session. Ordinary replies keep both proofs.
@@ -511,7 +532,8 @@ async function request(path, { body, rawBody, contentType, mutation = false, sta
       if (!owner || data.status !== "password_changed" || !sessionIdentity(data)
         || data.user.id !== owner.id || data.user.role !== owner.role) throw new Error("invalid_password_response");
     } else if (verifyOwner && owner && path !== `${sessionBase}/session`) await confirmOwner(ticket, owner, account);
-    if (!fresh(ticket, account)) throw staleResponse();
+    if (!fresh(ticket, account) || guard && !guard()) throw staleResponse();
+    if (preparationError) throw preparationError;
     if (!response.ok) {
       const retry = response.headers?.get?.("Retry-After");
       throw Object.assign(new Error("request_failed"), { status: response.status, code: data.error,
@@ -519,11 +541,12 @@ async function request(path, { body, rawBody, contentType, mutation = false, sta
     }
     return data;
   } catch (error) {
-    if (!fresh(ticket, account)) throw Object.assign(new Error("stale_response"), { stale: true });
+    if (!fresh(ticket, account) || guard && !guard()) throw Object.assign(new Error("stale_response"), { stale: true });
     throw error;
   } finally { clearTimeout(timeout); signal?.removeEventListener("abort", abort); controllers.delete(controller); }
 }
 function staleResponse() { return Object.assign(new Error("stale_response"), { stale: true }); }
+function unavailablePhotoPreparation() { return Object.assign(new Error("invalid_photo_preparation_response"), { code: "media_preparation_unavailable" }); }
 function sameOwner(left, right) { return Boolean(left && right && left.id === right.id && left.role === right.role && left.csrf === right.csrf); }
 function sessionIdentity(session) {
   const user = session?.user;
@@ -812,10 +835,14 @@ function renderImageDraft(state) {
   el("composer-help").classList.toggle("sr-only", !hasImage && el("message-body").value.length < 3896);
   el("cancel-image").disabled = Boolean(state.pending) || sendBusy;
   if (!draft && !pending) { revokePreview(); return; }
-  ui.text(el("image-draft-status"), pending?.stage === "uploading" ? "Préparation de la photo…" : draft?.asset?.sharedHere ? "Déjà envoyée ici · nouvel envoi" : "Une photo à envoyer");
+  const photoError = pending?.photoError ?? draft?.previewError;
+  let imageStatus = draft?.asset?.sharedHere ? "Déjà envoyée ici · nouvel envoi" : "Une photo à envoyer";
+  if (pending?.stage === "uploading") imageStatus = pending.filePrepared ? "Transfert de la photo…" : "Préparation de la photo…";
+  ui.text(el("image-draft-status"), photoError ? mediaErrorText(photoError) : imageStatus);
+  el("image-draft-status").classList.toggle("is-error", Boolean(photoError));
   if (!visible()) return;
   const identity = draft?.file ?? draft?.asset?.id ?? pending?.mediaId;
-  if (identity && identity === previewIdentity && (!draft?.prepared || previewUrl)) { queueMicrotask(() => startSelectedPhotoPreview(state)); return; }
+  if (identity && identity === previewIdentity && (!draft?.prepared || previewUrl) && !draft?.previewError) { queueMicrotask(() => startSelectedPhotoPreview(state)); return; }
   revokePreview(); previewIdentity = identity;
   if (draft?.file) {
     if (draft.prepared) {
@@ -1079,7 +1106,14 @@ async function removeOwnVideo(item, panel, button) {
 }
 
 async function refreshMediaCapability() {
-  try { const value = await request(`${mediaBase}/capabilities`); mediaEnabled = value.enabled === true; }
+  photoPreparationCapability = null;
+  try {
+    const value = await request(`${mediaBase}/capabilities`); mediaEnabled = value.enabled === true;
+    const preparation = value.preparation;
+    if (mediaEnabled && preparation?.enabled === true && ["maxOriginalBytes", "maxOutputBytes", "maxPixels"].every(key => Number.isSafeInteger(preparation[key]) && preparation[key] > 0)) {
+      photoPreparationCapability = { maxOriginalBytes: Math.min(preparation.maxOriginalBytes, 134217728), maxOutputBytes: Math.min(preparation.maxOutputBytes, MAX_PREPARED_PHOTO_BYTES), maxPixels: Math.min(preparation.maxPixels, 64000000) };
+    }
+  }
   catch (error) { if (error.stale) throw error; if (error.status === 404) mediaEnabled = false; else if (error.status === 401 || (role === "client" && error.status === 403)) { signOut(); throw error; } else mediaEnabled = false; }
 }
 async function refreshCrmCapability() {
@@ -1174,10 +1208,9 @@ function adoptPhotoSelection(state, files) {
   if (!state || !files.length || state.pending || sendBusy || state.photoBatch?.started || !state.conversation?.canSend) return;
   // MIME labels and filenames from camera/cloud pickers are unreliable. The
   // preparer inspects actual bytes before decoding and bounds each allocation.
-  const accepted = files.filter(file => file instanceof Blob && file.size > 0 && !file.type.startsWith("video/"));
-  const videoRefused = role === "client" && files.some(file => file.type.startsWith("video/"));
+  const accepted = files.filter(file => file instanceof Blob && file.size > 0);
   if (el("message-body").value.length > 1000) { notice("Raccourcis ton texte à 1 000 caractères avant d’ajouter une photo.", true); return; }
-  if (!accepted.length) { notice(videoRefused ? "L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos." : "Choisis une photo. Elle sera préparée sur cet appareil avant l’envoi.", true); return; }
+  if (!accepted.length) { notice("Choisis une photo. Elle sera préparée sur cet appareil avant l’envoi.", true); return; }
   const previousDraft = state.imageDraft, previous = previousDraft?.file ? [previousDraft.file] : [];
   const available = MAX_PHOTO_BATCH - (state.photoBatch?.items.length ?? previous.length);
   const chosen = accepted.slice(0, available);
@@ -1190,7 +1223,7 @@ function adoptPhotoSelection(state, files) {
     state.imageDraft = null; revokePreview();
   }
   renderMeta(state);
-  notice(videoRefused ? "L’envoi de vidéos est réservé à Jessie. Tu peux envoyer des photos." : chosen.length !== accepted.length ? "Choisis au maximum 50 photos par envoi." : accepted.length !== files.length ? "Certaines photos ont été refusées. Les autres restent dans ta sélection." : "Photos choisies. Vérifie les aperçus avant d’envoyer.", videoRefused || accepted.length !== files.length || chosen.length !== accepted.length);
+  notice(chosen.length !== accepted.length ? "Choisis au maximum 50 photos par envoi." : accepted.length !== files.length ? "Certaines photos ont été refusées. Les autres restent dans ta sélection." : "Photos choisies. Vérifie les aperçus avant d’envoyer.", accepted.length !== files.length || chosen.length !== accepted.length);
   focusComposer();
 }
 function visiblePhotoItems(state) {
@@ -1200,6 +1233,23 @@ function visiblePhotoItems(state) {
     return rect && Number.isFinite(rect.left) && Number.isFinite(rect.right) && Number.isFinite(bounds.left) && Number.isFinite(bounds.right)
       ? rect.right > bounds.left && rect.left < bounds.right : index < 4;
   }).slice(0, 4);
+}
+function photoConverter(state, ticket, signal, selected, account = false) {
+  const capability = photoPreparationCapability;
+  return capability ? async (original, { signal: conversionSignal = signal } = {}) => {
+    const current = () => fresh(ticket, account) && visible() && !signal?.aborted && selected();
+    if (!current()) throw staleResponse();
+    if (!(original instanceof Blob) || original.size < 1) throw Object.assign(new Error("invalid_photo_source"), { code: "media_format" });
+    if (original.size > capability.maxOriginalBytes) throw Object.assign(new Error("photo_source_too_large"), { code: "image_source_too_large" });
+    const prepared = await request(`${mediaBase}/prepare`, { state, account, mutation: true, rawBody: original,
+      contentType: original.type || "application/octet-stream", signal: conversionSignal, photoPreparation: true, guard: current });
+    if (!current()) throw staleResponse();
+    if (prepared.size > capability.maxOutputBytes) throw unavailablePhotoPreparation();
+    return prepared;
+  } : undefined;
+}
+function prepareChatPhoto(file, state, ticket, signal, selected) {
+  return prepareImageUpload(file, { signal, convert: photoConverter(state, ticket, signal, selected) });
 }
 function startSelectedPhotoPreview(state) {
   if (!visible() || currentState() !== state || sendBusy || photoPreviewJob) return;
@@ -1228,11 +1278,14 @@ function startSelectedPhotoPreview(state) {
   const ticket = snapshot(state), controller = new AbortController(), job = { holder, controller, promise: null }; photoPreviewJob = job; controllers.add(controller);
   job.promise = (async () => {
     try {
-      const prepared = await prepareImageUpload(holder.file, { signal: controller.signal });
+      const prepared = await prepareChatPhoto(holder.file, state, ticket, controller.signal, () => state.imageDraft === holder || state.photoBatch?.items.includes(holder));
       if (!fresh(ticket) || !visible() || controller.signal.aborted || state.imageDraft !== holder && !state.photoBatch?.items.includes(holder)) return;
       holder.prepared = prepared;
     } catch (error) {
-      if (fresh(ticket) && !controller.signal.aborted && (state.imageDraft === holder || state.photoBatch?.items.includes(holder))) holder.previewError = error;
+      if (fresh(ticket) && !controller.signal.aborted && (state.imageDraft === holder || state.photoBatch?.items.includes(holder))) {
+        holder.previewError = error;
+        if (error.status === 401 || error.status === 403) await handleError(error, state);
+      }
     } finally {
       controllers.delete(controller); if (photoPreviewJob === job) photoPreviewJob = null;
       if (fresh(ticket) && visible()) { renderMeta(state); queueMicrotask(() => startSelectedPhotoPreview(state)); }
@@ -1317,7 +1370,7 @@ async function sendPhotoSelection() {
         if (!fresh(ticket) || !visible()) throw staleResponse();
         if (holder?.prepared) return holder.prepared;
         const controller = new AbortController(); controllers.add(controller);
-        try { return await prepareImageUpload(file, { signal: controller.signal }); } finally { controllers.delete(controller); }
+        try { return await prepareChatPhoto(file, state, ticket, controller.signal, () => state.photoBatch === batch && batch.items.includes(holder)); } finally { controllers.delete(controller); }
       },
       upload: async file => (await uploadPhoto(file, state, ticket)).asset,
       send: messages => request(`${mediaBase}/conversations/${state.id}/messages/batch`, { state, mutation: true, body: { messages } }),
@@ -1334,13 +1387,14 @@ async function sendPhotoSelection() {
 }
 
 function mediaErrorText(error) {
+  if (error.status === 507) return "Le stockage des photos a atteint sa limite.";
+  if (error.status === 503 || error.code === "media_preparation_unavailable") return "Le service photo est momentanément indisponible. Réessaie cet envoi dans un moment.";
   if (error.code === "media_heic") return "Cet appareil n’a pas pu convertir cette photo HEIC ou HEIF. Essaie de la réexporter depuis ton application Photos.";
   if (error.code === "image_source_too_large") return "Cette photo dépasse la capacité de préparation de cet appareil. Essaie de la réexporter depuis ton application Photos.";
   if (error.code === "media_format") return "Cette image ne peut pas être lue. Essaie de la réexporter depuis ton application Photos.";
   if (error.code === "media_dimensions") return "La définition de cette photo dépasse la capacité de préparation de cet appareil. Essaie de la réexporter depuis ton application Photos.";
   if (error.code === "request_too_large" || error.status === 413) return "Cette photo est trop volumineuse pour le transfert. Essaie une autre version.";
-  if (error.code === "media_unavailable") return "La photo n’a pas pu être préparée. Essaie une autre photo.";
-  if (error.status === 507 && error.code === "storage_limit") return "Le stockage des photos a atteint sa limite.";
+  if (error.code === "media_unavailable") return "La photo n’a pas pu être préparée sur cet appareil. Réessaie cet envoi.";
   if (error.status === 409 && error.code === "media_in_use") return "Cette photo est utilisée dans une conversation ou comme avatar. Retire ces utilisations avant de la supprimer.";
   if (error.status === 404) return "Cette photo n’est plus disponible.";
   if (error.status === 415 || error.status === 400) return "La photo n’a pas pu être transférée. Réessaie avec une légende de 1 000 caractères maximum.";
@@ -2158,6 +2212,7 @@ async function sendImage(retry = false, reply = null) {
   if (!validCaption(caption)) { notice("Ajoute une légende de 1 000 caractères maximum, ou laisse le champ vide.", true); return; }
   const draft = state.imageDraft;
   const pending = prepareImageSend(state, { caption, mediaId: retry ? state.pending?.mediaId : draft?.asset?.id ?? null, file: retry ? state.pending?.file : draft?.file ?? null }, state.pending?.clientMessageId ?? newClientId());
+  delete pending.photoError; if (draft) delete draft.previewError;
   if (reply && !Object.hasOwn(pending, "replyThrough")) Object.assign(pending, reply);
   captureReply(state, pending);
   state.draft = caption;
@@ -2167,17 +2222,23 @@ async function sendImage(retry = false, reply = null) {
     if (photoPreviewJob) await photoPreviewJob.promise;
     if (!fresh(ticket) || !visible() || state.pending !== pending) return;
     if (!pending.mediaId) {
-      const preparation = new AbortController(); controllers.add(preparation); let prepared;
-      preparing = true;
-      try {
-        if (!fresh(ticket) || !visible()) throw staleResponse();
-        prepared = draft?.prepared ?? await prepareImageUpload(pending.file, { signal: preparation.signal });
+      if (!pending.filePrepared) {
+        const preparation = new AbortController(); controllers.add(preparation); let prepared;
+        preparing = true;
+        try {
+          if (!fresh(ticket) || !visible()) throw staleResponse();
+          prepared = draft?.prepared ?? await prepareChatPhoto(pending.file, state, ticket, preparation.signal, () => state.pending === pending);
+        }
+        finally { controllers.delete(preparation); }
+        preparing = false;
+        if (!fresh(ticket) || !visible() || state.pending !== pending) return;
+        // An upload can be stored even when its reply is lost. Every retry
+        // must reuse these exact normalized bytes, without another encoding.
+        pending.file = prepared; pending.filePrepared = true;
+        if (draft && state.imageDraft === draft) { draft.prepared = prepared; delete draft.previewError; }
       }
-      finally { controllers.delete(preparation); }
-      preparing = false;
-      if (!fresh(ticket) || !visible() || state.pending !== pending) return;
-      pending.file = prepared;
-      const result = await uploadPhoto(prepared, state, ticket);
+      renderMeta(state); notice("Transfert de la photo…");
+      const result = await uploadPhoto(pending.file, state, ticket);
       if (!completeImageUpload(state, pending.clientMessageId, result.asset.id)) return;
       state.imageDraft = { file: null, asset: result.asset }; renderMeta(state);
     }
@@ -2191,8 +2252,9 @@ async function sendImage(retry = false, reply = null) {
     if (preparing && fresh(ticket) && state.pending === pending) {
       // Local preparation failed before any upload/message request. The photo
       // can be changed safely; uncertain network sends keep their retry key.
-      state.pending = null;
+      state.pending = null; if (draft && state.imageDraft === draft) draft.previewError = error;
     } else if (!error.stale && state.pending && !rejectPendingImageSend(state, error.status)) retrySend(state);
+    if (!error.stale && fresh(ticket) && state.pending === pending) pending.photoError = { status: error.status, code: error.code };
     await handleMediaError(error, state);
   } finally { if (fresh(ticket)) { sendBusy = false; renderMeta(state); } }
 }

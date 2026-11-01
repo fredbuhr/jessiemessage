@@ -29,6 +29,7 @@ import { checkpointProcess, createRecurringSupervisor, recurringPreflight } from
 import { createManualBackupRequests } from "../server/backup/manual-backup-files.mjs";
 import { createManualBackupService } from "../server/backup/manual-backup-service.mjs";
 import { createManualBackupHandler } from "../server/backup/manual-backup-http.mjs";
+import { checkConfiguredBackupCapacity } from "../server/backup/media-capacity.mjs";
 
 const enabled = process.env.JESSIEMESSAGE_DB_TEST === "1";
 
@@ -88,7 +89,10 @@ await run(process.argv.slice(2),{loadMain:async()=>(args,settings)=>main(args,{.
     const requests = createManualBackupRequests({ operationsDirectory }), notices = [];
     supervisor = createRecurringSupervisor(options, { environment, manualBackups: true, manualRequests: requests,
       closureOperations: owner.operations, resumeClosures: resumeManagedLocalClosureRuntime, source: async () => {}, checkpoint,
-      preflight: (selected, settings) => recurringPreflight(selected, { ...settings, source: async () => {}, checkpoint }),
+      preflight: (selected, settings) => recurringPreflight(selected, { ...settings, source: async () => {}, checkpoint,
+        inspectCapacity: (selected, settings) => checkConfiguredBackupCapacity(selected, { ...settings, execArgv: [],
+          loadEnvironment: async (directory, parameters) => ({ ...await loadRuntimeBroadcastEnvironment(directory, parameters),
+            JESSIEMESSAGE_DB_ALLOW_INSECURE_LOCAL: "1" }) }) }),
       makeRuntime: () => synthetic.runtime, schedule: () => null, unschedule() {}, emit: value => notices.push(value) });
     await supervisor.start(); await supervisor.tick();
     assert.equal(synthetic.children.length, 1, "enabled historical configuration never triggers an automatic capture");

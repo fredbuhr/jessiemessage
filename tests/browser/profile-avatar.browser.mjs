@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
+import { createHash } from "node:crypto";
 import sharp from "sharp";
 import { AUTH_HEADERS } from "../../server/auth/http.mjs";
 import { startWebDriver, waitUntil } from "./webdriver.mjs";
@@ -12,7 +13,10 @@ async function avatarFixture() {
     "preferences.js", "preferences-model.js", "i18n-preferences.js", "profile-publication.js", "public-profile-model.js", "i18n-public-profile.js", "i18n.js"];
   const resources = new Map(await Promise.all(names.map(async name => [`/${name}`, await readFile(new URL(`../../public/${name}`, import.meta.url))])));
   resources.set("/heic-decoder-worker.js", await readFile(new URL("../../public/heic-decoder-worker.js", import.meta.url)));
-  resources.set("/heic-codec-1.23.5.mjs", await readFile(new URL("../../node_modules/libheif-js/libheif-wasm/libheif-bundle.mjs", import.meta.url)));
+  resources.set("/heic-decoder-core.js", await readFile(new URL("../../public/heic-decoder-core.js", import.meta.url)));
+  const codec = await readFile(new URL("../../node_modules/heic-to/src/lib/libheif-without-unsafe-eval.js", import.meta.url));
+  assert.equal(createHash("sha256").update(codec).digest("hex"), "75aaf03816c22f8cf40dbcaeb22bee83f2e1c5da4b7417577a7883b296348734");
+  resources.set("/heic-codec-1.23.7.mjs", codec);
   const privateMarker = "synthetic-avatar-original-owner-1141";
   const source = sharp({ create: { width: 800, height: 400, channels: 4, background: { r: 170, g: 50, b: 90, alpha: 0.5 } } })
     .withExif({ IFD0: { Artist: privateMarker } });
@@ -21,7 +25,7 @@ async function avatarFixture() {
   const photos = new Map(await Promise.all(formats.map(async ([extension, type, encoded]) => [`/photo.${extension}`, [await encoded.toBuffer(), type]])));
   photos.set("/photo.heic", [Buffer.from(await readFile(new URL("../fixtures/photo-1140.heic.b64", import.meta.url), "utf8"), "base64"), "image/heic"]);
   const decoderRequests = [], failures = [];
-  const workerPolicy = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'none'; worker-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'";
+  const workerPolicy = "default-src 'none'; script-src 'self'; connect-src 'none'; worker-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'";
   const server = createServer((request, response) => {
     try {
       if (request.method !== "GET") { failures.push("unexpected mutation"); response.writeHead(405); response.end(); return; }
@@ -47,7 +51,7 @@ async function avatarFixture() {
 }
 
 async function assertAvatar(result, label, marker) {
-  assert.equal(result.error, undefined, `${label}: ${result.error}`);
+  assert.equal(result.failureCode, undefined, `${label}: ${result.failureCode}`);
   assert.equal(result.type, "image/jpeg", label); assert.ok(result.bytes.length > 0 && result.bytes.length <= 262144, label);
   assert.deepEqual(result.violations, [], `${label}: document and isolated worker CSP are enforced`);
   const bytes = Buffer.from(result.bytes), metadata = await sharp(bytes).metadata();
@@ -82,13 +86,13 @@ test("real Chrome prepares JPEG, PNG, WebP, AVIF and HEIC avatars as private 256
           try { const blob = await prepareProfileAvatar(new File([photo], 'camera-original', { type: 'application/octet-stream' }));
             return { type: blob.type, bytes: Array.from(new Uint8Array(await blob.arrayBuffer())), draws, violations }; }
           finally { document.createElement = create; removeEventListener('securitypolicyviolation', violation); }
-        })().then(done, error => done({ error: error.code || error.name }));
+        })().then(done, error => done({ failureCode: error.code || error.name }));
       `, path);
       await assertAvatar(result, path, source.privateMarker);
     });
   }
-  assert.ok(source.decoderRequests.includes("/heic-decoder-worker.js"));
-  assert.ok(source.decoderRequests.includes("/heic-codec-1.23.5.mjs")); assert.deepEqual(source.failures, []);
+  assert.deepEqual(source.decoderRequests, ["/heic-decoder-worker.js", "/heic-decoder-core.js", "/heic-codec-1.23.7.mjs"]);
+  assert.deepEqual(source.failures, []);
 });
 
 test("real Chrome avatar cropping falls back to Image when ImageBitmap is missing or rejects", { timeout: 90000 }, async t => {
@@ -110,7 +114,7 @@ test("real Chrome avatar cropping falls back to Image when ImageBitmap is missin
           created: created.length, revoked: revoked.length, allReleased: created.every(url => revoked.includes(url)), draws: [], violations }; }
         finally { globalThis.createImageBitmap = bitmap; URL.createObjectURL = createURL; URL.revokeObjectURL = revokeURL;
           removeEventListener('securitypolicyviolation', violation); }
-      })().then(done, error => done({ error: error.code || error.name }));
+      })().then(done, error => done({ failureCode: error.code || error.name }));
     `, mode);
     await assertAvatar(result, mode, source.privateMarker);
     assert.ok(result.created >= 2, "both shared preparation and avatar crop use native Image fallback");
@@ -132,10 +136,11 @@ test("real Chrome avatar picker prepares AVIF and HEIC locally before an explici
           return { pseudonym: 'Synthetic avatar', version: '1', avatarId: null, avatarUrl: null }; },
         fetchBinary: async () => { throw Error('No saved avatar expected'); } });
       await window.__avatarUI.open(); return true;
-    })().then(done, error => done({ error: error.name }));
+    })().then(done, error => done({ failureCode: error.name }));
   `);
   assert.equal(opened, true);
-  assert.equal(await browser.execute("return document.querySelector('.profile-file').accept"), "image/*,.heic,.heif,.avif");
+  const accepted = (await browser.execute("return document.querySelector('.profile-file').accept")).split(",");
+  for (const format of ["image/*", ".avif", ".heic", ".heif"]) assert.ok(accepted.includes(format), format);
   for (const path of ["/photo.avif", "/photo.heic"]) await t.test(path, async () => {
     await browser.executeAsync(`
       const done = arguments[arguments.length - 1], path = arguments[0];
@@ -144,7 +149,7 @@ test("real Chrome avatar picker prepares AVIF and HEIC locally before an explici
         document.querySelector('.profile-choose-avatar').click();
         selected.items.add(new File([blob], 'camera-original', { type: 'application/octet-stream' })); input.files = selected.files;
         input.dispatchEvent(new Event('change', { bubbles: true })); return true;
-      })().then(done, error => done({ error: error.name }));
+      })().then(done, error => done({ failureCode: error.name }));
     `, path);
     await waitUntil(() => browser.execute("return document.querySelector('.profile-status').textContent==='Avatar prêt. Enregistre le profil pour l’appliquer.'"), "normalized avatar ready");
     await waitUntil(() => browser.execute("return document.querySelector('.profile-avatar-preview img').naturalWidth===256"), "prepared avatar preview decoded");
@@ -152,4 +157,48 @@ test("real Chrome avatar picker prepares AVIF and HEIC locally before an explici
     assert.equal(await browser.execute("return document.querySelector('.profile-file').value"), "");
   });
   await browser.execute("window.__avatarUI.destroy()"); assert.deepEqual(source.failures, []);
+});
+
+test("real Chrome profile conversion uses the injected original once and crops its validated JPEG before save", { timeout: 90000 }, async t => {
+  const driver = await startWebDriver(); t.after(() => driver.close());
+  const source = await avatarFixture(); t.after(() => source.close());
+  const browser = await driver.browser({ origin: source.origin }); await browser.navigate("/");
+  assert.equal(await browser.executeAsync(`
+    const done = arguments[arguments.length - 1];
+    (async () => {
+      const { createProfileUI } = await import('/profile.js'), normalized = await (await fetch('/photo.jpg')).blob();
+      window.__conversionCalls = []; window.__avatarWrites = []; window.__avatarViolations = [];
+      window.__avatarViolation = event => window.__avatarViolations.push(event.violatedDirective);
+      addEventListener('securitypolicyviolation', window.__avatarViolation);
+      window.__avatarCreateURL = URL.createObjectURL;
+      URL.createObjectURL = blob => { window.__avatarPreparedBlob = blob; return window.__avatarCreateURL(blob); };
+      window.__avatarUI = createProfileUI({ role: 'client', isCurrent: () => true,
+        convertImage: async (original, { signal }) => {
+          window.__conversionCalls.push({ sameOriginal: original === window.__avatarOriginal, signal }); return normalized;
+        },
+        request: async (path, options) => { if (options.mutation) window.__avatarWrites.push(path);
+          return { pseudonym: 'Synthetic converted avatar', version: '1', avatarId: null, avatarUrl: null }; },
+        fetchBinary: async () => { throw Error('No saved avatar expected'); } });
+      await window.__avatarUI.open();
+      const input = document.querySelector('.profile-file'), selected = new DataTransfer();
+      document.querySelector('.profile-choose-avatar').click();
+      selected.items.add(new File(['synthetic undecodable original'], 'opaque.tiff', { type: 'image/tiff' }));
+      input.files = selected.files; window.__avatarOriginal = input.files[0];
+      input.dispatchEvent(new Event('change', { bubbles: true })); return true;
+    })().then(done, error => done({ failureCode: error.code || error.name }));
+  `), true);
+  await waitUntil(() => browser.execute("return document.querySelector('.profile-status').textContent==='Avatar prêt. Enregistre le profil pour l’appliquer.'"), "converted profile avatar ready");
+  await waitUntil(() => browser.execute("return document.querySelector('.profile-avatar-preview img').naturalWidth===256"), "converted profile avatar preview");
+  const result = await browser.executeAsync(`
+    const done = arguments[arguments.length - 1];
+    (async () => { const blob = window.__avatarPreparedBlob;
+      return { type: blob.type, bytes: Array.from(new Uint8Array(await blob.arrayBuffer())), draws: [], violations: window.__avatarViolations,
+        calls: window.__conversionCalls.map(call => ({ sameOriginal: call.sameOriginal, aborted: call.signal.aborted })), writes: window.__avatarWrites };
+    })().then(done, error => done({ failureCode: error.code || error.name }));
+  `);
+  await assertAvatar(result, "injected avatar conversion", source.privateMarker);
+  assert.deepEqual(result.calls, [{ sameOriginal: true, aborted: false }]); assert.deepEqual(result.writes, []);
+  await browser.execute(`window.__avatarUI.destroy(); URL.createObjectURL = window.__avatarCreateURL;
+    removeEventListener('securitypolicyviolation', window.__avatarViolation);`);
+  assert.deepEqual(source.decoderRequests, []); assert.deepEqual(source.failures, []);
 });

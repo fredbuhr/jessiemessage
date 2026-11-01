@@ -11,6 +11,7 @@ const solid = (width, height, format = "jpeg") => sharp({ create: { width, heigh
   background: { r: 195, g: 37, b: 112, alpha: 0.3 } } })[format]().toBuffer();
 const code = (expected) => (error) => error?.code === expected && error.message === "Image preparation failed.";
 const heic = Buffer.from(await readFile(new URL("fixtures/photo-1140.heic.b64", import.meta.url), "utf8"), "base64");
+const acceptanceFixtures = JSON.parse(await readFile(new URL("fixtures/photo-acceptance-formats.json", import.meta.url), "utf8")).fixtures;
 function jpegDimensions(jpeg, width, height) {
   const bytes = Buffer.from(jpeg);
   let cursor = 2;
@@ -43,7 +44,7 @@ test("EXIF orientation is read for JPEG, PNG and WebP without exposing or copyin
   }
 });
 
-test("source pixel/side, compressed bytes and animation guards run before a browser decoder", async () => {
+test("software header inspection retains its pixel, byte and animation guards independently of native preparation", async () => {
   const ordinary = await solid(10, 10, "png");
   for (const [width, height] of [[MAX_SOURCE_IMAGE_SIDE + 1, 1], [16001, 16000]]) {
     // Patch a valid PNG header: the client must refuse without decoding pixels.
@@ -62,7 +63,7 @@ test("source pixel/side, compressed bytes and animation guards run before a brow
   assert.throws(() => inspectImageInput(animated), code("media_format"));
 });
 
-test("conflicting JPEG frames, duplicate PNG headers and WebP container/image dimensions are rejected before decoding", async () => {
+test("software container inspection rejects conflicting JPEG frames, duplicate PNG headers and WebP dimensions", async () => {
   const jpeg = await solid(32, 16);
   let cursor = 2, frame;
   while (cursor < jpeg.length) {
@@ -117,7 +118,7 @@ function harness({ outputSizes = [1000], decodeError, contextAvailable = true, d
       calls.push({ kind: "decode", file, options });
       bitmapReady(); if (pendingBitmap) await bitmapGate;
       if (decodeError) throw decodeError;
-      const bitmap = decode ?? { width: options.resizeWidth, height: options.resizeHeight };
+      const bitmap = decode ?? { width: options.resizeWidth ?? nativeSize[0], height: options.resizeHeight ?? nativeSize[1] };
       bitmap.close = () => { bitmap.closed = true; }; bitmaps.push(bitmap); onDecoded?.(); return bitmap;
     },
     document: { createElement(kind) {
@@ -224,21 +225,26 @@ test("camera originals above fifty MiB and two hundred megapixels request native
   const options = f.calls.find(call => call.kind === "decode").options;
   assert.deepEqual([options.resizeWidth, options.resizeHeight], [2048, 1024]);
   assert.ok(f.calls.filter(call => ["draw", "encode"].includes(call.kind)).every(call => call.width <= 2048 && call.height <= 2048));
-  const overSourceLimit = new Blob([new Uint8Array(MAX_SOURCE_IMAGE_BYTES + 1)], { type: "image/jpeg" });
-  await assert.rejects(f.prepare(overSourceLimit), code("image_source_too_large"));
-  assert.equal(f.calls.filter(call => call.kind === "decode").length, 1, "oversized original never reaches decoder");
+  class LargeNativeBlob extends Blob {
+    get size() { return MAX_SOURCE_IMAGE_BYTES + 1; }
+    arrayBuffer() { assert.fail("native preparation must not read the entire large original into JavaScript"); }
+  }
+  const large = new LargeNativeBlob([jpeg], { type: "image/jpeg" });
+  assert.equal((await f.prepare(large)).type, "image/jpeg");
+  assert.equal(f.calls.filter(call => call.kind === "decode").length, 2, "the native path is not gated by the software input byte budget");
 });
 
 test("missing, generic, legacy and incorrect picker MIME labels use the proven JPEG bytes for decoding", async () => {
   const bytes = await solid(40, 30);
-  for (const type of ["", "application/octet-stream", "image/jpg", "image/pjpeg", "image/png", "image/heic", "text/plain"]) {
+  for (const type of ["", "application/octet-stream", "image/jpg", "image/pjpeg", "image/png", "image/heic", "text/plain", "video/mp4"]) {
     const f = harness();
     await f.prepare(new Blob([bytes], { type }));
     assert.equal(f.calls.find(call => call.kind === "decode").file.type, "image/jpeg");
   }
-  const fake = harness();
+  const fake = harness({ decodeError: new Error("not a decoded image") });
   await assert.rejects(fake.prepare(new Blob(["not a photo"], { type: "image/jpeg" })), code("media_format"));
-  assert.equal(fake.calls.length, 0, "a label never admits arbitrary bytes to a decoder");
+  assert.equal(fake.calls.filter(call => call.kind === "decode").length, 1, "the native decoder still has to prove that bytes form an image");
+  assert.equal(fake.canvases.length, 0);
 });
 
 test("AVIF uses its byte-proven MIME and preserves alpha through the bounded PNG output", async () => {
@@ -249,6 +255,102 @@ test("AVIF uses its byte-proven MIME and preserves alpha through the bounded PNG
   assert.equal(result.type, "image/png");
 });
 
+test("a real MP4 remains a decoding failure instead of being admitted as a photo", async () => {
+  const bytes = Buffer.from(await readFile(new URL("fixtures/video-decodable.mp4.base64", import.meta.url), "utf8"), "base64");
+  const f = harness({ decodeError: new DOMException("The source is not an image", "InvalidStateError") });
+  await assert.rejects(f.prepare(new Blob([bytes], { type: "image/jpeg" })), code("media_format"));
+  assert.equal(f.calls.filter(call => call.kind === "decode").length, 1);
+  assert.equal(f.canvases.length, 0); assert.equal(f.workers.length, 0);
+});
+
+test("native decoding can normalize generated GIF, BMP, TIFF, APNG, AVIF sequences and redundant JPEG metadata", async () => {
+  for (const fixture of acceptanceFixtures) {
+    const bytes = Buffer.from(fixture.base64, "base64");
+    const f = harness({ decode: { width: fixture.preparedWidth, height: fixture.preparedHeight } });
+    let backendCalls = 0;
+    const output = await f.prepare(new Blob([bytes], { type: "application/octet-stream" }), {
+      convert() { backendCalls += 1; assert.fail("a natively decoded image needs no server conversion"); },
+    });
+    assert.equal(f.calls.filter(call => call.kind === "decode").length, 1, fixture.name);
+    assert.equal(backendCalls, 0, fixture.name);
+    assert.ok(["image/jpeg", "image/png"].includes(output.type)); assert.ok(output.size <= TARGET_UPLOAD_BYTES);
+    assert.ok(f.calls.filter(call => call.kind === "draw").every(call => call.width <= 2048 && call.height <= 2048));
+    assert.ok(f.bitmaps.every(bitmap => bitmap.closed));
+    if (fixture.name === "jpeg-duplicate-exif") {
+      const options = f.calls.find(call => call.kind === "decode").options;
+      assert.deepEqual([options.resizeWidth, options.resizeHeight], [24, 32]);
+    }
+    if (fixture.name === "jpeg-panorama") {
+      const options = f.calls.find(call => call.kind === "decode").options;
+      assert.deepEqual([options.resizeWidth, options.resizeHeight], [2048, 1]);
+    }
+  }
+});
+
+test("a caller-provided converter receives the original and signal once after local decoder failure", async () => {
+  const input = new Blob([Buffer.from(acceptanceFixtures.find(row => row.name === "tiff-lzw").base64, "base64")], { type: "image/tiff" });
+  const jpeg = new Blob([await solid(32, 24)], { type: "image/jpeg" });
+  const controller = new AbortController(), f = harness({ decodeError: new Error("native TIFF unavailable") });
+  const calls = [];
+  assert.equal(await f.prepare(input, { signal: controller.signal, convert(file, options) {
+    calls.push({ file, signal: options.signal }); return jpeg;
+  } }), jpeg);
+  assert.deepEqual(calls, [{ file: input, signal: controller.signal }]);
+  assert.equal(f.calls.filter(call => call.kind === "encode").length, 0);
+});
+
+test("native HEIF and AVIF decoding owns crop geometry instead of stretching to container extents", async () => {
+  for (const [bytes, type] of [[heic, "image/heic"], [await solid(64, 48, "avif"), "image/avif"]]) {
+    const f = harness({ decode: { width: 40, height: 20 } });
+    await f.prepare(new Blob([bytes], { type }));
+    assert.deepEqual({ ...f.calls.find(call => call.kind === "decode").options }, { imageOrientation: "from-image" });
+    const encode = f.calls.find(call => call.kind === "encode");
+    assert.deepEqual([encode.width, encode.height], [40, 20]);
+  }
+});
+
+test("local encoding resources are released before the converter runs, and HTTP errors are preserved without retry", async () => {
+  const input = new Blob([await solid(32, 24)], { type: "image/jpeg" });
+  const denied = Object.assign(new Error("synthetic authorization refusal"), { status: 403, code: "forbidden" });
+  const f = harness({ contextAvailable: false }); let calls = 0;
+  await assert.rejects(f.prepare(input, { convert() {
+    calls += 1;
+    assert.ok(f.bitmaps.every(bitmap => bitmap.closed));
+    assert.ok(f.canvases.every(canvas => canvas.width === 0 && canvas.height === 0));
+    throw denied;
+  } }), error => error === denied);
+  assert.equal(calls, 1);
+});
+
+test("converter output must be a bounded JPEG with bounded decoded dimensions", async () => {
+  const input = new Blob(["synthetic unsupported raster"], { type: "image/tiff" });
+  const jpeg = await solid(32, 24), wide = await solid(2049, 1);
+  for (const output of [null, {}, new Blob([jpeg], { type: "image/png" }), new Blob(["not JPEG"], { type: "image/jpeg" }),
+    new Blob([new Uint8Array(TARGET_UPLOAD_BYTES + 1)], { type: "image/jpeg" }), new Blob([wide], { type: "image/jpeg" })]) {
+    const f = harness({ decodeError: new Error("unavailable native decoder") }); let calls = 0;
+    await assert.rejects(f.prepare(input, { convert() { calls += 1; return output; } }), code("media_unavailable"));
+    assert.equal(calls, 1);
+  }
+});
+
+test("conversion is abortable even when its callback ignores cancellation, and late results are ignored", { timeout: 5000 }, async () => {
+  const input = new Blob(["unsupported raster"], { type: "image/tiff" });
+  const jpeg = new Blob([await solid(32, 24)], { type: "image/jpeg" });
+  let began, deliver, calls = 0;
+  const started = new Promise(resolve => { began = resolve; });
+  const f = harness({ decodeError: new Error("native unavailable") }), controller = new AbortController();
+  const pending = f.prepare(input, { signal: controller.signal, convert() {
+    calls += 1; began(); return new Promise(resolve => { deliver = resolve; });
+  } });
+  await started; controller.abort();
+  await assert.rejects(pending, error => error.name === "AbortError");
+  deliver(jpeg); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls, 1); assert.equal(f.canvases.length, 0);
+  let forbiddenCalls = 0;
+  await assert.rejects(f.prepare(input, { signal: controller.signal, convert() { forbiddenCalls += 1; return jpeg; } }), error => error.name === "AbortError");
+  assert.equal(forbiddenCalls, 0);
+});
+
 test("a high-definition original never falls back to an unbounded full-resolution native image", async () => {
   const jpeg = jpegDimensions(await solid(32, 16), 20000, 10000);
   const f = harness({ noBitmap: true, nativeFallback: true, nativeSize: [20000, 10000] });
@@ -256,7 +358,7 @@ test("a high-definition original never falls back to an unbounded full-resolutio
   assert.equal(f.nativeImages.length, 0); assert.equal(f.canvases.length, 0); assert.equal(f.urls.length, 0);
 });
 
-test("a pending cloud Blob read can be aborted or timed out, with late bytes cleared and never decoded", async () => {
+test("advisory cloud reads can abort or time out without blocking native preparation; late bytes are cleared", async () => {
   const jpeg = await solid(32, 16);
   for (const timeout of [false, true]) {
     let began, deliver;
@@ -268,8 +370,11 @@ test("a pending cloud Blob read can be aborted or timed out, with late bytes cle
     const f = harness({ fastTimers: timeout });
     const pending = f.prepare(input, { signal: controller.signal });
     await started; if (!timeout) controller.abort();
-    await assert.rejects(pending, timeout ? code("media_unavailable") : error => error.name === "AbortError");
-    assert.equal(f.calls.length, 0); assert.equal(f.canvases.length, 0);
+    if (timeout) assert.equal((await pending).type, "image/png", "a hint timeout does not reject a natively readable image");
+    else {
+      await assert.rejects(pending, error => error.name === "AbortError");
+      assert.equal(f.calls.length, 0); assert.equal(f.canvases.length, 0);
+    }
     assert.equal((await f.prepare(new Blob([jpeg], { type: "image/jpeg" }))).type, "image/jpeg",
       "a replacement photo does not wait for the abandoned cloud read");
     const oldDecodeCount = f.calls.filter(call => call.kind === "decode").length;
@@ -301,15 +406,17 @@ test("FileReader is used when available and its native read is aborted on cancel
     const pending = f.prepare(input, { signal: controller.signal });
     await started; if (outcome === "abort") controller.abort();
     if (outcome === "success") assert.equal((await pending).type, "image/jpeg");
-    else await assert.rejects(pending, outcome === "abort" ? error => error.name === "AbortError" : code("media_unavailable"));
+    else if (outcome === "abort") await assert.rejects(pending, error => error.name === "AbortError");
+    else assert.equal((await pending).type, "image/png", "unavailable hints leave native decoding available");
     const reader = readers[0]; assert.equal(readers.length, 1); assert.equal(reader.file, input);
     assert.equal(reader.aborts, outcome === "success" ? 0 : 1);
     for (const handler of ["onload", "onerror", "onabort"]) assert.equal(reader[handler], null, `${outcome}: ${handler} detached`);
     if (outcome !== "success") {
-      assert.equal(f.calls.length, 0);
+      const oldDecodeCount = f.calls.filter(call => call.kind === "decode").length;
+      assert.equal(oldDecodeCount, outcome === "abort" ? 0 : 1);
       const late = Uint8Array.from(jpeg).buffer; reader.result = late; reader.savedLoad();
       assert.ok(new Uint8Array(late).every(value => value === 0));
-      assert.equal(f.calls.length, 0);
+      assert.equal(f.calls.filter(call => call.kind === "decode").length, oldDecodeCount);
     }
   }
 });
@@ -352,6 +459,75 @@ test("HEIC fallback uses one fixed local disposable module worker and only retur
     await assert.rejects(invalid.prepare(new Blob([heic])), code("media_unavailable"));
     assert.equal(invalid.workers[0].terminated, true);
   }
+});
+
+test("HEIC server-first conversion avoids the full original read and software worker allocation", async () => {
+  class PhoneHEIC extends Blob {
+    get size() { return 1024 * 1024; }
+    arrayBuffer() { assert.fail("the complete HEIC original is not read for server-first conversion"); }
+  }
+  const input = new PhoneHEIC([heic], { type: "image/heic" });
+  const output = new Blob([await solid(64, 48)], { type: "image/jpeg" });
+  const controller = new AbortController(), f = harness({ noBitmap: true, workerResult: { ok: true, blob: output } });
+  let calls = 0;
+  assert.equal(await f.prepare(input, { signal: controller.signal, convert(file, { signal }) {
+    calls += 1; assert.equal(file, input); assert.equal(signal, controller.signal);
+    assert.equal(f.workers.length, 0); assert.equal(f.canvases.length, 0);
+    return output;
+  } }), output);
+  assert.equal(calls, 1); assert.equal(f.workers.length, 0); assert.equal(f.canvases.length, 0);
+});
+
+test("HEIC server-first404 keeps local compatibility without a second conversion even when software fails", async () => {
+  const input = new Blob([heic], { type: "image/heic" });
+  const output = new Blob([await solid(64, 48)], { type: "image/jpeg" });
+  for (const success of [true, false]) {
+    const f = harness({ noBitmap: true, workerResult: success ? { ok: true, blob: output } : { ok: false, code: "media_heic" } });
+    let calls = 0;
+    const pending = f.prepare(input, { convert() {
+      calls += 1; assert.equal(f.workers.length, 0);
+      throw Object.assign(new Error("old preparation route"), { status: 404, code: "not_found" });
+    } });
+    if (success) assert.equal(await pending, output);
+    else await assert.rejects(pending, code("media_heic"));
+    assert.equal(calls, 1); assert.equal(f.workers.length, 1); assert.equal(f.workers[0].terminated, true);
+  }
+});
+
+test("HEIC server-first failures preserve auth, resource and stale errors without starting software", async () => {
+  const input = new Blob([heic], { type: "image/heic" });
+  const errors = [401, 403, 422, 429, 503].map(status => Object.assign(new Error("synthetic HTTP refusal"), { status, code: "refused" }));
+  errors.push(Object.assign(new Error("old owner"), { stale: true, status: 404 }));
+  for (const error of errors) {
+    const f = harness({ noBitmap: true, workerResult: { ok: false, code: "media_heic" } }); let calls = 0;
+    await assert.rejects(f.prepare(input, { convert() { calls += 1; throw error; } }), failure => failure === error);
+    assert.equal(calls, 1); assert.equal(f.workers.length, 0); assert.equal(f.canvases.length, 0);
+  }
+});
+
+test("HEIC server-first conversion aborts without a software fallback or adoption of late output", async () => {
+  const input = new Blob([heic], { type: "image/heic" }), controller = new AbortController();
+  const output = new Blob([await solid(64, 48)], { type: "image/jpeg" });
+  const f = harness({ noBitmap: true, workerResult: { ok: true, blob: output } });
+  let begin, deliver, calls = 0; const started = new Promise(resolve => { begin = resolve; });
+  const pending = f.prepare(input, { signal: controller.signal, convert() {
+    calls += 1; begin(); return new Promise(resolve => { deliver = resolve; });
+  } });
+  await started; controller.abort();
+  await assert.rejects(pending, error => error.name === "AbortError");
+  deliver(output); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls, 1); assert.equal(f.workers.length, 0); assert.equal(f.canvases.length, 0);
+});
+
+test("a valid HEIC container reaches the native-guarded worker despite an advisory parser limit", async () => {
+  const free = Buffer.from([0, 0, 0, 8, 102, 114, 101, 101]);
+  const bytes = Buffer.concat([heic, ...Array(4097).fill(free)]);
+  assert.throws(() => inspectImageInput(bytes), code("media_format"));
+  const output = new Blob(["bounded-jpeg"], { type: "image/jpeg" });
+  const f = harness({ noBitmap: true, workerResult: { ok: true, blob: output } });
+  assert.equal(await f.prepare(new Blob([bytes])), output);
+  assert.equal(f.workers.length, 1);
+  assert.equal(f.workers[0].message.bytes.byteLength, bytes.length);
 });
 
 test("HEIC worker pixels are bounded and encoded with the document canvas when worker canvas is unavailable", async () => {
@@ -421,9 +597,9 @@ test("HEIC worker errors, timeout and abort release the worker and preserve safe
   const oversized = Buffer.from(heic), ispe = oversized.indexOf("ispe");
   oversized.writeUInt32BE(8001, ispe + 8); oversized.writeUInt32BE(8000, ispe + 12);
   assert.ok(8001 * 8000 > MAX_HEIC_IMAGE_PIXELS);
-  const blocked = harness({ noBitmap: true, workerResult: { ok: true, blob: new Blob(["x"], { type: "image/jpeg" }) } });
+  const blocked = harness({ noBitmap: true, workerResult: { ok: false, code: "media_dimensions" } });
   await assert.rejects(blocked.prepare(new Blob([oversized])), code("media_dimensions"));
-  assert.equal(blocked.workers.length, 0, "oversized HEIC never starts the software decoder");
+  assert.equal(blocked.workers.length, 1, "libheif owns the actual primary/coded-size guard instead of a metadata-only gate");
 });
 
 test("HEIC software decodes stay serial while a queued cancellation does not wait for the active photo", async () => {

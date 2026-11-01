@@ -36,7 +36,7 @@ export function sessionRace({ kind, role }, origin = "https://jessiemessage.com"
   // authentication or the named delayed read. Other operations must never run.
   const names = ["login", "session", "logout", "logoutAll", "adminSession", "inspectInvitation", "createInvitation", "listInvitations", "revokeInvitation", "register",
     "verifyEmail", "resendVerification", "listClients", "approveClient", "revokeClient", "renewClient", "actor", "listConversations", "clientConversation", "messages", "events",
-    "send", "markRead", "delete", "admitUpload", "releaseUpload", "upload", "listAssets", "asset", "messageAsset", "gallery", "removeAsset", "open", "openMessage", "listOwned", "remove",
+    "send", "markRead", "delete", "admitUpload", "admitPreparation", "releaseUpload", "prepareStream", "upload", "listAssets", "asset", "messageAsset", "gallery", "removeAsset", "open", "openMessage", "listOwned", "remove",
     "profile", "save", "avatar", "peerAvatar", "summary", "verifySmtp", "listLabels", "createLabel", "renameLabel", "deleteLabel", "saveProfile", "contacts",
     "preview", "create", "activity", "list", "get", "cancel", "current", "read", "close", "capabilities", "status", "subscribe", "disable"];
   const service = Object.fromEntries(names.map(name => [name, async () => { throw new Error(`Unexpected synthetic operation: ${name}`); }]));

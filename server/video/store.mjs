@@ -2,7 +2,7 @@ import { ChatStoreError } from "../chat/store.mjs";
 import { migrationStatus } from "../db/migrations.mjs";
 import { loadVideoMigrations } from "./migrations.mjs";
 import { MAX_VIDEO_BYTES, videoStoredBytes } from "./storage.mjs";
-import { BackupMediaAdmissionError, fitsBackupMediaAdmission, lockBackupMediaAdmission } from "../media/backup-admission.mjs";
+import { SharedMediaCapacityError, lockSharedMediaCapacity } from "../media/shared-capacity.mjs";
 
 export class VideoStoreError extends ChatStoreError {
   constructor(code) { super(code, "Private video persistence could not be completed."); this.name = "VideoStoreError"; }
@@ -265,10 +265,10 @@ export function createVideoStore({ pool, chatStore, capacity, experience = false
       request(value); const proposed = asset(value.asset);
       return chatStore.withActor(value, async (connection, context) => {
         if (context.actor.role !== "admin") fail("VIDEO_ADMIN_ONLY");
-        let backup;
-        try { backup = await lockBackupMediaAdmission(connection, { video: true }); }
+        let shared;
+        try { shared = await lockSharedMediaCapacity(connection, { video: true }); }
         catch (error) {
-          if (error instanceof BackupMediaAdmissionError) fail(error.reason === "unavailable" ? "VIDEO_CAPACITY_UNAVAILABLE" : "VIDEO_DATABASE_STATE");
+          if (error instanceof SharedMediaCapacityError) fail(error.reason === "unavailable" ? "VIDEO_CAPACITY_UNAVAILABLE" : "VIDEO_DATABASE_STATE");
           throw error;
         }
         const { heldBytes } = await snapshot(connection), existing = await allocation(connection, proposed.id);
@@ -278,7 +278,7 @@ export function createVideoStore({ pool, chatStore, capacity, experience = false
         } else {
           const ownerHeld = count((await connection.query("SELECT COALESCE(SUM(stored_bytes), 0) AS value FROM video_assets WHERE owner_id = ? AND state <> 'released' FOR UPDATE", [context.actor.id]))[0].value);
           if (heldBytes > capacity.totalBytes - proposed.storedBytes || ownerHeld > capacity.ownerBytes - proposed.storedBytes
-            || !fitsBackupMediaAdmission(backup, proposed.storedBytes, 1)) fail("VIDEO_STORAGE_LIMIT");
+            || shared.heldBytes > shared.totalBytes - proposed.storedBytes) fail("VIDEO_STORAGE_LIMIT");
           const at = sqlDate(context.now);
           await connection.query(`INSERT INTO video_assets (id, owner_id, owner_role, storage_key, reserve_token_hash,
             bytes, stored_bytes, mime, state, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'reserved', ?, ?)`,

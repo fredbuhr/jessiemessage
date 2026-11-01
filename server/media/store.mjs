@@ -1,9 +1,8 @@
 import { loadStoreMigrations } from "../db/store-migrations.mjs";
 import { ChatStoreError } from "../chat/store.mjs";
 import { migrationStatus } from "../db/migrations.mjs";
-import { heldMediaObjects, lockMediaCapacity, ownerMediaBytes, pendingMediaBytes, validateMediaCapacity } from "./capacity-store.mjs";
-import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_OBJECTS } from "./backup-limits.mjs";
-import { BackupMediaAdmissionError, fitsBackupMediaAdmission, lockBackupMediaAdmission } from "./backup-admission.mjs";
+import { lockMediaCapacity, pendingMediaBytes, validateMediaCapacity } from "./capacity-store.mjs";
+import { SharedMediaCapacityError, lockSharedMediaCapacity } from "./shared-capacity.mjs";
 
 // Chat transactions preserve this subclass while rolling back every callback
 // failure. No database exception, file key or message content escapes here.
@@ -187,27 +186,26 @@ export function createMediaStore({ pool, chatStore, capacity = null, video = fal
       validateAsset(asset);
       return chatStore.withActor({ role, tokenHash, now }, async (connection, context) => {
         if (capacity === null) fail("MEDIA_CAPACITY_UNAVAILABLE");
-        let backup;
-        try { backup = await lockBackupMediaAdmission(connection, { video }); }
+        let shared;
+        try { shared = await lockSharedMediaCapacity(connection, { video }); }
         catch (error) {
-          if (error instanceof BackupMediaAdmissionError) fail(error.reason === "unavailable" ? "MEDIA_CAPACITY_UNAVAILABLE" : "MEDIA_DATABASE_STATE");
+          if (error instanceof SharedMediaCapacityError) fail(error.reason === "unavailable" ? "MEDIA_CAPACITY_UNAVAILABLE" : "MEDIA_DATABASE_STATE");
           throw error;
         }
         const { heldBytes } = await lockMediaCapacity(connection, capacity);
         const existing = await allocation(connection, asset.id);
         if (existing && (!matches(existing, context, asset) || !["reserved", "registered"].includes(existing.state) || timestamp(existing.created_at) > now)) input();
         const pendingBytes = await pendingMediaBytes(connection);
-        const ownerHeld = await ownerMediaBytes(connection, context.actor.id);
         const previous = (await connection.query(`SELECT ${assetProjection} FROM media_assets a WHERE a.owner_id = ? AND a.active_digest = ? FOR UPDATE`, [context.actor.id, asset.digest]))[0];
         if (previous) { if (timestamp(previous.created_at) > now) fail("MEDIA_NOT_FOUND"); return { asset: rawAsset(previous), duplicate: true }; }
         if (existing && existing.state !== "reserved") input();
         const storedBytes = asset.fullBytes + asset.thumbnailBytes + 80;
         if (!existing) {
-          // Keep existing quota/root bindings and uncertain allocations intact.
-          // Only new allocations spend the checkpoint's byte and file budgets.
-          if (heldBytes > Math.min(capacity.totalBytes, BACKUP_MEDIA_MAX_BYTES) - storedBytes
-            || ownerHeld > capacity.ownerBytes - storedBytes || await heldMediaObjects(connection) >= BACKUP_MEDIA_MAX_OBJECTS
-            || !fitsBackupMediaAdmission(backup, storedBytes, 2)) fail("MEDIA_STORAGE_LIMIT");
+          // Keep owner_bytes in the historical authority binding, but photos
+          // have no per-owner ceiling. Only current configured total capacity
+          // bounds uploads; released history and backup formats spend nothing.
+          if (heldBytes > capacity.totalBytes - storedBytes
+            || shared.heldBytes > shared.totalBytes - storedBytes) fail("MEDIA_STORAGE_LIMIT");
           await connection.query(`INSERT INTO media_storage_objects
             (id, owner_id, owner_role, storage_key, content_digest, full_bytes, thumbnail_bytes, stored_bytes, state, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'reserved', ?, ?)`, [asset.id, context.actor.id, role, asset.storageKey, asset.digest,

@@ -3,6 +3,7 @@ import { CLIENT_ADMISSION_POLICY } from "../access/admission.mjs";
 import { AUTH_HEADERS, checkMutation, httpError, isToken, readJson, reply, sameText, sessionToken } from "../auth/http.mjs";
 import { safeMedia, safeMessage } from "../chat/http.mjs";
 import { validateMessageBody } from "../chat/crypto.mjs";
+import { MAX_PREPARATION_INPUT_BYTES, MAX_PREPARATION_OUTPUT_BYTES, MAX_PREPARATION_PIXELS, RAW_IMAGE_HINTS } from "./image.mjs";
 
 export const MAX_PHOTO_BATCH = 10;
 const MAX_UPLOAD_BYTES = 10485760;
@@ -55,8 +56,8 @@ function query(url, allowed, defaultLimit) {
 
 function routeFor(pathname) {
   if (libraryFiles.has(pathname)) return { role: "admin", kind: pathname === "/admin/media" ? "page" : "pageAsset", methods: ["GET", "HEAD"] };
-  let match = /^\/api\/media\/(admin|client)\/(capabilities|assets)$/.exec(pathname);
-  if (match) return { role: match[1], kind: match[2], methods: match[2] === "assets" ? ["GET", "POST"] : ["GET"] };
+  let match = /^\/api\/media\/(admin|client)\/(capabilities|assets|prepare)$/.exec(pathname);
+  if (match) return { role: match[1], kind: match[2], methods: match[2] === "prepare" ? ["POST"] : match[2] === "assets" ? ["GET", "POST"] : ["GET"] };
   match = /^\/api\/media\/(admin|client)\/assets\/([a-f0-9]{32})\/(delete|full|thumb)$/.exec(pathname);
   if (match) return { role: match[1], kind: match[3] === "delete" ? "delete" : "ownedBytes", assetId: match[2], variant: match[3], methods: match[3] === "delete" ? ["POST"] : ["GET", "HEAD"] };
   const batch = /^\/api\/media\/(admin|client)\/conversations\/([a-f0-9]{32})\/messages\/batch$/.exec(pathname);
@@ -84,11 +85,11 @@ function photoSendInput(body, role) {
   return body;
 }
 
-function checkUploadHeaders(request, origin) {
+function checkUploadHeaders(request, origin, preparation = false) {
   if (request.headers.origin !== origin) throw httpError(403, "request_rejected");
   const site = request.headers["sec-fetch-site"];
   if (site !== undefined && site !== "same-origin" && site !== "none") throw httpError(403, "request_rejected");
-  if (!FORMATS.includes(request.headers["content-type"])) throw httpError(415, "media_format");
+  if (!preparation && !FORMATS.includes(request.headers["content-type"])) throw httpError(415, "media_format");
   if (request.headers["content-encoding"] !== undefined && request.headers["content-encoding"] !== "identity") throw httpError(415, "media_format");
 }
 
@@ -98,14 +99,20 @@ function matchesDeclaredFormat(bytes, type) {
   return type === "image/webp" && bytes.length >= 12 && bytes.toString("ascii", 0, 4) === "RIFF" && bytes.toString("ascii", 8, 12) === "WEBP";
 }
 
-/** The caller authenticates the role and CSRF before this attaches a body reader. */
-export function readUpload(request) {
+function uploadLength(request, maxBytes) {
   if (request.aborted || request.destroyed) throw invalid();
   const declared = request.headers["content-length"];
   if (declared !== undefined) {
     if (typeof declared !== "string" || !/^(?:0|[1-9][0-9]*)$/.test(declared) || !Number.isSafeInteger(Number(declared))) throw invalid();
-    if (Number(declared) > MAX_UPLOAD_BYTES) throw httpError(413, "request_too_large");
+    if (Number(declared) > maxBytes) throw httpError(413, "request_too_large");
   }
+  return declared === undefined ? null : Number(declared);
+}
+
+/** The caller authenticates the role and CSRF before this attaches a body reader. */
+export function readUpload(request, { maxBytes = MAX_UPLOAD_BYTES, timeoutMilliseconds = 60_000 } = {}) {
+  const declaredBytes = uploadLength(request, maxBytes);
+  const declared = declaredBytes === null ? undefined : String(declaredBytes);
   return new Promise((resolve, reject) => {
     const chunks = [];
     let bytes = 0, done = false;
@@ -124,7 +131,7 @@ export function readUpload(request) {
     const onData = (chunk) => {
       if (!Buffer.isBuffer(chunk)) { finish(invalid()); return; }
       bytes += chunk.length;
-      if (bytes > MAX_UPLOAD_BYTES) finish(httpError(413, "request_too_large"));
+      if (bytes > maxBytes) finish(httpError(413, "request_too_large"));
       else {
         // Tiny transport chunks must not create millions of retained objects.
         // Fixed blocks keep both retained bytes and object count bounded.
@@ -146,7 +153,7 @@ export function readUpload(request) {
     const onAborted = () => finish(invalid());
     // Keep a hard overall body budget, with enough time for a phone upload.
     // The account/global upload admission still bounds concurrent readers.
-    const timer = setTimeout(() => finish(httpError(408, "request_timeout")), 60_000);
+    const timer = setTimeout(() => finish(httpError(408, "request_timeout")), timeoutMilliseconds);
     timer.unref();
     request.on("data", onData);
     request.once("end", onEnd);
@@ -164,6 +171,8 @@ function mappedError(error) {
   if (error?.code === "MEDIA_IN_USE") return { status: 409, code: "media_in_use" };
   if (error?.code === "CHAT_CONFLICT") return { status: 409, code: "message_conflict" };
   if (["CHAT_INPUT", "MEDIA_INPUT"].includes(error?.code)) return { status: 400, code: "invalid_request" };
+  if (error?.code === "MEDIA_TOO_LARGE") return { status: 413, code: "request_too_large" };
+  if (error?.code === "MEDIA_TIMEOUT") return { status: 408, code: "request_timeout" };
   if (error?.code === "MEDIA_FORMAT") return { status: 415, code: "media_format" };
   if (error?.code === "MEDIA_DIMENSIONS") return { status: 422, code: "media_dimensions" };
   if (error?.code === "MEDIA_STORAGE_LIMIT") return { status: 507, code: "storage_limit" };
@@ -175,7 +184,7 @@ function mappedError(error) {
 }
 
 function bytesReply(response, method, result, variant) {
-  const limit = variant === "thumb" ? 524288 : MAX_UPLOAD_BYTES;
+  const limit = variant === "prepared" ? MAX_PREPARATION_OUTPUT_BYTES : variant === "thumb" ? 524288 : MAX_UPLOAD_BYTES;
   if (!result || !Buffer.isBuffer(result.bytes) || result.bytes.length < 1 || result.bytes.length > limit || result.mime !== "image/jpeg") throw unavailable();
   reply(response, method, 200, result.bytes, {
     "Content-Type": "image/jpeg", "Content-Length": String(result.bytes.length),
@@ -225,7 +234,7 @@ function reserveBinaryRead(response) {
 export function createMediaHandler(service, { origin }) {
   const configured = new URL(origin);
   if (configured.protocol !== "https:" || configured.origin !== origin) throw new TypeError("A canonical HTTPS site origin is required");
-  for (const method of ["actor", "admitUpload", "releaseUpload", "upload", "listAssets", "asset", "messageAsset", "gallery", "removeAsset", "send"]) {
+  for (const method of ["actor", "admitUpload", "admitPreparation", "releaseUpload", "prepareStream", "upload", "listAssets", "asset", "messageAsset", "gallery", "removeAsset", "send"]) {
     if (typeof service?.[method] !== "function") throw new TypeError("A media service is required");
   }
   return async (request, response) => {
@@ -241,7 +250,7 @@ export function createMediaHandler(service, { origin }) {
     try {
       const upload = route.kind === "assets" && method === "POST";
       if (method === "POST") {
-        if (upload) checkUploadHeaders(request, origin);
+        if (upload || route.kind === "prepare") checkUploadHeaders(request, origin, route.kind === "prepare");
         else checkMutation(request, origin, url.pathname, false);
       }
       const token = sessionToken(request, COOKIES[route.role]);
@@ -265,7 +274,27 @@ export function createMediaHandler(service, { origin }) {
           ...(route.kind === "page" ? { "Content-Security-Policy": AUTH_HEADERS["Content-Security-Policy"] + "; media-src 'self' blob:" } : {}) });
       } else if (route.kind === "capabilities") {
         query(url, []);
-        reply(response, method, 200, { enabled: true, maxUploadBytes: MAX_UPLOAD_BYTES, formats: [...FORMATS] });
+        reply(response, method, 200, { enabled: true, maxUploadBytes: MAX_UPLOAD_BYTES, formats: [...FORMATS],
+          preparation: { enabled: true, maxOriginalBytes: MAX_PREPARATION_INPUT_BYTES, maxOutputBytes: MAX_PREPARATION_OUTPUT_BYTES, maxPixels: MAX_PREPARATION_PIXELS } });
+      } else if (route.kind === "prepare") {
+        query(url, []);
+        const hint = request.headers["x-image-format"] ?? null;
+        if (hint !== null && !RAW_IMAGE_HINTS.includes(hint)) throw invalid();
+        const declaredBytes = uploadLength(request, MAX_PREPARATION_INPUT_BYTES);
+        const admission = await service.admitPreparation(route.role, token);
+        if (!admission || typeof admission !== "object") throw unavailable();
+        const controller = new AbortController();
+        const onClose = () => { if (!response.writableFinished) controller.abort(); };
+        response.once("close", onClose);
+        if (response.destroyed) controller.abort();
+        try {
+          const result = await service.prepareStream(route.role, token, request, admission, { declaredBytes, hint, signal: controller.signal });
+          if (!response.destroyed && !response.writableEnded) {
+            const completed = reserveBinaryRead(response);
+            try { bytesReply(response, method, result, "prepared"); }
+            finally { completed(); }
+          }
+        } finally { response.off("close", onClose); service.releaseUpload(admission); }
       } else if (upload) {
         query(url, []);
         const admission = await service.admitUpload(route.role, token);

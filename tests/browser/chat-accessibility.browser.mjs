@@ -883,7 +883,7 @@ test("Chrome 320px: both roles edit their public profile with the keyboard, tran
       await tabUntil(page, ".profile-pseudonym");
       assert.equal(await page.execute("return document.activeElement.matches('.profile-pseudonym')"), true, "the name remains reachable through explicit keyboard navigation");
       assert.equal(await page.execute("return document.querySelector('.profile-header h2').textContent"), "Mon profil");
-      assert.deepEqual(await page.execute("const file=document.querySelector('.profile-file');return {button:document.querySelector('.profile-choose-avatar').textContent,hidden:file.hidden,accept:file.accept,label:file.getAttribute('aria-label')};"), {button:"Choisir ou remplacer l’avatar",hidden:true,accept:"image/*,.heic,.heif,.avif",label:"Choisir ou remplacer l’avatar"});
+      assert.deepEqual(await page.execute("const file=document.querySelector('.profile-file');return {button:document.querySelector('.profile-choose-avatar').textContent,hidden:file.hidden,acceptsImages:file.accept.split(',').includes('image/*'),label:file.getAttribute('aria-label')};"), {button:"Choisir ou remplacer l’avatar",hidden:true,acceptsImages:true,label:"Choisir ou remplacer l’avatar"});
       assert.equal(await page.execute("return document.querySelector('.profile-avatar-preview img').hidden"), true);
       await page.type(".profile-pseudonym", "Envoyer");
       await page.execute("JessieI18n.setLanguage('en')");

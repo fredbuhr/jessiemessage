@@ -1,0 +1,33 @@
+{
+  "utc": "2026-11-01T18:42:43.064655+00:00",
+  "scope": "only tests/browser/profile-avatar.browser.mjs",
+  "initial_ci": {
+    "pr": 147,
+    "chrome_job": 124940201705,
+    "source": "parent-reported failure; not independently fetched in this task"
+  },
+  "established_fixture_cause": [
+    "Current worker statically imports /heic-decoder-core.js, missing from avatarFixture resources; loopback responds404.",
+    "Fixture additionally served only historical /heic-codec-1.23.5.mjs while current worker lazily imports /heic-codec-1.23.7.mjs.",
+    "DOM picker assertion expected the old accept literal despite new supported extension list.",
+    "executeAsync callback used reserved error property, potentially obscuring actual media failure in WebDriver wrapper."
+  ],
+  "fix": [
+    "Serve current shared core and exact CSP-safe heic-to factory1.23.7, verify expected factorySHA75aaf03816c22f8cf40dbcaeb22bee83f2e1c5da4b7417577a7883b296348734.",
+    "Worker policy matches production script-src self without eval/Wasm permissions; document policy unchanged.",
+    "Require exact worker/core/codec1.23.7 request sequence and no unmapped fixture routes.",
+    "Check pertinent avatar image/AVIF/HEIC/HEIF DOM accept tokens; dedicated photo-picker test already checks complete supported extension enum.",
+    "Use failureCode payload; avatar image/canvas/metadata assertions remain active."
+  ],
+  "qualification": {
+    "syntax": "node --check tests/browser/profile-avatar.browser.mjs passed",
+    "diff_check": "targeted file passed",
+    "native_chrome": "not executed locally; next native CI required"
+  },
+  "file": {
+    "path": "tests/browser/profile-avatar.browser.mjs",
+    "bytes": 15824,
+    "sha256": "d9e45e100d8b4dd481636db38abe8669ea0141b22bea3be98a4ddca949dc2d27"
+  },
+  "product_source_changed": false
+}

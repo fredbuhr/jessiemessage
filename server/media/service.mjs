@@ -1,6 +1,6 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { tokenDigest } from "../auth/crypto.mjs";
-import { normalizeImage } from "./image.mjs";
+import { normalizeImage, prepareImageStream } from "./image.mjs";
 import { mediaDTO } from "./dto.mjs";
 
 export class MediaError extends Error {
@@ -19,18 +19,21 @@ const cursor = (value) => {
   return value;
 };
 const pageSize = (value) => { if (!Number.isInteger(value) || value < 1 || value > 100) fail("MEDIA_INPUT"); return value; };
-const allowed = new Set(["MEDIA_INPUT", "MEDIA_FORMAT", "MEDIA_DIMENSIONS", "MEDIA_BUSY", "MEDIA_NOT_FOUND", "MEDIA_IN_USE", "MEDIA_RATE_LIMIT", "MEDIA_STORAGE_LIMIT", "MEDIA_CAPACITY_UNAVAILABLE", "CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN", "CHAT_NOT_FOUND", "CHAT_CONFLICT", "CHAT_INPUT", "CHAT_RATE_LIMIT", "AUTH_RATE_LIMIT", "AUTH_BUSY", "ACCESS_EXPIRED", "ACCESS_PREREQUISITES"]);
+const allowed = new Set(["MEDIA_INPUT", "MEDIA_TOO_LARGE", "MEDIA_TIMEOUT", "MEDIA_FORMAT", "MEDIA_DIMENSIONS", "MEDIA_BUSY", "MEDIA_NOT_FOUND", "MEDIA_IN_USE", "MEDIA_RATE_LIMIT", "MEDIA_STORAGE_LIMIT", "MEDIA_CAPACITY_UNAVAILABLE", "CHAT_UNAUTHORIZED", "CHAT_FORBIDDEN", "CHAT_NOT_FOUND", "CHAT_CONFLICT", "CHAT_INPUT", "CHAT_RATE_LIMIT", "AUTH_RATE_LIMIT", "AUTH_BUSY", "ACCESS_EXPIRED", "ACCESS_PREREQUISITES"]);
 const MAX_ACTIVE_UPLOADS = 3;
 // Covers the fixed 60s body deadline plus a small hand-off margin. Processing
 // retains its existing place until completion; no additional uploads are admitted.
 const ADMISSION_MILLISECONDS = 65_000;
+const PREPARATION_ADMISSION_MILLISECONDS = 125_000;
 // Process-wide fairness follows the authenticated account, never its cookie.
 let activeUploads = 0;
+let activePreparations = 0;
 const uploadingAccounts = new Set();
-function reserveUpload(userId) {
-  if (activeUploads >= MAX_ACTIVE_UPLOADS || uploadingAccounts.has(userId)) throw new MediaError("MEDIA_BUSY", 5);
-  activeUploads += 1; uploadingAccounts.add(userId); let released = false;
-  return () => { if (!released) { released = true; activeUploads -= 1; uploadingAccounts.delete(userId); } };
+function reserveUpload(userId, preparation) {
+  if (activeUploads >= MAX_ACTIVE_UPLOADS || uploadingAccounts.has(userId) || preparation && activePreparations >= 1) throw new MediaError("MEDIA_BUSY", 5);
+  activeUploads += 1; if (preparation) activePreparations += 1;
+  uploadingAccounts.add(userId); let released = false;
+  return () => { if (!released) { released = true; activeUploads -= 1; if (preparation) activePreparations -= 1; uploadingAccounts.delete(userId); } };
 }
 
 export async function createMediaService({ store, chatService, authStore, storage, key, minimumFreeBytes = 536870912, clock = Date.now }) {
@@ -65,6 +68,7 @@ export async function createMediaService({ store, chatService, authStore, storag
   async function consumeBudget(userId, kind, now) {
     // Reject an exhausted account before spending the shared allowance.
     const budgets = kind === "upload" ? [["user-upload", userId, 60], ["global-upload", "all", 240]]
+      : kind === "prepare" ? [["user-prepare", userId, 60], ["global-prepare", "all", 120]]
       : ["library", "gallery"].includes(kind) ? [[`user-${kind}`, userId, 60], ["global-read", "all", 300]]
       : [[`user-${kind}`, userId, kind === "full" ? 20 : kind === "thumb" ? 120 : 30]];
     for (const [name, identity, ceiling] of budgets) {
@@ -78,17 +82,18 @@ export async function createMediaService({ store, chatService, authStore, storag
     if (record.state === "closed") return;
     record.state = "closed"; clearTimeout(record.timer); record.release();
   }
-  async function admitUpload(role, raw) {
+  async function admitUpload(role, raw, preparation = false) {
     const { actor, request } = await context(role, raw);
-    const release = reserveUpload(actor.user.id);
+    const release = reserveUpload(actor.user.id, preparation);
     try {
       // Incomplete/aborted bodies pay these persistent budgets as soon as
       // admitted. Do not release this reservation while SQL is outstanding.
-      await consumeBudget(actor.user.id, "upload", request.now);
+      await consumeBudget(actor.user.id, preparation ? "prepare" : "upload", request.now);
       const ticket = Object.freeze(Object.create(null));
-      const record = { role, tokenHash: request.tokenHash, userId: actor.user.id, expiresAt: currentTime() + ADMISSION_MILLISECONDS,
+      const duration = preparation ? PREPARATION_ADMISSION_MILLISECONDS : ADMISSION_MILLISECONDS;
+      const record = { role, tokenHash: request.tokenHash, userId: actor.user.id, preparation, expiresAt: currentTime() + duration,
         state: "waiting", release, timer: null };
-      record.timer = setTimeout(() => { if (record.state === "waiting") closeAdmission(record); }, ADMISSION_MILLISECONDS);
+      record.timer = setTimeout(() => { if (record.state === "waiting") closeAdmission(record); }, duration);
       record.timer.unref(); admissions.set(ticket, record); return ticket;
     } catch (error) { release(); throw error; }
   }
@@ -137,12 +142,30 @@ export async function createMediaService({ store, chatService, authStore, storag
   return Object.freeze({
     actor: (role, raw) => guarded(() => chatService.actor(role, raw)),
     admitUpload: (role, raw) => guarded(() => admitUpload(role, raw)),
+    admitPreparation: (role, raw) => guarded(() => admitUpload(role, raw, true)),
     releaseUpload,
+    prepareStream: (role, raw, source, ticket, options) => guarded(async () => {
+      if (ticket === undefined) ticket = await admitUpload(role, raw, true);
+      const record = admissions.get(ticket);
+      if (!record || record.state !== "waiting" || record.preparation !== true) fail("MEDIA_INPUT");
+      record.state = "processing"; clearTimeout(record.timer);
+      try {
+        let digest; try { digest = tokenDigest(raw); } catch { fail("CHAT_UNAUTHORIZED"); }
+        if (record.role !== role || !timingSafeEqual(record.tokenHash, digest)) fail("MEDIA_INPUT");
+        if (currentTime() >= record.expiresAt) fail("MEDIA_INPUT");
+        const { actor } = await context(role, raw);
+        if (actor.user.id !== record.userId) fail("CHAT_UNAUTHORIZED");
+        const image = await prepareImageStream(source, options);
+        const current = await context(role, raw);
+        if (current.actor.user.id !== record.userId) fail("CHAT_UNAUTHORIZED");
+        return { bytes: image.full, mime: "image/jpeg" };
+      } finally { closeAdmission(record); }
+    }),
     upload: (role, raw, bytes, ticket) => guarded(async () => {
       if (!Buffer.isBuffer(bytes) || bytes.length < 1 || bytes.length > 10485760) { if (ticket !== undefined) releaseUpload(ticket); fail("MEDIA_INPUT"); }
       if (ticket === undefined) ticket = await admitUpload(role, raw);
       const record = admissions.get(ticket);
-      if (!record || record.state !== "waiting") fail("MEDIA_INPUT");
+      if (!record || record.state !== "waiting" || record.preparation) fail("MEDIA_INPUT");
       record.state = "processing"; clearTimeout(record.timer);
       try {
         let digest; try { digest = tokenDigest(raw); } catch { fail("CHAT_UNAUTHORIZED"); }

@@ -1,13 +1,16 @@
 import { createHash } from "node:crypto";
 import sharp from "sharp";
-import { imageFormat, MAX_IMAGE_INPUT_BYTES } from "./image.mjs";
+import { imageFormat, MAX_IMAGE_INPUT_BYTES, MAX_PREPARATION_INPUT_BYTES, MAX_PREPARATION_OUTPUT_BYTES, MAX_PREPARATION_PIXELS } from "./image.mjs";
+import { decodeHeicOriginal } from "./heic-original.mjs";
+import { detectExtraImageFormat, decodeExtraImage } from "./extra-image-codecs.mjs";
 
 sharp.cache(false);
 sharp.concurrency(1);
-// Only buffer loaders for the three supported raster formats are available.
+// Only explicit raster Buffer loaders are available. Original preparation
+// additionally uses TIFF/GIF; assets keep their three-format input contract.
 // Filesystem, URL, SVG, PDF and all other foreign loaders remain blocked.
 sharp.block({ operation: ["VipsForeignLoad"] });
-sharp.unblock({ operation: ["VipsForeignLoadJpegBuffer", "VipsForeignLoadPngBuffer", "VipsForeignLoadWebpBuffer"] });
+sharp.unblock({ operation: ["VipsForeignLoadJpegBuffer", "VipsForeignLoadPngBuffer", "VipsForeignLoadWebpBuffer", "VipsForeignLoadTiffBuffer", "VipsForeignLoadNsgifBuffer"] });
 
 function pngAnimated(bytes) {
   // APNG can be presented by decoders as one page. Inspect the complete chunk
@@ -37,39 +40,94 @@ function webpAnimated(bytes) {
 }
 
 let accepted = false;
+async function originalInput(declaredBytes) {
+  if (declaredBytes !== null && (!Number.isSafeInteger(declaredBytes) || declaredBytes < 1 || declaredBytes > MAX_PREPARATION_INPUT_BYTES)) throw new Error();
+  const target = declaredBytes === null ? null : Buffer.allocUnsafe(declaredBytes);
+  const chunks = []; let received = 0;
+  for await (const chunk of process.stdin) {
+    if (!Buffer.isBuffer(chunk) || received + chunk.length > (declaredBytes ?? MAX_PREPARATION_INPUT_BYTES)) throw new Error();
+    if (target) chunk.copy(target, received); else chunks.push(chunk);
+    received += chunk.length;
+  }
+  if (received < 1 || declaredBytes !== null && received !== declaredBytes) throw new Error();
+  return target ?? Buffer.concat(chunks, received);
+}
 process.once("message", async (request) => {
   if (accepted) return;
   accepted = true;
   let bytes = request?.bytes;
   let full;
   let thumbnail;
+  let raster;
   let failure = "MEDIA_FORMAT";
   try {
-    const format = imageFormat(bytes);
-    if ((format === "png" && pngAnimated(bytes)) || (format === "webp" && webpAnimated(bytes))) throw new Error();
-    const settings = { failOn: "warning", limitInputPixels: 16_000_000, sequentialRead: true, animated: false };
+    const preparation = request.preparation === true;
+    if (preparation && request.stream === true) bytes = await originalInput(request.declaredBytes);
+    let format;
+    const hint = request.hint ?? null;
+    const extra = preparation ? detectExtraImageFormat(bytes, { hint }) : null;
+    try { format = imageFormat(bytes, { preparation }); }
+    catch (error) { if (extra === "raw") format = "raw"; else throw error; }
+    if (!preparation && ((format === "png" && pngAnimated(bytes)) || (format === "webp" && webpAnimated(bytes)))) throw new Error();
+    const maximumPixels = preparation ? MAX_PREPARATION_PIXELS : 16_000_000;
+    const settings = { failOn: "warning", limitInputPixels: maximumPixels, sequentialRead: true, animated: false, pages: 1 };
+    if (preparation && format === "heic") raster = await decodeHeicOriginal(bytes);
+    else if (extra) {
+      try { raster = await decodeExtraImage(bytes, extra, { hint }); }
+      catch (error) {
+        // An extension hint cannot prevent an ordinary TIFF from decoding.
+        // Keep real resource/dimension failures distinct and fail closed.
+        if (format !== "tiff" || extra !== "raw" || error?.code !== "MEDIA_FORMAT") throw error;
+      }
+    }
+    if (raster && (!Buffer.isBuffer(raster.data) || ![3, 4].includes(raster.channels)
+      || ![raster.width, raster.height].every(value => Number.isInteger(value) && value >= 1 && value <= 2048)
+      || raster.data.length !== raster.width * raster.height * raster.channels)) { failure = "MEDIA_UNAVAILABLE"; throw new Error(); }
+    const input = raster?.data ?? bytes;
+    const inputSettings = raster ? { ...settings, raw: { width: raster.width, height: raster.height, channels: raster.channels } } : settings;
     // metadata() reads headers only. Inspect dimensions before the separately
     // pixel-bounded decode so a large photo gets a useful, sanitized error.
-    const metadata = await sharp(bytes, { ...settings, limitInputPixels: false }).metadata();
+    const metadata = raster ? { format, width: raster.width, height: raster.height } : await sharp(bytes, { ...settings, limitInputPixels: false }).metadata();
     if (metadata.format !== format || !Number.isInteger(metadata.width) || !Number.isInteger(metadata.height)
-      || metadata.width < 1 || metadata.height < 1 || (metadata.pages ?? 1) !== 1
-      || (metadata.pageHeight !== undefined && metadata.pageHeight !== metadata.height)) throw new Error();
-    if (metadata.width > 8192 || metadata.height > 8192 || metadata.width * metadata.height > 16_000_000) {
+      || metadata.width < 1 || metadata.height < 1 || !Number.isInteger(metadata.pages ?? 1) || (metadata.pages ?? 1) < 1
+      || !preparation && ((metadata.pages ?? 1) !== 1 || metadata.pageHeight !== undefined && metadata.pageHeight !== metadata.height)) throw new Error();
+    if ((!preparation && (metadata.width > 8192 || metadata.height > 8192)) || metadata.width * metadata.height > maximumPixels) {
       failure = "MEDIA_DIMENSIONS"; throw new Error();
     }
     failure = "MEDIA_UNAVAILABLE";
+    const decode = source => sharp(source, inputSettings).rotate()
+      .resize({ width: 2048, height: 2048, fit: "inside", withoutEnlargement: true })
+      .flatten({ background: { r: 245, g: 238, b: 242 } })
+      .toColourspace("srgb").jpeg({ quality: 85, progressive: false }).toBuffer({ resolveWithObject: true });
     let normalized;
     try {
-      normalized = await sharp(bytes, settings).rotate()
-        .resize({ width: 2048, height: 2048, fit: "inside", withoutEnlargement: true })
-        .flatten({ background: { r: 245, g: 238, b: 242 } })
-        .toColourspace("srgb").jpeg({ quality: 85, progressive: false }).toBuffer({ resolveWithObject: true });
+      normalized = await decode(input);
     } catch (error) {
       // The pinned JPEG loader reports this exact input warning even when
       // metadata() can still read dimensions. Keep other native/output errors
       // and parent-observed crashes/timeouts classified as unavailable.
-      if (format === "jpeg" && error?.message === "VipsJpeg: premature end of JPEG image") failure = "MEDIA_FORMAT";
-      throw error;
+      if (format === "jpeg" && error?.message === "VipsJpeg: premature end of JPEG image") {
+        failure = "MEDIA_FORMAT";
+        if (preparation && !bytes.subarray(-2).equals(Buffer.from([255, 217]))) {
+          // Repair only a missing end marker. The strict decoder still rejects
+          // a missing scan/row or a damaged header; no tolerant pixel mode.
+          failure = "MEDIA_UNAVAILABLE";
+          try { normalized = await decode(Buffer.concat([bytes, Buffer.from([255, 217])])); }
+          catch (retry) {
+            if (["VipsJpeg: premature end of JPEG image", "VipsJpeg: Corrupt JPEG data: premature end of data segment"].includes(retry?.message)) failure = "MEDIA_FORMAT";
+            throw retry;
+          }
+        } else throw error;
+      } else throw error;
+    }
+    if (preparation && normalized.data.length > MAX_PREPARATION_OUTPUT_BYTES) {
+      const first = normalized;
+      for (let attempt = 1; attempt <= 4 && normalized.data.length > MAX_PREPARATION_OUTPUT_BYTES; attempt++) {
+        normalized = await sharp(first.data, settings).resize({ width: Math.max(1, Math.floor(first.info.width * 0.8 ** attempt)),
+          height: Math.max(1, Math.floor(first.info.height * 0.8 ** attempt)), fit: "inside", withoutEnlargement: true })
+          .jpeg({ quality: 85, progressive: false }).toBuffer({ resolveWithObject: true });
+      }
+      if (normalized.data.length > MAX_PREPARATION_OUTPUT_BYTES) throw new Error();
     }
     full = normalized.data;
     const small = await sharp(full, settings)
@@ -84,12 +142,13 @@ process.once("message", async (request) => {
     };
     process.send({ ok: true, result }, () => process.exit(0));
   } catch (error) {
-    const code = error?.code === "MEDIA_INPUT" ? "MEDIA_INPUT" : failure;
+    const code = ["MEDIA_INPUT", "MEDIA_FORMAT", "MEDIA_DIMENSIONS", "MEDIA_UNAVAILABLE"].includes(error?.code) ? error.code : failure;
     process.send?.({ ok: false, code }, () => process.exit(0));
   } finally {
     // send() serializes the buffers synchronously; the child is killed by its
     // parent after the response and never retains original input between jobs.
     bytes?.fill?.(0);
+    raster?.data?.fill?.(0);
   }
 });
 

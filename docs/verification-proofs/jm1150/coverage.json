@@ -1,0 +1,108 @@
+{
+  "format": "jessiemessage-1150-coverage",
+  "asOf": "2026-11-01",
+  "candidateVersion": "1.15.0",
+  "branch": "fix/photo-acceptance",
+  "status": "local_targeted_qualification_complete_native_candidate_and_browser_pending",
+  "reviewedCheckpoint": "592b826353b46f01f474ba8bf1aa01c66fee997c",
+  "reviewedTree": "d3c6272284335f3f70d4447858a1461c35f5ddea",
+  "finalCandidateSource": null,
+  "baseline": {
+    "documentaryMain": "127a4d57ff75457a9ccbb35fb04537be17c904ae",
+    "productionVersion": "1.14.1",
+    "productionSource": "c803c2c9be16c0c4ee218d8cac4a1272620d2772"
+  },
+  "groupsOverlapNotSummed": true,
+  "acquiredGroups": "development-checkpoint.json",
+  "localEvidenceManifest": "local-results.json",
+  "points": [
+    {
+      "id": "P01",
+      "scope": "Native-first preparation and codec boundaries",
+      "disposition": "pinned_codecs_local_checks_and_independent_bounds_review_passed_native_pending",
+      "evidence": ["tests/image-preparation.test.mjs", "tests/heic-decoder-worker.test.mjs", "tests/browser/image-preparation.browser.mjs", "local/shared-heic-server-first-heic.json.gz", "local/shared-heic-target-side-and-order.json.gz", "local/codec-bounds-counter-review.md", "local/extra-image-codecs-final.log.gz", "local/avif-modern-final.log.gz", "local/extra-raw-final-probes.json.gz", "local/extra-codecs-final.md", "codecs.json", "development-checkpoint.json"],
+      "proofScope": "Acquired local results cover native-first/pinned HEIC1.23.7 and bounded BMP/JXL/RAW/modern AVIF. Later common HEIC order has4 new passing cases: native then authenticated converter when supplied, software only absent callback or nonstale/nonabort404, never a second converter call. Target-side helper has1 new passing case. Independent codec bounds review reports no remaining blocker after duplicate advisory-transform guard; AVIF3/3 and Magick policy8/8 are separately retained, not added to overlapping backend145.512MiB WASM linear-memory maximum does not bound total RSS. Final synthetic RAW probes retain12MP full success,48MP with embedded JPEG success and48MP full MEDIA_UNAVAILABLE at this resource budget; no arbitrary8MP cap remains.64MP and2048 output bounds retained. No physical Safari/device attestation."
+    },
+    {
+      "id": "P02",
+      "scope": "Authenticated pure server conversion",
+      "disposition": "reviewed_and_locally_checked",
+      "evidence": ["server/media/http.mjs", "server/media/service.mjs", "server/media/image.mjs", "tests/media-http.test.mjs", "tests/media-service.test.mjs", "tests/media-preparation-stream.test.mjs", "local/backend-final-targeted.log.gz", "development-checkpoint.json"],
+      "proofScope": "Origin, role cookie, current actor and CSRF precede body admission.128MiB measured/declared original, stdin backpressure,120s body and30s decode, no original persistence or media allocation. Current owner checked again after conversion; bounded2MiB/2048 JPEG response. Final targeted backend group145/145 was acquired without replay by this review; it overlaps earlier backend and codec groups and is not global candidate CI."
+    },
+    {
+      "id": "P03",
+      "scope": "Cancellation after original EOF",
+      "disposition": "P2_corrected_locally_new_targeted_tests_and_independent_review_passed_native_pending",
+      "evidence": ["server/media/image.mjs", "server/media/http.mjs", "tests/media-preparation-stream.test.mjs", "tests/media-http.test.mjs", "local/backend-abort-after-eof-final.log.gz", "local/server-stream-abort-fix-review.md"],
+      "proofScope": "An independent synthetic probe reproduced afterEOF cancellation ignored at reviewedCheckpoint. The later fix links premature response.close to a local AbortSignal kept through decoder exit; normal request close does not cancel. Two new author tests passed and the delta was independently reread without replay. Global preparation remains occupied until child exit. No data leak or media loss established; final candidate native CI remains pending."
+    },
+    {
+      "id": "P04",
+      "scope": "Chat, retry identity and visible errors",
+      "disposition": "implemented_with_acquired_synthetic_checks_native_pending",
+      "evidence": ["tests/chat-lifecycle.test.mjs", "tests/chat-i18n.test.mjs", "tests/photo-upload.test.mjs", "tests/photo-batch.test.mjs", "development-checkpoint.json"],
+      "proofScope": "Owner/CSRF and cancellation guards, exact normalized Blob on explicit retry, no automatic uncertain storing POST, pure server fallback and profile account scope. Reported groups overlap and are not summed. No real message sent by this qualification."
+    },
+    {
+      "id": "P05",
+      "scope": "Profile, library and broadcast callers",
+      "disposition": "implemented_local_checks_passed_browser_pending",
+      "evidence": ["tests/profile-ui.test.mjs", "tests/media-library-ui.test.mjs", "tests/broadcast-lifecycle.test.mjs", "tests/browser/profile-avatar.browser.mjs", "local/ui-legacy-heic-capability-final.log.gz", "local/ui-mobile-capability-final.md", "development-checkpoint.json"],
+      "proofScope": "127-case library/broadcast group,10-case binary cancellation group with8 overlaps and2 new cases,4 new profile cases. A later mobile delta has8 new passing caller cases only: absent/disabled/404 capability supplies convert:undefined and retains local1140 HEIC preparation; active callback rechecks current capability/owner/CSRF.128MiB/180s, source-original identity, bounded binary/JSON errors, late/aborted replies, legacy404 without storing original, RAW enum only without filename. Profile browser case written but local attempt blocked before application by absent ChromeDriver."
+    },
+    {
+      "id": "P06",
+      "scope": "Live capacity and preserved storage accounting",
+      "disposition": "implemented_local_checks_passed_native_SQL_pending",
+      "evidence": ["tests/media-admission-budget.test.mjs", "tests/backup-media-admission.test.mjs", "tests/backup-media-admission.integration.test.mjs", "tests/media-store.integration.test.mjs", "tests/media-flow.integration.test.mjs", "development-checkpoint.json"],
+      "proofScope": "Archive1GiB/lifetime records no longer gate live media. Historical photo owner binding retained without photo per-owner admission cap. Configured aggregate photo/video total, disk/inflight/locks/counters and admin-only video owner quota retained. No reset, purge or real allocation changed.99 distinct executable cases green across capacity/preflight work;3 native omissions remain unqualified."
+    },
+    {
+      "id": "P07",
+      "scope": "Manual backup boundary and photo closure/recovery compatibility",
+      "disposition": "early_refusal_and_synthetic_checks_passed_native_pending",
+      "evidence": ["tests/manual-backup-capacity.test.mjs", "tests/manual-backup-http.test.mjs", "tests/manual-backups-ui.test.mjs", "tests/recurring-supervisor.test.mjs", "tests/backup-snapshot.test.mjs", "tests/backup-recovery-store.test.mjs", "tests/local-closures.integration.test.mjs", "tests/manual-restore-operator.integration.test.mjs"],
+      "proofScope": "Existing archive format/readers unchanged. Aggregate read before a new request and last in parent preflight rejects known oversize before stopping runtime; accepted request identity and old downloads preserved. Capture retains exact checks for uploads finishing after the sample/during drain. Photo snapshot/recovery above preserved owner binding checked synthetically; updated disposable SQL closure fixtures await native CI. No hosted backup or restore executed."
+    },
+    {
+      "id": "P08",
+      "scope": "Final candidate, hosted state and original client case",
+      "disposition": "pending_not_claimed",
+      "evidence": ["development-checkpoint.json"],
+      "proofScope": "No final candidate CI, merged-main qualification, deployment, hosted check or original client-photo reproduction is established here. Original file, error and device were not supplied; synthetic causes do not diagnose that account."
+    },
+    {
+      "id": "P09",
+      "scope": "Dependency advisory snapshot and lock preservation",
+      "disposition": "root_reported_npm_advisory_check_passed_limited_scope",
+      "evidence": ["local/npm-audit-final.json.gz", "local/npm-audit-final-scope.md"],
+      "proofScope": "Root reports npm audit --omit=dev --json exit0,63 total dependencies and0 known npm advisories. Root lock comparison reports no existing nonroot1141 record modified and only three new package records: @imagemagick/magick-wasm0.0.45, @phenomen/libavif-wasm1.4.203, heic-to1.6.7. This does not establish universal absence of codec/native/WASM vulnerabilities or final functional qualification."
+    },
+    {
+      "id": "P10",
+      "scope": "Root local build and six-family smoke",
+      "disposition": "local_build_and_synthetic_smoke_passed_global_CI_pending",
+      "evidence": ["local/final-build.log.gz", "local/smoke-six-families-initial.log.gz"],
+      "proofScope": "Root build completed syntax checks for810 JavaScript/shell sources and generated the workbench artifact. Root smoke reports6 successful synthetic codec families BMP/JXL/DNG/AVIF/HEIC/JPEG on Node24.22.1, with no runtime, SQL or stored media. This is not a final candidate/main CI or a hosted photo test."
+    }
+  ],
+  "openFindings": [],
+  "locallyResolvedFindings": [
+    {
+      "id": "PREPARE_ABORT_AFTER_EOF",
+      "severity": "P2",
+      "status": "corrected_locally_two_new_tests_passed_independent_review_passed_native_pending",
+      "atReviewedCheckpoint": true,
+      "correctionBase": "871a54b549c3ddb847abc80ce0af07f05b366d5b",
+      "correctionHttpSha256": "a274d33d093462292b02ccc249a069905050cb30a44cfa0f989f145e813734d7",
+      "correctionPreparerSha256": "3afdfbc1894e263e2a8d3f166d23f1a6c10d1f929d9975aece24c6673cf10ae9"
+    }
+  ],
+  "nativeCandidateQualification": false,
+  "nativeMainQualification": false,
+  "hostOperations": false,
+  "realAccountMediaMessagesTouched": false,
+  "realBackupOrRestoreExecuted": false,
+  "originalClientCase": "not_reproduced_without_original_error_and_device"
+}

@@ -43,7 +43,7 @@ function harness({ respond, prepare = async file => file } = {}) {
   const session = () => ({ user: { id: id(owner), role: "admin", pseudonym: "Synthetic Jessie" }, csrf: (owner === 1 ? "a" : "b").repeat(43), expiresAt: Date.now() + 3600000 });
   const rows = Array.from({ length: 45 }, (_, i) => photo(i + 1));
   const document = { visibilityState: "hidden", documentElement: parsed.root.querySelectorAll("html")[0], body: parsed.root.querySelectorAll("body")[0], getElementById: name => parsed.ids.get(name), createElement: tag => new Element(tag), querySelectorAll: selector => parsed.root.querySelectorAll(selector), addEventListener: (name, callback) => documentEvents.set(name, callback) };
-  const context = vm.createContext({ document, window: { addEventListener(name, callback) { if (!windowEvents.has(name)) windowEvents.set(name, []); windowEvents.get(name).push(callback); } }, navigator: { language: "fr-FR" }, sessionStorage: { getItem() { return null; }, setItem() {} }, location: { replace(value) { context.redirect = value; } }, Blob, AbortController, URL: { createObjectURL(blob) { const value = "blob:synthetic-" + created.length; created.push({ value, blob }); return value; }, revokeObjectURL(value) { revoked.push(value); } }, console,
+  const context = vm.createContext({ document, window: { addEventListener(name, callback) { if (!windowEvents.has(name)) windowEvents.set(name, []); windowEvents.get(name).push(callback); } }, navigator: { language: "fr-FR" }, sessionStorage: { getItem() { return null; }, setItem() {} }, location: { replace(value) { context.redirect = value; } }, Blob, Uint8Array, AbortController, URL: { createObjectURL(blob) { const value = "blob:synthetic-" + created.length; created.push({ value, blob }); return value; }, revokeObjectURL(value) { revoked.push(value); } }, console,
     __model: model, __prepare: prepare, JessieSessionClock: { scheduleSessionCheck() { return () => {}; } },
     setTimeout(callback, delay) { timers.set(++timer, { callback, delay }); return timer; }, clearTimeout(value) { timers.delete(value); },
     fetch: async (path, options = {}) => {
@@ -59,7 +59,7 @@ function harness({ respond, prepare = async file => file } = {}) {
   vm.runInContext(files["i18n.js"], context); vm.runInContext(files["i18n-tools.js"], context); vm.runInContext(files["i18n-media-library.js"], context);
   const source = files["media-library-page.js"].replace(/^import \{ prepareImageUpload \} from "\/image-preparation.js";/, "const prepareImageUpload = __prepare;").replace(/^import \{([^\n]+)\} from "\/media-library-model.js";/m, "const {$1} = __model;");
   vm.runInContext(source + "\nglobalThis.tools = {state, bootstrap, loadList, selectAsset, addPhoto, deleteSelected, clearPrivate, controls};", context);
-  return { ...parsed, document, context, calls, created, revoked, session, rows, setOwner(value) { owner = value; },
+  return { ...parsed, document, context, calls, created, revoked, session, rows, timers, setOwner(value) { owner = value; },
     async start() { document.visibilityState = "visible"; await context.tools.bootstrap(); await flush(); },
     async hide() { document.visibilityState = "hidden"; documentEvents.get("visibilitychange")(); await flush(); },
     async show() { document.visibilityState = "visible"; documentEvents.get("visibilitychange")(); await flush(); },
@@ -226,4 +226,111 @@ test("pending photo cleanup has no binary requests and an explicit retry release
   await h.ids.get("delete-media").trigger("click"); await h.ids.get("confirm-delete").trigger("click");
   assert.equal(attempt, 3); assert.equal(released, 1); assert.equal(h.context.tools.state.selected, null);
   assert.equal(h.context.tools.state.rows.some(row => row.id === id(1)), false); assert.equal(h.ids.get("library-status").textContent, "Nettoyage terminé.");
+});
+
+const preparationCapability = { enabled: true, maxOriginalBytes: 134217728, maxOutputBytes: 2097152, maxPixels: 64000000 };
+const preparedJpeg = () => new Response(new Uint8Array([255, 216, 255, 217]), { headers: { "Content-Type": "image/jpeg", "Content-Length": "4" } });
+const converting = async (file, { signal, convert }) => convert(file, { signal });
+test("library server conversion sends one original under owner proofs and stores only its prepared JPEG", async () => {
+  const original = new Blob(["original TIFF bytes"], { type: "image/tiff" }); let h;
+  h = harness({ prepare: converting, respond: (path, options) => {
+    if (path === "/api/media/admin/capabilities") return response(200, { enabled: true, preparation: preparationCapability });
+    if (path === "/api/media/admin/prepare") { assert.ok([...h.timers.values()].some(timer => timer.delay === 180000)); return preparedJpeg(); }
+    if (path === "/api/media/admin/assets" && options.method === "POST") return response(201, { asset: photo(99), duplicate: false });
+    return null;
+  } });
+  await h.start(); h.ids.get("photo-file").files = [original]; await h.context.tools.addPhoto();
+  const writes = h.calls.filter(call => call.options.method === "POST");
+  assert.deepEqual(writes.map(call => call.path), ["/api/media/admin/prepare", "/api/media/admin/assets"]);
+  assert.equal(writes[0].options.body, original); assert.equal(writes[0].options.headers["Content-Type"], "image/tiff");
+  assert.equal(writes[0].options.headers["X-CSRF-Token"], "a".repeat(43));
+  assert.notEqual(writes[1].options.body, original); assert.equal(writes[1].options.body.type, "image/jpeg"); assert.equal(writes[1].options.body.size, 4);
+  const at = h.calls.indexOf(writes[0]); assert.equal(h.calls[at - 1].path, "/api/auth/session"); assert.equal(h.calls[at + 1].path, "/api/auth/session");
+  assert.equal(h.context.tools.state.selected.id, id(99)); assert.equal(h.calls.some(call => call.path.includes("messages")), false);
+});
+test("library conversion legacy refusal or JSON errors never turn the original into an asset POST", async t => {
+  for (const status of [null, 401, 403, 404, 415, 503]) await t.test(status === null ? "old capability" : String(status), async () => {
+    const h = harness({ prepare: converting, respond: path => {
+      if (path === "/api/media/admin/capabilities") return response(200, { enabled: true, ...(status === null ? {} : { preparation: preparationCapability }) });
+      if (path === "/api/media/admin/prepare") return response(status, { error: status === 415 ? "media_format" : "media_unavailable" });
+      return null;
+    } });
+    await h.start(); h.ids.get("photo-file").files = [new Blob(["unreadable original"], { type: "image/tiff" })]; await h.context.tools.addPhoto();
+    const writes = h.calls.filter(call => call.options.method === "POST"); assert.equal(writes.length, status === null ? 0 : 1);
+    assert.equal(writes.some(call => call.path.endsWith("/assets")), false); assert.equal(h.context.tools.state.selected, null);
+  });
+});
+test("library conversion rejects an owner change before adopting bytes or creating an asset", async () => {
+  let h; h = harness({ prepare: converting, respond: path => {
+    if (path === "/api/media/admin/capabilities") return response(200, { enabled: true, preparation: preparationCapability });
+    if (path === "/api/media/admin/prepare") { h.setOwner(2); return preparedJpeg(); } return null;
+  } });
+  await h.start(); h.ids.get("photo-file").files = [new Blob(["private original"], { type: "image/tiff" })]; await h.context.tools.addPhoto();
+  assert.equal(h.calls.filter(call => call.options.method === "POST").length, 1);
+  assert.equal(h.context.tools.state.selected, null); assert.equal(h.ids.get("library-content").hidden, true);
+});
+test("library hiding aborts server conversion and ignores its late response without replay", async () => {
+  let release;
+  const h = harness({ prepare: converting, respond: path => {
+    if (path === "/api/media/admin/capabilities") return response(200, { enabled: true, preparation: preparationCapability });
+    if (path === "/api/media/admin/prepare") return new Promise(resolve => { release = () => resolve(preparedJpeg()); }); return null;
+  } });
+  await h.start(); h.ids.get("photo-file").files = [new Blob(["private original"], { type: "image/tiff" })];
+  const pending = h.context.tools.addPhoto(); await flush(); assert.ok(release);
+  const sent = h.calls.find(call => call.path === "/api/media/admin/prepare"); await h.hide(); assert.equal(sent.options.signal.aborted, true);
+  await h.show(); release(); await pending; await flush();
+  assert.equal(h.calls.filter(call => call.options.method === "POST").length, 1); assert.equal(h.context.tools.state.selected, null);
+});
+test("library conversion bounds streamed JPEG responses and declared original bytes before asset creation", async t => {
+  for (const failure of ["stream size", "declared size", "response MIME", "original size"]) await t.test(failure, async () => {
+    let cancelled = false;
+    const h = harness({ prepare: converting, respond: path => {
+      if (path === "/api/media/admin/capabilities") return response(200, { enabled: true, preparation: { ...preparationCapability, ...(failure === "original size" ? { maxOriginalBytes: 1 } : {}) } });
+      if (path === "/api/media/admin/prepare") {
+        if (failure === "response MIME") return new Response("not a JPEG", { headers: { "Content-Type": "text/html" } });
+        if (failure === "declared size") return new Response("oversized header", { headers: { "Content-Type": "image/jpeg", "Content-Length": "2097153" } });
+        return new Response(new ReadableStream({ start(controller) { controller.enqueue(new Uint8Array(2097153)); }, cancel() { cancelled = true; } }), { headers: { "Content-Type": "image/jpeg" } });
+      } return null;
+    } });
+    await h.start(); h.ids.get("photo-file").files = [new Blob(["original"], { type: "image/tiff" })]; await h.context.tools.addPhoto();
+    assert.equal(h.calls.some(call => call.path === "/api/media/admin/assets" && call.options.method === "POST"), false);
+    if (failure === "stream size") assert.equal(cancelled, true);
+    if (failure === "original size") assert.equal(h.calls.some(call => call.path === "/api/media/admin/prepare"), false);
+    else assert.equal(h.calls.find(call => call.path === "/api/media/admin/prepare").options.signal.aborted, true, "invalid binary responses cancel their fetch");
+  });
+});
+test("library RAW hints contain only a recognized extension and never reach the storing upload", async () => {
+  for (const [name, expected] of [["private-camera.DNG", "dng"], ["private-camera.NEF", "nef"], ["private-camera.cr3", "cr3"],
+    ["private-camera.jpg", undefined], ["private-camera.dng.backup", undefined], [undefined, undefined]]) {
+    const original = Object.assign(new Blob(["original bytes"], { type: "" }), name === undefined ? {} : { name });
+    const h = harness({ prepare: converting, respond: (path, options) => {
+      if (path === "/api/media/admin/capabilities") return response(200, { enabled: true, preparation: preparationCapability });
+      if (path === "/api/media/admin/prepare") return preparedJpeg();
+      if (path === "/api/media/admin/assets" && options.method === "POST") return response(201, { asset: photo(99), duplicate: false }); return null;
+    } });
+    await h.start(); h.ids.get("photo-file").files = [original]; await h.context.tools.addPhoto();
+    const writes = h.calls.filter(call => call.options.method === "POST"); assert.equal(writes.length, 2);
+    assert.equal(writes[0].options.headers["X-Image-Format"], expected); assert.equal(writes[0].options.headers["Content-Type"], "application/octet-stream");
+    assert.equal(writes[1].options.headers["X-Image-Format"], undefined); assert.equal(writes[0].options.body, original);
+    assert.doesNotMatch(JSON.stringify(writes.map(call => call.options.headers)), /private-camera/);
+  }
+});
+test("library legacy HEIC preparation receives no converter when the capability is absent", async t => {
+  for (const mode of ["absent", "disabled", "capability404"]) await t.test(mode, async () => {
+    const original = new Blob(["synthetic legacy HEIC"], { type: "image/heic" });
+    const prepared = new Blob([new Uint8Array([255, 216, 255, 217])], { type: "image/jpeg" }); let count = 0, capabilityReads = 0;
+    const h = harness({ prepare: async (file, { signal, convert }) => {
+      assert.equal(file, original); assert.equal(convert, undefined); assert.equal(signal.aborted, false); count++; return prepared;
+    }, respond: (path, options) => {
+      if (path === "/api/media/admin/capabilities") {
+        if (++capabilityReads > 1 && mode === "capability404") return response(404, { error: "not_found" });
+        return response(200, { enabled: true, ...(mode === "disabled" ? { preparation: { ...preparationCapability, enabled: false } } : {}) });
+      }
+      if (path === "/api/media/admin/assets" && options.method === "POST") return response(201, { asset: photo(99), duplicate: false }); return null;
+    } });
+    await h.start(); h.ids.get("photo-file").files = [original]; await h.context.tools.addPhoto();
+    assert.equal(count, 1); assert.equal(h.calls.some(call => call.path === "/api/media/admin/prepare"), false);
+    const writes = h.calls.filter(call => call.options.method === "POST"); assert.equal(writes.length, 1); assert.equal(writes[0].path, "/api/media/admin/assets");
+    assert.equal(writes[0].options.body, prepared); assert.equal(h.context.tools.state.selected.id, id(99));
+  });
 });

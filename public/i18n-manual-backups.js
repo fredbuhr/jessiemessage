@@ -38,6 +38,7 @@ globalThis.JessieI18n?.register({
   "Les sauvegardes sont momentanément indisponibles. Actualise l’état dans quelques instants.": "Backups are temporarily unavailable. Refresh the status in a few moments.",
   "Une sauvegarde est déjà demandée. Son état va être actualisé.": "A backup has already been requested. Its status will be refreshed.",
   "La demande a changé. Consulte son état avant une nouvelle action.": "The request has changed. Check its status before taking another action.",
+  "Les médias dépassent la capacité du format de sauvegarde actuel. La messagerie reste disponible.": "The media exceed the capacity of the current backup format. Messaging remains available.",
   "La demande a été refusée. Actualise l’état avant de réessayer.": "The request was refused. Refresh the status before trying again.",
   "Préparation du téléchargement…": "Preparing your download…",
   "Le téléchargement du fichier chiffré a été demandé.": "The encrypted file download has been requested.",

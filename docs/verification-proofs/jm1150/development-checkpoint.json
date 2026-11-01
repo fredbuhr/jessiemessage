@@ -1,0 +1,73 @@
+{
+  "format": "jessiemessage-1150-development-checkpoint",
+  "production": "1.14.1",
+  "baseMain": "127a4d57ff75457a9ccbb35fb04537be17c904ae",
+  "previousCheckpoint": "c39158662cedcaf1f44e1b0faef2c419547c8993",
+  "groupsOverlapNotSummed": true,
+  "groups": [
+    {
+      "scope": "native-first image/core initial",
+      "passed": 37,
+      "omitted": 0
+    },
+    {
+      "scope": "shared HEVC1.23.7 core distinct cases",
+      "passed": 12,
+      "omitted": 0
+    },
+    {
+      "scope": "backend first32MiB group",
+      "passed": 122,
+      "omitted": 0,
+      "historical": true
+    },
+    {
+      "scope": "backend128MiB stream HTTP/service",
+      "passed": 100,
+      "omitted": 0
+    },
+    {
+      "scope": "root Node HEIC adapter actual pixels",
+      "passed": 2,
+      "omitted": 0
+    },
+    {
+      "scope": "root fixed public codec routes and CSP",
+      "passed": 8,
+      "omitted": 0
+    },
+    {
+      "scope": "chat final RAW/profile cases",
+      "passed": 25,
+      "omitted": 0
+    },
+    {
+      "scope": "admin library/broadcast callers group",
+      "passed": 127,
+      "omitted": 0
+    },
+    {
+      "scope": "admin binary headers affected cases",
+      "passed": 10,
+      "omitted": 0
+    },
+    {
+      "scope": "profile converter new cases",
+      "passed": 4,
+      "omitted": 0,
+      "note": "first3/4 then only obsolete assertion corrected and failed1/1 passed"
+    },
+    {
+      "scope": "capacity and backup preflight distinct cases",
+      "passed": 99,
+      "omitted": 3,
+      "note": "three native omissions remain not successes; SQL/browser qualifications pending"
+    }
+  ],
+  "codecSelection": "HEIC1.23.7 validated; extra BMP/JXL/RAW and current safe AVIF pending",
+  "nativeCandidateQualification": false,
+  "originalClientCase": "not reproduced without original/error/device",
+  "realAccountMediaMessagesTouched": false,
+  "hostOperations": false,
+  "updatedAt": "2026-11-01T17:56:07.614071+00:00"
+}

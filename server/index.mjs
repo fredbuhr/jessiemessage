@@ -12,12 +12,15 @@ import { getProcessRelease } from "./release.mjs";
 import { VIDEO_CREATION_ENABLED, QUICK_REPLIES_WRITABLE } from "./release-features.mjs";
 
 const publicRoot = fileURLToPath(new URL("../public/", import.meta.url));
-// Fixed, public decoder code only. The optional codec is requested lazily and
-// never receives a client photo over the network.
+// Fixed public decoder assets, requested lazily. Conversion uses this device
+// or the authenticated same-origin prepare endpoint, never a third-party API.
 const heicDecoderFiles = new Map([
   ["/heic-decoder-worker.js", { path: new URL("../public/heic-decoder-worker.js", import.meta.url), type: "text/javascript; charset=utf-8", worker: true }],
+  ["/heic-decoder-core.js", { path: new URL("../public/heic-decoder-core.js", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/heic-codec-1.23.5.mjs", { path: new URL("../node_modules/libheif-js/libheif-wasm/libheif-bundle.mjs", import.meta.url), type: "text/javascript; charset=utf-8", versioned: true }],
   ["/heic-codec-1.23.5-LICENSE.txt", { path: new URL("../node_modules/libheif-js/libheif-wasm/LICENSE", import.meta.url), type: "text/plain; charset=utf-8", versioned: true }],
+  ["/heic-codec-1.23.7.mjs", { path: new URL("../node_modules/heic-to/src/lib/libheif-without-unsafe-eval.js", import.meta.url), type: "text/javascript; charset=utf-8", versioned: true }],
+  ["/heic-codec-1.23.7-LICENSE.txt", { path: new URL("../node_modules/heic-to/LICENSE", import.meta.url), type: "text/plain; charset=utf-8", versioned: true }],
 ]);
 const PRIMARY_ORIGIN = "https://jessiemessage.com";
 const RECIPE_ORIGIN = "https://recette.jessiemessage.com";
@@ -249,7 +252,7 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
           const bytes = await readFile(decoder.path);
           reply(response, method, 200, decoder.type, bytes, {
             ...(decoder.versioned ? { "Cache-Control": "public, max-age=31536000, immutable" } : {}),
-            ...(decoder.worker ? { "Content-Security-Policy": "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'none'; worker-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'" } : {}),
+            ...(decoder.worker ? { "Content-Security-Policy": "default-src 'none'; script-src 'self'; connect-src 'none'; worker-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'" } : {}),
           });
         } catch { reply(response, method, 503, "text/plain; charset=utf-8", "Decoder unavailable"); }
         return;
@@ -283,9 +286,9 @@ export function createAppServer({ authHandler, accessHandler, chatHandler, media
   });
   server.beginDrain = () => { draining = true; };
   server.waitForRequests = () => pendingRequests === 0 ? Promise.resolve() : new Promise((resolve) => { requestWaiters.add(resolve); });
-  // Handlers retain their own bounded readers: photos get 60s to receive a
-  // body, video owns 300s transfer/30s inactivity, ordinary JSON stays short.
-  server.requestTimeout = videoHandler ? 300000 : mediaHandler ? 65000 : 15000;
+  // Handlers retain their own bounded readers: prepared photos get 60s and
+  // originals get 120s; video owns 300s transfer/30s inactivity.
+  server.requestTimeout = videoHandler ? 300000 : mediaHandler ? 125000 : 15000;
   server.headersTimeout = 10000;
   server.keepAliveTimeout = 5000;
   server.maxRequestsPerSocket = 100;
@@ -371,9 +374,10 @@ export async function createConfiguredServer(env = process.env, options = {}) {
         import("./files/private-directory.mjs"), import("./backup/operational-checkpoint.mjs")]);
       await withPrivateDirectory(backupDirectory, assertNoOperationalRestore);
       if (accountClosures) {
-        const [{ createManualBackupService }, { createManualBackupHandler }] = await Promise.all([
-          import("./backup/manual-backup-service.mjs"), import("./backup/manual-backup-http.mjs")]);
-        backupHandler = createManualBackupHandler(createManualBackupService(backupDirectory, { clock }), { origin: config.origin, actor: token => service.session(token) });
+        const [{ createManualBackupService }, { createManualBackupHandler }, { assertManualBackupCapacity }] = await Promise.all([
+          import("./backup/manual-backup-service.mjs"), import("./backup/manual-backup-http.mjs"), import("./backup/media-capacity.mjs")]);
+        backupHandler = createManualBackupHandler(createManualBackupService(backupDirectory, { clock,
+          checkCapacity: () => assertManualBackupCapacity(pool, { video }) }), { origin: config.origin, actor: token => service.session(token) });
       } else {
         const [{ createBackupCopyService }, { createBackupCopyHandler }] = await Promise.all([import("./backup/copy-service.mjs"), import("./backup/copy-http.mjs")]);
         backupHandler = createBackupCopyHandler(createBackupCopyService(backupDirectory), { origin: config.origin, actor: token => service.session(token), clock });

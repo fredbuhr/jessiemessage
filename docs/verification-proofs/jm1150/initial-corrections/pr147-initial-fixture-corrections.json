@@ -1,0 +1,86 @@
+{
+  "status": "fixture_corrections_frozen",
+  "recordedAt": "2026-11-01T18:43:44.252038+00:00",
+  "initialRun": "PR147 / 41337463760",
+  "initialSourcePrefix": "8a34d678fa2f (provided by root)",
+  "scope": "Only tests/chat-lifecycle.test.mjs and tests/rehearsal/experience.rehearsal.mjs changed. No product, operator, guard, authorization, HTTP or SQL implementation change.",
+  "files": [
+    {
+      "path": "/workspace/scratch/2a0dbdfc70cc/jessiemessage-audit/tests/chat-lifecycle.test.mjs",
+      "bytes": 230880,
+      "sha256": "cbad955ac3b26e90079bce3c60b682cc4e0d2a5b3310ae945fabc63d447fb584"
+    },
+    {
+      "path": "/workspace/scratch/2a0dbdfc70cc/jessiemessage-audit/tests/rehearsal/experience.rehearsal.mjs",
+      "bytes": 58353,
+      "sha256": "e8249ba195a38a759455b6b93b25434d673bae9a656fd33bff755c345d00d2ba"
+    }
+  ],
+  "findings": [
+    {
+      "id": "OBSOLETE_PHOTO_ERROR_EXPECTATION",
+      "cause": "The extensionless fake GIF payload now reaches the broadened native preparation path. This Node VM test has no DOM decoder and deliberately supplies no server-conversion capability, so the actual local failure is media_unavailable, not the prior media_format wording.",
+      "correction": "Renamed the test around preservation on preparation failure; assert media_unavailable on the draft, current useful error in chat and inline status, original/caption preserved, pending cleared and every POST absent.",
+      "productChange": false
+    },
+    {
+      "id": "REVOKED_DEVICE_NAVIGATION_RACE",
+      "cause": "A direct GET session observes SQL401 before the chat controller consumes its own revoked-session response and location.replace to /access or /admin/login. The fixture immediately navigated the still-running old document to its random attestation URL. Its queued sign-out redirect can win and return the signin document, exactly the initial assertion output.",
+      "sourceEvidence": "public/chat.js signOut() replaces location after clearPrivate; request/poll handlers call signOut on401. experience.rehearsal.mjs checked the other-device session401, then called login immediately without waiting for the old controller document to be replaced.",
+      "correction": "Only the two post-password-change reconnections set afterRevocation:true. login waits for the expected signed-out URL, complete login document, no workspace and a visible enabled real login form before calling the unchanged strict attest helper. No arbitrary sleep, retry of credentials, origin relaxation or auth bypass.",
+      "cascade": "The later clearing-preferences401 came from the client device whose reauthentication had failed at attestation; no second product fix or weakened assertion was added.",
+      "productChange": false
+    }
+  ],
+  "checks": {
+    "photoFailedCaseOnly": {
+      "path": "/workspace/scratch/2a0dbdfc70cc/implementation-notes/photo-acceptance/pr147-initial-photo-fixture-test.log",
+      "bytes": 228,
+      "sha256": "326683a5e4ab79bb281d7d2f808871ec47bb07fe613f57aeb12c7c5d508d372e",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    "schedulingProbe": {
+      "path": "/workspace/scratch/2a0dbdfc70cc/implementation-notes/photo-acceptance/pr147-experience-navigation-probe.mjs",
+      "bytes": 4751,
+      "sha256": "db98c4d9a91288fa6dc5bade6ef76739f8f75d163a0018f5f961a1da8cdf735c"
+    },
+    "schedulingProbeLog": {
+      "path": "/workspace/scratch/2a0dbdfc70cc/implementation-notes/photo-acceptance/pr147-experience-navigation-probe.log",
+      "bytes": 672,
+      "sha256": "32a33910e1a890ae500252691790fba8b1ac164bc42d8b76d5e026ba3147b73b",
+      "counts": {
+        "tests": 6,
+        "pass": 6,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    "probeScope": "Actual attest/login helper source is evaluated against a deterministic browser-document scheduling model. Both roles reproduce old sign-out/proof collision, pass the new barrier and still reject an incorrect random proof before credentials. This is not native HTTPS or Chrome qualification.",
+    "syntax": [
+      "node --check tests/chat-lifecycle.test.mjs",
+      "node --check tests/rehearsal/experience.rehearsal.mjs"
+    ],
+    "syntaxExitCode": 0,
+    "trailingWhitespace": false,
+    "nativeHttpsExecuted": false,
+    "reason": "No local Chrome/Chromedriver runtime; root retains initial CI logs and will qualify the next candidate.",
+    "broadGreenSuitesRepeated": false
+  },
+  "notPerformed": [
+    "Git command",
+    "CI run",
+    "host access",
+    "browser cloud",
+    "real account/message/media",
+    "product/operator edit"
+  ]
+}

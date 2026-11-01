@@ -36,6 +36,7 @@ async function fixture(t, overrides = {}) {
   const service = {
     async actor(role, token) { calls.push(["actor", role, token]); return token === tokens[role] ? { user: { id: ids[role], role, pseudonym: role === "admin" ? "Jessie" : "Client test" }, csrf, expiresAt: now + 3600000, access: { state: "active", admissionPolicy: "manual_invitation", invitationConsumed: true, emailVerified: true, ageAssured: false, approved: true } } : null; },
     async upload(role, token, bytes) { calls.push(["upload", role, token, bytes]); return { asset: asset(role), duplicate: false }; },
+    async prepare(role, token, bytes) { calls.push(["prepare", role, token, bytes]); return { bytes: jpeg, mime: "image/jpeg" }; },
     async listAssets(role, token, options) { calls.push(["list", role, token, options]); return { assets: [asset(role)], nextCursor: null, hasMore: false }; },
     async asset(role, token, id, variant) { calls.push(["asset", role, token, id, variant]); return { bytes: jpeg, mime: "image/jpeg", storageKey: "private-storage-key" }; },
     async messageAsset(role, token, conversationId, messageId, variant) { calls.push(["delivery", role, token, conversationId, messageId, variant]); return { bytes: jpeg, mime: "image/jpeg" }; },
@@ -54,6 +55,8 @@ async function fixture(t, overrides = {}) {
     authStore: { async consumeRateLimit(bucket, options) { admissionRates.push({ bucket, options }); return { allowed: true }; } },
   });
   service.admitUpload ??= (...args) => admissionService.admitUpload(...args);
+  service.prepareStream ??= async (role, token, source, ticket) => service.prepare(role, token, await readUpload(source, { maxBytes: 134217728, timeoutMilliseconds: 120_000 }), ticket);
+  service.admitPreparation ??= (...args) => admissionService.admitPreparation(...args);
   service.releaseUpload ??= (...args) => admissionService.releaseUpload(...args);
   const handler = createMediaHandler(service, { origin });
   const server = createServer(async (request, response) => { if (!await handler(request, response)) { response.writeHead(404); response.end("fallback"); } });
@@ -69,7 +72,7 @@ function privateHeaders(response) {
 function noPrivateFields(value) { assert.doesNotMatch(JSON.stringify(value), /private-|storageKey|digest|ownerId|originalFilename|encryptedBody/); }
 
 test("media handler requires a complete service and a canonical HTTPS origin", () => {
-  const methods = ["actor", "admitUpload", "releaseUpload", "upload", "listAssets", "asset", "messageAsset", "gallery", "removeAsset", "send"];
+  const methods = ["actor", "admitUpload", "admitPreparation", "releaseUpload", "prepareStream", "upload", "listAssets", "asset", "messageAsset", "gallery", "removeAsset", "send"];
   const service = Object.fromEntries(methods.map((name) => [name, () => {}]));
   for (const candidate of ["http://example.invalid", `${origin}/`, `${origin}/messages`, `${origin}?x=1`, "https://user:pass@example.invalid"]) assert.throws(() => createMediaHandler(service, { origin: candidate }));
   assert.throws(() => createMediaHandler({}, { origin }));
@@ -80,7 +83,8 @@ test("capabilities, own library and upload DTOs authenticate both roles and hide
   for (const role of ["admin", "client"]) {
     const capabilities = await fetch(`${base}/api/media/${role}/capabilities`, { headers: { Cookie: cookie(role) } });
     assert.equal(capabilities.status, 200); privateHeaders(capabilities);
-    assert.deepEqual(await capabilities.json(), { enabled: true, maxUploadBytes: 10485760, formats: ["image/jpeg", "image/png", "image/webp"] });
+    assert.deepEqual(await capabilities.json(), { enabled: true, maxUploadBytes: 10485760, formats: ["image/jpeg", "image/png", "image/webp"],
+      preparation: { enabled: true, maxOriginalBytes: 134217728, maxOutputBytes: 2097152, maxPixels: 64000000 } });
     const list = await fetch(`${base}${assetsPath(role)}?conversationId=${ids.conversation}&afterId=${ids.asset}&limit=1`, { headers: { Cookie: cookie(role) } });
     assert.equal(list.status, 200); const listBody = await list.json(); noPrivateFields(listBody);
     assert.deepEqual(calls.at(-1), ["list", role, tokens[role], { conversationId: ids.conversation, afterId: ids.asset, limit: 1 }]);
@@ -174,6 +178,120 @@ test("declared photo type must match supported binary magic before native decodi
   }
   assert.equal(calls.some(([name]) => name === "upload"), false);
   assert.equal((await post(base, assetsPath(), jpeg, uploadHeaders())).status, 201);
+});
+
+test("original preparation accepts MIME hints and returns a private binary JPEG without creating an asset", async (t) => {
+  const { base, calls } = await fixture(t);
+  for (const role of ["admin", "client"]) for (const type of ["application/octet-stream", "image/tiff", "text/plain"]) {
+    const response = await post(base, `/api/media/${role}/prepare`, jpeg, uploadHeaders(role, { "Content-Type": type }));
+    assert.equal(response.status, 200); privateHeaders(response);
+    assert.equal(response.headers.get("content-type"), "image/jpeg");
+    assert.equal(response.headers.get("content-length"), String(jpeg.length));
+    assert.equal(response.headers.get("content-disposition"), 'inline; filename="photo.jpg"');
+    assert.deepEqual(Buffer.from(await response.arrayBuffer()), jpeg);
+    assert.deepEqual(calls.at(-1), ["prepare", role, tokens[role], jpeg]);
+  }
+  assert.equal(calls.some(([name]) => name === "upload"), false);
+});
+
+test("original preparation keeps session, Origin, CSRF, encoding and method guards before its body", async (t) => {
+  const { base, handler, calls, admissionRates } = await fixture(t);
+  for (const [extra, status] of [[{ Cookie: "" }, 401], [{ Origin: "https://other.example" }, 403],
+    [{ "X-CSRF-Token": "wrong" }, 403], [{ "Sec-Fetch-Site": "cross-site" }, 403], [{ "Content-Encoding": "gzip" }, 415]]) {
+    const request = new PassThrough(); request.method = "POST"; request.url = "/api/media/admin/prepare";
+    request.headers = Object.fromEntries(Object.entries(uploadHeaders("admin", extra)).map(([name, value]) => [name.toLowerCase(), value]));
+    let received; const response = { writeHead(value) { received = value; }, end() {}, headersSent: false, destroyed: false };
+    await handler(request, response); assert.equal(received, status); assert.equal(request.listenerCount("data"), 0); request.destroy();
+  }
+  assert.equal(admissionRates.length, 0); assert.equal(calls.some(([name]) => name === "prepare"), false);
+  for (const method of ["GET", "HEAD", "PUT"]) {
+    const response = await fetch(`${base}/api/media/admin/prepare`, { method, headers: { Cookie: cookie("admin") } });
+    assert.equal(response.status, 405); assert.equal(response.headers.get("allow"), "POST");
+  }
+  assert.equal((await post(base, "/api/media/admin/prepare?format=jpeg", jpeg, uploadHeaders())).status, 400);
+});
+
+test("original preparation rejects invalid output and restores admission after a sanitized failure", async (t) => {
+  let result;
+  const { base } = await fixture(t, { async prepare() { if (result instanceof Error) throw result; return result; } });
+  for (result of [{ bytes: Buffer.alloc(2097153), mime: "image/jpeg" }, { bytes: jpeg, mime: "image/png" }, { bytes: "private-secret", mime: "image/jpeg" }, new Error("private-secret-decoder")]) {
+    const response = await post(base, "/api/media/admin/prepare", jpeg, uploadHeaders());
+    assert.equal(response.status, 503); assert.deepEqual(await response.json(), { error: "media_unavailable" });
+  }
+  result = { bytes: jpeg, mime: "image/jpeg" };
+  assert.equal((await post(base, "/api/media/admin/prepare", jpeg, uploadHeaders())).status, 200);
+});
+
+test("raw reader options preserve independent byte and time bounds", async (t) => {
+  const options = { maxBytes: 33554432, timeoutMilliseconds: 120_000 };
+  const oversized = new PassThrough(); oversized.headers = { "content-length": "33554433" };
+  assert.throws(() => readUpload(oversized, options), error => error.httpStatus === 413); oversized.destroy();
+  const chunked = new PassThrough(); chunked.headers = {};
+  const rejected = readUpload(chunked, options); chunked.end(Buffer.alloc(33554433));
+  await assert.rejects(rejected, error => error.httpStatus === 413); chunked.destroy();
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const request = new PassThrough(); request.headers = {};
+  const pending = readUpload(request, options);
+  t.mock.timers.tick(119_999); assert.equal(request.listenerCount("data"), 1);
+  t.mock.timers.tick(1); await assert.rejects(pending, error => error.httpStatus === 408);
+  assert.equal(request.listenerCount("data"), 0); request.destroy();
+});
+
+test("streamed originals validate 128 MiB declared length before admission and preserve size/timeout public errors", async (t) => {
+  const { handler, admissionRates } = await fixture(t);
+  for (const [length, expected] of [["134217729", 413], ["0134217728", 400], ["9007199254740992", 400]]) {
+    const request = new PassThrough(); request.method = "POST"; request.url = "/api/media/admin/prepare";
+    request.headers = Object.fromEntries(Object.entries(uploadHeaders("admin", { "Content-Length": length })).map(([name, value]) => [name.toLowerCase(), value]));
+    let status; const response = { headersSent: false, destroyed: false, writeHead(value) { status = value; }, end() {} };
+    await handler(request, response); assert.equal(status, expected); assert.equal(request.listenerCount("data"), 0); request.destroy();
+  }
+  assert.equal(admissionRates.length, 0);
+  for (const [code, status, error] of [["MEDIA_TOO_LARGE", 413, "request_too_large"], ["MEDIA_TIMEOUT", 408, "request_timeout"]]) {
+    const { base } = await fixture(t, { async prepare() { throw Object.assign(new Error("private-secret-stream"), { code }); } });
+    const response = await post(base, "/api/media/admin/prepare", jpeg, uploadHeaders());
+    assert.equal(response.status, status); assert.deepEqual(await response.json(), { error });
+  }
+});
+
+test("original preparation accepts only enumerated RAW hints and forwards no client filename", async (t) => {
+  const seen = [];
+  const { base, admissionRates } = await fixture(t, {
+    async prepareStream(role, token, source, ticket, options) {
+      assert.ok(options.signal instanceof AbortSignal); assert.equal(options.signal.aborted, false);
+      seen.push({ declaredBytes: options.declaredBytes, hint: options.hint }); await readUpload(source); return { bytes: jpeg, mime: "image/jpeg" };
+    },
+  });
+  for (const hint of ["DNG", "jpeg", "../dng", "private-photo.dng", "dng,raf"]) {
+    const response = await post(base, "/api/media/admin/prepare", jpeg, uploadHeaders("admin", { "X-Image-Format": hint }));
+    assert.equal(response.status, 400); assert.deepEqual(await response.json(), { error: "invalid_request" });
+  }
+  assert.equal(admissionRates.length, 0); assert.equal(seen.length, 0);
+  for (const hint of ["dng", "nef", "arw", "cr2", "cr3", "raf", "rw2", "orf", "pef", "srw"]) {
+    const response = await post(base, "/api/media/admin/prepare", jpeg, uploadHeaders("admin", { "X-Image-Format": hint }));
+    assert.equal(response.status, 200); assert.deepEqual(seen.at(-1), { declaredBytes: jpeg.length, hint });
+  }
+});
+
+test("client response cancellation after original EOF signals the outstanding decoder and restores admission", async (t) => {
+  let entered, cancelled;
+  const started = new Promise(resolve => { entered = resolve; });
+  const aborted = new Promise(resolve => { cancelled = resolve; });
+  const { base, service } = await fixture(t, {
+    async prepareStream(role, token, source, ticket, { signal }) {
+      await readUpload(source); entered();
+      return new Promise((resolve, reject) => signal.addEventListener("abort", () => {
+        cancelled(); reject(Object.assign(new Error("private-secret-cancel"), { code: "MEDIA_INPUT" }));
+      }, { once: true }));
+    },
+  });
+  const controller = new AbortController();
+  const pending = fetch(`${base}/api/media/admin/prepare`, { method: "POST", headers: uploadHeaders(), body: jpeg, signal: controller.signal });
+  const denied = assert.rejects(pending, error => error.name === "AbortError");
+  await started; controller.abort(); await denied; await aborted;
+  await new Promise(resolve => setImmediate(resolve));
+  service.prepareStream = async (role, token, source) => { await readUpload(source); return { bytes: jpeg, mime: "image/jpeg" }; };
+  const next = await post(base, "/api/media/admin/prepare", jpeg, uploadHeaders());
+  assert.equal(next.status, 200);
 });
 
 test("upload rejection authenticates before attaching any body listener", async (t) => {
@@ -393,7 +511,7 @@ test("eight global private file operations bound both roles and retain aborted-o
   for (let index = 0; index < 10; index += 1) assert.equal((await fetch(blockedEndpoint, { headers: { Cookie: cookie("client") } })).status, 200);
 });
 
-test("private byte slots last through response finish or close and use only a fifteen-second binary timeout", async (t) => {
+test("private byte slots include prepared originals, last through finish or close and use a fifteen-second timeout", async (t) => {
   const { base, handler } = await fixture(t);
   const responses = [];
   for (let index = 0; index < 8; index += 1) {
@@ -403,7 +521,11 @@ test("private byte slots last through response finish or close and use only a fi
     response.end = function () { this.writableEnded = true; };
     response.setTimeout = function (duration, callback) { this.timeout = duration; if (callback) this.on("timeout", callback); return this; };
     response.destroy = function () { this.destroyed = true; this.emit("close"); };
-    const request = new PassThrough(); request.method = "GET"; request.url = `${assetsPath()}/${ids.asset}/full`; request.headers = { cookie: cookie("admin") };
+    const request = new PassThrough(); request.method = index < 4 ? "GET" : "POST";
+    request.url = index < 4 ? `${assetsPath()}/${ids.asset}/full` : "/api/media/admin/prepare";
+    request.headers = index < 4 ? { cookie: cookie("admin") }
+      : Object.fromEntries(Object.entries(uploadHeaders()).map(([name, value]) => [name.toLowerCase(), value]));
+    if (index >= 4) request.end(jpeg);
     assert.equal(await handler(request, response), true); assert.equal(response.status, 200); assert.equal(response.timeout, 15000); responses.push(response); request.destroy();
   }
   const endpoint = `${base}${assetsPath("client")}/${ids.asset}/thumb`;
