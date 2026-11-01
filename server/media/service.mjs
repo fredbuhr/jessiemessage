@@ -187,12 +187,17 @@ export async function createMediaService({ store, chatService, authStore, storag
         return response;
       } finally { closeAdmission(record); }
     }),
-    listAssets: (role, raw, { conversationId = null, afterId = null, limit = 50 } = {}) => guarded(async () => {
+    listAssets: (role, raw, { conversationId = null, afterId = null, limit = 50, includeCleanupPending = false } = {}) => guarded(async () => {
       pageSize(limit); const conversation = conversationId === null ? null : id(conversationId), after = afterId === null ? null : id(afterId);
+      if (typeof includeCleanupPending !== "boolean" || includeCleanupPending && (role !== "admin" || conversation !== null)) fail("MEDIA_INPUT");
       const { actor, request } = await context(role, raw);
       await consumeBudget(actor.user.id, "library", request.now);
-      const result = await store.listAssets({ ...request, now: currentTime(), conversationId: conversation, afterId: after, limit });
-      return { assets: result.assets.map((row) => mediaDTO(row, role)), nextCursor: result.nextCursor?.toString("hex") ?? null, hasMore: result.hasMore };
+      const result = await store.listAssets({ ...request, now: currentTime(), conversationId: conversation, afterId: after, limit,
+        ...(includeCleanupPending ? { includeCleanupPending: true } : {}) });
+      return { assets: result.assets.map((row) => {
+        if (includeCleanupPending && (typeof row.cleanupPending !== "boolean" || row.cleanupPending !== (row.deletedAt !== null))) fail("MEDIA_UNAVAILABLE");
+        return mediaDTO(row, role, { includeCleanupPending });
+      }), nextCursor: result.nextCursor?.toString("hex") ?? null, hasMore: result.hasMore };
     }),
     asset: (role, raw, assetId, variant) => guarded(async () => {
       variantValue(variant); const target = id(assetId); const { actor, request } = await context(role, raw);

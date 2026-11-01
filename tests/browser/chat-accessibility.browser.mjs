@@ -883,7 +883,7 @@ test("Chrome 320px: both roles edit their public profile with the keyboard, tran
       await tabUntil(page, ".profile-pseudonym");
       assert.equal(await page.execute("return document.activeElement.matches('.profile-pseudonym')"), true, "the name remains reachable through explicit keyboard navigation");
       assert.equal(await page.execute("return document.querySelector('.profile-header h2').textContent"), "Mon profil");
-      assert.deepEqual(await page.execute("const file=document.querySelector('.profile-file');return {button:document.querySelector('.profile-choose-avatar').textContent,hidden:file.hidden,accept:file.accept,label:file.getAttribute('aria-label')};"), {button:"Choisir ou remplacer l’avatar",hidden:true,accept:"image/jpeg,image/png,image/webp",label:"Choisir ou remplacer l’avatar"});
+      assert.deepEqual(await page.execute("const file=document.querySelector('.profile-file');return {button:document.querySelector('.profile-choose-avatar').textContent,hidden:file.hidden,accept:file.accept,label:file.getAttribute('aria-label')};"), {button:"Choisir ou remplacer l’avatar",hidden:true,accept:"image/*,.heic,.heif,.avif",label:"Choisir ou remplacer l’avatar"});
       assert.equal(await page.execute("return document.querySelector('.profile-avatar-preview img').hidden"), true);
       await page.type(".profile-pseudonym", "Envoyer");
       await page.execute("JessieI18n.setLanguage('en')");
@@ -924,9 +924,16 @@ test("Chrome: real avatar crop, private preview cleanup on controlled hiding, ex
     fixture.profiles[role].avatarId = id(351); fixture.profiles[peerRole].avatarId = id(352);
     const page = await browser(390);
     const chooseSyntheticAvatar = async () => {
-      await page.execute(`const bytes=Uint8Array.from(atob(arguments[0]),char=>char.charCodeAt(0)), files=new DataTransfer();
+      const selected = await page.execute(`const bytes=Uint8Array.from(atob(arguments[0]),char=>char.charCodeAt(0)), files=new DataTransfer();
         files.items.add(new File([bytes],'synthetic-avatar.jpg',{type:'image/jpeg'}));
-        const input=document.querySelector('.profile-file');input.files=files.files;input.dispatchEvent(new Event('change',{bubbles:true}));`, jpeg.toString("base64"));
+        const input=document.querySelector('.profile-file'),chooser=document.querySelector('.profile-choose-avatar');if(!input||!chooser)return false;
+        // Preserve the real profile opening/owner intent while replacing only
+        // the final native file-dialog call, then deliver a real FileList.
+        const nativeClick=input.click;let requested=false;input.click=()=>{requested=true;};
+        try{chooser.click();}finally{input.click=nativeClick;}
+        if(!requested)return false;
+        input.files=files.files;input.dispatchEvent(new Event('change',{bubbles:true}));return true;`, jpeg.toString("base64"));
+      assert.equal(selected, true, "the current profile chooser accepts the synthetic avatar selection");
       await waitUntil(() => page.execute(`const image=document.querySelector('.profile-avatar-preview img');
         return !document.querySelector('.profile-save').disabled && image?.complete && image.naturalWidth===256
           && document.querySelector('.profile-status').textContent==='Avatar prêt. Enregistre le profil pour l’appliquer.'`), "actual browser JPEG decode and central 256px crop");
@@ -1410,7 +1417,10 @@ test("Chrome personal reply lost acknowledgement never retries automatically and
     assert.equal(await page.execute("return document.querySelector('#personal-reply-body').value"), "Confirmation perdue");
     await page.click("#reload-personal-replies"); await waitUntil(() => page.execute("return !document.querySelector('#personal-reply-save').disabled && document.querySelectorAll('[data-personal-quick-reply]').length===1"), "explicit reload observes the saved reply");
     assert.equal(fixture.quickReplyRequests.length, 1); assert.equal(fixture.quickReplies.replies.length, 1); assert.equal(fixture.sent.length, 0);
-    await page.key("\uE00C"); assert.equal(await page.execute("return document.querySelector('#personal-reply-body').value"), "");
+    assert.equal(await page.execute("return document.querySelector('#personal-reply-body').value"), "Confirmation perdue", "the explicit reload preserves the unconfirmed draft for review");
+    await page.key("\uE00C");
+    await waitUntil(() => page.execute("return !document.querySelector('#quick-replies-dialog').open && document.querySelector('#personal-reply-body').value===''"), "the native close event clears the private reply draft");
+    assert.equal(fixture.quickReplyRequests.length, 1, "closing the editor never retries its uncertain write");
     const reads = fixture.quickReplyReads; await loaded(page, "/messages"); assert.equal(await page.execute("return document.querySelector('#open-quick-replies').hidden"), true);
     assert.equal(fixture.quickReplyReads, reads); await noJavascriptErrors(page);
   } finally { await page.close(); }

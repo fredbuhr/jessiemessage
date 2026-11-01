@@ -7,7 +7,7 @@ const root = new URL("../public/", import.meta.url);
 const files = Object.fromEntries(await Promise.all(["media-library-page.html", "media-library-page.js", "i18n.js", "i18n-tools.js", "i18n-media-library.js"].map(async name => [name, await readFile(new URL(name, root), "utf8")])));
 const flush = async () => { for (let n = 0; n < 35; n++) await new Promise(resolve => setImmediate(resolve)); };
 const id = number => number.toString(16).padStart(32, "0");
-const photo = number => ({ id: id(number), width: 1200, height: 800, thumbnailWidth: 480, thumbnailHeight: 320, bytes: 90000, thumbnailBytes: 7000, createdAt: 1793470438000, sharedHere: false, fullUrl: `/api/media/admin/assets/${id(number)}/full`, thumbnailUrl: `/api/media/admin/assets/${id(number)}/thumb` });
+const photo = number => ({ id: id(number), width: 1200, height: 800, thumbnailWidth: 480, thumbnailHeight: 320, bytes: 90000, thumbnailBytes: 7000, createdAt: 1793470438000, sharedHere: false, cleanupPending: false, fullUrl: `/api/media/admin/assets/${id(number)}/full`, thumbnailUrl: `/api/media/admin/assets/${id(number)}/thumb` });
 const video = number => ({ id: id(number), bytes: 500000, mime: "video/mp4", createdAt: 1793470438000, cleanupPending: false, contentUrl: `/api/video/admin/assets/${id(number)}/content` });
 class Element {
   constructor(tag = "div") { this.tagName = tag.toUpperCase(); this.children = []; this.parentElement = null; this.attributes = new Map(); this.events = new Map(); this.dataset = {}; this.value = ""; this.hidden = false; this.disabled = false; this._text = ""; this.className = ""; this.classList = { toggle() {} }; }
@@ -51,7 +51,7 @@ function harness({ respond, prepare = async file => file } = {}) {
       if (path === "/api/auth/session") return response(200, session());
       if (path === "/api/media/admin/capabilities") return response(200, { enabled: true });
       if (path === "/api/chat/admin/capabilities") return response(200, { enabled: true, video: { enabled: true } });
-      if (path.startsWith("/api/media/admin/assets?")) { const after = /afterId=([a-f0-9]+)/.exec(path)?.[1] ?? "", rest = owner === 1 ? rows.filter(row => row.id > after) : [], page = rest.slice(0, 20); return response(200, { assets: page, hasMore: rest.length > 20, nextCursor: rest.length > 20 ? page.at(-1).id : null }); }
+      if (path.startsWith("/api/media/admin/assets?")) { assert.equal(new URL(path, "http://fixture.invalid").searchParams.get("includeCleanupPending"), "1"); const after = /afterId=([a-f0-9]+)/.exec(path)?.[1] ?? "", rest = owner === 1 ? rows.filter(row => row.id > after) : [], page = rest.slice(0, 20); return response(200, { assets: page, hasMore: rest.length > 20, nextCursor: rest.length > 20 ? page.at(-1).id : null }); }
       if (path.startsWith("/api/video/admin/assets?")) return response(200, { assets: [video(80)], hasMore: false, nextCursor: null });
       if (/\/api\/media\/admin\/assets\/[a-f0-9]+\/(?:thumb|full)$/.test(path)) return response(200, null, { binary: true });
       throw new Error("Unexpected synthetic request " + path);
@@ -195,4 +195,35 @@ test("an already attempted photo upload interrupted by hiding is never placed ba
   await h.start(); await h.ids.get("photo-file").trigger("click"); h.ids.get("photo-file").files = [new Blob(["attempted upload"], { type: "image/jpeg" })]; await h.ids.get("photo-file").trigger("change"); assert.ok(release);
   await h.hide(); await h.show(); release(); await flush();
   assert.equal(h.calls.filter(call => call.options.method === "POST").length, 1); assert.equal(h.context.tools.state.selected, null); assert.equal(h.ids.get("library-content").hidden, false);
+});
+test("pending photo cleanup has no binary requests and an explicit retry releases its row only after acknowledgement", async () => {
+  let attempt = 0, released = 0;
+  const h = harness({ respond: (path, options, f) => {
+    if (path === `/api/media/admin/assets/${id(1)}/delete` && options.method === "POST") {
+      attempt++;
+      if (attempt === 1) return response(503, { error: "media_unavailable" });
+      if (attempt === 2) throw new TypeError("synthetic lost cleanup response");
+      f.rows.splice(0, 1); released++; return response(200, { deleted: true });
+    }
+    return null;
+  } });
+  h.rows[0] = { ...photo(1), cleanupPending: true, fullUrl: null, thumbnailUrl: null };
+  await h.start();
+  assert.equal(h.ids.get("media-grid").children[0].textContent.includes("Nettoyage à terminer"), true);
+  await h.context.tools.selectAsset(h.context.tools.state.rows[0]);
+  assert.equal(h.ids.get("media-preview").children.length, 0); assert.equal(h.ids.get("delete-media").textContent, "Réessayer le nettoyage");
+  assert.equal(h.calls.some(call => call.path === `/api/media/admin/assets/${id(1)}/full` || call.path === `/api/media/admin/assets/${id(1)}/thumb`), false);
+  for (let failure = 0; failure < 2; failure++) {
+    await h.ids.get("delete-media").trigger("click");
+    assert.equal(h.ids.get("delete-title").textContent, "Terminer le nettoyage de ce média ?");
+    assert.match(h.ids.get("delete-dialog").textContent, /seulement après confirmation/);
+    await h.ids.get("confirm-delete").trigger("click");
+    assert.equal(attempt, failure + 1); assert.equal(released, 0);
+    assert.equal(h.context.tools.state.rows[0].cleanupPending, true); assert.equal(h.ids.get("delete-media").disabled, true);
+    assert.match(h.ids.get("library-status").textContent, /résultat n’a pas été confirmé/);
+    await h.context.tools.loadList(); await h.context.tools.selectAsset(h.context.tools.state.rows[0]);
+  }
+  await h.ids.get("delete-media").trigger("click"); await h.ids.get("confirm-delete").trigger("click");
+  assert.equal(attempt, 3); assert.equal(released, 1); assert.equal(h.context.tools.state.selected, null);
+  assert.equal(h.context.tools.state.rows.some(row => row.id === id(1)), false); assert.equal(h.ids.get("library-status").textContent, "Nettoyage terminé.");
 });

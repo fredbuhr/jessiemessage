@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import vm from "node:vm";
 import factory from "../node_modules/libheif-js/libheif-wasm/libheif-bundle.mjs";
-import { inspectImageInput } from "../public/image-preparation.js";
+import { inspectImageInput, MAX_HEIC_IMAGE_PIXELS, TARGET_UPLOAD_BYTES } from "../public/image-preparation.js";
 import { decodeHeicPixels, shrinkHeicPlane, limitHeicDecoder } from "../public/heic-decoder-worker.js";
 
 // A generated colour pattern, never a customer original. The pinned native
@@ -187,4 +188,44 @@ test("the native RGBA plane is sampled directly into a bounded opaque output wit
     { width: 1, height: 1, stride: 4, data: new Uint16Array(4) },
     { width: 32769, height: 1, stride: 32769 * 4, data },
   ]) assert.throws(() => shrinkHeicPlane(bad), failure("media_dimensions"));
+});
+
+test("the real HEIC worker transfers only negotiated reduced pixels when its canvas capability is missing", async () => {
+  const source = await readFile(new URL("../public/heic-decoder-worker.js", import.meta.url), "utf8");
+  for (const capability of ["missing", "no2d", "noEncoder", "constructorFailure", "available"]) {
+    for (const acceptPixels of [false, true]) {
+      const messages = [], canvases = []; let closed = false;
+      class WorkerCanvas {
+        constructor(width, height) {
+          if (capability === "constructorFailure") throw new Error("synthetic canvas unavailable");
+          this.width = width; this.height = height; canvases.push(this);
+          if (capability === "noEncoder") this.convertToBlob = undefined;
+        }
+        getContext() { return capability === "no2d" ? null : { putImageData() {}, drawImage() {} }; }
+        async convertToBlob() { return new Blob([new Uint8Array(1000)], { type: "image/jpeg" }); }
+      }
+      const self = { postMessage(message, transfer = []) { messages.push(structuredClone(message, { transfer })); }, close() { closed = true; } };
+      const context = vm.createContext({ self, Blob, ArrayBuffer, Uint8Array, Uint8ClampedArray,
+        ImageData: class { constructor(data, width, height) { this.data = data; this.width = width; this.height = height; } },
+        OffscreenCanvas: capability === "missing" ? undefined : WorkerCanvas,
+        inspectImageInput, MAX_HEIC_IMAGE_PIXELS, TARGET_UPLOAD_BYTES, codecFactory: factory });
+      vm.runInContext(source.replace(/^import .*\n/m, "").replace(/export /g, "")
+        .replace('import("/heic-codec-1.23.5.mjs")', "Promise.resolve({ default: codecFactory })"), context);
+      const bytes = Uint8Array.from(heic);
+      await self.onmessage({ data: { bytes: bytes.buffer, ...(acceptPixels ? { acceptPixels: true } : {}) } });
+      assert.equal(closed, true); assert.equal(messages.length, 1);
+      assert.ok(bytes.every(value => value === 0), "original compressed bytes are cleared in the worker");
+      if (capability === "available") {
+        assert.equal(messages[0].blob.type, "image/jpeg"); assert.equal(messages[0].pixels, undefined);
+      } else if (!acceptPixels) assert.deepEqual(messages[0], { ok: false, code: "media_heic" });
+      else {
+        const { pixels, width, height } = messages[0];
+        assert.equal(messages[0].ok, true); assert.equal(messages[0].blob, undefined);
+        assert.ok(pixels instanceof ArrayBuffer); assert.deepEqual([width, height, pixels.byteLength], [64, 48, 64 * 48 * 4]);
+        assert.ok(new Uint8Array(pixels).some((value, index) => index % 4 !== 3 && value > 100));
+        assert.ok(new Uint8Array(pixels).every((value, index) => index % 4 !== 3 || value === 255));
+      }
+      assert.ok(canvases.every(canvas => canvas.width === 0 && canvas.height === 0));
+    }
+  }
 });

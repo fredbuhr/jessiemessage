@@ -262,16 +262,20 @@ export function createMediaStore({ pool, chatStore, capacity = null, video = fal
       });
     },
 
-    async listAssets({ role, tokenHash, now, conversationId = null, afterId = null, limit = 50 }) {
+    async listAssets({ role, tokenHash, now, conversationId = null, afterId = null, limit = 50, includeCleanupPending = false }) {
       integer(limit, 100); if (conversationId !== null) bytes(conversationId, 16); if (afterId !== null) bytes(afterId, 16);
+      if (typeof includeCleanupPending !== "boolean" || includeCleanupPending && (role !== "admin" || conversationId !== null)) input();
       return withContext({ role, tokenHash, now, conversationId }, async (connection, context) => {
         const shared = conversationId === null ? "0" : `EXISTS (SELECT 1 FROM message_media mm JOIN messages m ON m.id = mm.message_id AND m.conversation_id = mm.conversation_id
           WHERE mm.media_id = a.id AND mm.conversation_id = ? AND m.deleted_at IS NULL)`;
         const rows = await connection.query(`SELECT ${assetProjection}, ${shared} AS shared_here FROM media_assets a
-          WHERE a.owner_id = ? AND a.deleted_at IS NULL AND a.created_at <= ? ${afterId === null ? "" : "AND a.id > ?"} ORDER BY a.id ASC LIMIT ?`,
+          ${includeCleanupPending ? "JOIN media_storage_objects o ON o.asset_id = a.id AND o.owner_id = a.owner_id AND o.storage_key = a.storage_key" : ""}
+          WHERE a.owner_id = ? AND ${includeCleanupPending ? "(a.deleted_at IS NULL OR (a.deleted_at IS NOT NULL AND o.state = 'cleanup_pending'))" : "a.deleted_at IS NULL"}
+          AND a.created_at <= ? ${afterId === null ? "" : "AND a.id > ?"} ORDER BY a.id ASC LIMIT ?`,
         [...(conversationId === null ? [] : [conversationId]), context.actor.id, sqlDate(now), ...(afterId === null ? [] : [afterId]), limit + 1]);
         const selected = rows.slice(0, limit), hasMore = rows.length > limit;
-        return { assets: selected.map((row) => rawAsset(row, Boolean(Number(row.shared_here)))), nextCursor: hasMore ? selected.at(-1).id : null, hasMore };
+        return { assets: selected.map((row) => ({ ...rawAsset(row, Boolean(Number(row.shared_here))),
+          ...(includeCleanupPending ? { cleanupPending: row.deleted_at !== null } : {}) })), nextCursor: hasMore ? selected.at(-1).id : null, hasMore };
       });
     },
 
@@ -299,6 +303,13 @@ export function createMediaStore({ pool, chatStore, capacity = null, video = fal
         if (references.length) fail("MEDIA_IN_USE");
         const avatars = await connection.query("SELECT 1 FROM user_profiles WHERE avatar_media_id = ? LIMIT 1", [assetId]);
         if (avatars.length) fail("MEDIA_IN_USE");
+        if (context.actor.role === "admin") {
+          // Creation and workers hold the same owner lock first. This current
+          // read needs no campaign lock after the capacity/asset locks.
+          const campaigns = await connection.query(`SELECT 1 FROM broadcast_campaigns FORCE INDEX (broadcast_campaigns_media)
+            WHERE media_id = ? AND admin_id = ? AND status IN ('queued', 'running') LIMIT 1`, [assetId, context.actor.id]);
+          if (campaigns.length) fail("MEDIA_IN_USE");
+        }
         await connection.query("UPDATE media_assets SET deleted_at = ?, active_digest = NULL WHERE id = ?", [sqlDate(now), assetId]);
         await connection.query("UPDATE media_storage_objects SET state = 'cleanup_pending', updated_at = ? WHERE id = ?", [sqlDate(now), object.id]);
         return rawAsset({ ...row, deleted_at: sqlDate(now) });

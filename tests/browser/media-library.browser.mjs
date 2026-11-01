@@ -13,11 +13,12 @@ const video = Buffer.from(await readFile(new URL("../fixtures/video-decodable.mp
 let driver;
 before(async () => { driver = await startWebDriver(); }, { timeout: 60000 });
 after(async () => { await driver?.close(); });
-async function fixture() {
+async function fixture({ cleanupPending = false } = {}) {
   const files = new Map(await Promise.all(names.map(async name => ["/" + name, await readFile(new URL(name, publicRoot))])));
-  const state = { owner: 1, requests: [], uploads: [], deletions: [], errors: [] };
-  const photo = number => ({ id: id(number), width: 240, height: 160, thumbnailWidth: 240, thumbnailHeight: 160, bytes: image.length, thumbnailBytes: image.length, createdAt: 1793470438000 + number * 1000, sharedHere: false, fullUrl: `/api/media/admin/assets/${id(number)}/full`, thumbnailUrl: `/api/media/admin/assets/${id(number)}/thumb` });
-  const photos = Array.from({ length: 45 }, (_, index) => photo(index + 1));
+  const state = { owner: 1, requests: [], uploads: [], deletions: [], errors: [],
+    cleanup: cleanupPending ? { pending: true, mode: "refused", heldBytes: image.length * 2 + 80, releasedBytes: 0, releases: 0 } : null };
+  const photo = (number, pending = false) => ({ id: id(number), width: 240, height: 160, thumbnailWidth: 240, thumbnailHeight: 160, bytes: image.length, thumbnailBytes: image.length, createdAt: 1793470438000 + number * 1000, sharedHere: false, cleanupPending: pending, fullUrl: pending ? null : `/api/media/admin/assets/${id(number)}/full`, thumbnailUrl: pending ? null : `/api/media/admin/assets/${id(number)}/thumb` });
+  const photos = Array.from({ length: 45 }, (_, index) => photo(index + 1, cleanupPending && index === 0));
   const session = () => ({ user: { id: id(8000 + state.owner), role: "admin", pseudonym: "Synthetic Jessie" }, csrf: (state.owner === 1 ? "a" : "b").repeat(43), expiresAt: Date.now() + 3600000 });
   const server = createServer((request, response) => { void (async () => {
     const url = new URL(request.url, "http://localhost"); state.requests.push({ path: url.pathname + url.search, method: request.method });
@@ -38,14 +39,28 @@ async function fixture() {
       state.uploads.push({ bytes: body.length, type, width: metadata.width, height: metadata.height }); json(201, { asset: photo(99), duplicate: false }); return;
     }
     if (url.pathname === "/api/media/admin/assets") {
-      assert.equal(url.searchParams.get("limit"), "20"); const after = url.searchParams.get("afterId"), rows = state.owner === 1 ? photos.filter(row => !after || row.id > after) : [], page = rows.slice(0, 20), more = rows.length > 20;
+      assert.equal(url.searchParams.get("limit"), "20"); assert.equal(url.searchParams.get("includeCleanupPending"), "1");
+      const after = url.searchParams.get("afterId"), rows = state.owner === 1 ? photos.filter(row => (!after || row.id > after) && !(state.cleanup && !state.cleanup.pending && row.id === id(1))) : [], page = rows.slice(0, 20), more = rows.length > 20;
       json(200, { assets: page, nextCursor: more ? page.at(-1).id : null, hasMore: more }); return;
     }
     if (/^\/api\/media\/admin\/assets\/[a-f0-9]{32}\/(thumb|full)$/.test(url.pathname)) {
+      if (state.cleanup?.pending && url.pathname.includes(`/${id(1)}/`)) { json(404, { error: "not_found" }); return; }
       response.writeHead(200, { "Content-Type": "image/jpeg", "Content-Length": image.length }); response.end(image); return;
     }
     if (/^\/api\/(media|video)\/admin\/assets\/[a-f0-9]{32}\/delete$/.test(url.pathname) && request.method === "POST") {
       assert.equal(request.headers["x-csrf-token"], session().csrf); state.deletions.push(url.pathname); for await (const _chunk of request) { /* Drain synthetic body. */ }
+      if (state.cleanup && url.pathname === `/api/media/admin/assets/${id(1)}/delete`) {
+        assert.equal(state.cleanup.pending, true);
+        if (state.cleanup.mode === "refused") { json(503, { error: "media_unavailable" }); return; }
+        if (state.cleanup.mode === "lost") {
+          // Deliver headers before losing the body so Chrome cannot silently
+          // replay a POST on an ambiguously closed reused connection.
+          response.writeHead(200, { "Content-Type": "application/json", "Content-Length": "128", Connection: "close" });
+          response.end('{"deleted":'); return;
+        }
+        assert.equal(state.cleanup.mode, "success"); state.cleanup.pending = false; state.cleanup.releasedBytes += state.cleanup.heldBytes; state.cleanup.heldBytes = 0; state.cleanup.releases += 1;
+        json(200, { deleted: true }); return;
+      }
       json(409, { error: url.pathname.startsWith("/api/video") ? "video_in_use" : "media_in_use" }); return;
     }
     if (url.pathname === "/api/video/admin/assets") { json(200, { assets: [{ id: id(80), createdAt: 1793470438000, bytes: video.length, mime: "video/mp4", cleanupPending: false, contentUrl: `/api/video/admin/assets/${id(80)}/content` }], nextCursor: null, hasMore: false }); return; }
@@ -107,5 +122,38 @@ test("Chrome media library: session change clears selected private media before 
     await page.executeAsync("const done=arguments[arguments.length-1];fetch('/fixture/switch').then(()=>done(true),()=>done(false))"); await page.click("#refresh-list");
     await waitUntil(() => page.execute("return document.getElementById('library-content').hidden && document.querySelectorAll('#media-grid button').length===0 && document.querySelectorAll('#media-preview img').length===0 && !document.getElementById('reload-session').hidden"), "old session private contents discarded");
     await page.click("#reload-session"); await waitUntil(() => page.execute("return !document.getElementById('library-content').hidden && document.querySelectorAll('#media-grid button').length===0"), "new owner empty own library"); await errors(page, source);
+  } finally { await page?.close(); await source.close(); }
+});
+test("Chrome media library: pending photo cleanup stays explicit and uncertain attempts retain the row and synthetic quota until acknowledgement", { timeout: 60000 }, async () => {
+  const source = await fixture({ cleanupPending: true }); let page;
+  try {
+    page = await open(source, 390, "fr"); const heldBytes = source.state.cleanup.heldBytes;
+    const pendingSelector = `#media-grid button[data-media-id="${id(1)}"]`;
+    const selectPending = async () => {
+      await page.click(pendingSelector);
+      await waitUntil(() => page.execute("return !document.getElementById('media-detail').hidden && document.getElementById('preview-status').textContent===arguments[0]", "Ce média a déjà été retiré. Réessaie son nettoyage pour libérer l’espace restant."), "pending photo offers only cleanup");
+      assert.equal(await page.execute("return document.querySelectorAll('#media-preview img,#media-preview video').length"), 0);
+      assert.equal(await page.execute("return document.getElementById('delete-media').textContent"), "Réessayer le nettoyage");
+    };
+    const refreshPending = async () => {
+      await page.click("#refresh-list");
+      await waitUntil(() => page.execute("return !!document.querySelector(arguments[0]) && !document.getElementById('refresh-list').disabled && !document.querySelector(arguments[0]).disabled", pendingSelector), "refresh reconciles the pending photo before another attempt");
+      await selectPending();
+    };
+    const attempt = async count => {
+      await page.click("#delete-media"); assert.equal(source.state.deletions.length, count - 1, "opening the confirmation never retries cleanup");
+      assert.equal(await page.execute("return document.getElementById('confirm-delete').textContent"), "Réessayer le nettoyage");
+      await page.click("#confirm-delete");
+      await waitUntil(() => source.state.deletions.length === count && page.execute("return document.getElementById('library-status').textContent===arguments[0] && document.getElementById('delete-media').disabled", "Le résultat n’a pas été confirmé. Actualise la liste avant toute nouvelle modification."), "unconfirmed cleanup freezes changes until refresh");
+      assert.equal(await page.execute("return !!document.querySelector(arguments[0])", pendingSelector), true);
+      assert.equal(source.state.cleanup.pending, true); assert.equal(source.state.cleanup.heldBytes, heldBytes); assert.equal(source.state.cleanup.releasedBytes, 0); assert.equal(source.state.cleanup.releases, 0);
+    };
+    await selectPending(); await attempt(1);
+    await refreshPending(); source.state.cleanup.mode = "lost"; await attempt(2);
+    await refreshPending(); source.state.cleanup.mode = "success"; await page.click("#delete-media"); await page.click("#confirm-delete");
+    await waitUntil(() => page.execute("return document.getElementById('library-status').textContent==='Nettoyage terminé.' && !document.querySelector(arguments[0]) && document.getElementById('media-detail').hidden && !document.getElementById('refresh-list').disabled", pendingSelector), "acknowledged cleanup removes the pending row");
+    assert.equal(source.state.deletions.length, 3); assert.equal(source.state.cleanup.pending, false); assert.equal(source.state.cleanup.heldBytes, 0); assert.equal(source.state.cleanup.releasedBytes, heldBytes); assert.equal(source.state.cleanup.releases, 1);
+    assert.equal(source.state.requests.some(row => new RegExp(`/api/media/admin/assets/${id(1)}/(?:thumb|full)$`).test(row.path)), false, "pending photos never request inaccessible bytes");
+    await errors(page, source);
   } finally { await page?.close(); await source.close(); }
 });

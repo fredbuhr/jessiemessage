@@ -151,3 +151,106 @@ test("phone preparation really shrinks large JPEG, AVIF and HEIC locally under t
     }
   }
 });
+
+test("real HEIC uses document encoding without worker canvas while legacy callers keep the Blob contract", { timeout: 90000 }, async (t) => {
+  const driver = await startWebDriver(); t.after(() => driver.close());
+  const [helper, worker, codec, heicText] = await Promise.all([
+    readFile(new URL("../../public/image-preparation.js", import.meta.url)),
+    readFile(new URL("../../public/heic-decoder-worker.js", import.meta.url)),
+    readFile(new URL("../../node_modules/libheif-js/libheif-wasm/libheif-bundle.mjs", import.meta.url)),
+    readFile(new URL("../fixtures/photo-1140.heic.b64", import.meta.url), "utf8"),
+  ]);
+  const heic = Buffer.from(heicText, "base64"), decoderRequests = [];
+  const modes = {
+    available: "",
+    missing: "globalThis.OffscreenCanvas = undefined;\n",
+    no2d: "OffscreenCanvas.prototype.getContext = () => null;\n",
+    noEncoder: "OffscreenCanvas.prototype.convertToBlob = undefined;\n",
+  };
+  let mode = "available";
+  const server = createServer((request, response) => {
+    if (request.url === "/image-preparation.js") { response.writeHead(200, { "Content-Type": "text/javascript" }); response.end(helper); }
+    else if (request.url === "/heic-decoder-worker.js") {
+      decoderRequests.push([request.url, mode]);
+      response.writeHead(200, { "Content-Type": "text/javascript", "Cache-Control": "no-store",
+        "Content-Security-Policy": "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'none'; worker-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'" });
+      response.end(Buffer.concat([Buffer.from(modes[mode]), worker]));
+    } else if (request.url === "/heic-codec-1.23.5.mjs") { response.writeHead(200, { "Content-Type": "text/javascript" }); response.end(codec); }
+    else if (request.url === "/photo.heic") { response.writeHead(200, { "Content-Type": "image/heic" }); response.end(heic); }
+    else if (request.url === "/") { response.writeHead(200, { ...AUTH_HEADERS, "Content-Type": "text/html" }); response.end("<!doctype html><title>Local HEIC worker compatibility</title>"); }
+    else { response.writeHead(404); response.end(); }
+  });
+  await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+  t.after(async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); });
+  const browser = await driver.browser({ origin: `http://127.0.0.1:${server.address().port}` });
+  await browser.navigate("/");
+  for (const fixture of [{ mode: "available", legacy: true }, { mode: "missing" }, { mode: "no2d" },
+    { mode: "noEncoder" }, { mode: "missing", legacy: true, error: "media_heic" }]) {
+    mode = fixture.mode;
+    const result = await browser.executeAsync(`
+      const done = arguments[arguments.length - 1], { legacy } = arguments[0];
+      (async () => {
+        const original = await (await fetch('/photo.heic')).blob();
+        const savedBitmap = globalThis.createImageBitmap, savedImage = globalThis.Image, create = document.createElement;
+        const pixels = [], draws = [], violations = [];
+        const violation = event => violations.push(event.violatedDirective);
+        addEventListener('securitypolicyviolation', violation);
+        document.createElement = function (...args) {
+          const element = create.apply(this, args);
+          if (args[0] === 'canvas') {
+            const get = element.getContext;
+            element.getContext = function (...args) {
+              const context = get.apply(this, args), put = context?.putImageData, draw = context?.drawImage;
+              if (put) context.putImageData = function (image, ...args) { pixels.push([image.width, image.height, image.data.byteLength]); return put.call(this, image, ...args); };
+              if (draw) context.drawImage = function (...args) { draws.push([element.width, element.height]); return draw.apply(this, args); };
+              return context;
+            };
+          }
+          return element;
+        };
+        globalThis.createImageBitmap = async () => { throw new DOMException('Synthetic native HEIC unavailable', 'InvalidStateError'); };
+        globalThis.Image = undefined;
+        try {
+          let output;
+          if (legacy) {
+            const bytes = await original.arrayBuffer();
+            output = await new Promise((resolve, reject) => {
+              const worker = new Worker('/heic-decoder-worker.js', { type: 'module' });
+              worker.onerror = () => { worker.terminate(); reject(new Error('worker_error')); };
+              worker.onmessage = ({ data }) => {
+                worker.terminate();
+                if (data.ok !== true) reject(Object.assign(new Error('worker_error'), { code: data.code }));
+                else if (!(data.blob instanceof Blob) || data.pixels !== undefined) reject(new Error('legacy_contract'));
+                else resolve(data.blob);
+              };
+              worker.postMessage({ bytes }, [bytes]);
+            });
+          } else {
+            const { prepareImageUpload } = await import('/image-preparation.js');
+            output = await prepareImageUpload(original);
+          }
+          removeEventListener('securitypolicyviolation', violation);
+          const documentWasmBlocked = await WebAssembly.compile(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0])).then(() => false, () => true);
+          return { type: output.type, bytes: Array.from(new Uint8Array(await output.arrayBuffer())), pixels, draws, violations, documentWasmBlocked };
+        } finally {
+          globalThis.createImageBitmap = savedBitmap; globalThis.Image = savedImage; document.createElement = create;
+          removeEventListener('securitypolicyviolation', violation);
+        }
+      })().then(done, error => done({ failureCode: error.code || error.message }));
+    `, fixture);
+    if (fixture.error) { assert.equal(result.failureCode, fixture.error); continue; }
+    assert.equal(result.failureCode, undefined, fixture.mode);
+    assert.equal(result.type, "image/jpeg"); assert.equal(result.documentWasmBlocked, true);
+    assert.deepEqual(result.violations, []);
+    assert.deepEqual(result.pixels, fixture.legacy ? [] : [[64, 48, 64 * 48 * 4]]);
+    assert.ok(result.draws.every(([width, height]) => width <= 2048 && height <= 2048));
+    const bytes = Buffer.from(result.bytes), metadata = await sharp(bytes).metadata();
+    assert.ok(bytes.length > 0 && bytes.length <= 2 * 1024 * 1024);
+    assert.deepEqual([metadata.width, metadata.height], [64, 48]);
+    for (const field of ["exif", "iptc", "xmp", "orientation"]) assert.equal(metadata[field], undefined);
+    assert.ok((await sharp(bytes).removeAlpha().raw().toBuffer()).some(value => value > 100), "real HEVC colour survives the transferred-plane canvas copy");
+    const accepted = await normalizeImage(bytes);
+    assert.deepEqual([accepted.width, accepted.height], [64, 48]);
+  }
+  assert.deepEqual(decoderRequests.map(request => request[1]), ["available", "missing", "no2d", "noEncoder", "missing"]);
+});

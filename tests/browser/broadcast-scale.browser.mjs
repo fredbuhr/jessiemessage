@@ -40,7 +40,7 @@ window.clearTimeout=handle=>{polls.delete(handle);return nativeClearTimeout(hand
 window.__runScalePoll=async()=>{const entry=[...polls].at(-1);if(!entry)throw Error('No product history poll');nativeClearTimeout(entry[0]);polls.delete(entry[0]);await entry[1]();};
 `;
 
-async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed = false, videoEnabled = false, videoCreationEnabled = true, seedVideo = false, holdVideoUpload = false, mediaEnabled = false } = {}) {
+async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed = false, videoEnabled = false, videoCreationEnabled = true, seedVideo = false, holdVideoUpload = false, uncertainVideoUpload = false, mediaEnabled = false } = {}) {
   const files = new Map(await Promise.all(assets.map(async name => ["/" + name, await readFile(new URL(name, publicRoot))])));
   const html = files.get("/broadcast.html").toString().replace("<head>", '<head><script src="/scale-fixture.js"></script>');
   const contacts = Array.from({ length: 2500 }, (_, index) => ({ id: id(index + 1), client: { id: id(10000 + index), pseudonym: `Scale client ${String(index + 1).padStart(4, "0")}` }, crm: { nickname: "" }, canSend: true }));
@@ -112,6 +112,10 @@ async function fixture({ largeAudiencesEnabled = true, uncertain = false, seed =
       const chunks = []; for await (const chunk of request) chunks.push(chunk); const bytes = Buffer.concat(chunks);
       attempt.bytes = bytes.length; attempt.bodyMatches = bytes.equals(videoBytes);
       assert.deepEqual(bytes, videoBytes); state.uploads.push(bytes.length);
+      if (uncertainVideoUpload) {
+        response.writeHead(201, { "Content-Type": "application/json", "Content-Length": "128", Connection: "close" });
+        response.end('{"id":'); return;
+      }
       if (!holdVideoUpload) json(201, { id: id(7000), bytes: bytes.length, mime: "video/mp4" });
       return;
     }
@@ -334,8 +338,8 @@ test("Chrome: compatibility capability hides global creation while existing 2,50
   } finally { await page?.close(); await source.close(); }
 });
 
-async function selectVideo(page) {
-  await page.execute("const bytes=Uint8Array.from(atob(arguments[0]),c=>c.charCodeAt(0));const transfer=new DataTransfer();transfer.items.add(new File([bytes],'synthetic-broadcast.mp4',{type:'video/mp4'}));const input=document.getElementById('video-file');input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));", videoBytes.toString("base64"));
+async function selectVideo(page, type = "video/mp4") {
+  await page.execute("const bytes=Uint8Array.from(atob(arguments[0]),c=>c.charCodeAt(0));const transfer=new DataTransfer();transfer.items.add(new File([bytes],'synthetic-broadcast.mp4',{type:arguments[1]}));const input=document.getElementById('video-file'),native=input.click;input.click=()=>{};document.getElementById('pick-video').click();input.click=native;input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));", videoBytes.toString("base64"), type);
   await waitUntil(() => page.execute("const player=document.querySelector('#video-preview video');return player?.videoWidth===96&&player.videoHeight===64&&player.duration>1.5&&!document.getElementById('upload-video').disabled"), "native MP4 preview is decoded before upload");
 }
 
@@ -407,10 +411,58 @@ test("Chrome broadcast video upload can be cancelled while awaiting ACK without 
     await waitForVideoUpload(source, page, () => source.state.uploads.length === 1 && page.execute("return !document.getElementById('cancel-video').hidden"), "native upload awaits its server acknowledgement");
     assert.equal(await page.execute("return document.getElementById('preview').disabled&&document.getElementById('confirm').disabled&&!document.getElementById('video-progress').hidden"), true);
     await clickVideoButton(page, "cancel-video");
-    await waitUntil(() => page.execute("return document.getElementById('cancel-video').hidden&&document.getElementById('video-status').textContent.includes('Upload cancelled')"), "cancel aborts the upload and exposes a translated result");
+    await waitUntil(() => page.execute("return document.getElementById('cancel-video').hidden&&document.getElementById('video-status').textContent.includes('not confirmed')&&document.querySelector('#video-status a')?.getAttribute('href')==='/admin/media'"), "cancellation after send exposes its uncertain result and library link");
+    await page.execute("document.getElementById('upload-video').click()");
+    assert.equal(source.state.uploadAttempts.length, 1, "the failed draft cannot repeat its upload");
     await clickVideoButton(page, "remove-video");
     assert.equal(await page.execute("return document.querySelectorAll('#video-preview video').length===0&&document.getElementById('video-progress').hidden"), true);
     assert.equal(source.state.uploads.length, 1); assert.equal(source.state.creates.length, 0); assert.equal(source.state.previewInputs.length, 0); await errors(page);
+  } finally { await page?.close(); await source.close(); }
+});
+
+test("Chrome broadcast MP4 empty/alias MIME keeps native decoding and canonical upload headers", { timeout: 90000 }, async () => {
+  for (const type of ["", "application/mp4"]) {
+    const source = await fixture({ videoEnabled: true }); let page;
+    try {
+      page = await open(source, 390); await selectVideo(page, type);
+      assert.equal(source.state.uploadAttempts.length, 0); await clickVideoButton(page, "upload-video");
+      await waitForVideoUpload(source, page, () => page.execute("return document.getElementById('upload-video').hidden"), "the real MP4 receives its typed ACK");
+      assert.equal(source.state.uploadAttempts.length, 1); assert.equal(source.state.uploadAttempts[0].contentTypeMatches, true);
+      assert.equal(source.state.uploadAttempts[0].bodyMatches, true); assert.equal(source.state.creates.length, 0); await errors(page);
+    } finally { await page?.close(); await source.close(); }
+  }
+});
+
+test("Chrome broadcast video picker hidden change waits for same-owner resume proofs exactly once", { timeout: 60000 }, async () => {
+  const source = await fixture({ videoEnabled: true }); let page;
+  try {
+    page = await open(source, 390);
+    // Synthetic lifecycle ordering in Chrome; this does not emulate an OS picker.
+    await page.execute("const input=document.getElementById('video-file'),native=input.click;input.click=()=>{};document.getElementById('pick-video').click();input.click=native;Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'});document.dispatchEvent(new Event('visibilitychange'));const bytes=Uint8Array.from(atob(arguments[0]),c=>c.charCodeAt(0)),data=new DataTransfer();data.items.add(new File([bytes],'synthetic-return.mp4',{type:''}));input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}));", videoBytes.toString("base64"));
+    assert.equal(await page.execute("return document.querySelectorAll('#video-preview video').length"), 0);
+    source.state.blockSessionProofs = true;
+    await page.execute("Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});document.dispatchEvent(new Event('visibilitychange'))");
+    await waitUntil(() => source.state.heldSessionProofs > 0, "video selection awaits its owner proof");
+    assert.equal(await page.execute("return document.querySelectorAll('#video-preview video').length"), 0); assert.equal(source.state.uploadAttempts.length, 0);
+    source.releaseSessionProofs();
+    await waitUntil(() => page.execute("return document.querySelector('#video-preview video')?.videoWidth===96&&!document.getElementById('upload-video').disabled"), "same owner's deferred MP4 decoded once");
+    assert.equal(source.state.uploadAttempts.length, 0); await clickVideoButton(page, "upload-video");
+    await waitForVideoUpload(source, page, () => page.execute("return document.getElementById('upload-video').hidden"), "one explicit deferred video upload");
+    await page.execute("document.dispatchEvent(new Event('visibilitychange'));document.getElementById('upload-video').click()");
+    assert.equal(source.state.uploadAttempts.length, 1); assert.equal(source.state.creates.length, 0); await errors(page);
+  } finally { await page?.close(); await source.close(); }
+});
+
+test("Chrome broadcast lost video ACK retains one failed draft and a translated library link without upload replay", { timeout: 60000 }, async () => {
+  const source = await fixture({ videoEnabled: true, uncertainVideoUpload: true }); let page;
+  try {
+    page = await open(source, 390, "en"); await selectVideo(page); await clickVideoButton(page, "upload-video");
+    await waitUntil(() => page.execute("return document.getElementById('upload-video').hidden&&document.querySelector('#video-status a')?.textContent==='View my media'"), "uncertain committed upload directs to the library");
+    assert.equal(source.state.uploadAttempts.length, 1); assert.equal(source.state.uploads.length, 1);
+    await page.execute("document.getElementById('upload-video').click();JessieI18n.setLanguage('fr')");
+    assert.equal(await page.execute("return document.querySelector('#video-status a')?.textContent"), "Consulter mes médias");
+    assert.match(await page.execute("return document.getElementById('video-status').textContent"), /Consulte ta bibliothèque/);
+    assert.equal(source.state.uploadAttempts.length, 1); assert.equal(source.state.creates.length, 0); await errors(page);
   } finally { await page?.close(); await source.close(); }
 });
 

@@ -30,7 +30,7 @@ const flush = async () => { for (let index = 0; index < 12; index += 1) await ne
 class FakeNode {
   constructor(tag = "div") { this.attributes = new Map(); this.tagName = tag; this.children = []; this.hidden = false; this.disabled = false; this.checked = false; this.value = ""; this.listeners = new Map(); this.classList = { toggle() {} }; }
   set textContent(value) { this.text = value; this.children = []; }
-  get textContent() { return this.text ?? ""; }
+  get textContent() { return (this.text ?? "") + this.children.map(child => child.textContent ?? "").join(""); }
   append(...nodes) { this.children.push(...nodes); }
   replaceChildren(...nodes) { this.children = nodes; }
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
@@ -622,6 +622,7 @@ function videoFixture(handler = () => null, owner = videoActor()) {
   }
   const f = fixture(handler, owner, { XMLHttpRequest: Upload, urlApi: PreviewURL });
   return { ...f, uploads, revoked, created, choose(file = { type: "video/mp4", size: 12536 }) {
+    f.node("pick-video").click();
     f.node("video-file").files = [file]; f.ui.chooseVideo();
     return f.node("video-preview").children[0];
   }, decode() { f.node("video-preview").children[0].listeners.get("loadedmetadata")(); } };
@@ -685,10 +686,110 @@ test("broadcast cancelled, malformed and lost uploads never attach a video or re
       await loading; assert.equal(f.ui.state.draft.videoId, null); assert.equal(f.node("preview").disabled, true); assert.equal(f.node("upload-video").hidden, true);
       await f.ui.uploadVideo(); await f.ui.preview(); await f.ui.send();
       assert.equal(f.uploads.length, 1); assert.equal(f.calls.some(call => call.options.method === "POST"), false);
-      assert.match(f.node("video-status").textContent, failure === "cancel" ? /annulé/ : /pas été confirmé/);
+      assert.match(f.node("video-status").textContent, /pas été confirmé/);
+      assert.equal(f.node("video-status").children.find(child => child.tagName === "a").href, "/admin/media");
       f.ui.removeVideo(); assert.equal(f.ui.videoState().videoDraft, null); assert.equal(f.revoked.length, 1);
     } finally { f.close(); }
   });
+});
+
+test("late video preview errors preserve the uncertain upload warning and library link", async () => {
+  for (const failure of ["network", "cancel"]) {
+    const f = videoFixture();
+    try {
+      const player = f.choose(); f.decode(); const loading = f.ui.uploadVideo(); await flush();
+      if (failure === "cancel") f.ui.cancelVideoUpload();
+      else f.uploads[0].listeners.get("error")();
+      await loading;
+      const message = f.node("video-status").textContent, link = f.node("video-status").children.find(child => child.tagName === "a");
+      assert.match(message, /pas été confirmé/); assert.equal(link.href, "/admin/media");
+      player.listeners.get("error")();
+      assert.equal(f.node("video-status").textContent, message);
+      assert.equal(f.node("video-status").children.find(child => child.tagName === "a"), link);
+      assert.equal(f.ui.videoState().videoDraft.failed, true);
+      await f.ui.uploadVideo(); assert.equal(f.uploads.length, 1, "late preview events cannot repeat the uncertain upload");
+    } finally { f.close(); }
+  }
+});
+
+test("broadcast accepts MP4 extension with empty or alias metadata, while native decode and server ACK still gate upload", async () => {
+  const bytes = Buffer.from(await readFile(new URL("./fixtures/video-decodable.mp4.base64", import.meta.url), "utf8"), "base64");
+  for (const type of ["", "application/mp4", "video/x-m4v"]) {
+    const f = videoFixture();
+    try {
+      f.choose(new File([bytes], "synthetic.MP4", { type }));
+      assert.ok(f.ui.videoState().videoDraft); assert.equal(f.node("upload-video").disabled, true);
+      await f.ui.uploadVideo(); assert.equal(f.uploads.length, 0);
+      f.decode(); const loading = f.ui.uploadVideo(); await flush();
+      assert.equal(f.uploads.length, 1); assert.equal(f.uploads[0].headers.get("Content-Type"), "video/mp4");
+      f.uploads[0].complete(); await loading; assert.equal(f.ui.state.draft.videoId, id(77));
+    } finally { f.close(); }
+  }
+  const f = videoFixture();
+  try {
+    for (const file of [new File([bytes], "unknown.bin"), new File([bytes], "wrong.mp4", { type: "video/webm" })]) {
+      f.choose(file); assert.equal(f.ui.videoState().videoDraft, null); assert.equal(f.uploads.length, 0);
+    }
+  } finally { f.close(); }
+});
+
+test("native video picker retains one unstarted file through hidden change and verified owner resume without uploading it", async () => {
+  const gate = deferred(); let hold = false;
+  const f = videoFixture(path => hold && path === "/api/auth/session" ? gate.promise : null);
+  try {
+    f.node("pick-video").click(); f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange");
+    f.node("video-file").files = [{ name: "same-owner.mp4", type: "", size: 12536 }]; f.node("video-file").listeners.get("change")();
+    assert.equal(f.ui.videoState().videoDraft, null); assert.equal(f.created.length, 0);
+    hold = true; f.document.visibilityState = "visible"; const resumed = f.ui.resumePrivate(); await flush();
+    assert.equal(f.created.length, 0); assert.equal(f.uploads.length, 0);
+    hold = false; gate.resolve(response(videoActor())); await resumed; await flush();
+    assert.equal(f.created.length, 1); assert.equal(f.ui.videoState().videoDraft.file.name, "same-owner.mp4");
+    await f.ui.resumePrivate(); assert.equal(f.created.length, 1); assert.equal(f.uploads.length, 0);
+  } finally { f.close(); }
+});
+
+test("native video picker discards a queued file when the owner or CSRF changes during resume", async () => {
+  for (const next of [videoActor(2), { ...videoActor(), csrf: "z".repeat(43) }]) {
+    const f = videoFixture();
+    try {
+      f.node("pick-video").click(); f.document.visibilityState = "hidden"; f.dispatchDocument("visibilitychange");
+      f.node("video-file").files = [{ name: "old-owner.mp4", type: "video/mp4", size: 12536 }]; f.node("video-file").listeners.get("change")();
+      f.setOwner(next); f.document.visibilityState = "visible"; await f.ui.resumePrivate(); await flush();
+      assert.equal(f.ui.videoState().videoDraft, null); assert.equal(f.created.length, 0); assert.equal(f.uploads.length, 0);
+      assert.equal(f.ui.state.session.id, next.user.id); assert.equal(f.ui.state.session.csrf, next.csrf);
+    } finally { f.close(); }
+  }
+});
+
+test("cancel before any video POST is confirmed cancellation rather than an uncertain storage result", async () => {
+  const gate = deferred(); let hold = false;
+  const f = videoFixture(path => hold && path === "/api/broadcast/admin/session" ? gate.promise : null);
+  try {
+    f.choose(); f.decode(); hold = true; const loading = f.ui.uploadVideo(); await flush();
+    f.ui.cancelVideoUpload(); hold = false; gate.resolve(response(videoActor())); await loading;
+    assert.equal(f.uploads.length, 0); assert.match(f.node("video-status").textContent, /Chargement annulé/);
+    assert.equal(f.node("video-status").children.length, 0); await f.ui.uploadVideo(); assert.equal(f.uploads.length, 0);
+  } finally { f.close(); }
+});
+
+test("video POST ACK followed by final proof401 clears private data, while proof403 blocks composition without replay", async () => {
+  for (const status of [401, 403]) {
+    let proofs = 0;
+    const f = videoFixture(path => path === "/api/broadcast/admin/session" && ++proofs > 1 ? response({ error: "request_rejected" }, status) : null);
+    try {
+      f.choose(); f.decode(); const loading = f.ui.uploadVideo(); await flush(); f.uploads[0].complete(); await loading;
+      assert.equal(f.uploads.length, 1);
+      if (status === 401) {
+        assert.equal(f.ui.state.session, null); assert.equal(f.ui.videoState().videoDraft, null);
+        assert.equal(f.node("broadcast-content").hidden, true); assert.equal(f.node("video-preview").children.length, 0);
+      } else {
+        assert.equal(f.ui.state.csrfFailed, true); assert.equal(f.node("reload").hidden, false);
+        assert.equal(f.node("composition").disabled, true); assert.equal(f.ui.videoState().videoDraft.failed, true);
+        assert.equal(f.node("video-status").children.find(child => child.tagName === "a").href, "/admin/media");
+      }
+      await f.ui.uploadVideo(); assert.equal(f.uploads.length, 1);
+    } finally { f.close(); }
+  }
 });
 
 test("video upload acknowledgement under a changed account is discarded and suspension keeps the local file without replaying an ambiguous upload", async () => {

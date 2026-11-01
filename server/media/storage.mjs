@@ -1,5 +1,5 @@
 import { constants } from "node:fs";
-import { lstat, realpath, open, link, unlink, opendir, statfs } from "node:fs/promises";
+import { lstat, realpath, open, link, unlink, opendir, readdir, statfs } from "node:fs/promises";
 import { createCipheriv, createDecipheriv, createHmac, randomBytes } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -375,15 +375,48 @@ export async function createMediaStorage({ root, key, pathMode = privatePathMode
     buffer(storageKey, 32);
     try {
       await assertReady();
-      for (const variant of ["full", "thumb"]) {
-        const target = filename(storageKey, variant);
+      const selected = (name) => {
+        const entry = entryIdentity(name);
+        return entry.kind !== "unknown" && entry.storageKey.equals(storageKey);
+      };
+      const cleanupFile = (stats) => stats.isFile() && (stats.mode & 0o7777n) === 0o600n && owned(stats) && stats.nlink >= 1n;
+      const names = (await readdir(directoryPath())).filter(selected).sort(), groups = new Map();
+      // A stopped put can leave either a staging file alone or its exclusive
+      // final/staging hardlink pair. Validate the entire exact-key selection
+      // before unlinking; an external alias must still block cleanup.
+      for (const name of names) {
+        const stats = await lstat(namedPath(name), { bigint: true });
+        if (!cleanupFile(stats)) throw new Error();
+        const key = `${stats.dev}:${stats.ino}`, entry = entryIdentity(name);
+        if (!groups.has(key)) groups.set(key, { stats, names: [], variant: entry.variant });
+        const group = groups.get(key);
+        if (!sameEntry(group.stats, stats) || group.stats.nlink !== stats.nlink || group.variant !== entry.variant) throw new Error();
+        group.names.push(name);
+      }
+      for (const group of groups.values()) {
+        if (group.stats.nlink !== BigInt(group.names.length) || group.names.length > 2
+          || group.names.length > 1 && !group.names.includes(`${storageKey.toString("hex")}.${group.variant}.enc`)) throw new Error();
+      }
+      for (const group of groups.values()) {
+        const handle = await open(namedPath(group.names[0]), constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
         try {
-          const stats = await lstat(target);
-          if (!stats.isFile() || stats.isSymbolicLink() || (stats.mode & 0o777) !== 0o600 || !owned(stats) || stats.nlink !== 1) throw new Error();
-          await unlink(target);
-        } catch (error) { if (error?.code !== "ENOENT") throw error; }
+          let before = group.stats, remaining = BigInt(group.names.length);
+          for (const name of group.names) {
+            const opened = await handle.stat({ bigint: true }), named = await lstat(namedPath(name), { bigint: true });
+            if (![opened, named].every((stats) => cleanupFile(stats) && sameEntry(before, stats) && stats.nlink === remaining)) throw new Error();
+            await assertReady(); await unlink(namedPath(name)); remaining -= 1n;
+            const after = await handle.stat({ bigint: true });
+            if (!after.isFile() || !owned(after) || (after.mode & 0o7777n) !== 0o600n || after.dev !== before.dev
+              || after.ino !== before.ino || after.size !== before.size || after.mtimeNs !== before.mtimeNs || after.nlink !== remaining) throw new Error();
+            try { await lstat(namedPath(name)); throw new Error(); }
+            catch (error) { if (error?.code !== "ENOENT") throw error; }
+            before = after;
+          }
+        } finally { await handle.close(); }
       }
       await syncDirectory();
+      if ((await readdir(directoryPath())).some(selected)) throw new Error();
+      await assertReady();
     } catch { throw new MediaStorageError(); }
   }
 

@@ -153,11 +153,11 @@ function renderRows() {
   for (const asset of state.rows) {
     const item = node("li", undefined, "media-card"), button = node("button", undefined, "media-choice"); button.type = "button"; button.dataset.mediaId = asset.id;
     button.setAttribute("aria-pressed", String(state.selected?.id === asset.id)); ui.attr(button, "aria-label", asset.kind === "photos" ? "Voir la photo du {date}" : "Voir la vidéo du {date}", { date: date(asset) });
-    const image = node("div", asset.kind === "photos" ? "Photo" : asset.cleanupPending ? "Nettoyage à terminer" : "Vidéo", "media-thumb");
+    const image = node("div", asset.cleanupPending ? "Nettoyage à terminer" : asset.kind === "photos" ? "Photo" : "Vidéo", "media-thumb");
     const meta = node("div", undefined, "media-meta"), label = node("p"); ui.text(label, asset.kind === "photos" ? "Photo du {date}" : "Vidéo du {date}", { date: date(asset) });
     const detail = node("p", undefined, "small-copy"); summary(detail, asset); meta.append(label, detail); button.append(image, meta); item.append(button); rows.push(item);
     button.addEventListener("click", () => { if (!loading && !mutating && !uncertain) void selectAsset(asset, button); });
-    if (asset.kind === "photos") {
+    if (asset.kind === "photos" && !asset.cleanupPending) {
       image.libraryThumbnail = { asset, host: image, ticket, epoch, viewEpoch: thumbnailEpoch };
       if (thumbnailObserver) thumbnailObserver.observe(image); else thumbnailQueue.push(image.libraryThumbnail);
     }
@@ -176,7 +176,7 @@ async function loadList(action = "current") {
   const epoch = ++state.listEpoch; loading = true; clearThumbnails(); controls(); notice("Chargement des médias…");
   try {
     const root = kind === "photos" ? "/api/media/admin/assets" : "/api/video/admin/assets";
-    const data = await request(`${root}?limit=${LIBRARY_PAGE_SIZE}${after ? `&afterId=${after}` : ""}`, { ticket });
+    const data = await request(`${root}?limit=${LIBRARY_PAGE_SIZE}${kind === "photos" ? "&includeCleanupPending=1" : ""}${after ? `&afterId=${after}` : ""}`, { ticket });
     if (!current(ticket) || kind !== state.kind || epoch !== state.listEpoch) return false;
     const page = parseLibraryPage(data, kind, after);
     state.rows = page.rows; state.cursor = page.cursor; state.more = page.more; state.after = after; state.back = back; state.page = number; uncertain = false;
@@ -187,10 +187,11 @@ async function loadList(action = "current") {
 async function selectAsset(asset, opener = null) {
   if (paused || uncertain || mutating || loading) return;
   clearPreview(); state.selected = asset; previewOpener = opener; el("media-detail").hidden = false; summary(el("detail-summary"), asset);
+  ui.text(el("delete-media"), asset.cleanupPending ? "Réessayer le nettoyage" : "Supprimer ce média");
   el("detail-title").focus({ preventScroll: true }); el("media-detail").scrollIntoView?.({ block: "nearest" });
   for (const button of el("media-grid").querySelectorAll("button")) button.setAttribute("aria-pressed", String(button.dataset.mediaId === asset.id));
   const ticket = libraryTicket(state), epoch = previewEpoch;
-  if (asset.cleanupPending) { notice("Ce média a déjà été retiré. Tu peux terminer son nettoyage.", false, "preview-status"); return; }
+  if (asset.cleanupPending) { notice("Ce média a déjà été retiré. Réessaie son nettoyage pour libérer l’espace restant.", false, "preview-status"); return; }
   try {
     await verifySession(ticket); if (!current(ticket) || epoch !== previewEpoch || state.selected?.id !== asset.id) return;
     if (asset.kind === "photos") {
@@ -279,7 +280,7 @@ async function deleteSelected() {
     const result = await request(`${root}/${asset.id}/delete`, { ticket, body: {} });
     if (!current(ticket)) return; if (result?.deleted !== true) throw new Error("response_unconfirmed");
     clearPreview(); state.rows = state.rows.filter(row => row.id !== asset.id || row.kind !== asset.kind); renderRows();
-    mutating = false; const refreshed = await loadList(); if (current(ticket) && refreshed) notice("Média supprimé.");
+    mutating = false; const refreshed = await loadList(); if (current(ticket) && refreshed) notice(asset.cleanupPending ? "Nettoyage terminé." : "Média supprimé.");
   } catch (error) {
     if (!current(ticket) || error.stale) return;
     if ([401, 403].includes(error.status)) { report(error); return; }
@@ -323,7 +324,16 @@ el("refresh-list").addEventListener("click", () => { clearPreview(); void loadLi
 el("photo-file").addEventListener("click", capturePhotoIntent);
 el("photo-file").addEventListener("change", () => { void addPhoto(); }); el("reload-session").addEventListener("click", () => { void bootstrap(); }); el("logout").addEventListener("click", () => { void logout(); });
 el("close-preview").addEventListener("click", () => { clearPreview(); previewOpener?.focus?.({ preventScroll: true }); previewOpener = null; for (const button of el("media-grid").querySelectorAll("button")) button.setAttribute("aria-pressed", "false"); });
-el("delete-media").addEventListener("click", () => { if (!state.selected || mutating || loading || paused || uncertain) return; deleteTarget = state.selected; el("delete-dialog").showModal(); el("cancel-delete").focus({ preventScroll: true }); });
+el("delete-media").addEventListener("click", () => {
+  if (!state.selected || mutating || loading || paused || uncertain) return;
+  deleteTarget = state.selected;
+  ui.text(el("delete-title"), deleteTarget.cleanupPending ? "Terminer le nettoyage de ce média ?" : "Supprimer ce média ?");
+  ui.text(el("delete-dialog").querySelectorAll("p")[0], deleteTarget.cleanupPending
+    ? "L’espace restant sera libéré seulement après confirmation du nettoyage."
+    : "Cette action retire le média de ta bibliothèque. Un média utilisé par un message ou une diffusion reste protégé.");
+  ui.text(el("confirm-delete"), deleteTarget.cleanupPending ? "Réessayer le nettoyage" : "Confirmer la suppression");
+  el("delete-dialog").showModal(); el("cancel-delete").focus({ preventScroll: true });
+});
 el("cancel-delete").addEventListener("click", () => { deleteTarget = null; el("delete-dialog").close(); el("delete-media").focus({ preventScroll: true }); });
 el("confirm-delete").addEventListener("click", () => { void deleteSelected(); });
 el("delete-dialog").addEventListener("cancel", () => { deleteTarget = null; });

@@ -223,7 +223,7 @@ test("all private-interface catalogs can coexist and every static broadcast mark
 test("broadcast video labels, live progress and typed campaign details switch FR/EN without altering private draft or audience", () => {
   const h = harness(); h.model("broadcast-model.js");
   const executable = files["broadcast.js"].replace(/^import \{([^\n]+)\} from "\/broadcast-model\.js";/, "const {$1} = model;");
-  h.run(`(() => {${executable}\nglobalThis.videoTools={state,renderControls,renderPreview,renderDetail,notice};})();`); h.visible();
+  h.run(`(() => {${executable}\nglobalThis.videoTools={state,renderControls,renderPreview,renderDetail,notice,unconfirmedVideo};})();`); h.visible();
   h.run(`document.getElementById("broadcast-content").hidden=false;videoTools.state.visible=true;videoTools.state.session={id:"${id(1)}",csrf:"${"a".repeat(43)}",expiresAt:Date.now()+3600000,mediaEnabled:true,largeAudiencesEnabled:true,videoEnabled:true};
     videoTools.state.draft={title:"Private raw title",body:"Private raw caption",mediaId:null,videoId:"${id(88)}",allowRepeatMedia:false};
     videoTools.state.preview={eligibleCount:1,totalCount:1,excludedCount:0,repeatCount:1,audience:{mode:"all"},previewToken:"synthetic.preview",recipients:[{client:{pseudonym:"Vidéo"},eligible:true,reason:null,repeatMedia:true}]};
@@ -237,4 +237,8 @@ test("broadcast video labels, live progress and typed campaign details switch FR
   assert.match(h.ids.get("repeat-label").textContent, /send this video again/); assert.match(h.ids.get("campaign-detail").textContent, /Video without a captionA video attached/);
   assert.equal(h.run("JSON.stringify({draft:videoTools.state.draft,preview:videoTools.state.preview})"), before); assert.equal(h.calls.length, 0);
   h.switch("fr"); assert.equal(h.ids.get("video-status").textContent, "Chargement de la vidéo… 50 %");
+  h.run("videoTools.unconfirmedVideo()"); h.switch("en");
+  assert.match(h.ids.get("video-status").textContent, /Check your library before adding another video/);
+  assert.equal(h.ids.get("video-status").querySelectorAll("a")[0].textContent, "View my media");
+  h.switch("fr"); assert.equal(h.ids.get("video-status").querySelectorAll("a")[0].textContent, "Consulter mes médias");
 });

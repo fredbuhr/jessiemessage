@@ -79,6 +79,15 @@ test("magic alone cannot make corrupt or truncated bytes a supported image", asy
   await rejectsCode(normalizeImage(jpeg.subarray(0, Math.floor(jpeg.length / 2))), "MEDIA_FORMAT");
 });
 
+test("a truncated JPEG with readable metadata remains a file-format error", async () => {
+  const jpeg = await solid(1000, 1000, "jpeg");
+  const truncated = jpeg.subarray(0, jpeg.length - 2);
+  const metadata = await sharp(truncated).metadata();
+  assert.equal(metadata.format, "jpeg");
+  assert.deepEqual([metadata.width, metadata.height], [1000, 1000]);
+  await rejectsCode(normalizeImage(truncated), "MEDIA_FORMAT");
+});
+
 test("source dimension and decoded-pixel bounds reject otherwise valid raster files", async () => {
   await rejectsCode(normalizeImage(await solid(8193, 1)), "MEDIA_DIMENSIONS");
   await rejectsCode(normalizeImage(await solid(4001, 4000)), "MEDIA_DIMENSIONS");

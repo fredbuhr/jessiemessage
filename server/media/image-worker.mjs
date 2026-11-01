@@ -58,10 +58,19 @@ process.once("message", async (request) => {
       failure = "MEDIA_DIMENSIONS"; throw new Error();
     }
     failure = "MEDIA_UNAVAILABLE";
-    const normalized = await sharp(bytes, settings).rotate()
-      .resize({ width: 2048, height: 2048, fit: "inside", withoutEnlargement: true })
-      .flatten({ background: { r: 245, g: 238, b: 242 } })
-      .toColourspace("srgb").jpeg({ quality: 85, progressive: false }).toBuffer({ resolveWithObject: true });
+    let normalized;
+    try {
+      normalized = await sharp(bytes, settings).rotate()
+        .resize({ width: 2048, height: 2048, fit: "inside", withoutEnlargement: true })
+        .flatten({ background: { r: 245, g: 238, b: 242 } })
+        .toColourspace("srgb").jpeg({ quality: 85, progressive: false }).toBuffer({ resolveWithObject: true });
+    } catch (error) {
+      // The pinned JPEG loader reports this exact input warning even when
+      // metadata() can still read dimensions. Keep other native/output errors
+      // and parent-observed crashes/timeouts classified as unavailable.
+      if (format === "jpeg" && error?.message === "VipsJpeg: premature end of JPEG image") failure = "MEDIA_FORMAT";
+      throw error;
+    }
     full = normalized.data;
     const small = await sharp(full, settings)
       .resize({ width: 480, height: 480, fit: "inside", withoutEnlargement: true })

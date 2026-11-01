@@ -80,7 +80,7 @@ export async function runPhotoBatch(batch, { prepare, upload, send, current = ()
             if (row.message && id(row.message.id) && row.message.clientMessageId === item.clientMessageId && typeof row.duplicate === "boolean") {
               item.status = "sent"; item.message = row.message; if (item === batch.items[0]) batch.captionDelivered = true; item.file = null; item.prepared = null;
             } else if (row.status === 424 && row.error === "photo_batch_waiting") { item.status = "waiting"; item.error = null; }
-            else failure(item, row, !Number.isInteger(row.status) || row.status >= 500);
+            else failure(item, { status: row.status, code: row.error }, !Number.isInteger(row.status) || row.status >= 500);
           }
         } catch (error) {
           for (const item of pending) if (item.status !== "sent") failure(item, error, true);

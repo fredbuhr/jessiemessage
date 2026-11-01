@@ -53,15 +53,23 @@ async function photoVisible(page, caption) {
       && image?.complete && image.naturalWidth>0; });`, caption), "the actual stored photo is authorized, downloaded and decoded", 20000);
 }
 // The same small two-colour JPEG is used for messages and avatar preparation.
-async function selectSyntheticJpeg(page, selector) {
-  return page.executeAsync(`const selector=arguments[0],done=arguments[arguments.length-1];
+async function selectSyntheticJpeg(page, selector, chooserSelector = null) {
+  return page.executeAsync(`const selector=arguments[0],chooserSelector=arguments[1],done=arguments[arguments.length-1];
     const canvas=document.createElement('canvas');canvas.width=96;canvas.height=64;const ctx=canvas.getContext('2d');
     ctx.fillStyle='#b52f68';ctx.fillRect(0,0,96,64);ctx.fillStyle='#153f68';ctx.fillRect(48,0,48,64);
     canvas.toBlob(blob=>{if(!blob){done(false);return;} const transfer=new DataTransfer();
       transfer.items.add(new File([blob],'synthetic-rehearsal.jpg',{type:'image/jpeg'}));
       const input=document.querySelector(selector);if(!input){done(false);return;}
+      if(chooserSelector){
+        // Keep the production chooser's opening/owner intent; replace only its
+        // final native file-dialog call before supplying a real FileList.
+        const chooser=document.querySelector(chooserSelector);if(!chooser){done(false);return;}
+        const nativeClick=input.click;let requested=false;input.click=()=>{requested=true;};
+        try{chooser.click();}finally{input.click=nativeClick;}
+        if(!requested){done(false);return;}
+      }
       input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));done(true);
-    },'image/jpeg',0.9);`, selector);
+    },'image/jpeg',0.9);`, selector, chooserSelector);
 }
 async function browserJson(page, role, path, body = null) {
   return page.executeAsync(`const role=arguments[0],path=arguments[1],body=arguments[2],done=arguments[arguments.length-1];
@@ -111,7 +119,7 @@ async function saveProfile(page, { pseudonym = null, avatar = false, remove = fa
   const menuOpener = await openProfile(page);
   if (pseudonym !== null) await page.type(".profile-pseudonym", pseudonym);
   if (avatar) {
-    assert.equal(await selectSyntheticJpeg(page, ".profile-file"), true);
+    assert.equal(await selectSyntheticJpeg(page, ".profile-file", ".profile-choose-avatar"), true);
     await waitUntil(() => page.execute("const image=document.querySelector('.profile-avatar-preview img');return !document.querySelector('.profile-save').disabled&&!image.hidden&&image.complete&&image.naturalWidth===256&&image.naturalHeight===256"), "the real avatar preparer crops a 256px JPEG before upload");
   }
   if (remove) await page.click(".profile-remove-avatar");

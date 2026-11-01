@@ -233,10 +233,42 @@ function readImageBytes(file, signal) {
     } catch { finish(new ImagePreparationError("media_unavailable")); }
   });
 }
-function canvasBlob(canvas, type) {
-  return new Promise((resolve, reject) => canvas.toBlob((blob) => {
-    if (blob && blob.type === type) resolve(blob); else reject(new ImagePreparationError("media_unavailable"));
-  }, type, type === "image/jpeg" ? 0.88 : undefined));
+function canvasBlob(canvas, type, signal) {
+  return new Promise((resolve, reject) => {
+    let done = false;
+    const finish = (error, blob) => {
+      if (done) return; done = true;
+      clearTimeout(timer); signal?.removeEventListener("abort", cancel);
+      error ? reject(error) : resolve(blob);
+    };
+    const cancel = () => finish(new DOMException("Aborted", "AbortError"));
+    const timer = setTimeout(() => finish(new ImagePreparationError("media_unavailable")), 60000);
+    signal?.addEventListener("abort", cancel, { once: true });
+    if (signal?.aborted) { cancel(); return; }
+    try {
+      canvas.toBlob((blob) => {
+        if (blob && blob.type === type) finish(null, blob);
+        else finish(new ImagePreparationError("media_unavailable"));
+      }, type, type === "image/jpeg" ? 0.88 : undefined);
+    } catch { finish(new ImagePreparationError("media_unavailable")); }
+  });
+}
+
+function decodedHeicPixels(result, signal) {
+  const pixels = new Uint8ClampedArray(result.pixels);
+  let image;
+  try {
+    aborted(signal);
+    image = document.createElement("canvas"); image.width = result.width; image.height = result.height;
+    const context = image.getContext("2d", { alpha: false });
+    if (!context || typeof globalThis.ImageData !== "function") fail("media_unavailable");
+    context.putImageData(new ImageData(pixels, result.width, result.height), 0, 0);
+    return { image, width: result.width, height: result.height, dispose: () => { image.width = 0; image.height = 0; } };
+  } catch (error) {
+    if (image) { image.width = 0; image.height = 0; }
+    if (error instanceof ImagePreparationError || error?.name === "AbortError") throw error;
+    fail("media_unavailable");
+  } finally { pixels.fill(0); }
 }
 
 async function decodedImage(file, target, signal) {
@@ -311,11 +343,11 @@ async function decodeHeic(bytes, signal) {
     if (typeof globalThis.Worker !== "function") fail("media_heic");
     return await new Promise((resolve, reject) => {
       let worker, timer, settled = false;
-      const finish = (error, blob) => {
+      const finish = (error, result) => {
         if (settled) return; settled = true;
         clearTimeout(timer); signal?.removeEventListener("abort", cancel);
         if (worker) { worker.onmessage = worker.onerror = worker.onmessageerror = null; worker.terminate(); }
-        error ? reject(error) : resolve(blob);
+        error ? reject(error) : resolve(result);
       };
       const cancel = () => finish(new DOMException("Aborted", "AbortError"));
       try {
@@ -327,12 +359,21 @@ async function decodeHeic(bytes, signal) {
           const message = event.data;
           if (message?.ok !== true) return finish(new ImagePreparationError(message?.code === "media_dimensions" ? "media_dimensions" : "media_heic"));
           const blob = message.blob;
-          if (!(blob instanceof Blob) || blob.type !== "image/jpeg" || blob.size < 1 || blob.size > TARGET_UPLOAD_BYTES) {
+          if (blob !== undefined) {
+            if (!(blob instanceof Blob) || blob.type !== "image/jpeg" || blob.size < 1 || blob.size > TARGET_UPLOAD_BYTES || message.pixels !== undefined) {
+              finish(new ImagePreparationError("media_unavailable")); return;
+            }
+            finish(null, blob); return;
+          }
+          const { pixels, width, height } = message;
+          if (!(pixels instanceof ArrayBuffer) || !Number.isInteger(width) || !Number.isInteger(height)
+            || width < 1 || height < 1 || width > MAX_PREPARED_IMAGE_SIDE || height > MAX_PREPARED_IMAGE_SIDE
+            || pixels.byteLength !== width * height * 4) {
             finish(new ImagePreparationError("media_unavailable")); return;
           }
-          finish(null, blob);
+          finish(null, { pixels, width, height });
         };
-        aborted(signal); worker.postMessage({ bytes: bytes.buffer }, [bytes.buffer]);
+        aborted(signal); worker.postMessage({ bytes: bytes.buffer, acceptPixels: true }, [bytes.buffer]);
       } catch (error) { finish(error?.name === "AbortError" ? error : new ImagePreparationError("media_heic")); }
     });
   } finally { release(); }
@@ -360,7 +401,9 @@ export async function prepareImageUpload(file, { signal } = {}) {
       aborted(signal);
       if (info.type !== "image/heic") throw error;
       if (info.width * info.height > MAX_HEIC_IMAGE_PIXELS) fail("media_dimensions");
-      return await decodeHeic(bytes, signal);
+      const result = await decodeHeic(bytes, signal);
+      if (result instanceof Blob) { aborted(signal); return result; }
+      bitmap = decodedHeicPixels(result, signal);
     }
     aborted(signal);
     if (!Number.isInteger(bitmap.width) || !Number.isInteger(bitmap.height) || bitmap.width < 1 || bitmap.height < 1
@@ -374,7 +417,7 @@ export async function prepareImageUpload(file, { signal } = {}) {
       canvas.width = Math.max(1, Math.floor(actual.width * 0.75 ** attempt));
       canvas.height = Math.max(1, Math.floor(actual.height * 0.75 ** attempt));
       context.drawImage(bitmap.image, 0, 0, canvas.width, canvas.height);
-      const blob = await canvasBlob(canvas, ["image/jpeg", "image/heic"].includes(info.type) ? "image/jpeg" : "image/png");
+      const blob = await canvasBlob(canvas, ["image/jpeg", "image/heic"].includes(info.type) ? "image/jpeg" : "image/png", signal);
       aborted(signal);
       if (blob.size > 0 && blob.size <= TARGET_UPLOAD_BYTES) return blob;
     }

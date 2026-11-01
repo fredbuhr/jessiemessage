@@ -1,0 +1,74 @@
+{
+  "format": "jessiemessage-1141-development-checks",
+  "activeProduction": "1.14.0",
+  "base": "5dbd5dc7fb4456c2975096fd4472d8830292eb17",
+  "branch": "fix/media-reliability-1141",
+  "candidateVersion": "1.14.1",
+  "groupsOverlapNotSummed": true,
+  "groups": [
+    {
+      "scope": "backend/image/HTTP",
+      "passed": 99,
+      "omitted": 0
+    },
+    {
+      "scope": "chat/upload first group",
+      "tests": 142,
+      "passed": 141,
+      "failed": 1,
+      "note": "new test expectation too strict; corrected assertion and only failed case1/1 then passed; native whole candidate pending"
+    },
+    {
+      "scope": "batch",
+      "passed": 15,
+      "omitted": 0
+    },
+    {
+      "scope": "storage",
+      "passed": 33,
+      "omitted": 2,
+      "note": "procfs unavailable locally; native dirfd execution required; no guard removed"
+    },
+    {
+      "scope": "profile",
+      "passed": 33,
+      "omitted": 0
+    },
+    {
+      "scope": "image and HEIC",
+      "passed": 31,
+      "omitted": 0
+    },
+    {
+      "scope": "new real-HEVC worker handler after image group",
+      "passed": 1,
+      "internalCombinations": 10,
+      "omitted": 0
+    },
+    {
+      "scope": "admin first group",
+      "passed": 106,
+      "omitted": 0
+    },
+    {
+      "scope": "broadcast after auth-proof correction",
+      "passed": 75,
+      "omitted": 0
+    },
+    {
+      "scope": "new late video preview error regression",
+      "passed": 1,
+      "omitted": 0
+    }
+  ],
+  "localBuild": {
+    "exit": 0,
+    "syntaxSources": 797,
+    "logSha256": "68c8b289b8d3f2dbeedf73aee23320bfe2d601830cda25a39568e47b8eee70fb",
+    "lastMinorVideoGuardSyntaxCheckedSeparately": true
+  },
+  "nativeChromeSql": false,
+  "originalClientFileCause": "not established; no original file/error/device available",
+  "realAccountsMediaMessagesTouched": false,
+  "noHostedOperations": true
+}
