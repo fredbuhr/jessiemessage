@@ -42,6 +42,17 @@ test("recovery accepts only signed pending rows progressing to durable release a
   assert.equal(assertBackupSnapshot({ expected, actual, mode: "recovery", targetFingerprint: h("e") }).heldBytes, 190);
   assert.throws(() => assertBackupSnapshot({ expected, actual, mode: "recovery" }), /could not be verified/);
 });
+test("photo snapshots and recovery preserve the historical owner binding without imposing its former upload ceiling", async () => {
+  const expected = fixture(); expected.capacity.ownerBytes = 82;
+  assert.ok(expected.objects[0].stored_bytes > expected.capacity.ownerBytes);
+  assert.equal(assertBackupSnapshot({ expected, actual: clone(expected), mode: "exact" }).heldBytes, 900);
+  assert.equal((await verifyBackupStorage({ snapshot: expected, storage: storageFor(expected) })).healthy, true);
+  const actual = clone(expected);
+  for (const row of actual.objects.slice(1)) { row.state = "released"; row.updated_at = later; row.released_at = later; }
+  actual.capacity.heldBytes = 190;
+  assert.equal(assertBackupSnapshot({ expected, actual, mode: "recovery" }).heldBytes, 190);
+  assert.equal(actual.capacity.ownerBytes, 82);
+});
 test("snapshot rejects core/schema drift, active changes, lost rows, changed candidate bindings and counter refunds", () => {
   const expected = fixture();
   const mutations = [

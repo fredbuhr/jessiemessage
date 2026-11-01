@@ -12,14 +12,14 @@ async function fixture(t, enabled) {
 }
 const hash = bytes => createHash("sha256").update(bytes).digest("hex");
 
-test("HEIC decoder public code is available only with the media feature and its WASM permission stays in the worker", async t => {
+test("legacy HEIC code remains immutable while the current worker needs no dynamic code permission", async t => {
   const off = await fixture(t, false), on = await fixture(t, true);
   const paths = ["/heic-decoder-worker.js", "/heic-codec-1.23.5.mjs", "/heic-codec-1.23.5-LICENSE.txt"];
   for (const path of paths) assert.equal((await fetch(off + path)).status, 404, path);
   const worker = await fetch(on + paths[0]); assert.equal(worker.status, 200);
   const policy = worker.headers.get("content-security-policy");
-  assert.match(policy, /script-src 'self' 'wasm-unsafe-eval'/);
-  assert.doesNotMatch(policy, /'unsafe-eval'/);
+  assert.match(policy, /script-src 'self'/);
+  assert.doesNotMatch(policy, /unsafe-eval/);
   assert.match(policy, /connect-src 'none'/); assert.match(policy, /worker-src 'none'/);
   assert.equal(worker.headers.get("cache-control"), "no-store");
   assert.equal(hash(Buffer.from(await worker.arrayBuffer())), hash(await readFile(new URL("../public/heic-decoder-worker.js", import.meta.url))));
@@ -33,5 +33,22 @@ test("HEIC decoder public code is available only with the media feature and its 
   const home = await fetch(on + "/"); assert.doesNotMatch(home.headers.get("content-security-policy"), /unsafe-eval|wasm-unsafe-eval/);
   assert.equal((await fetch(on + "/heic-codec-1.23.5.mjs/extra")).status, 404);
   assert.equal((await fetch(on + paths[1], { method: "POST", body: "x" })).status, 405);
+  const head = await fetch(on + paths[1], { method: "HEAD" }); assert.equal(head.status, 200); assert.equal(await head.text(), "");
+});
+
+test("the patched HEVC codec, shared core and license are fixed feature-gated assets", async t => {
+  const off = await fixture(t, false), on = await fixture(t, true);
+  const paths = ["/heic-decoder-core.js", "/heic-codec-1.23.7.mjs", "/heic-codec-1.23.7-LICENSE.txt"];
+  for (const path of paths) assert.equal((await fetch(off + path)).status, 404, path);
+  const core = await fetch(on + paths[0]); assert.equal(core.status, 200);
+  assert.equal(core.headers.get("cache-control"), "no-store");
+  assert.equal(hash(Buffer.from(await core.arrayBuffer())), hash(await readFile(new URL("../public/heic-decoder-core.js", import.meta.url))));
+  const codec = await fetch(on + paths[1]); assert.equal(codec.status, 200);
+  assert.equal(codec.headers.get("cache-control"), "public, max-age=31536000, immutable");
+  assert.equal(hash(Buffer.from(await codec.arrayBuffer())), "75aaf03816c22f8cf40dbcaeb22bee83f2e1c5da4b7417577a7883b296348734");
+  const license = await fetch(on + paths[2]); assert.equal(license.status, 200);
+  assert.equal(hash(Buffer.from(await license.arrayBuffer())), hash(await readFile(new URL("../node_modules/heic-to/LICENSE", import.meta.url))));
+  assert.equal((await fetch(on + paths[1], { method: "POST", body: "x" })).status, 405);
+  assert.equal((await fetch(on + paths[1] + "/extra")).status, 404);
   const head = await fetch(on + paths[1], { method: "HEAD" }); assert.equal(head.status, 200); assert.equal(await head.text(), "");
 });

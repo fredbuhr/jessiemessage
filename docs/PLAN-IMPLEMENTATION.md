@@ -6,8 +6,8 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 [Diagnostic et périmètre](photo-acceptance-1150.md). Refus synthétiques établis sur formats courants, JPEG valides, capacité couplée aux archives et reprise/erreurs masquées. Original client non attesté.
 
-1. Achever préparateur natif-first, conversion serveur protégée sans stockage et choix des codecs réellement sûrs ; intégrer chat/profil/diffusion/bibliothèque.
-2. Découpler caps photos inutiles avec conservation des compteurs/charges et refus sauvegarde précoce avant arrêt ; tests synthétiques uniquement.
+1. Terminer les codecs BMP/JXL/RAW et AVIF sûrs puis l’intégration/contre-revue du candidat : préparateur natif-first, serveur /prepare128MiB streaming sans stockage et callers sont déjà codés et testés localement.
+2. Qualifier nativement les deltas SQL/fermeture et navigateur restants : découplage des caps photos, compteurs/charges et refus sauvegarde précoce codés. Omissions locales explicites conservées.
 3. Qualification ciblée puis PR/main5/5, couverture formats/variantes et preuves ; publier et préparer une seule mise à jour du SHA exact. Production1141 inchangée à ce jalon.
 
 ## Correctif 1.14.1 — livraison terminée

@@ -12,9 +12,10 @@ import { AUTH_HEADERS } from "../../server/auth/http.mjs";
 test("phone preparation really shrinks large JPEG, AVIF and HEIC locally under the isolated worker CSP", { timeout: 180000 }, async (t) => {
   const driver = await startWebDriver(); t.after(() => driver.close());
   const helper = await readFile(new URL("../../public/image-preparation.js", import.meta.url));
-  const [worker, codec, heicText] = await Promise.all([
+  const [worker, core, codec, heicText] = await Promise.all([
     readFile(new URL("../../public/heic-decoder-worker.js", import.meta.url)),
-    readFile(new URL("../../node_modules/libheif-js/libheif-wasm/libheif-bundle.mjs", import.meta.url)),
+    readFile(new URL("../../public/heic-decoder-core.js", import.meta.url)),
+    readFile(new URL("../../node_modules/heic-to/src/lib/libheif-without-unsafe-eval.js", import.meta.url)),
     readFile(new URL("../fixtures/photo-1140.heic.b64", import.meta.url), "utf8"),
   ]);
   const heic = Buffer.from(heicText, "base64"), decoderRequests = [];
@@ -54,7 +55,9 @@ test("phone preparation really shrinks large JPEG, AVIF and HEIC locally under t
     else if (request.url === "/image-preparation.js") { response.writeHead(200, { "Content-Type": "text/javascript" }); response.end(helper); }
     else if (request.url === "/heic-decoder-worker.js") {
       decoderRequests.push(request.url); response.writeHead(200, { "Content-Type": "text/javascript", "Content-Security-Policy": workerPolicy }); response.end(worker);
-    } else if (request.url === "/heic-codec-1.23.5.mjs") {
+    } else if (request.url === "/heic-decoder-core.js") {
+      response.writeHead(200, { "Content-Type": "text/javascript" }); response.end(core);
+    } else if (request.url === "/heic-codec-1.23.7.mjs") {
       decoderRequests.push(request.url); response.writeHead(200, { "Content-Type": "text/javascript" }); response.end(codec);
     } else if (request.url === "/") { response.writeHead(200, { ...AUTH_HEADERS, "Content-Type": "text/html" }); response.end("<!doctype html><title>Local synthetic image preparation</title>"); }
     else { response.writeHead(404); response.end(); }
@@ -71,6 +74,7 @@ test("phone preparation really shrinks large JPEG, AVIF and HEIC locally under t
   cases.push({ path: "/oriented.jpg", fallback: true }, { path: "/alpha.webp", fallback: true },
     { path: "/phone.jpg", fallback: false, mime: "application/octet-stream" },
     { path: "/phone.jpg", fallback: false, mime: "image/heic" },
+    { path: "/phone.jpg", fallback: false, mime: "video/mp4" },
     { path: "/phone.heic", worker: true });
   for (const fixture of cases) {
     const { path } = fixture;
@@ -115,9 +119,9 @@ test("phone preparation really shrinks large JPEG, AVIF and HEIC locally under t
           globalThis.createImageBitmap = saved; globalThis.Image = savedImage; document.createElement = create;
           removeEventListener('securitypolicyviolation', violation);
         }
-      })().then(done, (error) => done({ error: error.code || error.name }));
+      })().then(done, (error) => done({ failureCode: error.code || error.name }));
     `, fixture);
-    assert.equal(result.error, undefined, path);
+    assert.equal(result.failureCode, undefined, path);
     assert.deepEqual(result.violations, [], `${path}: browser enforced both document and isolated worker policies`);
     assert.ok(result.draws.every(([width, height]) => width <= 2048 && height <= 2048), `${path}: no full-resolution canvas is allocated`);
     const bytes = Buffer.from(result.bytes); assert.ok(bytes.length <= 2 * 1024 * 1024);
@@ -140,7 +144,7 @@ test("phone preparation really shrinks large JPEG, AVIF and HEIC locally under t
       const raw = await sharp(bytes).raw().toBuffer(); assert.ok(Math.abs(raw[3] - 77) <= 1, path);
     } else if (fixture.worker) {
       assert.equal(result.type, "image/jpeg"); assert.deepEqual([metadata.width, metadata.height], [64, 48]);
-      assert.deepEqual(decoderRequests, ["/heic-decoder-worker.js", "/heic-codec-1.23.5.mjs"]);
+      assert.deepEqual(decoderRequests, ["/heic-decoder-worker.js", "/heic-codec-1.23.7.mjs"]);
       const accepted = await normalizeImage(bytes); assert.deepEqual([accepted.width, accepted.height], [64, 48]);
     } else {
       assert.deepEqual([metadata.width, metadata.height], [40, 80]);
@@ -154,13 +158,15 @@ test("phone preparation really shrinks large JPEG, AVIF and HEIC locally under t
 
 test("real HEIC uses document encoding without worker canvas while legacy callers keep the Blob contract", { timeout: 90000 }, async (t) => {
   const driver = await startWebDriver(); t.after(() => driver.close());
-  const [helper, worker, codec, heicText] = await Promise.all([
+  const [helper, worker, core, codec, heicText, rotatedText] = await Promise.all([
     readFile(new URL("../../public/image-preparation.js", import.meta.url)),
     readFile(new URL("../../public/heic-decoder-worker.js", import.meta.url)),
-    readFile(new URL("../../node_modules/libheif-js/libheif-wasm/libheif-bundle.mjs", import.meta.url)),
+    readFile(new URL("../../public/heic-decoder-core.js", import.meta.url)),
+    readFile(new URL("../../node_modules/heic-to/src/lib/libheif-without-unsafe-eval.js", import.meta.url)),
     readFile(new URL("../fixtures/photo-1140.heic.b64", import.meta.url), "utf8"),
+    readFile(new URL("../fixtures/photo-1150-rotated.heic.b64", import.meta.url), "utf8"),
   ]);
-  const heic = Buffer.from(heicText, "base64"), decoderRequests = [];
+  const heic = Buffer.from(heicText, "base64"), rotated = Buffer.from(rotatedText, "base64"), decoderRequests = [];
   const modes = {
     available: "",
     missing: "globalThis.OffscreenCanvas = undefined;\n",
@@ -175,7 +181,10 @@ test("real HEIC uses document encoding without worker canvas while legacy caller
       response.writeHead(200, { "Content-Type": "text/javascript", "Cache-Control": "no-store",
         "Content-Security-Policy": "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'none'; worker-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'" });
       response.end(Buffer.concat([Buffer.from(modes[mode]), worker]));
-    } else if (request.url === "/heic-codec-1.23.5.mjs") { response.writeHead(200, { "Content-Type": "text/javascript" }); response.end(codec); }
+    } else if (request.url === "/heic-decoder-core.js") {
+      response.writeHead(200, { "Content-Type": "text/javascript" }); response.end(core);
+    } else if (request.url === "/heic-codec-1.23.7.mjs") { response.writeHead(200, { "Content-Type": "text/javascript" }); response.end(codec); }
+    else if (request.url === "/photo-rotated.heic") { response.writeHead(200, { "Content-Type": "image/heic" }); response.end(rotated); }
     else if (request.url === "/photo.heic") { response.writeHead(200, { "Content-Type": "image/heic" }); response.end(heic); }
     else if (request.url === "/") { response.writeHead(200, { ...AUTH_HEADERS, "Content-Type": "text/html" }); response.end("<!doctype html><title>Local HEIC worker compatibility</title>"); }
     else { response.writeHead(404); response.end(); }
@@ -185,12 +194,12 @@ test("real HEIC uses document encoding without worker canvas while legacy caller
   const browser = await driver.browser({ origin: `http://127.0.0.1:${server.address().port}` });
   await browser.navigate("/");
   for (const fixture of [{ mode: "available", legacy: true }, { mode: "missing" }, { mode: "no2d" },
-    { mode: "noEncoder" }, { mode: "missing", legacy: true, error: "media_heic" }]) {
+    { mode: "noEncoder" }, { mode: "missing", rotated: true }, { mode: "missing", legacy: true, error: "media_heic" }]) {
     mode = fixture.mode;
     const result = await browser.executeAsync(`
-      const done = arguments[arguments.length - 1], { legacy } = arguments[0];
+      const done = arguments[arguments.length - 1], { legacy, rotated } = arguments[0];
       (async () => {
-        const original = await (await fetch('/photo.heic')).blob();
+        const original = await (await fetch(rotated ? '/photo-rotated.heic' : '/photo.heic')).blob();
         const savedBitmap = globalThis.createImageBitmap, savedImage = globalThis.Image, create = document.createElement;
         const pixels = [], draws = [], violations = [];
         const violation = event => violations.push(event.violatedDirective);
@@ -242,15 +251,105 @@ test("real HEIC uses document encoding without worker canvas while legacy caller
     assert.equal(result.failureCode, undefined, fixture.mode);
     assert.equal(result.type, "image/jpeg"); assert.equal(result.documentWasmBlocked, true);
     assert.deepEqual(result.violations, []);
-    assert.deepEqual(result.pixels, fixture.legacy ? [] : [[64, 48, 64 * 48 * 4]]);
+    const expected = fixture.rotated ? [48, 64] : [64, 48];
+    assert.deepEqual(result.pixels, fixture.legacy ? [] : [[...expected, 64 * 48 * 4]]);
     assert.ok(result.draws.every(([width, height]) => width <= 2048 && height <= 2048));
     const bytes = Buffer.from(result.bytes), metadata = await sharp(bytes).metadata();
     assert.ok(bytes.length > 0 && bytes.length <= 2 * 1024 * 1024);
-    assert.deepEqual([metadata.width, metadata.height], [64, 48]);
+    assert.deepEqual([metadata.width, metadata.height], expected);
     for (const field of ["exif", "iptc", "xmp", "orientation"]) assert.equal(metadata[field], undefined);
     assert.ok((await sharp(bytes).removeAlpha().raw().toBuffer()).some(value => value > 100), "real HEVC colour survives the transferred-plane canvas copy");
     const accepted = await normalizeImage(bytes);
-    assert.deepEqual([accepted.width, accepted.height], [64, 48]);
+    assert.deepEqual([accepted.width, accepted.height], expected);
   }
-  assert.deepEqual(decoderRequests.map(request => request[1]), ["available", "missing", "no2d", "noEncoder", "missing"]);
+  assert.deepEqual(decoderRequests.map(request => request[1]), ["available", "missing", "no2d", "noEncoder", "missing", "missing"]);
+});
+
+test("real native preparation accepts raster variants and caller conversion automatically covers TIFF", { timeout: 120000 }, async t => {
+  const driver = await startWebDriver(); t.after(() => driver.close());
+  const helper = await readFile(new URL("../../public/image-preparation.js", import.meta.url));
+  const fixtures = JSON.parse(await readFile(new URL("../fixtures/photo-acceptance-formats.json", import.meta.url), "utf8")).fixtures;
+  const images = new Map(fixtures.map(fixture => [fixture.name, { ...fixture, bytes: Buffer.from(fixture.base64, "base64") }]));
+  const video = Buffer.from(await readFile(new URL("../fixtures/video-decodable.mp4.base64", import.meta.url), "utf8"), "base64");
+  const conversionRequests = [], unexpectedRequests = [];
+  const server = createServer(async (request, response) => {
+    if (request.url === "/image-preparation.js") { response.writeHead(200, { "Content-Type": "text/javascript" }); response.end(helper); }
+    else if (request.url === "/actual-video.mp4") { response.writeHead(200, { "Content-Type": "video/mp4" }); response.end(video); }
+    else if (request.url.startsWith("/source/")) {
+      const image = images.get(request.url.slice("/source/".length));
+      if (!image) { response.writeHead(404); response.end(); return; }
+      response.writeHead(200, { "Content-Type": image.mime }); response.end(image.bytes);
+    } else if (request.url === "/prepare/tiff-lzw" && request.method === "POST") {
+      // This loopback fixture exercises the callback/binary contract only;
+      // service authorization is covered by the separate authenticated route.
+      const chunks = [];
+      for await (const chunk of request) chunks.push(chunk);
+      const original = Buffer.concat(chunks);
+      conversionRequests.push({ name: "tiff-lzw", bytes: original.length });
+      if (!original.equals(images.get("tiff-lzw").bytes)) { response.writeHead(400); response.end(); return; }
+      const jpeg = await sharp(original).rotate().resize({ width: 2048, height: 2048, fit: "inside", withoutEnlargement: true }).jpeg().toBuffer();
+      response.writeHead(200, { "Content-Type": "image/jpeg", "Cache-Control": "no-store" }); response.end(jpeg);
+    } else if (request.url === "/") { response.writeHead(200, { ...AUTH_HEADERS, "Content-Type": "text/html" }); response.end("<!doctype html><title>Local raster acceptance</title>"); }
+    else { unexpectedRequests.push(request.url); response.writeHead(404); response.end(); }
+  });
+  await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+  t.after(async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); });
+  const browser = await driver.browser({ origin: `http://127.0.0.1:${server.address().port}` });
+  await browser.navigate("/");
+  for (const fixture of fixtures) await t.test(fixture.name, async () => {
+    const result = await browser.executeAsync(`
+      const done = arguments[arguments.length - 1], { name } = arguments[0];
+      (async () => {
+        const { prepareImageUpload } = await import('/image-preparation.js');
+        const source = await (await fetch('/source/'+name)).blob();
+        const input = new Blob([source], { type: 'application/octet-stream' });
+        const controller = new AbortController(); let conversions = 0;
+        const bitmap = globalThis.createImageBitmap, image = globalThis.Image;
+        if (name === 'tiff-lzw') {
+          globalThis.createImageBitmap = async () => { throw new DOMException('Synthetic TIFF unavailable', 'NotSupportedError'); };
+          globalThis.Image = undefined;
+        }
+        try {
+          const output = await prepareImageUpload(input, { signal: controller.signal,
+            convert: async (file, { signal }) => {
+              conversions += 1;
+              if (signal !== controller.signal || file !== input) throw new Error('conversion_identity');
+              const response = await fetch('/prepare/'+name, { method: 'POST', body: file, signal, headers: { 'Content-Type': file.type } });
+              if (!response.ok) throw Object.assign(new Error('conversion_failed'), { code: 'conversion_'+response.status });
+              return response.blob();
+            }
+          });
+          return { type: output.type, bytes: Array.from(new Uint8Array(await output.arrayBuffer())), conversions };
+        } finally { globalThis.createImageBitmap = bitmap; globalThis.Image = image; }
+      })().then(done, error => done({ failureCode: error.code || error.name }));
+    `, { name: fixture.name });
+    assert.equal(result.failureCode, undefined, fixture.name);
+    assert.ok(["image/jpeg", "image/png"].includes(result.type));
+    const bytes = Buffer.from(result.bytes), metadata = await sharp(bytes).metadata();
+    assert.ok(bytes.length <= 2 * 1024 * 1024);
+    assert.deepEqual([metadata.width, metadata.height], [fixture.preparedWidth, fixture.preparedHeight]);
+    assert.ok(metadata.width <= 2048 && metadata.height <= 2048);
+    for (const field of ["exif", "iptc", "xmp", "orientation"]) assert.equal(metadata[field], undefined, fixture.name);
+    if (fixture.sourcePages > 1) {
+      const pixel = await sharp(bytes).extract({ left: 0, top: 0, width: 1, height: 1 }).removeAlpha().raw().toBuffer();
+      assert.ok(pixel[0] > 150 && pixel[2] < 150 && pixel[0] > pixel[2] + 50, "the first red frame is normalized, never the later blue frame");
+    }
+    if (fixture.name !== "tiff-lzw") assert.equal(result.conversions, 0, "native raster conversion needs no server callback");
+    else assert.equal(result.conversions, 1, "an unavailable native TIFF decoder uses exactly one caller conversion");
+  });
+  await t.test("a real MP4 cannot be prepared as a photo", async () => {
+    const result = await browser.executeAsync(`
+      const done = arguments[arguments.length - 1];
+      (async () => {
+        const { prepareImageUpload } = await import('/image-preparation.js');
+        const video = await (await fetch('/actual-video.mp4')).blob();
+        try { await prepareImageUpload(video); return { accepted: true }; }
+        catch (error) { return { accepted: false, failureCode: error.code }; }
+      })().then(done, error => done({ failureCode: error.code || error.name }));
+    `);
+    assert.equal(result.accepted, false);
+    assert.equal(result.failureCode, "media_format");
+  });
+  assert.equal(conversionRequests.length, 1);
+  assert.deepEqual(unexpectedRequests.filter(value => value !== "/favicon.ico"), []);
 });

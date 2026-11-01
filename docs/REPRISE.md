@@ -6,7 +6,7 @@
 
 Nouveau signalement après1141 : envoi toujours refusé pour un client, format/appareil/erreur exacts inconnus. [Refus reproduits, portée et étapes](photo-acceptance-1150.md). Branche `fix/photo-acceptance`, base documentaire127a4d57ff75457a9ccbb35fb04537be17c904ae. Le lot ajoute conversion serveur sans stockage pour les formats non décodables localement, enlève des gates de format/métadonnées et quotas arbitraires, puis fiabilise aperçu/reprise. Choix et qualification codecs encore ouverts ; aucun fichier client original réparé attesté.
 
-Premier checkpoint de développement partiel : version1150 et corrections chat en cours, sans PR/CI/livraison. Les autres domaines restent en développement, production1141 et checkpoint93d6ddf7 inchangés. Prochaine étape : intégrer et qualifier les décodeurs et le secours authentifié, puis achever les tests du candidat complet ; ne rejouer aucune opération1141 close ni test réel.
+Premier checkpoint partielc39158662cedcaf1f44e1b0faef2c419547c8993 publié, puis reprise explicite des sous-tâches interrompues et préservation du deuxième jalon local. Endpoint /prepare128MiB en streaming, parcours natif-first/HEIC1.23.7, chat/profil/diffusion/bibliothèque et admission capacité sont codés avec contrôles ciblés ; codecs BMP/JXL/RAW/AVIF encore à terminer et qualifier. Ressources codec/core raccordées, aucun fichier client individuel attesté. Aucune PR/CI complète/livraison1150, production1141 et checkpoint93d6ddf7 inchangés. Prochaine étape : terminer le module codecs additionnels puis contre-revue et qualification du candidat complet. Ne rejouer aucune opération1141 close, suite verte sans raison ou test réel.
 
 ## Correctif 1.14.1 — déployé et finalisé
 

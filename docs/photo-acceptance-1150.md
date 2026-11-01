@@ -16,7 +16,7 @@ Les sondes et logs se trouvent temporairement dans implementation-notes/photo-ac
 ## Lot en cours
 
 1. Tentative native en premier : métadonnées indicatives, pas de liste arbitraire de formats/pixels bloquant le décodeur. Réduction avant transfert, première image des formats animés, sortie bornée et ressources libérées.
-2. Secours authentifié/CSRF POST media/prepare sans asset ni original conservé : JPEG normalisé pour aperçu puis POST assets ordinaire. Conversion isolée et bornée, aucune répétition automatique d’un envoi stockant au résultat incertain. Budget de secours proposé32MiB/64MP, distinct des capacités natives du téléphone et de la limite10MiB du fichier préparé ; sécurité mémoire réelle à qualifier.
+2. Secours authentifié/CSRF POST media/prepare sans asset ni original conservé : JPEG normalisé pour aperçu puis POST assets ordinaire. Conversion isolée et bornée, aucune répétition automatique d’un envoi stockant au résultat incertain. Budget final128MiB en lecture directe vers le sous-processus, sans copie de l’original dans le parent, et64MP, distinct des capacités natives du téléphone et de la limite10MiB du fichier préparé ; sécurité mémoire réelle à qualifier.
 3. Décodeurs serveur couvrant familles non natives au téléphone : choix des distributions en cours. HEIC/AVIF/BMP/RAW/JXL ne sont pas promis tant que leur build, variantes et gardes ne sont pas qualifiés. Aucune conversion tierce externe.
 4. Réutiliser exactement le Blob préparé en reprise ; afficher les erreurs locales et HTTP de manière distincte. Pas de télémétrie ou diagnostic de comptes.
 5. Découpler l’admission photos des caps d’archive et du quota par client historique, en conservant capacité globale/disque, charges, propriétaires et transactions. Garder un refus explicite de sauvegarde trop grande avant arrêt, sans élargissement du chantier sauvegarde.
@@ -27,3 +27,15 @@ Il n’est pas possible de garantir un fichier endommagé, chiffré ou un format
 ## Premier checkpoint
 
 Les corrections indépendantes chat sont en cours d’intégration du secours. Leur premier groupe ciblé :179tests/178réussites, puis une attente devenue obsolète après transfert corrigée et seul cas1/1 réussi ; nouveaux scénarios3/3 et5/5, sans omission. Groupes recoupants, ne pas additionner. Ce checkpoint ne vaut ni candidat complet, ni CI native, ni livraison. Backend, préparateur commun, capacité et codecs restent en développement et sont exclus du premier snapshot tant que non gelés.
+
+## Reprise après interruption — deuxième checkpoint de développement
+
+Les fichiers locaux et les références distantes ont été relus : premier checkpointc3915866 bien présent, main127a4d57 et production1141c803 inchangés, aucune PR ouverte. Les sous-tâches étaient interrompues ; reprise explicite depuis leurs preuves, sans répétition des suites vertes.
+
+Serveur : endpoint protégé /prepare désormais128MiB via stdin direct,120s de corps puis30s de conversion, réponseJPEG2MiB/2048 ; auth/CSRF avant lecture et propriétaire revérifié après. Tests stream100/100, original synthétique75MiB validé, parent42–44MiBRSS selon sonde resourceUsage ; ce ne sont pas un maximum garanti HEIC/RAW ni des mesures hébergées. HEIC1.23.7 partagé et worker Node réel branchés, rotation48×64 qualifiée.
+
+Préparateur natif-first et noyauHEIC1.23.7 gelés, interface chat/profil/diffusion/bibliothèque raccordée, hint RAW limité à une extension enum sans nom complet, commandes stockantes incertaines non répétées automatiquement. Les quotas photos par propriétaire et les caps d’archive ne bloquent plus l’admission live ; capacité globale/disque/charges/transactions conservés. La sauvegarde hors de son format garde ses limites et reçoit un refus précoce avant interruption, sans extension du chantier sauvegarde.
+
+Les ressources publiques codec/core/licences sont désormais raccordées ; le worker courant n’a plus de permission d’évaluation dynamique, les assets1.23.5 historiques restent immuables pour les onglets déjà ouverts. Huit contrôles serveur ciblés réussis ; NodeHEICréel2/2 acquis.
+
+RESTE : achever le module supplémentaire BMP/JXL/RAW forcé et une voie AVIF actuelle réellement sûre ; les probes ont révélé que jsquash2.1.1 livre un ancien décodeur AOM et non dav1d. Magick0.0.45 ne doit jamais invoquer HEIC/AVIF (libheif1.23.6 vulnérable) ; HEIC reste sur1.23.7. Choix final AVIF encore en cours, dépendances provisoires non livrées. Terminer intégration/contre-revues et qualifier le candidat complet PR/main, puis publication/préparation uniquement après résultats natifs. Ce deuxième checkpoint ne vaut ni candidat complet ni livraison.

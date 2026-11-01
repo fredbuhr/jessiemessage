@@ -44,14 +44,39 @@ function sessionChanged() {
   clearPrivate(); state.visible = visible(); paused = true; el("reload-session").hidden = false;
   notice("La session a changé. Actualise la connexion avant de reprendre.", true, "session-status");
 }
-async function transport(path, { ticket = libraryTicket(state), body, raw = null, signal, binaryLimit = null } = {}) {
+async function jpegBlob(response, limit, signal) {
+  const length = response.headers.get("content-length");
+  if (response.headers.get("content-type")?.split(";")[0] !== "image/jpeg"
+    || length !== null && (!/^[1-9][0-9]*$/.test(length) || !Number.isSafeInteger(Number(length)) || Number(length) > limit)) throw new Error("invalid_media_response");
+  let blob;
+  if (response.body?.getReader) {
+    const reader = response.body.getReader(), bytes = new Uint8Array(limit); let size = 0;
+    try {
+      while (true) {
+        const chunk = await reader.read(); if (signal.aborted) throw stale(); if (chunk.done) break;
+        if (!(chunk.value instanceof Uint8Array) || chunk.value.byteLength > limit - size) { await reader.cancel(); throw new Error("invalid_media_response"); }
+        bytes.set(chunk.value, size); size += chunk.value.byteLength;
+      }
+      blob = new Blob([bytes.subarray(0, size)], { type: "image/jpeg" });
+    } finally { bytes.fill(0); reader.releaseLock(); }
+  } else {
+    if (length === null) throw new Error("invalid_media_response");
+    blob = await response.blob();
+  }
+  if (signal.aborted) throw stale();
+  if (!blob.size || blob.size > limit || blob.type.split(";")[0] !== "image/jpeg" || length !== null && blob.size !== Number(length)) throw new Error("invalid_media_response");
+  return blob;
+}
+async function transport(path, { ticket = libraryTicket(state), body, raw = null, signal, binaryLimit = null, imageFormat, timeout = raw ? 120000 : 20000 } = {}) {
   if (!current(ticket)) throw stale();
   const controller = new AbortController(), abort = () => controller.abort(); controllers.add(controller);
   signal?.addEventListener("abort", abort, { once: true }); if (signal?.aborted) controller.abort();
-  const timer = setTimeout(() => controller.abort(), raw ? 120000 : 20000);
+  const timer = setTimeout(() => controller.abort(), timeout);
   try {
+    if (controller.signal.aborted) throw stale();
     const response = await fetch(path, { method: body === undefined && raw === null ? "GET" : "POST", credentials: "same-origin", cache: "no-store", signal: controller.signal,
-      headers: raw !== null ? { "Content-Type": raw.type, "X-CSRF-Token": state.session.csrf } : body === undefined ? {} : { "Content-Type": "application/json", "X-CSRF-Token": state.session.csrf },
+      headers: raw !== null ? { "Content-Type": raw.type || "application/octet-stream", "X-CSRF-Token": state.session.csrf,
+        ...(imageFormat ? { "X-Image-Format": imageFormat } : {}) } : body === undefined ? {} : { "Content-Type": "application/json", "X-CSRF-Token": state.session.csrf },
       body: raw !== null ? raw : body === undefined ? undefined : JSON.stringify(body) });
     if (!current(ticket)) throw stale();
     if (!response.ok) {
@@ -60,11 +85,10 @@ async function transport(path, { ticket = libraryTicket(state), body, raw = null
       throw Object.assign(new Error("request_failed"), { status: response.status, code: data?.error });
     }
     if (binaryLimit !== null) {
-      const length = response.headers.get("content-length");
-      if (response.headers.get("content-type")?.split(";")[0] !== "image/jpeg" || length !== null && (!/^\d+$/.test(length) || Number(length) > binaryLimit)) throw new Error("invalid_media_response");
-      const blob = await response.blob();
+      let blob;
+      try { blob = await jpegBlob(response, binaryLimit, controller.signal); }
+      catch (error) { controller.abort(); throw error; }
       if (!current(ticket)) throw stale();
-      if (!blob.size || blob.size > binaryLimit || blob.type.split(";")[0] !== "image/jpeg") throw new Error("invalid_media_response");
       return blob;
     }
     const data = await response.json(); if (!current(ticket)) throw stale(); return data;
@@ -78,10 +102,11 @@ async function verifySession(ticket) {
 }
 async function request(path, options = {}) {
   const ticket = options.ticket ?? libraryTicket(state);
-  if (paused || !current(ticket)) throw stale();
-  await verifySession(ticket); if (!current(ticket)) throw stale();
+  if (paused || !current(ticket) || options.signal?.aborted) throw stale();
+  await verifySession(ticket); if (!current(ticket) || options.signal?.aborted) throw stale();
   const result = await transport(path, { ...options, ticket });
-  await verifySession(ticket); if (!current(ticket)) throw stale(); return result;
+  if (options.signal?.aborted) throw stale();
+  await verifySession(ticket); if (!current(ticket) || options.signal?.aborted) throw stale(); return result;
 }
 function report(error, target = "library-status") {
   if (error?.stale) return;
@@ -258,7 +283,18 @@ async function uploadPhoto(file, ticket) {
   const controller = new AbortController(); controllers.add(controller); mutating = true; controls(); notice("Préparation de la photo…");
   let attempted = false;
   try {
-    const prepared = await prepareImageUpload(file, { signal: controller.signal }); if (!current(ticket)) throw stale();
+    const prepared = await prepareImageUpload(file, { signal: controller.signal, convert: async (original, { signal }) => {
+      if (!current(ticket) || signal.aborted) throw stale();
+      const capabilities = await request("/api/media/admin/capabilities", { ticket, signal });
+      if (!current(ticket) || signal.aborted) throw stale();
+      const preparation = capabilities?.preparation;
+      if (preparation?.enabled !== true) throw Object.assign(new Error("media_format"), { code: "media_format" });
+      if (!Number.isSafeInteger(preparation.maxOriginalBytes) || preparation.maxOriginalBytes < 1 || preparation.maxOriginalBytes > 134217728
+        || preparation.maxOutputBytes !== 2097152 || preparation.maxPixels !== 64000000) throw new Error("invalid_media_response");
+      if (original.size > preparation.maxOriginalBytes) throw Object.assign(new Error("request_too_large"), { status: 413, code: "request_too_large" });
+      const imageFormat = /\.(dng|nef|arw|cr2|cr3|raf|rw2|orf|pef|srw)$/i.exec(original.name ?? "")?.[1].toLowerCase();
+      return request("/api/media/admin/prepare", { ticket, raw: original, signal, imageFormat, binaryLimit: preparation.maxOutputBytes, timeout: 180000 });
+    } }); if (!current(ticket) || controller.signal.aborted) throw stale();
     notice("Chargement de la photo…"); attempted = true;
     const data = await request("/api/media/admin/assets", { ticket, raw: prepared, signal: controller.signal });
     if (!current(ticket)) throw stale(); if (typeof data?.duplicate !== "boolean") throw new Error("response_unconfirmed");

@@ -436,6 +436,7 @@ test("all controller message and photo error variants retain reactive translated
     ["mediaErrorText", { status: 507, code: "storage_limit" }, "Le stockage des photos a atteint sa limite."],
     ["mediaErrorText", { status: 507, code: "media_unavailable" }, "Le stockage des photos a atteint sa limite."],
     ["mediaErrorText", { status: 503, code: "media_unavailable" }, "Le service photo est momentanément indisponible. Réessaie cet envoi dans un moment."],
+    ["mediaErrorText", { code: "media_preparation_unavailable" }, "Le service photo est momentanément indisponible. Réessaie cet envoi dans un moment."],
     ["mediaErrorText", { code: "media_unavailable" }, "La photo n’a pas pu être préparée sur cet appareil. Réessaie cet envoi."],
     ["mediaErrorText", { status: 409, code: "media_in_use" }, "Cette photo est utilisée dans une conversation ou comme avatar. Retire ces utilisations avant de la supprimer."],
     ["mediaErrorText", { status: 404 }, "Cette photo n’est plus disponible."],

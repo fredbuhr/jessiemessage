@@ -1,84 +1,60 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { BackupMediaAdmissionError, fitsBackupMediaAdmission, lockBackupMediaAdmission } from "../server/media/backup-admission.mjs";
-import { BACKUP_MEDIA_MAX_BYTES, BACKUP_MEDIA_MAX_RECORDS } from "../server/media/backup-limits.mjs";
+import { SharedMediaCapacityError, lockSharedMediaCapacity } from "../server/media/shared-capacity.mjs";
 import { videoStoredBytes } from "../server/video/storage.mjs";
 
-function fixture({ photoBytes = 0, videoBytes = 0, photos = 0, assets = photos, videos = 0, photoState = true, videoState = true } = {}) {
+const GiB = 1024 ** 3;
+function fixture({ photoBytes = 0, videoBytes = 0, photoTotal = 10 * GiB, videoTotal = 20 * GiB,
+  photoState = true, videoState = true, orphanObjects = 0, orphanAssets = 0 } = {}) {
   const queries = [];
   return { queries, connection: { async query(sql) {
     queries.push(sql);
-    if (sql === "SELECT held_bytes FROM video_storage_state WHERE id = 1 FOR UPDATE") return videoState ? [{ held_bytes: videoBytes }] : [];
-    if (sql === "SELECT held_bytes FROM media_storage_state WHERE id = 1 FOR UPDATE") return photoState ? [{ held_bytes: photoBytes }] : [];
-    if (sql === "SELECT COUNT(*) AS value FROM media_storage_objects") return [{ value: photos }];
-    if (sql === "SELECT COUNT(*) AS value FROM media_assets") return [{ value: assets }];
-    if (sql === "SELECT COUNT(*) AS value FROM video_assets") return [{ value: videos }];
-    assert.fail(`Unexpected admission query: ${sql}`);
+    if (sql === "SELECT held_bytes, total_bytes FROM video_storage_state WHERE id = 1 FOR UPDATE") return videoState ? [{ held_bytes: videoBytes, total_bytes: videoTotal }] : [];
+    if (sql === "SELECT held_bytes, total_bytes FROM media_storage_state WHERE id = 1 FOR UPDATE") return photoState ? [{ held_bytes: photoBytes, total_bytes: photoTotal }] : [];
+    if (sql.startsWith("SELECT EXISTS")) return [{ objects: orphanObjects, assets: orphanAssets }];
+    assert.fail(`Unexpected shared capacity query: ${sql}`);
   } } };
 }
 
-test("SQL33 photo admission keeps its byte envelope and never queries video tables", async () => {
-  const f = fixture({ photoBytes: 512, photos: 2, assets: 1 });
-  const result = await lockBackupMediaAdmission(f.connection);
-  assert.deepEqual(result, { heldBytes: 512, records: 4 });
-  assert.ok(f.queries[0].endsWith("FROM media_storage_state WHERE id = 1 FOR UPDATE"));
-  assert.ok(f.queries.every(sql => !sql.includes("video_")));
-  assert.equal(fitsBackupMediaAdmission(result, BACKUP_MEDIA_MAX_BYTES - 512, 2), true);
-  assert.equal(fitsBackupMediaAdmission(result, BACKUP_MEDIA_MAX_BYTES - 511, 2), false);
+test("photo-only live admission reads configured total and never asks video tables or counts history", async () => {
+  const f = fixture({ photoBytes: GiB + 512 });
+  assert.deepEqual(await lockSharedMediaCapacity(f.connection), { heldBytes: GiB + 512, totalBytes: 10 * GiB });
+  assert.equal(f.queries.length, 1); assert.ok(f.queries.every(sql => !sql.includes("video_") && !sql.includes("COUNT(")));
 });
 
-test("video and photo allocations share the archive envelope with video-before-photo lock order", async () => {
-  const f = fixture({ photoBytes: BACKUP_MEDIA_MAX_BYTES - 200, videoBytes: 100, photos: 2, videos: 1 });
-  const result = await lockBackupMediaAdmission(f.connection, { video: true });
-  assert.deepEqual(result, { heldBytes: BACKUP_MEDIA_MAX_BYTES - 100, records: 5 });
-  assert.match(f.queries[0], /video_storage_state.*FOR UPDATE$/);
-  assert.match(f.queries[1], /media_storage_state.*FOR UPDATE$/);
-  assert.equal(fitsBackupMediaAdmission(result, 100, 1), true);
-  assert.equal(fitsBackupMediaAdmission(result, 101, 1), false);
-  assert.equal(fitsBackupMediaAdmission(result, 101, 2), false);
+test("photo and video bytes share the photo authority with video-before-photo lock order", async () => {
+  const f = fixture({ photoBytes: 5 * GiB, videoBytes: 2 * GiB });
+  assert.deepEqual(await lockSharedMediaCapacity(f.connection, { video: true }), { heldBytes: 7 * GiB, totalBytes: 10 * GiB });
+  assert.match(f.queries[0], /video_storage_state.*FOR UPDATE$/); assert.match(f.queries[1], /media_storage_state.*FOR UPDATE$/);
+  assert.equal(f.queries.length, 2, "retained released allocation history has no live record budget");
 });
 
-test("eleven 100MiB videos cannot reproduce the previous accepted-but-unbackable state", async () => {
-  const mib = 1024 * 1024, stored = videoStoredBytes(100 * mib);
-  // The two owners remain individually below the persisted 1GiB owner quota,
-  // and the persisted global 10GiB quota is intentionally unchanged.
-  let held = 0, accepted = 0;
+test("eleven 100MiB video allocations fit the shared configured ten GiB budget", async () => {
+  const stored = videoStoredBytes(100 * 1024 ** 2); let held = 0;
   for (let index = 0; index < 11; index++) {
-    const f = fixture({ videoBytes: held, videos: accepted });
-    const snapshot = await lockBackupMediaAdmission(f.connection, { video: true });
-    if (fitsBackupMediaAdmission(snapshot, stored, 1)) { held += stored; accepted++; }
+    const result = await lockSharedMediaCapacity(fixture({ videoBytes: held }).connection, { video: true });
+    assert.ok(result.heldBytes <= result.totalBytes - stored); held += stored;
   }
-  assert.equal(accepted, 10);
-  assert.ok(held <= BACKUP_MEDIA_MAX_BYTES);
-  assert.ok(held + stored > BACKUP_MEDIA_MAX_BYTES);
+  assert.ok(held > GiB && held < 10 * GiB);
 });
 
-test("record reservations include future photo metadata and retained allocation history", async () => {
-  const f = fixture({ photos: 49999, assets: 0, videos: 1 });
-  const snapshot = await lockBackupMediaAdmission(f.connection, { video: true });
-  assert.equal(snapshot.records, BACKUP_MEDIA_MAX_RECORDS - 1);
-  assert.equal(fitsBackupMediaAdmission(snapshot, 1, 1), true);
-  assert.equal(fitsBackupMediaAdmission(snapshot, 1, 2), false);
-  assert.equal(fitsBackupMediaAdmission({ heldBytes: 0, records: BACKUP_MEDIA_MAX_RECORDS }, 1, 1), false);
+test("a standalone video catalogue keeps its configured authority only while no photo catalogue exists", async () => {
+  const f = fixture({ photoState: false, videoBytes: GiB, videoTotal: 3 * GiB });
+  assert.deepEqual(await lockSharedMediaCapacity(f.connection, { video: true }), { heldBytes: GiB, totalBytes: 3 * GiB });
+  for (const changes of [{ orphanObjects: 1 }, { orphanAssets: 1 }])
+    await assert.rejects(lockSharedMediaCapacity(fixture({ photoState: false, ...changes }).connection, { video: true }), SharedMediaCapacityError);
 });
 
-test("an existing over-budget catalogue remains observable without resetting capacity or history", async () => {
-  const f = fixture({ photoBytes: BACKUP_MEDIA_MAX_BYTES, videoBytes: 1, photos: 50000, videos: 1 });
-  const snapshot = await lockBackupMediaAdmission(f.connection, { video: true });
-  assert.equal(snapshot.heldBytes, BACKUP_MEDIA_MAX_BYTES + 1);
-  assert.equal(snapshot.records, BACKUP_MEDIA_MAX_RECORDS + 1);
-  assert.equal(fitsBackupMediaAdmission(snapshot, 1, 1), false);
+test("historical over-capacity remains observable without rewriting counters or resetting any history", async () => {
+  const f = fixture({ photoBytes: 10 * GiB, videoBytes: 1 });
+  assert.deepEqual(await lockSharedMediaCapacity(f.connection, { video: true }), { heldBytes: 10 * GiB + 1, totalBytes: 10 * GiB });
   assert.ok(f.queries.every(sql => sql.startsWith("SELECT ")));
 });
 
-test("missing or malformed capacity authority fails closed without accepting a reservation", async () => {
-  await assert.rejects(lockBackupMediaAdmission(fixture({ videoState: false }).connection, { video: true }), error => error.reason === "unavailable");
-  assert.deepEqual(await lockBackupMediaAdmission(fixture({ photoState: false }).connection, { video: true }), { heldBytes: 0, records: 0 });
-  for (const changes of [{ photoBytes: -1 }, { videoBytes: "invalid" }, { photos: "" }, { photos: Number.MAX_SAFE_INTEGER },
-    { photoState: false, photos: 1 }, { photos: 0, assets: 1 }]) {
-    await assert.rejects(lockBackupMediaAdmission(fixture(changes).connection, { video: true }), BackupMediaAdmissionError);
-  }
-  for (const [bytes, records] of [[0, 1], [1, 0], [NaN, 1], [1, 0.5]]) {
-    assert.throws(() => fitsBackupMediaAdmission({ heldBytes: 0, records: 0 }, bytes, records), BackupMediaAdmissionError);
-  }
+test("missing or malformed capacity authorities fail closed", async () => {
+  await assert.rejects(lockSharedMediaCapacity(fixture({ videoState: false }).connection, { video: true }), error => error.reason === "unavailable");
+  await assert.rejects(lockSharedMediaCapacity(fixture({ photoState: false }).connection), error => error.reason === "unavailable");
+  for (const changes of [{ photoBytes: -1 }, { videoBytes: "invalid" }, { photoTotal: "" }, { photoTotal: 0 },
+    { photoBytes: Number.MAX_SAFE_INTEGER, videoBytes: 1 }, { videoTotal: "01" }])
+    await assert.rejects(lockSharedMediaCapacity(fixture(changes).connection, { video: true }), SharedMediaCapacityError);
 });

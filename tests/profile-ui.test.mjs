@@ -58,7 +58,7 @@ class Element {
   close() { this.open = false; this.emit("close"); }
 }
 
-function harness({ role = "client", avatarsEnabled = true, avatar = false, intercept, binary, prepareAvatar, language = "fr", bitmap, coarse = false, passwordEnabled = false, passwordResponse } = {}) {
+function harness({ role = "client", avatarsEnabled = true, avatar = false, intercept, binary, prepareAvatar, prepareImageUpload, convertImage, language = "fr", bitmap, coarse = false, passwordEnabled = false, passwordResponse } = {}) {
   const passwordSessions = [];
   const events = new Map(), windowEvents = new Map(), calls = [], binaryCalls = [], created = [], revoked = [], saved = [], errors = [];
   const add = (map, name, handler) => { if (!map.has(name)) map.set(name, new Set()); map.get(name).add(handler); };
@@ -73,7 +73,7 @@ function harness({ role = "client", avatarsEnabled = true, avatar = false, inter
   const mountedOwner = { ...state.session };
   const context = vm.createContext({ matchMedia: () => ({ matches: coarse }), document, Blob, AbortController, DOMException, console, TextEncoder, setTimeout, clearTimeout, __passwordProblem: passwordProblem,
     navigator: { language: language === "en" ? "en-GB" : "fr-FR" },
-    __prepareImageUpload: async file => file,
+    __prepareImageUpload: prepareImageUpload ?? (async file => file),
     createImageBitmap: async () => bitmap,
     window: { addEventListener: (name, handler) => add(windowEvents, name, handler), removeEventListener: (name, handler) => windowEvents.get(name)?.delete(handler) },
     URL: { createObjectURL(blob) { const url = `blob:profile-${created.length + 1}`; created.push({ url, blob }); return url; }, revokeObjectURL: url => revoked.push(url) } });
@@ -84,7 +84,7 @@ function harness({ role = "client", avatarsEnabled = true, avatar = false, inter
   vm.runInContext(`const prepareImageUpload = __prepareImageUpload; const createPasswordChangeUI = __createPasswordChangeUI;\n${source.replace(/^import[^\n]+;\n/gm, "").replace(/export (async )?function /g, "$1function ")}\nglobalThis.__profile = {createProfileUI, prepareProfileAvatar};`, context);
   const runtimeListeners = { visibilitychange: events.get("visibilitychange")?.size ?? 0, pagehide: windowEvents.get("pagehide")?.size ?? 0 };
   const ui = context.__profile.createProfileUI({ role, host: document.body, button, avatarsEnabled, isCurrent: () => state.owner && state.session.id === mountedOwner.id && state.session.csrf === mountedOwner.csrf,
-    prepareAvatar: prepareAvatar ?? (async file => file),
+    prepareAvatar: prepareAvatar ?? (async file => file), convertImage,
     async request(path, options) {
       calls.push({ path, options });
       const value = await intercept?.(path, options, state);
@@ -279,6 +279,89 @@ test("the default avatar crop makes a 256px central JPEG and releases the bitmap
   assert.equal(result.type, "image/jpeg"); assert.deepEqual(options, [{ type: "image/jpeg", quality: 0.88, width: 256, height: 256 }]);
   assert.deepEqual(draw[0].slice(1), [80, 0, 160, 160, 0, 0, 256, 256]);
   assert.equal(bitmap.closed, true); assert.equal(canvas.width, 0); assert.equal(canvas.height, 0); h.ui.destroy();
+});
+
+test("profile conversion forwards the original, signal and optional converter to shared preparation", async () => {
+  for (const provided of [false, true]) {
+    const original = new Blob(["synthetic original"], { type: "image/tiff" }), prepared = jpeg("normalized"), calls = [];
+    const controller = new AbortController(), convert = provided ? async () => prepared : undefined;
+    const bitmap = { width: 640, height: 480, close() {} };
+    const h = harness({ bitmap, prepareImageUpload: async (file, options) => { calls.push({ file, options }); return prepared; } });
+    const create = h.document.createElement;
+    h.document.createElement = tag => tag === "canvas" ? { width: 0, height: 0,
+      getContext: () => ({ fillRect() {}, drawImage() {} }), toBlob: callback => callback(jpeg("cropped")) } : create(tag);
+    const avatar = await h.context.__profile.prepareProfileAvatar(original, { signal: controller.signal, convert });
+    assert.equal(avatar.type, "image/jpeg"); assert.equal(calls.length, 1); assert.equal(calls[0].file, original);
+    assert.equal(calls[0].options.signal, controller.signal); assert.equal(calls[0].options.convert, convert);
+    h.ui.destroy();
+  }
+});
+
+test("profile conversion is injected for a current avatar and older adapters keep working without it", async () => {
+  for (const provided of [false, true]) {
+    const original = new Blob(["synthetic original"], { type: "image/tiff" }), prepared = jpeg("converted avatar"), calls = [];
+    let preparationSignal;
+    const h = harness({ convertImage: provided ? async (file, { signal }) => { calls.push({ file, signal }); return prepared; } : undefined,
+      prepareAvatar: async (file, { signal, convert }) => {
+        assert.equal(file, original); preparationSignal = signal;
+        if (provided) return convert(file, { signal });
+        assert.equal(convert, undefined); return prepared;
+      } });
+    await h.ui.open(); await h.choose(original);
+    assert.equal(calls.length, provided ? 1 : 0);
+    if (provided) { assert.equal(calls[0].file, original); assert.equal(calls[0].signal, preparationSignal); }
+    assert.equal(h.created.length, 1); assert.equal(h.created[0].blob, prepared);
+    assert.equal(h.calls.filter(call => call.options.mutation).length, 0);
+    h.ui.destroy();
+  }
+  assert.throws(() => harness({ convertImage: true }), /invalid_profile_adapter/);
+});
+
+test("profile conversion never starts for a stale owner, closed editor, aborted or replaced selection", async () => {
+  for (const mode of ["owner", "account", "csrf", "close", "suspend", "replacement"]) {
+    const release = deferred(), original = new Blob(["first original"], { type: "image/tiff" }), later = jpeg("later original");
+    const calls = [], preparations = [];
+    const h = harness({
+      convertImage: async (file, { signal }) => { calls.push({ file, signal }); return jpeg("normalized avatar"); },
+      prepareAvatar: async (file, options) => {
+        preparations.push({ file, options });
+        if (file === original) await release.promise;
+        return options.convert(file, { signal: options.signal });
+      }
+    });
+    await h.ui.open(); await h.choose(original); assert.equal(calls.length, 0);
+    if (mode === "owner") h.state.owner = false;
+    else if (mode === "account") h.state.session.id = id(2);
+    else if (mode === "csrf") h.state.session.csrf = "B".repeat(43);
+    else if (mode === "close") h.ui.close();
+    else if (mode === "suspend") h.ui.suspend();
+    else await h.choose(later);
+    release.resolve(); await flush();
+    assert.equal(calls.length, mode === "replacement" ? 1 : 0, mode);
+    if (mode === "replacement") assert.equal(calls[0].file, later);
+    assert.equal(preparations[0].options.signal.aborted, true, mode);
+    assert.equal(h.created.length, mode === "replacement" ? 1 : 0, mode);
+    assert.equal(h.calls.filter(call => call.options.mutation).length, 0, mode); assert.equal(h.errors.length, 0, mode);
+    h.ui.destroy();
+  }
+});
+
+test("profile conversion discards late results after owner loss or cancellation", async () => {
+  for (const mode of ["owner", "close", "replacement"]) {
+    const late = deferred(), calls = [], original = new Blob(["first original"], { type: "image/tiff" }), later = jpeg("next original");
+    const h = harness({
+      convertImage: (file, { signal }) => { calls.push({ file, signal }); return file === original ? late.promise : jpeg("new avatar"); },
+      prepareAvatar: (file, options) => options.convert(file, { signal: options.signal })
+    });
+    await h.ui.open(); await h.choose(original); assert.equal(calls.length, 1);
+    if (mode === "owner") h.state.owner = false;
+    else if (mode === "close") h.ui.close();
+    else await h.choose(later);
+    late.resolve(jpeg("late old avatar")); await flush();
+    assert.equal(calls[0].signal.aborted, true, mode); assert.equal(h.created.length, mode === "replacement" ? 1 : 0, mode);
+    assert.equal(h.calls.filter(call => call.options.mutation).length, 0, mode); assert.equal(h.errors.length, 0, mode);
+    h.ui.destroy();
+  }
 });
 
 test("a native avatar choice waits for the mounted account and CSRF proof before preparation", async () => {

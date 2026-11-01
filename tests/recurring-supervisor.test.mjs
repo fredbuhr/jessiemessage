@@ -568,8 +568,22 @@ test("preflight validates public recipient, source, free space and capture tools
   const result = await recurringPreflight(options, { environment, destination: "/srv/private-backups/probe",
     readConfiguration: async () => { events.push("configuration"); return configuration; },
     source: async () => { events.push("source"); }, inspectRecipient: async () => { events.push("recipient"); },
+    inspectCapacity: async () => { events.push("capacity"); },
     inspectSpace: async () => { events.push("space"); }, checkpoint: async command => { events.push(command); } });
-  assert.deepEqual(events, ["configuration", "source", "recipient", "space", "check-application"]); assert.equal(result, configuration);
+  assert.deepEqual(events, ["configuration", "source", "recipient", "space", "check-application", "capacity"]); assert.equal(result, configuration);
+});
+
+test("a backup format capacity refusal after asynchronous capture checks cannot stop the live runtime", async () => {
+  const { BackupCapacityError } = await import("../server/backup/media-capacity.mjs");
+  let exceeds = false;
+  const f = fixture({ preflight: selected => recurringPreflight(selected, { environment,
+    readConfiguration: async () => configuration, source: async () => {},
+    inspectCapacity: async () => { if (exceeds) throw new BackupCapacityError("BACKUP_CAPACITY_LIMIT"); },
+    inspectRecipient: async () => {}, inspectSpace: async () => {},
+    checkpoint: async command => { assert.equal(command, "check-application"); exceeds = true; } }) });
+  await f.supervisor.start(); await f.supervisor.tick();
+  assert.equal(f.events.includes("stop"), false); assert.equal(f.events.includes("capture"), false); assert.equal(f.runtime.state().status, "running");
+  await f.supervisor.close();
 });
 
 test("check command prints a safe result and cannot start a supervisor or capture", async () => {

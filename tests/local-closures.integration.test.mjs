@@ -38,7 +38,9 @@ test("local closures drain the real managed process and preserve durable SQL/pho
   await mkdir(mediaRoot, { mode: 0o700 }); await mkdir(journalRoot, { mode: 0o700 });
   const storage = await createMediaStorage({ root: mediaRoot, key: Buffer.alloc(32, 6), pathMode: "linux-dirfd" });
   const rootFingerprint = await storage.fingerprint(), journalKey = Buffer.alloc(32, 7);
-  const capacity = { ownerBytes: 1048576, totalBytes: 104857600, rootFingerprint };
+  // Every synthetic 580-byte photo exceeds this historical owner binding.
+  // Closing and reopening must continue to use the unchanged global accounting.
+  const capacity = { ownerBytes: 82, totalBytes: 104857600, rootFingerprint };
   let store;
   const journalFor = clientId => createErasureJournal({ directory: journalRoot, key: journalKey, binding: store.binding, clientId });
   const batch = page => readErasureJournalBatch({ directory: journalRoot, key: journalKey, binding: store.binding, ...page });
@@ -163,6 +165,7 @@ test("local closures drain the real managed process and preserve durable SQL/pho
     await t.test("normal closure drains requests and producers before SQL, restarts only after absence, and refuses a resurrected completed account", async step => {
       const f = await seed(), peerBefore = await peerSnapshot(f); await request(f);
       const held = Number((await connection.query("SELECT held_bytes FROM media_storage_state WHERE id = 1"))[0].held_bytes);
+      assert.ok(580 > capacity.ownerBytes && held > capacity.ownerBytes);
       const managedRoot = path.join(directory, "normal-runtime"); await mkdir(managedRoot, { mode: 0o700 });
       const managed = await managedClosureFixture(step, managedRoot); let body;
       try {

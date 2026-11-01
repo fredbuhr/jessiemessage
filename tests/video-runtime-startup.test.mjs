@@ -112,7 +112,7 @@ test("photo and video body deadlines fit their native request budgets while ordi
   const handler = async () => false;
   assert.equal(createAppServer().requestTimeout, 15000);
   const photos = createAppServer({ mediaHandler: handler });
-  assert.equal(photos.requestTimeout, 65000); assert.equal(photos.headersTimeout, 10000);
+  assert.equal(photos.requestTimeout, 125000); assert.equal(photos.headersTimeout, 10000);
   const selected = createAppServer({ videoHandler: handler });
   assert.equal(selected.requestTimeout, 300000); assert.equal(selected.headersTimeout, 10000); assert.equal(selected.keepAliveTimeout, 5000);
 });

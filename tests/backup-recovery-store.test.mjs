@@ -94,6 +94,14 @@ test("closing a signed reservation acknowledges cleanup without refund and repea
   assert.deepEqual(await f.store.closeCandidate(f.command()), { closed: true, state: "cleanup_pending" });
   assert.equal(f.state.mutations, 1); assert.equal(f.state.commits, 2); assert.equal(f.state.released, 2);
 });
+test("photo recovery can close and release bytes above the preserved historical owner binding", async () => {
+  const f = fixture(); f.state.global.owner_bytes = 82;
+  assert.ok(f.state.global.held_bytes > f.state.global.owner_bytes);
+  await f.store.closeCandidate(f.command()); assert.equal(f.state.global.held_bytes, 1180);
+  await f.store.releaseCandidate(f.command()); assert.equal(f.state.global.held_bytes, 0);
+  await f.store.rebind(f.rebind({ capacity: { ownerBytes: 82, totalBytes: 50000 } }));
+  assert.equal(f.state.global.owner_bytes, 82); assert.deepEqual(f.state.global.root_fingerprint, f.targetFingerprint);
+});
 
 test("release refuses an unclosed reservation and refunds a confirmed cleanup exactly once", async () => {
   const f = fixture();

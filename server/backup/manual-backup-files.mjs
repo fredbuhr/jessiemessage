@@ -45,6 +45,10 @@ const files = createPrivateJsonStore({ name: "manual-backup-request.json", lock:
   validate, empty: () => ({ version: 1, revision: 0, requestIds: [], current: null }), fail,
   isKnownError: error => error instanceof ManualBackupError });
 
+export function manualBackupRequestId(value) {
+  const { requestId } = fields(value, ["requestId"]); if (!id(requestId)) fail("INPUT"); return requestId;
+}
+
 /** One durable request, bounded accepted identities, and no automatic retry.
  * The short optimistic writer lock is never held over a capture or HTTP drain. */
 export function createManualBackupRequests({ operationsDirectory, clock = Date.now }, internal = {}) {
@@ -72,7 +76,7 @@ export function createManualBackupRequests({ operationsDirectory, clock = Date.n
   return Object.freeze({
     async status() { return publicRecord((await read()).current); },
     request(value) {
-      const { requestId } = fields(value, ["requestId"]); if (!id(requestId)) fail("INPUT");
+      const requestId = manualBackupRequestId(value);
       return change(state => {
         if (state.current?.requestId === requestId) return false;
         if (state.requestIds.includes(requestId)) fail("CHANGED");

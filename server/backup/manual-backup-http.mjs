@@ -3,6 +3,7 @@ import { pipeline } from "node:stream/promises";
 import { AUTH_HEADERS, checkMutation, httpError, readJson, reply, safeSession, sameText, sessionToken } from "../auth/http.mjs";
 import { BackupCopyError } from "./copy-state.mjs";
 import { ManualBackupError } from "./manual-backup-files.mjs";
+import { BackupCapacityError } from "./media-capacity.mjs";
 
 const assets = new Map([["/admin/backups", ["manual-backups.html", "text/html; charset=utf-8"]],
   ["/manual-backups.js", ["manual-backups.js", "text/javascript; charset=utf-8"]],
@@ -17,6 +18,8 @@ function route(path) {
   return archive ? { kind: "archive", id: archive[1], methods: ["GET"] } : null;
 }
 function mapped(error) {
+  if (error instanceof BackupCapacityError) return { status: error.code === "BACKUP_CAPACITY_LIMIT" ? 409 : 503,
+    code: error.code === "BACKUP_CAPACITY_LIMIT" ? "backup_capacity_limit" : "backups_unavailable" };
   if (error instanceof ManualBackupError) return { status: ({ MANUAL_BACKUP_INPUT: 400, MANUAL_BACKUP_BUSY: 429,
     MANUAL_BACKUP_CHANGED: 409, MANUAL_BACKUP_LIMIT: 409 })[error.code] ?? 503,
     code: ({ MANUAL_BACKUP_INPUT: "invalid_request", MANUAL_BACKUP_BUSY: "backup_in_progress",

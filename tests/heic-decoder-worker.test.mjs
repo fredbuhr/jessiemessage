@@ -2,9 +2,15 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
-import factory from "../node_modules/libheif-js/libheif-wasm/libheif-bundle.mjs";
-import { inspectImageInput, MAX_HEIC_IMAGE_PIXELS, TARGET_UPLOAD_BYTES } from "../public/image-preparation.js";
+import { inspectImageInput } from "../public/image-preparation.js";
 import { decodeHeicPixels, shrinkHeicPlane, limitHeicDecoder } from "../public/heic-decoder-worker.js";
+import { MAX_HEIC_INPUT_BYTES } from "../public/heic-decoder-core.js";
+// The browser serves these exact CSP-safe factory bytes. Run them in a keyless
+// realm as the server adapter does; no Node globals or dynamic code generation.
+const codecSource = await readFile(new URL("../node_modules/heic-to/src/lib/libheif-without-unsafe-eval.js", import.meta.url), "utf8");
+const codecRealm = vm.createContext({}, { codeGeneration: { strings: false, wasm: false } });
+vm.runInContext(codecSource.replace(/export default buildLibheif\s*$/, "globalThis.__factory = buildLibheif"), codecRealm);
+const factory = codecRealm.__factory;
 
 // A generated colour pattern, never a customer original. The pinned native
 // decoder must process actual HEVC bytes; mock planes alone cannot prove that.
@@ -16,12 +22,14 @@ function dimensions(width, height) {
   return bytes;
 }
 function mockLib({ context = { $$: { ptr: 11 } }, parseCode = 0, itemCount = 1, handle = 22,
-  width = 64, height = 48, decoded, decodeError, version = "1.23.5", nativeSetter = true } = {}) {
+  width = 64, height = 48, decoded, decodeError, version = "1.23.7", nativeSetter = true, fileType = 1 } = {}) {
   const calls = [];
   const record = (name, result) => (...args) => { calls.push([name, ...args]); return result; };
   const lib = {
     heif_get_version: () => version,
     _heif_context_set_maximum_image_size_limit: nativeSetter ? record("context.limit") : undefined,
+    heif_filetype_result: { heif_filetype_yes_supported: 1 },
+    heif_js_check_filetype: record("file.type", fileType),
     heif_error_code: { heif_error_Ok: 0 }, heif_colorspace: { heif_colorspace_RGB: 1 },
     heif_chroma: { heif_chroma_interleaved_RGBA: 10 }, heif_channel: { heif_channel_interleaved: 2 },
     heif_context_alloc: record("context.alloc", context),
@@ -44,7 +52,7 @@ function mockLib({ context = { $$: { ptr: 11 } }, parseCode = 0, itemCount = 1, 
 test("the pinned local HEVC decoder applies its native 64MP limit before reading, decodes the real HEIC and releases all native resources", async () => {
   assert.deepEqual(inspectImageInput(heic), { width: 64, height: 48, type: "image/heic", orientation: 1 });
   const lib = await factory({ print() {}, printErr() {} }), calls = [];
-  assert.equal(lib.heif_get_version(), "1.23.5");
+  assert.equal(lib.heif_get_version(), "1.23.7");
   const instrumented = Object.create(lib);
   instrumented._heif_context_set_maximum_image_size_limit = (pointer, maximumWidth) => {
     assert.ok(Number.isSafeInteger(pointer) && pointer > 0); assert.equal(maximumWidth, 8000);
@@ -109,7 +117,7 @@ test("a forged tiny ispe and primary handle cannot bypass the codec limit on the
 
 test("the pinned Embind adapter refuses changed versions, missing setters and invalid opaque pointers before native parsing", async () => {
   for (const options of [
-    { version: "1.23.6" }, { version: null }, { nativeSetter: false }, { context: {} },
+    { version: "1.23.5" }, { version: "1.23.6" }, { version: null }, { nativeSetter: false }, { context: {} },
     ...[0, -1, 1.5, NaN, Infinity, 0x100000000].map(ptr => ({ context: { $$: { ptr } } })),
   ]) {
     const mock = mockLib(options);
@@ -123,33 +131,68 @@ test("the pinned Embind adapter refuses changed versions, missing setters and in
   }
 });
 
-test("malicious container dimensions and structures are refused before allocating a decoder context", async () => {
-  const invalidFlags = Buffer.from(heic); invalidFlags[invalidFlags.indexOf("ipma") + 7] = 2;
-  const invalidBox = Buffer.from(heic); invalidBox.writeUInt32BE(invalidBox.length + 1, 0);
-  const free = Buffer.from([0, 0, 0, 8, 102, 114, 101, 101]);
-  for (const [bytes, expected] of [
-    [dimensions(8001, 8000), "media_dimensions"],
-    [dimensions(20000, 10000), "media_dimensions"],
-    [dimensions(32769, 1), "media_dimensions"],
-    [invalidFlags, "media_format"], [invalidBox, "media_format"],
-    [Buffer.concat([heic, ...Array(4097).fill(free)]), "media_format"],
-    [Buffer.from("not an HEIC image"), "media_format"],
-  ]) {
+test("invalid byte inputs and oversized originals are refused before context allocation; libheif owns format and parse failures", async () => {
+  for (const bytes of [null, new ArrayBuffer(3), new Uint16Array(3), new Uint8Array()]) {
     const mock = mockLib();
-    await assert.rejects(decodeHeicPixels(bytes, mock.lib), failure(expected));
-    assert.deepEqual(mock.names(), [], "no decoder/native allocation follows rejected container metadata");
+    await assert.rejects(decodeHeicPixels(bytes, mock.lib), failure("media_heic"));
+    assert.deepEqual(mock.names(), []);
+  }
+  const mock = mockLib();
+  await assert.rejects(decodeHeicPixels(new Uint8Array(MAX_HEIC_INPUT_BYTES + 1), mock.lib), failure("image_source_too_large"));
+  assert.deepEqual(mock.names(), []);
+  for (const options of [{ fileType: 0 }, { fileType: 2 }, { fileType: 3 }, { parseCode: 4 }]) {
+    const failed = mockLib(options);
+    await assert.rejects(decodeHeicPixels(heic, failed.lib), failure("media_heic"));
+    assert.deepEqual(failed.names().slice(0, 3), ["context.alloc", "context.limit", "file.type"]);
+    assert.equal(failed.names().includes("image.decode"), false);
+    assert.equal(failed.names().at(-1), "context.free");
   }
 });
 
+test("the real libheif validator rejects a non-image, MP4 and truncated HEIF without returning pixels", async () => {
+  const lib = await factory({ print() {}, printErr() {} });
+  const mp4 = Buffer.from(await readFile(new URL("fixtures/video-decodable.mp4.base64", import.meta.url), "utf8"), "base64");
+  for (const bytes of [Buffer.from("not an HEIC image"), mp4, heic.subarray(0, 100)]) {
+    const calls = [], instrumented = Object.create(lib);
+    for (const name of ["heif_js_decode_image2", "heif_context_free"]) {
+      instrumented[name] = (...args) => { calls.push(name); return lib[name](...args); };
+    }
+    await assert.rejects(decodeHeicPixels(bytes, instrumented), failure("media_heic"));
+    assert.deepEqual(calls, ["heif_context_free"]);
+  }
+});
+
+test("real native container validation accepts harmless extra boxes and applies primary-image rotation", async () => {
+  const lib = await factory({ print() {}, printErr() {} });
+  const free = Buffer.from([0, 0, 0, 8, 102, 114, 101, 101]);
+  const extended = Buffer.concat([heic, ...Array(4097).fill(free)]);
+  assert.throws(() => inspectImageInput(extended), failure("media_format"), "the former software gate rejected this decodable container");
+  const original = await decodeHeicPixels(heic, lib), extra = await decodeHeicPixels(extended, lib);
+  assert.deepEqual(extra, original);
+  const rotatedBytes = Buffer.from(await readFile(new URL("fixtures/photo-1150-rotated.heic.b64", import.meta.url), "utf8"), "base64");
+  const rotated = await decodeHeicPixels(rotatedBytes, lib);
+  assert.deepEqual([rotated.width, rotated.height], [48, 64]);
+  // irot=1 rotates counterclockwise: the old top-right pixel becomes top-left.
+  const corner = (original.width - 1) * 4;
+  assert.deepEqual(rotated.pixels.slice(0, 4), original.pixels.slice(corner, corner + 4));
+});
+
 test("the decoder primary image dimensions and item count are bounded before allocating decoded pixels", async () => {
-  for (const options of [{ width: 8001, height: 8000 }, { width: 32769, height: 1 },
-    { width: 0, height: 48 }, { itemCount: 1025 }]) {
+  for (const options of [{ width: 8001, height: 8000 }, { width: Number.MAX_SAFE_INTEGER, height: 2 },
+    { width: 0, height: 48 }, { itemCount: 1025 }, { itemCount: NaN }, { itemCount: 0 }]) {
     const mock = mockLib(options);
-    await assert.rejects(decodeHeicPixels(heic, mock.lib), failure(options.itemCount ? "media_heic" : "media_dimensions"));
+    await assert.rejects(decodeHeicPixels(heic, mock.lib), failure("itemCount" in options ? "media_heic" : "media_dimensions"));
     assert.equal(mock.names().includes("image.decode"), false);
     assert.equal(mock.names().at(-1), "context.free");
-    if (!options.itemCount) assert.equal(mock.names().at(-2), "handle.release");
+    if (!("itemCount" in options)) assert.equal(mock.names().at(-2), "handle.release");
   }
+});
+
+test("a thin panorama above 32768 pixels keeps the area guard and produces a small plane", async () => {
+  const mock = mockLib({ width: 32769, height: 1 });
+  const result = await decodeHeicPixels(heic, mock.lib);
+  assert.deepEqual([result.width, result.height, result.pixels.byteLength], [2048, 1, 8192]);
+  assert.ok(mock.names().indexOf("context.limit") < mock.names().indexOf("image.decode"));
 });
 
 test("every native allocation is released on parse, handle, decode and malformed plane failures", async () => {
@@ -186,7 +229,7 @@ test("the native RGBA plane is sampled directly into a bounded opaque output wit
     { width: 1, height: 1, stride: 3, data },
     { width: 1, height: 2, stride: 8, data: new Uint8Array(8) },
     { width: 1, height: 1, stride: 4, data: new Uint16Array(4) },
-    { width: 32769, height: 1, stride: 32769 * 4, data },
+    { width: 8001, height: 8000, stride: 8001 * 4, data },
   ]) assert.throws(() => shrinkHeicPlane(bad), failure("media_dimensions"));
 });
 
@@ -208,9 +251,9 @@ test("the real HEIC worker transfers only negotiated reduced pixels when its can
       const context = vm.createContext({ self, Blob, ArrayBuffer, Uint8Array, Uint8ClampedArray,
         ImageData: class { constructor(data, width, height) { this.data = data; this.width = width; this.height = height; } },
         OffscreenCanvas: capability === "missing" ? undefined : WorkerCanvas,
-        inspectImageInput, MAX_HEIC_IMAGE_PIXELS, TARGET_UPLOAD_BYTES, codecFactory: factory });
-      vm.runInContext(source.replace(/^import .*\n/m, "").replace(/export /g, "")
-        .replace('import("/heic-codec-1.23.5.mjs")', "Promise.resolve({ default: codecFactory })"), context);
+        decodeHeicPixels, MAX_HEIC_INPUT_BYTES, codecFactory: factory });
+      vm.runInContext(source.replace(/^(?:import|export) .*\n/gm, "")
+        .replace('import("/heic-codec-1.23.7.mjs")', "Promise.resolve({ default: codecFactory })"), context);
       const bytes = Uint8Array.from(heic);
       await self.onmessage({ data: { bytes: bytes.buffer, ...(acceptPixels ? { acceptPixels: true } : {}) } });
       assert.equal(closed, true); assert.equal(messages.length, 1);

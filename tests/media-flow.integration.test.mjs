@@ -205,7 +205,8 @@ test("real HTTP private media uses normalized encrypted files and current delive
       assert.equal((await request(mediaPath("client", "capabilities"))).status, 401);
       const capabilities = await request(mediaPath("client", "capabilities"), { headers: headersFor(a) });
       assert.equal(capabilities.status, 200);
-      assert.deepEqual(capabilities.body, { enabled: true, maxUploadBytes: 10485760, formats: ["image/jpeg", "image/png", "image/webp"] });
+      assert.deepEqual(capabilities.body, { enabled: true, maxUploadBytes: 10485760, formats: ["image/jpeg", "image/png", "image/webp"],
+        preparation: { enabled: true, maxOriginalBytes: 33554432, maxOutputBytes: 2097152, maxPixels: 64000000 } });
       assert.equal((await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: { Cookie: a.cookie } })).status, 403);
       assert.equal((await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA,
         headers: { ...headersFor(a), "Content-Type": "text/plain" } })).status, 415);
@@ -660,7 +661,7 @@ test("real HTTP private media uses normalized encrypted files and current delive
     });
 
     // These three additional independently assured synthetic accounts isolate
-    // each quota. Reservations intentionally remain charged without any file
+    // owner-binding compatibility and configured total. Reservations remain charged without any file
     // write until disposable-schema teardown; no unproven release is claimed.
     const c = await loginClient(clients[2]), d = await loginClient(clients[3]), e = await loginClient(clients[4]);
     async function fillReservedBytes(session, amount) {
@@ -671,7 +672,7 @@ test("real HTTP private media uses normalized encrypted files and current delive
       assert.equal(result.duplicate, false); assert.equal(result.reservation.bytes, amount);
       return asset;
     }
-    await t.test("an owner's durable ceiling rejects HTTP uploads with 507 before every encrypted file write", async () => {
+    await t.test("a photo upload may exceed its historical owner binding when the configured total has space", async () => {
       now += 61000;
       const filesBefore = await filesUnder(storageRoot), putsBefore = uploadPutCalls;
       const held = await capacityStore.status();
@@ -679,12 +680,14 @@ test("real HTTP private media uses normalized encrypted files and current delive
       const before = await capacityStore.status(), objectsBefore = (await capacityStore.listObjects()).objects.length;
       assert.equal(before.heldBytes, held.heldBytes + capacity.ownerBytes - 128);
       assert.ok(capacity.totalBytes - before.heldBytes > 10000, "the shared ceiling leaves enough room, isolating the owner ceiling");
-      const denied = await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: headersFor(c) });
-      assert.equal(denied.status, 507); assert.deepEqual(denied.body, { error: "storage_limit" });
-      assert.equal(uploadPutCalls, putsBefore); assert.deepEqual(await filesUnder(storageRoot), filesBefore);
-      assert.deepEqual(await capacityStore.status(), before); assert.equal((await capacityStore.listObjects()).objects.length, objectsBefore);
+      const admitted = await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: headersFor(c) });
+      assert.equal(admitted.status, 201);
+      const stored = admitted.body.asset.bytes + admitted.body.asset.thumbnailBytes + 80;
+      assert.ok(capacity.ownerBytes - 128 + stored > capacity.ownerBytes);
+      assert.equal(uploadPutCalls, putsBefore + 1); assert.equal((await filesUnder(storageRoot)).length, filesBefore.length + 2);
+      assert.equal((await capacityStore.status()).heldBytes, before.heldBytes + stored); assert.equal((await capacityStore.listObjects()).objects.length, objectsBefore + 1);
       assert.equal((await capacityStore.listObjects()).objects.find((row) => row.id.equals(reserved.id)).state, "reserved");
-      assert.equal((await request(mediaPath("client", "assets"), { headers: headersFor(c) })).body.assets.length, 0);
+      assert.equal((await request(mediaPath("client", "assets"), { headers: headersFor(c) })).body.assets.length, 1);
     });
     await t.test("the shared durable ceiling rejects a fresh owner's HTTP upload without reserving or writing again", async () => {
       now += 61000;

@@ -55,10 +55,10 @@ async function decodedAvatar(prepared, signal) {
   } catch (error) { dispose(); throw error; }
 }
 
-// Reuse the bounded image decoder, then crop its normalized image on-device.
+// Reuse bounded image preparation, then crop its normalized image on-device.
 // The media endpoint independently validates and normalizes this JPEG again.
-export async function prepareProfileAvatar(file, { signal } = {}) {
-  const prepared = await prepareImageUpload(file, { signal });
+export async function prepareProfileAvatar(file, { signal, convert } = {}) {
+  const prepared = await prepareImageUpload(file, { signal, convert });
   aborted(signal);
   let bitmap, canvas;
   try {
@@ -89,10 +89,11 @@ const validName = value => typeof value === "string" && value.trim().normalize("
 // request is the chat's owner-checked JSON/CSRF adapter. fetchBinary must use
 // the same owner checks and return a bounded Blob, never an object URL.
 export function createProfileUI(adapter) {
-  const { role, request, fetchBinary, isCurrent, onSaved, onError, avatarsEnabled = true,
+  const { role, request, fetchBinary, isCurrent, onSaved, onError, avatarsEnabled = true, convertImage,
     prepareAvatar = prepareProfileAvatar, host = document.body, button: openerButton, getReturnFocus, onPasswordChanged, passwordEnabled = false, preferencesEnabled = false, publicationEnabled = false } = adapter;
   if (!["admin", "client"].includes(role) || typeof request !== "function" || typeof isCurrent !== "function"
-    || avatarsEnabled && typeof fetchBinary !== "function" || typeof prepareAvatar !== "function") throw new TypeError("invalid_profile_adapter");
+    || avatarsEnabled && typeof fetchBinary !== "function" || typeof prepareAvatar !== "function"
+    || convertImage !== undefined && typeof convertImage !== "function") throw new TypeError("invalid_profile_adapter");
   const base = `/api/profile/${role}`, media = `/api/media/${role}/assets`;
   const node = (tag, text = null, className = "") => {
     const value = document.createElement(tag); if (className) value.className = className;
@@ -276,7 +277,11 @@ export function createProfileUI(adapter) {
     const controller = new AbortController(); preparationAbort = controller; controllers.add(controller);
     preparing = true; message("Préparation de l’avatar…"); controls();
     try {
-      const blob = await prepareAvatar(selected, { signal: controller.signal });
+      const convert = convertImage === undefined ? undefined : (original, { signal } = {}) => {
+        if (!current(ticket) || sequence !== preparation || controller.signal.aborted || signal?.aborted) throw stale();
+        return convertImage(original, { signal: controller.signal });
+      };
+      const blob = await prepareAvatar(selected, { signal: controller.signal, convert });
       if (!current(ticket) || sequence !== preparation || controller.signal.aborted) return;
       if (!validAvatar(blob)) throw invalidImage();
       draftBlob = blob; draftAvatarId = null; showPreview(blob, ticket);

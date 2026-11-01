@@ -47,7 +47,7 @@ function fixture(handler = () => null, initialOwner = actor(), { XMLHttpRequest,
   const node = (name) => { if (!nodes.has(name)) nodes.set(name, Object.assign(new FakeNode(), { ownerDocument: document })); return nodes.get(name); };
   const document = { visibilityState: "hidden", getElementById: node, createElement: (tag) => Object.assign(new FakeNode(tag), { ownerDocument: document }), addEventListener(name, callback) { documentEvents.set(name, callback); } };
   const context = createContext({ ...model, document, window: { addEventListener(name, callback) { windowEvents.set(name, callback); } }, location: { replace() {} },
-    AbortController, Blob, __imagePreparation: async () => ({ prepareImageUpload: prepare, MAX_UPLOAD_BYTES: 10 * 1024 * 1024 }), URL: urlApi, URLSearchParams, TextEncoder, Date, console, crypto: webcrypto, XMLHttpRequest,
+    AbortController, Blob, Uint8Array, __imagePreparation: async () => ({ prepareImageUpload: prepare, MAX_UPLOAD_BYTES: 10 * 1024 * 1024 }), URL: urlApi, URLSearchParams, TextEncoder, Date, console, crypto: webcrypto, XMLHttpRequest,
     setTimeout(callback, delay) { const timer = ++timerId; timers.set(timer, { callback, delay }); return timer; }, clearTimeout(timer) { timers.delete(timer); },
     fetch: async (path, options) => {
       calls.push({ path, options });
@@ -1105,4 +1105,111 @@ test("an explicit rejected photo POST remains a confirmed failure", async () => 
     assert.equal(f.node("photo-status").textContent, "La photo n’a pas été ajoutée. Ta sélection précédente est conservée ; choisis de nouveau une photo pour réessayer.");
     assert.equal(f.calls.filter(call => call.options.method === "POST").length, 1);
   } finally { f.close(); }
+});
+
+const preparationCapability = { enabled: true, maxOriginalBytes: 134217728, maxOutputBytes: 2097152, maxPixels: 64000000 };
+const preparedJpeg = () => new Response(new Uint8Array([255, 216, 255, 217]), { headers: { "Content-Type": "image/jpeg", "Content-Length": "4" } });
+const converting = async (file, { signal, convert }) => convert(file, { signal });
+test("broadcast server conversion sends one original under owner proofs and stores only the prepared JPEG", async () => {
+  const original = new Blob(["original TIFF bytes"], { type: "image/tiff" });
+  const asset = { id: id(1301), createdAt: now, width: 640, height: 480, thumbnailUrl: `/api/media/admin/assets/${id(1301)}/thumb` };
+  let f; f = fixture((path, options) => {
+    if (path === "/api/media/admin/capabilities") return response({ enabled: true, preparation: preparationCapability });
+    if (path === "/api/media/admin/prepare") { assert.ok([...f.timers.values()].some(timer => timer.delay === 180000)); return preparedJpeg(); }
+    if (path === "/api/media/admin/assets" && options.method === "POST") return response({ asset, duplicate: false }, 201);
+    if (path.endsWith("/thumb")) return { ok: true, status: 200, headers: { get: () => "image/jpeg" }, blob: async () => new Blob(["thumbnail"], { type: "image/jpeg" }) };
+    return null;
+  }, actor(), { prepare: converting });
+  try {
+    compose(f.ui); await f.ui.uploadPhoto(original); await flush();
+    const writes = f.calls.filter(call => call.options.method === "POST");
+    assert.deepEqual(writes.map(call => call.path), ["/api/media/admin/prepare", "/api/media/admin/assets"]);
+    assert.equal(writes[0].options.body, original); assert.equal(writes[0].options.headers["Content-Type"], "image/tiff");
+    assert.equal(writes[0].options.headers["X-CSRF-Token"], actor().csrf);
+    assert.notEqual(writes[1].options.body, original); assert.equal(writes[1].options.body.type, "image/jpeg"); assert.equal(writes[1].options.body.size, 4);
+    const at = f.calls.indexOf(writes[0]); assert.equal(f.calls[at - 1].path, "/api/broadcast/admin/session"); assert.equal(f.calls[at + 1].path, "/api/broadcast/admin/session");
+    assert.equal(f.ui.state.draft.mediaId, asset.id); assert.equal(f.calls.some(call => call.path.endsWith("/campaigns") && call.options.method === "POST"), false);
+  } finally { f.close(); }
+});
+test("broadcast conversion legacy refusal or JSON errors never store the original or create a campaign", async t => {
+  for (const status of [null, 401, 403, 404, 415, 503]) await t.test(status === null ? "old capability" : String(status), async () => {
+    const f = fixture(path => {
+      if (path === "/api/media/admin/capabilities") return response({ enabled: true, ...(status === null ? {} : { preparation: preparationCapability }) });
+      if (path === "/api/media/admin/prepare") return response({ error: status === 415 ? "media_format" : "media_unavailable" }, status);
+      return null;
+    }, actor(), { prepare: converting });
+    try {
+      compose(f.ui); f.ui.state.draft.mediaId = id(1302);
+      await f.ui.uploadPhoto(new Blob(["unreadable original"], { type: "image/tiff" })); await flush();
+      const writes = f.calls.filter(call => call.options.method === "POST"); assert.equal(writes.length, status === null ? 0 : 1);
+      assert.equal(writes.some(call => call.path.endsWith("/assets") || call.path.endsWith("/campaigns")), false);
+      assert.equal(f.ui.state.draft.mediaId, status === 401 ? null : id(1302));
+    } finally { f.close(); }
+  });
+});
+test("broadcast conversion rejects owner and CSRF changes before adopting bytes or posting an asset", async t => {
+  for (const next of [actor(2), { ...actor(), csrf: "z".repeat(43) }]) await t.test(next.user.id === id(2) ? "owner" : "csrf", async () => {
+    const f = fixture((path, _options, session) => {
+      if (path === "/api/media/admin/capabilities") return response({ enabled: true, preparation: preparationCapability });
+      if (path === "/api/media/admin/prepare") { session.setOwner(next); return preparedJpeg(); } return null;
+    }, actor(), { prepare: converting });
+    try {
+      compose(f.ui); await f.ui.uploadPhoto(new Blob(["private original"], { type: "image/tiff" })); await flush();
+      assert.equal(f.calls.filter(call => call.options.method === "POST").length, 1);
+      assert.equal(f.ui.state.draft.mediaId, null); assert.equal(f.ui.assets.size, 0);
+    } finally { f.close(); }
+  });
+});
+test("broadcast cancellation aborts server conversion and ignores its late response without another POST", async () => {
+  const gate = deferred();
+  const f = fixture(async path => {
+    if (path === "/api/media/admin/capabilities") return response({ enabled: true, preparation: preparationCapability });
+    if (path === "/api/media/admin/prepare") { await gate.promise; return preparedJpeg(); } return null;
+  }, actor(), { prepare: converting });
+  try {
+    compose(f.ui); f.ui.state.draft.mediaId = id(1303);
+    const pending = f.ui.uploadPhoto(new Blob(["original"], { type: "image/tiff" })); await flush();
+    const sent = f.calls.find(call => call.path === "/api/media/admin/prepare"); assert.ok(sent);
+    f.ui.cancelPhotoUpload(); assert.equal(sent.options.signal.aborted, true); gate.resolve(); await pending;
+    assert.equal(f.calls.filter(call => call.options.method === "POST").length, 1); assert.equal(f.ui.state.draft.mediaId, id(1303));
+  } finally { gate.resolve(); f.close(); }
+});
+test("broadcast conversion bounds streamed JPEG responses and original bytes before storing an asset", async t => {
+  for (const failure of ["stream size", "declared size", "response MIME", "original size"]) await t.test(failure, async () => {
+    let cancelled = false;
+    const f = fixture(path => {
+      if (path === "/api/media/admin/capabilities") return response({ enabled: true, preparation: { ...preparationCapability, ...(failure === "original size" ? { maxOriginalBytes: 1 } : {}) } });
+      if (path === "/api/media/admin/prepare") {
+        if (failure === "response MIME") return new Response("not a JPEG", { headers: { "Content-Type": "text/html" } });
+        if (failure === "declared size") return new Response("oversized header", { headers: { "Content-Type": "image/jpeg", "Content-Length": "2097153" } });
+        return new Response(new ReadableStream({ start(controller) { controller.enqueue(new Uint8Array(2097153)); }, cancel() { cancelled = true; } }), { headers: { "Content-Type": "image/jpeg" } });
+      } return null;
+    }, actor(), { prepare: converting });
+    try {
+      compose(f.ui); await f.ui.uploadPhoto(new Blob(["original"], { type: "image/tiff" })); await flush();
+      assert.equal(f.calls.some(call => call.path === "/api/media/admin/assets" && call.options.method === "POST"), false);
+      if (failure === "stream size") assert.equal(cancelled, true);
+      if (failure === "original size") assert.equal(f.calls.some(call => call.path === "/api/media/admin/prepare"), false);
+      else assert.equal(f.calls.find(call => call.path === "/api/media/admin/prepare").options.signal.aborted, true, "invalid binary responses cancel their fetch");
+    } finally { f.close(); }
+  });
+});
+test("broadcast RAW hints contain only a recognized extension and never reach the storing upload", async () => {
+  for (const [name, expected] of [["private-camera.DNG", "dng"], ["private-camera.NEF", "nef"], ["private-camera.cr3", "cr3"],
+    ["private-camera.jpg", undefined], ["private-camera.dng.backup", undefined], [undefined, undefined]]) {
+    const original = Object.assign(new Blob(["original bytes"], { type: "" }), name === undefined ? {} : { name });
+    const asset = { id: id(1304), createdAt: now, width: 640, height: 480, thumbnailUrl: `/api/media/admin/assets/${id(1304)}/thumb` };
+    const f = fixture((path, options) => {
+      if (path === "/api/media/admin/capabilities") return response({ enabled: true, preparation: preparationCapability });
+      if (path === "/api/media/admin/prepare") return preparedJpeg();
+      if (path === "/api/media/admin/assets" && options.method === "POST") return response({ asset, duplicate: false }, 201); return null;
+    }, actor(), { prepare: converting });
+    try {
+      compose(f.ui); await f.ui.uploadPhoto(original); await flush();
+      const writes = f.calls.filter(call => call.options.method === "POST"); assert.equal(writes.length, 2);
+      assert.equal(writes[0].options.headers["X-Image-Format"], expected); assert.equal(writes[0].options.headers["Content-Type"], "application/octet-stream");
+      assert.equal(writes[1].options.headers["X-Image-Format"], undefined); assert.equal(writes[0].options.body, original);
+      assert.doesNotMatch(JSON.stringify(writes.map(call => call.options.headers)), /private-camera/);
+    } finally { f.close(); }
+  }
 });

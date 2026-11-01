@@ -1,8 +1,8 @@
-// All preparation stays on this device. The server still validates, rotates,
-// strips metadata and normalizes every uploaded image independently.
+// Try device-native preparation first. A caller can provide an authenticated
+// conversion fallback; uploaded images are independently validated and normalized.
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
-// Camera originals can be much larger than the upload. Inspect their compressed
-// headers first, then resize locally; the server's independent 10 MiB cap stays.
+// These are software-inspection/HEVC budgets, not a format allowlist for the
+// browser's native image decoder. Normalized output keeps its separate limits.
 export const MAX_SOURCE_IMAGE_BYTES = 128 * 1024 * 1024;
 export const TARGET_UPLOAD_BYTES = 2 * 1024 * 1024;
 export const MAX_SOURCE_IMAGE_PIXELS = 256_000_000;
@@ -12,6 +12,7 @@ export const MAX_HEIC_IMAGE_PIXELS = 64_000_000;
 const MAX_NATIVE_FALLBACK_PIXELS = 64_000_000;
 export const MAX_SOURCE_IMAGE_SIDE = 32_768;
 const MAX_PREPARED_IMAGE_SIDE = 2048;
+const NATIVE_HINT_BYTES = 512 * 1024;
 
 
 export class ImagePreparationError extends Error {
@@ -40,7 +41,7 @@ function orientation(bytes, start, end) {
   return 1;
 }
 
-function jpegInfo(bytes, view) {
+function jpegInfo(bytes, view, nativeHint = false) {
   let cursor = 2, width, height, exif = 1, hasExif = false;
   while (cursor + 1 < bytes.length) {
     if (bytes[cursor++] !== 0xff) fail("media_format");
@@ -52,8 +53,9 @@ function jpegInfo(bytes, view) {
     const length = view.getUint16(cursor), end = cursor + length;
     if (length < 2 || end > bytes.length) fail("media_format");
     if (marker === 0xe1 && ascii(bytes, cursor + 2, 6) === "Exif\0\0") {
-      if (hasExif) fail("media_format");
-      hasExif = true; exif = orientation(bytes, cursor + 2, end);
+      const next = orientation(bytes, cursor + 2, end);
+      if (hasExif && (!nativeHint || exif !== next)) fail("media_format");
+      hasExif = true; exif = next;
     }
     if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
       if (length < 8 || width !== undefined) fail("media_format");
@@ -64,7 +66,7 @@ function jpegInfo(bytes, view) {
   return { width, height, type: "image/jpeg", orientation: exif };
 }
 
-function pngInfo(bytes, view) {
+function pngInfo(bytes, view, nativeHint = false) {
   if (bytes.length < 33 || ascii(bytes, 12, 4) !== "IHDR" || view.getUint32(8) !== 13) fail("media_format");
   let cursor = 8, ended = false, exif = 1;
   while (cursor + 12 <= bytes.length) {
@@ -72,7 +74,7 @@ function pngInfo(bytes, view) {
     if (end > bytes.length) fail("media_format");
     const chunk = ascii(bytes, cursor + 4, 4);
     if (chunk === "IHDR" && cursor !== 8) fail("media_format");
-    if (["acTL", "fcTL", "fdAT"].includes(chunk)) fail("media_format");
+    if (!nativeHint && ["acTL", "fcTL", "fdAT"].includes(chunk)) fail("media_format");
     if (chunk === "eXIf") exif = orientation(bytes, cursor + 8, end - 4);
     if (chunk === "IEND") { ended = true; break; }
     cursor = end;
@@ -81,17 +83,17 @@ function pngInfo(bytes, view) {
   return { width: view.getUint32(16), height: view.getUint32(20), type: "image/png", orientation: exif };
 }
 
-function webpInfo(bytes, view) {
+function webpInfo(bytes, view, nativeHint = false) {
   if (view.getUint32(4, true) + 8 !== bytes.length) fail("media_format");
   let cursor = 12, width, height, imageWidth, imageHeight, exif = 1;
   while (cursor + 8 <= bytes.length) {
     const length = view.getUint32(cursor + 4, true), start = cursor + 8, end = start + length;
     if (end > bytes.length) fail("media_format");
     const chunk = ascii(bytes, cursor, 4);
-    if (["ANIM", "ANMF"].includes(chunk)) fail("media_format");
+    if (!nativeHint && ["ANIM", "ANMF"].includes(chunk)) fail("media_format");
     if (chunk === "EXIF") exif = orientation(bytes, start, end);
     if (chunk === "VP8X") {
-      if (length !== 10 || bytes[start] & 0x02 || width !== undefined) fail("media_format");
+      if (length !== 10 || !nativeHint && bytes[start] & 0x02 || width !== undefined) fail("media_format");
       width = 1 + bytes[start + 4] + bytes[start + 5] * 256 + bytes[start + 6] * 65536;
       height = 1 + bytes[start + 7] + bytes[start + 8] * 256 + bytes[start + 9] * 65536;
     } else if (chunk === "VP8 ") {
@@ -105,13 +107,14 @@ function webpInfo(bytes, view) {
     cursor = end + length % 2;
   }
   if (cursor !== bytes.length) fail("media_format");
+  if (nativeHint && imageWidth === undefined) return { width, height, type: "image/webp", orientation: exif };
   if (width !== undefined && (width !== imageWidth || height !== imageHeight)) fail("media_format");
   return { width: imageWidth, height: imageHeight, type: "image/webp", orientation: exif };
 }
 
 // Inspect only the container metadata, never search compressed image payloads
 // for a magic word. Every walked ISO-BMFF box is range/depth/count bounded.
-function heifInfo(bytes, view) {
+function heifInfo(bytes, view, nativeHint = false) {
   let count = 0;
   const boxes = (start, end) => {
     const result = [];
@@ -132,8 +135,8 @@ function heifInfo(bytes, view) {
   if (!ftyp || ftyp.end - ftyp.start < 8 || (ftyp.end - ftyp.start) % 4) fail("media_format");
   const brands = [ascii(bytes, ftyp.start, 4)];
   for (let start = ftyp.start + 8; start < ftyp.end; start += 4) brands.push(ascii(bytes, start, 4));
-  if (brands.some(brand => ["avis", "msf1", "hevc", "hevx"].includes(brand))) fail("media_format");
-  const type = brands.includes("avif") ? "image/avif"
+  if (!nativeHint && brands.some(brand => ["avis", "msf1", "hevc", "hevx"].includes(brand))) fail("media_format");
+  const type = brands.includes("avif") || nativeHint && brands.includes("avis") ? "image/avif"
     : brands.some(brand => ["heic", "heix", "mif1"].includes(brand)) ? "image/heic" : null;
   if (!type) fail("media_format");
   const meta = top.filter(box => box.type === "meta");
@@ -178,8 +181,8 @@ function heifInfo(bytes, view) {
   return { width: rotated ? height : width, height: rotated ? width : height, type, orientation: 1 };
 }
 
-// Inspect bounded compressed bytes before calling any browser image decoder.
-// This does not trust the filename or MIME type as proof of an image format.
+// Strict metadata inspection for callers that need a bounded known format.
+// Native preparation treats source parsing as an advisory hint instead.
 export function inspectImageInput(bytes) {
   if (!(bytes instanceof Uint8Array) || bytes.length < 3) fail("media_format");
   if (bytes.length > MAX_SOURCE_IMAGE_BYTES) fail("image_source_too_large");
@@ -196,12 +199,51 @@ export function inspectImageInput(bytes) {
   return info;
 }
 
+// A bounded hint can help a native JPEG decoder shrink before allocating its
+// output. Missing, redundant or unfamiliar metadata never rejects an image.
+function nativeImageType(bytes) {
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
+  if (ascii(bytes, 0, 8) === "\x89PNG\r\n\x1a\n") return "image/png";
+  if (ascii(bytes, 0, 4) === "RIFF" && ascii(bytes, 8, 4) === "WEBP") return "image/webp";
+  if (["GIF87a", "GIF89a"].includes(ascii(bytes, 0, 6))) return "image/gif";
+  if (ascii(bytes, 0, 2) === "BM") return "image/bmp";
+  if (["II\x2a\0", "MM\0\x2a", "II\x2b\0", "MM\0\x2b"].includes(ascii(bytes, 0, 4))) return "image/tiff";
+  if (bytes.length >= 16 && ascii(bytes, 4, 4) === "ftyp") {
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const size = view.getUint32(0), start = size === 1 ? 16 : 8;
+    const end = Math.min(bytes.length, size === 1 && bytes.length >= 24 ? view.getUint32(12) : size);
+    const brands = [];
+    for (let offset = start; offset + 4 <= end; offset += 4) if (offset !== start + 4) brands.push(ascii(bytes, offset, 4));
+    if (brands.some(brand => ["avif", "avis"].includes(brand))) return "image/avif";
+    if (brands.some(brand => ["heic", "heix", "hevc", "hevx", "heim", "heis", "hevm", "hevs", "mif1", "msf1"].includes(brand))) return "image/heic";
+  }
+  return undefined;
+}
+async function nativeImageHint(file, signal) {
+  let bytes, type;
+  try {
+    bytes = await readImageBytes(file.size > NATIVE_HINT_BYTES ? file.slice(0, NATIVE_HINT_BYTES) : file, signal, 1000);
+    type = nativeImageType(bytes);
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    let info;
+    if (type === "image/jpeg") info = jpegInfo(bytes, view, true);
+    else if (type === "image/png") info = pngInfo(bytes, view, true);
+    else if (type === "image/webp") info = webpInfo(bytes, view, true);
+    else if (["image/heic", "image/avif"].includes(type)) info = heifInfo(bytes, view, true);
+    else if (type === "image/gif" && bytes.length >= 10) info = { width: view.getUint16(6, true), height: view.getUint16(8, true) };
+    else if (type === "image/bmp" && bytes.length >= 26 && view.getUint32(14, true) >= 40) info = { width: view.getInt32(18, true), height: Math.abs(view.getInt32(22, true)) };
+    if (info && [info.width, info.height].every(value => Number.isSafeInteger(value) && value > 0)) return { ...info, type };
+  } catch { aborted(signal); }
+  finally { bytes?.fill(0); }
+  return { type };
+}
+
 function dimensions(width, height, maximum = MAX_PREPARED_IMAGE_SIDE) {
   const ratio = Math.min(1, maximum / Math.max(width, height));
   return { width: Math.max(1, Math.floor(width * ratio)), height: Math.max(1, Math.floor(height * ratio)) };
 }
 function aborted(signal) { if (signal?.aborted) throw new DOMException("Aborted", "AbortError"); }
-function readImageBytes(file, signal) {
+function readImageBytes(file, signal, timeout = 60000) {
   return new Promise((resolve, reject) => {
     let reader, done = false;
     const finish = (error, buffer) => {
@@ -219,7 +261,7 @@ function readImageBytes(file, signal) {
       error ? reject(error) : resolve(new Uint8Array(buffer));
     };
     const cancel = () => finish(new DOMException("Aborted", "AbortError"));
-    const timer = setTimeout(() => finish(new ImagePreparationError("media_unavailable")), 60000);
+    const timer = setTimeout(() => finish(new ImagePreparationError("media_unavailable")), timeout);
     signal?.addEventListener("abort", cancel, { once: true });
     if (signal?.aborted) { cancel(); return; }
     try {
@@ -287,15 +329,16 @@ async function decodedImage(file, target, signal) {
         signal?.addEventListener("abort", cancel, { once: true });
         if (signal?.aborted) { cancel(); return; }
         try {
-          Promise.resolve(createImageBitmap(file, { imageOrientation: "from-image", resizeWidth: target.width,
-            resizeHeight: target.height, resizeQuality: "high" })).then(bitmap => finish(null, bitmap), error => finish(error));
+          const options = { imageOrientation: "from-image" };
+          if (target.width && target.height) Object.assign(options, { resizeWidth: target.width, resizeHeight: target.height, resizeQuality: "high" });
+          Promise.resolve(createImageBitmap(file, options)).then(bitmap => finish(null, bitmap), error => finish(error));
         } catch (error) { finish(error); }
       });
       return { image, width: image.width, height: image.height, dispose: () => image.close?.() };
     } catch (error) { bitmapError = error; aborted(signal); }
   }
   // Some phone browsers have no ImageBitmap API or reject its resize options.
-  // The source header/pixel guard has already run before this native decoder.
+  // Avoid a known oversized full-resolution fallback when native resize failed.
   if (typeof globalThis.Image !== "function" || typeof globalThis.URL?.createObjectURL !== "function") {
     if (bitmapError) throw bitmapError;
     fail("media_unavailable");
@@ -379,36 +422,66 @@ async function decodeHeic(bytes, signal) {
   } finally { release(); }
 }
 
-export async function prepareImageUpload(file, { signal } = {}) {
+async function convertedImage(file, convert, signal) {
+  // The caller owns authentication, owner proofs and the HTTP deadline. Keep
+  // cancellation effective even when an adapter settles after it was aborted.
+  const blob = await new Promise((resolve, reject) => {
+    let done = false;
+    const finish = (error, value) => {
+      if (done) return; done = true;
+      signal?.removeEventListener("abort", cancel);
+      error ? reject(error) : resolve(value);
+    };
+    const cancel = () => finish(new DOMException("Aborted", "AbortError"));
+    signal?.addEventListener("abort", cancel, { once: true });
+    if (signal?.aborted) { cancel(); return; }
+    try { Promise.resolve(convert(file, { signal })).then(value => finish(null, value), error => finish(error)); }
+    catch (error) { finish(error); }
+  });
+  aborted(signal);
+  if (!(blob instanceof Blob) || blob.type !== "image/jpeg" || blob.size < 1 || blob.size > TARGET_UPLOAD_BYTES) fail("media_unavailable");
+  let bytes;
+  try {
+    bytes = await readImageBytes(blob, signal);
+    const info = inspectImageInput(bytes);
+    if (info.type !== "image/jpeg" || info.width > MAX_PREPARED_IMAGE_SIDE || info.height > MAX_PREPARED_IMAGE_SIDE) fail("media_unavailable");
+    return blob;
+  } catch (error) {
+    if (error?.name === "AbortError") throw error;
+    fail("media_unavailable");
+  } finally { bytes?.fill(0); }
+}
+
+export async function prepareImageUpload(file, { signal, convert } = {}) {
   aborted(signal);
   if (!(file instanceof Blob) || file.size < 1) fail("media_format");
-  if (file.size > MAX_SOURCE_IMAGE_BYTES) fail("image_source_too_large");
+  if (convert !== undefined && typeof convert !== "function") fail("media_unavailable");
   let bitmap, canvas, bytes;
   try {
-    bytes = await readImageBytes(file, signal);
-    const info = inspectImageInput(bytes);
-    if (info.type === "image/heic" && info.width * info.height > MAX_HEIC_IMAGE_PIXELS) fail("media_dimensions");
+    const info = await nativeImageHint(file, signal);
     aborted(signal);
     if (typeof globalThis.document?.createElement !== "function") fail("media_unavailable");
     const oriented = info.orientation >= 5 && info.orientation <= 8
       ? { width: info.height, height: info.width } : info;
-    const target = { ...dimensions(oriented.width, oriented.height), sourcePixels: info.width * info.height };
+    // HEIF spatial extents can precede clean-aperture cropping or derived-image
+    // transforms. Let the native decoder report the actual displayed ratio.
+    const resizeHint = !["image/heic", "image/avif"].includes(info.type) && info.width && info.height;
+    const target = { ...(resizeHint ? dimensions(oriented.width, oriented.height) : {}), sourcePixels: info.width * info.height };
     // The bytes prove the format. Camera/cloud pickers often supply a generic
     // or simply incorrect MIME label; that label must not reject a real photo.
-    const decodable = file.type === info.type ? file : new Blob([file], { type: info.type });
+    const decodable = !info.type || file.type === info.type ? file : new Blob([file], { type: info.type });
     try { bitmap = await decodedImage(decodable, target, signal); }
     catch (error) {
       aborted(signal);
       if (info.type !== "image/heic") throw error;
-      if (info.width * info.height > MAX_HEIC_IMAGE_PIXELS) fail("media_dimensions");
+      if (file.size > MAX_SOURCE_IMAGE_BYTES) fail("image_source_too_large");
+      bytes = await readImageBytes(file, signal);
       const result = await decodeHeic(bytes, signal);
       if (result instanceof Blob) { aborted(signal); return result; }
       bitmap = decodedHeicPixels(result, signal);
     }
     aborted(signal);
-    if (!Number.isInteger(bitmap.width) || !Number.isInteger(bitmap.height) || bitmap.width < 1 || bitmap.height < 1
-      || bitmap.width > MAX_SOURCE_IMAGE_SIDE || bitmap.height > MAX_SOURCE_IMAGE_SIDE
-      || bitmap.width * bitmap.height > MAX_NATIVE_FALLBACK_PIXELS) fail("media_dimensions");
+    if (!Number.isSafeInteger(bitmap.width) || !Number.isSafeInteger(bitmap.height) || bitmap.width < 1 || bitmap.height < 1) fail("media_dimensions");
     canvas = document.createElement("canvas");
     const context = canvas.getContext("2d", { alpha: !["image/jpeg", "image/heic"].includes(info.type) });
     if (!context) fail("media_unavailable");
@@ -423,10 +496,18 @@ export async function prepareImageUpload(file, { signal } = {}) {
     }
     fail("request_too_large");
   } catch (error) {
+    if (error?.name === "AbortError") throw error;
+    aborted(signal);
+    if (convert) {
+      bitmap?.dispose?.(); bitmap = null;
+      if (canvas) { canvas.width = 0; canvas.height = 0; canvas = null; }
+      if (bytes?.byteLength) bytes.fill(0); bytes = null;
+      return await convertedImage(file, convert, signal);
+    }
     if (error instanceof ImagePreparationError || error?.name === "AbortError") throw error;
     fail("media_format");
   } finally {
-    bitmap?.dispose?.(); bytes = null;
+    bitmap?.dispose?.(); if (bytes?.byteLength) bytes.fill(0); bytes = null;
     if (canvas) { canvas.width = 0; canvas.height = 0; }
   }
 }

@@ -16,6 +16,7 @@ import { runManagedWitnessPreparation } from "./managed-witness.mjs";
 import { witnessOriginErrorCode } from "./witness-origin-diagnostics.mjs";
 import { runWitnessObservationMaintenance } from "./witness-observation-maintenance.mjs";
 import { createManualBackupRequests } from "./manual-backup-files.mjs";
+import { checkConfiguredBackupCapacity } from "./media-capacity.mjs";
 
 const REPOSITORY = resolve(fileURLToPath(new URL("../../", import.meta.url)));
 const PROFILE = "photos-notify-recovery-crm-broadcast";
@@ -170,13 +171,17 @@ export function recurringCheckpointDue(now, configuration, history) {
 
 export async function recurringPreflight(options, { environment = process.env, signal, destination,
   readConfiguration = readRecurringConfiguration, inspectRecipient = inspectCheckpointRecipient,
-  inspectSpace = inspectCheckpointSpace, source = assertRuntimeSource, checkpoint = checkpointProcess } = {}) {
+  inspectSpace = inspectCheckpointSpace, source = assertRuntimeSource, checkpoint = checkpointProcess,
+  inspectCapacity = checkConfiguredBackupCapacity } = {}) {
   active(signal);
   const configuration = await readConfiguration(options.operationsDirectory, { signal });
   await source(options, { signal });
   await inspectRecipient({ recipientDirectory: options.operationsDirectory, recipientSha256: configuration.recipientSha256, signal });
   await inspectSpace(options.operationsDirectory, { signal });
   await checkpoint("check-application", options, destination ?? `${options.operationsDirectory}/capture-preflight-${randomBytes(8).toString("hex")}`, { signal, environment });
+  // Uploads can finish during the asynchronous tool checks. Sample the format
+  // budget last; capture still verifies the exact drained catalogue itself.
+  await inspectCapacity(options, { environment, signal });
   active(signal);
   return configuration;
 }

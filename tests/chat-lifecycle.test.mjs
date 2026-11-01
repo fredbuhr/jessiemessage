@@ -1980,6 +1980,7 @@ test("photo requests allow server reception and processing while text and archiv
   f.context.__photoBody = new Blob(["synthetic photo transfer"], { type: "image/jpeg" });
   for (const [kind, options, expected] of [
     ["photo", 'mutation:true,rawBody:__photoBody,contentType:"image/jpeg"', 90000],
+    ["photo preparation", 'mutation:true,rawBody:__photoBody,contentType:"application/octet-stream",photoPreparation:true', 180000],
     ["text", 'mutation:true,body:{body:"ordinary text"}', 15000],
     ["archive", 'archive:true', 65000],
   ]) {
@@ -2531,5 +2532,305 @@ test("photo service and storage failures retain their HTTP diagnosis beside the 
     await f.advance(3000);
     assert.equal(f.element("image-draft-status").textContent, expected); assert.equal(uploads, 1);
     assert.equal(state.pending.clientMessageId, key); assert.equal(f.element("message-body").value, "Preserve this caption");
+  });
+});
+
+const serverPreparationCapability = () => ({ enabled: true, preparation: { enabled: true, maxOriginalBytes: 134217728, maxOutputBytes: 2097152, maxPixels: 64000000 } });
+function preparationReply(blob, { type = "image/jpeg", length = null, read = null, counts = null } = {}) {
+  return { ok: true, status: 200, headers: { get: key => key.toLowerCase() === "content-type" ? type : key.toLowerCase() === "content-length" ? length : null },
+    async blob() { if (counts) counts.blob++; return read ? await read() : blob; },
+    async json() { if (counts) counts.json++; throw new Error("a prepared JPEG must not be parsed as JSON"); } };
+}
+async function preparedJpegFixture() {
+  const { default: sharp } = await import("sharp");
+  return new Blob([await sharp({ create: { width: 32, height: 24, channels: 3, background: { r: 110, g: 40, b: 80 } } }).jpeg().toBuffer()], { type: "image/jpeg" });
+}
+function requestOriginalPreparation(f, original, signal = null) {
+  f.context.__preparationOriginal = original; f.context.__preparationSignal = signal;
+  return vm.runInContext('request("/api/media/client/prepare",{state:currentState(),mutation:true,rawBody:__preparationOriginal,contentType:__preparationOriginal.type||"application/octet-stream",signal:__preparationSignal,photoPreparation:true})', f.context);
+}
+
+test("photo preparation sends only an allowed RAW extension hint and never a filename or an asset hint", async t => {
+  const normalized = await preparedJpegFixture();
+  for (const extension of ["dng", "nef", "arw", "cr2", "cr3", "raf", "rw2", "orf", "pef", "srw"]) await t.test(extension, async () => {
+    const original = Object.assign(new Blob(["synthetic RAW original"], { type: "application/octet-stream" }), { name: `Private family photo.${extension.toUpperCase()}` });
+    const f = harness({ intercept: path => path === "/api/media/client/prepare" ? preparationReply(normalized) : undefined }); await flush();
+    await requestOriginalPreparation(f, original);
+    const upload = f.calls.find(call => call.path.endsWith("/prepare"));
+    assert.equal(upload.options.headers["X-Image-Format"], extension); assert.equal(upload.options.body, original);
+    assert.equal(JSON.stringify(upload.options.headers).includes("Private family photo"), false);
+  });
+  for (const name of [undefined, "photo.jpg", "photo.tiff", "photo.mp4", "photo.nef.jpg", "photo.nef?download=1", "photo.nef\r\nX-Private: yes"]) await t.test(`no hint: ${JSON.stringify(name)}`, async () => {
+    const original = Object.assign(new Blob(["synthetic original"], { type: "image/tiff" }), name == null ? {} : { name });
+    const f = harness({ intercept: path => path === "/api/media/client/prepare" ? preparationReply(normalized) : undefined }); await flush();
+    await requestOriginalPreparation(f, original);
+    assert.equal(f.calls.find(call => call.path.endsWith("/prepare")).options.headers["X-Image-Format"], undefined);
+  });
+  await t.test("stored asset", async () => {
+    const f = harness({ intercept: path => path === "/api/media/client/assets" ? response(200, { asset: { id: id(1950) } }) : undefined }); await flush();
+    f.context.__preparationOriginal = Object.assign(normalized, { name: "Private family photo.NEF" });
+    await vm.runInContext('request("/api/media/client/assets",{state:currentState(),mutation:true,rawBody:__preparationOriginal,contentType:"image/jpeg"})', f.context);
+    assert.equal(f.calls.find(call => call.path.endsWith("/assets")).options.headers["X-Image-Format"], undefined);
+  });
+});
+
+test("original-photo preparation reads only a valid bounded JPEG and preserves non-OK JSON errors", async t => {
+  await t.test("JPEG response and owner proofs", async () => {
+    const normalized = await preparedJpegFixture(), counts = { blob: 0, json: 0 };
+    const f = harness({ intercept: path => path === "/api/media/client/prepare" ? preparationReply(normalized, { length: String(normalized.size), counts }) : undefined }); await flush();
+    const original = new Blob(["synthetic original with no MIME"]), before = f.calls.length;
+    assert.equal(await requestOriginalPreparation(f, original), normalized);
+    const calls = f.calls.slice(before), upload = calls.find(call => call.path.endsWith("/prepare"));
+    assert.equal(upload.options.body, original); assert.equal(upload.options.headers["Content-Type"], "application/octet-stream");
+    assert.equal(upload.options.headers["X-CSRF-Token"], session().csrf); assert.equal(upload.options.cache, "no-store");
+    assert.equal(calls.filter(call => call.path === "/api/access/session").length, 2);
+    assert.deepEqual(counts, { blob: 1, json: 0 });
+  });
+  for (const status of [413, 415, 422, 429, 503]) await t.test(`HTTP${status}`, async () => {
+    let json = 0, blob = 0;
+    const f = harness({ intercept: path => path === "/api/media/client/prepare" ? { ok: false, status,
+      headers: { get: key => key.toLowerCase() === "retry-after" ? "5" : null },
+      json: async () => { json++; return { error: "synthetic_server_code" }; }, blob: async () => { blob++; throw new Error("refused response body must not become a photo"); } } : undefined }); await flush();
+    await assert.rejects(requestOriginalPreparation(f, new Blob(["original"])), error => error.status === status && error.code === "synthetic_server_code" && error.retryAfter === 5);
+    assert.equal(json, 1); assert.equal(blob, 0);
+  });
+  for (const invalid of ["type", "declared size", "empty", "oversized body"]) await t.test(invalid, async () => {
+    const blob = new Blob([invalid === "empty" ? "" : invalid === "oversized body" ? new Uint8Array(2097153) : "synthetic body"], { type: "image/jpeg" });
+    const counts = { blob: 0, json: 0 };
+    const f = harness({ intercept: path => path === "/api/media/client/prepare" ? preparationReply(blob, { counts, type: invalid === "type" ? "image/png" : "image/jpeg", length: invalid === "declared size" ? "2097153" : null }) : undefined }); await flush();
+    await assert.rejects(requestOriginalPreparation(f, new Blob(["original"])), error => error.code === "media_preparation_unavailable");
+    assert.equal(counts.json, 0); assert.equal(counts.blob, ["empty", "oversized body"].includes(invalid) ? 1 : 0);
+  });
+});
+
+test("chat preview and inline single preparation use the advertised fallback and keep its exact upload body", async t => {
+  for (const inline of [false, true]) await t.test(inline ? "inline after a preview failure" : "selected preview", async () => {
+    const normalized = await preparedJpegFixture(), originals = [], uploads = [], messages = []; let preparations = 0;
+    const f = harness({ prepare: async (file, options) => {
+      preparations++; if (inline && preparations === 1) throw Object.assign(new Error("synthetic transient local read failure"), { code: "media_unavailable" });
+      return prepareImageUpload(file, options);
+    }, intercept(path, options) {
+      if (path === "/api/media/client/capabilities") return response(200, serverPreparationCapability());
+      if (path === "/api/media/client/prepare") { originals.push(options.body); return preparationReply(normalized); }
+      if (path === "/api/media/client/assets") {
+        uploads.push(options.body); if (uploads.length === 1) throw new Error("synthetic lost stored-upload acknowledgement");
+        return response(200, { asset: { id: id(1900) }, duplicate: true });
+      }
+      if (path.includes("/api/media/client/conversations/") && path.endsWith("/messages")) {
+        const command = JSON.parse(options.body); messages.push(command);
+        return response(201, { message: { id: id(1901), sequence: "2", sender: "me", body: command.caption, clientMessageId: command.clientMessageId, createdAt: now, deletedAt: null } });
+      }
+    } }); await flush();
+    const original = new Blob(["synthetic raster original"], { type: "image/tiff" }); await chooseSyntheticPhotos(f, [original]);
+    assert.equal(originals.length, inline ? 0 : 1); assert.equal(uploads.length, 0, "preparation does not store an asset or send a message");
+    await f.send("Keep the fallback caption");
+    const state = f.inspect().states.get(f.inspect().selected), key = state.pending.clientMessageId;
+    assert.deepEqual(originals, [original]); assert.equal(uploads[0], normalized); assert.equal(state.pending.filePrepared, true);
+    await f.advance(3000); assert.equal(originals.length, 1); assert.equal(uploads.length, 1);
+    await f.click("retry-send");
+    assert.equal(originals.length, 1); assert.equal(preparations, inline ? 2 : 1); assert.equal(uploads[1], normalized);
+    assert.equal(messages.length, 1); assert.equal(messages[0].clientMessageId, key); assert.equal(messages[0].caption, "Keep the fallback caption");
+  });
+});
+
+test("a batch prepares an original beyond its visible previews without changing batch identity or order", async () => {
+  const normalized = await preparedJpegFixture(), originals = [], uploads = [], commands = [];
+  const f = harness({ prepare: prepareImageUpload, intercept(path, options) {
+    if (path === "/api/media/client/capabilities") return response(200, serverPreparationCapability());
+    if (path === "/api/media/client/prepare") { originals.push(options.body); return preparationReply(normalized); }
+    if (path === "/api/media/client/assets") { uploads.push(options.body); return response(201, { asset: { id: id(2000 + uploads.length) } }); }
+    if (path.endsWith("/messages/batch")) {
+      const values = JSON.parse(options.body).messages; commands.push(...values);
+      return response(200, { results: values.map((value, index) => ({ clientMessageId: value.clientMessageId, duplicate: false,
+        message: { id: id(2100 + index), sequence: String(2 + index), sender: "me", body: value.caption, clientMessageId: value.clientMessageId, createdAt: now, deletedAt: null } })) });
+    }
+  } }); await flush();
+  const files = Array.from({ length: 5 }, (_, index) => new Blob([`original ${index}`], { type: "image/tiff" })); await chooseSyntheticPhotos(f, files);
+  const state = f.inspect().states.get(f.inspect().selected), keys = state.photoBatch.items.map(item => item.clientMessageId);
+  assert.equal(originals.length, 4); assert.equal(uploads.length, 0);
+  await f.send("One batch caption");
+  assert.deepEqual(originals, files); assert.equal(uploads.length, 5); assert.ok(uploads.every(value => value === normalized));
+  assert.deepEqual(commands.map(value => value.clientMessageId), keys); assert.deepEqual(commands.map(value => value.caption), ["One batch caption", "", "", "", ""]);
+  assert.equal(state.photoBatch, null);
+});
+
+test("preparation fallback refuses old owner or CSRF selections before POST and before adopting returned bytes", async t => {
+  for (const boundary of ["before POST", "binary response"]) for (const changed of ["account", "CSRF"]) await t.test(`${boundary}: ${changed}`, async () => {
+    const gate = pause(), normalized = await preparedJpegFixture(); let blocked = false, posted = 0;
+    const f = harness({ prepare: (file, options) => options.convert(file, { signal: options.signal }), intercept(path) {
+      if (path === "/api/media/client/capabilities") return response(200, serverPreparationCapability());
+      if (blocked && boundary === "before POST" && path === "/api/access/session") return gate.promise;
+      if (path === "/api/media/client/prepare") { posted++; return preparationReply(normalized, { read: boundary === "binary response" ? () => gate.promise : null }); }
+    } }); await flush(); blocked = true;
+    await chooseSyntheticPhotos(f, [new Blob(["old owner original"], { type: "image/tiff" })]);
+    const next = changed === "account" ? session(2, "B".repeat(43)) : session(1, "B".repeat(43));
+    f.state.currentSession = next; blocked = false; gate.resolve(boundary === "before POST" ? response(200, next) : normalized); await flush();
+    assert.equal(posted, boundary === "before POST" ? 0 : 1); assert.equal(f.createdUrls.length, 0);
+    assert.equal(f.inspect().sessionOwner.csrf, next.csrf); assert.equal(f.inspect().sessionOwner.id, next.user.id);
+    assert.equal(f.inspect().states.get(f.inspect().selected).imageDraft, null);
+    assert.equal(f.calls.filter(call => call.path === "/api/media/client/assets").length, 0);
+  });
+});
+
+test("a removed or hidden selection cannot start a preparation POST after its delayed owner proof", async t => {
+  for (const action of ["remove", "hide"]) await t.test(action, async () => {
+    const proof = pause(), normalized = await preparedJpegFixture(); let block = false, posted = 0;
+    const f = harness({ prepare: (file, options) => options.convert(file, { signal: options.signal }), intercept(path) {
+      if (path === "/api/media/client/capabilities") return response(200, serverPreparationCapability());
+      if (block && path === "/api/access/session") return proof.promise;
+      if (path === "/api/media/client/prepare") { posted++; return preparationReply(normalized); }
+    } }); await flush(); block = true;
+    await chooseSyntheticPhotos(f, [new Blob(["selected original"], { type: "image/tiff" })]);
+    if (action === "remove") await f.click("cancel-image"); else await f.hide();
+    block = false; proof.resolve(response(200, session())); await flush();
+    assert.equal(posted, 0); assert.equal(f.createdUrls.length, 0);
+    assert.equal(f.calls.filter(call => call.path === "/api/media/client/assets").length, 0);
+  });
+});
+
+test("hiding aborts preparation transport and a late binary reply cannot create a preview", async () => {
+  const binary = pause(), normalized = await preparedJpegFixture(); let signal;
+  const f = harness({ prepare: (file, options) => options.convert(file, { signal: options.signal }), intercept(path, options) {
+    if (path === "/api/media/client/capabilities") return response(200, serverPreparationCapability());
+    if (path === "/api/media/client/prepare") { signal = options.signal; return preparationReply(normalized, { read: () => binary.promise }); }
+  } }); await flush();
+  await chooseSyntheticPhotos(f, [new Blob(["selected original"], { type: "image/tiff" })]); assert.equal(signal.aborted, false);
+  await f.hide(); assert.equal(signal.aborted, true); binary.resolve(normalized); await flush();
+  assert.equal(f.createdUrls.length, 0); assert.equal(f.element("workspace").hidden, true);
+  assert.equal(f.calls.filter(call => call.path === "/api/media/client/assets").length, 0);
+});
+
+test("lost preparation acknowledgement is not repeated by polling and HTTP errors retain their codes", async t => {
+  for (const failure of ["network", 422, 429, 503]) await t.test(String(failure), async () => {
+    let posts = 0;
+    const f = harness({ prepare: prepareImageUpload, intercept(path) {
+      if (path === "/api/media/client/capabilities") return response(200, serverPreparationCapability());
+      if (path === "/api/media/client/prepare") { posts++; if (failure === "network") throw new Error("synthetic lost preparation reply"); return response(failure, { error: "synthetic_preparation_error" }); }
+    } }); await flush();
+    await chooseSyntheticPhotos(f, [new Blob(["selected original"], { type: "image/tiff" })]);
+    const error = f.inspect().states.get(f.inspect().selected).imageDraft.previewError;
+    assert.ok(error); if (failure !== "network") { assert.equal(error.status, failure); assert.equal(error.code, "synthetic_preparation_error"); }
+    await f.advance(3000); assert.equal(posts, 1);
+    assert.equal(f.calls.filter(call => call.path === "/api/media/client/assets").length, 0);
+  });
+});
+
+test("current authorization failures from preparation close the client instead of installing returned data", async t => {
+  for (const status of [401, 403]) await t.test(String(status), async () => {
+    const f = harness({ prepare: (file, options) => options.convert(file, { signal: options.signal }), intercept(path) {
+      if (path === "/api/media/client/capabilities") return response(200, serverPreparationCapability());
+      if (path === "/api/media/client/prepare") return response(status, { error: "request_rejected" });
+    } }); await flush(); await chooseSyntheticPhotos(f, [new Blob(["selected original"], { type: "image/tiff" })]);
+    assert.equal(f.createdUrls.length, 0); assert.equal(f.inspect().sessionOwner, null); assert.deepEqual(f.redirects, ["/access"]);
+  });
+});
+
+test("chat conversion is opt-in and respects the advertised original limit before transferring bytes", async t => {
+  for (const advertised of [false, true]) await t.test(advertised ? "original exceeds the advertised limit" : "legacy media capability", async () => {
+    let posts = 0, callback;
+    const f = harness({ prepare: async (file, options) => {
+      callback = options.convert;
+      return callback ? callback(file, { signal: options.signal }) : new Blob(["locally normalized JPEG"], { type: "image/jpeg" });
+    }, intercept(path) {
+      if (path === "/api/media/client/capabilities") return response(200, advertised
+        ? { enabled: true, preparation: { enabled: true, maxOriginalBytes: 4, maxOutputBytes: 2097152, maxPixels: 64000000 } }
+        : { enabled: true });
+      if (path === "/api/media/client/prepare") { posts++; throw new Error("unavailable conversion must not be requested"); }
+    } }); await flush();
+    await chooseSyntheticPhotos(f, [new Blob(["longer than the advertised original limit"], { type: "image/tiff" })]);
+    assert.equal(posts, 0); assert.equal(typeof callback, advertised ? "function" : "undefined");
+    const draft = f.inspect().states.get(f.inspect().selected).imageDraft;
+    if (advertised) assert.equal(draft.previewError.code, "image_source_too_large");
+    else assert.equal(draft.prepared.type, "image/jpeg");
+  });
+});
+
+test("the advertised 128MiB fallback accepts an original beyond the former 32MiB boundary", async () => {
+  const normalized = await preparedJpegFixture(); let posted = null;
+  const f = harness({ prepare: (file, options) => options.convert(file, { signal: options.signal }), intercept(path, options) {
+    if (path === "/api/media/client/capabilities") return response(200, serverPreparationCapability());
+    if (path === "/api/media/client/prepare") { posted = options.body; return preparationReply(normalized); }
+  } }); await flush();
+  const original = new Blob([new Uint8Array(33554433)], { type: "image/tiff" });
+  await chooseSyntheticPhotos(f, [original]);
+  assert.equal(posted, original); assert.equal(posted.size, 33554433);
+  assert.equal(f.inspect().states.get(f.inspect().selected).imageDraft.prepared, normalized);
+  assert.equal(f.calls.filter(call => call.path === "/api/media/client/assets").length, 0);
+});
+
+test("a real JPEG labelled video/mp4 reaches photo preparation and never opens a client video route", async () => {
+  const normalized = await preparedJpegFixture(); let preparedOriginal = null, uploaded = null;
+  const original = new Blob([await normalized.arrayBuffer()], { type: "video/mp4" });
+  const f = harness({ prepare: async file => { preparedOriginal = file; return normalized; }, intercept(path, options) {
+    if (path === "/api/media/client/capabilities") return response(200, serverPreparationCapability());
+    if (path === "/api/media/client/assets") { uploaded = options.body; return response(201, { asset: { id: id(2200) } }); }
+    if (path.includes("/api/media/client/conversations/") && path.endsWith("/messages")) {
+      const command = JSON.parse(options.body);
+      return response(201, { message: { id: id(2201), sequence: "2", sender: "me", body: command.caption, clientMessageId: command.clientMessageId, createdAt: now, deletedAt: null } });
+    }
+  } }); await flush(); await chooseSyntheticPhotos(f, [original]);
+  assert.equal(preparedOriginal, original); assert.equal(f.inspect().states.get(f.inspect().selected).imageDraft.prepared, normalized);
+  assert.equal(f.inspect().states.get(f.inspect().selected).videoDraft, null);
+  await f.send("Mislabeled photo caption"); assert.equal(uploaded, normalized);
+  assert.equal(f.calls.find(call => call.path === "/api/media/client/assets").options.headers["Content-Type"], "image/jpeg");
+  assert.equal(f.calls.filter(call => call.path.startsWith("/api/video/")).length, 0);
+});
+
+test("a real MP4 selected as a photo stays on image preparation and an image-format refusal never stores or sends it", async () => {
+  const bytes = Buffer.from(await readFile(new URL("fixtures/video-decodable.mp4.base64", import.meta.url), "utf8"), "base64");
+  let sentOriginal = null;
+  const f = harness({ prepare: prepareImageUpload, intercept(path, options) {
+    if (path === "/api/media/client/capabilities") return response(200, serverPreparationCapability());
+    if (path === "/api/media/client/prepare") { sentOriginal = options.body; return response(415, { error: "media_format" }); }
+  } }); await flush();
+  const video = new Blob([bytes], { type: "video/mp4" }); await chooseSyntheticPhotos(f, [video]);
+  const state = f.inspect().states.get(f.inspect().selected);
+  assert.equal(sentOriginal, video); assert.equal(state.imageDraft.previewError.status, 415); assert.equal(state.imageDraft.previewError.code, "media_format");
+  assert.equal(state.imageDraft.prepared, undefined); assert.equal(state.videoDraft, null);
+  assert.equal(f.calls.filter(call => call.options.method === "POST" && call.path !== "/api/media/client/prepare").length, 0);
+  assert.equal(f.calls.filter(call => call.path.startsWith("/api/video/")).length, 0);
+});
+
+test("a current preparation CSRF refusal refreshes the owner without repeating the conversion", async () => {
+  let posts = 0;
+  const f = harness({ prepare: (file, options) => options.convert(file, { signal: options.signal }), intercept(path) {
+    if (path === "/api/media/client/capabilities") return response(200, serverPreparationCapability());
+    if (path === "/api/media/client/prepare") { posts++; return response(403, { error: "csrf_failed" }); }
+  } }); await flush(); await chooseSyntheticPhotos(f, [new Blob(["selected original"], { type: "image/tiff" })]);
+  assert.deepEqual(f.redirects, []); assert.equal(f.inspect().sessionOwner.csrf, session().csrf);
+  assert.equal(f.inspect().states.get(f.inspect().selected).imageDraft.previewError.code, "csrf_failed");
+  await f.advance(3000); assert.equal(posts, 1); assert.deepEqual(f.redirects, []);
+});
+
+test("profile preparation uses account ownership across conversation selection and same-owner visibility resume", async t => {
+  for (const role of ["client", "admin"]) await t.test(role, async () => {
+    const binary = pause(), normalized = await preparedJpegFixture(); let adapter, hold = true, posted = 0;
+    const f = harness({ currentSession: session(1, "A".repeat(43), role), profileFactory(value) { adapter = value; return { suspend() {}, resume() {}, destroy() {} }; },
+      intercept(path, options) {
+        if (path === `/api/chat/${role}/capabilities`) return response(200, { enabled: true, profile: { enabled: true, avatars: true } });
+        if (path === `/api/media/${role}/capabilities`) return response(200, serverPreparationCapability());
+        if (path === `/api/media/${role}/prepare`) { posted++; assert.equal(options.headers["X-Image-Format"], "nef"); return preparationReply(normalized, { read: hold ? () => binary.promise : null }); }
+      } }); await flush();
+    assert.equal(typeof adapter.convertImage, "function"); const original = Object.assign(new Blob(["profile original"], { type: "image/tiff" }), { name: "Private profile photo.NEF" });
+    const converting = adapter.convertImage(original, { signal: new AbortController().signal }); await flush();
+    vm.runInContext("selectionEpoch += 1", f.context); binary.resolve(normalized);
+    assert.equal(await converting, normalized, "the account profile is independent from the selected conversation");
+    await f.hide(); await f.show(); hold = false;
+    assert.equal(await adapter.convertImage(original, { signal: new AbortController().signal }), normalized, "a resumed profile takes a fresh visibility ticket");
+    assert.equal(posted, 2); assert.equal(f.calls.filter(call => call.path === `/api/media/${role}/assets`).length, 0);
+  });
+});
+
+test("an old profile conversion callback cannot upload after account or CSRF replacement", async t => {
+  for (const changed of ["account", "CSRF"]) await t.test(changed, async () => {
+    let adapter, posted = 0;
+    const f = harness({ profileFactory(value) { adapter = value; return { suspend() {}, resume() {}, destroy() {} }; }, intercept(path) {
+      if (path === "/api/chat/client/capabilities") return response(200, { enabled: true, profile: { enabled: true, avatars: true } });
+      if (path === "/api/media/client/capabilities") return response(200, serverPreparationCapability());
+      if (path === "/api/media/client/prepare") { posted++; throw new Error("an old profile must not post a new original"); }
+    } }); await flush(); const old = adapter;
+    await f.hide(); f.state.currentSession = changed === "account" ? session(2, "B".repeat(43)) : session(1, "B".repeat(43)); await f.show();
+    await assert.rejects(async () => old.convertImage(new Blob(["old profile original"]), { signal: new AbortController().signal }), error => error.stale === true);
+    assert.equal(posted, 0); assert.equal(f.inspect().sessionOwner.csrf, "B".repeat(43));
   });
 });

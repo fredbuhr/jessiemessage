@@ -8,6 +8,7 @@ import { createChatStore, ChatStoreError } from "../server/chat/store.mjs";
 import { createMediaStore } from "../server/media/store.mjs";
 import { createMediaCapacityStore } from "../server/media/capacity-store.mjs";
 import { BACKUP_MEDIA_MAX_BYTES } from "../server/media/backup-limits.mjs";
+import { readManualBackupCapacity, assertManualBackupCapacity } from "../server/backup/media-capacity.mjs";
 import { createVideoStore } from "../server/video/store.mjs";
 import { loadVideoMigrations } from "../server/video/migrations.mjs";
 import { videoStoredBytes } from "../server/video/storage.mjs";
@@ -22,7 +23,7 @@ const videoAsset = bytes => ({ id: id(), storageKey: digest(), bytes, storedByte
 const photoAsset = bytes => ({ id: id(), storageKey: digest(), digest: digest(), width: 1200, height: 800,
   thumbnailWidth: 480, thumbnailHeight: 320, fullBytes: bytes - 1080, thumbnailBytes: 1000 });
 
-test("real MariaDB photo and video admission share the existing backup envelope without rewriting historical quotas", {
+test("real MariaDB live media use configured shared capacity while backup format eligibility remains separate", {
   skip: enabled ? false : "Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.", timeout: 180000,
 }, async t => {
   const options = databaseOptions();
@@ -54,12 +55,12 @@ test("real MariaDB photo and video admission share the existing backup envelope 
     return value;
   }
   const actor = value => ({ role: value.role, tokenHash: value.tokenHash, now });
-  async function fresh() {
+  async function fresh({ totalBytes = 10 * GiB } = {}) {
     // These fixtures never create messages or files. Clear only their catalogues
     // between cases; the outer guarded reset owns the disposable schema.
     for (const table of ["media_storage_objects", "media_assets", "video_assets", "media_storage_state", "video_storage_state"])
       await connection.query(`DELETE FROM ${table}`);
-    const photoCapacity = { ownerBytes: GiB, totalBytes: 10 * GiB, rootFingerprint: digest() };
+    const photoCapacity = { ownerBytes: Math.min(GiB, totalBytes), totalBytes, rootFingerprint: digest() };
     const videoCapacity = { ownerBytes: GiB, totalBytes: 10 * GiB, rootFingerprint: digest() };
     const chat = createChatStore(pool, { clock: () => now });
     const media = createMediaStore({ pool, chatStore: chat, capacity: photoCapacity, video: true });
@@ -90,15 +91,13 @@ test("real MariaDB photo and video admission share the existing backup envelope 
     pool = await createRuntimePool(process.env);
     assert.equal(BACKUP_MEDIA_MAX_BYTES, GiB);
 
-    await t.test("ten 100 MiB reservations fit across owners, the eleventh rolls back, and an exact replay spends nothing", async () => {
+    await t.test("eleven 100 MiB reservations fit configured ten GiB across owners, and exact replay spends nothing", async () => {
       const fixture = await fresh(), values = await reserveTen(fixture);
-      const expected = 10 * videoStoredBytes(100 * MiB), before = await totals();
-      assert.equal(before.held, expected); assert.equal(before.videoObjects, 10);
-      assert.ok(expected <= GiB); assert.ok(expected + videoStoredBytes(100 * MiB) > GiB);
-      const refused = videoAsset(100 * MiB);
-      await assert.rejects(fixture.videos.reserve({ ...actor(fixture.owners[0]), asset: refused }), code("VIDEO_STORAGE_LIMIT"));
-      assert.deepEqual(await totals(), before);
-      assert.equal((await connection.query("SELECT id FROM video_assets WHERE id = ?", [refused.id])).length, 0);
+      const eleventh = videoAsset(100 * MiB);
+      await fixture.videos.reserve({ ...actor(fixture.owners[0]), asset: eleventh });
+      const expected = 11 * videoStoredBytes(100 * MiB), before = await totals();
+      assert.equal(before.held, expected); assert.equal(before.videoObjects, 11);
+      assert.ok(expected > GiB && expected < 10 * GiB);
       const replay = await fixture.videos.reserve({ ...actor(fixture.owners[0]), asset: values[0] });
       assert.ok(replay.reservation.id.equals(values[0].id));
       assert.equal(replay.reservation.storedBytes, values[0].storedBytes);
@@ -109,8 +108,8 @@ test("real MariaDB photo and video admission share the existing backup envelope 
       assert.equal(status.ownerBytes, GiB); assert.equal(status.totalBytes, 10 * GiB);
     });
 
-    await t.test("independent owners racing photo and video reservations cannot jointly exceed the shared envelope", async () => {
-      const fixture = await fresh(); await reserveTen(fixture);
+    await t.test("independent owners racing photo and video reservations cannot exceed a configured one GiB shared total", async () => {
+      const fixture = await fresh({ totalBytes: GiB }); await reserveTen(fixture);
       const before = await totals(), photo = photoAsset(10 * MiB), video = videoAsset(20 * MiB);
       assert.ok(before.held + 10 * MiB <= GiB && before.held + video.storedBytes <= GiB);
       assert.ok(before.held + 10 * MiB + video.storedBytes > GiB);
@@ -120,7 +119,7 @@ test("real MariaDB photo and video admission share the existing backup envelope 
       const racingPool = { getConnection: async () => {
         const native = await pool.getConnection();
         return { ...native, query: async (...arguments_) => {
-          if (arguments_[0] === "SELECT held_bytes FROM video_storage_state WHERE id = 1 FOR UPDATE") {
+          if (arguments_[0] === "SELECT held_bytes, total_bytes FROM video_storage_state WHERE id = 1 FOR UPDATE") {
             arrivals += 1;
             if (arrivals === 1) timer = setTimeout(() => rejectBarrier(new Error("Both independent upload transactions must reach the shared lock.")), 5000);
             if (arrivals === 2) { clearTimeout(timer); releaseBarrier(); }
@@ -151,8 +150,8 @@ test("real MariaDB photo and video admission share the existing backup envelope 
       assert.equal((await connection.query("SELECT id FROM video_assets WHERE id = ?", [video.id])).length, Number(!photoWon));
     });
 
-    await t.test("historical allocations above the envelope stay readable with their bindings and replay identities intact", async () => {
-      const fixture = await fresh(), photo = photoAsset(10 * MiB);
+    await t.test("historical allocations above configured shared capacity remain readable and replayable without resets", async () => {
+      const fixture = await fresh({ totalBytes: GiB }), photo = photoAsset(10 * MiB);
       await fixture.media.reserveAsset({ ...actor(fixture.owners[0]), asset: photo });
       await fixture.media.registerAsset({ ...actor(fixture.owners[0]), asset: photo });
       const values = Array.from({ length: 11 }, () => videoAsset(100 * MiB)), contentDigest = digest();
@@ -178,7 +177,7 @@ test("real MariaDB photo and video admission share the existing backup envelope 
       assert.equal((await fixture.videos.status()).heldBytes, before.videoHeld);
       assert.equal((await fixture.photos.status()).heldBytes, before.photoHeld);
       assert.equal((await fixture.videos.initialize({ now, offline: true })).totalBytes, 10 * GiB);
-      assert.equal((await fixture.photos.initialize({ now, offline: true })).totalBytes, 10 * GiB);
+      assert.equal((await fixture.photos.initialize({ now, offline: true })).totalBytes, fixture.photoCapacity.totalBytes);
       const owned = await fixture.videos.getOwned({ ...actor(fixture.owners[0]), assetId: values[0].id });
       assert.ok(owned.digest.equals(contentDigest)); assert.equal(owned.bytes, 100 * MiB);
       assert.ok((await fixture.videos.listOwned(actor(fixture.owners[0]))).assets.some(asset => asset.id.equals(values[0].id)));
@@ -191,6 +190,32 @@ test("real MariaDB photo and video admission share the existing backup envelope 
       await assert.rejects(fixture.media.reserveAsset({ ...actor(fixture.owners[0]), asset: photoAsset(2048) }), code("MEDIA_STORAGE_LIMIT"));
       assert.deepEqual(await totals(), before);
       assert.deepEqual(await bindings(), originalBindings);
+    });
+
+    await t.test("video owner quota remains effective independently of the larger shared total", async () => {
+      const fixture = await fresh();
+      for (let index = 0; index < 10; index++) await fixture.videos.reserve({ ...actor(fixture.owners[0]), asset: videoAsset(100 * MiB) });
+      const before = await totals(); assert.ok(before.held < GiB);
+      await assert.rejects(fixture.videos.reserve({ ...actor(fixture.owners[0]), asset: videoAsset(100 * MiB) }), code("VIDEO_STORAGE_LIMIT"));
+      assert.deepEqual(await totals(), before);
+      await fixture.videos.reserve({ ...actor(fixture.owners[1]), asset: videoAsset(100 * MiB) });
+      assert.ok((await totals()).held > GiB);
+    });
+
+    await t.test("manual backup eligibility accepts the format boundary and rejects larger admitted live media without changing counters", async () => {
+      const fixture = await fresh(); let remaining = GiB;
+      while (remaining > 0) {
+        const charge = Math.min(10 * MiB, remaining);
+        await fixture.media.reserveAsset({ ...actor(fixture.owners[0]), asset: photoAsset(charge) }); remaining -= charge;
+      }
+      assert.equal((await totals()).held, GiB);
+      assert.deepEqual(await readManualBackupCapacity(pool, { video: true }), { withinFormat: true });
+      await fixture.media.reserveAsset({ ...actor(fixture.owners[0]), asset: photoAsset(2048) });
+      const before = await totals(); assert.equal(before.held, GiB + 2048);
+      assert.deepEqual(await readManualBackupCapacity(pool, { video: true }), { withinFormat: false });
+      await assert.rejects(assertManualBackupCapacity(pool, { video: true }), error => error.code === "BACKUP_CAPACITY_LIMIT");
+      assert.deepEqual(await totals(), before);
+      assert.equal((await fixture.photos.status()).ownerBytes, GiB, "no historical configuration or binding was rewritten");
     });
   } finally {
     await pool?.end(); try { await reset(); } finally { await connection.end(); }

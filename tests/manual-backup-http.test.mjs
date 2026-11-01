@@ -10,6 +10,7 @@ import { createCopyCatalog } from "../server/backup/copy-catalog.mjs";
 import { createManualBackupRequests } from "../server/backup/manual-backup-files.mjs";
 import { createManualBackupHandler } from "../server/backup/manual-backup-http.mjs";
 import { createManualBackupService } from "../server/backup/manual-backup-service.mjs";
+import { BackupCapacityError } from "../server/backup/media-capacity.mjs";
 
 const origin = "https://jessiemessage.com", token = "A".repeat(43), csrf = Buffer.alloc(32, 2).toString("base64url");
 const id = "1".repeat(32), requestId = "2".repeat(32), startedAt = 1792340000000, captureId = `capture-${startedAt}-${"c".repeat(16)}`;
@@ -45,7 +46,7 @@ async function fixture(t, options = {}) {
     }
     return realCatalog.transfer(selected, consume, settings);
   } };
-  const service = createManualBackupService(directory, { requests, catalog, clock: () => startedAt + 100 });
+  const service = createManualBackupService(directory, { requests, catalog, clock: () => startedAt + 100, ...(options.checkCapacity ? { checkCapacity: options.checkCapacity } : {}) });
   let actorCalls = 0;
   const handler = createManualBackupHandler(service, { origin, actor: async value => {
     actorCalls++; await options.beforeActor?.(actorCalls);
@@ -116,6 +117,21 @@ test("session revocation while reading a POST body prevents recording a backup r
   let f;
   f = await fixture(t, { beforeActor: calls => { if (calls === 2) f.setSession(null); } });
   assert.equal((await f.post()).status, 401); assert.equal(f.saves(), 0);
+});
+
+test("an archive capacity refusal precedes every durable request and does not affect old downloads", async t => {
+  let checks = 0;
+  const f = await fixture(t, { checkCapacity: async () => { checks++; throw new BackupCapacityError("BACKUP_CAPACITY_LIMIT"); } });
+  const response = await f.post(); assert.equal(response.status, 409); assert.deepEqual(await response.json(), { error: "backup_capacity_limit" });
+  assert.equal(checks, 1); assert.equal(f.saves(), 0); assert.equal(await f.requests.status(), null);
+  assert.equal((await f.get(`/api/admin/backups/archives/${captureId}`)).status, 200);
+});
+
+test("an accepted backup acknowledgement retry retains its intent even if the format budget later fills", async t => {
+  let checks = 0;
+  const f = await fixture(t, { checkCapacity: async () => { if (++checks > 1) throw new BackupCapacityError("BACKUP_CAPACITY_LIMIT"); } });
+  assert.equal((await f.post()).status, 202); assert.equal((await f.post()).status, 202);
+  assert.equal(checks, 1); assert.equal(f.saves(), 1);
 });
 
 test("download streams only the verified encrypted descriptor and rechecks the administrator after prehash", async t => {

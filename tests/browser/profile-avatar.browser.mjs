@@ -153,3 +153,47 @@ test("real Chrome avatar picker prepares AVIF and HEIC locally before an explici
   });
   await browser.execute("window.__avatarUI.destroy()"); assert.deepEqual(source.failures, []);
 });
+
+test("real Chrome profile conversion uses the injected original once and crops its validated JPEG before save", { timeout: 90000 }, async t => {
+  const driver = await startWebDriver(); t.after(() => driver.close());
+  const source = await avatarFixture(); t.after(() => source.close());
+  const browser = await driver.browser({ origin: source.origin }); await browser.navigate("/");
+  assert.equal(await browser.executeAsync(`
+    const done = arguments[arguments.length - 1];
+    (async () => {
+      const { createProfileUI } = await import('/profile.js'), normalized = await (await fetch('/photo.jpg')).blob();
+      window.__conversionCalls = []; window.__avatarWrites = []; window.__avatarViolations = [];
+      window.__avatarViolation = event => window.__avatarViolations.push(event.violatedDirective);
+      addEventListener('securitypolicyviolation', window.__avatarViolation);
+      window.__avatarCreateURL = URL.createObjectURL;
+      URL.createObjectURL = blob => { window.__avatarPreparedBlob = blob; return window.__avatarCreateURL(blob); };
+      window.__avatarUI = createProfileUI({ role: 'client', isCurrent: () => true,
+        convertImage: async (original, { signal }) => {
+          window.__conversionCalls.push({ sameOriginal: original === window.__avatarOriginal, signal }); return normalized;
+        },
+        request: async (path, options) => { if (options.mutation) window.__avatarWrites.push(path);
+          return { pseudonym: 'Synthetic converted avatar', version: '1', avatarId: null, avatarUrl: null }; },
+        fetchBinary: async () => { throw Error('No saved avatar expected'); } });
+      await window.__avatarUI.open();
+      const input = document.querySelector('.profile-file'), selected = new DataTransfer();
+      document.querySelector('.profile-choose-avatar').click();
+      selected.items.add(new File(['synthetic undecodable original'], 'opaque.tiff', { type: 'image/tiff' }));
+      input.files = selected.files; window.__avatarOriginal = input.files[0];
+      input.dispatchEvent(new Event('change', { bubbles: true })); return true;
+    })().then(done, error => done({ error: error.code || error.name }));
+  `), true);
+  await waitUntil(() => browser.execute("return document.querySelector('.profile-status').textContent==='Avatar prêt. Enregistre le profil pour l’appliquer.'"), "converted profile avatar ready");
+  await waitUntil(() => browser.execute("return document.querySelector('.profile-avatar-preview img').naturalWidth===256"), "converted profile avatar preview");
+  const result = await browser.executeAsync(`
+    const done = arguments[arguments.length - 1];
+    (async () => { const blob = window.__avatarPreparedBlob;
+      return { type: blob.type, bytes: Array.from(new Uint8Array(await blob.arrayBuffer())), draws: [], violations: window.__avatarViolations,
+        calls: window.__conversionCalls.map(call => ({ sameOriginal: call.sameOriginal, aborted: call.signal.aborted })), writes: window.__avatarWrites };
+    })().then(done, error => done({ error: error.code || error.name }));
+  `);
+  await assertAvatar(result, "injected avatar conversion", source.privateMarker);
+  assert.deepEqual(result.calls, [{ sameOriginal: true, aborted: false }]); assert.deepEqual(result.writes, []);
+  await browser.execute(`window.__avatarUI.destroy(); URL.createObjectURL = window.__avatarCreateURL;
+    removeEventListener('securitypolicyviolation', window.__avatarViolation);`);
+  assert.deepEqual(source.decoderRequests, []); assert.deepEqual(source.failures, []);
+});

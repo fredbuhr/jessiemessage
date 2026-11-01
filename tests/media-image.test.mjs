@@ -2,8 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
 import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import sharp from "sharp";
-import { createImageNormalizer, imageFormat, MAX_IMAGE_INPUT_BYTES, MediaImageError, normalizeImage } from "../server/media/image.mjs";
+import { createImageNormalizer, imageFormat, MAX_IMAGE_INPUT_BYTES, MAX_PREPARATION_INPUT_BYTES, MAX_PREPARATION_OUTPUT_BYTES, MediaImageError, normalizeImage } from "../server/media/image.mjs";
 
 const solid = (width = 32, height = 16, format = "png") => sharp({
   create: { width, height, channels: 3, background: { r: 192, g: 37, b: 97 } },
@@ -112,7 +113,7 @@ test("actual animated WebP is rejected rather than retaining its first frame", a
   await rejectsCode(normalizeImage(animated), "MEDIA_FORMAT");
 });
 
-function fakeHarness() {
+function fakeHarness({ preparation = false } = {}) {
   const children = []; const timers = [];
   const normalize = createImageNormalizer({
     forkProcess(url, args, options) {
@@ -125,7 +126,7 @@ function fakeHarness() {
       child.kill = (signal) => { child.killed = signal; return true; };
       children.push(child); return child;
     },
-    setTimer(callback, delay) { assert.equal(delay, 10_000); const timer = { callback, cleared: false, unref() {} }; timers.push(timer); return timer; },
+    setTimer(callback, delay) { assert.equal(delay, preparation ? 30_000 : 10_000); const timer = { callback, cleared: false, unref() {} }; timers.push(timer); return timer; },
     clearTimer(timer) { timer.cleared = true; },
   });
   return { normalize, children, timers };
@@ -170,4 +171,96 @@ test("real worker overload returns a retry hint and all accepted subprocess jobs
   const results = await Promise.all(jobs);
   assert.equal(results.length, 3); assert.ok(results.every((result) => result.width === 32));
   assert.equal((await normalizeImage(source)).height, 16);
+});
+
+test("original preparation adds TIFF and GIF without changing asset formats", async () => {
+  for (const format of ["tiff", "gif"]) {
+    const source = await solid(90, 60, format);
+    await rejectsCode(normalizeImage(source), "MEDIA_FORMAT");
+    const result = await normalizeImage(source, { preparation: true });
+    assert.deepEqual([result.width, result.height], [90, 60]);
+    assert.equal(imageFormat(result.full), "jpeg");
+    assert.ok(result.full.length <= MAX_PREPARATION_OUTPUT_BYTES);
+    const metadata = await sharp(result.full).metadata();
+    for (const name of ["exif", "icc", "iptc", "xmp", "orientation"]) assert.equal(metadata[name], undefined);
+  }
+});
+
+test("original preparation selects the first GIF frame and WebP frame", async () => {
+  const raw = Buffer.alloc(16 * 32 * 3);
+  for (let index = 0; index < raw.length; index += 3) raw[index + (index < raw.length / 2 ? 0 : 2)] = 255;
+  for (const format of ["gif", "webp"]) {
+    const source = await sharp(raw, { raw: { width: 16, height: 32, channels: 3, pageHeight: 16 } })[format]({ loop: 0, delay: [50, 50] }).toBuffer();
+    assert.equal((await sharp(source, { animated: true }).metadata()).pages, 2);
+    const prepared = await normalizeImage(source, { preparation: true });
+    assert.deepEqual([prepared.width, prepared.height], [16, 16]);
+    const { data } = await sharp(prepared.full).raw().toBuffer({ resolveWithObject: true });
+    assert.ok(data[0] > 240 && data[2] < 15, `${format}: the red first frame is selected`);
+  }
+});
+
+test("original preparation selects the first APNG frame and TIFF page", async () => {
+  const fixtures = JSON.parse(await readFile(new URL("./fixtures/photo-acceptance-formats.json", import.meta.url), "utf8"));
+  const apng = Buffer.from(fixtures.fixtures.find(value => value.name === "apng-two-frames").base64, "base64");
+  await rejectsCode(normalizeImage(apng), "MEDIA_FORMAT");
+  const first = await normalizeImage(apng, { preparation: true });
+  assert.deepEqual([first.width, first.height], [32, 24]);
+  const { data } = await sharp(first.full).raw().toBuffer({ resolveWithObject: true });
+  assert.ok(data[0] > 200 && data[2] < 110, "the red APNG frame is selected");
+  const raw = Buffer.alloc(16 * 32 * 3);
+  for (let index = 0; index < raw.length; index += 3) raw[index + (index < raw.length / 2 ? 0 : 2)] = 255;
+  const tiff = await sharp(raw, { raw: { width: 16, height: 32, channels: 3, pageHeight: 16 } }).tiff().toBuffer();
+  assert.equal((await sharp(tiff).metadata()).pages, 2);
+  const page = await normalizeImage(tiff, { preparation: true });
+  assert.deepEqual([page.width, page.height], [16, 16]);
+  const pixels = await sharp(page.full).raw().toBuffer();
+  assert.ok(pixels[0] > 240 && pixels[2] < 15, "the red TIFF page is selected");
+});
+
+test("original preparation accepts large JPEGs and narrow panoramas within a 64 MP pixel budget", async () => {
+  for (const [width, height] of [[8000, 6000], [32769, 1]]) {
+    const source = await solid(width, height, "jpeg");
+    await rejectsCode(normalizeImage(source), "MEDIA_DIMENSIONS");
+    const prepared = await normalizeImage(source, { preparation: true });
+    assert.equal(prepared.width, 2048); assert.ok(prepared.height >= 1 && prepared.height <= 2048);
+  }
+  await rejectsCode(normalizeImage(await solid(8001, 8000, "jpeg"), { preparation: true }), "MEDIA_DIMENSIONS");
+});
+
+test("original preparation repairs a missing JPEG end marker but rejects missing scan data", async () => {
+  const source = await solid(1000, 1000, "jpeg");
+  const missingMarker = source.subarray(0, -2);
+  await rejectsCode(normalizeImage(missingMarker), "MEDIA_FORMAT");
+  assert.equal((await normalizeImage(missingMarker, { preparation: true })).width, 1000);
+  for (const cut of [10, 100]) await rejectsCode(normalizeImage(source.subarray(0, -cut), { preparation: true }), "MEDIA_FORMAT");
+});
+
+test("original byte and output budgets allow a large lossless input and bound its JPEG result", async () => {
+  const pixels = Buffer.alloc(2048 * 2048 * 3); let value = 0x12345678;
+  for (let index = 0; index < pixels.length; index++) { value ^= value << 13; value ^= value >>> 17; value ^= value << 5; pixels[index] = value & 255; }
+  const source = await sharp(pixels, { raw: { width: 2048, height: 2048, channels: 3 } }).png().toBuffer();
+  assert.ok(source.length > MAX_IMAGE_INPUT_BYTES && source.length < MAX_PREPARATION_INPUT_BYTES);
+  await rejectsCode(normalizeImage(source), "MEDIA_INPUT");
+  const prepared = await normalizeImage(source, { preparation: true });
+  assert.ok(prepared.full.length <= MAX_PREPARATION_OUTPUT_BYTES);
+  assert.ok(prepared.width < 2048, "large encoded output is reduced before returning");
+  let spawned = 0;
+  const normalize = createImageNormalizer({ forkProcess() { spawned++; throw new Error("unexpected"); } });
+  await rejectsCode(normalize(Buffer.alloc(MAX_PREPARATION_INPUT_BYTES + 1), { preparation: true }), "MEDIA_INPUT");
+  for (const source of [Buffer.from("<svg/>"), Buffer.from("%PDF-secret"), Buffer.from("/tmp/private-secret")]) {
+    await rejectsCode(normalize(source, { preparation: true }), "MEDIA_FORMAT");
+  }
+  assert.equal(spawned, 0);
+});
+
+test("original preparation deadline retains the decoder place until the child exits", async () => {
+  const source = await solid(); const h = fakeHarness({ preparation: true });
+  const first = h.normalize(source, { preparation: true });
+  const second = h.normalize(source, { preparation: true });
+  assert.equal(h.children[0].request.preparation, true);
+  h.timers[0].callback(); assert.equal(h.children[0].killed, "SIGKILL");
+  assert.equal(h.children.length, 1);
+  h.children[0].emit("exit", null, "SIGKILL"); await rejectsCode(first, "MEDIA_UNAVAILABLE");
+  assert.equal(h.children.length, 2);
+  h.children[1].emit("exit", 1); await rejectsCode(second, "MEDIA_UNAVAILABLE");
 });
