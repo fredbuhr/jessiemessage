@@ -3,7 +3,10 @@ name: Publish qualified JessieMessage 1.14.1
 on:
   push:
     branches: ["ops/publish-v1.14.1"]
-    paths: [".github/workflows/publish-qualified1141.yml"]
+    paths:
+      - ".github/workflows/publish-qualified1141.yml"
+      - "ops/publish-qualified1141.py"
+      - "ops/test-publish-qualified1141.py"
 
 permissions: {}
 

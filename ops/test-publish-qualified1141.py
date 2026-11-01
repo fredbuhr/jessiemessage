@@ -170,7 +170,10 @@ class Publication(unittest.TestCase):
         module = helper()
         self.assertEqual((module.BASE_SOURCE, module.BASE_TREE, module.BASE_RELEASE_ID, module.BASE_VERSION),
             ('4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd', 'e5a239eaf7b8c3395a843c9e0d600efeb7aa569b', 430149586, '1.14.0'))
-        with mock.patch.object(module.subprocess, 'check_output', side_effect=AssertionError('no process')):
+        pending = tuple(dict(release, source='QUALIFICATION_PENDING', tree='QUALIFICATION_PENDING',
+            ci='QUALIFICATION_PENDING', attempt='QUALIFICATION_PENDING') for release in module.RELEASES)
+        with mock.patch.object(module, 'RELEASES', pending), \
+                mock.patch.object(module.subprocess, 'check_output', side_effect=AssertionError('no process')):
             with self.assertRaisesRegex(module.PublicationRefused, 'QUALIFICATION_PINS_REQUIRED'):
                 module.publish(request=lambda *_args, **_kwargs: self.fail('no API before pins'))
 
