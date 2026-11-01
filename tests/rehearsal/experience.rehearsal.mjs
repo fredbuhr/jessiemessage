@@ -23,7 +23,16 @@ async function json(page, role, path, body = null, authenticated = true) {
 async function ready(page, role) {
   await waitUntil(() => page.execute("return location.pathname===arguments[0]&&!!document.getElementById('workspace')&&!document.getElementById('workspace').hidden&&!!document.getElementById('message-body')&&!document.getElementById('message-body').disabled", role === "admin" ? "/admin/messages" : "/messages"), "real experience conversation ready", 20000);
 }
-async function login(page, fixture, role, { credentials = null, password = null, recoveryIndex = 0 } = {}) {
+async function login(page, fixture, role, { credentials = null, password = null, recoveryIndex = 0, afterRevocation = false } = {}) {
+  // A direct session GET can observe revocation before the chat controller's
+  // own request consumes 401 and replaces its document. Let that redirect and
+  // the real login UI finish before navigating to the strict fixture proof.
+  if (afterRevocation) await waitUntil(() => page.execute(`const admin=arguments[0]==='admin',
+    form=document.getElementById(admin?'login-form':'client-login-form'),
+    button=admin?document.getElementById('login-button'):form?.querySelector('button[type=submit]');
+    return location.pathname===(admin?'/admin/login':'/access')&&document.readyState==='complete'
+      &&!document.getElementById('workspace')&&!!form&&!form.hidden&&!!button&&!button.disabled;`, role),
+  "revoked device finishes its signed-out navigation before fixture attestation", 20000);
   await attest(page, fixture);
   if (role === "admin") {
     await page.navigate("/admin/login");
@@ -456,7 +465,7 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
       assert.equal((await json(clientDevice, "client", "/api/access/session")).status, 401);
       const reset = await json(other, "client", "/api/access/recovery/reset", { token: resetToken, password: "reset888" }, false); assert.equal(reset.status, 401); assert.equal(reset.data.error, "invalid_reset_link");
       const staleLogin = await json(other, "client", "/api/access/login", { email: fixture.client.email, password: fixture.client.password }, false); assert.equal(staleLogin.status, 401);
-      await login(clientDevice, fixture, "client", { password: newPassword });
+      await login(clientDevice, fixture, "client", { password: newPassword, afterRevocation: true });
       assert.deepEqual((await json(clientDevice, "client", "/api/profile/client/preferences")).data.selectedIds, [firstChoice]);
       const history = await json(client, "client", `/api/chat/client/conversations/${conversation}/messages`); assert.equal(history.status, 200); assert.ok(history.data.messages.some(message => message.body === caption));
       assert.equal((await imageReadable(client, mediaPath)).status, 200);
@@ -468,7 +477,7 @@ test("real HTTPS SQL38: private profiles across devices and own-password rotatio
       const newPassword = "admin888"; const oldToken = await changePassword(admin, "admin", fixture.password, newPassword);
       assert.equal(await fixture.sessionRemainsActive("admin", oldToken), false);
       assert.equal((await json(adminDevice, "admin", "/api/auth/session")).status, 401);
-      await login(adminDevice, fixture, "admin", { password: newPassword, recoveryIndex: 2 });
+      await login(adminDevice, fixture, "admin", { password: newPassword, recoveryIndex: 2, afterRevocation: true });
       assert.deepEqual((await json(adminDevice, "admin", "/api/profile/admin/preferences")).data.selectedIds, [secondChoice]);
       const history = await json(admin, "admin", `/api/chat/admin/conversations/${conversation}/messages`); assert.equal(history.status, 200); assert.ok(history.data.messages.some(message => message.body === caption));
       assert.deepEqual(await fixture.privatePreferencesState([firstChoice, secondChoice]), encryptedBefore);

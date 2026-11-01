@@ -377,7 +377,7 @@ test("a native avatar choice waits for the mounted account and CSRF proof before
     h.state.owner = true; assert.equal(h.ui.resume(), true); await flush();
     assert.equal(preparations, 1); assert.equal(h.created.length, 1); assert.equal(h.element("profile-save").disabled, false);
     assert.equal(h.calls.filter(call => call.options.mutation).length, 0, "resume prepares locally without any POST");
-    assert.equal(h.element("profile-file").accept, "image/*,.heic,.heif,.avif"); h.ui.destroy();
+    assert.match(h.element("profile-file").accept, /^image\/\*(?:,|$)/); h.ui.destroy();
   }
 });
 

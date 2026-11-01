@@ -1925,7 +1925,7 @@ test("photo picker retains camera originals and generic MIME files with bounded 
   assert.equal(f.calls.filter(call => call.options.method === "POST" && /\/(messages|assets)$/.test(call.path)).length, 0);
 });
 
-test("extensionless generic or empty MIME files still fail byte validation before any upload", async () => {
+test("extensionless generic or empty MIME preparation errors preserve the original before any upload", async () => {
   for (const type of ["", "application/octet-stream"]) {
     let preparations = 0;
     const f = harness({ prepare: async file => { preparations++; return prepareImageUpload(file); },
@@ -1940,9 +1940,11 @@ test("extensionless generic or empty MIME files still fail byte validation befor
     assert.equal(preparations, 2);
     assert.equal(state.pending, null);
     assert.equal(state.imageDraft.file, invalid);
+    assert.equal(state.imageDraft.previewError?.code, "media_unavailable");
     assert.equal(f.element("message-body").value, "Keep my caption");
-    assert.match(f.element("chat-status").textContent, /image ne peut pas être lue/);
-    assert.equal(f.calls.filter(call => call.options.method === "POST" && /\/(messages|assets)$/.test(call.path)).length, 0);
+    assert.match(f.element("chat-status").textContent, /photo n’a pas pu être préparée sur cet appareil/);
+    assert.match(f.element("image-draft-status").textContent, /photo n’a pas pu être préparée sur cet appareil/);
+    assert.equal(posts(f).length, 0);
   }
 });
 

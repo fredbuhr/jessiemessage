@@ -168,10 +168,12 @@ async function freePort() {
   const port = server.address().port; await new Promise(resolve => server.close(resolve)); return port;
 }
 function shimFixture({ startupDelay = 0, drainDelay = 0, waitForStop = false, drainFailed = false } = {}) {
+  // The marker may become observable before writeFile resolves. Install the
+  // shutdown waiter first so seeing it proves the fixture can receive SIGTERM.
   return `import { run } from ${JSON.stringify(shimUrl)};
 import { createServer } from 'node:http';
 await run({runtimeDirectory:'/synthetic-runtime',privateDirectory:'/synthetic-private',port:Number(process.env.PORT)}, {async loadRuntime(){return {
-async main(args,dependencies){${waitForStop ? "await import('node:fs/promises').then(({writeFile})=>writeFile(new URL('./startup-waiting',import.meta.url),'ready'));await new Promise(resolve=>process.once('SIGTERM',resolve));" : `await new Promise(resolve=>setTimeout(resolve,${startupDelay}));`}await dependencies.startServer({},{});},
+async main(args,dependencies){${waitForStop ? "const stopped=new Promise(resolve=>process.once('SIGTERM',resolve));await import('node:fs/promises').then(({writeFile})=>writeFile(new URL('./startup-waiting',import.meta.url),'ready'));await stopped;" : `await new Promise(resolve=>setTimeout(resolve,${startupDelay}));`}await dependencies.startServer({},{});},
 async start(){const server=createServer((request,response)=>{response.setHeader('Cache-Control','no-store');response.end(JSON.stringify({status:request.headers.host==='jessiemessage.com'&&request.headers['x-forwarded-proto']==='https'?'ready':'wrong'}));});await new Promise(resolve=>server.listen(Number(process.env.PORT),'127.0.0.1',resolve));return {async drain(){await new Promise(resolve=>setTimeout(resolve,${drainDelay}));await new Promise(resolve=>server.close(resolve));return {failed:${drainFailed},timedOut:false};}};}
 };}});`;
 }

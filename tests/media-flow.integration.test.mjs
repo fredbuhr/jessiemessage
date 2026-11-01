@@ -206,7 +206,7 @@ test("real HTTP private media uses normalized encrypted files and current delive
       const capabilities = await request(mediaPath("client", "capabilities"), { headers: headersFor(a) });
       assert.equal(capabilities.status, 200);
       assert.deepEqual(capabilities.body, { enabled: true, maxUploadBytes: 10485760, formats: ["image/jpeg", "image/png", "image/webp"],
-        preparation: { enabled: true, maxOriginalBytes: 33554432, maxOutputBytes: 2097152, maxPixels: 64000000 } });
+        preparation: { enabled: true, maxOriginalBytes: 134217728, maxOutputBytes: 2097152, maxPixels: 64000000 } });
       assert.equal((await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA, headers: { Cookie: a.cookie } })).status, 403);
       assert.equal((await request(mediaPath("client", "assets"), { method: "POST", binary: sourceA,
         headers: { ...headersFor(a), "Content-Type": "text/plain" } })).status, 415);

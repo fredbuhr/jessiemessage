@@ -1,0 +1,154 @@
+{
+  "format": "jessiemessage-1150-initial-native-failure",
+  "status": "failed_preserved_not_qualification",
+  "source": "8a34d678f78d855fb4c083d31d6b0a4ff1455651",
+  "tree": "fa2f69b47ff2075fa750449fe164ad6457263bc7",
+  "PR": 147,
+  "run": 41337463760,
+  "attempt": 1,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41337463760",
+  "jobs": [
+    {
+      "name": "verify",
+      "tests": 4524,
+      "pass": 4469,
+      "fail": 3,
+      "skipped": 52
+    },
+    {
+      "name": "Chrome keyboard and chat lifecycle",
+      "tests": 322,
+      "pass": 318,
+      "fail": 4,
+      "skipped": 0
+    },
+    {
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "tests": 14,
+      "pass": 11,
+      "fail": 3,
+      "skipped": 0
+    },
+    {
+      "name": "MariaDB10.11",
+      "tests": 617,
+      "pass": 615,
+      "fail": 2,
+      "skipped": 0
+    },
+    {
+      "name": "MariaDB11.4",
+      "tests": 617,
+      "pass": 615,
+      "fail": 2,
+      "skipped": 0
+    }
+  ],
+  "countedFailuresIncludeParents": true,
+  "groupsNotSummed": true,
+  "omissionsAreNotSuccesses": true,
+  "corrections": [
+    {
+      "finding": "Obsolete unavailable-photo copy expected in Node without native DOM",
+      "change": "Assert actual media_unavailable and preserve original/caption, zero storingPOST; failed case alone1/1."
+    },
+    {
+      "finding": "Three obsolete exact accept lists",
+      "change": "Check relevant image acceptance; separate dedicated picker test retains full supported-extension contract."
+    },
+    {
+      "finding": "Avatar loopback fixture lacked new HEIC core and1.23.7 URLs",
+      "change": "Serve exact core/factory/hash and real CSP; realHEIC assertions retained. Chrome native pending."
+    },
+    {
+      "finding": "Startup fixture published ready marker before SIGTERM listener",
+      "change": "Install promise/listener before marker. Deterministic probe and failed case alone1/1; runtime and timeouts unchanged."
+    },
+    {
+      "finding": "Reconnection proof could be overtaken by previous401 navigation",
+      "change": "Wait signed-out/form only for revoked devices before unchanged strict attestation; synthetic probe6/6. HTTPS native pending."
+    },
+    {
+      "finding": "SQL capability fixture retained intermediate32MiB input limit",
+      "change": "Expect final134217728 bytes; asset10MiB contract and auth guards unchanged. Native SQL pending."
+    }
+  ],
+  "applicationCodeChangedByTheseCorrections": false,
+  "guardsOrTimeoutsRemoved": false,
+  "productionTouched": false,
+  "logs": [
+    {
+      "job": 124940201493,
+      "path": "logs/pr-initial-124940201493.log.gz",
+      "bytes": 637404,
+      "sha256": "ff06b7f8c704f85f451d65c14ed0b2d266d88c7101a85dd99d2a55065a643f12",
+      "gzipBytes": 187144,
+      "gzipSha256": "de8366204cbc9271c975513b98363f3026c7bbf7e22342354ff9408a751b7531",
+      "gzipMtime": 0
+    },
+    {
+      "job": 124940201638,
+      "path": "logs/pr-initial-124940201638.log.gz",
+      "bytes": 53337,
+      "sha256": "0af54aaf1e867144bceaabba9e8cbfaebc57c24c131cb2b02c99dad0e3bc5b21",
+      "gzipBytes": 12852,
+      "gzipSha256": "5e40ddfdf69c385466bfaa3a35bb6deae10e133053e61e44c098dc9d24046c06",
+      "gzipMtime": 0
+    },
+    {
+      "job": 124940201690,
+      "path": "logs/pr-initial-124940201690.log.gz",
+      "bytes": 368736,
+      "sha256": "b49cc5fc37f3678c697d9d473f59e23ed66b8020d6e914e12e8465d742a69ee6",
+      "gzipBytes": 69513,
+      "gzipSha256": "57ba9c67c6053a6661277a5d9446d0a6afad4564457f4f022f57b4535e52e7f5",
+      "gzipMtime": 0
+    },
+    {
+      "job": 124940201705,
+      "path": "logs/pr-initial-124940201705.log.gz",
+      "bytes": 69506,
+      "sha256": "ee505418ea9dfc343fb0501bf05769549b43c4aa038f6ebed5f9bda008350dd4",
+      "gzipBytes": 18526,
+      "gzipSha256": "9b4a41f3e7084fd7d445481210be699729640b9db7a7267b1a9e972b0ccf7f1a",
+      "gzipMtime": 0
+    },
+    {
+      "job": 124940201786,
+      "path": "logs/pr-initial-124940201786.log.gz",
+      "bytes": 368414,
+      "sha256": "33bd2aff01fb09776d4c886a862a0dcbc7c18521e8c7ca68cda442f924344f86",
+      "gzipBytes": 69831,
+      "gzipSha256": "483e763c6d6c35433049822d40a2e33525706093053b891f98a9e8ebb2600acc",
+      "gzipMtime": 0
+    }
+  ],
+  "correctionEvidence": [
+    {
+      "path": "initial-corrections/managed-runtime-startup-handshake.md",
+      "sha256": "cc803e7d627c7fb371eb3c3a3fbceb73e7f29302da743d4650122a85898fc176",
+      "bytes": 2113
+    },
+    {
+      "path": "initial-corrections/managed-runtime-startup-handshake.log",
+      "sha256": "8965e842640e787c84ae5b7222134363a72720c83e1792fb979339ccc6ae413e",
+      "bytes": 213
+    },
+    {
+      "path": "initial-corrections/pr147-initial-fixture-corrections.json",
+      "sha256": "5359ef0538944e65c433bd6146191b533340a96e9a52a71a1ee823bcee3d5909",
+      "bytes": 4723
+    },
+    {
+      "path": "initial-corrections/native-profile-picker-fix.log",
+      "sha256": "93963014ee47260ac23b380f0ec0c694e429837b1b0a8b9c6ec579e9ebafb7a1",
+      "bytes": 220
+    },
+    {
+      "path": "initial-corrections/profile-avatar-fixture-ci.json",
+      "sha256": "0da39360e74e61d2c23b65089d0190725eecaa380aa96278bec300cd8d500910",
+      "bytes": 1824
+    }
+  ],
+  "next": "One revised candidate, complete native PR then exact main qualification."
+}
