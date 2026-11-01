@@ -236,10 +236,10 @@ test("real HEIC uses document encoding without worker canvas while legacy caller
           globalThis.createImageBitmap = savedBitmap; globalThis.Image = savedImage; document.createElement = create;
           removeEventListener('securitypolicyviolation', violation);
         }
-      })().then(done, error => done({ error: error.code || error.message }));
+      })().then(done, error => done({ failureCode: error.code || error.message }));
     `, fixture);
-    if (fixture.error) { assert.equal(result.error, fixture.error); continue; }
-    assert.equal(result.error, undefined, fixture.mode);
+    if (fixture.error) { assert.equal(result.failureCode, fixture.error); continue; }
+    assert.equal(result.failureCode, undefined, fixture.mode);
     assert.equal(result.type, "image/jpeg"); assert.equal(result.documentWasmBlocked, true);
     assert.deepEqual(result.violations, []);
     assert.deepEqual(result.pixels, fixture.legacy ? [] : [[64, 48, 64 * 48 * 4]]);
