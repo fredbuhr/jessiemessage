@@ -1,0 +1,35 @@
+{
+  "status": "operator_drafts_unqualified_pins_pending",
+  "baselineMain": "127a4d57ff75457a9ccbb35fb04537be17c904ae",
+  "activeRelease": "1.14.1",
+  "files": [
+    {
+      "path": "ops/prepare-release1150.py",
+      "sha256": "2f620c3f5dabbf4d3bc3c17161b9bad17a899520a28dde60d56cb98e18c36f32",
+      "bytes": 35491
+    },
+    {
+      "path": "ops/test-prepare-release1150.py",
+      "sha256": "0a195eb532ee6141cda74473ed3969518e12688733e70c07e4e1d4fecf07090b",
+      "bytes": 40591
+    },
+    {
+      "path": "ops/publish-qualified1150.py",
+      "sha256": "d018209e5b09106fe1dee23a9fabcd0efcf4dfd2c631efbab094e6e833c25f45",
+      "bytes": 19252
+    },
+    {
+      "path": "ops/test-publish-qualified1150.py",
+      "sha256": "1256ac3740f2a440f13b1f534080296810617af77120697a14927cf6dc3d70cd",
+      "bytes": 29670
+    }
+  ],
+  "syntheticTests": {
+    "prepareInitial": 18,
+    "prepareNativeModeNewOnly": 4,
+    "publisher": 23
+  },
+  "nativeInstallExecuted": false,
+  "hostActions": false,
+  "next": "Only after application PR and exact-main five-job success: fill source/tree/dependency/codec/smoke pins, qualify new operators in isolated native CI."
+}
