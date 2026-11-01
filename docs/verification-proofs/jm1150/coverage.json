@@ -3,7 +3,7 @@
   "asOf": "2026-11-01",
   "candidateVersion": "1.15.0",
   "branch": "fix/photo-acceptance",
-  "status": "hosted_activation_reported_metadata_writer_qualification_pending",
+  "status": "hosted_activation_reported_writer_native_qualified_receipt_pending",
   "reviewedCheckpoint": "592b826353b46f01f474ba8bf1aa01c66fee997c",
   "reviewedTree": "d3c6272284335f3f70d4447858a1461c35f5ddea",
   "finalCandidateSource": "6712028e08b1e04ac7628bdbb9c39fd9f90d9909",
@@ -142,7 +142,7 @@
     {
       "id": "P08",
       "scope": "Final candidate, hosted state and original client case",
-      "disposition": "hosted_activation_reported_final_metadata_pending",
+      "disposition": "hosted_activation_reported_writer_qualified_final_receipt_pending",
       "evidence": [
         "development-checkpoint.json",
         "pr-native.json",
@@ -150,9 +150,10 @@
         "publication-native.json",
         "preparation-native.json",
         "hosted-preparation.json",
-        "hosted-identity.json"
+        "hosted-identity.json",
+        "writer-final-native.json"
       ],
-      "proofScope": "PR/main qualified and immutable1.15.0 published. User preparation/CHECK acquired with exact6384c78b receipt and native dependencies. User UI now reports1.15.0/source6712028e/Node24.22.1 at01/11/2026 20:27:30Paris, second1793561250. Exact milliseconds, service signal and independent process/SQL inspection absent. Metadata1150 writer qualification/execution still pending, last checkpoint1141/93d6 preserved at preparation. No new restart or real client-photo test."
+      "proofScope": "PR/main qualified and immutable1.15.0 published. User preparation/CHECK acquired with exact6384c78b receipt and native dependencies. User UI now reports1.15.0/source6712028e/Node24.22.1 at01/11/2026 20:27:30Paris, second1793561250. Exact milliseconds, service signal and independent process/SQL inspection absent. Metadata1150 writer qualification/execution still pending, last checkpoint1141/93d6 preserved at preparation. No new restart or real client-photo test. The new metadata-only writer is now39/39native qualified, with exact remote bytes and independent review; no production writer execution or final receipt yet."
     },
     {
       "id": "P09",
@@ -251,5 +252,15 @@
     "activationProof": "hosted-identity.json",
     "startedAtSecond": 1793561250,
     "exactMillisecondsReported": false
+  },
+  "writerQualification": {
+    "proof": "writer-final-native.json",
+    "run": 41342830219,
+    "operator": "c12846680c30ce008d9cc2f170aa87f06b8d78aa",
+    "tests": 39,
+    "pass": 39,
+    "skipped": 0,
+    "productionExecutedByAgent": false,
+    "userReceiptAcquired": false
   }
 }

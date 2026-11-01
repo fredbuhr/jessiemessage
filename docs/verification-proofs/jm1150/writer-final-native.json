@@ -1,0 +1,70 @@
+{
+  "format": "jessiemessage1150-writer-native-qualification",
+  "operator": "c12846680c30ce008d9cc2f170aa87f06b8d78aa",
+  "operatorTree": "e79d4eee550bdbd1299e37f2e4f35564e953029a",
+  "run": 41342830219,
+  "attempt": 1,
+  "job": 124956289501,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41342830219",
+  "status": "completed",
+  "conclusion": "success",
+  "successfulJobs": 1,
+  "tests": 39,
+  "pass": 39,
+  "fail": 0,
+  "skipped": 0,
+  "nodeVersion": "v24.22.1",
+  "qualifiedBytes": [
+    {
+      "path": "ops/record-release1150.py",
+      "bytes": 44256,
+      "sha256": "dc8e7e45aa0d4ec68bc0bd050c65869d1a3bcc8840e577f79996b32995c74c6b",
+      "remoteBytesEqual": true
+    },
+    {
+      "path": "ops/test-record-release1150.py",
+      "bytes": 55053,
+      "sha256": "a2dc62bbf56ba665e6747a5d5991fd7c578abe31868d271f32738a202f585377",
+      "remoteBytesEqual": true
+    },
+    {
+      "path": ".github/workflows/record-release1150.yml",
+      "bytes": 1254,
+      "sha256": "cd3de4e666cc3e5db0d8d8933a0dd175118f79201392b2e95ef0bbde0cfe23b4",
+      "remoteBytesEqual": true
+    }
+  ],
+  "binding": {
+    "source": "6712028e08b1e04ac7628bdbb9c39fd9f90d9909",
+    "tree": "c80ee33ebfe01838c86cc2b4166b344acf5ea745",
+    "startedAtSecond": 1793561250,
+    "UIExactMillisecondsSupplied": false,
+    "stageSha256": "6384c78bf94ce688ec33060d672019d8ae534466d7de57c701046e75c6c46a4b",
+    "priorCheckpointSha256": "93d6ddf70db3b1b30d006bf2fb30ab7594ebc2d2b8f88cc59a230f247cbaca82"
+  },
+  "counterReview": {
+    "path": "writer-counter-review.md",
+    "sha256": "0620eee16dc9f7017923f2baa810f2eef91ba4c998a6650e8a095f4ae727c3e0",
+    "blockingFindingRemaining": false,
+    "initialStaticFinding": "Default2MiB file guard rejected real15MiB WASM/3.4MiB codec. Corrected with dedicated bounded hash-only resource read; JSON/checkpoint2MiB retained and regression tested."
+  },
+  "log": {
+    "path": "logs/writer-124956289501.log.gz",
+    "bytes": 25183,
+    "sha256": "e05a923b3000158429d4785d2c090e4c95e803e4d8838680df0e4dbd31de219c",
+    "gzipBytes": 5722,
+    "gzipSha256": "e10df0de70a499d501f000fec1e96b6ac78b344a7179daf44087cbffa0609452",
+    "gzipMtime": 0
+  },
+  "localLog": {
+    "path": "logs/writer-local39.log.gz",
+    "bytes": 6503,
+    "sha256": "cf1176b9a7731de67f9e57821d4b9922b8b2edc98f07628b7f4a4d7cd72a2600",
+    "gzipSha256": "d02611ff1b091bc8de880ff82b1c15ce6775ead6f4185b432da8a830eab5630e",
+    "tests": 39,
+    "groupsOverlapNativeAndLocalNotSummed": true
+  },
+  "productionWriterExecuted": false,
+  "appSuitesRepeated": false,
+  "next": "User executes pinned metadata-only writer once; await receipt. No preparation,CHECK,config,SQL write or restart."
+}

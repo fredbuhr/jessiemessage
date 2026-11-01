@@ -12,9 +12,10 @@ Préparation/CHECK1150 désormais acquis selon le reçu utilisateur : empreinte6
 
 Activation1150 désormais rapportée : source6712028e/Node24.22.1,01/11/2026 20:27:30Paris, seconde1793561250. Aucun nouveau redémarrage, préparation ou CHECK à demander.
 
-1. Terminer le writer1150 de métadonnées seules et ses fixtures, lié au démarrage1793561250, staging6384c78b et dernier checkpoint1141/93d6. Qualification native et contre-revue, sans répéter les suites applicatives vertes.
-2. Fournir le bloc épinglé puis recueillir le reçu final. Ne jamais relancer après sortie incertaine pour découvrir le résultat ; inspecter en lecture seule.
-3. Après reçu acquis seulement, consigner l’alignement final et clore. Aucun ancien writer à rejouer ni nouvelle activation à effectuer.
+Writer1150 désormais qualifié39/39 natifs, opérateurc1284668, workflow41342830219, contre-revue et octets relus. Aucun writer réel exécuté par l’agent et aucune suite applicative verte répétée.
+
+1. Recueillir le JSON utilisateur de l’unique writer1150 épinglé dans le guide. En cas de sortie incertaine, lecture seule du checkpoint/traces, jamais relance pour découvrir.
+2. Après reçu acquis seulement, consigner l’alignement final et clore. Aucun ancien writer, préparation/CHECK ou nouvelle activation à rejouer.
 
 ## Correctif 1.14.1 — livraison terminée
 

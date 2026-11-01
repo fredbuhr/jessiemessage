@@ -1,6 +1,6 @@
-# Livraison 1.15.0 — démarrée, métadonnées finales en cours
+# Livraison 1.15.0 — démarrée, writer qualifié à exécuter
 
-La **1.15.0 est démarrée selon le [relevé utilisateur](verification-proofs/jm1150/hosted-identity.json)** : source6712028e08b1e04ac7628bdbb9c39fd9f90d9909, Nodev24.22.1,01/11/2026 20:27:30Paris, seconde1793561250. Millisecondes et signal disponible non fournis. Le dernier checkpoint de métadonnées reste1141/93d6, préservé à la préparation ; un nouveau writer1150 doit être qualifié. Ne rejouer ni préparation, CHECK, activation ou ancien outil1141.
+La **1.15.0 est démarrée selon le [relevé utilisateur](verification-proofs/jm1150/hosted-identity.json)** : source6712028e08b1e04ac7628bdbb9c39fd9f90d9909, Nodev24.22.1,01/11/2026 20:27:30Paris, seconde1793561250. Millisecondes et signal disponible non fournis. Le dernier checkpoint de métadonnées reste1141/93d6, préservé à la préparation ; le nouveau writer1150 est désormais qualifié et son exécution reste à effectuer. Ne rejouer ni préparation, CHECK, activation ou ancien outil1141.
 
 La [PR147](https://github.com/fredbuhr/jessiemessage/pull/147) est fusionnée. Source/tag [v1.15.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.15.0) : **`6712028e08b1e04ac7628bdbb9c39fd9f90d9909`**, arbre **`c80ee33ebfe01838c86cc2b4166b344acf5ea745`**, release/latest **430794626**. Le main documentaire peut avancer ensuite ; ne pas le confondre avec le code publié.
 
@@ -16,24 +16,42 @@ Préparateur : opérateur **`6b6342ba784572d89b076a56647ccb887587f10f`**, arbre 
 
 Les flags faux et journaux vides du JSON décrivent le staging avant le CHECK séparé. À cette phase, aucun démarrage1150 n’était déduit ; le relevé suivant l’atteste séparément. Métadonnées1150 et inventaire SQL physique indépendant restent non acquis. **Préparation et CHECK SSH1150 ne doivent pas être rejoués.**
 
-## Activation personnelle — acquise selon le relevé, ne pas rejouer
+## Activation personnelle — acquise, ne pas rejouer
 
-Les valeurs ci-dessous documentent l’activation rapportée ; aucune manipulation ou relance supplémentaire à effectuer.
+L’[identité utilisateur](verification-proofs/jm1150/hosted-identity.json) confirme version1.15.0, source6712028e08b1e04ac7628bdbb9c39fd9f90d9909, Nodev24.22.1, **01/11/2026 20:27:30 Europe/Paris**, secondeUTC1793561250. Millisecondes et signal disponible absents de cet extrait ; le writer vérifie le journal réel et les GET publics. Les champs Manager, PID/socket/binaire et inventaire SQL physique ne sont pas indépendamment inspectés par l’agent. Aucun nouveau redémarrage demandé.
 
-1. Ouvrir [Run & Build du service Node239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), nommé **recette.jessiemessage.com**, qui dessert aussi le principal.
-2. Remplacer les deux champs :
-
-| Champ | Valeur1150 |
+| Champ de l’activation rapportée | Valeur1150 |
 | --- | --- |
 | Exécution, champ du haut | `bash /srv/customer/jessiemessage-private/start-primary-release1150-6712028e.sh` |
 | Build, champ du bas | `bash /srv/customer/jessiemessage-private/check-primary-release1150-6712028e.sh` |
 | Port | `3000`, conservé |
-| Répertoire Manager | Conserver la valeur existante ; aucune nouvelle valeur à saisir |
 
-3. Cliquer **Enregistrer**. Si cela relance déjà l’application, attendre ; sinon cliquer une seule fois **Redémarrer** dans le [tableau de bord Node](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard). Aucun CHECK manuel supplémentaire en SSH. Le Node effectif reste le binaire privé24.22.1 du lanceur ; ne pas modifier PHP/DNS/SSL.
-4. Ouvrir [État du service](https://jessiemessage.com/admin/readiness), puis transmettre Version de l’application, Commit au démarrage complet, Version Node.js et Relevé au démarrage. Attendus : **1.15.0**, **`6712028e08b1e04ac7628bdbb9c39fd9f90d9909`**, **v24.22.1**, nouvelle date réelle. Le signal disponible peut compléter le relevé. Une seule activation : ne pas redémarrer de nouveau si l’identité est déjà correcte.
+Le service Node239143 encore nommé recette.jessiemessage.com dessert aussi le principal. Ne modifier ni ces champs ni la configuration pour la finalisation des métadonnées ci-dessous.
 
-Ce relevé est désormais acquis, à la seconde1793561250. Prochaine étape : terminer et qualifier un nouveau writer1150 de métadonnées seules lié à cette seconde et au staging6384c78b ; aucun ancien writer à réutiliser. Le dernier checkpoint actif attesté reste1141/93d6 en attendant. Repli historique185 SQL38 seul, jamais démarré, sans garantie de downgrade publicformat2 ;184/172 restent interdits. Aucun test client réel, sauvegarde reportée ou chantier juridique ouvert.
+## Enregistrement final — prochaine action unique
+
+Le nouveau writer est [qualifié39/39 tests natifs](verification-proofs/jm1150/writer-final-native.json), sans omission, Node24.22.1, tentative1,1/1job : [run41342830219](https://github.com/fredbuhr/jessiemessage/actions/runs/41342830219). Opérateur **`c12846680c30ce008d9cc2f170aa87f06b8d78aa`**, arbre `e79d4eee550bdbd1299e37f2e4f35564e953029a`, helper **44256octets**, SHA256 **`dc8e7e45aa0d4ec68bc0bd050c65869d1a3bcc8840e577f79996b32995c74c6b`**. Helper/test/workflow relus identiques aux octets qualifiés ; [contre-revue](verification-proofs/jm1150/writer-counter-review.md) sans bloqueur restant. Les39tests locaux et39natifs concernent le même lot, sans addition ; aucune suite applicative verte rejouée.
+
+Il vérifie la seconde1793561250 dans le démarrage unique, le staging6384c78b/6008octets, l’ancien checkpoint1141/93d6, les sources/tags, Node/configuration/migrations, l’installation1150 réelle et l’ancien lien1141→vrai1140. Neuf versions, onze ressources, les quatre logs d’installation/smoke et le graphe strictement préservé sont liés. Les codecs dépassant2Mio disposent d’une lecture hash bornée dédiée ; la limite JSON/checkpoint2Mio demeure. Préconditions et identité HTTP publics doivent concorder avant l’écriture atomique/relecture des seules métadonnées. Active1141 entier, section1141, tous historiques/autres blocs et scopes185 SQL38seul/publicProfileDowngradeQualified:false/184172interdits préservés. Aucun CHECK, installation, SQL en écriture ou redémarrage.
+
+Ouvrir le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis coller une seule fois :
+
+```bash
+env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD1150'
+import hashlib, urllib.request
+
+url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/c12846680c30ce008d9cc2f170aa87f06b8d78aa/ops/record-release1150.py'
+with urllib.request.urlopen(url, timeout=30) as response:
+    if response.status != 200 or response.url != url:
+        raise SystemExit('URL_OUTIL_A_VERIFIER : arret.')
+    code = response.read(65537)
+if len(code) > 65536 or hashlib.sha256(code).hexdigest() != 'dc8e7e45aa0d4ec68bc0bd050c65869d1a3bcc8840e577f79996b32995c74c6b':
+    raise SystemExit('EMPREINTE_OUTIL_INCORRECTE : aucun outil execute.')
+exec(compile(code, '<enregistrement1150>', 'exec'), {'__name__': '__main__'})
+PY_RECORD1150
+```
+
+Transmettre le JSON final. Aucun reçu d’enregistrement1150 n’est encore acquis à ce jalon. Si réponse perdue/interruption/statut non confirmé, ne jamais relancer pour découvrir le résultat : inspecter le checkpoint et les traces en lecture seule. Repli185 reste SQL38seulement, jamais démarré, sans garantie de downgrade publicformat2. Aucun compte/message/média réel, sauvegarde reportée ou chantier juridique touché.
 
 ## Historique — bloc préparation/CHECK exécuté, ne pas rejouer
 
