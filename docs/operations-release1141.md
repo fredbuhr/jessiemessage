@@ -33,23 +33,23 @@ Le nouveau checkout attendu est `/srv/customer/jessiemessage-operator/production
 
 Le staging14 SHA256 `2fe494a43a446c882ce509f4ecf51925bd5789a94bdbdf2ce6923d83e5ff7d72`, le checkpoint14, les clés, configurations, historiques et anciens lanceurs restent préservés. La préparation ne lance ni CHECK, ni service et ne change ni Manager ni checkpoint. Son reçu initial décrit uniquement des sources préparées, avant le CHECK séparé.
 
-## Première étape personnelle — un passage au terminal, reçu attendu
+## Préparation et CHECK1141 — acquis, ne pas rejouer
 
-**Préparation et CHECK1141 non reçus à ce stade.** Aucun démarrage1141 n'est acquis.
+Le [reçu utilisateur](verification-proofs/jm1141/hosted-preparation.json) confirme la source et l’arbre1141 exacts, le checkout0700, la réutilisation des dépendances1140 vérifiées et la préservation du checkpoint14, de la configuration et des anciennes sorties. Empreinte canonique **`df4b58f79ed08af15365557fd88670cd887c4cce9382200fadbd03a9c9593d72`**,3183octets reconstruits identiques ; `CHECK1141_EXIT=0` puis `PREPARATION_1141_CHECK_OK`.
 
-**La première et unique action à effectuer maintenant est le bloc terminal ci-dessous ; attendre son reçu avant l'activation.**
+- Lanceur start0700 SHA256 `e53198d1ddf099eaf3ecbd60b6916a94921430a555eaed2a4a4c41ce64ff27a9`.
+- Lanceur CHECK0700 SHA256 `6f4aa454a5d1163b9450dba8644ed50dcf034f1a916cad1891c0fa1fc2b05919`.
+- Checkpoint14/19ceaa7e, staging14/2fe494a4, inventaire547c6ec0 (1082entrées/914fichiers), six versions et codec identiques selon le reçu.
 
-1. Dans ton propre navigateur, ouvrir le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal).
-2. Ouvrir le [bloc exact de préparation/CHECK1141](verification-proofs/jm1141/preparation-command.sh), copier toutes ses lignes, de `env -i` jusqu'à `PY_PREPARE1141`, puis les coller dans ce terminal et valider **une seule fois**. Le bloc télécharge le helper au commit `fac6890fa0650c785fcbaa464a9d228ba519a312`, vérifie son SHA256 avant exécution, prépare les nouvelles sorties et conserve le reçu initial, puis effectue le CHECK séparé1141.
-3. Transmettre le JSON de staging et son empreinte canonique, la ligne `CHECK1141_EXIT=0` et le marqueur `PREPARATION_1141_CHECK_OK` s'ils sont présents. Ne transmettre aucun secret ou fichier privé. Si la réponse est interrompue ou refusée, conserver l'état et le message ; une réponse manquante n'autorise pas une répétition du bloc.
+Les flags `precheckPassed:false`, `started:false` et les journaux vides du JSON décrivent l’état avant le CHECK séparé. Son succès ne prouve ni démarrage1141 ni inventaire SQL physique indépendant. Aucun accès direct de l’agent au Manager, au processus ou aux fichiers privés n’est déduit.
 
-**Attendre la validation du reçu avant de modifier le Manager ou d'activer1141.** Des flags `precheckPassed:false`, `started:false` et des journaux vides dans le reçu initial décrivent l'étape avant CHECK ; ils ne doivent pas être réécrits pour fabriquer un succès. Un CHECK réussi ne prouve pas que le processus1141 a démarré.
+Le [bloc exécuté reste conservé](verification-proofs/jm1141/preparation-command.sh) comme preuve historique. **Ne rejouer ni ce bloc ni le CHECK SSH1141.**
 
-## Activation personnelle — seulement après le reçu validé
+## Prochaine étape personnelle — activation1141
 
 Le service Node **239143**, nommé **recette.jessiemessage.com** dans le Manager, dessert aussi **jessiemessage.com**, avec le même runtime et la même base. Le site PHP `accueil.jessiemessage.com` n'est pas la cible de cette opération.
 
-**Activation future : ne pas appliquer les valeurs suivantes avant validation du reçu de préparation et du CHECK1141.** Elles devront correspondre aux chemins et empreintes du reçu validé.
+**Préparation et CHECK validés : les valeurs suivantes correspondent au reçu.** L’activation et le nouveau démarrage restent à effectuer et à relever.
 
 | Champ Manager | Valeur1141 attendue après le reçu validé |
 | --- | --- |
@@ -57,11 +57,11 @@ Le service Node **239143**, nommé **recette.jessiemessage.com** dans le Manager
 | Build, champ du bas | `bash /srv/customer/jessiemessage-private/check-primary-release1141-c803c2c9.sh` |
 | Port | `3000` |
 
-Après cette validation seulement :
+Pour activer1141 une seule fois :
 
 1. Ouvrir les [réglages Run/Build du service Node239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application).
 2. Renseigner **Exécution, champ du haut**, et **Build, champ du bas**, avec les deux valeurs1141 du tableau, confirmées par le reçu. Conserver le port **3000**. Les valeurs1140 du guide clos ne sont pas des commandes à rejouer.
-3. Après enregistrement des valeurs exactes, effectuer l'activation personnelle selon les consignes alors fournies, puis ouvrir le [tableau de bord Node.js du même service](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard).
+3. Enregistrer les paramètres, puis ouvrir le [tableau de bord Node.js du même service](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) et utiliser Redémarrer une seule fois. La [documentation Infomaniak](https://www.infomaniak.com/fr/support/faq/2535/modifier-la-configuration-dun-site-nodejs-infomaniak), consultée pour cette étape, distingue l’enregistrement des paramètres du redémarrage depuis ce tableau de bord.
 4. Relever la nouvelle identité réelle de démarrage : version1.14.1, commit complet, Nodev24.22.1, date/heure et fuseau affichés, ainsi que l'état disponible. Transmettre ce relevé avant toute étape de métadonnées. Ne pas inventer les millisecondes absentes de l'interface et ne pas recommencer le démarrage pour les obtenir.
 
 L'agent n'a pas inspecté le Manager ou le processus hébergé. Les réglages et le nouveau démarrage restent non attestés tant que leur relevé n'est pas reçu.

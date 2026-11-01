@@ -239,7 +239,7 @@
     {
       "id": "M12",
       "scope": "Distribution, PWA et livraison",
-      "disposition": "code_qualified_merged_published_hosted_preparation_not_received",
+      "disposition": "code_qualified_published_hosted_preparation_and_check_received_activation_pending",
       "changes": [
         "Aucun défaut de cache établi ; imports, ressources fixes/no-store et SW sans cache fetch relus.",
         "Candidat2 modifie uniquement trois fixtures natives après le premier run en échec."
@@ -251,9 +251,10 @@
         "main-native.json",
         "preparation-native.json",
         "publication-initial-failure.json",
-        "publication-native.json"
+        "publication-native.json",
+        "hosted-preparation.json"
       ],
-      "proofScope": "PR et main5/5 tentative1 chacun, tag/release/latest v1.14.1 sur mainc803c2c9 exact. Publication2/2 réussie et17/17 tests opérateur natifs, opérateur préparation39/39 qualifié. Préparation hébergée/CHECK/démarrage1141 non acquis.",
+      "proofScope": "PR et main5/5 tentative1 chacun, tag/release/latest v1.14.1 sur mainc803c2c9 exact. Publication2/2 réussie et17/17 tests opérateur natifs, opérateur préparation39/39 qualifié. Préparation hébergée et CHECK1141 acquis selon le reçu utilisateur, empreinte canonique identique ; démarrage1141 non reçu.",
       "nativeCandidate2": "qualified_in_pr_in_stated_scope",
       "nativeMain": "qualified_in_stated_scope"
     }
@@ -426,14 +427,18 @@
       "deploymentPerformed": false
     },
     "hosted1141": {
-      "status": "not_prepared_not_checked_not_started",
-      "preparationReceipt": null,
-      "checkReceipt": null,
+      "status": "prepared_and_checked_activation_not_received",
+      "preparationReceipt": "hosted-preparation.json",
+      "checkReceipt": "hosted-preparation.json",
       "identityReceipt": null,
-      "metadataReceipt": null
+      "metadataReceipt": null,
+      "preparationAcquiredFromUserReceipt": true,
+      "checkExit": 0,
+      "receiptSha256": "df4b58f79ed08af15365557fd88670cd887c4cce9382200fadbd03a9c9593d72",
+      "directHostingAccessByAgent": false
     },
     "preparation": {
-      "status": "operator_native_qualified_hosted_preparation_not_received",
+      "status": "operator_native_qualified_hosted_preparation_and_check_received",
       "proof": "preparation-native.json",
       "operator": {
         "source": "fac6890fa0650c785fcbaa464a9d228ba519a312",
@@ -463,12 +468,13 @@
       },
       "helperSha256": "e1ecb05e40667ad4eadbd029c971d9b44b7f68f7f7bec7c6e7d2f52c79ce0197",
       "helperBytes": 23585,
-      "hostedReceipt": null,
-      "hostedPreparationPerformed": false,
-      "checkExecuted": false,
+      "hostedReceipt": "hosted-preparation.json",
+      "hostedPreparationPerformed": true,
+      "checkExecuted": true,
       "runtimeStarted": false,
       "checkpointChanged": false,
-      "historicalFlags": "applicationPins mainQualificationAcquired/publicationAcquired=false were observations at preparation-operator qualification time, superseded by later main/publication receipts."
+      "historicalFlags": "applicationPins mainQualificationAcquired/publicationAcquired=false were observations at preparation-operator qualification time, superseded by later main/publication receipts.",
+      "hostedAuthority": "user terminal output; no direct hosting operation by agent"
     }
   },
   "initialNativeRun": {
