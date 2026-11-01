@@ -1,0 +1,94 @@
+{
+  "format": "jessiemessage-1141-preparation-native-observation",
+  "authority": "GitHub API completed run, job logs and exact operator file readback; no hosted action",
+  "operator": {
+    "source": "fac6890fa0650c785fcbaa464a9d228ba519a312",
+    "tree": "ea382dd779e7fc98bf32a88a0fc3d2befdd3c208",
+    "workflow": ".github/workflows/prepare-qualified1141.yml"
+  },
+  "run": {
+    "id": 41322003894,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "fac6890fa0650c785fcbaa464a9d228ba519a312",
+    "headBranch": "ops/prepare-v1.14.1",
+    "event": "push",
+    "createdAt": "2026-11-01T15:35:34Z",
+    "updatedAt": "2026-11-01T15:36:12Z",
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41322003894"
+  },
+  "jobs": {
+    "total": 1,
+    "successful": 1,
+    "omitted": 0,
+    "items": [
+      {
+        "id": 124894010126,
+        "name": "operator-tests",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "synthetic": {
+    "methods": 39,
+    "passedLines": 39,
+    "omittedLines": 0,
+    "failed": 0,
+    "durationSeconds": 26.787,
+    "footer": "Ran 39 tests in 26.787s",
+    "nodeVersion": "v24.22.1"
+  },
+  "script": {
+    "path": "ops/prepare-release1141.py",
+    "bytes": 23585,
+    "sha256": "e1ecb05e40667ad4eadbd029c971d9b44b7f68f7f7bec7c6e7d2f52c79ce0197",
+    "blobSha": "80104995f7b066489c995247870896b97d2ab036",
+    "url": "https://github.com/fredbuhr/jessiemessage/blob/fac6890fa0650c785fcbaa464a9d228ba519a312/ops/prepare-release1141.py",
+    "readbackIdentical": true
+  },
+  "test": {
+    "path": "ops/test-prepare-release1141.py",
+    "bytes": 49485,
+    "sha256": "5f5a0f4c5911345aa8ac5da200cad303b8071c248cb2ec991e3eb7a9e43c1c27",
+    "blobSha": "22e4673e3971b9e5b1d78b487760f04e99069c8d",
+    "url": "https://github.com/fredbuhr/jessiemessage/blob/fac6890fa0650c785fcbaa464a9d228ba519a312/ops/test-prepare-release1141.py",
+    "readbackIdentical": true
+  },
+  "workflow": {
+    "path": ".github/workflows/prepare-qualified1141.yml",
+    "bytes": 1181,
+    "sha256": "73ea2d7c36b9074446dc52214b07d7e5be8ff9024325667080806cf2a6d243d1",
+    "blobSha": "d600add5412092df3a3632953edb69a653c5fbbc",
+    "url": "https://github.com/fredbuhr/jessiemessage/blob/fac6890fa0650c785fcbaa464a9d228ba519a312/.github/workflows/prepare-qualified1141.yml",
+    "readbackIdentical": true
+  },
+  "log": {
+    "file": "logs/preparation-native.log.gz",
+    "complete": true,
+    "source": "full decoded GitHub job log encoded as UTF-8",
+    "bytes": 54284,
+    "sha256": "7bf28f1724240dfb0741b3de2c9868c77abe95a03128613b1d0196375deb8e02",
+    "gzipBytes": 10544,
+    "gzipSha256": "9c96f659b8078962fdbd9fbbc04b227603a9221fffdc0687c690b2d3fc3df378",
+    "gzipMtime": 0
+  },
+  "applicationPins": {
+    "source": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+    "tree": "f391b5cebe0a8a8ffd63c818cd481b50970336f1",
+    "mainCiRun": 41321950561,
+    "mainQualificationAcquired": false,
+    "publicationAcquired": false
+  },
+  "limits": {
+    "hostedOperationPerformed": false,
+    "checkExecuted": false,
+    "dependenciesInstalled": false,
+    "runtimeStarted": false,
+    "managerChanged": false,
+    "checkpointChanged": false,
+    "appTestsReplayed": false
+  },
+  "status": "preparation_operator_native_qualified_hosted_preparation_not_received"
+}

@@ -1,0 +1,541 @@
+{
+  "format": "jessiemessage-1141-coverage",
+  "asOf": "2026-11-01",
+  "candidateVersion": "1.14.1",
+  "source": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+  "tree": "f391b5cebe0a8a8ffd63c818cd481b50970336f1",
+  "branch": "fix/media-reliability-1141",
+  "baseline": {
+    "documentaryMain": "5dbd5dc7fb4456c2975096fd4472d8830292eb17",
+    "productionVersion": "1.14.0",
+    "productionSource": "4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd",
+    "checkpoint14Sha256": "19ceaa7e91d32daba7da5b71d7dfe02ad964e8d9d2850ae016cfa732b8a9c6e0",
+    "authority": "docs/REPRISE.md; user receipts of1.14.0; no new hosted inspection"
+  },
+  "count": 12,
+  "points": [
+    {
+      "id": "M01",
+      "scope": "Signatures, formats, dimensions et métadonnées",
+      "disposition": "reviewed_no_general_valid_format_rejection_demonstrated",
+      "changes": [],
+      "evidence": [
+        "tests/media-image.test.mjs",
+        "tests/image-preparation.test.mjs",
+        "development-checks.json",
+        "pr-native.json",
+        "main-native.json"
+      ],
+      "proofScope": "Probes serveur synthétiques JPEG progressif/CMYK, PNG palette/16bits, WebP lossless avec alpha. Entrées uniformes bornées, pas tous les formats/variantes ni l'original client.",
+      "nativeCandidate2": "qualified_in_pr_in_stated_scope",
+      "nativeMain": "qualified_in_stated_scope"
+    },
+    {
+      "id": "M02",
+      "scope": "Préparation locale, mémoire et annulation",
+      "disposition": "implemented_local_checks_passed",
+      "changes": [
+        "Abort et échéance pour encodage canvas ; libération des ressources et rejet des callbacks tardifs.",
+        "HEIC sans canvas worker : transfert RGBA opt-in réduit et validé, encodage document existant."
+      ],
+      "evidence": [
+        "tests/image-preparation.test.mjs",
+        "tests/heic-decoder-worker.test.mjs",
+        "tests/browser/image-preparation.browser.mjs",
+        "development-checks.json",
+        "pr-native.json",
+        "main-native.json"
+      ],
+      "proofScope": "31 tests locaux puis un nouveau handler réel/HEVC passé seul avec dix combinaisons internes ; groupes recoupants. Garde native64MP, côtés de sortie2048 et ArrayBuffer exact RGBA8 maximum16MiB conservés.",
+      "nativeCandidate2": "qualified_in_pr_in_stated_scope",
+      "nativeMain": "qualified_in_stated_scope"
+    },
+    {
+      "id": "M03",
+      "scope": "Codec HEIC, compatibilité et CSP",
+      "disposition": "reviewed_compatibility_preserved",
+      "changes": [
+        "Le caller acceptPixels:true peut recevoir des pixels seulement si canvas worker indisponible ; l'ancien contrat reste Blob JPEG ou erreur catégorisée."
+      ],
+      "evidence": [
+        "tests/heic-decoder-worker.test.mjs",
+        "tests/browser/image-preparation.browser.mjs",
+        "development-checks.json",
+        "pr-native.json",
+        "main-native.json"
+      ],
+      "proofScope": "Bundle libheif-js1.23.5 épinglé, HEVC ; aucun nouveau codec AV1, aucun contournement ispe/SPS/clap,64MP ou CSP. Aucun navigateur Safari physique attesté.",
+      "nativeCandidate2": "qualified_in_pr_in_stated_scope",
+      "nativeMain": "qualified_in_stated_scope"
+    },
+    {
+      "id": "M04",
+      "scope": "Chat, légendes, brouillons et lots",
+      "disposition": "implemented_local_checks_and_independent_probes_passed",
+      "changes": [
+        "Capturer la légende courante après les attentes précédant le premier envoi effectif.",
+        "Refuser de commencer si l'ancien brouillon récupérable ne peut pas être retiré ; avertir avant départ d'une sélection sans légende.",
+        "Sérialiser les préparations d'originaux ; conserver row.error dans le résultat batch.",
+        "Conserver clés/messageIds et préfixe acquitté pour reprise explicite d'une réponse incertaine."
+      ],
+      "evidence": [
+        "tests/chat-lifecycle.test.mjs",
+        "tests/chat-drafts.test.mjs",
+        "tests/photo-upload.test.mjs",
+        "tests/photo-batch.test.mjs",
+        "development-checks.json",
+        "pr-native.json",
+        "main-native.json"
+      ],
+      "proofScope": "Harness VM/probes synthétiques de changement propriétaire/CSRF, double soumission, preview en attente et ACK perdu. Aucun POST de message au résultat incertain automatiquement rejoué ; pas de récupération des fichiers privés après rechargement.",
+      "nativeCandidate2": "qualified_in_pr_in_stated_scope",
+      "nativeMain": "qualified_in_stated_scope"
+    },
+    {
+      "id": "M05",
+      "scope": "HTTP, admission et erreurs",
+      "disposition": "implemented_local_checks_passed",
+      "changes": [
+        "Reclasser en MEDIA_FORMAT/HTTP415 le seul warning JPEG tronqué établi lors du premier décodage."
+      ],
+      "evidence": [
+        "tests/media-image.test.mjs",
+        "tests/media-service.test.mjs",
+        "tests/media-http.test.mjs",
+        "development-checks.json",
+        "pr-native.json",
+        "main-native.json"
+      ],
+      "proofScope": "99 tests locaux backend/image/HTTP. Les erreurs natives inconnues, génération, crash/IPC et timeout restent indisponibilité503 ; limites flux/temps/taille, origine, rôle, CSRF et admission conservés.",
+      "nativeCandidate2": "qualified_in_pr_in_stated_scope",
+      "nativeMain": "qualified_in_stated_scope"
+    },
+    {
+      "id": "M06",
+      "scope": "SQL, références et déduplication photo",
+      "disposition": "implemented_native_sql_qualified_on_pr_and_main",
+      "changes": [
+        "Refuser la tombstone d'une photo utilisée par une campagne queued/running du même propriétaire ; historique terminal préservé."
+      ],
+      "evidence": [
+        "tests/media-lifecycle-store.test.mjs",
+        "tests/media-store.integration.test.mjs",
+        "pr-initial-failure.json",
+        "pr-native.json",
+        "main-native.json"
+      ],
+      "proofScope": "Unités et nouveaux sous-tests MariaDB ; PR et main615/615 sur10.11 et11.4 chacun, sans omission SQL. Déduplication photo owner+empreinte et références messages/avatars conservées ; aucune migration.",
+      "nativeCandidate2": "qualified_in_pr_in_stated_scope",
+      "nativeMain": "qualified_in_stated_scope"
+    },
+    {
+      "id": "M07",
+      "scope": "Stockage chiffré et interruptions",
+      "disposition": "implemented_local_filesystem_checks_with_explicit_omissions",
+      "changes": [
+        "Nettoyer seulement noms publiés et staging reconnus de la storageKey exacte, avec paire publication même variante autorisée.",
+        "Prévalider UID/mode0600/inode/liens du groupe, unlink/fsync puis preuve d'absence avant ACK."
+      ],
+      "evidence": [
+        "tests/media-storage.test.mjs",
+        "tests/media-storage-dirfd.test.mjs",
+        "tests/media-lifecycle-store.test.mjs",
+        "development-checks.json",
+        "pr-native.json",
+        "main-native.json"
+      ],
+      "proofScope": "Groupe stockage33 réussis et2 omissions explicites procfs locales. Liens externes, autre clé, fichiers non sûrs et états inconnus préservés. Aucun filesystem hébergé manipulé.",
+      "nativeCandidate2": "qualified_in_pr_in_stated_scope",
+      "nativeMain": "qualified_in_stated_scope"
+    },
+    {
+      "id": "M08",
+      "scope": "Quota et reprise de nettoyage",
+      "disposition": "implemented_local_api_store_and_ui_checks_passed",
+      "changes": [
+        "GET admin assets?includeCleanupPending=1 sans conversationId, actifs+tombstones cleanup_pending encore chargées.",
+        "DTO pending sans URLs ; réutiliser POST delete existant avec reprise explicite et confirmation."
+      ],
+      "evidence": [
+        "tests/media-http.test.mjs",
+        "tests/media-service.test.mjs",
+        "tests/media-lifecycle-store.test.mjs",
+        "tests/media-store.integration.test.mjs",
+        "tests/media-library-ui.test.mjs",
+        "tests/browser/media-library.browser.mjs",
+        "pr-native.json",
+        "main-native.json"
+      ],
+      "proofScope": "Libération backend seulement après remove physique réussi ; pas de remise à zéro du quota. Les refus/réponse perdue UI conservent la ligne jusqu'à réconciliation ; quota du scénario Chrome simulé et distinct du stockage réel.",
+      "nativeCandidate2": "qualified_in_pr_in_stated_scope",
+      "nativeMain": "qualified_in_stated_scope"
+    },
+    {
+      "id": "M09",
+      "scope": "Galerie, aperçus, pages et suppression",
+      "disposition": "reviewed_and_cleanup_ui_implemented",
+      "changes": [
+        "Afficher le pending sans miniature/aperçu ni fetch de contenu ; action Réessayer le nettoyage.",
+        "Garder mutations bloquées après issue incertaine jusqu'à actualisation ; retrait local sur ACK valide seulement."
+      ],
+      "evidence": [
+        "tests/media-library-model.test.mjs",
+        "tests/media-library-ui.test.mjs",
+        "tests/browser/media-library.browser.mjs",
+        "tests/tools-i18n.test.mjs",
+        "pr-native.json",
+        "visual-native.json",
+        "main-native.json"
+      ],
+      "proofScope": "Pagination20, sélection indépendante, preuves owner/CSRF, URLs canoniques et révocation des blobs conservées. Aucun défaut supplémentaire de pagination prouvé dans la portée relue.",
+      "nativeCandidate2": "qualified_in_pr_in_stated_scope",
+      "nativeMain": "qualified_in_stated_scope"
+    },
+    {
+      "id": "M10",
+      "scope": "Avatar, profils et copie publique",
+      "disposition": "implemented_local_checks_passed",
+      "changes": [
+        "Accept image/*,.heic,.heif,.avif et texte d'erreur cohérent avec préparation par signature.",
+        "Décodage Image de secours si ImageBitmap absent/rejeté, crop JPEG256, ressources et attentes bornées.",
+        "Différer seulement un fichier non commencé attaché au même dialogue/propriétaire/session."
+      ],
+      "evidence": [
+        "tests/profile-ui.test.mjs",
+        "tests/browser/profile-avatar.browser.mjs",
+        "tests/public-profile.test.mjs",
+        "development-checks.json",
+        "pr-initial-failure.json",
+        "pr-native.json",
+        "main-native.json"
+      ],
+      "proofScope": "33 tests locaux profil ; nouveaux scénarios Chrome avatar qualifiés dans les jobs PR/main313/313 chacun. Copie publique explicite/versionnée relue sans défaut nouveau. Pas d'essai original client/Safari/OS physique.",
+      "nativeCandidate2": "qualified_in_pr_in_stated_scope",
+      "nativeMain": "qualified_in_stated_scope"
+    },
+    {
+      "id": "M11",
+      "scope": "Diffusions et vidéos administrateur",
+      "disposition": "implemented_local_checks_passed",
+      "changes": [
+        "Accepter MP4 .mp4 avec File.type vide ou alias ; aperçu natif obligatoire et Content-Type canonique, validation serveur inchangée.",
+        "Retenir la sélection non commencée au retour hidden jusqu'aux preuves owner/CSRF.",
+        "Après ACK perdu/annulation après send : draft échoué non réémissible, lien bibliothèque et guidance conservés même après player.error tardif.",
+        "401 prioritaire efface le privé ;403 bloque composition et propose actualisation."
+      ],
+      "evidence": [
+        "tests/broadcast-lifecycle.test.mjs",
+        "tests/browser/broadcast-scale.browser.mjs",
+        "tests/tools-i18n.test.mjs",
+        "development-checks.json",
+        "pr-native.json",
+        "visual-native.json",
+        "main-native.json"
+      ],
+      "proofScope": "Groupe admin106 puis diffusion75 et seule nouvelle régression1, jamais additionnés. Aucun upload vidéo automatiquement rejoué. Pas de déduplication vidéo nouvelle : un choix volontairement nouveau peut créer une nouvelle allocation.",
+      "nativeCandidate2": "qualified_in_pr_in_stated_scope",
+      "nativeMain": "qualified_in_stated_scope"
+    },
+    {
+      "id": "M12",
+      "scope": "Distribution, PWA et livraison",
+      "disposition": "code_qualified_merged_published_hosted_preparation_not_received",
+      "changes": [
+        "Aucun défaut de cache établi ; imports, ressources fixes/no-store et SW sans cache fetch relus.",
+        "Candidat2 modifie uniquement trois fixtures natives après le premier run en échec."
+      ],
+      "evidence": [
+        "development-checks.json",
+        "pr-initial-failure.json",
+        "pr-native.json",
+        "main-native.json",
+        "preparation-native.json",
+        "publication-initial-failure.json",
+        "publication-native.json"
+      ],
+      "proofScope": "PR et main5/5 tentative1 chacun, tag/release/latest v1.14.1 sur mainc803c2c9 exact. Publication2/2 réussie et17/17 tests opérateur natifs, opérateur préparation39/39 qualifié. Préparation hébergée/CHECK/démarrage1141 non acquis.",
+      "nativeCandidate2": "qualified_in_pr_in_stated_scope",
+      "nativeMain": "qualified_in_stated_scope"
+    }
+  ],
+  "qualification": {
+    "pr": {
+      "number": 146,
+      "url": "https://github.com/fredbuhr/jessiemessage/pull/146",
+      "run": 41321277444,
+      "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/41321277444",
+      "status": "completed",
+      "conclusion": "success",
+      "counts": [
+        {
+          "name": "MariaDB 11.4",
+          "tests": 615,
+          "suites": 0,
+          "pass": 615,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 266689.793469
+        },
+        {
+          "name": "MariaDB 10.11",
+          "tests": 615,
+          "suites": 0,
+          "pass": 615,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 409122.996748
+        },
+        {
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "tests": 14,
+          "suites": 0,
+          "pass": 14,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 88881.357118
+        },
+        {
+          "name": "Chrome keyboard and chat lifecycle",
+          "tests": 313,
+          "suites": 0,
+          "pass": 313,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 287137.730839
+        },
+        {
+          "name": "verify",
+          "tests": 4333,
+          "suites": 0,
+          "pass": 4281,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 52,
+          "todo": 0,
+          "duration_ms": 94385.037969
+        }
+      ],
+      "evidence": "Final native PR receipt supplied and persisted by root; five successful jobs.",
+      "attempt": 1,
+      "successfulJobs": 5,
+      "proof": "pr-native.json",
+      "source": "d4795b47b1a7cf27e997d27550f854c70831eb08",
+      "tree": "f391b5cebe0a8a8ffd63c818cd481b50970336f1"
+    },
+    "main": {
+      "status": "completed",
+      "conclusion": "success",
+      "source": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+      "tree": "f391b5cebe0a8a8ffd63c818cd481b50970336f1",
+      "sameTreeAsPr": true,
+      "run": 41321950561,
+      "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/41321950561",
+      "counts": [
+        {
+          "name": "Chrome keyboard and chat lifecycle",
+          "tests": 313,
+          "suites": 0,
+          "pass": 313,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 289920.448431
+        },
+        {
+          "name": "verify",
+          "tests": 4333,
+          "suites": 0,
+          "pass": 4281,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 52,
+          "todo": 0,
+          "duration_ms": 121983.32727
+        },
+        {
+          "name": "MariaDB 11.4",
+          "tests": 615,
+          "suites": 0,
+          "pass": 615,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 411817.624491
+        },
+        {
+          "name": "Chrome HTTPS authentication and messaging with MariaDB",
+          "tests": 14,
+          "suites": 0,
+          "pass": 14,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 85195.877643
+        },
+        {
+          "name": "MariaDB 10.11",
+          "tests": 615,
+          "suites": 0,
+          "pass": 615,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 343872.724904
+        }
+      ],
+      "evidence": "Final native main receipt supplied and persisted by root; five successful jobs.",
+      "attempt": 1,
+      "successfulJobs": 5,
+      "proof": "main-native.json"
+    },
+    "publication": {
+      "status": "published",
+      "source": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+      "tag": "v1.14.1",
+      "release": 430681218,
+      "latest": true,
+      "run": 41322823806,
+      "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/41322823806",
+      "attempt": 1,
+      "successfulJobs": 2,
+      "totalJobs": 2,
+      "operator": "1af81e39b0b995aae650f0dcc1c98995e3943767",
+      "operatorTests": {
+        "tests": 17,
+        "passed": 17,
+        "failed": 0,
+        "omitted": 0
+      },
+      "evidence": "Root and formats verified the completed native final publication log:17 tests OK,2/2 successful jobs; exact tag/release/latest source independently reread. Detailed final receipt is publication-native.json.",
+      "hostedDeploymentPerformed": false,
+      "initialFailureProof": "publication-initial-failure.json",
+      "proof": "publication-native.json",
+      "result": "published_verified",
+      "deploymentPerformed": false
+    },
+    "hosted1141": {
+      "status": "not_prepared_not_checked_not_started",
+      "preparationReceipt": null,
+      "checkReceipt": null,
+      "identityReceipt": null,
+      "metadataReceipt": null
+    },
+    "preparation": {
+      "status": "operator_native_qualified_hosted_preparation_not_received",
+      "proof": "preparation-native.json",
+      "operator": {
+        "source": "fac6890fa0650c785fcbaa464a9d228ba519a312",
+        "tree": "ea382dd779e7fc98bf32a88a0fc3d2befdd3c208",
+        "workflow": ".github/workflows/prepare-qualified1141.yml"
+      },
+      "run": {
+        "id": 41322003894,
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "headSha": "fac6890fa0650c785fcbaa464a9d228ba519a312",
+        "headBranch": "ops/prepare-v1.14.1",
+        "event": "push",
+        "createdAt": "2026-11-01T15:35:34Z",
+        "updatedAt": "2026-11-01T15:36:12Z",
+        "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41322003894"
+      },
+      "synthetic": {
+        "methods": 39,
+        "passedLines": 39,
+        "omittedLines": 0,
+        "failed": 0,
+        "durationSeconds": 26.787,
+        "footer": "Ran 39 tests in 26.787s",
+        "nodeVersion": "v24.22.1"
+      },
+      "helperSha256": "e1ecb05e40667ad4eadbd029c971d9b44b7f68f7f7bec7c6e7d2f52c79ce0197",
+      "helperBytes": 23585,
+      "hostedReceipt": null,
+      "hostedPreparationPerformed": false,
+      "checkExecuted": false,
+      "runtimeStarted": false,
+      "checkpointChanged": false,
+      "historicalFlags": "applicationPins mainQualificationAcquired/publicationAcquired=false were observations at preparation-operator qualification time, superseded by later main/publication receipts."
+    }
+  },
+  "initialNativeRun": {
+    "run": 41320000883,
+    "source": "03771f25d4a9670b46832e9e1812b9220559cb9e",
+    "tree": "7ccd4a3fb1c2fc3028c50a430c6ba5e5822ede63",
+    "conclusion": "failure",
+    "proof": "pr-initial-failure.json",
+    "countsAreHistoricalNotCandidate2": true,
+    "fixtureCorrectionsOnly": [
+      "tests/browser/chat-accessibility.browser.mjs",
+      "tests/browser/image-preparation.browser.mjs",
+      "tests/rehearsal/messaging.rehearsal.mjs"
+    ],
+    "productCodeChangedToSatisfyTheseInitialFailures": false
+  },
+  "localChecks": {
+    "proof": "development-checks.json",
+    "groupsOverlapNotSummed": true,
+    "areNativeCandidate2Qualification": false,
+    "procfsOmissions": 2,
+    "localChromeExecuted": false,
+    "localMariaDbExecuted": false
+  },
+  "historicalCheckpoint": {
+    "source": "c13ea025ff9912a8d8d61032649d7b77ad0039a0",
+    "tree": "e5ad097d80ad6c522fad2a24f79c3aeb9084f800",
+    "scope": "core chat/batch/backend/storage only; UI/HEIC were then unfinished",
+    "supersededByCurrentCompleteCandidate": true,
+    "isQualificationOrDelivery": false
+  },
+  "originalClientCase": {
+    "originalAvailable": false,
+    "exactErrorAvailable": false,
+    "deviceKnown": false,
+    "cause": "not_established",
+    "resolution": "not_attested"
+  },
+  "limitations": [
+    "Physical Safari/iOS/Android and the native OS picker are not attested.",
+    "Synthetic Chrome/API/SQL/filesystem tests do not prove original client photo acceptance or hosted disk/quota state.",
+    "The first failed native run remains historical; final PR qualification is from run41321277444. Main qualification is acquired separately from run41321950561; hosted preparation/CHECK/start remain unreceived.",
+    "Local procfs omissions are not successful dirfd execution.",
+    "Video remains admin-only and nonidempotent across a deliberately new upload selection.",
+    "No real account, message, media, hosted cleanup or restart was performed during the audit.",
+    "Manual backup/PC/legal work remains out of scope; no past delivery command or green historical suite is to be replayed."
+  ],
+  "visual": {
+    "proof": "visual-native.json",
+    "run": 41321277444,
+    "artifact": 13089048204,
+    "count": 5,
+    "inspectedBy": "root",
+    "scope": [
+      "photo picker FR320",
+      "photo picker EN390",
+      "photo picker FR1280",
+      "library FR320",
+      "library EN1280"
+    ],
+    "syntheticOnly": true,
+    "cleanupLifecycleInferredFromScreenshots": false,
+    "physicalDeviceAttested": false,
+    "legacyFilenamesAreNotSourceVersion": "The1140 filenames contain capture bytes from this1141 run."
+  },
+  "prSource": "d4795b47b1a7cf27e997d27550f854c70831eb08",
+  "version": "1.14.1",
+  "stage": "qualified_merged_published_ready_for_hosted_preparation",
+  "nextAction": "Hosted preparation1141 using the pinned qualified operator against preserved baseline14, then separate CHECK. No hosted success implied by code qualification or publication."
+}

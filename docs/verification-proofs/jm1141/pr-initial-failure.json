@@ -1,0 +1,332 @@
+{
+  "format": "jessiemessage-1141-pr-initial-failure",
+  "run": 41320000883,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41320000883",
+  "attempt": 1,
+  "source": "03771f25d4a9670b46832e9e1812b9220559cb9e",
+  "tree": "7ccd4a3fb1c2fc3028c50a430c6ba5e5822ede63",
+  "base": "5dbd5dc7fb4456c2975096fd4472d8830292eb17",
+  "checkoutMerge": "e0391fe4a265dbe8bd6860df64171bc532598a1b",
+  "checkoutTree": null,
+  "checkoutTreeNote": "Actual native merge SHA is recorded from all five logs. Its tree was not independently read and is not inferred here.",
+  "conclusion": "failure",
+  "status": "initial failures preserved; fixture corrections require a new native candidate",
+  "groupsOverlapNotSummed": true,
+  "jobs": [
+    {
+      "id": 124887958785,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "conclusion": "failure",
+      "counts": {
+        "tests": 14,
+        "suites": 0,
+        "pass": 12,
+        "fail": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 107066.006803
+      },
+      "node": "v24.22.1",
+      "checkoutMerge": "e0391fe4a265dbe8bd6860df64171bc532598a1b",
+      "log": {
+        "path": "docs/verification-proofs/jm1141/pr-first-https.log.gz",
+        "encoding": "UTF-8, connector-decoded BOM preserved",
+        "bytes": 43304,
+        "sha256": "68e510496a1a018940e09fc5eb1cbef441beba8e2bc26bd4d2c8a0ffdfdc0db5",
+        "gzipBytes": 10834,
+        "gzipSha256": "26ef9db165a12bcfe39d0cec89f867a0d8365ff1e7cfc65b233f9afe6634b286",
+        "gzipMtime": 0,
+        "lastLine": "2026-11-01T15:14:13.5409486Z Cleaning up orphan processes"
+      },
+      "footer": [
+        "2026-11-01T15:14:11.9669235Z ℹ tests 14",
+        "2026-11-01T15:14:11.9669701Z ℹ suites 0",
+        "2026-11-01T15:14:11.9671873Z ℹ pass 12",
+        "2026-11-01T15:14:11.9672340Z ℹ fail 2",
+        "2026-11-01T15:14:11.9672729Z ℹ cancelled 0",
+        "2026-11-01T15:14:11.9673200Z ℹ skipped 0",
+        "2026-11-01T15:14:11.9673679Z ℹ todo 0",
+        "2026-11-01T15:14:11.9674232Z ℹ duration_ms 107066.006803"
+      ]
+    },
+    {
+      "id": 124887958925,
+      "name": "verify",
+      "conclusion": "success",
+      "counts": {
+        "tests": 4333,
+        "suites": 0,
+        "pass": 4281,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 52,
+        "todo": 0,
+        "duration_ms": 115769.604193
+      },
+      "node": "v24.22.1",
+      "checkoutMerge": "e0391fe4a265dbe8bd6860df64171bc532598a1b",
+      "log": {
+        "path": "docs/verification-proofs/jm1141/pr-first-verify.log.gz",
+        "encoding": "UTF-8, connector-decoded BOM preserved",
+        "bytes": 613253,
+        "sha256": "733eb773f28bfc04e2ef074dcf38d5db55cb68ecc64d547f8b5177d3316324f1",
+        "gzipBytes": 179978,
+        "gzipSha256": "2413627588b5891cd4f2642e733544ec1af84bde7be2e815e2c6f0bad4dc128c",
+        "gzipMtime": 0,
+        "lastLine": "2026-11-01T15:14:35.5069405Z Cleaning up orphan processes"
+      },
+      "footer": [
+        "2026-11-01T15:14:12.4944169Z ℹ tests 4333",
+        "2026-11-01T15:14:12.4944403Z ℹ suites 0",
+        "2026-11-01T15:14:12.4944635Z ℹ pass 4281",
+        "2026-11-01T15:14:12.4944857Z ℹ fail 0",
+        "2026-11-01T15:14:12.4945085Z ℹ cancelled 0",
+        "2026-11-01T15:14:12.4945319Z ℹ skipped 52",
+        "2026-11-01T15:14:12.4945553Z ℹ todo 0",
+        "2026-11-01T15:14:12.4945815Z ℹ duration_ms 115769.604193"
+      ]
+    },
+    {
+      "id": 124887959010,
+      "name": "MariaDB 10.11",
+      "conclusion": "success",
+      "counts": {
+        "tests": 615,
+        "suites": 0,
+        "pass": 615,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 387458.046036
+      },
+      "node": "v24.22.1",
+      "checkoutMerge": "e0391fe4a265dbe8bd6860df64171bc532598a1b",
+      "log": {
+        "path": "docs/verification-proofs/jm1141/pr-first-mariadb-10.11.log.gz",
+        "encoding": "UTF-8, connector-decoded BOM preserved",
+        "bytes": 363516,
+        "sha256": "569732dbd0f7cffb7307db049974c2784f51011ac6d400b258f790ee23e9ee72",
+        "gzipBytes": 68302,
+        "gzipSha256": "be95602cef2ef386e547ce4e5a257e7b999fb4060ec034fef84278d6a54815a0",
+        "gzipMtime": 0,
+        "lastLine": "2026-11-01T15:19:02.4373289Z Cleaning up orphan processes"
+      },
+      "footer": [
+        "2026-11-01T15:19:01.6879685Z # tests 615",
+        "2026-11-01T15:19:01.6879979Z # suites 0",
+        "2026-11-01T15:19:01.6880262Z # pass 615",
+        "2026-11-01T15:19:01.6880535Z # fail 0",
+        "2026-11-01T15:19:01.6880741Z # cancelled 0",
+        "2026-11-01T15:19:01.6880963Z # skipped 0",
+        "2026-11-01T15:19:01.6881165Z # todo 0",
+        "2026-11-01T15:19:01.6881404Z # duration_ms 387458.046036"
+      ]
+    },
+    {
+      "id": 124887959020,
+      "name": "MariaDB 11.4",
+      "conclusion": "success",
+      "counts": {
+        "tests": 615,
+        "suites": 0,
+        "pass": 615,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 434689.464761
+      },
+      "node": "v24.22.1",
+      "checkoutMerge": "e0391fe4a265dbe8bd6860df64171bc532598a1b",
+      "log": {
+        "path": "docs/verification-proofs/jm1141/pr-first-mariadb-11.4.log.gz",
+        "encoding": "UTF-8, connector-decoded BOM preserved",
+        "bytes": 364063,
+        "sha256": "10b44214de697801677b586e140ed8c44e89f054d257bea69d69e84598fb1b8a",
+        "gzipBytes": 68525,
+        "gzipSha256": "63573ff2e640672eefc129e9576c50beca453f7f1d4060332e373e3ee57bb1c5",
+        "gzipMtime": 0,
+        "lastLine": "2026-11-01T15:19:57.6096730Z Cleaning up orphan processes"
+      },
+      "footer": [
+        "2026-11-01T15:19:56.8043095Z # tests 615",
+        "2026-11-01T15:19:56.8043458Z # suites 0",
+        "2026-11-01T15:19:56.8044122Z # pass 615",
+        "2026-11-01T15:19:56.8044367Z # fail 0",
+        "2026-11-01T15:19:56.8044583Z # cancelled 0",
+        "2026-11-01T15:19:56.8044812Z # skipped 0",
+        "2026-11-01T15:19:56.8045034Z # todo 0",
+        "2026-11-01T15:19:56.8045274Z # duration_ms 434689.464761"
+      ]
+    },
+    {
+      "id": 124887959001,
+      "name": "Chrome keyboard and chat lifecycle",
+      "conclusion": "failure",
+      "counts": {
+        "tests": 313,
+        "suites": 0,
+        "pass": 309,
+        "fail": 4,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 377440.911551
+      },
+      "node": "v24.22.1",
+      "checkoutMerge": "e0391fe4a265dbe8bd6860df64171bc532598a1b",
+      "log": {
+        "path": "docs/verification-proofs/jm1141/pr-first-chrome.log.gz",
+        "encoding": "UTF-8, connector-decoded BOM preserved",
+        "bytes": 67472,
+        "sha256": "1263c3830f7115ee5dd2f239f9b9278b91f266f542595a00fc49aed58feb3e1e",
+        "gzipBytes": 18047,
+        "gzipSha256": "8f1ff645826d96105856cfb6c2708811382df0c4afee642091d36dde1d6dba06",
+        "gzipMtime": 0,
+        "lastLine": "2026-11-01T15:18:34.7925306Z Cleaning up orphan processes"
+      },
+      "footer": [
+        "2026-11-01T15:18:29.8503432Z ℹ tests 313",
+        "2026-11-01T15:18:29.8503766Z ℹ suites 0",
+        "2026-11-01T15:18:29.8504081Z ℹ pass 309",
+        "2026-11-01T15:18:29.8504387Z ℹ fail 4",
+        "2026-11-01T15:18:29.8504762Z ℹ cancelled 0",
+        "2026-11-01T15:18:29.8505088Z ℹ skipped 0",
+        "2026-11-01T15:18:29.8505400Z ℹ todo 0",
+        "2026-11-01T15:18:29.8505798Z ℹ duration_ms 377440.911551"
+      ]
+    }
+  ],
+  "failureCounting": {
+    "chrome": {
+      "tests": 313,
+      "pass": 309,
+      "fail": 4,
+      "skipped": 0,
+      "independentFailedTests": 4
+    },
+    "https": {
+      "tests": 14,
+      "pass": 12,
+      "fail": 2,
+      "skipped": 0,
+      "failedSubtests": 1,
+      "failedParents": 1,
+      "independentFailureCauses": 1
+    },
+    "note": "HTTPS counts include the failed parent; repeated failure-report lines in logs are not additional failed tests."
+  },
+  "failures": [
+    {
+      "id": "CHROME-01",
+      "jobId": 124887959001,
+      "test": "Chrome 320px: both roles edit their public profile with the keyboard, translated labels and focus restored to the opener",
+      "location": "tests/browser/chat-accessibility.browser.mjs:886",
+      "observed": "Expected old accept=image/jpeg,image/png,image/webp; actual accept=image/*,.heic,.heif,.avif.",
+      "confirmedCause": "The fixture asserted the superseded picker contract.",
+      "fixtureCorrection": "Update only the expected accept string to the actual supported contract."
+    },
+    {
+      "id": "CHROME-02",
+      "jobId": 124887959001,
+      "test": "Chrome: real avatar crop, private preview cleanup on controlled hiding, explicit upload/save and peer initials after removal",
+      "location": "tests/browser/chat-accessibility.browser.mjs:930",
+      "observed": "Timed out: actual browser JPEG decode and central 256px crop.",
+      "confirmedCause": "The avatar helper injected FileList/change without opening the real chooser, so the opening-bound intent guard rejected the synthetic selection before preparation.",
+      "fixtureCorrection": "Invoke the real profile chooser handler while intercepting and restoring only input.click for the OS dialog; require that native call was requested, then provide the real DataTransfer/FileList/change. Keep real decoding, private reads and explicit upload/save."
+    },
+    {
+      "id": "CHROME-03",
+      "jobId": 124887959001,
+      "test": "Chrome personal reply lost acknowledgement never retries automatically and explicit reload reveals the saved reply",
+      "location": "tests/browser/chat-accessibility.browser.mjs:1413",
+      "observed": "Immediately after Escape, personal-reply-body remained 'Confirmation perdue'; expected ''. The log did not record dialog.open.",
+      "confirmedFixtureGap": "The assertion read the field after the key action without waiting for the native dialog close event. Source preserves the draft on explicit reload and clears it in the close handler.",
+      "diagnosticLimit": "The first log alone does not prove the exact native close-event timing or a product defect. The correction retains a bounded check for complete closure and private-field cleanup, so a genuine failure to close remains detectable.",
+      "fixtureCorrection": "Assert 'Confirmation perdue' is preserved after explicit GET reload; send real Escape; wait until the dialog is closed AND the field is empty; retain the assertion that only one uncertain POST was issued."
+    },
+    {
+      "id": "CHROME-04",
+      "jobId": 124887959001,
+      "test": "real HEIC uses document encoding without worker canvas while legacy callers keep the Blob contract",
+      "location": "tests/browser/image-preparation.browser.mjs:190",
+      "observed": "WebDriver POST /session/:session/execute/async: command failed (HTTP 200).",
+      "confirmedCause": "The last negative legacy variant correctly expected media_heic but returned it as {error: ...}; the WebDriver requester treats that reserved payload key as a protocol error. A local protocol-only probe reproduced the collision.",
+      "fixtureCorrection": "Rename only the returned test payload key error to failureCode. Preserve the expected media_heic outcome and the real HEIC decoder/worker/CSP paths."
+    },
+    {
+      "id": "HTTPS-01",
+      "jobId": 124887958785,
+      "countedAs": "failed subtest",
+      "test": "real HTTPS/SQL profiles: both roles persist names and avatars, foreign reads fail and removed URLs cannot resurrect",
+      "location": "tests/rehearsal/messaging.rehearsal.mjs:270",
+      "helperLocation": "tests/rehearsal/messaging.rehearsal.mjs:115",
+      "observed": "Timed out: the real avatar preparer crops a 256px JPEG before upload.",
+      "confirmedCause": "The existing helper supplied FileList/change directly without the real chooser intent, as in CHROME-02.",
+      "fixtureCorrection": "The shared synthetic JPEG helper accepts an optional real chooser selector, intercepts/restores only native input.click, verifies the chooser accepted the opening, then supplies a real FileList/change. The avatar caller passes .profile-choose-avatar; chat photo callers keep their existing path. Real API, SQL, decoder and owner checks remain active."
+    },
+    {
+      "id": "HTTPS-02",
+      "jobId": 124887958785,
+      "countedAs": "failed parent test",
+      "test": "real Chrome + MariaDB: independent client sessions, live text and JPEG, memory draft and exact notification after new login",
+      "causeReference": "HTTPS-01",
+      "confirmedCause": "The parent is counted failed because its profile subtest failed; this is not a second independent HTTPS failure cause.",
+      "fixtureCorrection": "Same fixture correction as HTTPS-01."
+    }
+  ],
+  "fixtureOnlyCorrectionFiles": [
+    "tests/browser/chat-accessibility.browser.mjs",
+    "tests/rehearsal/messaging.rehearsal.mjs",
+    "tests/browser/image-preparation.browser.mjs"
+  ],
+  "correctionChecks": {
+    "syntax": "Node v24.22.1 --check passed for the changed fixtures; generated avatar scripts compiled without execution.",
+    "diff": "git diff --check passed.",
+    "productCodeChangedToSatisfyInitialFailures": false,
+    "nativeRerunByThisCollector": false,
+    "qualifiedAfterCorrectionByThisRecord": false
+  },
+  "otherObservedResults": {
+    "nodePreparationPython": {
+      "tests": 15,
+      "result": "OK, from verify job log"
+    },
+    "newAvatarChrome": {
+      "parentsPassed": 3,
+      "subtestsPassed": 9,
+      "formats": [
+        "JPEG",
+        "PNG",
+        "WebP",
+        "AVIF",
+        "HEIC"
+      ],
+      "nativeImageFallback": [
+        "missing",
+        "rejecting"
+      ],
+      "picker": [
+        "AVIF",
+        "HEIC"
+      ],
+      "note": "These 12 passing cases are already included in the Chrome footer; do not add them to totals."
+    }
+  },
+  "evidenceHandling": {
+    "syntheticOnly": true,
+    "sourceLogs": "Complete connector-decoded UTF-8 logs, preserved after completed job status; original BOM and final cleanup line retained.",
+    "rawLogWrites": "Temporary file, fsync, atomic rename, directory fsync; reread and SHA256 in a separate tool call before packaging.",
+    "gzip": "gzip level9, empty header filename, mtime0; decompressed bytes must equal the original log.",
+    "productionOrRealAccountUsed": false,
+    "ciTriggeredOrRerun": false,
+    "commitOrPushByCollector": false
+  },
+  "limits": [
+    "The initial run is a failure, not a qualification of the corrected fixtures.",
+    "No physical Safari, iOS or Android validation or original client photo is inferred.",
+    "No production operation or delivery step is repeated by this record."
+  ]
+}

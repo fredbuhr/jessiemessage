@@ -1,0 +1,285 @@
+{
+  "format": "jessiemessage-native-application-qualification",
+  "scope": "main",
+  "source": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+  "tree": "f391b5cebe0a8a8ffd63c818cd481b50970336f1",
+  "run": 41321950561,
+  "runNumber": 790,
+  "attempt": 1,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41321950561",
+  "event": "push",
+  "status": "completed",
+  "conclusion": "success",
+  "successfulJobs": 5,
+  "nodeVersion": "v24.22.1",
+  "runCreatedAt": "2026-11-01T15:34:59Z",
+  "runUpdatedAt": "2026-11-01T15:42:22Z",
+  "jobs": [
+    {
+      "id": 124893859832,
+      "name": "Chrome keyboard and chat lifecycle",
+      "conclusion": "success",
+      "status": "completed",
+      "counts": {
+        "tests": 313,
+        "suites": 0,
+        "pass": 313,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 289920.448431
+      },
+      "nodeVersion": "v24.22.1",
+      "nodeEvidence": "2026-11-01T15:35:04.9724598Z node: v24.22.1",
+      "checkoutCommit": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+      "checkoutEvidence": "2026-11-01T15:35:04.4924568Z c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+      "logSha256": "d04efc8f5b139489e37d910780fe0ebd77cd5eb55ff4d2f23274540df32abbee",
+      "logBytes": 60988,
+      "footerSha256": "85c4f6b2f8669acd7682f0c1a82541b50905f938b3ca294a29ffc4aca3f8abd0",
+      "footerComplete": true,
+      "footer": [
+        "2026-11-01T15:39:56.0957927Z ℹ tests 313",
+        "2026-11-01T15:39:56.0958104Z ℹ suites 0",
+        "2026-11-01T15:39:56.0958280Z ℹ pass 313",
+        "2026-11-01T15:39:56.0958449Z ℹ fail 0",
+        "2026-11-01T15:39:56.0958625Z ℹ cancelled 0",
+        "2026-11-01T15:39:56.0958811Z ℹ skipped 0",
+        "2026-11-01T15:39:56.0958983Z ℹ todo 0",
+        "2026-11-01T15:39:56.0959185Z ℹ duration_ms 289920.448431"
+      ],
+      "lastLogLine": "2026-11-01T15:39:59.3690462Z Cleaning up orphan processes",
+      "durableLog": {
+        "job": 124893859832,
+        "path": "logs/main-124893859832.log.gz",
+        "bytes": 60988,
+        "sha256": "d04efc8f5b139489e37d910780fe0ebd77cd5eb55ff4d2f23274540df32abbee",
+        "gzipBytes": 16431,
+        "gzipSha256": "97f4292776e6cecd6147a70f17a08c9bf0eea95c83e15a221a298b3ba14a9976",
+        "gzipMtime": 0
+      }
+    },
+    {
+      "id": 124893860035,
+      "name": "verify",
+      "conclusion": "success",
+      "status": "completed",
+      "counts": {
+        "tests": 4333,
+        "suites": 0,
+        "pass": 4281,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 52,
+        "todo": 0,
+        "duration_ms": 121983.32727
+      },
+      "nodeVersion": "v24.22.1",
+      "nodeEvidence": "2026-11-01T15:35:05.7647026Z node: v24.22.1",
+      "checkoutCommit": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+      "checkoutEvidence": "2026-11-01T15:35:05.0078549Z c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+      "logSha256": "dac2c2b8da3bbf7a32f9931b27fb4f44d79f1e5487587bbdcb14523604e1189c",
+      "logBytes": 612586,
+      "footerSha256": "a65594917a8eb03769028d0f30dffdd1fb69ccf9168d7f3aeb8ef9fab537d7d6",
+      "footerComplete": true,
+      "footer": [
+        "2026-11-01T15:37:10.1588483Z ℹ tests 4333",
+        "2026-11-01T15:37:10.1588703Z ℹ suites 0",
+        "2026-11-01T15:37:10.1589210Z ℹ pass 4281",
+        "2026-11-01T15:37:10.1589446Z ℹ fail 0",
+        "2026-11-01T15:37:10.1589653Z ℹ cancelled 0",
+        "2026-11-01T15:37:10.1589868Z ℹ skipped 52",
+        "2026-11-01T15:37:10.1590069Z ℹ todo 0",
+        "2026-11-01T15:37:10.1590318Z ℹ duration_ms 121983.32727"
+      ],
+      "lastLogLine": "2026-11-01T15:37:31.9463193Z Cleaning up orphan processes",
+      "durableLog": {
+        "job": 124893860035,
+        "path": "logs/main-124893860035.log.gz",
+        "bytes": 612586,
+        "sha256": "dac2c2b8da3bbf7a32f9931b27fb4f44d79f1e5487587bbdcb14523604e1189c",
+        "gzipBytes": 179616,
+        "gzipSha256": "89ba19fcbd5fc2713ee343f3d323eb8640f4ddcfb2670ab1edd5287756aacd3c",
+        "gzipMtime": 0
+      }
+    },
+    {
+      "id": 124893860097,
+      "name": "MariaDB 11.4",
+      "conclusion": "success",
+      "status": "completed",
+      "counts": {
+        "tests": 615,
+        "suites": 0,
+        "pass": 615,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 411817.624491
+      },
+      "nodeVersion": "v24.22.1",
+      "nodeEvidence": "2026-11-01T15:35:16.4113476Z node: v24.22.1",
+      "checkoutCommit": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+      "checkoutEvidence": "2026-11-01T15:35:15.6660847Z c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+      "logSha256": "079e4335690ff72687d5abc0baf414c2fd0cdc7d97342075ce05c55bdb856288",
+      "logBytes": 363039,
+      "footerSha256": "5a4a76a4d3560578aed577ae4c310803f06050cd5b4aa4bfc0e596381cd48d87",
+      "footerComplete": true,
+      "footer": [
+        "2026-11-01T15:42:20.0455628Z # tests 615",
+        "2026-11-01T15:42:20.0455992Z # suites 0",
+        "2026-11-01T15:42:20.0456823Z # pass 615",
+        "2026-11-01T15:42:20.0457237Z # fail 0",
+        "2026-11-01T15:42:20.0463631Z # cancelled 0",
+        "2026-11-01T15:42:20.0473539Z # skipped 0",
+        "2026-11-01T15:42:20.0473891Z # todo 0",
+        "2026-11-01T15:42:20.0474265Z # duration_ms 411817.624491"
+      ],
+      "lastLogLine": "2026-11-01T15:42:20.7784760Z Cleaning up orphan processes",
+      "durableLog": {
+        "job": 124893860097,
+        "path": "logs/main-124893860097.log.gz",
+        "bytes": 363039,
+        "sha256": "079e4335690ff72687d5abc0baf414c2fd0cdc7d97342075ce05c55bdb856288",
+        "gzipBytes": 68111,
+        "gzipSha256": "ef0b4aa3aa263a939157deeb23cf5845fc09dfd793fedd70526130c77266b24b",
+        "gzipMtime": 0
+      }
+    },
+    {
+      "id": 124893860109,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "conclusion": "success",
+      "status": "completed",
+      "counts": {
+        "tests": 14,
+        "suites": 0,
+        "pass": 14,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 85195.877643
+      },
+      "nodeVersion": "v24.22.1",
+      "nodeEvidence": "2026-11-01T15:35:18.8666432Z node: v24.22.1",
+      "checkoutCommit": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+      "checkoutEvidence": "2026-11-01T15:35:18.2883254Z c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+      "logSha256": "9f14aabc66e8924f8d38a392b614d60269d60589de8bf9f24d1733be2c4e99a8",
+      "logBytes": 41372,
+      "footerSha256": "6526097add9240f7e81a3251767839be296684f81c095b7be824e41d37a93ad5",
+      "footerComplete": true,
+      "footer": [
+        "2026-11-01T15:36:45.5862172Z ℹ tests 14",
+        "2026-11-01T15:36:45.5862608Z ℹ suites 0",
+        "2026-11-01T15:36:45.5862849Z ℹ pass 14",
+        "2026-11-01T15:36:45.5863066Z ℹ fail 0",
+        "2026-11-01T15:36:45.5863291Z ℹ cancelled 0",
+        "2026-11-01T15:36:45.5863541Z ℹ skipped 0",
+        "2026-11-01T15:36:45.5863807Z ℹ todo 0",
+        "2026-11-01T15:36:45.5864135Z ℹ duration_ms 85195.877643"
+      ],
+      "lastLogLine": "2026-11-01T15:36:48.0817400Z Cleaning up orphan processes",
+      "durableLog": {
+        "job": 124893860109,
+        "path": "logs/main-124893860109.log.gz",
+        "bytes": 41372,
+        "sha256": "9f14aabc66e8924f8d38a392b614d60269d60589de8bf9f24d1733be2c4e99a8",
+        "gzipBytes": 10289,
+        "gzipSha256": "baaee1e7426931e2f276a1813a0a01b37fbc6a0afd768fa1807f25f515152ca3",
+        "gzipMtime": 0
+      }
+    },
+    {
+      "id": 124893860223,
+      "name": "MariaDB 10.11",
+      "conclusion": "success",
+      "status": "completed",
+      "counts": {
+        "tests": 615,
+        "suites": 0,
+        "pass": 615,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 343872.724904
+      },
+      "nodeVersion": "v24.22.1",
+      "nodeEvidence": "2026-11-01T15:35:18.2397212Z node: v24.22.1",
+      "checkoutCommit": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+      "checkoutEvidence": "2026-11-01T15:35:17.6336791Z c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+      "logSha256": "e399f2fe72203fad4a8c73a29ac83e21e48f9c6a3052d37d4998bccbd780b655",
+      "logBytes": 362406,
+      "footerSha256": "5819aa8065a8267b69b3b7fe513097717504f9b559724d8a50afb6d2c36701bc",
+      "footerComplete": true,
+      "footer": [
+        "2026-11-01T15:41:13.8879713Z # tests 615",
+        "2026-11-01T15:41:13.8879989Z # suites 0",
+        "2026-11-01T15:41:13.8880277Z # pass 615",
+        "2026-11-01T15:41:13.8880521Z # fail 0",
+        "2026-11-01T15:41:13.8880776Z # cancelled 0",
+        "2026-11-01T15:41:13.8881073Z # skipped 0",
+        "2026-11-01T15:41:13.8881321Z # todo 0",
+        "2026-11-01T15:41:13.8881615Z # duration_ms 343872.724904"
+      ],
+      "lastLogLine": "2026-11-01T15:41:14.5127840Z Cleaning up orphan processes",
+      "durableLog": {
+        "job": 124893860223,
+        "path": "logs/main-124893860223.log.gz",
+        "bytes": 362406,
+        "sha256": "e399f2fe72203fad4a8c73a29ac83e21e48f9c6a3052d37d4998bccbd780b655",
+        "gzipBytes": 67737,
+        "gzipSha256": "35cfc78a709451b56a50ccbffee09dc26ba518de54fc88df4b01d09c9a154bfe",
+        "gzipMtime": 0
+      }
+    }
+  ],
+  "checkout": {
+    "sha": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+    "tree": "f391b5cebe0a8a8ffd63c818cd481b50970336f1",
+    "parents": [
+      "5dbd5dc7fb4456c2975096fd4472d8830292eb17",
+      "d4795b47b1a7cf27e997d27550f854c70831eb08"
+    ],
+    "evidence": "GitHub REST GET /repos/fredbuhr/jessiemessage/git/commits/c803c2c9be16c0c4ee218d8cac4a1272620d2772 returned this exact tree and parents; all five native logs independently print this full SHA after git log -1 --format=%H.",
+    "api": "https://api.github.com/repos/fredbuhr/jessiemessage/git/commits/c803c2c9be16c0c4ee218d8cac4a1272620d2772"
+  },
+  "runIdentityEvidence": "GitHub REST workflow-run GET supplied main head SHA, push event, attempt1 and completed/success; workflow-run jobs GET supplied the five completed/success job IDs.",
+  "qualifiedPR": {
+    "pr": 146,
+    "source": "d4795b47b1a7cf27e997d27550f854c70831eb08",
+    "tree": "f391b5cebe0a8a8ffd63c818cd481b50970336f1",
+    "run": 41321277444,
+    "record": "pr-native.json",
+    "sameApplicationTree": true,
+    "nativeMainNotInferredFromPR": true
+  },
+  "omissionsAreNotSuccesses": true,
+  "groupsNotSummed": true,
+  "originalLogEncoding": "Exact UTF-8 connector-decoded text including original BOM and line endings; stored atomically and reread by SHA-256 in a separate tool call before packaging.",
+  "gzip": {
+    "compressionLevel": 9,
+    "headerFilename": "",
+    "mtime": 0,
+    "decompressedBytesEqualSource": true
+  },
+  "collection": {
+    "readOnlyGitHub": true,
+    "onlyCompletedJobLogsFetched": true,
+    "statusPollingIntervalMinimumSeconds": 60,
+    "rerun": false,
+    "atomicRawLogs": "Temporary file, fsync, rename, directory fsync, then distinct reread and SHA-256.",
+    "countsSource": "All counts extracted from these five main logs, without extrapolation from PR.",
+    "collectedAtUtc": "2026-11-01T15:45:05.362974+00:00"
+  },
+  "initialFailures": {
+    "run": 41320000883,
+    "record": "pr-initial-failure.json",
+    "preserved": true
+  },
+  "visualArtifacts": "Root owns capture collection and inspection. Existing PR captures have the same application tree; this record makes no new capture or visual-inspection attestation.",
+  "productionTouched": false,
+  "physicalDevicesOrSafariAttested": false
+}

@@ -1,0 +1,279 @@
+{
+  "format": "jessiemessage-native-application-qualification",
+  "scope": "pr",
+  "pr": 146,
+  "source": "d4795b47b1a7cf27e997d27550f854c70831eb08",
+  "tree": "f391b5cebe0a8a8ffd63c818cd481b50970336f1",
+  "run": 41321277444,
+  "runNumber": 789,
+  "attempt": 1,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41321277444",
+  "event": "pull_request",
+  "status": "completed",
+  "conclusion": "success",
+  "successfulJobs": 5,
+  "nodeVersion": "v24.22.1",
+  "runCreatedAt": "2026-11-01T15:27:00Z",
+  "runUpdatedAt": "2026-11-01T15:34:20Z",
+  "jobs": [
+    {
+      "id": 124891843117,
+      "name": "MariaDB 11.4",
+      "conclusion": "success",
+      "status": "completed",
+      "counts": {
+        "tests": 615,
+        "suites": 0,
+        "pass": 615,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 266689.793469
+      },
+      "nodeVersion": "v24.22.1",
+      "nodeEvidence": "2026-11-01T15:27:24.9346300Z node: v24.22.1",
+      "checkoutMerge": "db37253f16ebc8ca738ab0df0a9c06df55204e1a",
+      "checkoutEvidence": "2026-11-01T15:27:22.0501264Z HEAD is now at db37253 Merge d4795b47b1a7cf27e997d27550f854c70831eb08 into 5dbd5dc7fb4456c2975096fd4472d8830292eb17",
+      "logSha256": "792eaeeb1ce4121e519a08a99688a5e4fc23a41b46cb9e0e459b6bc2f62fc13d",
+      "logBytes": 363300,
+      "footerSha256": "5cb406776642df0275e0a560f9183bd485ff76129f36b0c6ebff0a0785020ccd",
+      "footerComplete": true,
+      "footer": [
+        "2026-11-01T15:32:10.7393671Z # tests 615",
+        "2026-11-01T15:32:10.7393850Z # suites 0",
+        "2026-11-01T15:32:10.7393977Z # pass 615",
+        "2026-11-01T15:32:10.7394085Z # fail 0",
+        "2026-11-01T15:32:10.7394193Z # cancelled 0",
+        "2026-11-01T15:32:10.7394929Z # skipped 0",
+        "2026-11-01T15:32:10.7395040Z # todo 0",
+        "2026-11-01T15:32:10.7395171Z # duration_ms 266689.793469"
+      ],
+      "lastLogLine": "2026-11-01T15:32:11.3428795Z Cleaning up orphan processes",
+      "durableLog": {
+        "job": 124891843117,
+        "path": "logs/pr-124891843117.log.gz",
+        "bytes": 363300,
+        "sha256": "792eaeeb1ce4121e519a08a99688a5e4fc23a41b46cb9e0e459b6bc2f62fc13d",
+        "gzipBytes": 67530,
+        "gzipSha256": "3fc665b3bdaa01be20bff89580da2c9448d11c765d08697cd5ebf44194df80d9",
+        "gzipMtime": 0
+      }
+    },
+    {
+      "id": 124891843241,
+      "name": "MariaDB 10.11",
+      "conclusion": "success",
+      "status": "completed",
+      "counts": {
+        "tests": 615,
+        "suites": 0,
+        "pass": 615,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 409122.996748
+      },
+      "nodeVersion": "v24.22.1",
+      "nodeEvidence": "2026-11-01T15:27:17.2639047Z node: v24.22.1",
+      "checkoutMerge": "db37253f16ebc8ca738ab0df0a9c06df55204e1a",
+      "checkoutEvidence": "2026-11-01T15:27:16.5238051Z HEAD is now at db37253 Merge d4795b47b1a7cf27e997d27550f854c70831eb08 into 5dbd5dc7fb4456c2975096fd4472d8830292eb17",
+      "logSha256": "dd138ff2c3538c46fc3d2da86b9370c170f3850d8d1b9079722ec96f60400f96",
+      "logBytes": 363401,
+      "footerSha256": "cae02a4566f6e4e9908236399ee7ef30a62bb9811dee6b3582e839d7be767c13",
+      "footerComplete": true,
+      "footer": [
+        "2026-11-01T15:34:17.9469418Z # tests 615",
+        "2026-11-01T15:34:17.9469777Z # suites 0",
+        "2026-11-01T15:34:17.9470121Z # pass 615",
+        "2026-11-01T15:34:17.9470463Z # fail 0",
+        "2026-11-01T15:34:17.9470808Z # cancelled 0",
+        "2026-11-01T15:34:17.9471173Z # skipped 0",
+        "2026-11-01T15:34:17.9471524Z # todo 0",
+        "2026-11-01T15:34:17.9472162Z # duration_ms 409122.996748"
+      ],
+      "lastLogLine": "2026-11-01T15:34:18.6662945Z Cleaning up orphan processes",
+      "durableLog": {
+        "job": 124891843241,
+        "path": "logs/pr-124891843241.log.gz",
+        "bytes": 363401,
+        "sha256": "dd138ff2c3538c46fc3d2da86b9370c170f3850d8d1b9079722ec96f60400f96",
+        "gzipBytes": 68522,
+        "gzipSha256": "25afc217f207816300d9025d9df05a0031f39dc35a2b94dfe18d4e2cd25ba5b2",
+        "gzipMtime": 0
+      }
+    },
+    {
+      "id": 124891843244,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "conclusion": "success",
+      "status": "completed",
+      "counts": {
+        "tests": 14,
+        "suites": 0,
+        "pass": 14,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 88881.357118
+      },
+      "nodeVersion": "v24.22.1",
+      "nodeEvidence": "2026-11-01T15:27:20.0837106Z node: v24.22.1",
+      "checkoutMerge": "db37253f16ebc8ca738ab0df0a9c06df55204e1a",
+      "checkoutEvidence": "2026-11-01T15:27:19.4989171Z HEAD is now at db37253 Merge d4795b47b1a7cf27e997d27550f854c70831eb08 into 5dbd5dc7fb4456c2975096fd4472d8830292eb17",
+      "logSha256": "0cd93ec8e373f65c163bbe1e58327a3343bb67c3fae12bcdd63f26627556d4a1",
+      "logBytes": 42405,
+      "footerSha256": "39248093a54a0b42ef0fb19f803782714c6d0817ef1338d7bc368b9512ee75d4",
+      "footerComplete": true,
+      "footer": [
+        "2026-11-01T15:28:50.5188834Z ℹ tests 14",
+        "2026-11-01T15:28:50.5191252Z ℹ suites 0",
+        "2026-11-01T15:28:50.5191689Z ℹ pass 14",
+        "2026-11-01T15:28:50.5192016Z ℹ fail 0",
+        "2026-11-01T15:28:50.5192571Z ℹ cancelled 0",
+        "2026-11-01T15:28:50.5192860Z ℹ skipped 0",
+        "2026-11-01T15:28:50.5193093Z ℹ todo 0",
+        "2026-11-01T15:28:50.5193446Z ℹ duration_ms 88881.357118"
+      ],
+      "lastLogLine": "2026-11-01T15:28:52.7696673Z Cleaning up orphan processes",
+      "durableLog": {
+        "job": 124891843244,
+        "path": "logs/pr-124891843244.log.gz",
+        "bytes": 42405,
+        "sha256": "0cd93ec8e373f65c163bbe1e58327a3343bb67c3fae12bcdd63f26627556d4a1",
+        "gzipBytes": 10641,
+        "gzipSha256": "7c612421af2b58eac611b87f4491432a8ec8bfe56d6e281d75b159314476b407",
+        "gzipMtime": 0
+      }
+    },
+    {
+      "id": 124891843271,
+      "name": "Chrome keyboard and chat lifecycle",
+      "conclusion": "success",
+      "status": "completed",
+      "counts": {
+        "tests": 313,
+        "suites": 0,
+        "pass": 313,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 287137.730839
+      },
+      "nodeVersion": "v24.22.1",
+      "nodeEvidence": "2026-11-01T15:27:07.0855707Z node: v24.22.1",
+      "checkoutMerge": "db37253f16ebc8ca738ab0df0a9c06df55204e1a",
+      "checkoutEvidence": "2026-11-01T15:27:06.5229264Z HEAD is now at db37253 Merge d4795b47b1a7cf27e997d27550f854c70831eb08 into 5dbd5dc7fb4456c2975096fd4472d8830292eb17",
+      "logSha256": "3c5f6d76de386841263abd1c08b42dda7a4a9f99f14ca4e43b5da65fdcfe3c7e",
+      "logBytes": 61759,
+      "footerSha256": "3a6326c0c86b0e14202a395f1d5c171c1c51db836a004bc76d96d5a4d6a35fb5",
+      "footerComplete": true,
+      "footer": [
+        "2026-11-01T15:31:55.4975246Z ℹ tests 313",
+        "2026-11-01T15:31:55.4975435Z ℹ suites 0",
+        "2026-11-01T15:31:55.4975624Z ℹ pass 313",
+        "2026-11-01T15:31:55.4975807Z ℹ fail 0",
+        "2026-11-01T15:31:55.4975991Z ℹ cancelled 0",
+        "2026-11-01T15:31:55.4976181Z ℹ skipped 0",
+        "2026-11-01T15:31:55.4976364Z ℹ todo 0",
+        "2026-11-01T15:31:55.4976579Z ℹ duration_ms 287137.730839"
+      ],
+      "lastLogLine": "2026-11-01T15:31:59.4031993Z Cleaning up orphan processes",
+      "durableLog": {
+        "job": 124891843271,
+        "path": "logs/pr-124891843271.log.gz",
+        "bytes": 61759,
+        "sha256": "3c5f6d76de386841263abd1c08b42dda7a4a9f99f14ca4e43b5da65fdcfe3c7e",
+        "gzipBytes": 16812,
+        "gzipSha256": "873b40b97b5b7f40defd2d1644634534dd6651d55b73551443801aa3e2c186a6",
+        "gzipMtime": 0
+      }
+    },
+    {
+      "id": 124891843365,
+      "name": "verify",
+      "conclusion": "success",
+      "status": "completed",
+      "counts": {
+        "tests": 4333,
+        "suites": 0,
+        "pass": 4281,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 52,
+        "todo": 0,
+        "duration_ms": 94385.037969
+      },
+      "nodeVersion": "v24.22.1",
+      "nodeEvidence": "2026-11-01T15:27:06.4013800Z node: v24.22.1",
+      "checkoutMerge": "db37253f16ebc8ca738ab0df0a9c06df55204e1a",
+      "checkoutEvidence": "2026-11-01T15:27:05.8411521Z HEAD is now at db37253 Merge d4795b47b1a7cf27e997d27550f854c70831eb08 into 5dbd5dc7fb4456c2975096fd4472d8830292eb17",
+      "logSha256": "b2e6f75d01cb024d41f1f760f6d5496ed16095d399122cfddd197e60f92a11b3",
+      "logBytes": 612932,
+      "footerSha256": "fc439115fbdd2ff7322aa515a43f7fb793949bf47e6af8319b3100b2afd4f4f1",
+      "footerComplete": true,
+      "footer": [
+        "2026-11-01T15:28:42.5296061Z ℹ tests 4333",
+        "2026-11-01T15:28:42.5296270Z ℹ suites 0",
+        "2026-11-01T15:28:42.5296471Z ℹ pass 4281",
+        "2026-11-01T15:28:42.5296668Z ℹ fail 0",
+        "2026-11-01T15:28:42.5296869Z ℹ cancelled 0",
+        "2026-11-01T15:28:42.5297076Z ℹ skipped 52",
+        "2026-11-01T15:28:42.5297274Z ℹ todo 0",
+        "2026-11-01T15:28:42.5297496Z ℹ duration_ms 94385.037969"
+      ],
+      "lastLogLine": "2026-11-01T15:28:58.7817151Z Cleaning up orphan processes",
+      "durableLog": {
+        "job": 124891843365,
+        "path": "logs/pr-124891843365.log.gz",
+        "bytes": 612932,
+        "sha256": "b2e6f75d01cb024d41f1f760f6d5496ed16095d399122cfddd197e60f92a11b3",
+        "gzipBytes": 178461,
+        "gzipSha256": "99888c38837ed3327f5241a1d4090a00e99f8941de49619233918d9e5ebf085c",
+        "gzipMtime": 0
+      }
+    }
+  ],
+  "checkout": {
+    "sha": "db37253f16ebc8ca738ab0df0a9c06df55204e1a",
+    "tree": "f391b5cebe0a8a8ffd63c818cd481b50970336f1",
+    "parents": [
+      "5dbd5dc7fb4456c2975096fd4472d8830292eb17",
+      "d4795b47b1a7cf27e997d27550f854c70831eb08"
+    ],
+    "treeEqualsCandidate": true,
+    "evidence": "GitHub REST GET /repos/fredbuhr/jessiemessage/git/commits/db37253f16ebc8ca738ab0df0a9c06df55204e1a returned this exact tree and parents; all five native logs print this checkout SHA.",
+    "api": "https://api.github.com/repos/fredbuhr/jessiemessage/git/commits/db37253f16ebc8ca738ab0df0a9c06df55204e1a"
+  },
+  "runIdentityEvidence": "GitHub REST workflow-run GET supplied head SHA, pull_request event, attempt1 and completed/success; workflow-run jobs GET supplied the five completed/success job IDs.",
+  "omissionsAreNotSuccesses": true,
+  "groupsNotSummed": true,
+  "originalLogEncoding": "Exact UTF-8 connector-decoded text including BOM and line endings; stored atomically and reread by SHA-256 in a separate tool call before packaging.",
+  "gzip": {
+    "compressionLevel": 9,
+    "headerFilename": "",
+    "mtime": 0,
+    "decompressedBytesEqualSource": true
+  },
+  "collection": {
+    "readOnlyGitHub": true,
+    "onlyCompletedJobLogsFetched": true,
+    "statusPollingIntervalMinimumSeconds": 60,
+    "rerun": false,
+    "atomicRawLogs": "Temporary file, fsync, rename, directory fsync, then distinct reread and SHA-256.",
+    "collectedAtUtc": "2026-11-01T15:35:52.186540+00:00"
+  },
+  "initialRun": {
+    "run": 41320000883,
+    "source": "03771f25d4a9670b46832e9e1812b9220559cb9e",
+    "record": "pr-initial-failure.json",
+    "preserved": true,
+    "note": "Initial failures and their original logs remain separate; corrected fixtures were qualified by this new source/run rather than a replay of successful jobs."
+  },
+  "visualArtifacts": "Screenshot collection and visual inspection are recorded separately by root; this file attests native jobs and logs only.",
+  "productionTouched": false,
+  "physicalDevicesOrSafariAttested": false
+}

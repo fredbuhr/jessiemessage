@@ -1,0 +1,25 @@
+{
+  "format": "jessiemessage-1141-publication-initial-failure",
+  "operator": "0ebfd333c6bc7d2666076e97aad4febea2b07a93",
+  "tree": "9dc52551659c72154bfc0e25f0638a86423e2e8b",
+  "run": 41322644861,
+  "attempt": 1,
+  "operatorTestsJob": 124895941419,
+  "tests": 17,
+  "passed": 16,
+  "failed": 1,
+  "omitted": 0,
+  "publishJob": 124895988231,
+  "publishConclusion": "skipped",
+  "deploymentPerformed": false,
+  "publicationHelperExecuted": false,
+  "cause": "A fixture assumed real qualification pins were still pending after the final source/tree/CI pins had been supplied; no process/API expectation was reached with valid pins.",
+  "fixScope": "Inject missing pins explicitly in the isolated fixture; do not relax helper gates or change app code.",
+  "log": {
+    "path": "logs/publication-first-operator-tests.log.gz",
+    "bytes": 52007,
+    "sha256": "db945240be2d352d4c95803fc93376f1e7024fc5dd8308a56af7d823bda15972",
+    "gzipSha256": "34e6996e826a3e4aa0cd24031781870331ab97903992877f76315a66462b3dbf",
+    "gzipMtime": 0
+  }
+}

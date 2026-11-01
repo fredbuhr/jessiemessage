@@ -2,14 +2,14 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Correctif 1.14.1 — fiabilité de la chaîne médias
+## Correctif 1.14.1 — code qualifié et publié, activation à venir
 
-[Objectif et couverture](media-reliability-1141.md). Une correction compatible regroupée, sans nouvelle dépendance, migration ni modification des données réelles. La livraison14 reste close et active.
+[Bilan et couverture12domaines](media-reliability-1141.md). PR146/main5/5 et cinq captures acquises ; source/tagc803c2c9/arbre f391b5ce, publication/latestv1.14.1 acquise, release430681218. Préparateur nouveaufac6890f qualifié39/39. Aucune dépendance, migration ou changement Node ; la14 reste active. Échecs initiaux et52omissions explicites préservés.
 
-Les corrections reproduites, scénarios et contre-revues du lot sont terminés localement ; droits, quotas et limites conservés.
+1. Exécuter une seule fois le [nouveau bloc préparation1141 + CHECK](verification-proofs/jm1141/preparation-command.sh), puis vérifier le reçu avant toute action dépendante. Aucun reçu hébergé1141 encore acquis.
+2. Après ce résultat : activation personnelle dans Manager avec nouveaux lanceurs, puis relevé réel version/commit/Node/démarrage. Qualifier le writer1141 lié à ces preuves avant métadonnées seules et reçu final. Aucune ancienne commande, nouveau redémarrage exploratoire ou test réel non demandé à rejouer.
 
-1. Qualification native PR puis SHA main : formats/décodage, HTTP/SQL, stockage/dirfd, lifecycle et captures FR/EN. Les omissions locales procfs restent non attestées jusqu’à la CI native.
-2. Publier le correctif exact et préparer un nouvel opérateur limité au baseline14 réel ; aucune activation déduite de la publication. Ne pas rejouer les outils14 clos.
+[REPRISE](REPRISE.md) et [guide opérateur](operations-release1141.md) portent les pins exacts. Photo cliente originale, appareils physiques/Safari et sauvegarde reportée ne deviennent pas des réussites ni de nouveaux chantiers automatiques.
 
 ## Évolution 1.14.0 — livraison terminée
 

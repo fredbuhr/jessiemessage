@@ -1,0 +1,40 @@
+{
+  "run": 41321277444,
+  "artifact": 13089048204,
+  "artifactSha256": "c4aabf6e2a5170719dfbc095925f416a18e7546b1e4d2dbbd43c7dbf90225736",
+  "source": "d4795b47b1a7cf27e997d27550f854c70831eb08",
+  "tree": "f391b5cebe0a8a8ffd63c818cd481b50970336f1",
+  "inspected": true,
+  "captures": [
+    {
+      "path": "screenshots/broadcast-photos-1140-en-390.png",
+      "bytes": 37656,
+      "sha256": "dcdf78e9b2de92613e40c9167cced739d8ecc22ee0cf5938a0253a80fa95f115"
+    },
+    {
+      "path": "screenshots/broadcast-photos-1140-fr-1280.png",
+      "bytes": 101245,
+      "sha256": "da2bb96721896324b4193fe7956f9d857034475e45f180d787a694edf11e0274"
+    },
+    {
+      "path": "screenshots/broadcast-photos-1140-fr-320.png",
+      "bytes": 34888,
+      "sha256": "d1ecd39dd53b5a3f78e3ba5bf6730a21b58eafa28f2e829ccb80ab50b1a3fbdc"
+    },
+    {
+      "path": "screenshots/media-library-1140-en-1280.png",
+      "bytes": 65307,
+      "sha256": "fa19e549ea811f7dd3bdaaca54ad096e59f0436ed125c51aa94de298e32a6167"
+    },
+    {
+      "path": "screenshots/media-library-1140-fr-320.png",
+      "bytes": 41226,
+      "sha256": "0c5b2cc071452fc6f082a3264edff497a92a8ceb96596fd8175cc48c123bb77b"
+    }
+  ],
+  "review": "Five synthetic Chrome captures inspected by root: photo picker FR320/EN390/FR1280 and library FR320/EN1280. Thumbnails, bounded scrolling and pagination remain readable, no horizontal overflow observed. Original filenames1140 are retained; these bytes come from this1141 run. Cleanup lifecycle is covered by native assertions, not inferred from these screenshots.",
+  "physicalDevicesAttested": false,
+  "privateData": "synthetic fixtures only",
+  "sameTreeQualifiedOnMain": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+  "mainRun": 41321950561
+}

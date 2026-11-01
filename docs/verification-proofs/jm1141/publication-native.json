@@ -1,0 +1,165 @@
+{
+  "format": "jessiemessage-1141-publication-native-observation",
+  "authority": "GitHub API completed run, two complete job logs, exact operator readback and independent tag/release/latest reads",
+  "operator": {
+    "source": "1af81e39b0b995aae650f0dcc1c98995e3943767",
+    "tree": "d8d5e292ef221513ee125676a256886665eb793f",
+    "workflow": ".github/workflows/publish-qualified1141.yml"
+  },
+  "run": {
+    "id": 41322823806,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "1af81e39b0b995aae650f0dcc1c98995e3943767",
+    "headBranch": "ops/publish-v1.14.1",
+    "event": "push",
+    "createdAt": "2026-11-01T15:45:27Z",
+    "updatedAt": "2026-11-01T15:45:52Z",
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41322823806"
+  },
+  "jobs": {
+    "total": 2,
+    "successful": 2,
+    "omitted": 0,
+    "items": [
+      {
+        "id": 124896471932,
+        "name": "operator-tests",
+        "status": "completed",
+        "conclusion": "success",
+        "nodeVersion": "v24.22.1",
+        "checkoutCommit": "1af81e39b0b995aae650f0dcc1c98995e3943767",
+        "checkoutEvidence": "2026-11-01T15:45:32.2533283Z 1af81e39b0b995aae650f0dcc1c98995e3943767",
+        "lastLogLine": "2026-11-01T15:45:35.7895422Z Cleaning up orphan processes",
+        "log": {
+          "file": "logs/publication-operator-tests.log.gz",
+          "complete": true,
+          "source": "full decoded GitHub job log encoded as UTF-8",
+          "bytes": 50098,
+          "sha256": "f0a711351109dee98eaf493aff7c4b7647a8c5971b349eea7f66c7d6df697a50",
+          "gzipBytes": 9731,
+          "gzipSha256": "f5ff0a420d307b06e8904d950dea9603cfe8e1a2a0fb833cb7621352cabda331",
+          "gzipMtime": 0
+        }
+      },
+      {
+        "id": 124896514514,
+        "name": "publish",
+        "status": "completed",
+        "conclusion": "success",
+        "nodeVersion": "v24.22.1",
+        "checkoutCommit": "1af81e39b0b995aae650f0dcc1c98995e3943767",
+        "checkoutEvidence": "2026-11-01T15:45:42.3760211Z 1af81e39b0b995aae650f0dcc1c98995e3943767",
+        "lastLogLine": "2026-11-01T15:45:50.6616305Z Cleaning up orphan processes",
+        "log": {
+          "file": "logs/publication-publish.log.gz",
+          "complete": true,
+          "source": "full decoded GitHub job log encoded as UTF-8",
+          "bytes": 17812,
+          "sha256": "651b72f97101d74160caab0ce614c1aa40bc499c57c87b30cfdaae57e2ed5332",
+          "gzipBytes": 4256,
+          "gzipSha256": "59c0a2239af78ad1a12f11eb3040d8b8e1ead70d0b7d95c814d9307b8310e9ab",
+          "gzipMtime": 0
+        }
+      }
+    ]
+  },
+  "synthetic": {
+    "methods": 17,
+    "passedLines": 17,
+    "omittedLines": 0,
+    "failed": 0,
+    "durationSeconds": 0.072,
+    "footer": "Ran 17 tests in 0.072s",
+    "nodeVersion": "v24.22.1"
+  },
+  "script": {
+    "path": "ops/publish-qualified1141.py",
+    "bytes": 14678,
+    "sha256": "ab09f3cc63b283812420c120d67c510279b3b11af1291b1dc69245ed80ede48d",
+    "blobSha": "18f7d016c7de8f2c59774dd202cf1987ac7e1545",
+    "url": "https://github.com/fredbuhr/jessiemessage/blob/1af81e39b0b995aae650f0dcc1c98995e3943767/ops/publish-qualified1141.py",
+    "readbackIdentical": true
+  },
+  "test": {
+    "path": "ops/test-publish-qualified1141.py",
+    "bytes": 23168,
+    "sha256": "e11d26c35184534b5b2d929f8f30741226e76debbe0d843987cafa43d808a325",
+    "blobSha": "fa3d074e4d319d481c1ebb969aa27d1a4d8f781a",
+    "url": "https://github.com/fredbuhr/jessiemessage/blob/1af81e39b0b995aae650f0dcc1c98995e3943767/ops/test-publish-qualified1141.py",
+    "readbackIdentical": true
+  },
+  "workflow": {
+    "path": ".github/workflows/publish-qualified1141.yml",
+    "bytes": 1907,
+    "sha256": "8dc06a944198d078683409e3fdf2352f2c156c8e29dd3238fe193092514b52f9",
+    "blobSha": "eb8d8af346b8d6d13c11a83520154c94dabed09d",
+    "url": "https://github.com/fredbuhr/jessiemessage/blob/1af81e39b0b995aae650f0dcc1c98995e3943767/.github/workflows/publish-qualified1141.yml",
+    "readbackIdentical": true
+  },
+  "receipt": {
+    "status": "published_verified",
+    "nodeVersion": "24.22.1",
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "normalMigrations": 33,
+    "videoMigrations": 3,
+    "experienceMigrations": 2,
+    "releases": [
+      {
+        "tag": "v1.14.1",
+        "source": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+        "tree": "f391b5cebe0a8a8ffd63c818cd481b50970336f1",
+        "ciRun": "41321950561",
+        "ciAttempt": 1,
+        "releaseId": 430681218
+      }
+    ],
+    "latest": {
+      "tag": "v1.14.1",
+      "source": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+      "id": 430681218
+    },
+    "publicationMode": "created",
+    "created": [
+      "v1.14.1"
+    ],
+    "deploymentPerformed": false
+  },
+  "independentReadback": {
+    "tagRef": "refs/tags/v1.14.1",
+    "tagObjectType": "commit",
+    "tagSource": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+    "releaseId": 430681218,
+    "latestId": 430681218,
+    "tag": "v1.14.1",
+    "source": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+    "draft": false,
+    "prerelease": false,
+    "publishedAt": "2026-11-01T15:45:49Z",
+    "releaseUrl": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.14.1",
+    "releaseMatchesExactPinnedMetadata": true,
+    "latestMatchesExactPinnedMetadata": true,
+    "rootComplementaryIndependentApiReadReported": true
+  },
+  "applicationPins": {
+    "source": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+    "tree": "f391b5cebe0a8a8ffd63c818cd481b50970336f1",
+    "mainCiRun": 41321950561,
+    "mainCiAttempt": 1,
+    "mainQualificationAcquired": true,
+    "publicationAcquired": true
+  },
+  "previousFailure": "publication-initial-failure.json",
+  "limits": {
+    "hostedOperationPerformed": false,
+    "checkExecuted": false,
+    "runtimeStarted": false,
+    "managerChanged": false,
+    "checkpointChanged": false,
+    "appTestsReplayed": false,
+    "workflowRerunPerformed": false
+  },
+  "status": "published_verified_hosted_activation_not_received"
+}
