@@ -2,20 +2,13 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Correctif 1.14.1 — application démarrée, writer qualifié, reçu attendu
+## Correctif 1.14.1 — livraison terminée
 
-[Bilan et couverture12domaines](media-reliability-1141.md). PR146/main5/5 et cinq captures acquises ; source/tagc803c2c9/arbre f391b5ce, publication/latestv1.14.1 acquise, release430681218. Préparateur nouveaufac6890f qualifié39/39. Aucune dépendance, migration ou changement Node ; démarrage1141 rapporté le1novembre17:21:03Paris. Échecs initiaux et52omissions explicites préservés.
+[Bilan et couverture12domaines](media-reliability-1141.md). Corrections médias regroupées, PR146/main5/5 et cinq captures acquises ; source/tagc803c2c9/arbre f391b5ce, publication/latestv1.14.1/release430681218. Node24.22.1, six dépendances et SQL38/37tables attendues inchangés. Échecs initiaux et52omissions explicites conservés.
 
-Préparation et CHECK1141 acquis selon le [reçu utilisateur](verification-proofs/jm1141/hosted-preparation.json), empreinte canonique df4b58f7 identique, CHECK0 et marqueur final. Dépendances14 et checkpoint14 préservés ; ne rejouer ni préparation ni CHECK SSH1141.
+Préparation/CHECK1141 reçus et validés (stagingdf4b58f7, CHECK0), puis activation1novembre17:21:03Paris. Writer e6bfd8aa qualifié32/32 natifs sousNode24.22.1, [run41326737432](verification-proofs/jm1141/writer-final-native.json),1/1job, tentative1, fichiers relus identiques. [Reçu final utilisateur](verification-proofs/jm1141/hosted-metadata.json) `release1141_metadata_recorded`, `publicReady:true`, métadonnées seules et aucun nouveau redémarrage, checkpoint1141SHA **`93d6ddf70db3b1b30d006bf2fb30ab7594ebc2d2b8f88cc59a230f247cbaca82`**. Démarrage réel1793550063863ms, soit01/11/2026 17:21:03.863Paris, conforme à l’UI. État14 complet et tous historiques/autres blocs préservés selon le reçu.
 
-Démarrage1141 acquis selon l’[identité utilisateur](verification-proofs/jm1141/hosted-identity.json), sourcec803c2c9/Node24.22.1,01/11/2026 17:21:03Paris, seconde1793550063. Aucun nouveau redémarrage requis.
-
-Writer nouveau e6bfd8aa qualifié32/32 natifs, [run41326737432](verification-proofs/jm1141/writer-final-native.json),1/1job, tentative1 ; source relue identique. Aucun SQL, CHECK ou nouveau redémarrage.
-
-1. Exécuter une seule fois le [bloc épinglé de métadonnées1141](verification-proofs/jm1141/record-command.sh) dans le terminal SSH puis transmettre son JSON. Aucun enregistrement final1141 acquis à ce stade.
-2. Vérifier ce reçu final et la préservation complète de l’état14 avant de clore la livraison. Aucun ancien writer, nouvelle activation exploratoire ou test réel non demandé à rejouer.
-
-[REPRISE](REPRISE.md) et [guide opérateur](operations-release1141.md) portent les pins exacts. Photo cliente originale, appareils physiques/Safari et sauvegarde reportée ne deviennent pas des réussites ni de nouveaux chantiers automatiques.
+**Aucune étape de livraison restante.** Ne rejouer ni préparation, CHECK, activation, writer ou CI verte. [REPRISE](REPRISE.md) et [guide clos](operations-release1141.md) portent les preuves et limites. Photo cliente originale, Safari/téléphones physiques et sauvegarde reportée restent non attestés ou reportés, sans nouvel essai réel automatique.
 
 ## Évolution 1.14.0 — livraison terminée
 

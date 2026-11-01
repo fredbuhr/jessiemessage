@@ -1,0 +1,70 @@
+{
+  "format": "jessiemessage-1141-hosted-metadata-observation",
+  "authority": "user terminal result of pinned qualified writer; no direct agent hosting access",
+  "operator": {
+    "source": "e6bfd8aa4e50c04f5b51cafe1abb309dd9c2fc57",
+    "tree": "bfcacffd621e5daa495961e1c946b837be1e45a4",
+    "helperSha256": "83b0c3da69dc50e4263632138ba163dc40efc249b5aacffef6a19af653c83ef0",
+    "qualificationRun": 41326737432,
+    "qualificationProof": "writer-final-native.json"
+  },
+  "result": {
+    "status": "release1141_metadata_recorded",
+    "version": "1.14.1",
+    "source": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+    "tree": "f391b5cebe0a8a8ffd63c818cd481b50970336f1",
+    "metadataOnly": true,
+    "noRestart": true,
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "release": {
+      "version": "1.14.1",
+      "commit": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+      "nodeVersion": "v24.22.1",
+      "startedAt": 1793550063863
+    },
+    "publicReady": true,
+    "rollbackRelease": "1.8.5",
+    "rollbackAfterMigrationQualified": true,
+    "rollbackQualificationScope": "sql38_precheck_only",
+    "publicProfileDowngradeQualified": false,
+    "restart184Allowed": false,
+    "restart172Allowed": false,
+    "historicalRelease1140Preserved": true,
+    "historicalRelease1130Preserved": true,
+    "historicalRelease1112Preserved": true,
+    "historicalRelease1111Preserved": true,
+    "historicalRelease1110Preserved": true,
+    "historicalRelease1101Preserved": true,
+    "historicalRelease1100Preserved": true,
+    "historicalRelease190Preserved": true,
+    "historicalRelease184Preserved": true,
+    "priorHostedStaging1140Preserved": true,
+    "priorMetadataRelease": "1.14.0",
+    "priorActivePreserved": true,
+    "otherBlocksPreserved": true,
+    "checkpointSha256": "93d6ddf70db3b1b30d006bf2fb30ab7594ebc2d2b8f88cc59a230f247cbaca82"
+  },
+  "verification": {
+    "reportedIdentityMatches": true,
+    "reportedUiSecondMatches": true,
+    "startedAtLocalIso": "2026-11-01T17:21:03.863+01:00",
+    "startedAtParis": "01/11/2026 17:21:03.863",
+    "metadataOnly": true,
+    "noRestart": true,
+    "checkpointSha256IsReportedNotIndependentlyReconstructed": true,
+    "completePrivateCheckpointNotSupplied": true,
+    "publicReadyConfirmedByQualifiedWriterReceipt": true,
+    "releaseTagSourceIndependentlyReread": true,
+    "priorComplete14StateAndOtherBlocksPreservedAccordingToReceipt": true,
+    "rollbackScopeUnchanged": true,
+    "independentLocalReviewOfReceiptConfirmed": true
+  },
+  "limits": {
+    "noIndependentProcessPidSocketInspection": true,
+    "noNewIndependentSqlPhysicalInventory": true,
+    "originalClientPhotoCaseNotAttested": true,
+    "physicalSafariPhoneTestsNotAttested": true
+  },
+  "nextAction": "none; delivery1141 closed; do not replay staging, CHECK, activation or writer"
+}

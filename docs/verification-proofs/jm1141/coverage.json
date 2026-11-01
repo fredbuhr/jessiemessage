@@ -239,7 +239,7 @@
     {
       "id": "M12",
       "scope": "Distribution, PWA et livraison",
-      "disposition": "code_published_startup_reported_writer_qualified_metadata_receipt_pending",
+      "disposition": "code_published_deployed_metadata_finalized_from_user_receipts",
       "changes": [
         "Aucun défaut de cache établi ; imports, ressources fixes/no-store et SW sans cache fetch relus.",
         "Candidat2 modifie uniquement trois fixtures natives après le premier run en échec."
@@ -255,9 +255,10 @@
         "hosted-preparation.json",
         "hosted-identity.json",
         "writer-final-native.json",
-        "writer-counter-review.json"
+        "writer-counter-review.json",
+        "hosted-metadata.json"
       ],
-      "proofScope": "PR et main5/5 tentative1 chacun, tag/release/latest v1.14.1 sur mainc803c2c9 exact. Publication2/2 réussie et17/17 tests opérateur natifs, opérateur préparation39/39 qualifié. Préparation hébergée et CHECK1141 acquis selon le reçu utilisateur, empreinte canonique identique ; démarrage1141 rapporté selon identité utilisateur, writer32/32 natifs qualifié, enregistrement final non reçu.",
+      "proofScope": "PR et main5/5 tentative1 chacun, tag/release/latest v1.14.1 sur mainc803c2c9 exact. Publication2/2 réussie et17/17 tests opérateur natifs, opérateur préparation39/39 qualifié. Préparation hébergée et CHECK1141 acquis selon le reçu utilisateur, empreinte canonique identique ; démarrage1141 rapporté selon identité utilisateur, writer32/32 natifs qualifié, enregistrement final1141 reçu, publicReady:true et préservation état14 selon ce résultat.",
       "nativeCandidate2": "qualified_in_pr_in_stated_scope",
       "nativeMain": "qualified_in_stated_scope"
     }
@@ -430,18 +431,26 @@
       "deploymentPerformed": false
     },
     "hosted1141": {
-      "status": "startup_reported_writer_native_qualified_metadata_receipt_pending",
+      "status": "finalized_from_user_receipts",
       "preparationReceipt": "hosted-preparation.json",
       "checkReceipt": "hosted-preparation.json",
       "identityReceipt": "hosted-identity.json",
-      "metadataReceipt": null,
+      "metadataReceipt": "hosted-metadata.json",
       "preparationAcquiredFromUserReceipt": true,
       "checkExit": 0,
       "receiptSha256": "df4b58f79ed08af15365557fd88670cd887c4cce9382200fadbd03a9c9593d72",
       "directHostingAccessByAgent": false,
       "reportedStartupSecondUtc": 1793550063,
       "publicAvailabilityInSuppliedUi": false,
-      "restartRequired": false
+      "restartRequired": false,
+      "reportedStartupMilliseconds": 1793550063863,
+      "startedAtParis": "01/11/2026 17:21:03.863",
+      "checkpointSha256": "93d6ddf70db3b1b30d006bf2fb30ab7594ebc2d2b8f88cc59a230f247cbaca82",
+      "publicReadyAccordingToWriterReceipt": true,
+      "metadataOnly": true,
+      "noRestart": true,
+      "priorComplete14StatePreservedAccordingToReceipt": true,
+      "nextAction": null
     },
     "preparation": {
       "status": "operator_native_qualified_hosted_preparation_and_check_received",
@@ -483,7 +492,7 @@
       "hostedAuthority": "user terminal output; no direct hosting operation by agent"
     },
     "metadataWriter": {
-      "status": "native_qualified_hosted_execution_not_received",
+      "status": "native_qualified_hosted_metadata_recorded",
       "operator": {
         "source": "e6bfd8aa4e50c04f5b51cafe1abb309dd9c2fc57",
         "tree": "bfcacffd621e5daa495961e1c946b837be1e45a4",
@@ -523,7 +532,8 @@
       "command": "record-command.sh",
       "metadataOnly": true,
       "restartRequired": false,
-      "metadataReceipt": null
+      "metadataReceipt": "hosted-metadata.json",
+      "hostedExecutionReported": true
     }
   },
   "initialNativeRun": {
@@ -592,5 +602,6 @@
   "prSource": "d4795b47b1a7cf27e997d27550f854c70831eb08",
   "version": "1.14.1",
   "stage": "qualified_merged_published_ready_for_hosted_preparation",
-  "nextAction": "Hosted preparation1141 using the pinned qualified operator against preserved baseline14, then separate CHECK. No hosted success implied by code qualification or publication."
+  "nextAction": null,
+  "deliveryStatus": "complete"
 }

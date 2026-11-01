@@ -1,8 +1,8 @@
-# Livraison 1.14.1 — guide en cours
+# Livraison 1.14.1 — terminée
 
-État du 1 novembre 2026. [REPRISE](REPRISE.md) reste la référence de production. La source1141 est qualifiée et publiée ; le bloc de préparation est prêt. **Préparation hébergée, CHECK, activation et enregistrement final1141 restent à effectuer et à attester.**
+État du1novembre2026. [REPRISE](REPRISE.md) reste la référence. La1.14.1 est démarrée et ses métadonnées sont alignées selon le [reçu final utilisateur](verification-proofs/jm1141/hosted-metadata.json). Aucune étape de livraison restante, aucune commande1141 ou antérieure à rejouer. `recette.jessiemessage.com` et `jessiemessage.com` partagent le service Node239143 et la même base.
 
-**Production acquise : 1.14.0, livraison close.** Source `4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd`, arbre `e5a239eaf7b8c3395a843c9e0d600efeb7aa569b`, checkpoint14 SHA256 `19ceaa7e91d32daba7da5b71d7dfe02ad964e8d9d2850ae016cfa732b8a9c6e0`. [Bilan clos1140](operations-release1140.md), [reçu final](verification-proofs/jm1140/hosted-metadata.json). Ne rejouer aucune préparation, CHECK, activation ou commande de métadonnées1140.
+Ancienne production14 et ses preuves entièrement conservées dans le [guide clos1140](operations-release1140.md). Son checkpoint19ceaa7e a servi de baseline strict à la transition1141 ; il n’est plus le checkpoint actif après le reçu final ci-dessous.
 
 ## Source qualifiée et publication acquises
 
@@ -27,9 +27,9 @@ Le helper de préparation, son test et son workflow ont été relus par API au c
 
 Le correctif conserve **Node24.22.1, les six dépendances verrouillées et SQL38/37tables attendues**. Aucune installation npm, nouvelle dépendance, migration SQL ou modification du bundle de configuration n'est prévue.
 
-Le préparateur doit vérifier le checkout14 `/srv/customer/jessiemessage-operator/production-1140-4f3ce5de`, puis réutiliser son **vrai répertoire** `node_modules`, mode0700. Ce répertoire n'est pas un lien symbolique. Son inventaire attendu est **1082entrées/914fichiers**, SHA256 `547c6ec03aa29027264dbb848e7830df0cb615a1eb92710498bc94d988897c37` ; les six versions et les deux fichiers du codec HEIC sont également vérifiés. Le nouveau checkout1141 recevra un lien vers ce répertoire exact, sans réinstallation ni modification des dépendances14.
+Le préparateur a vérifié le checkout14 `/srv/customer/jessiemessage-operator/production-1140-4f3ce5de`, puis réutilisé son **vrai répertoire** `node_modules`, mode0700. Ce répertoire n'est pas un lien symbolique. Son inventaire attendu est **1082entrées/914fichiers**, SHA256 `547c6ec03aa29027264dbb848e7830df0cb615a1eb92710498bc94d988897c37` ; les six versions et les deux fichiers du codec HEIC sont également vérifiés. Le checkout1141 a reçu un lien vers ce répertoire exact, sans réinstallation ni modification des dépendances14.
 
-Le nouveau checkout attendu est `/srv/customer/jessiemessage-operator/production-1141-c803c2c9`. Ce checkout, ses lanceurs, journaux et reçu sont des sorties exclusives : toute sortie déjà présente, même partielle, est préservée et fait refuser une répétition. Seul le nouveau checkout créé avec le mode2700 hérité peut être normalisé0700, sous descripteur après contrôle d'identité et d'UID. Les parents existants, le checkout14 et ses dépendances gardent leurs permissions.
+Le checkout préparé est `/srv/customer/jessiemessage-operator/production-1141-c803c2c9`. Ce checkout, ses lanceurs, journaux et reçu sont des sorties exclusives : toute sortie déjà présente, même partielle, est préservée et fait refuser une répétition. Seul le nouveau checkout créé avec le mode2700 hérité peut être normalisé0700, sous descripteur après contrôle d'identité et d'UID. Les parents existants, le checkout14 et ses dépendances gardent leurs permissions.
 
 Le staging14 SHA256 `2fe494a43a446c882ce509f4ecf51925bd5789a94bdbdf2ce6923d83e5ff7d72`, le checkpoint14, les clés, configurations, historiques et anciens lanceurs restent préservés. La préparation ne lance ni CHECK, ni service et ne change ni Manager ni checkpoint. Son reçu initial décrit uniquement des sources préparées, avant le CHECK séparé.
 
@@ -47,7 +47,7 @@ Le [bloc exécuté reste conservé](verification-proofs/jm1141/preparation-comma
 
 ## Activation1141 — acquise selon le relevé utilisateur, ne pas rejouer
 
-L’[identité utilisateur](verification-proofs/jm1141/hosted-identity.json) confirme version1.14.1, commit `c803c2c9be16c0c4ee218d8cac4a1272620d2772`, Nodev24.22.1, **01/11/2026 17:21:03 Europe/Paris**, secondeUTC1793550063. Aucune inspection directe de l’agent des champs Manager ou du processus n’en est déduite. Le signal de disponibilité et les millisecondes ne figurent pas dans l’extrait fourni.
+L’[identité utilisateur](verification-proofs/jm1141/hosted-identity.json) confirme version1.14.1, commit `c803c2c9be16c0c4ee218d8cac4a1272620d2772`, Nodev24.22.1, **01/11/2026 17:21:03 Europe/Paris**, secondeUTC1793550063. Aucune inspection directe de l’agent des champs Manager ou du processus n’en est déduite. Le signal de disponibilité et les millisecondes ne figuraient pas dans cet extrait initial ; le reçu final ci-dessous les complète.
 
 | Champ correspondant à l’activation rapportée | Valeur1141 |
 | --- | --- |
@@ -57,18 +57,16 @@ L’[identité utilisateur](verification-proofs/jm1141/hosted-identity.json) con
 
 Le service Node239143 nommé recette.jessiemessage.com dessert aussi le principal et sa base. **Ne rejouer ni préparation, CHECK SSH, réglages ou redémarrage.** Les [réglages du service](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application) et son [tableau de bord](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) ne sont pas à modifier pour la finalisation de métadonnées.
 
-## Enregistrement final1141 — outil qualifié, reçu attendu
+## Enregistrement final1141 — acquis, ne pas rejouer
 
 Le nouvel outil est [qualifié32/32 natifs](verification-proofs/jm1141/writer-final-native.json), sans échec ni omission : [run41326737432](https://github.com/fredbuhr/jessiemessage/actions/runs/41326737432), tentative1,1/1job, Nodev24.22.1. Opérateur **`e6bfd8aa4e50c04f5b51cafe1abb309dd9c2fc57`**, arbre `bfcacffd621e5daa495961e1c946b837be1e45a4`, helper SHA256 **`83b0c3da69dc50e4263632138ba163dc40efc249b5aacffef6a19af653c83ef0`**,34880octets. Helper/test/workflow relus via API et identiques aux octets qualifiés ; log complet conservé et contre-revue indépendante sans bloqueur. Tests applicatifs déjà verts non rejoués.
 
 Il exige le stagingdf4b58f7, le checkpoint14/19ceaa7e et la secondeUTC1793550063 ; retrouve les millisecondes dans l’unique journal de démarrage, contrôle versions/sources/locks/Node/configuration/migrations, dépendances réutilisées, précontrôles, HTTP publics et publication avant toute écriture. Normalisation de la seule version applicative entre14 et1141 ; lock14 installé623e3be5 distinct du lock1141d4b723dc. État actif14 complet, sectionrelease1140/historiques et autres blocs préservés, avec repli185 dans sa portéeSQL38 seule et publicProfileDowngradeQualified:false. Écriture gardée atomique des seules métadonnées puis relecture ; aucun nouvel envoi, SQL, installation, CHECK ou redémarrage.
 
-**Action unique maintenant :**
+**Exécution acquise selon le [reçu final utilisateur](verification-proofs/jm1141/hosted-metadata.json)** : `release1141_metadata_recorded`, version1.14.1/sourcec803c2c9/arbre f391b5ce/Nodev24.22.1 exacts ; `publicReady:true`, `metadataOnly:true`, `noRestart:true`, SQL38/37tables attendues. Checkpoint1141 SHA256 **`93d6ddf70db3b1b30d006bf2fb30ab7594ebc2d2b8f88cc59a230f247cbaca82`**. Le journal donne1793550063863ms, soit **01/11/2026 17:21:03.863 Europe/Paris**, en accord avec le relevé UI à la seconde.
 
-1. Ouvrir le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal) dans ton navigateur.
-2. Copier le [bloc exact record-command.sh](verification-proofs/jm1141/record-command.sh), de `env -i` à `PY_RECORD1141`, puis le coller et valider une seule fois. Il télécharge le nouvel outil à son commit immuable et vérifie son SHA256 avant exécution.
-3. Transmettre le JSON retourné. Si la réponse est perdue ou refusée, conserver les traces et lire l’état durable avant toute reprise ; ne pas rejouer le bloc pour découvrir son résultat.
+Le writer a vérifié sources/tags/dépendances/Node/configuration/migrations, reçus et précontrôles, journal unique lié au démarrage et HTTP publics avant l’écriture atomique et sa relecture. État actif14 complet, sectionrelease1140/staging14, historiques1130/1112/1111/1110/1101/1100/190/184 et autres blocs conservés selon le résultat. Repli185 qualifiéSQL38 seulement, sans démarrage ; publicProfileDowngradeQualified:false et interdictions184/172 maintenus. Aucune inspection directe de l’agent de l’hôte ou du checkpoint privé complet n’en est déduite ; l’empreinte est celle du reçu du writer après relecture, non une reconstruction locale du document privé.
 
-**Aucun reçu final1141 reçu et aucun writer hébergé exécuté par l’agent à ce stade.** Le succès natif synthétique ne constitue pas l’exécution réelle. La livraison sera close après validation de la concordance application/checkpoint/publication et de la préservation de l’état14 dans le reçu final.
+Le [bloc exécuté reste conservé dans l’historique Git](https://github.com/fredbuhr/jessiemessage/blob/904ff037213496e55959094a1e5c625c7c462b78/docs/verification-proofs/jm1141/record-command.sh). **Ne rejouer aucune commande acquise.**
 
-Les GET publics ne prouvent pas seuls le commit du processus. Le writer les rapproche du journal lié au démarrage rapporté, sans inspection indépendante PID/socket/binaire par l’agent. Téléphones physiques, Safari, photo originale problématique et inventaire SQL physique nouveau ne sont pas déduits de cette livraison. Sauvegarde reportée, PC et chantiers hors périmètre gardent leur état acquis, sans nouvel essai automatique.
+**Livraison1141 terminée : aucune prochaine action technique.** Les GET publics ne prouvent pas seuls le commit du processus ; le writer les rapproche du journal lié au démarrage rapporté, sans inspection indépendante PID/socket/binaire par l’agent. Téléphones physiques, Safari, photo originale problématique et nouvel inventaire SQL physique restent non attestés. Aucun envoi ou changement de compte/média réel, sauvegarde reportée, manipulation PC ou chantier hors périmètre lancé.
