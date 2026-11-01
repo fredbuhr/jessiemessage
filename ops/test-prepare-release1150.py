@@ -165,7 +165,8 @@ class Fixture:
         self.archive = archive_bytes(m); m.ARCHIVE_BYTES = len(self.archive); m.ARCHIVE_SHA = digest(self.archive)
         self.identities = {self.base: (self.base_sha, self.base_tree), self.old_base: (self.old_sha, self.old_tree)}
         self.git_calls = []; self.processes = []; self.downloads = 0
-        self.install_error = False; self.smoke_error = False; self.after_install = None
+        self.install_error = False; self.smoke_error = False; self.smoke_timeout = False; self.after_install = None
+        self.smoke_stdout = b'synthetic codec smoke stdout\n'; self.smoke_stderr = b'synthetic codec smoke stderr\n'
         self.migrations = {'db/migrations': [(f'{i:04d}_synthetic.sql', str(i)) for i in range(1, 34)],
             'server/video/migrations': [(name, name) for name in m.VIDEO_DDL],
             'server/experience/migrations': [(name, name) for name in m.EXPERIENCE_DDL]}
@@ -214,6 +215,8 @@ class Fixture:
             if self.after_install: self.after_install(self)
             return types.SimpleNamespace(returncode=0)
         if args == [str(self.node), str(self.module.release_plan(self.sha, self.tree)['checkout'] / self.module.CODEC_SMOKE_PATH)]:
+            kwargs['stdout'].write(self.smoke_stdout); kwargs['stderr'].write(self.smoke_stderr)
+            if self.smoke_timeout: raise subprocess.TimeoutExpired(args, 30)
             return types.SimpleNamespace(returncode=1 if self.smoke_error else 0, stdout=b'', stderr=b'')
         raise AssertionError(('no real process allowed', args))
 
@@ -253,9 +256,10 @@ class DraftPinsTests(unittest.TestCase):
 
     def test_pending_pins_stop_before_private_reads_processes_network_or_writes(self):
         m = load_helper()
-        for name in ('RELEASE_SOURCE', 'RELEASE_TREE', 'ALLOWED_NEW_DEPENDENCIES', 'ADDITIONAL_LOCK_RECORDS', 'CODEC_FILES', 'CODEC_SMOKE_PATH', 'CODEC_SMOKE_SHA'):
-            self.assertEqual(getattr(m, name), m.QUALIFICATION_PENDING)
-        with mock.patch.object(m, 'private_directory', side_effect=AssertionError('no private read')), \
+        pending = {name: m.QUALIFICATION_PENDING for name in ('RELEASE_SOURCE', 'RELEASE_TREE',
+            'ALLOWED_NEW_DEPENDENCIES', 'ADDITIONAL_LOCK_RECORDS', 'CODEC_FILES', 'CODEC_SMOKE_PATH', 'CODEC_SMOKE_SHA')}
+        with mock.patch.multiple(m, **pending), \
+             mock.patch.object(m, 'private_directory', side_effect=AssertionError('no private read')), \
              mock.patch.object(m.subprocess, 'run', side_effect=AssertionError('no process')), \
              mock.patch.object(m, 'download_archive', side_effect=AssertionError('no network')):
             with self.assertRaisesRegex(m.StagingRefused, 'release1150_pins_pending'): m.stage('a' * 40, 'b' * 40)
@@ -404,6 +408,45 @@ class StagingTests(unittest.TestCase):
                 with self.assertRaises(f.module.StagingRefused): f.stage()
                 self.assertFalse((f.private / 'jm1150-staging.json').exists())
 
+    def test_codec_smoke_private_streams_survive_failure_without_receipt_and_are_hashed_on_success(self):
+        for outcome in ('nonzero', 'timeout', 'success', 'existing-output'):
+            with self.subTest(outcome=outcome), Fixture() as f:
+                f.smoke_error = outcome == 'nonzero'; f.smoke_timeout = outcome == 'timeout'
+                f.smoke_stderr = b'synthetic codec failure\n' + b'x' * 9000
+                plan = f.module.release_plan(f.sha, f.tree)
+                if outcome == 'existing-output':
+                    f.after_install = lambda value: write(plan['tools'] / 'codec-smoke-stdout.log', b'preserve existing smoke output\n')
+                    with self.assertRaises(FileExistsError): f.stage()
+                    self.assertEqual((plan['tools'] / 'codec-smoke-stdout.log').read_bytes(), b'preserve existing smoke output\n')
+                    self.assertFalse((f.private / 'jm1150-staging.json').exists())
+                    self.assertFalse(any(args == [str(f.node), str(plan['checkout'] / f.module.CODEC_SMOKE_PATH)] for args, _ in f.processes))
+                    f.assert_preserved(self)
+                    continue
+                if outcome == 'success':
+                    receipt = f.stage()
+                    self.assertEqual(receipt['dependencies']['codecSmokeStdoutSha256'], digest(f.smoke_stdout))
+                    self.assertEqual(receipt['dependencies']['codecSmokeStderrSha256'], digest(f.smoke_stderr))
+                else:
+                    with self.assertRaisesRegex(f.module.StagingRefused, 'native_dependency_refused|native_dependency_not_confirmed'): f.stage()
+                    self.assertFalse((f.private / 'jm1150-staging.json').exists()); self.assertFalse(plan['start'].exists())
+                for stream, expected in (('stdout', f.smoke_stdout), ('stderr', f.smoke_stderr)):
+                    path = plan['tools'] / ('codec-smoke-' + stream + '.log')
+                    self.assertEqual(path.read_bytes(), expected); self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
+                self.assertEqual((plan['tools'] / 'npm-stdout.log').read_bytes(), b'synthetic npm stdout\n')
+                self.assertEqual((plan['tools'] / 'npm-stderr.log').read_bytes(), b'synthetic npm stderr\n')
+                f.assert_preserved(self)
+                with tempfile.TemporaryDirectory(prefix='prepare1150-native-', dir=f.root) as temporary:
+                    root = Path(temporary); root.chmod(0o700); tools = root / 'tools'; tools.mkdir(mode=0o700)
+                    for name in ('npm-stdout.log', 'npm-stderr.log', 'codec-smoke-stdout.log', 'codec-smoke-stderr.log'):
+                        write(tools / name, (plan['tools'] / name).read_bytes())
+                    output = io.StringIO()
+                    with redirect_stderr(output): native_failure_logs(f.module, root, tools)
+                    records = [json.loads(line) for line in output.getvalue().splitlines()]
+                    self.assertEqual([value['stream'] for value in records], ['stdout', 'stderr', 'codec-smoke-stdout', 'codec-smoke-stderr'])
+                    self.assertEqual(records[0]['text'], 'synthetic npm stdout\n'); self.assertEqual(records[1]['text'], 'synthetic npm stderr\n')
+                    self.assertEqual(records[2]['text'], f.smoke_stdout.decode()); self.assertEqual(len(records[3]['text']), 8192)
+                    self.assertTrue(records[3]['truncated'])
+
     def test_exclusive_write_preserves_preexisting_symlink_and_target(self):
         with Fixture() as f:
             target = f.root / 'target'; write(target, b'preserve target\n')
@@ -424,10 +467,16 @@ def native_failure_logs(module, root, tools):
     module.require(root.is_absolute() and root.name.startswith('prepare1150-native-')
         and not root.is_relative_to(Path('/srv')) and tools == root / 'tools', 'native_diagnostic_scope')
     module.private_directory(root); module.private_directory(tools)
-    for name in ('stdout', 'stderr'):
-        path = tools / ('npm-' + name + '.log')
+    for name in ('stdout', 'stderr', 'codec-smoke-stdout', 'codec-smoke-stderr'):
+        optional = name.startswith('codec-smoke-')
+        path = tools / (name + '.log' if optional else 'npm-' + name + '.log')
+        scope = 'isolated_native_codec_smoke_only' if optional else 'isolated_native_npm_install_only'
         try:
-            info = path.lstat()
+            try:
+                info = path.lstat()
+            except FileNotFoundError:
+                if optional: continue
+                raise
             module.require(stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid()
                 and info.st_nlink == 1 and stat.S_IMODE(info.st_mode) == 0o600, 'native_log_metadata')
             fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
@@ -435,10 +484,10 @@ def native_failure_logs(module, root, tools):
                 opened = os.fstat(source.fileno())
                 module.require((info.st_dev, info.st_ino) == (opened.st_dev, opened.st_ino), 'native_log_changed')
                 data = source.read(8193)
-            print(json.dumps(dict(scope='isolated_native_npm_install_only', stream=name,
+            print(json.dumps(dict(scope=scope, stream=name,
                 truncated=len(data) > 8192, text=data[:8192].decode('utf-8', errors='replace'))), file=sys.stderr)
         except (OSError, module.StagingRefused):
-            print(json.dumps(dict(scope='isolated_native_npm_install_only', stream=name, available=False)), file=sys.stderr)
+            print(json.dumps(dict(scope=scope, stream=name, available=False)), file=sys.stderr)
 
 
 def native_install(*, module=None, environment=None):
@@ -504,7 +553,8 @@ def native_install(*, module=None, environment=None):
 class NativeModeTests(unittest.TestCase):
     def test_pending_native_pins_stop_before_context_directory_process_or_network(self):
         m = load_helper()
-        with mock.patch.object(m, 'private_directory', side_effect=AssertionError('no private path')), \
+        with mock.patch.object(m, 'RELEASE_SOURCE', m.QUALIFICATION_PENDING), \
+             mock.patch.object(m, 'private_directory', side_effect=AssertionError('no private path')), \
              mock.patch.object(m, 'command', side_effect=AssertionError('no process')), \
              mock.patch.object(m, 'download_archive', side_effect=AssertionError('no network')), \
              mock.patch.object(tempfile, 'TemporaryDirectory', side_effect=AssertionError('no output')):

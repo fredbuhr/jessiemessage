@@ -28,8 +28,8 @@ DEPENDENCY_ROOT = Path('/srv/customer/jessiemessage-operator/production-1140-4f3
 BASE_SOURCE = 'c803c2c9be16c0c4ee218d8cac4a1272620d2772'
 BASE_TREE = 'f391b5cebe0a8a8ffd63c818cd481b50970336f1'
 QUALIFICATION_PENDING = 'QUALIFICATION_PENDING'
-RELEASE_SOURCE = QUALIFICATION_PENDING
-RELEASE_TREE = QUALIFICATION_PENDING
+RELEASE_SOURCE = '6712028e08b1e04ac7628bdbb9c39fd9f90d9909'
+RELEASE_TREE = 'c80ee33ebfe01838c86cc2b4166b344acf5ea745'
 START_PIN = 'e53198d1ddf099eaf3ecbd60b6916a94921430a555eaed2a4a4c41ce64ff27a9'
 CHECK_PIN = '6f4aa454a5d1163b9450dba8644ed50dcf034f1a916cad1891c0fa1fc2b05919'
 NODE_PIN = 'e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb'
@@ -61,11 +61,33 @@ CONFIGURATION_NAMES = tuple(sorted(('runtime-database.json', 'runtime-auth.json'
     'runtime-media.json', 'runtime-notifications.json', 'runtime-crm.json', 'runtime-video.json')))
 # Final codec choice, all added lock records, installed resources and a real
 # decoding smoke must be pinned together before this draft can touch a host.
-ALLOWED_NEW_DEPENDENCIES = QUALIFICATION_PENDING
-ADDITIONAL_LOCK_RECORDS = QUALIFICATION_PENDING
-CODEC_FILES = QUALIFICATION_PENDING
-CODEC_SMOKE_PATH = QUALIFICATION_PENDING
-CODEC_SMOKE_SHA = QUALIFICATION_PENDING
+ALLOWED_NEW_DEPENDENCIES = {'@imagemagick/magick-wasm': '0.0.45', '@phenomen/libavif-wasm': '1.4.203', 'heic-to': '1.6.7'}
+ADDITIONAL_LOCK_RECORDS = {'node_modules/@imagemagick/magick-wasm': {'integrity': 'sha512-ef8FHka4xLWo5/tGTV6P45bPjTvnKZz/oHN6sCDTbY8zaCdM2MeaoQHLsy9IHuiVHQhomG3TQ6ErgTnEDyuzvw==',
+                                           'license': 'Apache-2.0',
+                                           'resolved': 'https://registry.npmjs.org/@imagemagick/magick-wasm/-/magick-wasm-0.0.45.tgz',
+                                           'version': '0.0.45'},
+ 'node_modules/@phenomen/libavif-wasm': {'engines': {'node': '>=22'},
+                                         'integrity': 'sha512-gGYPkUddbjsnyRRWV75oXeq0Wog5SSAR7d9QHo5c68cWwvN64s+ikfFGYgQ1SeKuDqGWhE33qtv/xibTIBfW7Q==',
+                                         'license': 'MIT',
+                                         'resolved': 'https://registry.npmjs.org/@phenomen/libavif-wasm/-/libavif-wasm-1.4.203.tgz',
+                                         'version': '1.4.203'},
+ 'node_modules/heic-to': {'integrity': 'sha512-GCPYNl86u6eZ7mr2aa+uQB+PrQOVKSBYfH8esovr8kh2c6EYQSDYIJ6uhXSmM2hPC8PdBVJ/Trn0jnfM9H9gvg==',
+                          'license': 'LGPL-3.0',
+                          'resolved': 'https://registry.npmjs.org/heic-to/-/heic-to-1.6.7.tgz',
+                          'version': '1.6.7'}}
+CODEC_FILES = {'@imagemagick/magick-wasm/LICENSE': 'cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30',
+ '@imagemagick/magick-wasm/NOTICE': '7cb6cf162ba965ed068dbc9e638c9b792b8a1a9f4dae51031e7a21ff1ebefc8d',
+ '@imagemagick/magick-wasm/dist/index.js': '696370daea26ec9ccb1d53316e49eca464cd841678be0fdd550652cbcc73208e',
+ '@imagemagick/magick-wasm/dist/x86/magick.wasm': '54629cbcf06dd10db38b4d87fa6ab241b248c09c94f2d9689506e5f994ac5f0c',
+ '@phenomen/libavif-wasm/LICENSE': '9c49270079649e9ca5017850706c7c7b6d3e55c87351f50db343c9cf8a3947ac',
+ '@phenomen/libavif-wasm/THIRD_PARTY_NOTICES.md': '6f002f45208da417ea75f12759a151419e6472dc3c5a7718b422c652f65209f6',
+ '@phenomen/libavif-wasm/dist/codec/decode.mjs': '9a005bb8209388479101680344c7ef2123625d08af699ff32bbcd85c198f0d07',
+ '@phenomen/libavif-wasm/dist/decode.wasm': '10cd87f2c5cd865a3c4fcfde30cc9611387bebe91e4eae7d62b62ef17c27279e',
+ '@phenomen/libavif-wasm/dist/versions.json': '48e014a6fe8aa1f6638c3a146f106b78a7c6c7bc98ec7df47af5b7bcdbbac477',
+ 'heic-to/LICENSE': 'dbd7222d8026e5d6ca6991d1e6a205de927f300840433c2e90a60644a9980c75',
+ 'heic-to/src/lib/libheif-without-unsafe-eval.js': '75aaf03816c22f8cf40dbcaeb22bee83f2e1c5da4b7417577a7883b296348734'}
+CODEC_SMOKE_PATH = 'ops/smoke-photo-codecs1150.mjs'
+CODEC_SMOKE_SHA = '57d6d1e552fb8dd9a9373d3fa0a103705e109edbffe8c9c35e1dfb6fe53d9ddb'
 
 
 class StagingRefused(Exception):
@@ -452,17 +474,23 @@ def install_dependencies(checkout, tools, node, package_bytes, lock_bytes, *, no
         require(regular(modules / name, digest_only=True) == expected, 'installed_codec:' + name)
     smoke = checkout / CODEC_SMOKE_PATH
     require(regular(smoke, digest_only=True) == CODEC_SMOKE_SHA, 'codec_smoke_identity')
-    try:
-        checked = subprocess.run([str(node), str(smoke)], cwd=str(checkout),
-            env=npm_environment(node, tools / 'cache', tools / 'tmp'), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            timeout=30, check=False)
-    except (OSError, subprocess.TimeoutExpired):
-        raise StagingRefused('native_dependency_not_confirmed') from None
+    smoke_logs = [tools / ('codec-smoke-' + name + '.log') for name in ('stdout', 'stderr')]
+    for path in smoke_logs:
+        write_exclusive(path, b'')
+    with smoke_logs[0].open('ab') as stdout, smoke_logs[1].open('ab') as stderr:
+        try:
+            checked = subprocess.run([str(node), str(smoke)], cwd=str(checkout),
+                env=npm_environment(node, tools / 'cache', tools / 'tmp'), stdout=stdout, stderr=stderr,
+                timeout=30, check=False)
+        except (OSError, subprocess.TimeoutExpired):
+            raise StagingRefused('native_dependency_not_confirmed') from None
     require(checked.returncode == 0, 'native_dependency_refused')
     require(dependency_inventory(modules) == inventory, 'installed_dependencies_changed')
     return dict(strategy='private-npm-ci-ignore-scripts', directory=str(modules), lockSha256=fingerprint(lock_bytes),
         inventory=inventory, directVersions=release_dependencies(), codecSha256=dict(CODEC_FILES), codecSyntheticSmoke=True,
         codecSmokePath=CODEC_SMOKE_PATH, codecSmokeSha256=CODEC_SMOKE_SHA,
+        codecSmokeStdoutSha256=regular(smoke_logs[0], 0o600, digest_only=True),
+        codecSmokeStderrSha256=regular(smoke_logs[1], 0o600, digest_only=True),
         stdoutSha256=regular(logs[0], 0o600, digest_only=True), stderrSha256=regular(logs[1], 0o600, digest_only=True),
         scriptsExecuted=False)
 

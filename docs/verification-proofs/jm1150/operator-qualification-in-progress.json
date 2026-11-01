@@ -1,0 +1,32 @@
+{
+  "status": "native_preparation_qualification_requested_not_hosted",
+  "source": "6712028e08b1e04ac7628bdbb9c39fd9f90d9909",
+  "tree": "c80ee33ebfe01838c86cc2b4166b344acf5ea745",
+  "PR": 147,
+  "PRNativeRun": 41338555685,
+  "PRFiveJobsPassed": true,
+  "mainNativeRun": 41339290231,
+  "mainNativeQualification": "pending_parallel",
+  "localOperatorTests": 23,
+  "localOperatorPassed": 23,
+  "files": [
+    {
+      "path": "ops/prepare-release1150.py",
+      "sha256": "2bb7a901a3e18321fd7ad428e8bc017594e94517af111efe6a6de73320c7e10f",
+      "bytes": 38463
+    },
+    {
+      "path": "ops/test-prepare-release1150.py",
+      "sha256": "f933250d9d0fecceb366c9e6bdb81ddfa7062bf2bf863e1fcc54b31b1dd90155",
+      "bytes": 44763
+    },
+    {
+      "path": ".github/workflows/prepare-qualified1150.yml",
+      "sha256": "91845d47dce915bfecce71cad93438b90b59cc2826bc63f9fc4ffff5e003d48c",
+      "bytes": 1380
+    }
+  ],
+  "workflowScope": "Synthetic filesystem qualification and one fresh npm install+six-family smoke in disposable CI only. No runtime/SQL/CHECK/host.",
+  "hostCommandAllowedToBeProvided": false,
+  "next": "Require main five-job success, native operator+fresh install success and immutable publication before supplying pinned staging command."
+}
