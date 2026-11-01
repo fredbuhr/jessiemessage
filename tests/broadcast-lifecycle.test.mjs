@@ -1213,3 +1213,23 @@ test("broadcast RAW hints contain only a recognized extension and never reach th
     } finally { f.close(); }
   }
 });
+test("broadcast legacy HEIC preparation receives no converter when the capability is absent", async t => {
+  for (const mode of ["absent", "disabled", "capability404"]) await t.test(mode, async () => {
+    const original = new Blob(["synthetic legacy HEIC"], { type: "image/heic" });
+    const prepared = new Blob([new Uint8Array([255, 216, 255, 217])], { type: "image/jpeg" }); let count = 0;
+    const asset = { id: id(1305), createdAt: now, width: 640, height: 480, thumbnailUrl: `/api/media/admin/assets/${id(1305)}/thumb` };
+    const f = fixture((path, options) => {
+      if (path === "/api/media/admin/capabilities") return mode === "capability404" ? response({ error: "not_found" }, 404)
+        : response({ enabled: true, ...(mode === "disabled" ? { preparation: { ...preparationCapability, enabled: false } } : {}) });
+      if (path === "/api/media/admin/assets" && options.method === "POST") return response({ asset, duplicate: false }, 201); return null;
+    }, actor(), { prepare: async (file, { signal, convert }) => {
+      assert.equal(file, original); assert.equal(convert, undefined); assert.equal(signal.aborted, false); count++; return prepared;
+    } });
+    try {
+      compose(f.ui); await f.ui.uploadPhoto(original); await flush();
+      assert.equal(count, 1); assert.equal(f.calls.some(call => call.path === "/api/media/admin/prepare"), false);
+      const writes = f.calls.filter(call => call.options.method === "POST"); assert.equal(writes.length, 1); assert.equal(writes[0].path, "/api/media/admin/assets");
+      assert.equal(writes[0].options.body, prepared); assert.equal(f.ui.state.draft.mediaId, asset.id);
+    } finally { f.close(); }
+  });
+});

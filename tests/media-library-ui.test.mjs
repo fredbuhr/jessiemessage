@@ -315,3 +315,22 @@ test("library RAW hints contain only a recognized extension and never reach the 
     assert.doesNotMatch(JSON.stringify(writes.map(call => call.options.headers)), /private-camera/);
   }
 });
+test("library legacy HEIC preparation receives no converter when the capability is absent", async t => {
+  for (const mode of ["absent", "disabled", "capability404"]) await t.test(mode, async () => {
+    const original = new Blob(["synthetic legacy HEIC"], { type: "image/heic" });
+    const prepared = new Blob([new Uint8Array([255, 216, 255, 217])], { type: "image/jpeg" }); let count = 0, capabilityReads = 0;
+    const h = harness({ prepare: async (file, { signal, convert }) => {
+      assert.equal(file, original); assert.equal(convert, undefined); assert.equal(signal.aborted, false); count++; return prepared;
+    }, respond: (path, options) => {
+      if (path === "/api/media/admin/capabilities") {
+        if (++capabilityReads > 1 && mode === "capability404") return response(404, { error: "not_found" });
+        return response(200, { enabled: true, ...(mode === "disabled" ? { preparation: { ...preparationCapability, enabled: false } } : {}) });
+      }
+      if (path === "/api/media/admin/assets" && options.method === "POST") return response(201, { asset: photo(99), duplicate: false }); return null;
+    } });
+    await h.start(); h.ids.get("photo-file").files = [original]; await h.context.tools.addPhoto();
+    assert.equal(count, 1); assert.equal(h.calls.some(call => call.path === "/api/media/admin/prepare"), false);
+    const writes = h.calls.filter(call => call.options.method === "POST"); assert.equal(writes.length, 1); assert.equal(writes[0].path, "/api/media/admin/assets");
+    assert.equal(writes[0].options.body, prepared); assert.equal(h.context.tools.state.selected.id, id(99));
+  });
+});

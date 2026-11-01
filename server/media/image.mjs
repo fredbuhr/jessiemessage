@@ -161,9 +161,10 @@ export const normalizeImage = createImageNormalizer();
 // retains or copies the original. This does not use the prepared-asset queue.
 export function createImagePreparer({ forkProcess = fork, setTimer = setTimeout, clearTimer = clearTimeout } = {}) {
   let active = false;
-  return function prepare(source, { declaredBytes = null, hint = null } = {}) {
+  return function prepare(source, { declaredBytes = null, hint = null, signal } = {}) {
     if (!source || !["on", "once", "off", "listeners", "pause", "resume"].every(name => typeof source[name] === "function")
-      || source.aborted || source.destroyed || source.readableEnded || hint !== null && !RAW_IMAGE_HINTS.includes(hint)
+      || source.aborted || source.destroyed || source.readableEnded || signal !== undefined && (!(signal instanceof AbortSignal) || signal.aborted)
+      || hint !== null && !RAW_IMAGE_HINTS.includes(hint)
       || declaredBytes !== null && (!Number.isSafeInteger(declaredBytes) || declaredBytes < 0 || declaredBytes > MAX_PREPARATION_INPUT_BYTES)) {
       return Promise.reject(new MediaImageError("MEDIA_INPUT"));
     }
@@ -182,14 +183,14 @@ export function createImagePreparer({ forkProcess = fork, setTimer = setTimeout,
       };
       const finish = () => {
         if (finished) return;
-        finished = true; clearTimers(); detach(); active = false;
+        finished = true; clearTimers(); detach(); signal?.removeEventListener("abort", onAborted); active = false;
         if (failure) reject(failure);
         else if (result) resolve(result);
         else reject(new MediaImageError("MEDIA_UNAVAILABLE"));
       };
       const stop = (error) => {
         if (finished || failure) return;
-        failure = error; clearTimers(); detach();
+        failure = error; clearTimers(); detach(); signal?.removeEventListener("abort", onAborted);
         try { child?.stdin?.destroy(); } catch { /* No transport details escape. */ }
         try { child?.kill("SIGKILL"); } catch { /* Retain the place until exit. */ }
         if (!child?.pid) finish();
@@ -232,7 +233,9 @@ export function createImagePreparer({ forkProcess = fork, setTimer = setTimeout,
           } catch { stop(new MediaImageError("MEDIA_UNAVAILABLE")); }
         });
         bodyTimer = setTimer(() => stop(new MediaImageError("MEDIA_TIMEOUT")), 120_000); bodyTimer?.unref?.();
-        child.send({ preparation: true, stream: true, declaredBytes, hint }, error => { if (error) stop(new MediaImageError("MEDIA_UNAVAILABLE")); });
+        signal?.addEventListener("abort", onAborted, { once: true });
+        if (signal?.aborted) stop(new MediaImageError("MEDIA_INPUT"));
+        if (!failure) child.send({ preparation: true, stream: true, declaredBytes, hint }, error => { if (error) stop(new MediaImageError("MEDIA_UNAVAILABLE")); });
         if (!failure && !finished) {
           source.once("end", onEnd); source.once("aborted", onAborted); source.once("error", onAborted); source.once("close", onClose); source.on("data", onData);
         }

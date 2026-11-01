@@ -20,12 +20,13 @@ export function limitHeicDecoder(context, lib, maximumWidth = 8000) {
 
 // The pinned libheif API returns its RGBA plane. Sample it directly into the
 // small output; never copy the full plane into another RGBA buffer or canvas.
-export function shrinkHeicPlane(channel) {
+export function shrinkHeicPlane(channel, targetSide = SIZE) {
+  if (!Number.isSafeInteger(targetSide) || targetSide < 1 || targetSide > SIZE) fail("media_dimensions");
   const { width, height, stride, data } = channel ?? {};
   if (!validSize(width, height) || !Number.isSafeInteger(stride) || stride < width * 4
     || !ArrayBuffer.isView(data) || data.BYTES_PER_ELEMENT !== 1
     || data.byteLength < stride * (height - 1) + width * 4) fail("media_dimensions");
-  const ratio = Math.min(1, SIZE / Math.max(width, height));
+  const ratio = Math.min(1, targetSide / Math.max(width, height));
   const targetWidth = Math.max(1, Math.floor(width * ratio)), targetHeight = Math.max(1, Math.floor(height * ratio));
   const pixels = new Uint8ClampedArray(targetWidth * targetHeight * 4);
   for (let y = 0; y < targetHeight; y += 1) {

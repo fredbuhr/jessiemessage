@@ -457,6 +457,7 @@ export async function prepareImageUpload(file, { signal, convert } = {}) {
   if (!(file instanceof Blob) || file.size < 1) fail("media_format");
   if (convert !== undefined && typeof convert !== "function") fail("media_unavailable");
   let bitmap, canvas, bytes;
+  let conversionAttempted = false, conversionMissing = false;
   try {
     const info = await nativeImageHint(file, signal);
     aborted(signal);
@@ -474,6 +475,18 @@ export async function prepareImageUpload(file, { signal, convert } = {}) {
     catch (error) {
       aborted(signal);
       if (info.type !== "image/heic") throw error;
+      if (convert) {
+        // Avoid a full original read and a large local HEVC plane when the
+        // authenticated converter is available. Only an old route's404 falls
+        // back to software; other HTTP/owner failures must remain visible.
+        conversionAttempted = true;
+        try { return await convertedImage(file, convert, signal); }
+        catch (error) {
+          aborted(signal);
+          if (error?.name === "AbortError" || error?.stale || error?.status !== 404) throw error;
+          conversionMissing = true;
+        }
+      }
       if (file.size > MAX_SOURCE_IMAGE_BYTES) fail("image_source_too_large");
       bytes = await readImageBytes(file, signal);
       const result = await decodeHeic(bytes, signal);
@@ -498,7 +511,8 @@ export async function prepareImageUpload(file, { signal, convert } = {}) {
   } catch (error) {
     if (error?.name === "AbortError") throw error;
     aborted(signal);
-    if (convert) {
+    if (conversionAttempted && !conversionMissing) throw error;
+    if (convert && !conversionAttempted) {
       bitmap?.dispose?.(); bitmap = null;
       if (canvas) { canvas.width = 0; canvas.height = 0; canvas = null; }
       if (bytes?.byteLength) bytes.fill(0); bytes = null;

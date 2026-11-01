@@ -1,0 +1,412 @@
+{
+  "format": "jessiemessage-1150-codecs",
+  "asOf": "2026-11-01",
+  "status": "frozen_local_codec_evidence_not_final_CI_or_host_qualification",
+  "scope": "Pinned server photo-decoder routing, actual synthetic fixtures, denied decoders, source/output guards and measured RAW costs. The original client photo was unavailable.",
+  "sourceAssociation": "The hashes below identify the qualified codec source files. This document does not qualify the whole working tree or any hosted deployment.",
+  "sourceFiles": [
+    {
+      "path": "server/media/extra-image-codecs.mjs",
+      "sha256": "e7c543cc25fb812903099c1a4d181fd87de51f022388e02972ff9b0b1a5f1c0d",
+      "bytes": 12363
+    },
+    {
+      "path": "tests/extra-image-codecs.test.mjs",
+      "sha256": "743539beb8fd4527502d3f99459dd41cc085767faef9bc44653b91a3f228d557",
+      "bytes": 10499
+    },
+    {
+      "path": "tests/fixtures/photo-extra-codecs.json",
+      "sha256": "90f9b17ff024943e9bfc2566454d54d634b797b0a0f8550951cdd008d9c2b108",
+      "bytes": 72431
+    },
+    {
+      "path": "server/media/bounded-wasm.mjs",
+      "sha256": "a71f242b579bcad38ec90b524c946807e93223026467355ad9bfc3bf3607292f",
+      "bytes": 2978
+    },
+    {
+      "path": "server/media/avif-original.mjs",
+      "sha256": "1dd2eedb2961e55c49187b59a515a441f6b3b1736398d6d0062f0e37908d20e9",
+      "bytes": 8118
+    },
+    {
+      "path": "server/media/heic-original.mjs",
+      "sha256": "06d96cc230c4c70499248e344c1565013dce58231c3abe052dfe2e95695e769a",
+      "bytes": 2439
+    },
+    {
+      "path": "public/heic-decoder-core.js",
+      "sha256": "a94074280669e2e909eac12c869215a25f4f9dfe9233a175531df007f84cd992",
+      "bytes": 5252
+    }
+  ],
+  "api": {
+    "detect": "detectExtraImageFormat(bytes,{hint}) -> bmp|jxl|avif|raw|null; pure detector with no codec initialization",
+    "decode": "async decodeExtraImage(bytes,format,{hint,maxPixels=64000000,maxSide=null,targetSide=2048}) -> {data:Buffer,width,height,channels:4}",
+    "initialization": "No top-level await. Codec imports, factory initialization and WASM compilation occur lazily inside decode.",
+    "originalInputByteCeiling": 134217728,
+    "sourcePixelCeiling": 64000000,
+    "maximumOutputSide": 2048,
+    "outputContract": "Reduced RGBA only; the separate common worker normalizes it to JPEG <=2 MiB. This module does not write to storage.",
+    "rawHints": [
+      "dng",
+      "nef",
+      "arw",
+      "cr2",
+      "cr3",
+      "raf",
+      "rw2",
+      "orf",
+      "pef",
+      "srw"
+    ],
+    "hintValidation": "Only a short extension enum, compatible with TIFF/ORF/RW2/RAF/CR3 bytes. No full client filename or path. A JPEG signature mislabeled RAW retains signature precedence.",
+    "sideGuard": "Native Magick width/height limits are retained and never increased (observed 33554431); optional caller maxSide may only restrict them. No new 32768-side or 8MP ceiling is imposed."
+  },
+  "activeDecoders": [
+    {
+      "package": "@imagemagick/magick-wasm",
+      "version": "0.0.45",
+      "runtime": "ImageMagick 7.1.2-33 Q8 wasm32; LibRaw 0.22.2-Release; libjxl 0.12.0",
+      "versionEvidence": "Runtime Magick.version/MagickFormatInfo probes retained in scratch magick-wasm/capabilities.json; exact package and loaded bytes hashed below.",
+      "allowedInputFamilies": [
+        "BMP",
+        "JXL",
+        "RAW through forced DNG"
+      ],
+      "init": {
+        "path": "node_modules/@imagemagick/magick-wasm/dist/index.js",
+        "sha256": "696370daea26ec9ccb1d53316e49eca464cd841678be0fdd550652cbcc73208e",
+        "bytes": 409295
+      },
+      "packageMetadata": {
+        "path": "node_modules/@imagemagick/magick-wasm/package.json",
+        "sha256": "345b53e4826e3b08a7a372073815fb3eec06de7e31a099a35cb0fb032acf5b07",
+        "bytes": 2053
+      },
+      "wasm": {
+        "path": "node_modules/@imagemagick/magick-wasm/dist/x86/magick.wasm",
+        "sha256": "54629cbcf06dd10db38b4d87fa6ab241b248c09c94f2d9689506e5f994ac5f0c",
+        "bytes": 15425791,
+        "minimumPages": 256,
+        "originalMaximumPages": 65536,
+        "maximumPages": 8192,
+        "pageBytes": 65536,
+        "maximumLinearMemoryBytes": 536870912,
+        "derivedBytes": 15425790,
+        "derivedSha256": "42b7e145fc333a4bc4f9440e7d631fa0e77de4721f7f09a75240ddae119e36ed"
+      },
+      "archive": {
+        "source": "official npm registry metadata/archive",
+        "sha256": "9e34a0ed83455f3bafd9ac764bc0d84e7c8c1ccb746a272517bce5dc0a15e5b2",
+        "bytes": 11260414,
+        "sri": "sha512-ef8FHka4xLWo5/tGTV6P45bPjTvnKZz/oHN6sCDTbY8zaCdM2MeaoQHLsy9IHuiVHQhomG3TQ6ErgTnEDyuzvw==",
+        "sriRecomputedAndMatched": true,
+        "runtimeDependencies": 0,
+        "lifecycleNotRunForResearch": true
+      },
+      "policy": {
+        "installedBeforeUntrustedPingAndRead": true,
+        "forcedFormatForBothPingAndRead": true,
+        "coderDefault": "deny all; read-only allow BMP/BMP2/BMP3/JXL/DNG",
+        "moduleDefault": "deny all; BMP/JXL/DNG registration only",
+        "delegateAndFilter": "deny all",
+        "explicitlyDenied": [
+          "HEIC",
+          "HEIF",
+          "AVIF",
+          "SVG",
+          "MSVG",
+          "MVG",
+          "MSL",
+          "URL",
+          "HTTP",
+          "HTTPS",
+          "FTP",
+          "FILE",
+          "PDF",
+          "PS",
+          "EPS"
+        ],
+        "pathsDenied": [
+          "@*",
+          "|*"
+        ],
+        "writers": "No Magick coder write rights; RGBA is copied from pixel view. Actual BMP-write denial is tested."
+      },
+      "resourceLimits": {
+        "cacheMemoryBytes": 268435456,
+        "maxMemoryRequestBytes": 268435456,
+        "profileBytes": 16777216,
+        "diskBytes": 0,
+        "timeSeconds": 20,
+        "listLength": 2,
+        "frameIndex": 0,
+        "frameCount": 1
+      },
+      "rawPreview": "LibRaw ping extracts dng:thumbnail before full RAW raster allocation. A JPEG profile <=16 MiB is decoded by the existing Sharp JPEG Buffer loader, with orientation once and no enlargement. Visible and native sensor-page dimensions are checked before full decode.",
+      "bundledButForbidden": "This package includes libheif 1.23.6. It is not a HEIC/HEIF/AVIF decoder for this application; no HEIF ping/read is allowed. Actual installed policy denial is positively tested."
+    },
+    {
+      "package": "@phenomen/libavif-wasm",
+      "version": "1.4.203",
+      "runtimeDeclaredVersions": {
+        "libavif": "1.4.2",
+        "dav1d": "1.5.4",
+        "aom": "3.15.2 (encoder package component; not the selected decode path)"
+      },
+      "versionsEvidence": {
+        "path": "node_modules/@phenomen/libavif-wasm/dist/versions.json",
+        "sha256": "48e014a6fe8aa1f6638c3a146f106b78a7c6c7bc98ec7df47af5b7bcdbbac477",
+        "bytes": 575
+      },
+      "adapter": "server/media/avif-original.mjs; lazy route from decodeExtraImage; first image only",
+      "init": {
+        "path": "node_modules/@phenomen/libavif-wasm/dist/codec/decode.mjs",
+        "sha256": "9a005bb8209388479101680344c7ef2123625d08af699ff32bbcd85c198f0d07",
+        "bytes": 7980
+      },
+      "wasm": {
+        "path": "node_modules/@phenomen/libavif-wasm/dist/decode.wasm",
+        "sha256": "10cd87f2c5cd865a3c4fcfde30cc9611387bebe91e4eae7d62b62ef17c27279e",
+        "bytes": 586850,
+        "minimumPages": 256,
+        "originalMaximumPages": 32768,
+        "maximumPages": 8192,
+        "pageBytes": 65536,
+        "maximumLinearMemoryBytes": 536870912,
+        "derivedSha256": "466508b384cd81c60dd8fb490f17e986bdd88bf56ebf47ae396ca34aac246436"
+      },
+      "allocation": "Low-level decoder pointer API; output is sampled directly from WASM HEAP into reduced RGBA, avoiding a JavaScript copy of full decoded RGBA. The native decoded plane may still require full WASM allocation.",
+      "guard": "Source dimensions/pixels and caller restrictions checked; primary-item irot/imir applied to actual decoded pixels. Unknown advisory metadata does not disable the native decoder. Fresh AVIF child test confirms Magick remains uninitialized."
+    },
+    {
+      "package": "heic-to",
+      "version": "1.6.7",
+      "runtime": "libheif 1.23.7; libde265 1.0.16",
+      "versionEvidence": "Pinned CSP factory runtime libheif version and archive component inspection from the separate HEIC owner.",
+      "adapter": "server/media/heic-original.mjs (separate root-owned HEIC path, not Magick)",
+      "init": {
+        "path": "node_modules/heic-to/src/lib/libheif-without-unsafe-eval.js",
+        "sha256": "75aaf03816c22f8cf40dbcaeb22bee83f2e1c5da4b7417577a7883b296348734",
+        "bytes": 3397950
+      },
+      "execution": "Pinned CSP asm.js factory in a restricted Node VM; no process/require supplied, codeGeneration strings:false/wasm:false. Shared plane sampler returns reduced RGBA.",
+      "wasmLinearMemoryClaim": null,
+      "guard": "Native coded-dimension/source 64 MP checks retained; no SPS/ispe/clap bypass."
+    }
+  ],
+  "boundedWasmMechanism": {
+    "helper": "server/media/bounded-wasm.mjs",
+    "operation": "Validate exact original SHA, one defined nonshared wasm32 memory with expected min/max and no imported memory; lower only memory-section maximum, preserve minimum/instructions, then validate exact derived SHA.",
+    "appliesTo": [
+      "Magick wasm32",
+      "modern AVIF decoder WASM"
+    ],
+    "linearHeapOnly": true,
+    "hardTotalProcessRssLimitEstablished": false,
+    "failure": "Pinned-module mismatch or allocation failure returns sanitized MEDIA_UNAVAILABLE; non-Error C++ allocation exceptions are included."
+  },
+  "qualification": {
+    "extraCodecs": {
+      "command": "node --test tests/extra-image-codecs.test.mjs",
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "log": {
+        "path": "local/extra-image-codecs-final.log.gz",
+        "uncompressedSourceName": "extra-image-codecs-final.log",
+        "uncompressedSha256": "471ba7348f412f729b7c90e028c5364ea95a915f65aaf5e4b0697f77d7170fc3",
+        "uncompressedBytes": 989,
+        "archiveManifest": "local-results.json"
+      },
+      "syntaxChecks": "node --check passed for owned module and test",
+      "diffCheck": "passed at code freeze"
+    },
+    "modernAvifAdapter": {
+      "owner": "media_backend_1141",
+      "command": "node --test tests/avif-original.test.mjs",
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skipped": 0,
+      "log": {
+        "path": "local/avif-modern-final.log.gz",
+        "uncompressedSourceName": "avif-modern-final.log",
+        "uncompressedSha256": "1f94fa53c8b6722a0e4f735454a543c090274b44a173dde996e7dcbb801a6b95",
+        "uncompressedBytes": 486,
+        "archiveManifest": "local-results.json"
+      }
+    },
+    "groupsOverlapNotSummed": true,
+    "extraCodecsCases": [
+      "Signature-first detector and compatible RAW hints, including extended-size BMFF ftyp and high-bit nonaliases",
+      "Actual BMP/JXL/DNG reduced RGBA; source buffers unchanged",
+      "Embedded JPEG RAW preview priority and native RAW orientation 6 applied once",
+      "Actual modern AVIF in fresh child, Magick uninitialized, narrowed targetSide/maxPixels",
+      "Dimension bounds,32769x1 panorama accepted, small input not enlarged",
+      "Malformed rasters and HEIF/SVG mislabeled RAW refused",
+      "Installed Magick policy positively rejects forced HEIC/AVIF/SVG ping and read; write denied",
+      "BMP containers with appended HEIC/SVG refused without decoder fallback"
+    ],
+    "noNewSuiteRunForThisProof": true
+  },
+  "qualifiedFamilies": [
+    {
+      "family": "BMP",
+      "actuallyQualified": "Synthetic 24-bit 32x24 raster; reduced RGBA; 32769x1 panorama; malformed/trailer refusal. Also integrated worker smoke by root.",
+      "notAttested": "Every BMP DIB/bit depth/RLE/ICC variant, real client BMP."
+    },
+    {
+      "family": "JXL",
+      "actuallyQualified": "Actual upstream-encoded container fixture with orientation, decoded by forced libjxl; target 32 output 24x32. Integrated worker smoke by root.",
+      "notAttested": "All codestream variants, HDR/animation and real phone originals."
+    },
+    {
+      "family": "RAW/DNG",
+      "actuallyQualified": "Synthetic CFA 128x96 DNG with and without embedded JPEG; orientation 6; full 12 MP success; bounded 48 MP allocation refusal; 48 MP sensor with 64x48 preview success. Integrated worker smoke by root.",
+      "notAttested": "Actual NEF/ARW/CR2/CR3/RAF/RW2/ORF/PEF/SRW camera files or all DNG compression/sensor variants. Their compatible-family detector tests are not decode qualification."
+    },
+    {
+      "family": "AVIF",
+      "actuallyQualified": "Actual static image and sequence (first frame only); rotation 90 CCW and both mirror axes checked against actual pixels; unrelated properties do not transform; caller restrictions. Separate adapter 3/3 and extra-route test.",
+      "notAttested": "Every profile/bit depth/HDR/grid/sequence variant, physical older-phone originals or client original."
+    },
+    {
+      "family": "HEIC/HEIF HEVC",
+      "actuallyQualified": "Separate pinned libheif 1.23.7 decoder with actual 64x48 fixture pixels/source unchanged and invalid-input refusal; tests/heic-original.test.mjs by HEIC owner; integrated worker smoke by root.",
+      "notAttested": "Every camera/phone/grids/HDR/colour profile variant, physical Safari/OS picker or client original."
+    },
+    {
+      "family": "JPEG/PNG/WebP/TIFF/GIF",
+      "actuallyQualified": "Existing native Sharp route remains separate; backend and root own its targeted and integration evidence. JPEG preview decoding is exercised by the RAW tests.",
+      "notAttested": "This 8-test group is not a replacement qualification for every native family/variant."
+    }
+  ],
+  "rawMeasurements": {
+    "format": "jessiemessage-1150-final-raw-probes",
+    "scope": "Synthetic CFA DNG, separate disposable Node 24.22.1 processes with --max-old-space-size=96 and final512MiB linear-heap mechanism. Metrics are observations, not a hard process RSS guarantee.",
+    "sourcePixelCeiling": 64000000,
+    "originalInputByteCeiling": 134217728,
+    "linearHeapMaximumBytes": 536870912,
+    "cacheMemoryBytes": 268435456,
+    "arbitrary8MpLimitPresent": false,
+    "rssMeasurement": "process.resourceUsage().maxRSS, KiB; /proc current RSS unavailable here",
+    "cases": [
+      {
+        "name": "DNG12MP full, no embedded JPEG",
+        "ok": true,
+        "width": 2048,
+        "height": 1536,
+        "ms": 2839.438542,
+        "maxRssKiB": 495536
+      },
+      {
+        "name": "DNG48MP full, no embedded JPEG",
+        "ok": false,
+        "code": "MEDIA_UNAVAILABLE",
+        "message": "Photo conversion failed.",
+        "ms": 1112.302483,
+        "maxRssKiB": 519692
+      },
+      {
+        "name": "DNG48MP with embedded JPEG",
+        "ok": true,
+        "width": 64,
+        "height": 48,
+        "ms": 583.967658,
+        "maxRssKiB": 470300
+      }
+    ],
+    "notes": [
+      "The 48 MP failure was reprobed after classifying untyped C++ allocation exceptions as MEDIA_UNAVAILABLE.",
+      "The12MP/thumbnail successful measurements were retained from the bounded-mechanism probes; later changes did not alter their decode paths.",
+      "Synthetic48MP raw source is96000372bytes; thumbnail variant96001205bytes.",
+      "The 48 MP fixture embedded JPEG is64x48; larger camera previews/models are not inferred."
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "local/extra-raw-final-probes.json.gz",
+      "uncompressedSourceName": "extra-raw-final-probes.json",
+      "uncompressedSha256": "6c8cc8712719ed9c78c28f9a6615b67d9ca62fc5534e39136936dc7aa43e9dc8",
+      "uncompressedBytes": 1549,
+      "archiveManifest": "local-results.json"
+    },
+    {
+      "path": "local/extra-codecs-final.md",
+      "uncompressedSourceName": "extra-codecs-final.md",
+      "uncompressedSha256": "b42a4878be8b2575ff9d87e62c058ed2d47d2335bfed1c4b1c8e67f7b2c51534",
+      "uncompressedBytes": 2127,
+      "archiveManifest": "local-results.json"
+    },
+    {
+      "path": "local/extra-codecs-implementation.json.gz",
+      "uncompressedSourceName": "extra-codecs-implementation.json",
+      "uncompressedSha256": "6cd44fdc09761b4dc02317fe455b8e4f7df42735127fcf97b1aa2a72a68fead6",
+      "uncompressedBytes": 4260,
+      "archiveManifest": "local-results.json"
+    }
+  ],
+  "historicalEvidence": {
+    "unbounded48MpFull": {
+      "historicalOnly": true,
+      "maxRssKiB": 1360480,
+      "ms": 10692,
+      "meaning": "Motivated the final WASM linear-memory cap; not the current path."
+    },
+    "temporary8MpCeiling": "Removed before final freeze; no such input restriction remains.",
+    "initial48MpFailureClassification": "Corrected from MEDIA_FORMAT to MEDIA_UNAVAILABLE; only the corrected re-probe is present in the clean final RAW measurements.",
+    "rejectedJsquash": "@jsquash/avif2.1.1 actual libavif 1.0.1/aom 3.7.0 was not activated. Modern @phenomen decoder replaces this proposal.",
+    "earlyMagickResearch": "Earlier exploratory all-format probes and 32 MiB/32768 drafts are historical, not application policy or final input limits."
+  },
+  "licenseNoticeInventory": {
+    "meaning": "Package-supplied licence/notice files identified; this is an inventory, not a legal compliance conclusion.",
+    "files": [
+      {
+        "path": "node_modules/@imagemagick/magick-wasm/LICENSE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "bytes": 11358
+      },
+      {
+        "path": "node_modules/@imagemagick/magick-wasm/NOTICE",
+        "sha256": "7cb6cf162ba965ed068dbc9e638c9b792b8a1a9f4dae51031e7a21ff1ebefc8d",
+        "bytes": 221910
+      },
+      {
+        "path": "node_modules/@phenomen/libavif-wasm/LICENSE",
+        "sha256": "9c49270079649e9ca5017850706c7c7b6d3e55c87351f50db343c9cf8a3947ac",
+        "bytes": 1061
+      },
+      {
+        "path": "node_modules/@phenomen/libavif-wasm/THIRD_PARTY_NOTICES.md",
+        "sha256": "6f002f45208da417ea75f12759a151419e6472dc3c5a7718b422c652f65209f6",
+        "bytes": 14250
+      },
+      {
+        "path": "node_modules/@phenomen/libavif-wasm/dist/THIRD_PARTY_NOTICES.md",
+        "sha256": "6f002f45208da417ea75f12759a151419e6472dc3c5a7718b422c652f65209f6",
+        "bytes": 14250
+      },
+      {
+        "path": "node_modules/heic-to/LICENSE",
+        "sha256": "dbd7222d8026e5d6ca6991d1e6a205de927f300840433c2e90a60644a9980c75",
+        "bytes": 8177
+      }
+    ]
+  },
+  "limits": [
+    "512 MiB is only the maximum WASM linear memory per selected decoder, not a process RSS limit; original buffers, glue, module compilation and Sharp add memory.",
+    "The parent bounds input, source pixels, conversion time and child lifetime; no continuous or hard RSS ceiling is established here.",
+    "RAW 12 MP without preview fits this measured runtime; RAW 48 MP without preview can fail availability despite being within 64 MP. Full 64 MP is allowed to try, not guaranteed to fit.",
+    "The 48 MP embedded preview fixture is only 64x48; successful preview output does not attest camera-preview quality or large real camera previews.",
+    "Synthetic tests and local Node 24.22.1 observations do not attest the unavailable original client photo, a real account/media/host, physical Safari, OS picker or telephone.",
+    "No release, deployment, preparation, CHECK or start outcome is asserted by this codec proof."
+  ],
+  "noCodeChangesDuringProof": true,
+  "noCommitPushOrHostedMutationByOwner": true
+}

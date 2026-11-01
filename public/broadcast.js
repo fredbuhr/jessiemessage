@@ -523,7 +523,10 @@ async function uploadPhoto(file = el("photo-file").files?.[0]) {
   try {
     const { prepareImageUpload, MAX_UPLOAD_BYTES } = await import("/image-preparation.js");
     if (!current()) throw stale();
-    const prepared = await prepareImageUpload(file, { signal: transfer.controller.signal, convert: async (original, { signal }) => {
+    const capabilities = await request("/api/media/admin/capabilities", { ticket, signal: transfer.controller.signal })
+      .catch(error => { if (error.status === 404) return null; throw error; });
+    if (!current()) throw stale();
+    const convert = capabilities?.preparation?.enabled === true ? async (original, { signal }) => {
       if (!current() || signal.aborted) throw stale();
       const capabilities = await request("/api/media/admin/capabilities", { ticket, signal });
       if (!current() || signal.aborted) throw stale();
@@ -534,7 +537,8 @@ async function uploadPhoto(file = el("photo-file").files?.[0]) {
       if (original.size > preparation.maxOriginalBytes) throw Object.assign(new Error("request_too_large"), { status: 413, code: "request_too_large" });
       const imageFormat = /\.(dng|nef|arw|cr2|cr3|raf|rw2|orf|pef|srw)$/i.exec(original.name ?? "")?.[1].toLowerCase();
       return request("/api/media/admin/prepare", { ticket, raw: original, signal, imageFormat, binaryLimit: preparation.maxOutputBytes, timeout: 180000 });
-    } });
+    } : undefined;
+    const prepared = await prepareImageUpload(file, { signal: transfer.controller.signal, convert });
     if (!current()) throw stale();
     if (!prepared || !Number.isSafeInteger(prepared.size) || prepared.size < 1 || prepared.size > MAX_UPLOAD_BYTES || typeof prepared.type !== "string" || !prepared.type.startsWith("image/")) throw new Error("invalid_prepared_photo");
     await verifySession(ticket); if (!current()) throw stale();

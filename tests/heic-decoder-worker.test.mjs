@@ -233,6 +233,18 @@ test("the native RGBA plane is sampled directly into a bounded opaque output wit
   ]) assert.throws(() => shrinkHeicPlane(bad), failure("media_dimensions"));
 });
 
+test("direct native-plane sampling accepts a bounded target side and reduces to32 without a full-plane copy", () => {
+  const width = 64, height = 48, data = new Uint8Array(width * height * 4);
+  for (let offset = 0; offset < data.length; offset += 4) data.set([60, 120, 200, 255], offset);
+  const channel = { width, height, stride: width * 4, data };
+  const result = shrinkHeicPlane(channel, 32);
+  assert.deepEqual([result.width, result.height, result.pixels.byteLength], [32, 24, 32 * 24 * 4]);
+  assert.notEqual(result.pixels.buffer, data.buffer);
+  assert.deepEqual([...result.pixels.slice(0, 4)], [60, 120, 200, 255]);
+  assert.deepEqual([...data.slice(0, 4)], [60, 120, 200, 255], "sampling preserves the caller-owned native plane");
+  for (const targetSide of [0, 2049]) assert.throws(() => shrinkHeicPlane(channel, targetSide), failure("media_dimensions"));
+});
+
 test("the real HEIC worker transfers only negotiated reduced pixels when its canvas capability is missing", async () => {
   const source = await readFile(new URL("../public/heic-decoder-worker.js", import.meta.url), "utf8");
   for (const capability of ["missing", "no2d", "noEncoder", "constructorFailure", "available"]) {

@@ -283,7 +283,10 @@ async function uploadPhoto(file, ticket) {
   const controller = new AbortController(); controllers.add(controller); mutating = true; controls(); notice("Préparation de la photo…");
   let attempted = false;
   try {
-    const prepared = await prepareImageUpload(file, { signal: controller.signal, convert: async (original, { signal }) => {
+    const capabilities = await request("/api/media/admin/capabilities", { ticket, signal: controller.signal })
+      .catch(error => { if (error.status === 404) return null; throw error; });
+    if (!current(ticket) || controller.signal.aborted) throw stale();
+    const convert = capabilities?.preparation?.enabled === true ? async (original, { signal }) => {
       if (!current(ticket) || signal.aborted) throw stale();
       const capabilities = await request("/api/media/admin/capabilities", { ticket, signal });
       if (!current(ticket) || signal.aborted) throw stale();
@@ -294,7 +297,8 @@ async function uploadPhoto(file, ticket) {
       if (original.size > preparation.maxOriginalBytes) throw Object.assign(new Error("request_too_large"), { status: 413, code: "request_too_large" });
       const imageFormat = /\.(dng|nef|arw|cr2|cr3|raf|rw2|orf|pef|srw)$/i.exec(original.name ?? "")?.[1].toLowerCase();
       return request("/api/media/admin/prepare", { ticket, raw: original, signal, imageFormat, binaryLimit: preparation.maxOutputBytes, timeout: 180000 });
-    } }); if (!current(ticket) || controller.signal.aborted) throw stale();
+    } : undefined;
+    const prepared = await prepareImageUpload(file, { signal: controller.signal, convert }); if (!current(ticket) || controller.signal.aborted) throw stale();
     notice("Chargement de la photo…"); attempted = true;
     const data = await request("/api/media/admin/assets", { ticket, raw: prepared, signal: controller.signal });
     if (!current(ticket)) throw stale(); if (typeof data?.duplicate !== "boolean") throw new Error("response_unconfirmed");

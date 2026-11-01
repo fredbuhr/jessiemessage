@@ -111,6 +111,18 @@ test("RAW hints are a fixed enum passed as configuration without a filename or o
   source.emit("data", jpeg); source.emit("end"); child.emit("message", { ok: true, result: result() }); child.emit("exit", 0); await pending;
 });
 
+test("cancellation after the complete body kills decoding and retains the global place until child exit", async () => {
+  const h = harness(), source = h.source(), controller = new AbortController();
+  const pending = h.prepare(source, { signal: controller.signal }), denied = assert.rejects(pending, code("MEDIA_INPUT"));
+  const child = h.children[0]; source.emit("data", jpeg); source.emit("end");
+  assert.equal(source.listenerCount("aborted"), 0); assert.equal(child.killed, undefined);
+  controller.abort(); assert.equal(child.killed, "SIGKILL"); assert.equal(child.inputDestroyed, true);
+  await assert.rejects(h.prepare(h.source()), code("MEDIA_BUSY"));
+  child.emit("message", { ok: true, result: result() }); child.emit("exit", null, "SIGKILL"); await denied;
+  const next = h.prepare(h.source()); h.children[1].emit("exit", 1); await assert.rejects(next, code("MEDIA_UNAVAILABLE"));
+  assert.ok(h.timers.every(timer => timer.cleared));
+});
+
 test("real stdin preparation accepts a 75 MiB synthetic original with known or chunked length and strips its source padding", async () => {
   const base = await sharp({ create: { width: 64, height: 48, channels: 3, background: "red" } }).jpeg().toBuffer();
   const length = 75 * 1024 * 1024, padding = Buffer.alloc(64 * 1024);
@@ -147,4 +159,19 @@ test("real stdin BMP, JXL and hinted RAW preparation enter the common bounded JP
   const fallback = await prepareImageStream(Readable.from([tiff]), { declaredBytes: tiff.length, hint: "dng" });
   assert.deepEqual([fallback.width, fallback.height], [30, 20]);
   const pixels = await sharp(fallback.full).raw().toBuffer(); assert.ok(pixels[0] > 240 && pixels[1] < 15);
+});
+
+test("real stdin AVIF preparation handles still, sequence and primary transforms without the Sharp HEIF loader", async () => {
+  const extras = JSON.parse(await readFile(new URL("./fixtures/photo-extra-codecs.json", import.meta.url), "utf8"));
+  const families = JSON.parse(await readFile(new URL("./fixtures/photo-acceptance-formats.json", import.meta.url), "utf8"));
+  const transforms = JSON.parse(await readFile(new URL("./fixtures/photo-1150-avif-transforms.json", import.meta.url), "utf8"));
+  for (const [base64, expected] of [[extras.avif.base64, [64, 48]],
+    [families.fixtures.find(value => value.name === "avif-two-frames").base64, [32, 24]],
+    [transforms.rotate90ccw.base64, [8, 16]], [transforms.mirrorLeftRight.base64, [16, 8]]]) {
+    const source = Buffer.from(base64, "base64");
+    const result = await prepareImageStream(Readable.from([source]), { declaredBytes: source.length });
+    assert.deepEqual([result.width, result.height], expected); assert.ok(result.full.length <= 2097152);
+    const metadata = await sharp(result.full).metadata(); assert.equal(metadata.format, "jpeg");
+    for (const field of ["exif", "icc", "iptc", "xmp", "orientation"]) assert.equal(metadata[field], undefined);
+  }
 });

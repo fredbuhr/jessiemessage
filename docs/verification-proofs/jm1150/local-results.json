@@ -1,0 +1,935 @@
+{
+  "format": "jessiemessage-1150-local-results",
+  "asOf": "2026-11-01",
+  "status": "acquired_development_evidence_not_final_CI_or_host_qualification",
+  "developmentCheckpoint": "592b826353b46f01f474ba8bf1aa01c66fee997c",
+  "sourceAssociation": "Historical development groups can refer to different code states. Their notes/logs state individual scope; no whole working-tree qualification is implied.",
+  "groupsOverlapNotSummed": true,
+  "totalsIntentionallyNotComputed": true,
+  "artifacts": [
+    {
+      "path": "local/backend-stream-first.log.gz",
+      "category": "log",
+      "sourceName": "backend-stream-first.log",
+      "sourceBytes": 11164,
+      "sourceSha256": "d26e254cc663ccb86013c980f4fd559c664c885b8504944ae755f51f085152ca",
+      "bytes": 4371,
+      "sha256": "84b20ddbccb5aa9b1bedcbded5dafbfb6e01619b5f334c074bcb57e1fb53bd0d",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 100,
+        "pass": 100,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/backend-stream-http-cancel.log.gz",
+      "category": "log",
+      "sourceName": "backend-stream-http-cancel.log",
+      "sourceBytes": 359,
+      "sourceSha256": "3ae7dd2f8698945fc4a10cfe907262a9edf07acfab999886a3d70af6521c857c",
+      "bytes": 252,
+      "sha256": "6ac2537d35640f3c02e6f5df0fe2bdfb9fd37bd3a73e3004f2083ce47493f373",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/backend-stream-mp4.log.gz",
+      "category": "log",
+      "sourceName": "backend-stream-mp4.log",
+      "sourceBytes": 224,
+      "sourceSha256": "f727d459786edc56edbf61428bc978adbc1441cc6ff766ccfca6f7379baa5c8d",
+      "bytes": 179,
+      "sha256": "b732580134d9afaee0994584fcc917c218cf0963c9092d45175658e0e28031d0",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/backend-stream-source-validation.log.gz",
+      "category": "log",
+      "sourceName": "backend-stream-source-validation.log",
+      "sourceBytes": 243,
+      "sourceSha256": "3e1ae4acf8d309fd49098e71b560b52b623f2ff826b300e9fec01e5b0c329cca",
+      "bytes": 191,
+      "sha256": "8d41f0a1e807e9e98ef745710492b7751dd6df23e33bf4c2449b7712609489cc",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/backend-raw-hints.log.gz",
+      "category": "log",
+      "sourceName": "backend-raw-hints.log",
+      "sourceBytes": 329,
+      "sourceSha256": "3272452f76a11c9e563427cf340bd2b561aea22de8c5617ed8a5857d21cfbb85",
+      "bytes": 237,
+      "sha256": "dcd1727d3ef91cd1b0e3323be5451286539a1c671f3a656b5d5e41f108d787b8",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/backend-stream-heic.log.gz",
+      "category": "log",
+      "sourceName": "backend-stream-heic.log",
+      "sourceBytes": 239,
+      "sourceSha256": "38becc0bec0688c8f69695bb716bbabce5ac7c5abe7a228e056e7bb28d97df33",
+      "bytes": 193,
+      "sha256": "db2fffd87dc34945a48dda384793926c22611ea485be9db847a6528f705f749e",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/backend-apng-tiff-pages.log.gz",
+      "category": "log",
+      "sourceName": "backend-apng-tiff-pages.log",
+      "sourceBytes": 198,
+      "sourceSha256": "3c4bfa42444159c34b1f265ad0f3773815d077d3eb7bef1737a61fff2d2f3553",
+      "bytes": 170,
+      "sha256": "5c66a47dbb80269b293b35fd3fb4ed099dacceaae5c801f272bf8044710749dc",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/backend-http-response-bound.log.gz",
+      "category": "log",
+      "sourceName": "backend-http-response-bound.log",
+      "sourceBytes": 4126,
+      "sourceSha256": "3c8fd392726c23bc4a9c97d1b3bed1cb0c13dd5a0e73fbeb51e94308c7d23408",
+      "bytes": 1944,
+      "sha256": "fa52f3c9576b9fe01bc9a80e26a6f1ee5bf13a456e409fd69430a45a32ab6af5",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 38,
+        "pass": 38,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/chat-photo-group.log.gz",
+      "category": "log",
+      "sourceName": "chat-photo-group.log",
+      "sourceBytes": 20526,
+      "sourceSha256": "8b62d3af88aaa03c8a5cd356db342d2fcb2a7ad14d2af4a01cfd16e5b4dd2c33",
+      "bytes": 7364,
+      "sha256": "d67c4ab3cd985c02e5cc3b9d45465f3e5f9c398d498cdadab8bccd995a5c9b18",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 179,
+        "pass": 178,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "historicalFailureLog": true
+    },
+    {
+      "path": "local/chat-preparation-transport-targeted.log.gz",
+      "category": "log",
+      "sourceName": "chat-preparation-transport-targeted.log",
+      "sourceBytes": 2082,
+      "sourceSha256": "870ab146a7d8e34a6cf56ba3d935b56973206a59fd348753260b146382b083f3",
+      "bytes": 857,
+      "sha256": "a9206a277b185c5e17ead62ee6ad9d66b8bda1ed2d3a012e8f0cd6212cb5ed4c",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 27,
+        "pass": 27,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/chat-preparation-common-targeted.log.gz",
+      "category": "log",
+      "sourceName": "chat-preparation-common-targeted.log",
+      "sourceBytes": 852,
+      "sourceSha256": "5e8d5b1e601c1634132f402524960dd846d38e69ebe9f191034964bbfa096905",
+      "bytes": 421,
+      "sha256": "c99f6b4593fda5e2ea15c461a25b8adba7860d076445dfa1a75000b26dedb281",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 9,
+        "pass": 9,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/chat-preparation-latest-targeted.log.gz",
+      "category": "log",
+      "sourceName": "chat-preparation-latest-targeted.log",
+      "sourceBytes": 5647,
+      "sourceSha256": "7955c07de2e50cbc555025ead3b77979c370d9da2c1f878a351ff6d51a5382ef",
+      "bytes": 1051,
+      "sha256": "19fd91b88d3c21153e36aba67baf4951e2b80dd61da64b3e2778e77f40b382a3",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 10,
+        "pass": 4,
+        "fail": 6,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "historicalFailureLog": true
+    },
+    {
+      "path": "local/chat-preparation-final-deltas.log.gz",
+      "category": "log",
+      "sourceName": "chat-preparation-final-deltas.log",
+      "sourceBytes": 1436,
+      "sourceSha256": "5e82b4338aa8c15e7ba409a1368e7ad4e313f222e99de001dc17b3750b273bb4",
+      "bytes": 612,
+      "sha256": "75385b3c9bfc98665c78c9085855c73339a0d235bdb388f3339c310165dd0b7b",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 25,
+        "pass": 25,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/photo-error-targeted.log.gz",
+      "category": "log",
+      "sourceName": "photo-error-targeted.log",
+      "sourceBytes": 577,
+      "sourceSha256": "b6cd43ac7ba4d8c62ff6ad98e8a543ac14d17130900b65cbbda69d9c9ed31ac8",
+      "bytes": 334,
+      "sha256": "d49b0d8aa3a8c1e0ff67dbbe39316a4a620172c01cde9f01b73f59727dc680a4",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/single-prepared-retry-test.log.gz",
+      "category": "log",
+      "sourceName": "single-prepared-retry-test.log",
+      "sourceBytes": 442,
+      "sourceSha256": "a1790f741b4889e1cbabadae9b3806f0bd74308b9cfffabd34b13790c6b9eae1",
+      "bytes": 252,
+      "sha256": "7a8d84b1a1eb04e484c2273b15c06fa4119f142349ab38950b58e93e0bf8f42a",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/photo-upload-phase-test.log.gz",
+      "category": "log",
+      "sourceName": "photo-upload-phase-test.log",
+      "sourceBytes": 213,
+      "sourceSha256": "99251249d89656299c5c8858faaf249645098504b493e21b7ce17dcb117f5b34",
+      "bytes": 177,
+      "sha256": "7770126186ee56e09328f42ed96051057c450f81efa9147f0a579b00818ae0c0",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/ui-conversion-unit.log.gz",
+      "category": "log",
+      "sourceName": "ui-conversion-unit.log",
+      "sourceBytes": 12182,
+      "sourceSha256": "e3d6f2aeb93d77aa98c15fdf388b3514b5ada704691343bdb263a50cef4f48c2",
+      "bytes": 4334,
+      "sha256": "02192f9563e04aec65a07a8bcddc8af308635a9c1176cde791a06297134f71c5",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 127,
+        "pass": 127,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/ui-conversion-binary-cancellation.log.gz",
+      "category": "log",
+      "sourceName": "ui-conversion-binary-cancellation.log",
+      "sourceBytes": 816,
+      "sourceSha256": "dff729103c79fe1c56c08470a379782da2dee1aaf82697bfa25aa9249e13082d",
+      "bytes": 333,
+      "sha256": "c5d64cdfda4861de42cd61aae3aa155f2b1d0a28b1a564df1d6037ae332577d8",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 10,
+        "pass": 10,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/native-first-results.json.gz",
+      "category": "record",
+      "sourceName": "native-first-results.json",
+      "sourceBytes": 4183,
+      "sourceSha256": "22b7b4bc02ef18fd6997adb4895a6aa3392a4c0d27f5d334e6e831c56bd4d2bd",
+      "bytes": 1979,
+      "sha256": "6e661a38ebefb53db9c05c1c98381cb4cd505a0a6ac4561724c01c6414dda7e1",
+      "gzipMtime": 0
+    },
+    {
+      "path": "local/format-rejections-results.json.gz",
+      "category": "record",
+      "sourceName": "format-rejections-results.json",
+      "sourceBytes": 2994,
+      "sourceSha256": "c6aa63cab8a1138e3ee3752d0ad9ecc2c23e67153cf6ab04fd7e544646114e5e",
+      "bytes": 656,
+      "sha256": "b85d1f968082a34b888dc0482f7f23202cde3b7e86192a653065c7f8f43ca777",
+      "gzipMtime": 0,
+      "proofScope": "historical synthetic refusal reproduction before native-first correction; not original client diagnosis"
+    },
+    {
+      "path": "local/jpeg-avif-rejections.json.gz",
+      "category": "record",
+      "sourceName": "jpeg-avif-rejections.json",
+      "sourceBytes": 2057,
+      "sourceSha256": "e3e4548d7f978bed6facab5dcf058ebd5bfb0db428d43c06b277764ed14b5da1",
+      "bytes": 607,
+      "sha256": "74a51e505a203c6813aae8f59800f0c97848cd3672e91acb33e1efd1a0835285",
+      "gzipMtime": 0,
+      "proofScope": "historical synthetic refusal reproduction before native-first correction; not original client diagnosis"
+    },
+    {
+      "path": "local/stream-memory.json.gz",
+      "category": "record",
+      "sourceName": "stream-memory.json",
+      "sourceBytes": 4806,
+      "sourceSha256": "ddbf64ec2baa0337dcbe9115fae89d4cf722b39b196f9285798f37eb274303d0",
+      "bytes": 692,
+      "sha256": "37ef87252c9d2cfda33af572a128b61e9f45bbc5df428c0ce914f2b5c3b7e36d",
+      "gzipMtime": 0
+    },
+    {
+      "path": "local/stream-memory-first-failed.json.gz",
+      "category": "record",
+      "sourceName": "stream-memory-first-failed.json",
+      "sourceBytes": 2330,
+      "sourceSha256": "a0453f8f88d91c84fdb13a3777ea9552558895789165a78e69c0bdf063cd877a",
+      "bytes": 453,
+      "sha256": "bba780c8a64760cf19d663232403d7600c74a0f08d29335aa5e63d5ae74a729d",
+      "gzipMtime": 0
+    },
+    {
+      "path": "local/stream-memory-second-failed.json.gz",
+      "category": "record",
+      "sourceName": "stream-memory-second-failed.json",
+      "sourceBytes": 2330,
+      "sourceSha256": "2a3f324f29db22634e8922a44c6773fac8109c0bf98be7b162d31e77d95f15ea",
+      "bytes": 458,
+      "sha256": "dd94976d5f4cc3cd037ba1914edce19846cb80c839eaf98898971ab988844320",
+      "gzipMtime": 0
+    },
+    {
+      "path": "local/extra-raw-bounded-results.json.gz",
+      "category": "record",
+      "sourceName": "extra-raw-bounded-results.json",
+      "sourceBytes": 554,
+      "sourceSha256": "fbba69222e8fe73bcf73615b34d8fc9a3c62d88af28dfc66d8ebc53baecf8389",
+      "bytes": 258,
+      "sha256": "fee16b92643b90775d8a833c02c23d043d596e5eacfa4b56aa0c97ce0e2e09c6",
+      "gzipMtime": 0,
+      "proofScope": "historical codec-resource stage, superseded for final interpretation by extra-raw-final-probes.json; not final candidate acceptance"
+    },
+    {
+      "path": "local/extra-raw-12mp-result.json.gz",
+      "category": "record",
+      "sourceName": "extra-raw-12mp-result.json",
+      "sourceBytes": 141,
+      "sourceSha256": "c97d0234cd49eb048ab6ab186301c70fcfc77158fb20cc7e6d6a08345c23385e",
+      "bytes": 136,
+      "sha256": "88471bb9214ff4e2e56c3565b051a5477e3d63500ba83cedcfd7f2a49176c4b2",
+      "gzipMtime": 0,
+      "proofScope": "historical codec-resource stage, superseded for final interpretation by extra-raw-final-probes.json; not final candidate acceptance"
+    },
+    {
+      "path": "local/extra-raw-48mp-result.json.gz",
+      "category": "record",
+      "sourceName": "extra-raw-48mp-result.json",
+      "sourceBytes": 218,
+      "sourceSha256": "98f02c720f4d2a4181adaa09a0b3b11d93f6704ae474a2aee7f7bdd54779ade4",
+      "bytes": 177,
+      "sha256": "56a104a9c46b3aa23444f2e1ce4592f3cdf2e8ad9e76b24f5675f0f3f4ca28ff",
+      "gzipMtime": 0,
+      "proofScope": "historical codec-resource stage, superseded for final interpretation by extra-raw-final-probes.json; not final candidate acceptance"
+    },
+    {
+      "path": "local/chat-photo-independent-fixes.json.gz",
+      "category": "record",
+      "sourceName": "chat-photo-independent-fixes.json",
+      "sourceBytes": 6729,
+      "sourceSha256": "cb6a958156bc731924e469c1b988bdb164016ece17277c2cdc9db6464c7720fa",
+      "bytes": 2918,
+      "sha256": "257f6648c8ec91383e9d669ce59f900573ffac3a80d60646c52cda24f9898a25",
+      "gzipMtime": 0
+    },
+    {
+      "path": "local/chat-photo-preparation-integration.json.gz",
+      "category": "record",
+      "sourceName": "chat-photo-preparation-integration.json",
+      "sourceBytes": 6522,
+      "sourceSha256": "acc302c2c25fffe012ac44428536c7b4a047500e68fd7ac415961b033b765510",
+      "bytes": 2706,
+      "sha256": "85abc16563727d82f2f8e4f88153ec209a09b99ae4c901d592183a4e77e2eb1e",
+      "gzipMtime": 0
+    },
+    {
+      "path": "local/stream-after-end-abort-probe-result.json.gz",
+      "category": "record",
+      "sourceName": "stream-after-end-abort-probe-result.json",
+      "sourceBytes": 486,
+      "sourceSha256": "7de1214d8694d887d767948f870dad10038eaadccec7647c0afd04ad65d2531d",
+      "bytes": 307,
+      "sha256": "e3f4f8576041f16876fceca43524664addfa58bc719e092bb0c1d089d75f350b",
+      "gzipMtime": 0,
+      "reviewedSource": "592b826353b46f01f474ba8bf1aa01c66fee997c"
+    },
+    {
+      "path": "local/shared-heic-probe-results.json.gz",
+      "category": "record",
+      "sourceName": "shared-heic/probe-results.json",
+      "sourceBytes": 721,
+      "sourceSha256": "58d4c30bf38044d44656c6973ca6c229d1b45533f4c87705ea4565b66330ddc0",
+      "bytes": 232,
+      "sha256": "151c7517f1732389647eb3cc11b85c94a888eb2681ae5e86b37563dbad873ad7",
+      "gzipMtime": 0
+    },
+    {
+      "path": "local/stream-memory.mjs.gz",
+      "category": "probe",
+      "sourceName": "stream-memory.mjs",
+      "sourceBytes": 1861,
+      "sourceSha256": "d08f312f66750cfc971ef368811ce19eb805998d761d280f278456a98758ec66",
+      "bytes": 883,
+      "sha256": "4ca49080f69ca94b941baebb1aef0801787ef181bd312854ce52eddf6ff07937",
+      "gzipMtime": 0
+    },
+    {
+      "path": "local/stream-memory-worker.mjs.gz",
+      "category": "probe",
+      "sourceName": "stream-memory-worker.mjs",
+      "sourceBytes": 453,
+      "sourceSha256": "ff1842277b896738a79de8f02b7661c186a1d0af4af46d69c35cc9360ebfe8ed",
+      "bytes": 262,
+      "sha256": "8c6cfa58e02ccf4e4ddae5da487ccd8cc973a33bc36308d91e331d9e75b26404",
+      "gzipMtime": 0
+    },
+    {
+      "path": "local/native-memory.mjs.gz",
+      "category": "probe",
+      "sourceName": "native-memory.mjs",
+      "sourceBytes": 2200,
+      "sourceSha256": "dc171c1749d5ecd844911ce5654cc62ddae03d0f58b9df3ff713905759755a75",
+      "bytes": 1004,
+      "sha256": "114191a8ca3ec7d85ac5d68cc8e8a761b1423e2e20a71bdbed496aa6d69f0552",
+      "gzipMtime": 0
+    },
+    {
+      "path": "local/format-rejections-probe.mjs.gz",
+      "category": "probe",
+      "sourceName": "format-rejections-probe.mjs",
+      "sourceBytes": 4216,
+      "sourceSha256": "0e2cdc326922e7a99d11a29975e6d980ac76206c81832ee9ba6bc4f157919d5b",
+      "bytes": 1773,
+      "sha256": "f29dd07e1bd75a112b7866db2c0fd569ca8f2f6180d8319f4acb8790b60df83d",
+      "gzipMtime": 0,
+      "proofScope": "historical synthetic refusal reproduction before native-first correction; not original client diagnosis"
+    },
+    {
+      "path": "local/stream-after-end-abort-probe.mjs.gz",
+      "category": "probe",
+      "sourceName": "stream-after-end-abort-probe.mjs",
+      "sourceBytes": 1811,
+      "sourceSha256": "978316ee81fd126a81f95180dde75b20629f7025136bc0890e010e1a4bebd0b7",
+      "bytes": 851,
+      "sha256": "60274e2de5b37881aadd7b1a50858389711f853c0cbd3d5f85f633d7be7ecac8",
+      "gzipMtime": 0,
+      "reviewedSource": "592b826353b46f01f474ba8bf1aa01c66fee997c"
+    },
+    {
+      "path": "local/frozen-stream-image-592b8263.mjs.gz",
+      "category": "probe",
+      "sourceName": "frozen-stream-image-592b8263.mjs",
+      "sourceBytes": 12544,
+      "sourceSha256": "4275422b6fa971edcd5de26eef994d630b5072705a99e462127b66fc31ae5826",
+      "bytes": 3614,
+      "sha256": "0fabfa14d81093502461f1741b1ab58b82ff2cd442ee265c5421f364344b8ead",
+      "gzipMtime": 0,
+      "reviewedSource": "592b826353b46f01f474ba8bf1aa01c66fee997c"
+    },
+    {
+      "path": "local/backend-stream-128.md",
+      "category": "note",
+      "sourceName": "backend-stream-128.md",
+      "sourceBytes": 5061,
+      "sourceSha256": "8b89d0edb60059b6ccc55da9e0187300fc876a1077e725dee19951cfc5663be0",
+      "bytes": 5061,
+      "sha256": "8b89d0edb60059b6ccc55da9e0187300fc876a1077e725dee19951cfc5663be0"
+    },
+    {
+      "path": "local/capacity-backup-preflight-implementation.md",
+      "category": "note",
+      "sourceName": "capacity-backup-preflight-implementation.md",
+      "sourceBytes": 7253,
+      "sourceSha256": "d7a7a9b29999c8fffe9daff1d7678f12efcbe07bf686f7b3a6c23c62a92a1cbf",
+      "bytes": 7253,
+      "sha256": "d7a7a9b29999c8fffe9daff1d7678f12efcbe07bf686f7b3a6c23c62a92a1cbf"
+    },
+    {
+      "path": "local/live-capacity-implementation.md",
+      "category": "note",
+      "sourceName": "live-capacity-implementation.md",
+      "sourceBytes": 3395,
+      "sourceSha256": "5849785d28a905aca4fcc1776d2ee29a7f9e6b1fd8f36db4fcf57b75cb1b44d3",
+      "bytes": 3395,
+      "sha256": "5849785d28a905aca4fcc1776d2ee29a7f9e6b1fd8f36db4fcf57b75cb1b44d3"
+    },
+    {
+      "path": "local/profile-conversion-callers.md",
+      "category": "note",
+      "sourceName": "profile-conversion-callers.md",
+      "sourceBytes": 2733,
+      "sourceSha256": "69196216e580e64a1bca332c7091544c8af7015adf419f4620f6a64c37514839",
+      "bytes": 2733,
+      "sha256": "69196216e580e64a1bca332c7091544c8af7015adf419f4620f6a64c37514839"
+    },
+    {
+      "path": "local/ui-conversion-callers-final.md",
+      "category": "note",
+      "sourceName": "ui-conversion-callers-final.md",
+      "sourceBytes": 6075,
+      "sourceSha256": "3735a2124da1d760778e39aac03d2cdb2cebdecfca241789441c2fb1ae115d6f",
+      "bytes": 6075,
+      "sha256": "3735a2124da1d760778e39aac03d2cdb2cebdecfca241789441c2fb1ae115d6f"
+    },
+    {
+      "path": "local/server-stream-counter-review-592b8263.md",
+      "category": "note",
+      "sourceName": "server-stream-counter-review-592b8263.md",
+      "sourceBytes": 3823,
+      "sourceSha256": "569ccd38d7d9aa375f64d414b7e336bc187366bbf1be1364fe8094e870a092e9",
+      "bytes": 3823,
+      "sha256": "569ccd38d7d9aa375f64d414b7e336bc187366bbf1be1364fe8094e870a092e9"
+    },
+    {
+      "path": "local/native-first-independent-review.md",
+      "category": "note",
+      "sourceName": "native-first-independent-review.md",
+      "sourceBytes": 4373,
+      "sourceSha256": "72d9ecb3623ce4ceb980fabfe233325444ae9d08262a7a79a1bba5b0a4f42a74",
+      "bytes": 4373,
+      "sha256": "72d9ecb3623ce4ceb980fabfe233325444ae9d08262a7a79a1bba5b0a4f42a74"
+    },
+    {
+      "path": "local/backend-abort-after-eof-final.log.gz",
+      "category": "log",
+      "sourceName": "backend-abort-after-eof-final.log",
+      "sourceBytes": 351,
+      "sourceSha256": "6e5ddbc0c8b4af000b7fe981934395e8b98f361ee0042e8d7795b8b07ba84dda",
+      "bytes": 247,
+      "sha256": "98d6e2dc185e8b4532e12acf8151f968cbfc58b80682e00df6a9e987d0b63a65",
+      "proofScope": "afterEOF corrective delta, independently reviewed; final candidate native qualification pending",
+      "correctionBase": "871a54b549c3ddb847abc80ce0af07f05b366d5b",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/server-stream-abort-fix-review.md",
+      "category": "note",
+      "sourceName": "server-stream-abort-fix-review.md",
+      "sourceBytes": 2450,
+      "sourceSha256": "7464211d9bd453a4151268842f9b40fb70976160340fb4056370773ba6671d63",
+      "bytes": 2450,
+      "sha256": "7464211d9bd453a4151268842f9b40fb70976160340fb4056370773ba6671d63",
+      "proofScope": "afterEOF corrective delta, independently reviewed; final candidate native qualification pending",
+      "correctionBase": "871a54b549c3ddb847abc80ce0af07f05b366d5b"
+    },
+    {
+      "path": "local/ui-legacy-heic-capability-final.log.gz",
+      "category": "log",
+      "sourceName": "ui-legacy-heic-capability-final.log",
+      "sourceBytes": 677,
+      "sourceSha256": "ed757baab0d9e55ad17e571af16c9b7343a7463831965dcbb649b619265621b5",
+      "bytes": 284,
+      "sha256": "3f949a186dab41cfa3761e3caec61cb99e7d2c1d912613d33c52920e621f0265",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 8,
+        "pass": 8,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/ui-mobile-capability-final.md",
+      "category": "note",
+      "sourceName": "ui-mobile-capability-final.md",
+      "sourceBytes": 2547,
+      "sourceSha256": "761ab333762393eb4749ec5aee4266837268b9783d03eb81282dccd7861f135f",
+      "bytes": 2547,
+      "sha256": "761ab333762393eb4749ec5aee4266837268b9783d03eb81282dccd7861f135f"
+    },
+    {
+      "path": "local/npm-audit-final.json.gz",
+      "category": "record",
+      "sourceName": "npm-audit-final.json",
+      "sourceBytes": 361,
+      "sourceSha256": "974580651a30ccbb60ee33d30aabe1fdb1df0f7157ad2c7f133e2ac21ac52087",
+      "bytes": 184,
+      "sha256": "300d765c50449901d9355b5571bfa7b670b5d271233f3c3aa2cee34572336134",
+      "gzipMtime": 0,
+      "proofScope": "root-reported npm advisory snapshot only; no universal codec vulnerability claim"
+    },
+    {
+      "path": "local/npm-audit-final-scope.md",
+      "category": "note",
+      "sourceName": "npm-audit-final-scope.md",
+      "sourceBytes": 1005,
+      "sourceSha256": "29b45112127432a01a0d44bc48c51d6c2ab1dfe660caa6a8292731742ae4b2cd",
+      "bytes": 1005,
+      "sha256": "29b45112127432a01a0d44bc48c51d6c2ab1dfe660caa6a8292731742ae4b2cd",
+      "proofScope": "root-reported npm advisory snapshot only; no universal codec vulnerability claim"
+    },
+    {
+      "path": "local/backend-final-targeted.log.gz",
+      "category": "log",
+      "sourceName": "backend-final-targeted.log",
+      "sourceBytes": 16004,
+      "sourceSha256": "61ae77347a466ffdeece35083e08aa2e6d7dc877cb9379a5dc300369e1892aeb",
+      "bytes": 6154,
+      "sha256": "f52d96e7e9c393e8d6d58805f535859bd593bdbc007a30ba91517c3e6e973532",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 145,
+        "pass": 145,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "proofScope": "final targeted backend145/145, overlapping earlier backend/codec groups; not global CI"
+    },
+    {
+      "path": "local/codec-bounds-counter-review.md",
+      "category": "note",
+      "sourceName": "codec-bounds-counter-review.md",
+      "sourceBytes": 3691,
+      "sourceSha256": "d777ee11d9fbe6599a04032da935559c80c8dfaa0bcefd0a00b2e1a24b8e5455",
+      "bytes": 3691,
+      "sha256": "d777ee11d9fbe6599a04032da935559c80c8dfaa0bcefd0a00b2e1a24b8e5455"
+    },
+    {
+      "path": "local/shared-heic-server-first-heic.json.gz",
+      "category": "record",
+      "sourceName": "shared-heic/server-first-heic.json",
+      "sourceBytes": 1625,
+      "sourceSha256": "7e6a05fd1619868b4fb5f7cbc6d5c30ef908471204e43c6d7a9828c457a1cf8c",
+      "bytes": 840,
+      "sha256": "96817483c2971527625cc4ec46e5a59977a8942464be30e01a64fe5f550bb848",
+      "gzipMtime": 0,
+      "reportedCheck": {
+        "command": "node --test --test-name-pattern='HEIC server-first' tests/image-preparation.test.mjs",
+        "tests": 4,
+        "pass": 4,
+        "skipped": 0,
+        "duration_ms": 143.827733,
+        "cases": [
+          "Original identity and signal retained, no full original read or worker/canvas allocation before successful convert.",
+          "404 local worker success and failure; one conversion total in both cases.",
+          "401/403/422/429/503 and stale404 exact error identity, no software worker.",
+          "Abort while converter ignores signal, late success ignored, no worker/canvas."
+        ]
+      },
+      "proofScope": "separate later common/core delta; not global candidate or browser qualification"
+    },
+    {
+      "path": "local/shared-heic-target-side-and-order.json.gz",
+      "category": "record",
+      "sourceName": "shared-heic/target-side-and-order.json",
+      "sourceBytes": 2254,
+      "sourceSha256": "890a8a52ee8a2e0fdbed199793ac5e2586c74d4bc100e86b22ab49a810400325",
+      "bytes": 1241,
+      "sha256": "f40a389b54c8bbddf34c88bb796666e85f00ef01c666ace804bae23c0b77aaf2",
+      "gzipMtime": 0,
+      "reportedCheck": {
+        "command": "node --test --test-name-pattern='direct native-plane sampling accepts' tests/heic-decoder-worker.test.mjs",
+        "tests": 1,
+        "pass": 1,
+        "skipped": 0,
+        "duration_ms": 190.965607
+      },
+      "proofScope": "separate later common/core delta; not global candidate or browser qualification"
+    },
+    {
+      "path": "local/smoke-six-families-initial.log.gz",
+      "category": "log",
+      "sourceName": "smoke-six-families-initial.log",
+      "sourceBytes": 181,
+      "sourceSha256": "e543359fa86dde7b69979c467dff601a69e481fdb47907762949ccfb9687ec8e",
+      "bytes": 161,
+      "sha256": "dd36bb366e356f62e50b9f464f56a8358dd58088f2015a169d52cbafaa3de7a5",
+      "gzipMtime": 0,
+      "reportedSmoke": {
+        "status": "photo_codecs1150_synthetic_ok",
+        "nodeVersion": "v24.22.1",
+        "families": [
+          "bmp",
+          "jxl",
+          "dng",
+          "avif",
+          "heic",
+          "jpeg"
+        ],
+        "cases": 6,
+        "noRuntime": true,
+        "noSql": true,
+        "noStoredMedia": true
+      },
+      "proofScope": "root acquired synthetic six-family check; no runtime/SQL/stored media"
+    },
+    {
+      "path": "local/final-build.log.gz",
+      "category": "log",
+      "sourceName": "final-build.log",
+      "sourceBytes": 688,
+      "sourceSha256": "e6c8abdd740ebe4a2a0979aaabb28fee1acedc35f7d7062abe9c46d94b4c236f",
+      "bytes": 376,
+      "sha256": "c9409814928cc42e4391e3cf704346f675dc238c78bdc84b0a26d8f21fab54d5",
+      "gzipMtime": 0,
+      "reportedBuild": {
+        "reportedBy": "root",
+        "passed": true,
+        "syntaxSourceFiles": 810,
+        "globalCI": false
+      }
+    },
+    {
+      "path": "local/extra-image-codecs-final.log.gz",
+      "category": "log",
+      "sourceName": "extra-image-codecs-final.log",
+      "sourceBytes": 989,
+      "sourceSha256": "471ba7348f412f729b7c90e028c5364ea95a915f65aaf5e4b0697f77d7170fc3",
+      "bytes": 613,
+      "sha256": "e88cecf7037855a7c3635899561b47d2d94ee0867370b73435f496c241ff266d",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 8,
+        "pass": 8,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/avif-modern-final.log.gz",
+      "category": "log",
+      "sourceName": "avif-modern-final.log",
+      "sourceBytes": 486,
+      "sourceSha256": "1f94fa53c8b6722a0e4f735454a543c090274b44a173dde996e7dcbb801a6b95",
+      "bytes": 332,
+      "sha256": "8f874eb2ba134e8200c2f47e9af95d7179a854bacdb4984426699c4b9f776b14",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/backend-stream-avif.log.gz",
+      "category": "log",
+      "sourceName": "backend-stream-avif.log",
+      "sourceBytes": 239,
+      "sourceSha256": "895896180e6e648a3432dca784423d333eb3f60687794aa43c95ee42371a5d2b",
+      "bytes": 197,
+      "sha256": "55ab4d47c2dcfa454e2c8f3a310c02a06b8be6f7179eb5c58ba7e1c2dfee7199",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/backend-stream-extra-final.log.gz",
+      "category": "log",
+      "sourceName": "backend-stream-extra-final.log",
+      "sourceBytes": 221,
+      "sourceSha256": "67620649e2180c3fa754ea1fa29e0b554e80af3b113467db983c7dd90189e486",
+      "bytes": 188,
+      "sha256": "18e284938041792a8798d8eb151bf42df598008c3f55bb33623671eb53c9d671",
+      "gzipMtime": 0,
+      "reportedTestCounts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "path": "local/extra-raw-final-probes.json.gz",
+      "category": "record",
+      "sourceName": "extra-raw-final-probes.json",
+      "sourceBytes": 1549,
+      "sourceSha256": "6c8cc8712719ed9c78c28f9a6615b67d9ca62fc5534e39136936dc7aa43e9dc8",
+      "bytes": 822,
+      "sha256": "e844164ba3045b212c2ef13f8e3c53926e75e2154be956c291c21b96fa5b6eb7",
+      "gzipMtime": 0,
+      "proofScope": "final bounded RAW observations only:12MP full succeeds,48MP full503,48MP embedded JPEG succeeds; linear heap512MiB is not total RSS bound"
+    },
+    {
+      "path": "local/extra-codecs-final.md",
+      "category": "note",
+      "sourceName": "extra-codecs-final.md",
+      "sourceBytes": 2127,
+      "sourceSha256": "b42a4878be8b2575ff9d87e62c058ed2d47d2335bfed1c4b1c8e67f7b2c51534",
+      "bytes": 2127,
+      "sha256": "b42a4878be8b2575ff9d87e62c058ed2d47d2335bfed1c4b1c8e67f7b2c51534"
+    },
+    {
+      "path": "local/extra-codecs-implementation.json.gz",
+      "category": "record",
+      "sourceName": "extra-codecs-implementation.json",
+      "sourceBytes": 4260,
+      "sourceSha256": "6cd44fdc09761b4dc02317fe455b8e4f7df42735127fcf97b1aa2a72a68fead6",
+      "bytes": 2095,
+      "sha256": "9a18373b4a7eb811a9aa482010093395ad86d716f82c524babc9214a6a82b320",
+      "gzipMtime": 0
+    }
+  ],
+  "overlapNotes": [
+    "backend100 includes/revises earlier backend cases;38-case binary response group is preserved separately, not added.",
+    "chat179 initial group has178 pass and1 fixture assertion failure; the affected phase case was corrected and passed alone.",
+    "chat latest10 contains4 passing cases and6 counted fixture failures; final25 covers remaining RAW/profile corrections.27 transport and9 common are separate prior groups, not a sum.",
+    "library/broadcast127 passed once; affected binary10 overlaps8 cases and adds2. The prior26 targeted group is not archived as a second success total.",
+    "profile4 new cases were acquired as initial3/4 and corrected failed1/1; no full profile/browser success claimed.",
+    "capacity/preflight99 distinct executable green cases and3 native omissions are documented in notes; native SQL omissions are not successes.",
+    "resource maxRSS figures are experiments for named fixtures, not a worst-case memory guarantee or hosted measurement.",
+    "afterEOF initial probe reproduces P2 at reviewed checkpoint; separate later corrective log has2 new passing cases and independent delta review. Initial evidence remains unchanged.",
+    "Later mobile caller delta:8 new cases only;127/10/profile4 and capacity99 not replayed. Common mobile order has separate owner evidence.",
+    "Final targeted backend145/145, Magick8/8, AVIF3/3 and real-stdin1/1 logs overlap; preserve them separately without addition.",
+    "Common server-first HEIC4/4 and target-side helper1/1 are later distinct method results; native browser qualification remains pending.",
+    "Root build reports810 syntax sources; root smoke reports6 synthetic codec families without runtime/SQL/stored media. Neither is global candidate CI.",
+    "Final RAW consolidated probes supersede historical resource-stage interpretation:12MP full pass,48MP full MEDIA_UNAVAILABLE under final heap budget,48MP embedded JPEG pass.96MiB raw fixture binaries not copied."
+  ],
+  "limits": {
+    "finalCandidateNativeCI": false,
+    "mergedMainQualification": false,
+    "hostOperations": false,
+    "realAccountsMessagesMedia": false,
+    "originalClientCaseReproduced": false,
+    "realBackupOrRestore": false,
+    "rawLargeBinariesCopied": false,
+    "npmResearchArtifactsCopied": false,
+    "suitesOrProbesRerunForPackaging": false
+  },
+  "indexNote": {
+    "path": "local/README.md",
+    "bytes": 4238,
+    "sha256": "af8e1b690ba992a1057bd81d28f7e2b828ef66dc7bacfbc57e7f152776c89ce7"
+  },
+  "externalChecks": {
+    "npmAudit": {
+      "command": "npm audit --omit=dev --json",
+      "exitCode": 0,
+      "reportedBy": "root",
+      "totalDependencies": 63,
+      "knownNpmAdvisories": 0,
+      "universalCodecVulnerabilityAbsenceClaimed": false
+    }
+  },
+  "completion": "Final local evidence pack frozen; candidate/global CI/main/host status must be recorded later by root."
+}

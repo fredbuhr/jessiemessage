@@ -27,11 +27,17 @@ const MAGICK_POLICY = `<?xml version="1.0"?><policymap>
 </policymap>`;
 
 function brands(bytes) {
-  if (bytes.length < 16 || bytes.toString("ascii", 4, 8) !== "ftyp") return [];
-  const size = bytes.readUInt32BE(0);
-  if (size < 16 || size > bytes.length || size > 4096 || size % 4 !== 0) return [];
-  const result = [bytes.toString("ascii", 8, 12)];
-  for (let offset = 16; offset < size; offset += 4) result.push(bytes.toString("ascii", offset, offset + 4));
+  if (bytes.length < 16 || bytes.toString("latin1", 4, 8) !== "ftyp") return [];
+  let size = bytes.readUInt32BE(0), header = 8;
+  if (size === 1) {
+    if (bytes.length < 24) return [];
+    const extended = bytes.readBigUInt64BE(8);
+    if (extended > 4096n) return [];
+    size = Number(extended); header = 16;
+  }
+  if (size < header + 8 || size > bytes.length || size > 4096 || size % 4 !== 0) return [];
+  const result = [bytes.toString("latin1", header, header + 4)];
+  for (let offset = header + 8; offset < size; offset += 4) result.push(bytes.toString("latin1", offset, offset + 4));
   return result;
 }
 
@@ -54,7 +60,7 @@ export function detectExtraImageFormat(bytes, { hint = null } = {}) {
   if (TIFF_HINTS.has(hint) && TIFF_HEADERS.has(header)) return "raw";
   if (hint === "orf" && ["4949524f", "49495352", "4d4d4f52"].includes(header)) return "raw";
   if (hint === "rw2" && header === "49495500") return "raw";
-  if (hint === "raf" && bytes.length >= 16 && bytes.toString("ascii", 0, 16) === "FUJIFILMCCD-RAW ") return "raw";
+  if (hint === "raf" && bytes.length >= 16 && bytes.toString("latin1", 0, 16) === "FUJIFILMCCD-RAW ") return "raw";
   if (hint === "cr3" && fileBrands.includes("crx ") && !avif && !fileBrands.some(value => HEIF_BRANDS.has(value))) return "raw";
   return null;
 }
@@ -65,6 +71,8 @@ function magick() {
     const api = await import("@imagemagick/magick-wasm");
     const { boundWasmMemory } = await import("./bounded-wasm.mjs");
     const original = await readFile(new URL(import.meta.resolve("@imagemagick/magick-wasm/magick.wasm")));
+    // Only the pinned module's linear-memory maximum is lowered to 512 MiB;
+    // its instructions/minimum are unchanged. This is not a total RSS limit.
     const wasm = boundWasmMemory(original, {
       expectedSha256: "54629cbcf06dd10db38b4d87fa6ab241b248c09c94f2d9689506e5f994ac5f0c",
       expectedMinimumPages: 256, expectedMaximumPages: 65536, maximumPages: 8192,
@@ -95,10 +103,10 @@ function dimensions(width, height, options) {
 async function rawPreview(bytes, orientation, options) {
   try {
     const { default: sharp } = await import("sharp");
-    const settings = { failOn: "warning", limitInputPixels: Math.min(options.maxPixels, 16_000_000), sequentialRead: true, animated: false, pages: 1 };
+    const settings = { failOn: "warning", limitInputPixels: options.maxPixels, sequentialRead: true, animated: false, pages: 1 };
     const metadata = await sharp(bytes, { ...settings, limitInputPixels: false }).metadata();
     if (metadata.format !== "jpeg") fail("MEDIA_FORMAT");
-    dimensions(metadata.width, metadata.height, { ...options, maxPixels: Math.min(options.maxPixels, 16_000_000) });
+    dimensions(metadata.width, metadata.height, options);
     let pipeline = sharp(bytes, settings);
     if (metadata.orientation) pipeline = pipeline.rotate();
     else if (orientation === 2) pipeline = pipeline.flop();
@@ -178,9 +186,9 @@ async function decodeMagick(bytes, format, options) {
     });
   } catch (error) {
     if (["MEDIA_INPUT", "MEDIA_FORMAT", "MEDIA_DIMENSIONS", "MEDIA_UNAVAILABLE"].includes(error?.code)) throw error;
-    if (/WidthOrHeightExceedsLimit|ImagePixelLimitExceeded/.test(error?.message ?? "")) fail("MEDIA_DIMENSIONS");
-    if (error instanceof WebAssembly.RuntimeError
-      || /NotAuthorized|CacheResourcesExhausted|MemoryAllocationFailed|TimeLimitExceeded|out of memory|Aborted\(OOM\)/i.test(error?.message ?? "")) fail("MEDIA_UNAVAILABLE");
+    if (!error || typeof error.message !== "string" || error instanceof WebAssembly.RuntimeError) fail("MEDIA_UNAVAILABLE");
+    if (/WidthOrHeightExceedsLimit|ImagePixelLimitExceeded/.test(error.message)) fail("MEDIA_DIMENSIONS");
+    if (/NotAuthorized|CacheResourcesExhausted|MemoryAllocationFailed|TimeLimitExceeded|out of memory|Aborted\(OOM\)/i.test(error.message)) fail("MEDIA_UNAVAILABLE");
     fail("MEDIA_FORMAT");
   }
 }
@@ -192,6 +200,10 @@ export async function decodeExtraImage(bytes, format, options = {}) {
   const configured = limits(options);
   if (!Buffer.isBuffer(bytes) || !bytes.length || bytes.length > MAX_INPUT_BYTES) fail("MEDIA_INPUT");
   if (!["bmp", "jxl", "raw", "avif"].includes(format) || detectExtraImageFormat(bytes, configured) !== format) fail("MEDIA_FORMAT");
-  if (format === "avif") fail("MEDIA_UNAVAILABLE"); // Separate AV1 decoder pending version-qualified selection.
+  if (format === "avif") {
+    let decode;
+    try { ({ decodeAvifOriginal: decode } = await import("./avif-original.mjs")); } catch { fail("MEDIA_UNAVAILABLE"); }
+    return decode(bytes, configured);
+  }
   return decodeMagick(bytes, format, configured);
 }

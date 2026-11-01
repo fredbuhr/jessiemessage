@@ -257,7 +257,8 @@ test("original preparation accepts only enumerated RAW hints and forwards no cli
   const seen = [];
   const { base, admissionRates } = await fixture(t, {
     async prepareStream(role, token, source, ticket, options) {
-      seen.push(options); await readUpload(source); return { bytes: jpeg, mime: "image/jpeg" };
+      assert.ok(options.signal instanceof AbortSignal); assert.equal(options.signal.aborted, false);
+      seen.push({ declaredBytes: options.declaredBytes, hint: options.hint }); await readUpload(source); return { bytes: jpeg, mime: "image/jpeg" };
     },
   });
   for (const hint of ["DNG", "jpeg", "../dng", "private-photo.dng", "dng,raf"]) {
@@ -269,6 +270,28 @@ test("original preparation accepts only enumerated RAW hints and forwards no cli
     const response = await post(base, "/api/media/admin/prepare", jpeg, uploadHeaders("admin", { "X-Image-Format": hint }));
     assert.equal(response.status, 200); assert.deepEqual(seen.at(-1), { declaredBytes: jpeg.length, hint });
   }
+});
+
+test("client response cancellation after original EOF signals the outstanding decoder and restores admission", async (t) => {
+  let entered, cancelled;
+  const started = new Promise(resolve => { entered = resolve; });
+  const aborted = new Promise(resolve => { cancelled = resolve; });
+  const { base, service } = await fixture(t, {
+    async prepareStream(role, token, source, ticket, { signal }) {
+      await readUpload(source); entered();
+      return new Promise((resolve, reject) => signal.addEventListener("abort", () => {
+        cancelled(); reject(Object.assign(new Error("private-secret-cancel"), { code: "MEDIA_INPUT" }));
+      }, { once: true }));
+    },
+  });
+  const controller = new AbortController();
+  const pending = fetch(`${base}/api/media/admin/prepare`, { method: "POST", headers: uploadHeaders(), body: jpeg, signal: controller.signal });
+  const denied = assert.rejects(pending, error => error.name === "AbortError");
+  await started; controller.abort(); await denied; await aborted;
+  await new Promise(resolve => setImmediate(resolve));
+  service.prepareStream = async (role, token, source) => { await readUpload(source); return { bytes: jpeg, mime: "image/jpeg" }; };
+  const next = await post(base, "/api/media/admin/prepare", jpeg, uploadHeaders());
+  assert.equal(next.status, 200);
 });
 
 test("upload rejection authenticates before attaching any body listener", async (t) => {

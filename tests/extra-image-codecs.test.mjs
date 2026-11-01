@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import { decodeExtraImage, detectExtraImageFormat } from "../server/media/extra-image-codecs.mjs";
 
 const source = JSON.parse(await readFile(new URL("./fixtures/photo-extra-codecs.json", import.meta.url), "utf8"));
@@ -50,6 +51,11 @@ test("extra format detection keeps signatures primary and RAW hints restricted t
   assert.equal(detectExtraImageFormat(ftyp("crx ", "heic"), { hint: "cr3" }), null);
   assert.equal(detectExtraImageFormat(ftyp("crx ", "avif"), { hint: "cr3" }), "avif");
   assert.equal(detectExtraImageFormat(ftyp("heic", "avif"), { hint: "cr3" }), null);
+  const extended = Buffer.alloc(28); extended.writeUInt32BE(1); extended.write("ftyp", 4); extended.writeBigUInt64BE(28n, 8);
+  extended.write("avif", 16); extended.write("mif1", 24);
+  assert.equal(detectExtraImageFormat(extended), "avif", "extended-size ftyp remains a valid family hint");
+  const disguised = ftyp("crx ", "isom"); disguised[8] |= 128;
+  assert.equal(detectExtraImageFormat(disguised, { hint: "cr3" }), null, "high-bit bytes are not ASCII brand aliases");
   assert.equal(detectExtraImageFormat(svg, { hint: "dng" }), null);
 });
 
@@ -74,6 +80,26 @@ test("RAW prefers its embedded JPEG during native ping, then Sharp normalizes th
   const portrait = await decodeExtraImage(rawOrientation(bytes, 6), "raw", { hint: "dng", targetSide: 32 });
   assert.deepEqual([portrait.width, portrait.height, portrait.channels], [24, 32, 4], "native RAW orientation is applied once when JPEG has no orientation");
   portrait.data.fill(0);
+});
+
+test("AVIF uses the separate decoder without initializing Magick's older HEIF code", () => {
+  const script = `import {readFile} from "node:fs/promises";
+    import {decodeExtraImage} from "./server/media/extra-image-codecs.mjs";
+    import {Magick} from "@imagemagick/magick-wasm";
+    const cold=()=>{try{void Magick.delegates;return false;}catch{return true;}};
+    const fixtures=JSON.parse(await readFile("tests/fixtures/photo-extra-codecs.json","utf8"));
+    const bytes=Buffer.from(fixtures.avif.base64,"base64"),before=cold(),image=await decodeExtraImage(bytes,"avif");
+    const small=await decodeExtraImage(bytes,"avif",{targetSide:32});
+    let restricted;try{await decodeExtraImage(bytes,"avif",{maxPixels:100});}catch(error){restricted=error.code;}
+    console.log(JSON.stringify({before,after:cold(),width:image.width,height:image.height,channels:image.channels,bytes:image.data.length,
+      small:[small.width,small.height],restricted}));
+    image.data.fill(0);small.data.fill(0);`;
+  const result = spawnSync(process.execPath, ["--max-old-space-size=96", "--input-type=module", "--eval", script], {
+    cwd: new URL("../", import.meta.url), encoding: "utf8", timeout: 10000,
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout), { before: true, after: true, width: 64, height: 48, channels: 4, bytes: 64 * 48 * 4,
+    small: [32, 24], restricted: "MEDIA_DIMENSIONS" });
 });
 
 test("extra decode bounds dimensions before pixel decode, preserves panoramas and does not enlarge small photos", async () => {

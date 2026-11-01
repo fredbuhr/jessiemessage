@@ -283,14 +283,18 @@ export function createMediaHandler(service, { origin }) {
         const declaredBytes = uploadLength(request, MAX_PREPARATION_INPUT_BYTES);
         const admission = await service.admitPreparation(route.role, token);
         if (!admission || typeof admission !== "object") throw unavailable();
+        const controller = new AbortController();
+        const onClose = () => { if (!response.writableFinished) controller.abort(); };
+        response.once("close", onClose);
+        if (response.destroyed) controller.abort();
         try {
-          const result = await service.prepareStream(route.role, token, request, admission, { declaredBytes, hint });
+          const result = await service.prepareStream(route.role, token, request, admission, { declaredBytes, hint, signal: controller.signal });
           if (!response.destroyed && !response.writableEnded) {
             const completed = reserveBinaryRead(response);
             try { bytesReply(response, method, result, "prepared"); }
             finally { completed(); }
           }
-        } finally { service.releaseUpload(admission); }
+        } finally { response.off("close", onClose); service.releaseUpload(admission); }
       } else if (upload) {
         query(url, []);
         const admission = await service.admitUpload(route.role, token);

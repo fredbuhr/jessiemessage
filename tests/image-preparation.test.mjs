@@ -461,6 +461,64 @@ test("HEIC fallback uses one fixed local disposable module worker and only retur
   }
 });
 
+test("HEIC server-first conversion avoids the full original read and software worker allocation", async () => {
+  class PhoneHEIC extends Blob {
+    get size() { return 1024 * 1024; }
+    arrayBuffer() { assert.fail("the complete HEIC original is not read for server-first conversion"); }
+  }
+  const input = new PhoneHEIC([heic], { type: "image/heic" });
+  const output = new Blob([await solid(64, 48)], { type: "image/jpeg" });
+  const controller = new AbortController(), f = harness({ noBitmap: true, workerResult: { ok: true, blob: output } });
+  let calls = 0;
+  assert.equal(await f.prepare(input, { signal: controller.signal, convert(file, { signal }) {
+    calls += 1; assert.equal(file, input); assert.equal(signal, controller.signal);
+    assert.equal(f.workers.length, 0); assert.equal(f.canvases.length, 0);
+    return output;
+  } }), output);
+  assert.equal(calls, 1); assert.equal(f.workers.length, 0); assert.equal(f.canvases.length, 0);
+});
+
+test("HEIC server-first404 keeps local compatibility without a second conversion even when software fails", async () => {
+  const input = new Blob([heic], { type: "image/heic" });
+  const output = new Blob([await solid(64, 48)], { type: "image/jpeg" });
+  for (const success of [true, false]) {
+    const f = harness({ noBitmap: true, workerResult: success ? { ok: true, blob: output } : { ok: false, code: "media_heic" } });
+    let calls = 0;
+    const pending = f.prepare(input, { convert() {
+      calls += 1; assert.equal(f.workers.length, 0);
+      throw Object.assign(new Error("old preparation route"), { status: 404, code: "not_found" });
+    } });
+    if (success) assert.equal(await pending, output);
+    else await assert.rejects(pending, code("media_heic"));
+    assert.equal(calls, 1); assert.equal(f.workers.length, 1); assert.equal(f.workers[0].terminated, true);
+  }
+});
+
+test("HEIC server-first failures preserve auth, resource and stale errors without starting software", async () => {
+  const input = new Blob([heic], { type: "image/heic" });
+  const errors = [401, 403, 422, 429, 503].map(status => Object.assign(new Error("synthetic HTTP refusal"), { status, code: "refused" }));
+  errors.push(Object.assign(new Error("old owner"), { stale: true, status: 404 }));
+  for (const error of errors) {
+    const f = harness({ noBitmap: true, workerResult: { ok: false, code: "media_heic" } }); let calls = 0;
+    await assert.rejects(f.prepare(input, { convert() { calls += 1; throw error; } }), failure => failure === error);
+    assert.equal(calls, 1); assert.equal(f.workers.length, 0); assert.equal(f.canvases.length, 0);
+  }
+});
+
+test("HEIC server-first conversion aborts without a software fallback or adoption of late output", async () => {
+  const input = new Blob([heic], { type: "image/heic" }), controller = new AbortController();
+  const output = new Blob([await solid(64, 48)], { type: "image/jpeg" });
+  const f = harness({ noBitmap: true, workerResult: { ok: true, blob: output } });
+  let begin, deliver, calls = 0; const started = new Promise(resolve => { begin = resolve; });
+  const pending = f.prepare(input, { signal: controller.signal, convert() {
+    calls += 1; begin(); return new Promise(resolve => { deliver = resolve; });
+  } });
+  await started; controller.abort();
+  await assert.rejects(pending, error => error.name === "AbortError");
+  deliver(output); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls, 1); assert.equal(f.workers.length, 0); assert.equal(f.canvases.length, 0);
+});
+
 test("a valid HEIC container reaches the native-guarded worker despite an advisory parser limit", async () => {
   const free = Buffer.from([0, 0, 0, 8, 102, 114, 101, 101]);
   const bytes = Buffer.concat([heic, ...Array(4097).fill(free)]);
