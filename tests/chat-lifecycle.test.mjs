@@ -2454,3 +2454,82 @@ test("a new single-photo send waits for preparation of a removed preview", async
   assert.doesNotMatch(f.element("chat-status").textContent, /légende/);
   assert.equal(f.inspect().states.get(f.inspect().selected).pending, null);
 });
+
+test("single-photo retry reuses its normalized upload body after transient preview failure and a lost upload reply", async t => {
+  for (const hideBeforeRetry of [false, true]) await t.test(hideBeforeRetry ? "same-owner visibility resume" : "same visible page", async () => {
+    const original = new Blob(["synthetic camera original"], { type: "image/jpeg" });
+    const normalized = new Blob(["synthetic normalized JPEG body"], { type: "image/jpeg" });
+    let preparations = 0; const uploadedBodies = [], sentCommands = [];
+    const f = harness({ prepare: async file => {
+      preparations++;
+      if (preparations === 1) throw Object.assign(new Error("transient preview read failure"), { code: "media_unavailable" });
+      assert.equal(file, original, "an already normalized retry body must never return to preparation");
+      return normalized;
+    }, intercept(path, options) {
+      if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+      if (path === "/api/media/client/assets" && options.method === "POST") {
+        uploadedBodies.push(options.body);
+        if (uploadedBodies.length === 1) throw new Error("synthetic lost upload acknowledgement");
+        return response(200, { asset: { id: id(1800) }, duplicate: true });
+      }
+      if (path.startsWith("/api/media/client/conversations/") && path.endsWith("/messages") && options.method === "POST") {
+        const command = JSON.parse(options.body); sentCommands.push(command);
+        return response(201, { message: { id: id(1801), sequence: "2", sender: "me", body: command.caption,
+          clientMessageId: command.clientMessageId, createdAt: now, deletedAt: null } });
+      }
+    } }); await flush();
+    await chooseSyntheticPhotos(f, [original]); assert.equal(preparations, 1); assert.equal(uploadedBodies.length, 0);
+    await f.send("Keep this caption");
+    const state = f.inspect().states.get(f.inspect().selected), key = state.pending?.clientMessageId;
+    assert.equal(preparations, 2); assert.equal(uploadedBodies.length, 1); assert.equal(uploadedBodies[0], normalized);
+    assert.equal(state.pending?.file, normalized); assert.equal(state.pending?.filePrepared, true); assert.equal(state.pending?.status, "retry");
+    assert.equal(sentCommands.length, 0);
+    if (hideBeforeRetry) { await f.hide(); await f.show(); }
+    await f.advance(60000);
+    assert.equal(preparations, 2); assert.equal(uploadedBodies.length, 1, "time and visibility never repeat an uncertain upload automatically");
+    assert.equal(state.pending?.clientMessageId, key); assert.equal(state.pending?.filePrepared, true);
+    await f.click("retry-send");
+    assert.equal(preparations, 2); assert.equal(uploadedBodies.length, 2); assert.equal(uploadedBodies[1], uploadedBodies[0]);
+    assert.equal(sentCommands.length, 1); assert.equal(sentCommands[0].clientMessageId, key);
+    assert.equal(sentCommands[0].caption, "Keep this caption"); assert.equal(state.pending, null); assert.equal(state.imageDraft, null);
+  });
+});
+
+test("a local photo preview failure remains visible after polling and an explicit preparation retry", async () => {
+  let preparations = 0;
+  const f = harness({ prepare: async () => {
+    preparations++; throw Object.assign(new Error("synthetic cloud read unavailable"), { code: "media_unavailable" });
+  }, intercept: path => path === "/api/media/client/capabilities" ? response(200, { enabled: true }) : undefined }); await flush();
+  const original = new Blob(["synthetic camera original"], { type: "image/jpeg" });
+  await chooseSyntheticPhotos(f, [original]);
+  const state = f.inspect().states.get(f.inspect().selected), expected = "La photo n’a pas pu être préparée sur cet appareil. Réessaie cet envoi.";
+  assert.equal(preparations, 1); assert.equal(state.imageDraft.previewError.code, "media_unavailable");
+  assert.equal(f.element("image-preview").textContent, expected);
+  assert.equal(f.element("image-draft-status").textContent, expected);
+  assert.equal(f.element("image-draft-status").classList.contains("is-error"), true);
+  await f.advance(3000);
+  assert.equal(f.element("image-preview").textContent, expected); assert.equal(preparations, 1, "polling does not silently restart local preparation");
+  await f.send("Preserve this caption"); assert.equal(preparations, 2); assert.equal(state.pending, null);
+  await f.advance(3000);
+  assert.equal(f.element("image-draft-status").textContent, expected); assert.equal(f.element("image-preview").textContent, expected);
+  assert.equal(state.imageDraft.file, original); assert.equal(f.element("message-body").value, "Preserve this caption");
+  assert.equal(f.calls.filter(call => call.options.method === "POST" && call.path.startsWith("/api/media/")).length, 0);
+});
+
+test("photo service and storage failures retain their HTTP diagnosis beside the selected photo", async t => {
+  for (const status of [503, 507]) await t.test(String(status), async () => {
+    let uploads = 0;
+    const f = harness({ prepare: async () => new Blob(["normalized JPEG"], { type: "image/jpeg" }), intercept(path) {
+      if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+      if (path === "/api/media/client/assets") { uploads++; return response(status, { error: "media_unavailable" }); }
+    } }); await flush();
+    await chooseSyntheticPhotos(f, [new Blob(["synthetic original"], { type: "image/jpeg" })]); await f.send("Preserve this caption");
+    const state = f.inspect().states.get(f.inspect().selected), key = state.pending.clientMessageId;
+    const expected = status === 503 ? "Le service photo est momentanément indisponible. Réessaie cet envoi dans un moment." : "Le stockage des photos a atteint sa limite.";
+    assert.equal(f.element("chat-status").textContent, expected); assert.equal(f.element("image-draft-status").textContent, expected);
+    assert.equal(state.pending.photoError.status, status); assert.equal(state.pending.status, "retry");
+    await f.advance(3000);
+    assert.equal(f.element("image-draft-status").textContent, expected); assert.equal(uploads, 1);
+    assert.equal(state.pending.clientMessageId, key); assert.equal(f.element("message-body").value, "Preserve this caption");
+  });
+});

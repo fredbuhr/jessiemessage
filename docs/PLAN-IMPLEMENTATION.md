@@ -2,6 +2,14 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
+## Évolution1.15.0 — suppression des refus photo injustifiés
+
+[Diagnostic et périmètre](photo-acceptance-1150.md). Refus synthétiques établis sur formats courants, JPEG valides, capacité couplée aux archives et reprise/erreurs masquées. Original client non attesté.
+
+1. Achever préparateur natif-first, conversion serveur protégée sans stockage et choix des codecs réellement sûrs ; intégrer chat/profil/diffusion/bibliothèque.
+2. Découpler caps photos inutiles avec conservation des compteurs/charges et refus sauvegarde précoce avant arrêt ; tests synthétiques uniquement.
+3. Qualification ciblée puis PR/main5/5, couverture formats/variantes et preuves ; publier et préparer une seule mise à jour du SHA exact. Production1141 inchangée à ce jalon.
+
 ## Correctif 1.14.1 — livraison terminée
 
 [Bilan et couverture12domaines](media-reliability-1141.md). Corrections médias regroupées, PR146/main5/5 et cinq captures acquises ; source/tagc803c2c9/arbre f391b5ce, publication/latestv1.14.1/release430681218. Node24.22.1, six dépendances et SQL38/37tables attendues inchangés. Échecs initiaux et52omissions explicites conservés.

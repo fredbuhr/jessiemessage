@@ -326,7 +326,8 @@ test("image draft captions and uploading state remain unchanged while UI labels 
   for (const handler of f.element("composer").events.get("submit")) handler({ preventDefault() {} }); await flush();
   const state = f.inspect().states.get(f.inspect().selected), pending = state.pending, key = pending.clientMessageId;
   const before = f.calls.length; f.language("en");
-  assert.equal(f.element("image-draft-status").textContent, "Preparing photo…");
+  assert.equal(state.pending.filePrepared, true);
+  assert.equal(f.element("image-draft-status").textContent, "Uploading photo…");
   assert.equal(f.element("message-body").placeholder, "Caption…");
   assert.equal(f.element("image-preview").querySelector("img"), preview); assert.equal(preview.getAttribute("aria-label"), "Selected photo preview");
   assert.equal(state.pending, pending); assert.equal(state.pending.caption, "Envoyer"); assert.equal(state.pending.clientMessageId, key);
@@ -433,6 +434,9 @@ test("all controller message and photo error variants retain reactive translated
     ["errorText", { status: 403 }, "L’envoi n’est pas autorisé pour le moment."],
     ["errorText", {}, "La connexion est interrompue. Ton texte reste ici ; tu peux réessayer."],
     ["mediaErrorText", { status: 507, code: "storage_limit" }, "Le stockage des photos a atteint sa limite."],
+    ["mediaErrorText", { status: 507, code: "media_unavailable" }, "Le stockage des photos a atteint sa limite."],
+    ["mediaErrorText", { status: 503, code: "media_unavailable" }, "Le service photo est momentanément indisponible. Réessaie cet envoi dans un moment."],
+    ["mediaErrorText", { code: "media_unavailable" }, "La photo n’a pas pu être préparée sur cet appareil. Réessaie cet envoi."],
     ["mediaErrorText", { status: 409, code: "media_in_use" }, "Cette photo est utilisée dans une conversation ou comme avatar. Retire ces utilisations avant de la supprimer."],
     ["mediaErrorText", { status: 404 }, "Cette photo n’est plus disponible."],
     ["mediaErrorText", { status: 415 }, "La photo n’a pas pu être transférée. Réessaie avec une légende de 1 000 caractères maximum."],

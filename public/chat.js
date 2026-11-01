@@ -21,6 +21,8 @@ ui.register({
   "Un envoi reste à confirmer. Réessaie cet envoi pour reprendre la même demande.": "A send still needs confirmation. Retry this send to resume the same request.",
   "Ce navigateur ne peut pas garder ce brouillon après rechargement. Il reste dans cet onglet.": "This browser cannot keep this draft after reloading. It remains in this tab.",
   "Cet envoi n’a pas commencé. Réessaie sans recharger la page pour conserver ton brouillon.": "This send has not started. Retry without reloading the page to keep your draft.",
+  "La photo n’a pas pu être préparée sur cet appareil. Réessaie cet envoi.": "The photo could not be prepared on this device. Retry this send.",
+  "Le service photo est momentanément indisponible. Réessaie cet envoi dans un moment.": "The photo service is temporarily unavailable. Retry this send shortly.",
 });
 
 const el = (id) => document.getElementById(id);
@@ -812,10 +814,14 @@ function renderImageDraft(state) {
   el("composer-help").classList.toggle("sr-only", !hasImage && el("message-body").value.length < 3896);
   el("cancel-image").disabled = Boolean(state.pending) || sendBusy;
   if (!draft && !pending) { revokePreview(); return; }
-  ui.text(el("image-draft-status"), pending?.stage === "uploading" ? "Préparation de la photo…" : draft?.asset?.sharedHere ? "Déjà envoyée ici · nouvel envoi" : "Une photo à envoyer");
+  const photoError = pending?.photoError ?? draft?.previewError;
+  let imageStatus = draft?.asset?.sharedHere ? "Déjà envoyée ici · nouvel envoi" : "Une photo à envoyer";
+  if (pending?.stage === "uploading") imageStatus = pending.filePrepared ? "Transfert de la photo…" : "Préparation de la photo…";
+  ui.text(el("image-draft-status"), photoError ? mediaErrorText(photoError) : imageStatus);
+  el("image-draft-status").classList.toggle("is-error", Boolean(photoError));
   if (!visible()) return;
   const identity = draft?.file ?? draft?.asset?.id ?? pending?.mediaId;
-  if (identity && identity === previewIdentity && (!draft?.prepared || previewUrl)) { queueMicrotask(() => startSelectedPhotoPreview(state)); return; }
+  if (identity && identity === previewIdentity && (!draft?.prepared || previewUrl) && !draft?.previewError) { queueMicrotask(() => startSelectedPhotoPreview(state)); return; }
   revokePreview(); previewIdentity = identity;
   if (draft?.file) {
     if (draft.prepared) {
@@ -1334,13 +1340,14 @@ async function sendPhotoSelection() {
 }
 
 function mediaErrorText(error) {
+  if (error.status === 507) return "Le stockage des photos a atteint sa limite.";
+  if (error.status === 503) return "Le service photo est momentanément indisponible. Réessaie cet envoi dans un moment.";
   if (error.code === "media_heic") return "Cet appareil n’a pas pu convertir cette photo HEIC ou HEIF. Essaie de la réexporter depuis ton application Photos.";
   if (error.code === "image_source_too_large") return "Cette photo dépasse la capacité de préparation de cet appareil. Essaie de la réexporter depuis ton application Photos.";
   if (error.code === "media_format") return "Cette image ne peut pas être lue. Essaie de la réexporter depuis ton application Photos.";
   if (error.code === "media_dimensions") return "La définition de cette photo dépasse la capacité de préparation de cet appareil. Essaie de la réexporter depuis ton application Photos.";
   if (error.code === "request_too_large" || error.status === 413) return "Cette photo est trop volumineuse pour le transfert. Essaie une autre version.";
-  if (error.code === "media_unavailable") return "La photo n’a pas pu être préparée. Essaie une autre photo.";
-  if (error.status === 507 && error.code === "storage_limit") return "Le stockage des photos a atteint sa limite.";
+  if (error.code === "media_unavailable") return "La photo n’a pas pu être préparée sur cet appareil. Réessaie cet envoi.";
   if (error.status === 409 && error.code === "media_in_use") return "Cette photo est utilisée dans une conversation ou comme avatar. Retire ces utilisations avant de la supprimer.";
   if (error.status === 404) return "Cette photo n’est plus disponible.";
   if (error.status === 415 || error.status === 400) return "La photo n’a pas pu être transférée. Réessaie avec une légende de 1 000 caractères maximum.";
@@ -2158,6 +2165,7 @@ async function sendImage(retry = false, reply = null) {
   if (!validCaption(caption)) { notice("Ajoute une légende de 1 000 caractères maximum, ou laisse le champ vide.", true); return; }
   const draft = state.imageDraft;
   const pending = prepareImageSend(state, { caption, mediaId: retry ? state.pending?.mediaId : draft?.asset?.id ?? null, file: retry ? state.pending?.file : draft?.file ?? null }, state.pending?.clientMessageId ?? newClientId());
+  delete pending.photoError; if (draft) delete draft.previewError;
   if (reply && !Object.hasOwn(pending, "replyThrough")) Object.assign(pending, reply);
   captureReply(state, pending);
   state.draft = caption;
@@ -2167,17 +2175,23 @@ async function sendImage(retry = false, reply = null) {
     if (photoPreviewJob) await photoPreviewJob.promise;
     if (!fresh(ticket) || !visible() || state.pending !== pending) return;
     if (!pending.mediaId) {
-      const preparation = new AbortController(); controllers.add(preparation); let prepared;
-      preparing = true;
-      try {
-        if (!fresh(ticket) || !visible()) throw staleResponse();
-        prepared = draft?.prepared ?? await prepareImageUpload(pending.file, { signal: preparation.signal });
+      if (!pending.filePrepared) {
+        const preparation = new AbortController(); controllers.add(preparation); let prepared;
+        preparing = true;
+        try {
+          if (!fresh(ticket) || !visible()) throw staleResponse();
+          prepared = draft?.prepared ?? await prepareImageUpload(pending.file, { signal: preparation.signal });
+        }
+        finally { controllers.delete(preparation); }
+        preparing = false;
+        if (!fresh(ticket) || !visible() || state.pending !== pending) return;
+        // An upload can be stored even when its reply is lost. Every retry
+        // must reuse these exact normalized bytes, without another encoding.
+        pending.file = prepared; pending.filePrepared = true;
+        if (draft && state.imageDraft === draft) { draft.prepared = prepared; delete draft.previewError; }
       }
-      finally { controllers.delete(preparation); }
-      preparing = false;
-      if (!fresh(ticket) || !visible() || state.pending !== pending) return;
-      pending.file = prepared;
-      const result = await uploadPhoto(prepared, state, ticket);
+      renderMeta(state); notice("Transfert de la photo…");
+      const result = await uploadPhoto(pending.file, state, ticket);
       if (!completeImageUpload(state, pending.clientMessageId, result.asset.id)) return;
       state.imageDraft = { file: null, asset: result.asset }; renderMeta(state);
     }
@@ -2191,8 +2205,9 @@ async function sendImage(retry = false, reply = null) {
     if (preparing && fresh(ticket) && state.pending === pending) {
       // Local preparation failed before any upload/message request. The photo
       // can be changed safely; uncertain network sends keep their retry key.
-      state.pending = null;
+      state.pending = null; if (draft && state.imageDraft === draft) draft.previewError = error;
     } else if (!error.stale && state.pending && !rejectPendingImageSend(state, error.status)) retrySend(state);
+    if (!error.stale && fresh(ticket) && state.pending === pending) pending.photoError = { status: error.status, code: error.code };
     await handleMediaError(error, state);
   } finally { if (fresh(ticket)) { sendBusy = false; renderMeta(state); } }
 }
