@@ -57,10 +57,18 @@ L’[identité utilisateur](verification-proofs/jm1141/hosted-identity.json) con
 
 Le service Node239143 nommé recette.jessiemessage.com dessert aussi le principal et sa base. **Ne rejouer ni préparation, CHECK SSH, réglages ou redémarrage.** Les [réglages du service](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application) et son [tableau de bord](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) ne sont pas à modifier pour la finalisation de métadonnées.
 
-## Critère de fin — writer1141 encore à qualifier
+## Enregistrement final1141 — outil qualifié, reçu attendu
 
-La nouvelle identité étant reçue, un writer1141 est à préparer et qualifier séparément, lié aux sources exactes, au reçu de staging, au CHECK, au démarrage réel et au checkpoint14 préservé. Il devra vérifier ces preuves avant une écriture gardée des seules métadonnées, puis relire le résultat ; aucun nouveau redémarrage ou SQL n'est prévu pour cette finalisation.
+Le nouvel outil est [qualifié32/32 natifs](verification-proofs/jm1141/writer-final-native.json), sans échec ni omission : [run41326737432](https://github.com/fredbuhr/jessiemessage/actions/runs/41326737432), tentative1,1/1job, Nodev24.22.1. Opérateur **`e6bfd8aa4e50c04f5b51cafe1abb309dd9c2fc57`**, arbre `bfcacffd621e5daa495961e1c946b837be1e45a4`, helper SHA256 **`83b0c3da69dc50e4263632138ba163dc40efc249b5aacffef6a19af653c83ef0`**,34880octets. Helper/test/workflow relus via API et identiques aux octets qualifiés ; log complet conservé et contre-revue indépendante sans bloqueur. Tests applicatifs déjà verts non rejoués.
 
-La livraison ne sera close qu'après réception et vérification du résultat de ce writer : application/checkpoint/publication1141 concordants, disponibilité publique confirmée dans sa portée, état14 complet et autres blocs préservés. **Writer1141 non qualifié et non exécuté à ce stade ; aucun enregistrement final1141 acquis.**
+Il exige le stagingdf4b58f7, le checkpoint14/19ceaa7e et la secondeUTC1793550063 ; retrouve les millisecondes dans l’unique journal de démarrage, contrôle versions/sources/locks/Node/configuration/migrations, dépendances réutilisées, précontrôles, HTTP publics et publication avant toute écriture. Normalisation de la seule version applicative entre14 et1141 ; lock14 installé623e3be5 distinct du lock1141d4b723dc. État actif14 complet, sectionrelease1140/historiques et autres blocs préservés, avec repli185 dans sa portéeSQL38 seule et publicProfileDowngradeQualified:false. Écriture gardée atomique des seules métadonnées puis relecture ; aucun nouvel envoi, SQL, installation, CHECK ou redémarrage.
 
-Les GET publics ne prouvent pas seuls le commit du processus. Téléphones physiques, Safari, photo originale problématique et inventaire SQL physique nouveau ne sont pas déduits de cette livraison. La sauvegarde reportée, les comptes et médias réels, le PC et les chantiers hors périmètre gardent leur état acquis, sans nouvel essai automatique.
+**Action unique maintenant :**
+
+1. Ouvrir le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal) dans ton navigateur.
+2. Copier le [bloc exact record-command.sh](verification-proofs/jm1141/record-command.sh), de `env -i` à `PY_RECORD1141`, puis le coller et valider une seule fois. Il télécharge le nouvel outil à son commit immuable et vérifie son SHA256 avant exécution.
+3. Transmettre le JSON retourné. Si la réponse est perdue ou refusée, conserver les traces et lire l’état durable avant toute reprise ; ne pas rejouer le bloc pour découvrir son résultat.
+
+**Aucun reçu final1141 reçu et aucun writer hébergé exécuté par l’agent à ce stade.** Le succès natif synthétique ne constitue pas l’exécution réelle. La livraison sera close après validation de la concordance application/checkpoint/publication et de la préservation de l’état14 dans le reçu final.
+
+Les GET publics ne prouvent pas seuls le commit du processus. Le writer les rapproche du journal lié au démarrage rapporté, sans inspection indépendante PID/socket/binaire par l’agent. Téléphones physiques, Safari, photo originale problématique et inventaire SQL physique nouveau ne sont pas déduits de cette livraison. Sauvegarde reportée, PC et chantiers hors périmètre gardent leur état acquis, sans nouvel essai automatique.

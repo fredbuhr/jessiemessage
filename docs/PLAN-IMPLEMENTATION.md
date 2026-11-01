@@ -2,7 +2,7 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Correctif 1.14.1 — application démarrée, métadonnées à finaliser
+## Correctif 1.14.1 — application démarrée, writer qualifié, reçu attendu
 
 [Bilan et couverture12domaines](media-reliability-1141.md). PR146/main5/5 et cinq captures acquises ; source/tagc803c2c9/arbre f391b5ce, publication/latestv1.14.1 acquise, release430681218. Préparateur nouveaufac6890f qualifié39/39. Aucune dépendance, migration ou changement Node ; démarrage1141 rapporté le1novembre17:21:03Paris. Échecs initiaux et52omissions explicites préservés.
 
@@ -10,8 +10,10 @@ Préparation et CHECK1141 acquis selon le [reçu utilisateur](verification-proof
 
 Démarrage1141 acquis selon l’[identité utilisateur](verification-proofs/jm1141/hosted-identity.json), sourcec803c2c9/Node24.22.1,01/11/2026 17:21:03Paris, seconde1793550063. Aucun nouveau redémarrage requis.
 
-1. Qualifier le nouveau writer1141 lié à ces preuves et au checkpoint14 avant de fournir son bloc épinglé de métadonnées seules.
-2. Vérifier son reçu final et la préservation complète de l’état14 avant de clore la livraison. Aucun ancien writer, nouvelle activation exploratoire ou test réel non demandé à rejouer.
+Writer nouveau e6bfd8aa qualifié32/32 natifs, [run41326737432](verification-proofs/jm1141/writer-final-native.json),1/1job, tentative1 ; source relue identique. Aucun SQL, CHECK ou nouveau redémarrage.
+
+1. Exécuter une seule fois le [bloc épinglé de métadonnées1141](verification-proofs/jm1141/record-command.sh) dans le terminal SSH puis transmettre son JSON. Aucun enregistrement final1141 acquis à ce stade.
+2. Vérifier ce reçu final et la préservation complète de l’état14 avant de clore la livraison. Aucun ancien writer, nouvelle activation exploratoire ou test réel non demandé à rejouer.
 
 [REPRISE](REPRISE.md) et [guide opérateur](operations-release1141.md) portent les pins exacts. Photo cliente originale, appareils physiques/Safari et sauvegarde reportée ne deviennent pas des réussites ni de nouveaux chantiers automatiques.
 

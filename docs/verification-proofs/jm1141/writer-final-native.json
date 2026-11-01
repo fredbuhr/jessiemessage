@@ -1,0 +1,119 @@
+{
+  "format": "jessiemessage-1141-writer-final-native-observation",
+  "authority": "GitHub API completed run and unique job, complete UTF-8 job log, pinned source readback; no hosted writer execution",
+  "operator": {
+    "source": "e6bfd8aa4e50c04f5b51cafe1abb309dd9c2fc57",
+    "tree": "bfcacffd621e5daa495961e1c946b837be1e45a4",
+    "workflow": ".github/workflows/record-release1141.yml"
+  },
+  "run": {
+    "id": 41326737432,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "e6bfd8aa4e50c04f5b51cafe1abb309dd9c2fc57",
+    "headBranch": "ops/record-v1.14.1",
+    "event": "push",
+    "createdAt": "2026-11-01T16:31:07Z",
+    "updatedAt": "2026-11-01T16:31:17Z",
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41326737432"
+  },
+  "jobs": {
+    "total": 1,
+    "successful": 1,
+    "omitted": 0,
+    "items": [
+      {
+        "id": 124908143376,
+        "name": "operator-tests",
+        "status": "completed",
+        "conclusion": "success",
+        "nodeVersion": "v24.22.1",
+        "checkoutCommit": "e6bfd8aa4e50c04f5b51cafe1abb309dd9c2fc57",
+        "checkoutEvidence": "2026-11-01T16:31:12.9762249Z e6bfd8aa4e50c04f5b51cafe1abb309dd9c2fc57"
+      }
+    ]
+  },
+  "synthetic": {
+    "methods": 32,
+    "passedLines": 32,
+    "failed": 0,
+    "omittedLines": 0,
+    "durationSeconds": 1.337,
+    "footer": "Ran 32 tests in 1.337s",
+    "nodeVersion": "v24.22.1"
+  },
+  "script": {
+    "path": "ops/record-release1141.py",
+    "bytes": 34880,
+    "sha256": "83b0c3da69dc50e4263632138ba163dc40efc249b5aacffef6a19af653c83ef0",
+    "blobSha": "5d24b53c339f1c3cdb311cf9d88bd802357ddda4",
+    "readbackIdentical": true,
+    "url": "https://github.com/fredbuhr/jessiemessage/blob/e6bfd8aa4e50c04f5b51cafe1abb309dd9c2fc57/ops/record-release1141.py"
+  },
+  "test": {
+    "path": "ops/test-record-release1141.py",
+    "bytes": 41943,
+    "sha256": "4c067651f93bcba4cc47e4b5aefb0388984efe2afcbfc3e2af2f1b246b99a104",
+    "blobSha": "ecb98339c64df9e0e9c6343fd7544c9576173101",
+    "readbackIdentical": true,
+    "url": "https://github.com/fredbuhr/jessiemessage/blob/e6bfd8aa4e50c04f5b51cafe1abb309dd9c2fc57/ops/test-record-release1141.py"
+  },
+  "workflow": {
+    "path": ".github/workflows/record-release1141.yml",
+    "bytes": 1254,
+    "sha256": "9988d19a52c5486f641951d03911234e1e1f27781bdeec8fd77dde5248d4c899",
+    "blobSha": "c86a630572acc8010c071ff3ddac1a0d0a15a30f",
+    "readbackIdentical": true,
+    "url": "https://github.com/fredbuhr/jessiemessage/blob/e6bfd8aa4e50c04f5b51cafe1abb309dd9c2fc57/.github/workflows/record-release1141.yml"
+  },
+  "log": {
+    "file": "logs/writer-final-native.log.gz",
+    "complete": true,
+    "source": "full decoded GitHub job log encoded as UTF-8",
+    "bytes": 23828,
+    "sha256": "dcfa9cf1dba267771426d0cbb8e5328c9e37d715b1472775fa3cbe04233dba19",
+    "gzipBytes": 5433,
+    "gzipSha256": "2456cc4edc021bb17ad457dfc30edae1575acd110893b6658a748060e573542a",
+    "gzipMtime": 0,
+    "lastLogLine": "2026-11-01T16:31:15.5352806Z Cleaning up orphan processes"
+  },
+  "applicationPins": {
+    "source": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+    "tree": "f391b5cebe0a8a8ffd63c818cd481b50970336f1",
+    "version": "1.14.1",
+    "nodeVersion": "24.22.1",
+    "schemaMigrations": 38,
+    "applicationTablesExpected": 37,
+    "releaseId": 430681218,
+    "releaseTag": "v1.14.1",
+    "reportedStartupSecondUtc": 1793550063,
+    "startupMillisecondsNotDerivedFromUi": true,
+    "stagingSha256": "df4b58f79ed08af15365557fd88670cd887c4cce9382200fadbd03a9c9593d72",
+    "priorCheckpoint14Sha256": "19ceaa7e91d32daba7da5b71d7dfe02ad964e8d9d2850ae016cfa732b8a9c6e0",
+    "priorSource": "4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd",
+    "priorTree": "e5a239eaf7b8c3395a843c9e0d600efeb7aa569b",
+    "priorStagingSha256": "2fe494a43a446c882ce509f4ecf51925bd5789a94bdbdf2ce6923d83e5ff7d72",
+    "launcherSha256": "e53198d1ddf099eaf3ecbd60b6916a94921430a555eaed2a4a4c41ce64ff27a9",
+    "checkLauncherSha256": "6f4aa454a5d1163b9450dba8644ed50dcf034f1a916cad1891c0fa1fc2b05919"
+  },
+  "scope": {
+    "metadataOnly": true,
+    "preserveCompletePriorCheckpoint": true,
+    "nativeQualificationDistinctFromHostedExecution": true,
+    "reportedStartupIdentity": "hosted-identity.json",
+    "hostedMetadataReceiptNotReceived": true
+  },
+  "limits": {
+    "hostedWriterExecuted": false,
+    "restartPerformed": false,
+    "realCheckExecuted": false,
+    "managerChanged": false,
+    "checkpointChanged": false,
+    "dependenciesInstalled": false,
+    "runtimeStarted": false,
+    "appTestsReplayed": false,
+    "workflowRerunPerformed": false
+  },
+  "status": "writer_operator_native_qualified_hosted_metadata_not_received"
+}
