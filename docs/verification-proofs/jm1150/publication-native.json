@@ -1,0 +1,103 @@
+{
+  "format": "jessiemessage1150-publication-native",
+  "operator": "2b238dc6e94da5c4228070a50d8b2ef50e25999a",
+  "operatorTree": "8c3156bff4399d6a803f88d106cdf3e4a8e3fa53",
+  "run": 41340064560,
+  "attempt": 1,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41340064560",
+  "status": "completed",
+  "conclusion": "success",
+  "successfulJobs": 2,
+  "tests": 23,
+  "pass": 23,
+  "fail": 0,
+  "skipped": 0,
+  "qualifiedBytes": [
+    {
+      "path": "ops/publish-qualified1150.py",
+      "bytes": 20560,
+      "sha256": "710aa4bbc1438674db0479303c6f3617ab7c1ab5cb7a4c392457bce4e8e2acc8",
+      "remoteEqual": true
+    },
+    {
+      "path": "ops/test-publish-qualified1150.py",
+      "bytes": 29386,
+      "sha256": "ab7cbd8f4a837fe4a59c5a899b092c6df366a20097f179f1485726272c9fb63a",
+      "remoteEqual": true
+    },
+    {
+      "path": ".github/workflows/publish-qualified1150.yml",
+      "bytes": 1907,
+      "sha256": "06685417e839277be4eb14fb934d23567790a64bec1c03a10cf34a859d19ab76",
+      "remoteEqual": true
+    }
+  ],
+  "receipt": {
+    "status": "published_verified",
+    "previousReleasePreserved": true,
+    "previousReleaseId": 430681218,
+    "uniqueReleaseVerified": true,
+    "nodeVersion": "24.22.1",
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "normalMigrations": 33,
+    "videoMigrations": 3,
+    "experienceMigrations": 2,
+    "releases": [
+      {
+        "tag": "v1.15.0",
+        "source": "6712028e08b1e04ac7628bdbb9c39fd9f90d9909",
+        "tree": "c80ee33ebfe01838c86cc2b4166b344acf5ea745",
+        "ciRun": "41339290231",
+        "ciAttempt": 1,
+        "releaseId": 430794626
+      }
+    ],
+    "latest": {
+      "tag": "v1.15.0",
+      "source": "6712028e08b1e04ac7628bdbb9c39fd9f90d9909",
+      "id": 430794626
+    },
+    "publicationMode": "created",
+    "created": [
+      "v1.15.0"
+    ],
+    "deploymentPerformed": false
+  },
+  "remoteReadback": {
+    "tagSource": "6712028e08b1e04ac7628bdbb9c39fd9f90d9909",
+    "releaseId": 430794626,
+    "latestId": 430794626,
+    "previousReleaseId": 430681218,
+    "previousTagSource": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+    "equal": true
+  },
+  "logs": [
+    {
+      "job": 124947982461,
+      "path": "logs/publish-124947982461.log.gz",
+      "bytes": 51821,
+      "sha256": "570af7694e1b010931a98393111c3c37aa74d0dc459a462e97f0cfeb7ba5559f",
+      "gzipBytes": 9914,
+      "gzipSha256": "92c97c38bc6caefed192dec3e2ca8265fb464ced9282b624d4d45432b7b11ed7",
+      "gzipMtime": 0
+    },
+    {
+      "job": 124948022759,
+      "path": "logs/publish-124948022759.log.gz",
+      "bytes": 17898,
+      "sha256": "698483793f6b45a711176b8b16c6e8a34b04164582d5901dc49331304b945c4b",
+      "gzipBytes": 4271,
+      "gzipSha256": "a6b7a19a06165eab4f2e0a280e94d962b891aeae2dff4414bab76ebe4d32995e",
+      "gzipMtime": 0
+    }
+  ],
+  "counterReview": {
+    "path": "publication-counter-review.md",
+    "sha256": "27e08b2956db10a5cf4e015894ecec678b22c5fda7ead4a04526b7c630bc841d",
+    "blockingFinding": false,
+    "originalNoteSha256": "41e87f8346bfe0de09fa60c6e05c1ad6f24a69833e6cc76791f35df25bfe4c76",
+    "normalization": "One redundant blank EOF line removed for documentary diff check."
+  },
+  "deploymentPerformed": false
+}

@@ -1,0 +1,118 @@
+{
+  "format": "jessiemessage1150-preparation-native",
+  "operator": "6b6342ba784572d89b076a56647ccb887587f10f",
+  "operatorTree": "bd00255613868d8a74c82b887e931749a702fc3f",
+  "run": 41339490486,
+  "attempt": 1,
+  "job": 124946277869,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41339490486",
+  "status": "completed",
+  "conclusion": "success",
+  "successfulJobs": 1,
+  "tests": 23,
+  "pass": 23,
+  "fail": 0,
+  "skipped": 0,
+  "qualifiedBytes": [
+    {
+      "path": "ops/prepare-release1150.py",
+      "sha256": "2bb7a901a3e18321fd7ad428e8bc017594e94517af111efe6a6de73320c7e10f",
+      "bytes": 38463,
+      "remoteEqual": true
+    },
+    {
+      "path": "ops/test-prepare-release1150.py",
+      "sha256": "f933250d9d0fecceb366c9e6bdb81ddfa7062bf2bf863e1fcc54b31b1dd90155",
+      "bytes": 44763,
+      "remoteEqual": true
+    },
+    {
+      "path": ".github/workflows/prepare-qualified1150.yml",
+      "sha256": "91845d47dce915bfecce71cad93438b90b59cc2826bc63f9fc4ffff5e003d48c",
+      "bytes": 1380,
+      "remoteEqual": true
+    }
+  ],
+  "nativeInstall": {
+    "checkExecuted": false,
+    "checkpointChanged": false,
+    "codecSmokePassed": true,
+    "codecSmokeSha256": "57d6d1e552fb8dd9a9373d3fa0a103705e109edbffe8c9c35e1dfb6fe53d9ddb",
+    "dependencies": {
+      "codecSha256": {
+        "@imagemagick/magick-wasm/LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "@imagemagick/magick-wasm/NOTICE": "7cb6cf162ba965ed068dbc9e638c9b792b8a1a9f4dae51031e7a21ff1ebefc8d",
+        "@imagemagick/magick-wasm/dist/index.js": "696370daea26ec9ccb1d53316e49eca464cd841678be0fdd550652cbcc73208e",
+        "@imagemagick/magick-wasm/dist/x86/magick.wasm": "54629cbcf06dd10db38b4d87fa6ab241b248c09c94f2d9689506e5f994ac5f0c",
+        "@phenomen/libavif-wasm/LICENSE": "9c49270079649e9ca5017850706c7c7b6d3e55c87351f50db343c9cf8a3947ac",
+        "@phenomen/libavif-wasm/THIRD_PARTY_NOTICES.md": "6f002f45208da417ea75f12759a151419e6472dc3c5a7718b422c652f65209f6",
+        "@phenomen/libavif-wasm/dist/codec/decode.mjs": "9a005bb8209388479101680344c7ef2123625d08af699ff32bbcd85c198f0d07",
+        "@phenomen/libavif-wasm/dist/decode.wasm": "10cd87f2c5cd865a3c4fcfde30cc9611387bebe91e4eae7d62b62ef17c27279e",
+        "@phenomen/libavif-wasm/dist/versions.json": "48e014a6fe8aa1f6638c3a146f106b78a7c6c7bc98ec7df47af5b7bcdbbac477",
+        "heic-to/LICENSE": "dbd7222d8026e5d6ca6991d1e6a205de927f300840433c2e90a60644a9980c75",
+        "heic-to/src/lib/libheif-without-unsafe-eval.js": "75aaf03816c22f8cf40dbcaeb22bee83f2e1c5da4b7417577a7883b296348734"
+      },
+      "codecSmokePath": "ops/smoke-photo-codecs1150.mjs",
+      "codecSmokeSha256": "57d6d1e552fb8dd9a9373d3fa0a103705e109edbffe8c9c35e1dfb6fe53d9ddb",
+      "codecSmokeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "codecSmokeStdoutSha256": "e543359fa86dde7b69979c467dff601a69e481fdb47907762949ccfb9687ec8e",
+      "codecSyntheticSmoke": true,
+      "directVersions": {
+        "@imagemagick/magick-wasm": "0.0.45",
+        "@phenomen/libavif-wasm": "1.4.203",
+        "heic-to": "1.6.7",
+        "libheif-js": "1.23.5",
+        "mariadb": "3.5.4",
+        "nodemailer": "10.1.4",
+        "otpauth": "9.5.2",
+        "sharp": "0.35.5",
+        "web-push": "3.6.7"
+      },
+      "directory": "/home/runner/work/_temp/prepare1150-native-wen5wmcf/candidate/node_modules",
+      "inventory": {
+        "entries": 1180,
+        "files": 988,
+        "sha256": "4df6d0b94070f09f2180c9478446b38e07ba58f3bb3e25de083ae79cf14a6152"
+      },
+      "lockSha256": "1c0f01051219030260877c438566a5be69bedf28b433907ebe0f9a26cd36fdd1",
+      "scriptsExecuted": false,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutSha256": "a93cec561d30b0e48414b8a526dfc163a51e9ca00ac0b52c2fd769a7c13b251f",
+      "strategy": "private-npm-ci-ignore-scripts"
+    },
+    "installer": {
+      "archiveBytes": 32026916,
+      "archiveSha256": "6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6",
+      "npmCli": "/home/runner/work/_temp/prepare1150-native-wen5wmcf/tools/npm/bin/npm-cli.js",
+      "npmVersion": "11.19.1"
+    },
+    "launchersWritten": false,
+    "nodeBinarySha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb",
+    "nodeVersion": "v24.22.1",
+    "npmVersion": "11.19.1",
+    "productionPathsAccessed": false,
+    "runtimeStarted": false,
+    "source": "6712028e08b1e04ac7628bdbb9c39fd9f90d9909",
+    "sqlExecuted": false,
+    "status": "prepare1150_native_install_passed",
+    "syntheticDirectoryRemovedOnExit": true,
+    "tree": "c80ee33ebfe01838c86cc2b4166b344acf5ea745"
+  },
+  "counterReview": {
+    "path": "preparation-counter-review.md",
+    "sha256": "4b7023f8683d32394e3188875dedde620721b7a0f4a59324d4a2032fad77a334",
+    "blockingFinding": false
+  },
+  "log": {
+    "path": "logs/prepare-124946277869.log.gz",
+    "bytes": 55213,
+    "sha256": "58503816224b720085195d32ffe7ed14b61f259912d072f762d8509df26d63bb",
+    "gzipBytes": 11639,
+    "gzipSha256": "1faa97f7ac958f0d62e7abd638181fbb1426ccb6443f17dd9277a5b1a91bb84a",
+    "gzipMtime": 0
+  },
+  "qualifiedInParallelWithMain": true,
+  "sameSourceAndTreeLaterQualifiedMain": 41339290231,
+  "productionTouched": false,
+  "hostedPreparationCheckActivationOrMetadataAttested": false
+}

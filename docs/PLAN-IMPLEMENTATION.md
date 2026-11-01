@@ -6,9 +6,11 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 [Diagnostic et périmètre](photo-acceptance-1150.md). Refus synthétiques établis sur formats courants, JPEG valides, capacité couplée aux archives et reprise/erreurs masquées. Original client non attesté.
 
-1. Qualifier le candidat gelé sur les cinq jobs natifs de PR, puis sur le SHA exact fusionné sur main : navigateur, HTTPS, deux MariaDB et général. Les contrôles locaux et contre-revues sont acquis ; omissions locales conservées et groupes recoupants non additionnés.
-2. Conserver couverture formats/variantes, captures et journaux ; publier un seul tag immuable1.15.0 au SHA qualifié.
-3. Qualifier les nouveaux opérateurs de publication/préparation et une installation fraîche réellement isolée avec smoke six familles. Fournir ensuite la commande hébergée exacte ; attendre les reçus utilisateur de préparation et activation avant toute métadonnée finale. Production1141 inchangée à ce jalon.
+Code, contre-revues, qualifications PR/main5/5, publicationv1.15.0/source6712028e et opérateurs natifs sont acquis. [Preuves et prochaine action exacte](REPRISE.md).
+
+1. Recueillir le reçu utilisateur de l’unique préparation/CHECK1150 épinglé dans le guide ; comparer source/arbre/inventaire et préservation1141. Aucune relance si reçu incertain.
+2. Après ce résultat seulement, fournir les champs Manager exacts puis recueillir l’identité réellement démarrée. Production1141 reste le dernier état attesté.
+3. Après démarrage attesté, qualifier un nouveau writer1150 lié à la seconde et au staging observés ; enregistrer les seules métadonnées puis clore. Aucun ancien outil à rejouer, aucune nouvelle suite applicative verte à relancer sans cause.
 
 ## Correctif 1.14.1 — livraison terminée
 

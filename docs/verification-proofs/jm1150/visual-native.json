@@ -1,0 +1,55 @@
+{
+  "format": "jessiemessage1150-visual-review",
+  "source": "ea933869fd0453f6d734de74d0ca9e98064aa456",
+  "checkout": "57f7f6d2e556ff6e848bd59d6b11914997c42e53",
+  "tree": "c80ee33ebfe01838c86cc2b4166b344acf5ea745",
+  "run": 41338555685,
+  "artifact": 13096561266,
+  "artifactSha256": "ba68d7b7f2f7cf7336e89e43b5062f491ff3a7c818947122afff2092287c80dd",
+  "reviewedImages": [
+    {
+      "path": "visual/pr-photo-caption-short-client.png",
+      "sha256": "517878feaf870c6662a341681d8bdff38e75d5579fba21e60aaae568873ae316",
+      "bytes": 28818,
+      "width": 360,
+      "height": 360
+    },
+    {
+      "path": "visual/pr-photo-caption-short-admin.png",
+      "sha256": "5b13f375db7d05cbeaa3138c0a6c2d89d0f3f1c7204801a7877961dfae811343",
+      "bytes": 29764,
+      "width": 360,
+      "height": 360
+    },
+    {
+      "path": "visual/pr-media-library-1140-fr-320.png",
+      "sha256": "0c5b2cc071452fc6f082a3264edff497a92a8ceb96596fd8175cc48c123bb77b",
+      "bytes": 41226,
+      "width": 320,
+      "height": 780
+    },
+    {
+      "path": "visual/pr-broadcast-photos-1140-en-390.png",
+      "sha256": "ea5b4340870c78bda12416124839882adb8fe6a6d94c0fa555a2cf5fa3732898",
+      "bytes": 37746,
+      "width": 390,
+      "height": 780
+    },
+    {
+      "path": "visual/pr-media-library-1140-en-1280.png",
+      "sha256": "fa19e549ea811f7dd3bdaaca54ad096e59f0436ed125c51aa94de298e32a6167",
+      "bytes": 65307,
+      "width": 1280,
+      "height": 757
+    }
+  ],
+  "review": {
+    "captionComposer360": "Client and admin retain preview/remove controls, readable multiline caption, linebreak and send buttons in short viewport.",
+    "library320": "Two-column media cards, add/refresh controls and bounded pagination visible.",
+    "broadcast390": "Thumbnail selector, direct add control and page navigation visible.",
+    "library1280": "Six-column cards, bounded inner scroll and pagination visible.",
+    "blockingVisualDefectObserved": false
+  },
+  "scope": "Synthetic Chrome screenshots from this exact tree; inherited1140 filenames are not historical artifacts. Actual codec conversion is qualified by tests, not by the solid-colour thumbnails.",
+  "physicalPhoneSafariOrOriginalClientPhotoAttested": false
+}
