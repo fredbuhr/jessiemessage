@@ -13,7 +13,47 @@ const ui = globalThis.JessieI18n ?? {
 };
 const aborted = signal => { if (signal?.aborted) throw new DOMException("Aborted", "AbortError"); };
 const invalidImage = () => Object.assign(new Error("invalid_avatar"), { code: "media_format" });
+const unavailableImage = () => Object.assign(new Error("avatar_unavailable"), { code: "media_unavailable" });
 const validAvatar = blob => blob instanceof Blob && blob.type === "image/jpeg" && blob.size > 0 && blob.size <= MAX_AVATAR_BYTES;
+
+function avatarStep(start, signal, discard = () => {}) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (error, value) => {
+      if (settled) { discard(value); return; }
+      settled = true; clearTimeout(timer); signal?.removeEventListener("abort", cancel);
+      error ? reject(error) : resolve(value);
+    };
+    const cancel = () => finish(new DOMException("Aborted", "AbortError"));
+    const timer = setTimeout(() => finish(unavailableImage()), 60000);
+    signal?.addEventListener("abort", cancel, { once: true });
+    if (signal?.aborted) { cancel(); return; }
+    try { start(finish); } catch (error) { finish(error); }
+  });
+}
+async function decodedAvatar(prepared, signal) {
+  if (typeof globalThis.createImageBitmap === "function") {
+    try {
+      const image = await avatarStep(finish => {
+        Promise.resolve(globalThis.createImageBitmap(prepared)).then(value => finish(null, value), error => finish(error));
+      }, signal, image => image?.close?.());
+      return { image, width: image.width, height: image.height, dispose: () => image.close?.() };
+    } catch { aborted(signal); }
+  }
+  if (typeof globalThis.Image !== "function" || typeof globalThis.URL?.createObjectURL !== "function") throw unavailableImage();
+  const image = new Image(), url = URL.createObjectURL(prepared);
+  let disposed = false;
+  const dispose = () => {
+    if (disposed) return; disposed = true;
+    image.onload = image.onerror = null; image.src = ""; URL.revokeObjectURL(url);
+  };
+  try {
+    await avatarStep(finish => {
+      image.onload = () => finish(); image.onerror = () => finish(invalidImage()); image.src = url;
+    }, signal);
+    return { image, width: image.naturalWidth, height: image.naturalHeight, dispose };
+  } catch (error) { dispose(); throw error; }
+}
 
 // Reuse the bounded image decoder, then crop its normalized image on-device.
 // The media endpoint independently validates and normalizes this JPEG again.
@@ -22,23 +62,23 @@ export async function prepareProfileAvatar(file, { signal } = {}) {
   aborted(signal);
   let bitmap, canvas;
   try {
-    bitmap = await globalThis.createImageBitmap(prepared);
+    bitmap = await decodedAvatar(prepared, signal);
     aborted(signal);
     if (!Number.isInteger(bitmap.width) || !Number.isInteger(bitmap.height) || bitmap.width < 1 || bitmap.height < 1
-      || bitmap.width > 16384 || bitmap.height > 16384 || bitmap.width * bitmap.height > 64000000) throw invalidImage();
+      || bitmap.width > 2048 || bitmap.height > 2048) throw invalidImage();
     canvas = document.createElement("canvas"); canvas.width = 256; canvas.height = 256;
     const context = canvas.getContext("2d", { alpha: false });
     if (!context) throw invalidImage();
     const side = Math.min(bitmap.width, bitmap.height);
     context.fillStyle = "#ffffff"; context.fillRect(0, 0, 256, 256);
-    context.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, 256, 256);
-    const blob = await new Promise((resolve, reject) => canvas.toBlob(value => {
-      if (validAvatar(value)) resolve(value); else reject(invalidImage());
-    }, "image/jpeg", 0.88));
+    context.drawImage(bitmap.image, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, 256, 256);
+    const blob = await avatarStep(finish => canvas.toBlob(value => {
+      if (validAvatar(value)) finish(null, value); else finish(invalidImage());
+    }, "image/jpeg", 0.88), signal);
     aborted(signal);
     return blob;
   } finally {
-    bitmap?.close?.();
+    bitmap?.dispose?.();
     if (canvas) { canvas.width = 0; canvas.height = 0; }
   }
 }
@@ -77,12 +117,12 @@ export function createProfileUI(adapter) {
   const preview = node("div", null, "profile-avatar-preview"); preview.setAttribute("aria-hidden", "true");
   const image = node("img"); image.alt = ""; image.hidden = true;
   const fallback = node("span", "○", "profile-avatar-fallback"); preview.append(image, fallback);
-  const file = node("input", null, "profile-file"); file.type = "file"; file.accept = "image/jpeg,image/png,image/webp";
+  const file = node("input", null, "profile-file"); file.type = "file"; file.accept = "image/*,.heic,.heif,.avif";
   // Native file-control captions use the browser's language. Keep that
   // control hidden and bind the visible command to our explicit UI source.
   file.hidden = true; ui.attr(file, "aria-label", "Choisir ou remplacer l’avatar");
   const choose = action("Choisir ou remplacer l’avatar", "profile-choose-avatar", () => {
-    if (opened && ownerCurrent() && avatarsEnabled && !busy && saved) file.click();
+    if (opened && ownerCurrent() && avatarsEnabled && !busy && saved) { pickerIntent = opening; file.click(); }
   });
   const fileLabel = node("div", null, "profile-field"); fileLabel.append(choose, file);
   const remove = action("Retirer l’avatar", "profile-remove-avatar", () => removeAvatar());
@@ -104,6 +144,7 @@ export function createProfileUI(adapter) {
   let destroyed = false, opened = false, suspended = false, internalCloseEvents = 0, epoch = 0, preparation = 0, previewEpoch = 0;
   let saved = null, draftAvatarId = null, draftBlob = null, conflict = false, busy = false, preparing = false;
   let previewUrl = null, previewAbort = null, preparationAbort = null, returnFocus = null;
+  let opening = 0, pickerIntent = null, pendingAvatarSelection = null;
   const controllers = new Set();
   const ownerCurrent = () => !destroyed && isCurrent() && document.visibilityState !== "hidden";
   const current = ticket => {
@@ -122,7 +163,7 @@ export function createProfileUI(adapter) {
     if (opened && !suspended && !ownerCurrent()) { close(false); return; }
     name.disabled = busy || !saved; file.disabled = busy || !saved; choose.disabled = busy || !saved;
     remove.disabled = busy || !saved || !draftAvatarId && !draftBlob && !preparing;
-    saveButton.disabled = busy || preparing || conflict || !saved || !validName(name.value);
+    saveButton.disabled = busy || preparing || Boolean(pendingAvatarSelection) || conflict || !saved || !validName(name.value);
     reload.disabled = busy; keep.disabled = busy; conflictBox.hidden = !conflict;
     dialog.setAttribute("aria-busy", String(busy || preparing));
   }
@@ -174,7 +215,8 @@ export function createProfileUI(adapter) {
       return;
     }
     let text = "Le profil est indisponible. Réessaie dans un moment.";
-    if (error.code === "media_format" || error.status === 415) text = "Choisis une photo JPEG, PNG ou WebP.";
+    if (error.code === "media_format" || error.status === 415) text = "Cette image ne peut pas être lue. Essaie de la réexporter depuis ton application Photos.";
+    if (error.code === "media_heic") text = "Cet appareil n’a pas pu convertir cette photo HEIC ou HEIF. Essaie de la réexporter depuis ton application Photos.";
     if (error.code === "media_unavailable") text = "L’avatar n’a pas pu être préparé. Essaie une autre photo.";
     if (error.code === "media_dimensions" || error.code === "request_too_large" || error.status === 413) text = "Cette photo est trop grande. Choisis une version plus légère.";
     if (error.status === 400 || error.status === 422) text = "Vérifie le nom public et l’avatar avant de réessayer.";
@@ -214,10 +256,21 @@ export function createProfileUI(adapter) {
     } catch (error) { if (current(ticket)) { report(error, ticket); retry.hidden = !opened || Boolean(saved); } }
     finally { if (current(ticket)) { busy = false; controls(); if (saved) focusLoadedProfile(); } }
   }
-  async function chooseAvatar() {
-    const selected = file.files?.[0]; file.value = "";
+  function chooseAvatar() {
+    const selected = file.files?.[0], intent = pickerIntent;
+    file.value = ""; pickerIntent = null;
+    if (!selected || intent !== opening || !opened || !avatarsEnabled || !saved || busy) return;
+    // isCurrent belongs to the mounting chat's account, CSRF and generation.
+    // Keep only this unstarted choice until that adapter proves its owner again.
+    pendingAvatarSelection = { selected, opening: intent }; controls(); void applyAvatarSelection();
+  }
+  async function applyAvatarSelection() {
+    const selection = pendingAvatarSelection;
+    if (!selection || selection.opening !== opening || suspended || !ownerCurrent()) return;
+    const selected = selection.selected;
     const ticket = epoch;
     if (!selected || !avatarsEnabled || !saved || busy || !current(ticket)) return;
+    pendingAvatarSelection = null;
     const sequence = ++preparation; preparationAbort?.abort();
     previewEpoch += 1; previewAbort?.abort(); previewAbort = null;
     const controller = new AbortController(); preparationAbort = controller; controllers.add(controller);
@@ -236,6 +289,7 @@ export function createProfileUI(adapter) {
   }
   function removeAvatar() {
     if (!opened || !ownerCurrent() || busy || !saved || !avatarsEnabled) return;
+    pendingAvatarSelection = null; pickerIntent = null;
     preparation += 1; preparationAbort?.abort(); preparationAbort = null; preparing = false;
     draftBlob = null; draftAvatarId = null; clearPreview();
     message("Avatar retiré du brouillon. Enregistre le profil pour appliquer ce choix."); controls();
@@ -255,7 +309,7 @@ export function createProfileUI(adapter) {
   async function save(event) {
     event.preventDefault();
     const ticket = epoch;
-    if (!current(ticket) || busy || preparing || conflict || !saved) return;
+    if (!current(ticket) || busy || preparing || pendingAvatarSelection || conflict || !saved) return;
     if (!validName(name.value)) { message("Choisis un nom public de 1 à 64 caractères.", true); focus(name); return; }
     const pseudonym = name.value.trim().normalize("NFC"); let writingProfile = false;
     busy = true; controls(); message("Enregistrement du profil…");
@@ -282,6 +336,7 @@ export function createProfileUI(adapter) {
   function close(restoreFocus) {
     const wasOpen = opened, previous = returnFocus;
     opened = false; suspended = false; epoch += 1; preparation += 1;
+    opening += 1; pickerIntent = null; pendingAvatarSelection = null;
     passwordChange?.close(); preferences?.close(); publication?.close();
     for (const controller of controllers) controller.abort(); controllers.clear();
     preparationAbort = null; preparing = false; clearPreview();
@@ -320,7 +375,7 @@ export function createProfileUI(adapter) {
       if (preferences && !preferences.resume()) void preferences.load();
       void publication?.resume();
     });
-    focus(closeButton); return true;
+    focus(closeButton); void applyAvatarSelection(); return true;
   }
   const onOpen = () => { void open(); };
   const hidden = () => { if (document.visibilityState === "hidden") suspend(); else resume(); };

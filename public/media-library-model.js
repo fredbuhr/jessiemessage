@@ -26,13 +26,15 @@ export function acceptLibrarySession(state, session, now = Date.now()) {
 export function parseLibraryAsset(value, kind) {
   if (!value || !libraryId(value.id) || !instant(value.createdAt)) invalid();
   if (kind === "photos") {
+    const cleanupPending = value.cleanupPending === true;
     if (!integer(value.width, 2048) || !integer(value.height, 2048) || !integer(value.thumbnailWidth, 480) || !integer(value.thumbnailHeight, 480)
       || !integer(value.bytes, 10485760) || !integer(value.thumbnailBytes, 524288)
-      || value.fullUrl !== `/api/media/admin/assets/${value.id}/full` || value.thumbnailUrl !== `/api/media/admin/assets/${value.id}/thumb`
+      || value.cleanupPending !== undefined && typeof value.cleanupPending !== "boolean"
+      || value.fullUrl !== (cleanupPending ? null : `/api/media/admin/assets/${value.id}/full`) || value.thumbnailUrl !== (cleanupPending ? null : `/api/media/admin/assets/${value.id}/thumb`)
       || typeof value.sharedHere !== "boolean") invalid();
     return { id: value.id, kind, createdAt: value.createdAt, bytes: value.bytes, width: value.width, height: value.height,
       thumbnailWidth: value.thumbnailWidth, thumbnailHeight: value.thumbnailHeight, thumbnailBytes: value.thumbnailBytes,
-      fullUrl: value.fullUrl, thumbnailUrl: value.thumbnailUrl, sharedHere: value.sharedHere };
+      fullUrl: value.fullUrl, thumbnailUrl: value.thumbnailUrl, sharedHere: value.sharedHere, cleanupPending };
   }
   if (kind !== "videos" || value.mime !== "video/mp4" || !integer(value.bytes, 104857600) || typeof value.cleanupPending !== "boolean"
     || value.contentUrl !== (value.cleanupPending ? null : `/api/video/admin/assets/${value.id}/content`)) invalid();

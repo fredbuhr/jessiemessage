@@ -82,8 +82,11 @@ test("conflicting JPEG frames, duplicate PNG headers and WebP container/image di
 
 function harness({ outputSizes = [1000], decodeError, contextAvailable = true, decode, onDecoded,
   nativeFallback = false, noBitmap = false, nativeSize = [5000, 4000], onNativeLoaded,
-  workerResult, workerError, onWorkerPosted, fastTimers = false, pendingBitmap = false, fileReader } = {}) {
+  workerResult, workerError, onWorkerPosted, fastTimers = false, pendingBitmap = false, fileReader,
+  pendingEncode = false, encodeError } = {}) {
   const calls = [], canvases = [], bitmaps = [], nativeImages = [], urls = [], revokedUrls = [], workers = [];
+  const encoders = []; let encodingReady;
+  const encodingStarted = new Promise(resolve => { encodingReady = resolve; });
   let bitmapReady, continueBitmap;
   const bitmapStarted = new Promise(resolve => { bitmapReady = resolve; });
   const bitmapGate = new Promise(resolve => { continueBitmap = resolve; });
@@ -103,7 +106,8 @@ function harness({ outputSizes = [1000], decodeError, contextAvailable = true, d
     set src(value) { this.source = value; if (value) Promise.resolve().then(() => { onNativeLoaded?.(); this.onload?.(); }); }
     get src() { return this.source; }
   }
-  const context = vm.createContext({ Blob, Uint8Array, DataView, Set, Error, Number, Math, DOMException,
+  const context = vm.createContext({ Blob, ArrayBuffer, Uint8Array, Uint8ClampedArray, DataView, Set, Error, Number, Math, DOMException,
+    ImageData: class { constructor(data, width, height) { this.data = data; this.width = width; this.height = height; } },
     setTimeout: fastTimers ? (callback) => setTimeout(callback, 5) : setTimeout, clearTimeout,
     FileReader: fileReader,
     Worker: workerResult !== undefined || workerError || onWorkerPosted || fastTimers ? PhotoWorker : undefined,
@@ -120,17 +124,24 @@ function harness({ outputSizes = [1000], decodeError, contextAvailable = true, d
       assert.equal(kind, "canvas");
       const canvas = { width: 0, height: 0, getContext(type, options) {
         calls.push({ kind: "context", type, options });
-        return contextAvailable ? { drawImage(bitmap, x, y, width, height) { calls.push({ kind: "draw", bitmap, x, y, width, height }); } } : null;
+        return contextAvailable ? {
+          drawImage(bitmap, x, y, width, height) { calls.push({ kind: "draw", bitmap, x, y, width, height }); },
+          putImageData(image, x, y) { calls.push({ kind: "pixels", width: image.width, height: image.height, pixels: [...image.data], x, y }); },
+        } : null;
       }, toBlob(done, type, quality) {
         const size = outputSizes.length > 1 ? outputSizes.shift() : outputSizes[0];
         calls.push({ kind: "encode", type, quality, width: this.width, height: this.height });
-        done(new Blob([new Uint8Array(size)], { type }));
+        if (encodeError) throw encodeError;
+        const finish = () => done(new Blob([new Uint8Array(size)], { type }));
+        encoders.push(finish); encodingReady();
+        if (!pendingEncode) finish();
       } };
       canvases.push(canvas); return canvas;
     } },
   });
   vm.runInContext(source.replace(/export /g, "") + "\nglobalThis.prepare = prepareImageUpload;", context);
-  return { prepare: context.prepare, calls, canvases, bitmaps, nativeImages, urls, revokedUrls, workers, bitmapStarted, continueBitmap };
+  return { prepare: context.prepare, calls, canvases, bitmaps, nativeImages, urls, revokedUrls, workers,
+    bitmapStarted, continueBitmap, encodingStarted, encoders };
 }
 
 test("preparation sizes a phone JPEG before decoding and releases its bitmap/canvas", async () => {
@@ -173,6 +184,33 @@ test("unavailable canvas, bad bytes, oversized output and cancellation fail safe
   assert.ok(interrupted.bitmaps.every((bitmap) => bitmap.closed));
   assert.equal(interrupted.canvases.length, 0);
   await assert.rejects(prepareImageUpload(null), (error) => error instanceof ImagePreparationError && error.code === "media_format");
+});
+
+test("abort and deadline during canvas encoding release resources without waiting for a late callback", { timeout: 5000 }, async () => {
+  const input = new Blob([await solid(32, 16)], { type: "image/jpeg" });
+  for (const timeout of [false, true]) {
+    const controller = new AbortController(), f = harness({ pendingEncode: true, fastTimers: timeout });
+    const pending = f.prepare(input, { signal: controller.signal });
+    await f.encodingStarted;
+    if (!timeout) controller.abort();
+    await assert.rejects(pending, timeout ? code("media_unavailable") : error => error.name === "AbortError");
+    assert.ok(f.bitmaps.every(bitmap => bitmap.closed));
+    assert.ok(f.canvases.every(canvas => canvas.width === 0 && canvas.height === 0));
+    const oldEncodes = f.calls.filter(call => call.kind === "encode").length;
+    f.encoders[0](); await new Promise(resolve => setImmediate(resolve));
+    assert.equal(f.calls.filter(call => call.kind === "encode").length, oldEncodes, "late output never starts another encoding attempt");
+    const replacement = f.prepare(input);
+    while (f.encoders.length < 2) await new Promise(resolve => setImmediate(resolve));
+    f.encoders[1]();
+    assert.equal((await replacement).type, "image/jpeg", "a replacement photo does not wait for the abandoned encoder");
+  }
+});
+
+test("a synchronous canvas encoder failure is unavailable and releases the bitmap and canvas", async () => {
+  const f = harness({ encodeError: new Error("private encoder diagnostic") });
+  await assert.rejects(f.prepare(new Blob([await solid(32, 16)], { type: "image/jpeg" })), code("media_unavailable"));
+  assert.ok(f.bitmaps.every(bitmap => bitmap.closed));
+  assert.ok(f.canvases.every(canvas => canvas.width === 0 && canvas.height === 0));
 });
 
 test("camera originals above fifty MiB and two hundred megapixels request native shrink before any bounded canvas allocation", async () => {
@@ -305,6 +343,7 @@ test("HEIC fallback uses one fixed local disposable module worker and only retur
   assert.equal(worker.url, "/heic-decoder-worker.js");
   assert.deepEqual({ ...worker.options }, { type: "module", name: "JessieMessage photo" });
   assert.equal(worker.transfers[0], worker.message.bytes);
+  assert.equal(worker.message.acceptPixels, true);
   assert.equal(worker.message.bytes.byteLength, heic.length);
   assert.equal(worker.terminated, true); assert.equal(f.canvases.length, 0);
   for (const blob of [new Blob(["x"], { type: "image/png" }), new Blob([], { type: "image/jpeg" }),
@@ -312,6 +351,55 @@ test("HEIC fallback uses one fixed local disposable module worker and only retur
     const invalid = harness({ noBitmap: true, workerResult: { ok: true, blob } });
     await assert.rejects(invalid.prepare(new Blob([heic])), code("media_unavailable"));
     assert.equal(invalid.workers[0].terminated, true);
+  }
+});
+
+test("HEIC worker pixels are bounded and encoded with the document canvas when worker canvas is unavailable", async () => {
+  const pixels = new Uint8ClampedArray([200, 40, 120, 255, 30, 80, 200, 255]);
+  const f = harness({ noBitmap: true, workerResult: { ok: true, pixels: pixels.buffer, width: 2, height: 1 } });
+  const output = await f.prepare(new Blob([heic], { type: "image/heic" }));
+  assert.equal(output.type, "image/jpeg"); assert.equal(output.size, 1000);
+  assert.deepEqual(f.calls.find(call => call.kind === "pixels"), { kind: "pixels", width: 2, height: 1,
+    pixels: [200, 40, 120, 255, 30, 80, 200, 255], x: 0, y: 0 });
+  assert.ok(pixels.every(value => value === 0), "the reduced transferred plane is cleared after its canvas copy");
+  assert.equal(f.canvases.length, 2);
+  assert.ok(f.canvases.every(canvas => canvas.width === 0 && canvas.height === 0));
+  assert.equal(f.workers[0].terminated, true);
+});
+
+test("malformed or oversized HEIC worker pixel messages never allocate a document canvas", async () => {
+  const input = new Blob([heic], { type: "image/heic" });
+  for (const result of [
+    { pixels: new ArrayBuffer(4), width: 0, height: 1 },
+    { pixels: new ArrayBuffer(4), width: 1, height: -1 },
+    { pixels: new ArrayBuffer(4), width: 1.5, height: 1 },
+    { pixels: new ArrayBuffer(4), width: 2049, height: 1 },
+    { pixels: new ArrayBuffer(4), width: 1, height: 2049 },
+    { pixels: new ArrayBuffer(3), width: 1, height: 1 },
+    { pixels: new ArrayBuffer(8), width: 1, height: 1 },
+    { pixels: new Uint8ClampedArray(4), width: 1, height: 1 },
+    { pixels: { byteLength: 4 }, width: 1, height: 1 },
+    { width: 1, height: 1 },
+    { pixels: new ArrayBuffer(4), width: 1, height: 1, blob: new Blob(["x"], { type: "image/jpeg" }) },
+  ]) {
+    const f = harness({ noBitmap: true, workerResult: { ok: true, ...result } });
+    await assert.rejects(f.prepare(input), code("media_unavailable"));
+    assert.equal(f.canvases.length, 0); assert.equal(f.workers[0].terminated, true);
+  }
+});
+
+test("HEIC document encoding can abort or time out and ignores a late callback after cleanup", { timeout: 5000 }, async () => {
+  for (const timeout of [false, true]) {
+    const controller = new AbortController(), pixels = new Uint8ClampedArray([200, 40, 120, 255]);
+    const f = harness({ noBitmap: true, pendingEncode: true, fastTimers: timeout,
+      workerResult: { ok: true, pixels: pixels.buffer, width: 1, height: 1 } });
+    const pending = f.prepare(new Blob([heic]), { signal: controller.signal });
+    await f.encodingStarted; if (!timeout) controller.abort();
+    await assert.rejects(pending, timeout ? code("media_unavailable") : error => error.name === "AbortError");
+    assert.ok(f.canvases.every(canvas => canvas.width === 0 && canvas.height === 0));
+    assert.ok(pixels.every(value => value === 0));
+    f.encoders[0](); await new Promise(resolve => setImmediate(resolve));
+    assert.equal(f.calls.filter(call => call.kind === "encode").length, 1);
   }
 });
 

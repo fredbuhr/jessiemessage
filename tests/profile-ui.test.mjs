@@ -69,8 +69,9 @@ function harness({ role = "client", avatarsEnabled = true, avatar = false, inter
   document.documentElement.append(document.body); document.activeElement = document.body;
   const button = new Element("button", document); document.body.append(button);
   const base = `/api/profile/${role}`;
-  const state = { owner: true, profile: { pseudonym: "Envoyer", version: "1", avatarId: avatar ? id(1) : null, avatarUrl: avatar ? `${base}/avatar?v=1` : null } };
-  const context = vm.createContext({ matchMedia: () => ({ matches: coarse }), document, Blob, AbortController, DOMException, console, TextEncoder, __passwordProblem: passwordProblem,
+  const state = { owner: true, session: { id: id(1), csrf: "A".repeat(43) }, profile: { pseudonym: "Envoyer", version: "1", avatarId: avatar ? id(1) : null, avatarUrl: avatar ? `${base}/avatar?v=1` : null } };
+  const mountedOwner = { ...state.session };
+  const context = vm.createContext({ matchMedia: () => ({ matches: coarse }), document, Blob, AbortController, DOMException, console, TextEncoder, setTimeout, clearTimeout, __passwordProblem: passwordProblem,
     navigator: { language: language === "en" ? "en-GB" : "fr-FR" },
     __prepareImageUpload: async file => file,
     createImageBitmap: async () => bitmap,
@@ -82,7 +83,7 @@ function harness({ role = "client", avatarsEnabled = true, avatar = false, inter
   vm.runInContext(`(() => { const passwordProblem = __passwordProblem;\n${passwordChange.replace(/^import[^\n]+;\n/gm, "").replace(/export function /g, "function ")}\nglobalThis.__createPasswordChangeUI = createPasswordChangeUI; })();`, context);
   vm.runInContext(`const prepareImageUpload = __prepareImageUpload; const createPasswordChangeUI = __createPasswordChangeUI;\n${source.replace(/^import[^\n]+;\n/gm, "").replace(/export (async )?function /g, "$1function ")}\nglobalThis.__profile = {createProfileUI, prepareProfileAvatar};`, context);
   const runtimeListeners = { visibilitychange: events.get("visibilitychange")?.size ?? 0, pagehide: windowEvents.get("pagehide")?.size ?? 0 };
-  const ui = context.__profile.createProfileUI({ role, host: document.body, button, avatarsEnabled, isCurrent: () => state.owner,
+  const ui = context.__profile.createProfileUI({ role, host: document.body, button, avatarsEnabled, isCurrent: () => state.owner && state.session.id === mountedOwner.id && state.session.csrf === mountedOwner.csrf,
     prepareAvatar: prepareAvatar ?? (async file => file),
     async request(path, options) {
       calls.push({ path, options });
@@ -102,7 +103,7 @@ function harness({ role = "client", avatarsEnabled = true, avatar = false, inter
   const element = selector => document.body.querySelector(`.${selector}`);
   return { ui, document, button, calls, binaryCalls, state, passwordSessions, created, revoked, saved, errors, context, events, windowEvents, element, runtimeListeners,
     language: value => context.JessieI18n.setLanguage(value),
-    async choose(blob) { const file = element("profile-file"); file.files = [blob]; file.emit("change"); await flush(); },
+    async choose(blob) { element("profile-choose-avatar").emit("click"); const file = element("profile-file"); file.files = [blob]; file.emit("change"); await flush(); },
     async save() { element("profile-form").emit("submit"); await flush(); },
     async click(selector) { element(selector).emit("click"); await flush(); },
     hide() { document.visibilityState = "hidden"; for (const fn of events.get("visibilitychange") ?? []) fn(); },
@@ -280,6 +281,96 @@ test("the default avatar crop makes a 256px central JPEG and releases the bitmap
   assert.equal(bitmap.closed, true); assert.equal(canvas.width, 0); assert.equal(canvas.height, 0); h.ui.destroy();
 });
 
+test("a native avatar choice waits for the mounted account and CSRF proof before preparation", async () => {
+  for (const role of ["client", "admin"]) for (const changeWhileHidden of [true, false]) {
+    const chosen = new Blob(["synthetic original"], { type: "image/heic" }); let preparations = 0;
+    const h = harness({ role, prepareAvatar: async file => { assert.equal(file, chosen); preparations++; return jpeg("normalized avatar"); } });
+    await h.ui.open(); await h.click("profile-choose-avatar"); h.hide(); h.state.owner = false;
+    if (!changeWhileHidden) h.show();
+    const file = h.element("profile-file"); file.files = [chosen]; file.emit("change"); await flush();
+    assert.equal(preparations, 0); assert.equal(h.created.length, 0); assert.equal(file.files.length, 0);
+    if (changeWhileHidden) h.show();
+    assert.equal(h.element("profile-dialog").open, false);
+    h.state.owner = true; assert.equal(h.ui.resume(), true); await flush();
+    assert.equal(preparations, 1); assert.equal(h.created.length, 1); assert.equal(h.element("profile-save").disabled, false);
+    assert.equal(h.calls.filter(call => call.options.mutation).length, 0, "resume prepares locally without any POST");
+    assert.equal(h.element("profile-file").accept, "image/*,.heic,.heif,.avif"); h.ui.destroy();
+  }
+});
+
+test("a deferred native avatar never adopts a changed account, changed CSRF or later dialog opening", async () => {
+  for (const replacement of ["account", "csrf", "opening"]) {
+    let preparations = 0;
+    const h = harness({ prepareAvatar: async () => { preparations++; return jpeg("must not be prepared"); } });
+    await h.ui.open(); await h.click("profile-choose-avatar"); h.hide();
+    const file = h.element("profile-file");
+    if (replacement === "opening") {
+      h.ui.close(); h.show(); await h.ui.open();
+      file.files = [jpeg("late old native choice")]; file.emit("change");
+    } else {
+      file.files = [jpeg("old owner choice")]; file.emit("change");
+      if (replacement === "account") h.state.session.id = id(2);
+      else h.state.session.csrf = "B".repeat(43);
+      h.show(); assert.equal(h.ui.resume(), false);
+    }
+    await flush(); assert.equal(preparations, 0); assert.equal(h.created.length, 0);
+    assert.equal(h.calls.filter(call => call.options.mutation).length, 0); h.ui.destroy();
+  }
+});
+
+test("the normalized avatar crop falls back to Image when ImageBitmap is absent or rejected", async () => {
+  for (const mode of ["absent", "rejected"]) {
+    const h = harness(), decoded = [], draws = [];
+    h.context.createImageBitmap = mode === "absent" ? undefined : async () => { throw new Error("unsupported decoder"); };
+    h.context.Image = class {
+      constructor() { this.naturalWidth = 320; this.naturalHeight = 160; decoded.push(this); }
+      set src(value) { this.source = value; if (value) queueMicrotask(() => this.onload?.()); }
+    };
+    const canvas = { width: 0, height: 0, getContext: () => ({ fillRect() {}, drawImage: (...args) => draws.push(args) }), toBlob(callback) { callback(jpeg("crop")); } };
+    const original = h.document.createElement; h.document.createElement = tag => tag === "canvas" ? canvas : original(tag);
+    const result = await h.context.__profile.prepareProfileAvatar(jpeg("prepared source"));
+    assert.equal(result.type, "image/jpeg"); assert.equal(draws[0][0], decoded[0]);
+    assert.deepEqual(draws[0].slice(1), [80, 0, 160, 160, 0, 0, 256, 256]);
+    assert.equal(decoded[0].source, ""); assert.equal(decoded[0].onload, null); assert.equal(decoded[0].onerror, null);
+    assert.deepEqual(h.revoked, [h.created[0].url]); assert.equal(canvas.width, 0); assert.equal(canvas.height, 0); h.ui.destroy();
+  }
+});
+
+test("aborting an unfinished avatar bitmap closes its late result without starting a fallback", async () => {
+  const late = deferred(), controller = new AbortController(), h = harness(); let fallback = 0, closed = 0;
+  h.context.createImageBitmap = () => late.promise; h.context.Image = class { constructor() { fallback++; } };
+  const preparing = h.context.__profile.prepareProfileAvatar(jpeg("prepared source"), { signal: controller.signal }); await flush();
+  controller.abort(); await assert.rejects(preparing, error => error.name === "AbortError");
+  late.resolve({ width: 320, height: 160, close() { closed++; } }); await flush();
+  assert.equal(closed, 1); assert.equal(fallback, 0); assert.equal(h.created.length, 0); h.ui.destroy();
+});
+
+test("avatar encoding is abortable and bounded even when canvas never calls back", async () => {
+  for (const stop of ["abort", "timeout"]) {
+    const bitmap = { width: 320, height: 160, closed: false, close() { this.closed = true; } };
+    const h = harness({ bitmap }), controller = new AbortController(), timers = new Map(); let next = 0, finishEncoding;
+    h.context.setTimeout = callback => { timers.set(++next, callback); return next; };
+    h.context.clearTimeout = key => timers.delete(key);
+    const canvas = { width: 0, height: 0, getContext: () => ({ fillRect() {}, drawImage() {} }), toBlob(callback) { finishEncoding = callback; } };
+    const original = h.document.createElement; h.document.createElement = tag => tag === "canvas" ? canvas : original(tag);
+    const preparing = h.context.__profile.prepareProfileAvatar(jpeg("prepared source"), { signal: controller.signal }); await flush();
+    assert.equal(timers.size, 1); assert.equal(typeof finishEncoding, "function");
+    if (stop === "abort") controller.abort(); else [...timers.values()][0]();
+    await assert.rejects(preparing, error => stop === "abort" ? error.name === "AbortError" : error.code === "media_unavailable");
+    assert.equal(bitmap.closed, true); assert.equal(canvas.width, 0); assert.equal(canvas.height, 0); assert.equal(timers.size, 0);
+    finishEncoding(jpeg("late encoder result")); await flush(); assert.equal(h.created.length, 0); h.ui.destroy();
+  }
+});
+
+test("resuming after an uncertain avatar upload never repeats its POST", async () => {
+  const h = harness({ intercept(path) { if (path.endsWith("/assets")) throw new Error("synthetic lost upload acknowledgement"); } });
+  await h.ui.open(); await h.choose(jpeg("avatar")); await h.save();
+  assert.equal(h.calls.filter(call => call.options.mutation).length, 1);
+  h.hide(); h.show(); await flush();
+  assert.equal(h.calls.filter(call => call.options.mutation).length, 1);
+  assert.equal(h.element("profile-dialog").open, true); h.ui.destroy();
+});
+
 test("touch profile loading and saving do not open a keyboard; desktop name focus remains available", async () => {
   for (const coarse of [true, false]) {
     const h = harness({ coarse }); await h.ui.open();
@@ -354,7 +445,7 @@ test("translated load errors, avatar errors and conflict actions preserve their 
   failed.language("fr"); assert.equal(failed.element("profile-status").textContent, "Le profil est indisponible. Réessaie dans un moment."); failed.ui.destroy();
   const avatar = harness({ prepareAvatar() { throw Object.assign(new Error("synthetic format"), { code: "media_format" }); } });
   await avatar.ui.open(); await avatar.choose(jpeg("invalid")); avatar.language("en");
-  assert.equal(avatar.element("profile-status").textContent, "Choose a JPEG, PNG or WebP photo."); avatar.ui.destroy();
+  assert.equal(avatar.element("profile-status").textContent, "This image cannot be read. Try exporting it again from your Photos app."); avatar.ui.destroy();
   const conflict = harness({ intercept(path, options) { if (options.mutation) throw Object.assign(new Error("synthetic conflict"), { status: 409 }); } });
   await conflict.ui.open(); conflict.element("profile-pseudonym").value = "Garder mon brouillon"; await conflict.save();
   const calls = conflict.calls.length; conflict.language("en");

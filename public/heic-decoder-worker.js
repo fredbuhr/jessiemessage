@@ -1,5 +1,6 @@
-// A single disposable worker owns the optional local HEVC decoder. No photo
-// bytes, filenames or decoder diagnostics leave this worker except a JPEG.
+// A single disposable worker owns the optional local HEVC decoder. Original
+// bytes, filenames and decoder diagnostics are never returned. Output is a JPEG
+// or an explicitly negotiated small RGBA plane for document-canvas encoding.
 import { inspectImageInput, MAX_HEIC_IMAGE_PIXELS, TARGET_UPLOAD_BYTES } from "./image-preparation.js";
 
 const MAX_SIDE = 32768;
@@ -77,7 +78,7 @@ if (typeof self !== "undefined") {
   let accepted = false;
   self.onmessage = async event => {
     if (accepted) return; accepted = true;
-    let canvas, sourceCanvas, bytes;
+    let canvas, sourceCanvas, bytes, pixels;
     try {
       if (!(event.data?.bytes instanceof ArrayBuffer)) fail("media_heic");
       bytes = new Uint8Array(event.data.bytes);
@@ -89,10 +90,23 @@ if (typeof self !== "undefined") {
       const lib = await factory({ print() {}, printErr() {} });
       const result = await decodeHeicPixels(bytes, lib);
       bytes.fill(0); bytes = null;
-      sourceCanvas = new OffscreenCanvas(result.width, result.height);
-      const sourceContext = sourceCanvas.getContext("2d", { alpha: false }); if (!sourceContext) fail("media_heic");
-      sourceContext.putImageData(new ImageData(result.pixels, result.width, result.height), 0, 0);
-      result.pixels.fill(0);
+      pixels = result.pixels;
+      let sourceContext;
+      if (typeof OffscreenCanvas === "function" && typeof ImageData === "function") {
+        try {
+          sourceCanvas = new OffscreenCanvas(result.width, result.height);
+          if (typeof sourceCanvas.convertToBlob === "function") sourceContext = sourceCanvas.getContext("2d", { alpha: false });
+        } catch { /* Older workers can lack 2D canvas despite exposing its constructor. */ }
+      }
+      if (!sourceContext) {
+        // Callers from an already-open 1.14.0 tab keep the JPEG-only contract.
+        // Only the new preparer accepts these reduced, bounded pixels.
+        if (event.data.acceptPixels !== true) fail("media_heic");
+        self.postMessage({ ok: true, pixels: pixels.buffer, width: result.width, height: result.height }, [pixels.buffer]);
+        pixels = null; return;
+      }
+      sourceContext.putImageData(new ImageData(pixels, result.width, result.height), 0, 0);
+      pixels.fill(0); pixels = null;
       canvas = new OffscreenCanvas(result.width, result.height);
       let blob;
       for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -110,6 +124,7 @@ if (typeof self !== "undefined") {
       self.postMessage({ ok: false, code: error?.code === "media_dimensions" ? "media_dimensions" : "media_heic" });
     } finally {
       bytes?.fill?.(0);
+      pixels?.fill?.(0);
       if (canvas) { canvas.width = 0; canvas.height = 0; }
       if (sourceCanvas) { sourceCanvas.width = 0; sourceCanvas.height = 0; }
       self.close();

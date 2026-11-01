@@ -6,9 +6,10 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 [Objectif et couverture](media-reliability-1141.md). Une correction compatible regroupée, sans nouvelle dépendance, migration ni modification des données réelles. La livraison14 reste close et active.
 
-1. Terminer les corrections reproduites et les scénarios UI/profil/vidéo/nettoyage ainsi que le secours HEIC sans OffscreenCanvas ; conserver droits, quotas, limites et absence de répétition d’un POST incertain.
-2. Contre-revue du lot, qualification native PR puis SHA main : formats/décodage, HTTP/SQL, stockage/dirfd, lifecycle et captures FR/EN. Les omissions locales procfs restent non attestées jusqu’à la CI native.
-3. Publier le correctif exact et préparer un nouvel opérateur limité au baseline14 réel ; aucune activation déduite de la publication. Ne pas rejouer les outils14 clos.
+Les corrections reproduites, scénarios et contre-revues du lot sont terminés localement ; droits, quotas et limites conservés.
+
+1. Qualification native PR puis SHA main : formats/décodage, HTTP/SQL, stockage/dirfd, lifecycle et captures FR/EN. Les omissions locales procfs restent non attestées jusqu’à la CI native.
+2. Publier le correctif exact et préparer un nouvel opérateur limité au baseline14 réel ; aucune activation déduite de la publication. Ne pas rejouer les outils14 clos.
 
 ## Évolution 1.14.0 — livraison terminée
 

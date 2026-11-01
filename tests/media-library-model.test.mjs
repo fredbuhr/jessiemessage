@@ -32,3 +32,12 @@ test("video library supports explicit cleanup state without inventing a readable
   const cleanup = { ...video(1), cleanupPending: true, contentUrl: null }; assert.equal(parseLibraryAsset(cleanup, "videos").cleanupPending, true);
   for (const bad of [{ ...cleanup, contentUrl: video(1).contentUrl }, { ...video(1), contentUrl: "javascript:alert(1)" }, { ...video(1), mime: "video/webm" }, { ...video(1), bytes: 104857601 }]) assert.throws(() => parseLibraryAsset(bad, "videos"));
 });
+test("photo library supports cleanupPending only with both private preview URLs removed", () => {
+  const pending = { ...photo(1), cleanupPending: true, fullUrl: null, thumbnailUrl: null };
+  assert.equal(parseLibraryAsset(pending, "photos").cleanupPending, true);
+  assert.equal(parseLibraryAsset({ ...photo(1), cleanupPending: false }, "photos").cleanupPending, false);
+  assert.equal(parseLibraryAsset(photo(1), "photos").cleanupPending, false, "ordinary upload response has no cleanup flag");
+  for (const bad of [{ ...pending, fullUrl: photo(1).fullUrl }, { ...pending, thumbnailUrl: photo(1).thumbnailUrl }, { ...photo(1), cleanupPending: "true" }, { ...photo(1), fullUrl: null }]) {
+    assert.throws(() => parseLibraryAsset(bad, "photos"));
+  }
+});
