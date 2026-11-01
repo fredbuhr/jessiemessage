@@ -239,7 +239,7 @@
     {
       "id": "M12",
       "scope": "Distribution, PWA et livraison",
-      "disposition": "code_qualified_published_hosted_preparation_and_check_received_activation_pending",
+      "disposition": "code_qualified_published_startup_reported_metadata_pending",
       "changes": [
         "Aucun défaut de cache établi ; imports, ressources fixes/no-store et SW sans cache fetch relus.",
         "Candidat2 modifie uniquement trois fixtures natives après le premier run en échec."
@@ -252,9 +252,10 @@
         "preparation-native.json",
         "publication-initial-failure.json",
         "publication-native.json",
-        "hosted-preparation.json"
+        "hosted-preparation.json",
+        "hosted-identity.json"
       ],
-      "proofScope": "PR et main5/5 tentative1 chacun, tag/release/latest v1.14.1 sur mainc803c2c9 exact. Publication2/2 réussie et17/17 tests opérateur natifs, opérateur préparation39/39 qualifié. Préparation hébergée et CHECK1141 acquis selon le reçu utilisateur, empreinte canonique identique ; démarrage1141 non reçu.",
+      "proofScope": "PR et main5/5 tentative1 chacun, tag/release/latest v1.14.1 sur mainc803c2c9 exact. Publication2/2 réussie et17/17 tests opérateur natifs, opérateur préparation39/39 qualifié. Préparation hébergée et CHECK1141 acquis selon le reçu utilisateur, empreinte canonique identique ; démarrage1141 rapporté selon identité utilisateur, métadonnées finales encore à qualifier.",
       "nativeCandidate2": "qualified_in_pr_in_stated_scope",
       "nativeMain": "qualified_in_stated_scope"
     }
@@ -427,15 +428,18 @@
       "deploymentPerformed": false
     },
     "hosted1141": {
-      "status": "prepared_and_checked_activation_not_received",
+      "status": "startup_reported_metadata_pending",
       "preparationReceipt": "hosted-preparation.json",
       "checkReceipt": "hosted-preparation.json",
-      "identityReceipt": null,
+      "identityReceipt": "hosted-identity.json",
       "metadataReceipt": null,
       "preparationAcquiredFromUserReceipt": true,
       "checkExit": 0,
       "receiptSha256": "df4b58f79ed08af15365557fd88670cd887c4cce9382200fadbd03a9c9593d72",
-      "directHostingAccessByAgent": false
+      "directHostingAccessByAgent": false,
+      "reportedStartupSecondUtc": 1793550063,
+      "publicAvailabilityInSuppliedUi": false,
+      "restartRequired": false
     },
     "preparation": {
       "status": "operator_native_qualified_hosted_preparation_and_check_received",

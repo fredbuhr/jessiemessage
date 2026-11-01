@@ -1,0 +1,36 @@
+{
+  "format": "jessiemessage-1141-hosted-identity-observation",
+  "authority": "user application technical details; no direct Manager or process inspection by agent",
+  "reported": {
+    "version": "1.14.1",
+    "commit": "c803c2c9be16c0c4ee218d8cac4a1272620d2772",
+    "nodeVersion": "v24.22.1",
+    "startedAtDisplay": "01/11/2026 17:21:03",
+    "availabilitySignal": null
+  },
+  "conversion": {
+    "timezone": "Europe/Paris",
+    "timezoneBasis": "project operational convention and current user timezone; offset not printed in supplied UI extract",
+    "offset": "+01:00",
+    "isoLocal": "2026-11-01T17:21:03+01:00",
+    "isoUtc": "2026-11-01T16:21:03+00:00",
+    "startupSecondUtc": 1793550063,
+    "millisecondsNotSupplied": true
+  },
+  "qualifiedReference": {
+    "tag": "v1.14.1",
+    "tree": "f391b5cebe0a8a8ffd63c818cd481b50970336f1",
+    "treeFromQualifiedSourceNotUi": true,
+    "releaseId": 430681218
+  },
+  "interpretation": {
+    "startupReported": true,
+    "reportedIdentityMatchesQualifiedRelease": true,
+    "publicAvailabilityNotInSuppliedExtract": true,
+    "metadata1141Recorded": false,
+    "checkpoint14LastObserved": "19ceaa7e91d32daba7da5b71d7dfe02ad964e8d9d2850ae016cfa732b8a9c6e0",
+    "restartPerformedByAgent": false,
+    "noFurtherRestartRequired": true
+  },
+  "nextAction": "qualify new metadata-only writer bound to this startup second and staged sources; actual milliseconds and public availability must be verified by writer before atomic metadata recording"
+}

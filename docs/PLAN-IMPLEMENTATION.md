@@ -2,14 +2,16 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Correctif 1.14.1 — code qualifié et publié, activation à venir
+## Correctif 1.14.1 — application démarrée, métadonnées à finaliser
 
-[Bilan et couverture12domaines](media-reliability-1141.md). PR146/main5/5 et cinq captures acquises ; source/tagc803c2c9/arbre f391b5ce, publication/latestv1.14.1 acquise, release430681218. Préparateur nouveaufac6890f qualifié39/39. Aucune dépendance, migration ou changement Node ; la14 reste active. Échecs initiaux et52omissions explicites préservés.
+[Bilan et couverture12domaines](media-reliability-1141.md). PR146/main5/5 et cinq captures acquises ; source/tagc803c2c9/arbre f391b5ce, publication/latestv1.14.1 acquise, release430681218. Préparateur nouveaufac6890f qualifié39/39. Aucune dépendance, migration ou changement Node ; démarrage1141 rapporté le1novembre17:21:03Paris. Échecs initiaux et52omissions explicites préservés.
 
 Préparation et CHECK1141 acquis selon le [reçu utilisateur](verification-proofs/jm1141/hosted-preparation.json), empreinte canonique df4b58f7 identique, CHECK0 et marqueur final. Dépendances14 et checkpoint14 préservés ; ne rejouer ni préparation ni CHECK SSH1141.
 
-1. Activation personnelle dans Manager avec nouveaux lanceurs1141 confirmés, port3000, puis relevé réel version/commit/Node/démarrage. Aucun démarrage1141 encore communiqué.
-2. Qualifier le writer1141 lié à ces preuves avant métadonnées seules et reçu final. Aucune ancienne commande, nouveau redémarrage exploratoire ou test réel non demandé à rejouer.
+Démarrage1141 acquis selon l’[identité utilisateur](verification-proofs/jm1141/hosted-identity.json), sourcec803c2c9/Node24.22.1,01/11/2026 17:21:03Paris, seconde1793550063. Aucun nouveau redémarrage requis.
+
+1. Qualifier le nouveau writer1141 lié à ces preuves et au checkpoint14 avant de fournir son bloc épinglé de métadonnées seules.
+2. Vérifier son reçu final et la préservation complète de l’état14 avant de clore la livraison. Aucun ancien writer, nouvelle activation exploratoire ou test réel non demandé à rejouer.
 
 [REPRISE](REPRISE.md) et [guide opérateur](operations-release1141.md) portent les pins exacts. Photo cliente originale, appareils physiques/Safari et sauvegarde reportée ne deviennent pas des réussites ni de nouveaux chantiers automatiques.
 

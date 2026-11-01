@@ -45,30 +45,21 @@ Les flags `precheckPassed:false`, `started:false` et les journaux vides du JSON 
 
 Le [bloc exécuté reste conservé](verification-proofs/jm1141/preparation-command.sh) comme preuve historique. **Ne rejouer ni ce bloc ni le CHECK SSH1141.**
 
-## Prochaine étape personnelle — activation1141
+## Activation1141 — acquise selon le relevé utilisateur, ne pas rejouer
 
-Le service Node **239143**, nommé **recette.jessiemessage.com** dans le Manager, dessert aussi **jessiemessage.com**, avec le même runtime et la même base. Le site PHP `accueil.jessiemessage.com` n'est pas la cible de cette opération.
+L’[identité utilisateur](verification-proofs/jm1141/hosted-identity.json) confirme version1.14.1, commit `c803c2c9be16c0c4ee218d8cac4a1272620d2772`, Nodev24.22.1, **01/11/2026 17:21:03 Europe/Paris**, secondeUTC1793550063. Aucune inspection directe de l’agent des champs Manager ou du processus n’en est déduite. Le signal de disponibilité et les millisecondes ne figurent pas dans l’extrait fourni.
 
-**Préparation et CHECK validés : les valeurs suivantes correspondent au reçu.** L’activation et le nouveau démarrage restent à effectuer et à relever.
-
-| Champ Manager | Valeur1141 attendue après le reçu validé |
+| Champ correspondant à l’activation rapportée | Valeur1141 |
 | --- | --- |
 | Exécution, champ du haut | `bash /srv/customer/jessiemessage-private/start-primary-release1141-c803c2c9.sh` |
 | Build, champ du bas | `bash /srv/customer/jessiemessage-private/check-primary-release1141-c803c2c9.sh` |
 | Port | `3000` |
 
-Pour activer1141 une seule fois :
-
-1. Ouvrir les [réglages Run/Build du service Node239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application).
-2. Renseigner **Exécution, champ du haut**, et **Build, champ du bas**, avec les deux valeurs1141 du tableau, confirmées par le reçu. Conserver le port **3000**. Les valeurs1140 du guide clos ne sont pas des commandes à rejouer.
-3. Enregistrer les paramètres, puis ouvrir le [tableau de bord Node.js du même service](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) et utiliser Redémarrer une seule fois. La [documentation Infomaniak](https://www.infomaniak.com/fr/support/faq/2535/modifier-la-configuration-dun-site-nodejs-infomaniak), consultée pour cette étape, distingue l’enregistrement des paramètres du redémarrage depuis ce tableau de bord.
-4. Relever la nouvelle identité réelle de démarrage : version1.14.1, commit complet, Nodev24.22.1, date/heure et fuseau affichés, ainsi que l'état disponible. Transmettre ce relevé avant toute étape de métadonnées. Ne pas inventer les millisecondes absentes de l'interface et ne pas recommencer le démarrage pour les obtenir.
-
-L'agent n'a pas inspecté le Manager ou le processus hébergé. Les réglages et le nouveau démarrage restent non attestés tant que leur relevé n'est pas reçu.
+Le service Node239143 nommé recette.jessiemessage.com dessert aussi le principal et sa base. **Ne rejouer ni préparation, CHECK SSH, réglages ou redémarrage.** Les [réglages du service](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application) et son [tableau de bord](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard) ne sont pas à modifier pour la finalisation de métadonnées.
 
 ## Critère de fin — writer1141 encore à qualifier
 
-Après la nouvelle identité de démarrage, un writer1141 devra être préparé et qualifié séparément, lié aux sources exactes, au reçu de staging, au CHECK, au démarrage réel et au checkpoint14 préservé. Il devra vérifier ces preuves avant une écriture gardée des seules métadonnées, puis relire le résultat ; aucun nouveau redémarrage ou SQL n'est prévu pour cette finalisation.
+La nouvelle identité étant reçue, un writer1141 est à préparer et qualifier séparément, lié aux sources exactes, au reçu de staging, au CHECK, au démarrage réel et au checkpoint14 préservé. Il devra vérifier ces preuves avant une écriture gardée des seules métadonnées, puis relire le résultat ; aucun nouveau redémarrage ou SQL n'est prévu pour cette finalisation.
 
 La livraison ne sera close qu'après réception et vérification du résultat de ce writer : application/checkpoint/publication1141 concordants, disponibilité publique confirmée dans sa portée, état14 complet et autres blocs préservés. **Writer1141 non qualifié et non exécuté à ce stade ; aucun enregistrement final1141 acquis.**
 
