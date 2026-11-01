@@ -1,0 +1,27 @@
+{
+  "status": "qualified_main_publication_requested",
+  "source": "6712028e08b1e04ac7628bdbb9c39fd9f90d9909",
+  "tree": "c80ee33ebfe01838c86cc2b4166b344acf5ea745",
+  "mainRun": 41339290231,
+  "mainFiveJobsPassed": true,
+  "attempt": 1,
+  "localPublisherTests": 23,
+  "files": [
+    {
+      "path": "ops/publish-qualified1150.py",
+      "bytes": 20560,
+      "sha256": "710aa4bbc1438674db0479303c6f3617ab7c1ab5cb7a4c392457bce4e8e2acc8"
+    },
+    {
+      "path": "ops/test-publish-qualified1150.py",
+      "bytes": 29386,
+      "sha256": "ab7cbd8f4a837fe4a59c5a899b092c6df366a20097f179f1485726272c9fb63a"
+    },
+    {
+      "path": ".github/workflows/publish-qualified1150.yml",
+      "bytes": 1907,
+      "sha256": "06685417e839277be4eb14fb934d23567790a64bec1c03a10cf34a859d19ab76"
+    }
+  ],
+  "scope": "Only immutable new tag/release publication; no host deployment, metadata, SQL or restart."
+}
