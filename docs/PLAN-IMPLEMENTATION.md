@@ -10,9 +10,11 @@ Code, contre-revues, qualifications PR/main5/5, publicationv1.15.0/source6712028
 
 Préparation/CHECK1150 désormais acquis selon le reçu utilisateur : empreinte6384c78b/6008octets vérifiée, inventaire et codecs identiques au natif, CHECK0. Ne pas les rejouer.
 
-1. Activer une seule fois les lanceurs1150 dans Manager selon le guide ; conserver port3000 et répertoire existant. Si Enregistrer relance déjà, ne pas ajouter de redémarrage.
-2. Recueillir version, commit complet, Node et date réellement affichés. Production1141 reste le dernier état attesté jusqu’à ce relevé.
-3. Après démarrage attesté, qualifier un nouveau writer1150 lié à sa seconde et au staging6384c78b ; enregistrer les seules métadonnées puis clore. Aucun ancien outil ou test applicatif vert à rejouer sans cause.
+Activation1150 désormais rapportée : source6712028e/Node24.22.1,01/11/2026 20:27:30Paris, seconde1793561250. Aucun nouveau redémarrage, préparation ou CHECK à demander.
+
+1. Terminer le writer1150 de métadonnées seules et ses fixtures, lié au démarrage1793561250, staging6384c78b et dernier checkpoint1141/93d6. Qualification native et contre-revue, sans répéter les suites applicatives vertes.
+2. Fournir le bloc épinglé puis recueillir le reçu final. Ne jamais relancer après sortie incertaine pour découvrir le résultat ; inspecter en lecture seule.
+3. Après reçu acquis seulement, consigner l’alignement final et clore. Aucun ancien writer à rejouer ni nouvelle activation à effectuer.
 
 ## Correctif 1.14.1 — livraison terminée
 

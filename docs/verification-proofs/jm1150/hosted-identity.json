@@ -1,0 +1,37 @@
+{
+  "format": "jessiemessage-1150-hosted-identity-observation",
+  "authority": "user application UI report; no direct host/Manager access by agent",
+  "observed": {
+    "version": "1.15.0",
+    "commit": "6712028e08b1e04ac7628bdbb9c39fd9f90d9909",
+    "nodeVersion": "v24.22.1",
+    "startedAtDisplay": "01/11/2026 20:27:30",
+    "timeZone": "Europe/Paris",
+    "utcOffset": "+01:00",
+    "startedAtUTC": "2026-11-01T19:27:30Z",
+    "startedAtSecond": 1793561250,
+    "startedAtMilliseconds": null,
+    "serviceSignal": null
+  },
+  "publishedIdentity": {
+    "tag": "v1.15.0",
+    "tree": "c80ee33ebfe01838c86cc2b4166b344acf5ea745",
+    "sourceMatches": true,
+    "treeNotShownInUI": true
+  },
+  "preparationProof": "hosted-preparation.json",
+  "stagingSha256": "6384c78bf94ce688ec33060d672019d8ae534466d7de57c701046e75c6c46a4b",
+  "lastRecordedMetadata": {
+    "version": "1.14.1",
+    "checkpointSha256": "93d6ddf70db3b1b30d006bf2fb30ab7594ebc2d2b8f88cc59a230f247cbaca82",
+    "preservedAtPreparation": true,
+    "notReadDirectlyByAgent": true
+  },
+  "limits": [
+    "UI provides a second, not exact milliseconds; final writer must bind the unique real startup log.",
+    "Service availability, PID/socket/executed binary and physical SQL inventory not independently inspected.",
+    "No real client photo or Safari/physical phone qualification inferred."
+  ],
+  "noRestartRequested": true,
+  "next": "Qualify the new1150 metadata-only writer bound to observed second1793561250 and staging6384c78b; do not replay preparation,CHECK,activation or old writers."
+}

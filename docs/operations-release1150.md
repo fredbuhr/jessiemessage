@@ -1,6 +1,6 @@
-# Livraison 1.15.0 — préparation/CHECK acquis, activation attendue
+# Livraison 1.15.0 — démarrée, métadonnées finales en cours
 
-La production demeure la **1.14.1** selon le dernier reçu utilisateur : source `c803c2c9be16c0c4ee218d8cac4a1272620d2772`, checkpoint `93d6ddf70db3b1b30d006bf2fb30ab7594ebc2d2b8f88cc59a230f247cbaca82`. Le reçu de préparation1150 et le CHECK séparé sont acquis ci-dessous ; aucun démarrage1150 encore attesté. Ne rejouer aucun outil1141.
+La **1.15.0 est démarrée selon le [relevé utilisateur](verification-proofs/jm1150/hosted-identity.json)** : source6712028e08b1e04ac7628bdbb9c39fd9f90d9909, Nodev24.22.1,01/11/2026 20:27:30Paris, seconde1793561250. Millisecondes et signal disponible non fournis. Le dernier checkpoint de métadonnées reste1141/93d6, préservé à la préparation ; un nouveau writer1150 doit être qualifié. Ne rejouer ni préparation, CHECK, activation ou ancien outil1141.
 
 La [PR147](https://github.com/fredbuhr/jessiemessage/pull/147) est fusionnée. Source/tag [v1.15.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.15.0) : **`6712028e08b1e04ac7628bdbb9c39fd9f90d9909`**, arbre **`c80ee33ebfe01838c86cc2b4166b344acf5ea745`**, release/latest **430794626**. Le main documentaire peut avancer ensuite ; ne pas le confondre avec le code publié.
 
@@ -14,9 +14,11 @@ Préparateur : opérateur **`6b6342ba784572d89b076a56647ccb887587f10f`**, arbre 
 
 [Reçu utilisateur](verification-proofs/jm1150/hosted-preparation.json) : `CHECK1150_EXIT=0`, puis `PREPARATION_1150_CHECK_OK`. Empreinte canonique **`6384c78bf94ce688ec33060d672019d8ae534466d7de57c701046e75c6c46a4b`**,6008octets vérifiés. Source/arbre/Node, inventaire1180/988/4df6, lock1c0f, onze ressources codec et sorties smoke identiques au natif. Configuration/bcca, checkpoint1141/93d6, staging1141/df4b et ancien inventaire547 préservés selon ce reçu. Checkout0700, lanceurs0700 ; start SHA256 `da4c86b73649a0939d8ff37f1bd35175b5d2d2b31aa0f15bcd8e1f9fcb191b56`, CHECK SHA256 `c165522014d83d09d5fcb0032b41d91fa13e2f5e146f5aaffde61062620459ba`.
 
-Les flags faux et journaux vides du JSON décrivent le staging avant le CHECK séparé. Aucun démarrage1150, changement Manager ou métadonnées1150 déduit, aucun inventaire SQL physique indépendant. **Préparation et CHECK SSH1150 ne doivent pas être rejoués.**
+Les flags faux et journaux vides du JSON décrivent le staging avant le CHECK séparé. À cette phase, aucun démarrage1150 n’était déduit ; le relevé suivant l’atteste séparément. Métadonnées1150 et inventaire SQL physique indépendant restent non acquis. **Préparation et CHECK SSH1150 ne doivent pas être rejoués.**
 
-## Activation personnelle — prochaine action
+## Activation personnelle — acquise selon le relevé, ne pas rejouer
+
+Les valeurs ci-dessous documentent l’activation rapportée ; aucune manipulation ou relance supplémentaire à effectuer.
 
 1. Ouvrir [Run & Build du service Node239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application), nommé **recette.jessiemessage.com**, qui dessert aussi le principal.
 2. Remplacer les deux champs :
@@ -31,7 +33,7 @@ Les flags faux et journaux vides du JSON décrivent le staging avant le CHECK s�
 3. Cliquer **Enregistrer**. Si cela relance déjà l’application, attendre ; sinon cliquer une seule fois **Redémarrer** dans le [tableau de bord Node](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard). Aucun CHECK manuel supplémentaire en SSH. Le Node effectif reste le binaire privé24.22.1 du lanceur ; ne pas modifier PHP/DNS/SSL.
 4. Ouvrir [État du service](https://jessiemessage.com/admin/readiness), puis transmettre Version de l’application, Commit au démarrage complet, Version Node.js et Relevé au démarrage. Attendus : **1.15.0**, **`6712028e08b1e04ac7628bdbb9c39fd9f90d9909`**, **v24.22.1**, nouvelle date réelle. Le signal disponible peut compléter le relevé. Une seule activation : ne pas redémarrer de nouveau si l’identité est déjà correcte.
 
-Après ce relevé seulement, qualifier un nouveau writer1150 lié à sa seconde et au staging6384c78b ; aucun ancien writer à réutiliser. Le dernier checkpoint actif attesté reste1141/93d6 en attendant. Repli historique185 SQL38 seul, jamais démarré, sans garantie de downgrade publicformat2 ;184/172 restent interdits. Aucun test client réel, sauvegarde reportée ou chantier juridique ouvert.
+Ce relevé est désormais acquis, à la seconde1793561250. Prochaine étape : terminer et qualifier un nouveau writer1150 de métadonnées seules lié à cette seconde et au staging6384c78b ; aucun ancien writer à réutiliser. Le dernier checkpoint actif attesté reste1141/93d6 en attendant. Repli historique185 SQL38 seul, jamais démarré, sans garantie de downgrade publicformat2 ;184/172 restent interdits. Aucun test client réel, sauvegarde reportée ou chantier juridique ouvert.
 
 ## Historique — bloc préparation/CHECK exécuté, ne pas rejouer
 
