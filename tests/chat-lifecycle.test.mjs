@@ -2351,3 +2351,106 @@ test("a failed uploaded-selection thumbnail retries only on a later render and r
   late.reject(new Error("old hidden request failed")); await flush();
   assert.equal(image.dataset.assetId, item.asset.id); assert.equal(image.src, resumedSource);
 });
+
+async function chooseSyntheticPhotos(f, files) {
+  f.element("image-file").files = files;
+  for (const handler of f.element("image-file").events.get("change")) handler({});
+  await flush();
+}
+
+test("a captionless photo selection warns before leaving until explicitly removed", async () => {
+  const f = harness({ intercept: path => path === "/api/media/client/capabilities" ? response(200, { enabled: true }) : undefined }); await flush();
+  await chooseSyntheticPhotos(f, [new Blob(["photo one"]), new Blob(["photo two"])]);
+  let prevented = false;
+  const event = { preventDefault() { prevented = true; } };
+  await f.event("beforeunload", event); assert.equal(prevented, true); assert.equal(event.returnValue, "");
+  await f.click("photo-batch-clear"); prevented = false;
+  await f.event("beforeunload", event); assert.equal(prevented, false);
+  assert.equal(posts(f).length, 0);
+});
+
+test("a photo selection takes the edited caption after history failed before its first send", async () => {
+  let failHistory = false, uploads = 0; const published = [];
+  const f = harness({ intercept(path, options) {
+    if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+    if (failHistory && path.includes("/messages?")) return response(503, { error: "messaging_unavailable" });
+    if (path === "/api/media/client/assets") return response(201, { asset: { id: id(1400 + uploads++) } });
+    if (path.endsWith("/messages/batch")) { published.push(JSON.parse(options.body)); throw new Error("synthetic lost acknowledgement"); }
+  } }); await flush();
+  await chooseSyntheticPhotos(f, [new Blob(["photo one"]), new Blob(["photo two"])]);
+  const state = f.inspect().states.get(f.inspect().selected); state.hasMoreAfter = true; failHistory = true;
+  await f.send("Caption before failed history");
+  assert.equal(state.photoBatch.started, false); assert.equal(published.length, 0); assert.equal(uploads, 0);
+  failHistory = false; state.hasMoreAfter = false;
+  await f.send("Edited caption to publish");
+  assert.deepEqual(published[0].messages.map(item => item.caption), ["Edited caption to publish", ""]);
+  const keys = published[0].messages.map(item => item.clientMessageId);
+  await f.advance(60000); assert.equal(published.length, 1, "an uncertain POST is not repeated automatically");
+  await f.send("Edited caption to publish");
+  assert.deepEqual(published[1].messages.map(item => item.clientMessageId), keys);
+  assert.equal(uploads, 2, "retry resolves the uploaded assets and original request keys");
+});
+
+test("a photo selection cannot publish while its old recoverable caption cannot be removed", async () => {
+  const stored = persistentTabStore(); let writable = true, uploads = 0; const published = [];
+  const store = { getItem: stored.getItem,
+    setItem(key, value) { if (!writable) throw new Error("synthetic storage blocked"); stored.setItem(key, value); },
+    removeItem(key) { if (!writable) throw new Error("synthetic storage blocked"); stored.removeItem(key); } };
+  const f = harness({ draftStorage: store, intercept(path, options) {
+    if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+    if (path === "/api/media/client/assets") return response(201, { asset: { id: id(1500 + uploads++) } });
+    if (path.endsWith("/messages/batch")) { published.push(JSON.parse(options.body)); throw new Error("synthetic lost acknowledgement"); }
+  } }); await readyDraftFixture(f);
+  await enterPersistentDraft(f, "Caption still recoverable");
+  await chooseSyntheticPhotos(f, [new Blob(["photo one"]), new Blob(["photo two"])]);
+  writable = false; await f.send("Caption still recoverable");
+  const state = f.inspect().states.get(f.inspect().selected);
+  assert.equal(published.length, 0); assert.equal(uploads, 0); assert.equal(state.photoBatch.started, false);
+  assert.equal(f.element("message-body").disabled, false); assert.equal(f.element("message-body").value, "Caption still recoverable");
+  assert.match(f.element("chat-status").textContent, /envoi n’a pas commencé/);
+  const keys = state.photoBatch.items.map(item => item.clientMessageId);
+  writable = true; await f.send("Caption still recoverable");
+  assert.equal(published.length, 1); assert.deepEqual(published[0].messages.map(item => item.clientMessageId), keys);
+  assert.deepEqual(JSON.parse([...stored.values.values()][0]).entries, [], "a lost media reply cannot resurrect its caption as a new text send");
+});
+
+test("photo sending waits for an offscreen preview before preparing another original", async () => {
+  const deferred = pause(), files = Array.from({ length: 12 }, (_, index) => new Blob([`original ${index}`]));
+  let active = 0, maximum = 0, preparations = 0, uploads = 0;
+  const f = harness({ prepare: async file => {
+    preparations++; active++; maximum = Math.max(maximum, active);
+    try { if (file === files[8]) await deferred.promise; return new Blob(["normalized photo"], { type: "image/jpeg" }); }
+    finally { active--; }
+  }, intercept(path) {
+    if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+    if (path === "/api/media/client/assets") { uploads++; throw new Error("synthetic network interruption"); }
+  } }); await flush();
+  await chooseSyntheticPhotos(f, files); assert.equal(preparations, 4);
+  const list = f.element("photo-batch-list"); list.syntheticRect = { left: 0, right: 400 };
+  for (const [index, card] of list.children.entries()) card.syntheticRect = { left: (index - 8) * 100, right: (index - 7) * 100 };
+  for (const handler of list.events.get("scroll")) handler({}); await flush(); assert.equal(preparations, 5);
+  await f.send(""); assert.equal(preparations, 5); assert.equal(uploads, 0);
+  deferred.resolve(); await flush();
+  assert.equal(maximum, 1); assert.equal(uploads, 1); assert.equal(f.inspect().sendBusy, false);
+});
+
+test("a new single-photo send waits for preparation of a removed preview", async () => {
+  const deferred = pause(), old = new Blob(["removed original"]), replacement = new Blob(["replacement original"]);
+  let active = 0, maximum = 0, preparations = 0, uploads = 0;
+  const f = harness({ prepare: async file => {
+    preparations++; active++; maximum = Math.max(maximum, active);
+    try { if (file === old) await deferred.promise; return new Blob(["normalized photo"], { type: "image/jpeg" }); }
+    finally { active--; }
+  }, intercept(path) {
+    if (path === "/api/media/client/capabilities") return response(200, { enabled: true });
+    if (path === "/api/media/client/assets") { uploads++; return response(413, {}); }
+  } }); await flush();
+  await chooseSyntheticPhotos(f, [old]); await f.click("cancel-image"); await chooseSyntheticPhotos(f, [replacement]);
+  await f.send(""); assert.equal(preparations, 1); assert.equal(uploads, 0);
+  deferred.resolve(); await flush();
+  assert.ok(preparations >= 2, "the replacement can prepare again for its preview after a refused upload");
+  assert.equal(maximum, 1); assert.equal(uploads, 1);
+  assert.match(f.element("chat-status").textContent, /trop volumineuse pour le transfert/);
+  assert.doesNotMatch(f.element("chat-status").textContent, /légende/);
+  assert.equal(f.inspect().states.get(f.inspect().selected).pending, null);
+});

@@ -288,6 +288,50 @@ test("real MariaDB private media ownership and delivery (synthetic disposable da
       assert.equal(Number((await connection.query("SELECT COUNT(*) AS value FROM message_media WHERE media_id = ?", [image.id]))[0].value), 2, "historical linkage survives tombstones");
     });
 
+    await t.test("active photo campaigns protect originals while terminal campaign history remains intact", async () => {
+      const fixture = await pair();
+      for (const status of ["queued", "running", "completed", "cancelled", "paused"]) {
+        const value = asset(), campaignId = id(); await register(fixture, "admin", value);
+        await connection.query(`INSERT INTO broadcast_campaigns (id, admin_id, client_campaign_id, mfa_version, payload_encrypted,
+          request_fingerprint, media_id, status, created_at, updated_at, expires_at) VALUES (?, ?, ?, 1, 'v1.synthetic-photo-campaign', ?, ?, ?, ?, ?, ?)`,
+        [campaignId, fixture.admin.id, id(), digest(), value.id, status, sqlDate(now), sqlDate(now), sqlDate(now + 60000)]);
+        const command = { ...actor(fixture, "admin"), assetId: value.id };
+        if (["queued", "running"].includes(status)) {
+          await assert.rejects(media.deleteAsset(command), code("MEDIA_IN_USE"));
+          assert.equal((await connection.query("SELECT deleted_at FROM media_assets WHERE id = ?", [value.id]))[0].deleted_at, null);
+          assert.equal((await connection.query("SELECT state FROM media_storage_objects WHERE id = ?", [value.id]))[0].state, "registered");
+          await connection.query("UPDATE broadcast_campaigns SET status = 'cancelled' WHERE id = ?", [campaignId]);
+        }
+        assert.equal((await media.deleteAsset(command)).deletedAt, now);
+        assert.equal((await connection.query("SELECT media_id FROM broadcast_campaigns WHERE id = ?", [campaignId]))[0].media_id.equals(value.id), true);
+        await media.releaseStorageObject({ ...actor(fixture, "admin"), objectId: value.id, storageKey: value.storageKey });
+      }
+    });
+
+    await t.test("admin cleanup pages expose pending tombstones until quota release without changing ordinary selectors", async () => {
+      const fixture = await pair(), other = await pair(), active = asset(), pending = asset(), released = asset();
+      const before = (await capacityStore.status()).heldBytes;
+      for (const value of [active, pending, released]) await register(fixture, "admin", value);
+      await remove(fixture, "admin", pending.id); await remove(fixture, "admin", released.id);
+      await media.releaseStorageObject({ ...actor(fixture, "admin"), objectId: released.id, storageKey: released.storageKey });
+      assert.equal((await capacityStore.status()).heldBytes, before + active.fullBytes + active.thumbnailBytes + pending.fullBytes + pending.thumbnailBytes + 160);
+      assert.deepEqual((await media.listAssets(actor(fixture, "admin"))).assets.map(row => row.id.toString("hex")), [active.id.toString("hex")]);
+      const command = { ...actor(fixture, "admin"), includeCleanupPending: true, limit: 1 };
+      const first = await media.listAssets(command), second = await media.listAssets({ ...command, afterId: first.nextCursor });
+      assert.equal(first.hasMore, true); assert.equal(second.hasMore, false);
+      const recovered = [...first.assets, ...second.assets];
+      assert.deepEqual(recovered.map(row => row.id.toString("hex")), [active.id, pending.id].sort(Buffer.compare).map(value => value.toString("hex")));
+      assert.equal(recovered.find(row => row.id.equals(pending.id)).cleanupPending, true);
+      assert.equal(recovered.find(row => row.id.equals(active.id)).cleanupPending, false);
+      assert.equal((await media.listAssets({ ...actor(other, "admin"), includeCleanupPending: true })).assets.length, 0);
+      await assert.rejects(media.getOwnedAsset({ ...actor(fixture, "admin"), assetId: pending.id }), code("MEDIA_NOT_FOUND"));
+      await assert.rejects(media.listAssets({ ...actor(fixture), includeCleanupPending: true }), code("MEDIA_INPUT"));
+      await assert.rejects(media.listAssets({ ...command, conversationId: fixture.conversationId }), code("MEDIA_INPUT"));
+      await remove(fixture, "admin", pending.id);
+      await media.releaseStorageObject({ ...actor(fixture, "admin"), objectId: pending.id, storageKey: pending.storageKey });
+      assert.deepEqual((await media.listAssets({ ...command, limit: 100 })).assets.map(row => row.id.toString("hex")), [active.id.toString("hex")]);
+    });
+
     await t.test("an active avatar blocks media deletion until its owner clears the profile; cleanup refunds the quota once", async () => {
       for (const role of ["client", "admin"]) {
         const fixture = await pair(), value = asset({ width: 256, height: 256, thumbnailWidth: 256, thumbnailHeight: 256 });

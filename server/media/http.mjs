@@ -183,6 +183,21 @@ function bytesReply(response, method, result, variant) {
   });
 }
 
+function safeLibraryMedia(value, role, includeCleanupPending) {
+  if (!includeCleanupPending) {
+    if (value?.cleanupPending === true) throw unavailable();
+    return safeMedia(value, { role });
+  }
+  if (typeof value?.cleanupPending !== "boolean") throw unavailable();
+  if (!value.cleanupPending) return { ...safeMedia(value, { role }), cleanupPending: false };
+  if (value.fullUrl !== null || value.thumbnailUrl !== null || value.sharedHere !== false) throw unavailable();
+  // Validate the unchanged metadata with the ordinary media validator, then
+  // keep deleted bytes inaccessible while exposing only the cleanup action.
+  const base = `/api/media/${role}/assets/${value.id}`;
+  const metadata = safeMedia({ ...value, fullUrl: `${base}/full`, thumbnailUrl: `${base}/thumb` }, { role });
+  return { ...metadata, fullUrl: null, thumbnailUrl: null, cleanupPending: true };
+}
+
 function reserveBinaryRead(response) {
   if (activeBinaryReads >= MAX_ACTIVE_BINARY_READS) throw Object.assign(new Error("MEDIA_BUSY"), { code: "MEDIA_BUSY", retryAfter: 5 });
   activeBinaryReads += 1;
@@ -263,13 +278,16 @@ export function createMediaHandler(service, { origin }) {
           reply(response, method, result.duplicate ? 200 : 201, { asset: safeMedia(result.asset, { role: route.role }), duplicate: result.duplicate });
         } finally { service.releaseUpload(admission); }
       } else if (route.kind === "assets") {
-        const options = query(url, ["conversationId", "afterId", "limit"], 50);
+        const options = query(url, ["conversationId", "afterId", "limit", "includeCleanupPending"], 50);
         const conversationId = options.conversationId ?? null, afterId = options.afterId ?? null;
         if (conversationId !== null && !id(conversationId) || afterId !== null && !id(afterId)) throw invalid();
-        const result = await service.listAssets(route.role, token, { conversationId, afterId, limit: options.limit });
+        const includeCleanupPending = options.includeCleanupPending === "1";
+        if (options.includeCleanupPending !== undefined && (!includeCleanupPending || route.role !== "admin" || conversationId !== null)) throw invalid();
+        const result = await service.listAssets(route.role, token, { conversationId, afterId, limit: options.limit,
+          ...(includeCleanupPending ? { includeCleanupPending: true } : {}) });
         if (!result || !Array.isArray(result.assets) || result.assets.length > options.limit || typeof result.hasMore !== "boolean"
           || !(result.nextCursor === null || id(result.nextCursor))) throw unavailable();
-        reply(response, method, 200, { assets: result.assets.map((value) => safeMedia(value, { role: route.role })), nextCursor: result.nextCursor, hasMore: result.hasMore });
+        reply(response, method, 200, { assets: result.assets.map((value) => safeLibraryMedia(value, route.role, includeCleanupPending)), nextCursor: result.nextCursor, hasMore: result.hasMore });
       } else if (route.kind === "ownedBytes" || route.kind === "deliveryBytes") {
         query(url, []);
         const completed = reserveBinaryRead(response);

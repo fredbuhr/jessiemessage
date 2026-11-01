@@ -2,6 +2,14 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
+## Correctif 1.14.1 — fiabilité de la chaîne médias
+
+[Objectif et couverture](media-reliability-1141.md). Une correction compatible regroupée, sans nouvelle dépendance, migration ni modification des données réelles. La livraison14 reste close et active.
+
+1. Terminer les corrections reproduites et les scénarios UI/profil/vidéo/nettoyage ainsi que le secours HEIC sans OffscreenCanvas ; conserver droits, quotas, limites et absence de répétition d’un POST incertain.
+2. Contre-revue du lot, qualification native PR puis SHA main : formats/décodage, HTTP/SQL, stockage/dirfd, lifecycle et captures FR/EN. Les omissions locales procfs restent non attestées jusqu’à la CI native.
+3. Publier le correctif exact et préparer un nouvel opérateur limité au baseline14 réel ; aucune activation déduite de la publication. Ne pas rejouer les outils14 clos.
+
 ## Évolution 1.14.0 — livraison terminée
 
 Code, revue, PR/main5/5, sept captures, publication, nouvel opérateur d’installation et writer final sont terminés. [Bilan et couverture](media-library-1140.md), [guide clos](operations-release1140.md). Une seule livraison compatible ; Node24.22.1 et schéma38 inchangés.

@@ -128,6 +128,29 @@ test("asset operations preflight the current role and forward digest authorizati
   assert.equal(f.calls.length, count);
 });
 
+test("only the standalone admin library can explicitly list unfinished photo cleanup", async () => {
+  const f = await fixture();
+  f.store.listAssets = async options => {
+    f.calls.push({ name: "listAssets", options });
+    return { assets: [{ ...f.asset(), deletedAt: now, sharedHere: false, cleanupPending: true },
+      { ...f.asset(), id: Buffer.alloc(16, 0x45), sharedHere: false, cleanupPending: false }], nextCursor: null, hasMore: false };
+  };
+  const result = await f.service.listAssets("admin", f.token, { includeCleanupPending: true });
+  assert.equal(f.calls.at(-1).options.includeCleanupPending, true);
+  assert.equal(result.assets[0].cleanupPending, true);
+  assert.equal(result.assets[0].fullUrl, null); assert.equal(result.assets[0].thumbnailUrl, null);
+  assert.equal(result.assets[1].cleanupPending, false);
+  assert.equal(result.assets[1].fullUrl, `/api/media/admin/assets/${"45".repeat(16)}/full`);
+  const count = f.calls.length;
+  for (const [role, options] of [["client", { includeCleanupPending: true }], ["admin", { conversationId: conversationHex, includeCleanupPending: true }],
+    ["admin", { includeCleanupPending: "1" }]]) {
+    await assert.rejects(f.service.listAssets(role, f.token, options), hasCode("MEDIA_INPUT"));
+  }
+  assert.equal(f.calls.length, count);
+  f.store.listAssets = async () => ({ assets: [{ ...f.asset(), cleanupPending: true }], nextCursor: null, hasMore: false });
+  await assert.rejects(f.service.listAssets("admin", f.token, { includeCleanupPending: true }), hasCode("MEDIA_UNAVAILABLE"));
+});
+
 test("invalid sessions, client gates and malformed clocks fail before metadata or filesystem access", async () => {
   const f = await fixture();
   for (const code of ["AUTH_INVALID", "ACCESS_EXPIRED", "ACCESS_PREREQUISITES"]) {

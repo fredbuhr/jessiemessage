@@ -91,6 +91,42 @@ test("capabilities, own library and upload DTOs authenticate both roles and hide
   }
 });
 
+test("admin cleanup listing requires explicit scope and hides deleted photo byte URLs", async (t) => {
+  const { base, calls } = await fixture(t, {
+    async listAssets(role, token, options) {
+      calls.push(["cleanup-list", role, token, options]);
+      return { assets: [asset(role, false, { fullUrl: null, thumbnailUrl: null, sharedHere: false, cleanupPending: true })], nextCursor: null, hasMore: false };
+    },
+  });
+  const response = await fetch(`${base}${assetsPath()}?includeCleanupPending=1`, { headers: { Cookie: cookie("admin") } });
+  assert.equal(response.status, 200);
+  const body = await response.json(); noPrivateFields(body);
+  assert.equal(body.assets[0].cleanupPending, true);
+  assert.equal(body.assets[0].fullUrl, null); assert.equal(body.assets[0].thumbnailUrl, null);
+  assert.deepEqual(calls.at(-1).at(-1), { conversationId: null, afterId: null, limit: 50, includeCleanupPending: true });
+  const before = calls.filter(call => call[0] === "cleanup-list").length;
+  for (const [role, query] of [["client", "includeCleanupPending=1"], ["admin", "includeCleanupPending=0"],
+    ["admin", `includeCleanupPending=1&conversationId=${ids.conversation}`], ["admin", "includeCleanupPending=true"]]) {
+    const rejected = await fetch(`${base}${assetsPath(role)}?${query}`, { headers: { Cookie: cookie(role) } });
+    assert.equal(rejected.status, 400, `${role}:${query}`);
+  }
+  assert.equal(calls.filter(call => call[0] === "cleanup-list").length, before);
+  assert.equal((await fetch(`${base}${assetsPath()}`, { headers: { Cookie: cookie("admin") } })).status, 503,
+    "a cleanup row cannot enter ordinary photo selectors");
+});
+
+test("cleanup listings keep ordinary metadata validation and require an explicit boolean state", async (t) => {
+  let value = asset("admin", false, { cleanupPending: false });
+  const { base } = await fixture(t, { async listAssets() { return { assets: [value], nextCursor: null, hasMore: false }; } });
+  const get = () => fetch(`${base}${assetsPath()}?includeCleanupPending=1`, { headers: { Cookie: cookie("admin") } });
+  let response = await get(); assert.equal(response.status, 200);
+  assert.equal((await response.json()).assets[0].cleanupPending, false);
+  for (const invalid of [{ cleanupPending: "true" }, { cleanupPending: true }, { cleanupPending: true, fullUrl: null, thumbnailUrl: null, width: 2049 }]) {
+    value = asset("admin", false, invalid);
+    assert.equal((await get()).status, 503);
+  }
+});
+
 test("media cookies never accept the other role, duplicate values, or noncanonical token entropy", async (t) => {
   const { base, calls } = await fixture(t);
   for (const role of ["admin", "client"]) {

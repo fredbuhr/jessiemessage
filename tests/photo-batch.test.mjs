@@ -55,6 +55,21 @@ test("partial message failure retries only failed identities and keeps the captu
   assert.equal(await runPhotoBatch(f.batch,f.hooks),true);assert.equal(f.sent.size,3);
   assert.equal(f.calls.sent.length,3);assert.ok(f.calls.sent.every(input=>input.replyThrough==="9007199254740993"&&input.replyVersion==="7"));
 });
+test("batch item refusals retain their server code and retry the original uploaded identities",async()=>{
+  for(const refusal of [{status:404,error:"not_found"},{status:415,error:"media_format"},{status:422,error:"media_dimensions"},{status:429,error:"rate_limited"}]){
+    const f=fixture(2),send=f.hooks.send,keys=f.batch.items.map(item=>item.clientMessageId);let first=true;
+    f.hooks.send=async messages=>{
+      if(!first)return send(messages);first=false;
+      return{results:[{clientMessageId:messages[0].clientMessageId,...refusal},{clientMessageId:messages[1].clientMessageId,status:424,error:"photo_batch_waiting"}]};
+    };
+    assert.equal(await runPhotoBatch(f.batch,f.hooks),false);
+    assert.equal(f.batch.items[0].status,"failed");assert.deepEqual(f.batch.items[0].error,{status:refusal.status,code:refusal.error});
+    assert.equal(f.batch.items[1].status,"waiting");assert.equal(f.batch.items[1].error,null);
+    assert.ok(f.batch.items.every(item=>item.mediaId));assert.equal(f.sent.size,0);
+    assert.equal(await runPhotoBatch(f.batch,f.hooks),true);assert.equal(f.calls.uploaded.length,2);
+    assert.deepEqual(f.calls.sent.map(item=>item.clientMessageId),keys);assert.equal(f.sent.size,2);
+  }
+});
 test("account or conversation switch stops before publication and preserves the in-memory draft",async()=>{
   const f=fixture(2);let current=true;f.hooks.prepare=async file=>{current=false;return file;};
   await assert.rejects(runPhotoBatch(f.batch,{...f.hooks,current:()=>current}),error=>error.stale===true);

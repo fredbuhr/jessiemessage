@@ -4,11 +4,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, rm, readFile, writeFile, readdir, chmod, stat, symlink, unlink, mkdir, rename, link, truncate } from "node:fs/promises";
+import { mkdtemp, rm, readFile, writeFile, readdir, chmod, stat, statfs, symlink, unlink, mkdir, rename, link, truncate } from "node:fs/promises";
 import { createMediaStorage, MediaStorageError } from "../server/media/storage.mjs";
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const base = path.resolve(repo, "../audit");
+const procAvailable = process.platform === "linux" && await statfs("/proc/self/fd", { bigint: true }).then(stats => stats.type === 0x9fa0n, () => false);
+const dirfdOptions = { skip: procAvailable ? false : "Linux procfs /proc/self/fd is unavailable locally; CI Linux executes this filesystem case." };
 const input = () => ({ assetId: randomBytes(16), storageKey: randomBytes(32), full: Buffer.from("private-secret-normalized-full-jpeg-bytes"), thumbnail: Buffer.from("private-secret-normalized-thumbnail-jpeg-bytes") });
 const filename = (root, storageKey, variant) => path.join(root, `${storageKey.toString("hex")}.${variant}.enc`);
 const unavailable = (promise) => assert.rejects(promise, (error) => error instanceof MediaStorageError && error.code === "MEDIA_UNAVAILABLE"
@@ -143,13 +145,40 @@ test("bounded regular-file reads reject oversized envelopes before allocating th
   await unavailable(storage.get({ ...asset, variant: "thumb" }));
 });
 
-test("asset removal is idempotent and never scans or deletes unrelated files", async (t) => {
+test("asset removal is idempotent and never deletes unrelated files", async (t) => {
   const { root, storage } = await fixture(t); const asset = input(); await storage.put(asset);
   const sentinel = path.join(root, "unknown-private-encrypted-orphan.enc"); await writeFile(sentinel, "leave-me", { mode: 0o600 });
   await storage.remove(asset); await storage.remove(asset);
   assert.deepEqual(await readdir(root), [path.basename(sentinel)]); assert.equal(await readFile(sentinel, "utf8"), "leave-me");
   await unavailable(storage.get({ ...asset, variant: "full" }));
 });
+
+for (const pathMode of ["strict", "linux-dirfd"]) {
+  test(`photo cleanup removes exact-key interrupted staging files and publication hardlinks (${pathMode})`, pathMode === "linux-dirfd" ? dirfdOptions : {}, async (t) => {
+    const { root, key } = await fixture(t), storage = await createMediaStorage({ root, key, pathMode }), asset = input();
+    await storage.put(asset);
+    const stage = variant => path.join(root, `.${asset.storageKey.toString("hex")}.${variant}.${randomBytes(16).toString("hex")}.tmp`);
+    await link(filename(root, asset.storageKey, "full"), stage("full"));
+    const thumbnailStage = stage("thumb");
+    await rename(filename(root, asset.storageKey, "thumb"), thumbnailStage);
+    const foreign = path.join(root, `.${randomBytes(32).toString("hex")}.full.${randomBytes(16).toString("hex")}.tmp`);
+    await writeFile(foreign, "synthetic-other-upload", { mode: 0o600 });
+    await storage.remove(asset); await storage.remove(asset);
+    assert.deepEqual(await readdir(root), [path.basename(foreign)]);
+    assert.equal(await readFile(foreign, "utf8"), "synthetic-other-upload");
+  });
+
+  test(`photo cleanup rejects an unsafe exact-key stage before deleting any original (${pathMode})`, pathMode === "linux-dirfd" ? dirfdOptions : {}, async (t) => {
+    const { root, key } = await fixture(t), storage = await createMediaStorage({ root, key, pathMode }), asset = input();
+    await storage.put(asset);
+    const stage = path.join(root, `.${asset.storageKey.toString("hex")}.full.${randomBytes(16).toString("hex")}.tmp`);
+    await writeFile(stage, "synthetic-untrusted-stage", { mode: 0o644 });
+    const before = (await readdir(root)).sort();
+    await unavailable(storage.remove(asset));
+    assert.deepEqual((await readdir(root)).sort(), before);
+    assert.deepEqual(await storage.get({ ...asset, variant: "full" }), asset.full);
+  });
+}
 
 test("storage APIs accept only fixed-length opaque Buffer identifiers and bounded variants", async (t) => {
   const { storage } = await fixture(t); const asset = input();

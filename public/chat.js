@@ -475,7 +475,7 @@ async function resumeConnection({ reset = false } = {}) {
   try { return await task.promise; } finally { if (resumeTask === task) resumeTask = null; }
 }
 function hasUnsavedWork() {
-  return !loggingOut && (crm?.hasUnsavedWork?.() === true || [...states.values()].some((state) => state.draft?.length || state.pending || state.imageDraft || state.videoDraft));
+  return !loggingOut && (pendingPhotoSelection || crm?.hasUnsavedWork?.() === true || [...states.values()].some((state) => state.draft?.length || state.pending || state.imageDraft || state.videoDraft || state.photoBatch?.items.length));
 }
 function signOut() {
   clearPrivate({ purgeDrafts: true });
@@ -1294,18 +1294,26 @@ function replyFields(holder) { return role === "admin" && holder.replyThrough !=
 async function sendPhotoSelection() {
   const state = currentState(), batch = state?.photoBatch;
   if (!batch || batch.busy || sendBusy || !state.conversation?.canSend || !validCaption(el("message-body").value)) return;
-  const ticket = snapshot(state); if (batch.caption === null) batch.caption = el("message-body").value;
+  const ticket = snapshot(state); if (!batch.started) batch.caption = el("message-body").value;
   if (!batch.started) { delete batch.replyThrough; captureReply(state, batch); if (batch.replyThrough === undefined) batch.replyThrough = null; }
   state.draft = batch.caption; sendBusy = true; renderMeta(state);
   try {
     // Sending from an old gallery/message anchor returns to the current page
     // before publishing. The reply boundary above stays tied to what was seen.
     if (state.hasMoreAfter && (!await loadNewer({ latest: true }) || !fresh(ticket) || state.photoBatch !== batch)) return;
+    if (!batch.started) {
+      batch.started = true;
+      if (!drafts.beforeSend(state).safeToSend) {
+        batch.started = false; batch.caption = null;
+        notice("Cet envoi n’a pas commencé. Réessaie sans recharger la page pour conserver ton brouillon.", true); return;
+      }
+    }
+    if (photoPreviewJob) await photoPreviewJob.promise;
+    if (!fresh(ticket) || !visible() || state.photoBatch !== batch) return;
     const complete = await runPhotoBatch(batch, {
       current: () => fresh(ticket) && visible() && state.photoBatch === batch,
       prepare: async file => {
         const holder = batch.items.find(item => item.file === file);
-        if (photoPreviewJob?.holder === holder) await photoPreviewJob.promise;
         if (!fresh(ticket) || !visible()) throw staleResponse();
         if (holder?.prepared) return holder.prepared;
         const controller = new AbortController(); controllers.add(controller);
@@ -1330,12 +1338,12 @@ function mediaErrorText(error) {
   if (error.code === "image_source_too_large") return "Cette photo dépasse la capacité de préparation de cet appareil. Essaie de la réexporter depuis ton application Photos.";
   if (error.code === "media_format") return "Cette image ne peut pas être lue. Essaie de la réexporter depuis ton application Photos.";
   if (error.code === "media_dimensions") return "La définition de cette photo dépasse la capacité de préparation de cet appareil. Essaie de la réexporter depuis ton application Photos.";
-  if (error.code === "request_too_large") return "Cette photo est trop volumineuse pour le transfert. Essaie une autre version.";
+  if (error.code === "request_too_large" || error.status === 413) return "Cette photo est trop volumineuse pour le transfert. Essaie une autre version.";
   if (error.code === "media_unavailable") return "La photo n’a pas pu être préparée. Essaie une autre photo.";
   if (error.status === 507 && error.code === "storage_limit") return "Le stockage des photos a atteint sa limite.";
   if (error.status === 409 && error.code === "media_in_use") return "Cette photo est utilisée dans une conversation ou comme avatar. Retire ces utilisations avant de la supprimer.";
   if (error.status === 404) return "Cette photo n’est plus disponible.";
-  if (error.status === 415 || error.status === 400 || error.status === 413) return "La photo n’a pas pu être transférée. Réessaie avec une légende de 1 000 caractères maximum.";
+  if (error.status === 415 || error.status === 400) return "La photo n’a pas pu être transférée. Réessaie avec une légende de 1 000 caractères maximum.";
   if (error.status === 429) return "Patiente un moment avant de réessayer cet envoi.";
   return "La photo n’a pas pu être chargée. Réessaie dans un moment.";
 }
@@ -2156,11 +2164,12 @@ async function sendImage(retry = false, reply = null) {
   if (!drafts.beforeSend(state).safeToSend) { retrySend(state); renderMeta(state); notice("Cet envoi n’a pas commencé. Réessaie sans recharger la page pour conserver ton brouillon.", true); return; }
   state.draft = caption; sendBusy = true; let preparing = false; renderMeta(state); notice(pending.mediaId ? "Envoi de la photo…" : "Préparation de la photo…");
   try {
+    if (photoPreviewJob) await photoPreviewJob.promise;
+    if (!fresh(ticket) || !visible() || state.pending !== pending) return;
     if (!pending.mediaId) {
       const preparation = new AbortController(); controllers.add(preparation); let prepared;
       preparing = true;
       try {
-        if (photoPreviewJob?.holder === draft) await photoPreviewJob.promise;
         if (!fresh(ticket) || !visible()) throw staleResponse();
         prepared = draft?.prepared ?? await prepareImageUpload(pending.file, { signal: preparation.signal });
       }
