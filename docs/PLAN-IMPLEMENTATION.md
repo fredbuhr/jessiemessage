@@ -6,16 +6,9 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 [Diagnostic et périmètre](photo-acceptance-1150.md). Refus synthétiques établis sur formats courants, JPEG valides, capacité couplée aux archives et reprise/erreurs masquées. Original client non attesté.
 
-Code, contre-revues, qualifications PR/main5/5, publicationv1.15.0/source6712028e et opérateurs natifs sont acquis. [Preuves et prochaine action exacte](REPRISE.md).
+**Livraison terminée.** Code, contre-revues, PR/main5/5, publicationv1.15.0/source6712028e, préparateur23/23 avec installation neuve/smoke six familles et writer39/39 natifs sont acquis. Préparation/CHECK0 et activation rapportés ; reçu final `release1150_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, `publicReady:true`, checkpoint1150 **`989de548cb42ac6784cbc4c341e43b240b63386a089fb2d107d4f6a067798814`**. Démarrage réel01/11/2026 20:27:30.173Paris, conforme à l’UI. [Preuves et état courant](REPRISE.md).
 
-Préparation/CHECK1150 désormais acquis selon le reçu utilisateur : empreinte6384c78b/6008octets vérifiée, inventaire et codecs identiques au natif, CHECK0. Ne pas les rejouer.
-
-Activation1150 désormais rapportée : source6712028e/Node24.22.1,01/11/2026 20:27:30Paris, seconde1793561250. Aucun nouveau redémarrage, préparation ou CHECK à demander.
-
-Writer1150 désormais qualifié39/39 natifs, opérateurc1284668, workflow41342830219, contre-revue et octets relus. Aucun writer réel exécuté par l’agent et aucune suite applicative verte répétée.
-
-1. Recueillir le JSON utilisateur de l’unique writer1150 épinglé dans le guide. En cas de sortie incertaine, lecture seule du checkpoint/traces, jamais relance pour découvrir.
-2. Après reçu acquis seulement, consigner l’alignement final et clore. Aucun ancien writer, préparation/CHECK ou nouvelle activation à rejouer.
+Aucune action restante pour ce lot. Ne rejouer ni préparation, CHECK, activation, writer ou suite applicative verte sans raison nouvelle ; aucune nouvelle mise à jour automatique. Attendre la prochaine demande utilisateur. Original client/Safari/téléphones physiques et sauvegarde manuelle reportée restent non attestés ou différés selon leur périmètre, sans réouverture automatique.
 
 ## Correctif 1.14.1 — livraison terminée
 

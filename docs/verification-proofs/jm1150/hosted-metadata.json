@@ -1,0 +1,74 @@
+{
+  "format": "jessiemessage-1150-hosted-metadata-observation",
+  "authority": "user terminal output of the pinned qualified writer; no direct hosting access by agent",
+  "operator": "c12846680c30ce008d9cc2f170aa87f06b8d78aa",
+  "helperSha256": "dc8e7e45aa0d4ec68bc0bd050c65869d1a3bcc8840e577f79996b32995c74c6b",
+  "nativeQualification": "writer-final-native.json",
+  "receipt": {
+    "status": "release1150_metadata_recorded",
+    "version": "1.15.0",
+    "source": "6712028e08b1e04ac7628bdbb9c39fd9f90d9909",
+    "tree": "c80ee33ebfe01838c86cc2b4166b344acf5ea745",
+    "metadataOnly": true,
+    "noRestart": true,
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "release": {
+      "version": "1.15.0",
+      "commit": "6712028e08b1e04ac7628bdbb9c39fd9f90d9909",
+      "nodeVersion": "v24.22.1",
+      "startedAt": 1793561250173
+    },
+    "publicReady": true,
+    "rollbackRelease": "1.8.5",
+    "rollbackAfterMigrationQualified": true,
+    "rollbackQualificationScope": "sql38_precheck_only",
+    "publicProfileDowngradeQualified": false,
+    "restart184Allowed": false,
+    "restart172Allowed": false,
+    "historicalRelease1141Preserved": true,
+    "historicalRelease1140Preserved": true,
+    "historicalRelease1130Preserved": true,
+    "historicalRelease1112Preserved": true,
+    "historicalRelease1111Preserved": true,
+    "historicalRelease1110Preserved": true,
+    "historicalRelease1101Preserved": true,
+    "historicalRelease1100Preserved": true,
+    "historicalRelease190Preserved": true,
+    "historicalRelease184Preserved": true,
+    "priorHostedStaging1141Preserved": true,
+    "priorHostedStaging1140Preserved": true,
+    "priorMetadataRelease": "1.14.1",
+    "priorActivePreserved": true,
+    "otherBlocksPreserved": true,
+    "checkpointSha256": "989de548cb42ac6784cbc4c341e43b240b63386a089fb2d107d4f6a067798814"
+  },
+  "startupVerification": {
+    "startedAtSecond": 1793561250,
+    "startedAtMilliseconds": 1793561250173,
+    "startedAtParis": "2026-11-01T20:27:30.173+01:00",
+    "matchesPriorUserUIToSecond": true,
+    "exactMillisecondsFromWriterStartupEvidence": true
+  },
+  "checkpointVerification": {
+    "sha256ReportedAfterAtomicWriteAndReadback": "989de548cb42ac6784cbc4c341e43b240b63386a089fb2d107d4f6a067798814",
+    "privateFullDocumentProvidedToAgent": false,
+    "hashIndependentlyReconstructedByAgent": false
+  },
+  "preservationScope": "Complete previous active1141, section1141, older histories/staging and other blocks preserved according to qualified writer receipt. Rollback185 qualification remains SQL38 precheck only; no public-format downgrade or restart184/172 inferred.",
+  "limits": [
+    "No independent PID/socket/executed-binary or physical SQL inventory by agent.",
+    "No real original client photo, physical phone, Safari or hosted large-original proxy test inferred.",
+    "Deferred manual backup/restore and legal/PC work remain unopened."
+  ],
+  "deliveryStatus": "closed_no_action_remaining",
+  "neverReplay": [
+    "prepare1150",
+    "SSH CHECK1150",
+    "activation1150",
+    "record1150",
+    "old operators",
+    "green app suites without a new reason"
+  ],
+  "next": "Wait for a new user improvement/audit request. Read durable state before any future dependent operation; never rerun a mutation to discover its outcome."
+}

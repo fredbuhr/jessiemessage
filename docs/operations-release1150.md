@@ -1,6 +1,6 @@
-# Livraison 1.15.0 — démarrée, writer qualifié à exécuter
+# Livraison 1.15.0 — terminée, aucune commande à rejouer
 
-La **1.15.0 est démarrée selon le [relevé utilisateur](verification-proofs/jm1150/hosted-identity.json)** : source6712028e08b1e04ac7628bdbb9c39fd9f90d9909, Nodev24.22.1,01/11/2026 20:27:30Paris, seconde1793561250. Millisecondes et signal disponible non fournis. Le dernier checkpoint de métadonnées reste1141/93d6, préservé à la préparation ; le nouveau writer1150 est désormais qualifié et son exécution reste à effectuer. Ne rejouer ni préparation, CHECK, activation ou ancien outil1141.
+La **1.15.0 est démarrée et ses métadonnées sont alignées selon le [reçu final utilisateur](verification-proofs/jm1150/hosted-metadata.json)** : source6712028e08b1e04ac7628bdbb9c39fd9f90d9909, Nodev24.22.1,01/11/2026 20:27:30.173Paris,1793561250173ms. Statut `release1150_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, `publicReady:true` ; checkpoint **`989de548cb42ac6784cbc4c341e43b240b63386a089fb2d107d4f6a067798814`** après écriture et relecture du writer. Active1141 entier, sections/historiques/staging antérieurs et autres blocs préservés selon le reçu. Aucune étape de livraison restante ; ne rejouer ni préparation, CHECK, activation ou writer.
 
 La [PR147](https://github.com/fredbuhr/jessiemessage/pull/147) est fusionnée. Source/tag [v1.15.0](https://github.com/fredbuhr/jessiemessage/releases/tag/v1.15.0) : **`6712028e08b1e04ac7628bdbb9c39fd9f90d9909`**, arbre **`c80ee33ebfe01838c86cc2b4166b344acf5ea745`**, release/latest **430794626**. Le main documentaire peut avancer ensuite ; ne pas le confondre avec le code publié.
 
@@ -18,7 +18,7 @@ Les flags faux et journaux vides du JSON décrivent le staging avant le CHECK s�
 
 ## Activation personnelle — acquise, ne pas rejouer
 
-L’[identité utilisateur](verification-proofs/jm1150/hosted-identity.json) confirme version1.15.0, source6712028e08b1e04ac7628bdbb9c39fd9f90d9909, Nodev24.22.1, **01/11/2026 20:27:30 Europe/Paris**, secondeUTC1793561250. Millisecondes et signal disponible absents de cet extrait ; le writer vérifie le journal réel et les GET publics. Les champs Manager, PID/socket/binaire et inventaire SQL physique ne sont pas indépendamment inspectés par l’agent. Aucun nouveau redémarrage demandé.
+L’[identité utilisateur](verification-proofs/jm1150/hosted-identity.json) confirme version1.15.0, source6712028e08b1e04ac7628bdbb9c39fd9f90d9909, Nodev24.22.1, **01/11/2026 20:27:30 Europe/Paris**, secondeUTC1793561250. Millisecondes et signal disponible étaient absents de cet extrait initial ; le reçu final complète le journal réel et les GET publics. Les champs Manager, PID/socket/binaire et inventaire SQL physique ne sont pas indépendamment inspectés par l’agent. Aucun nouveau redémarrage demandé.
 
 | Champ de l’activation rapportée | Valeur1150 |
 | --- | --- |
@@ -28,13 +28,13 @@ L’[identité utilisateur](verification-proofs/jm1150/hosted-identity.json) con
 
 Le service Node239143 encore nommé recette.jessiemessage.com dessert aussi le principal. Ne modifier ni ces champs ni la configuration pour la finalisation des métadonnées ci-dessous.
 
-## Enregistrement final — prochaine action unique
+## Enregistrement final — acquis, ne pas rejouer
 
 Le nouveau writer est [qualifié39/39 tests natifs](verification-proofs/jm1150/writer-final-native.json), sans omission, Node24.22.1, tentative1,1/1job : [run41342830219](https://github.com/fredbuhr/jessiemessage/actions/runs/41342830219). Opérateur **`c12846680c30ce008d9cc2f170aa87f06b8d78aa`**, arbre `e79d4eee550bdbd1299e37f2e4f35564e953029a`, helper **44256octets**, SHA256 **`dc8e7e45aa0d4ec68bc0bd050c65869d1a3bcc8840e577f79996b32995c74c6b`**. Helper/test/workflow relus identiques aux octets qualifiés ; [contre-revue](verification-proofs/jm1150/writer-counter-review.md) sans bloqueur restant. Les39tests locaux et39natifs concernent le même lot, sans addition ; aucune suite applicative verte rejouée.
 
 Il vérifie la seconde1793561250 dans le démarrage unique, le staging6384c78b/6008octets, l’ancien checkpoint1141/93d6, les sources/tags, Node/configuration/migrations, l’installation1150 réelle et l’ancien lien1141→vrai1140. Neuf versions, onze ressources, les quatre logs d’installation/smoke et le graphe strictement préservé sont liés. Les codecs dépassant2Mio disposent d’une lecture hash bornée dédiée ; la limite JSON/checkpoint2Mio demeure. Préconditions et identité HTTP publics doivent concorder avant l’écriture atomique/relecture des seules métadonnées. Active1141 entier, section1141, tous historiques/autres blocs et scopes185 SQL38seul/publicProfileDowngradeQualified:false/184172interdits préservés. Aucun CHECK, installation, SQL en écriture ou redémarrage.
 
-Ouvrir le [terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), puis coller une seule fois :
+Le bloc ci-dessous a été exécuté une fois dans le terminal SSH et son résultat est acquis. **Historique seulement : ne pas le rejouer.**
 
 ```bash
 env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD1150'
@@ -51,7 +51,7 @@ exec(compile(code, '<enregistrement1150>', 'exec'), {'__name__': '__main__'})
 PY_RECORD1150
 ```
 
-Transmettre le JSON final. Aucun reçu d’enregistrement1150 n’est encore acquis à ce jalon. Si réponse perdue/interruption/statut non confirmé, ne jamais relancer pour découvrir le résultat : inspecter le checkpoint et les traces en lecture seule. Repli185 reste SQL38seulement, jamais démarré, sans garantie de downgrade publicformat2. Aucun compte/message/média réel, sauvegarde reportée ou chantier juridique touché.
+Le [JSON final utilisateur](verification-proofs/jm1150/hosted-metadata.json) confirme `release1150_metadata_recorded`, `publicReady:true`, métadonnées seules et aucun redémarrage. Démarrage exact20:27:30.173Paris conforme au relevé UI, checkpoint989de548. Le fichier privé complet et les PID/socket/SQL physiques n’ont pas été indépendamment inspectés par l’agent. Aucun reçu ou action de livraison restant. Si réponse perdue/interruption/statut non confirmé, ne jamais relancer pour découvrir le résultat : inspecter le checkpoint et les traces en lecture seule. Repli185 reste SQL38seulement, jamais démarré, sans garantie de downgrade publicformat2. Aucun compte/message/média réel, sauvegarde reportée ou chantier juridique touché.
 
 ## Historique — bloc préparation/CHECK exécuté, ne pas rejouer
 
