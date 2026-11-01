@@ -1,0 +1,674 @@
+"""Real private synthetic receipts, dependency files and atomic metadata; no host access."""
+import copy
+import json
+import os
+from pathlib import Path
+import tempfile
+import types
+import unittest
+from unittest import mock
+
+HERE = Path(__file__).resolve().parent
+
+
+def helper():
+    path = HERE / 'record-release1150.py'
+    module = types.ModuleType('record1150_synthetic'); module.__file__ = str(path)
+    with mock.patch('subprocess.run', side_effect=AssertionError('import must not execute anything')):
+        exec(compile(path.read_bytes(), str(path), 'exec'), module.__dict__)
+    return module
+
+
+class Recording(unittest.TestCase):
+    def setUp(self):
+        self.m = helper()
+        self.temp = tempfile.TemporaryDirectory(prefix='record1150-synthetic-', dir=HERE.parent)
+        self.addCleanup(self.temp.cleanup)
+        root = Path(self.temp.name)
+        self.m.PRIVATE, self.m.OPERATOR = root / 'private', root / 'operator'
+        self.m.PRIVATE.mkdir(mode=0o700); self.m.OPERATOR.mkdir(mode=0o700)
+        self.m.SOURCE, self.m.TREE, self.m.RELEASE_ID = 'a' * 40, 'b' * 40, 1150001
+        self.m.ROLLBACK185_SOURCE = self.m.ROLLBACK185_TREE = 'QUALIFICATION_PENDING'
+        self.m.ROLLBACK185_STAGING_SHA = 'STAGING_PENDING'
+        # Full finalized1141 metadata, not reconstructed by replaying an operator.
+        self.old = dict(release='1.14.1', source=self.m.OLD_SOURCE, tree=self.m.OLD_TREE,
+            checkout='synthetic full prior checkout', launcher='synthetic prior launcher',
+            checkLauncher='synthetic prior check', log='synthetic prior log', nodeAfterDeployment='v24.22.1',
+            nodeBinary='synthetic private node', nodeBinarySha256='1'*64, schemaMigrations=38, applicationTables=37,
+            profile=self.m.PROFILE, launcherSha256='2'*64, checkLauncherSha256='3'*64,
+            mode='start-local-closures', closuresEnabled=True, port=3000, tasksEnabled=True, announcementsEnabled=True,
+            launcherMode='0700', logMode='0600', manualBackupsEnabled=True, backupMode='manual-admin',
+            dependencyStrategy='reuse-exact-private-1140', dependencyDirectory='synthetic1140 dependencies',
+            videoEnabled=True, videoCreationEnabled=True, clientVideoCreationEnabled=False, quickRepliesWritable=True,
+            experienceEnabled=True, preferencesEnabled=True, replyTrackingEnabled=True, publicProfileEnabled=True,
+            status='identity_observed_via_startup_log_and_public_http',
+            evidence=dict(release=dict(version='1.14.1', commit=self.m.OLD_SOURCE, nodeVersion='v24.22.1', startedAt=1793550063863),
+                          publicReady=True, publicHttp={'synthetic prior availability': True}),
+            extension={'unknown prior state': ['preserve every nested value']})
+        final1141 = dict(status=self.old['status'], recordedAt='2026-11-01T16:50:04+00:00',
+            priorCheckpointSha256='19ceaa7e91d32daba7da5b71d7dfe02ad964e8d9d2850ae016cfa732b8a9c6e0',
+            priorActiveService=dict(release='1.14.0', source=self.m.LEGACY_SOURCE, tree=self.m.LEGACY_TREE,
+                                   preserve={'complete prior14': ['unknown nested state']}),
+            priorMetadataRelease='1.14.0', priorHostedStaging1140Preserved=True,
+            evidence=dict(identity=copy.deepcopy(self.old['evidence']),
+                priorHostedStaging=dict(release='1.14.0', stagingReceiptSha256='2fe494a43a446c882ce509f4ecf51925bd5789a94bdbdf2ce6923d83e5ff7d72', scope='staging_only')),
+            publicProfileDowngradeQualified=False, rollbackQualificationScope='sql38_precheck_only')
+        self.document = dict(activeService=copy.deepcopy(self.old),
+            developmentSimplification=dict(release1141=final1141,
+                release1140={'status': 'complete historical1140', 'unknown': {'preserve': ['all prior14 fields']}},
+                release1130={'status':'complete historical1130','unknown':{'preserve':['all prior13 fields']}},
+                release1112={'status':'complete','priorActiveService':{'full':'history1111'}},
+                release1111={'status':'historical1111','keep':['full preserved1111 block']},
+                release1110={'status':'historical1110','keep':['full older block']},
+                release1101={'status':'historical1101','keep':['full historical block']}, release1100={'status':'historical1100'},
+                release190={'status':'historical190'}, release184=dict(status='historical', rollback=dict(release='1.7.2', schemaMigrations=36)),
+                release183={'history':'preserved'}, release180={'history':'preserved'}, other=['untouched']),
+            separateBlock={'authority':'do not alter'})
+        self.path = self.m.PRIVATE / 'jm0702-existing-pc-update.json'
+        self.write(self.path, self.m.render(self.document)); self.m.CHECKPOINT_SHA = self.m.digest(self.path.read_bytes())
+        self.node = self.m.PRIVATE / 'runtime-node-v24.22.1/bin/node'
+        self.write(self.node, b'synthetic binary never executed', 0o700); self.m.NODE_SHA = self.m.digest(self.node.read_bytes())
+        bundle = self.m.PRIVATE / 'runtime-video-180'; bundle.mkdir(mode=0o700)
+        aggregate = self.m.hashlib.sha256()
+        for name in self.m.BUNDLE_NAMES:
+            data = ('synthetic configuration ' + name).encode(); self.write(bundle / name, data)
+            aggregate.update(name.encode()); aggregate.update(b'\0'); aggregate.update(str(len(data)).encode()); aggregate.update(b'\0'); aggregate.update(data)
+        self.m.BUNDLE_SHA = aggregate.hexdigest()
+        self.legacy, self.previous, self.current = (self.m.release(v) for v in ('1.14.0','1.14.1','1.15.0'))
+        for pin in (self.legacy, self.previous, self.current): pin['checkout'].mkdir(mode=0o700)
+        self.old_modules = self.legacy['checkout'] / 'node_modules'; self.old_modules.mkdir(mode=0o700)
+        self.m.OLD_DEPENDENCY_ROOT = self.old_modules
+        self.write(self.old_modules / 'old-sentinel', b'complete1140 dependencies remain private')
+        for name, version in self.m.OLD_ROOT_DEPENDENCIES.items():
+            self.write(self.old_modules / name / 'package.json', self.m.canonical(dict(name=name, version=version)))
+        old_codec = {name: ('synthetic1140 codec ' + name).encode() for name in self.m.OLD_CODEC_FILES}
+        self.m.OLD_CODEC_FILES = {name:self.m.digest(data) for name,data in old_codec.items()}
+        for name,data in old_codec.items(): self.write(self.old_modules / 'libheif-js' / name, data)
+        self.m.OLD_DEPENDENCY_INVENTORY = self.m.dependency_inventory(self.old_modules)
+        self.module_link = self.previous['checkout'] / 'node_modules'; self.module_link.symlink_to(self.old_modules,target_is_directory=True)
+        self.modules = self.current['checkout'] / 'node_modules'; self.modules.mkdir(mode=0o700); self.m.DEPENDENCY_ROOT=self.modules
+        for name,version in self.m.ROOT_DEPENDENCIES.items():
+            self.write(self.modules / name / 'package.json', self.m.canonical(dict(name=name,version=version)))
+        codec = {name: ('synthetic1150 codec ' + name).encode() for name in self.m.CODEC_FILES}
+        self.m.CODEC_FILES={name:self.m.digest(data) for name,data in codec.items()}
+        for name,data in codec.items(): self.write(self.modules/name,data)
+        # Legacy immutable resources remain independently checked inside fresh1150.
+        for name,data in old_codec.items(): self.write(self.modules/'libheif-js'/name,data)
+        self.m.DEPENDENCY_INVENTORY=self.m.dependency_inventory(self.modules)
+        base_lock=dict(version='VERSION',lockfileVersion=3,packages={'':dict(version='VERSION',dependencies=copy.deepcopy(self.m.OLD_ROOT_DEPENDENCIES))})
+        base_lock['packages'].update({'node_modules/'+k:dict(version=v,integrity='synthetic-'+k) for k,v in self.m.OLD_ROOT_DEPENDENCIES.items()})
+        added={k:v for k,v in self.m.ROOT_DEPENDENCIES.items() if k not in self.m.OLD_ROOT_DEPENDENCIES}
+        self.m.ADDED_LOCK_RECORDS={'node_modules/'+k:dict(version=v,integrity='synthetic-'+k) for k,v in added.items()}
+        candidate_lock=copy.deepcopy(base_lock); candidate_lock['packages']['']['dependencies']=copy.deepcopy(self.m.ROOT_DEPENDENCIES)
+        candidate_lock['packages'].update(copy.deepcopy(self.m.ADDED_LOCK_RECORDS))
+        for pin,version,lock,name in ((self.legacy,'1.14.0',base_lock,'LEGACY_LOCK_SHA'),(self.previous,'1.14.1',base_lock,'OLD_LOCK_SHA'),(self.current,'1.15.0',candidate_lock,'LOCK_SHA')):
+            actual=copy.deepcopy(lock);actual['version']=actual['packages']['']['version']=version
+            self.write(pin['checkout']/'package-lock.json',self.m.render(actual));setattr(self.m,name,self.m.digest((pin['checkout']/'package-lock.json').read_bytes()))
+        package=dict(name='jessiemessage',version='VERSION',dependencies=copy.deepcopy(self.m.OLD_ROOT_DEPENDENCIES),engines={'node':'>=24 <25'})
+        self.base_inventory=(base_lock,[('base','1'*64)]*33,[(name,'2'*64) for name in self.m.VIDEO_DDL],[(name,'3'*64) for name in self.m.EXPERIENCE_DDL],package)
+        self.legacy_inventory=copy.deepcopy(self.base_inventory)
+        current_package=copy.deepcopy(package);current_package['dependencies']=copy.deepcopy(self.m.ROOT_DEPENDENCIES)
+        self.candidate_inventory=(candidate_lock,*copy.deepcopy(self.base_inventory[1:4]),current_package)
+        self.legacy_stage=self.staged('1.14.0')
+        self.legacy_stage.update(preservedActiveCheckpointSha256='cdcb3f8b35208ddfaff19009235f86d4dd23a10ac13b00c9c692daad2bbe496d',
+            priorActiveStagingSha256='08eb630927a84cc63c0b552fa9f729ab7ee2433f6c3fc8aca1466c007f021ecd',baselineMetadataRelease='1.13.0',expectedActiveServiceVersion='1.13.0',
+            dependenciesReused=False,dependencyDirectory=str(self.old_modules),checkoutMode='0700',dependencies=dict(strategy='private-npm-ci-ignore-scripts',directory=str(self.old_modules),lockSha256=self.m.LEGACY_LOCK_SHA,
+                inventory=copy.deepcopy(self.m.OLD_DEPENDENCY_INVENTORY),directVersions=copy.deepcopy(self.m.OLD_ROOT_DEPENDENCIES),codecSha256=copy.deepcopy(self.m.OLD_CODEC_FILES),scriptsExecuted=False,sharpSyntheticSmoke=True),installer={'historical':'preserve'})
+        self.m.LEGACY_STAGING_SHA=self.pin_json(self.m.PRIVATE/'jm1140-staging.json',self.legacy_stage)
+        self.prior_stage=self.staged('1.14.1')
+        self.m.OLD_START_SHA,self.m.OLD_CHECK_SHA=self.prior_stage['launcherSha256'],self.prior_stage['checkLauncherSha256']
+        self.prior_stage.update(priorActiveStagingSha256=self.m.LEGACY_STAGING_SHA,baselineMetadataRelease='1.14.0',expectedActiveServiceVersion='1.14.0',
+            preservedActiveCheckpointSha256='19ceaa7e91d32daba7da5b71d7dfe02ad964e8d9d2850ae016cfa732b8a9c6e0',
+            dependenciesReused=True,dependencyDirectory=str(self.old_modules),checkoutMode='0700',dependencies=dict(strategy='reuse-exact-private-1140',directory=str(self.old_modules),lockSha256=self.m.LEGACY_LOCK_SHA,
+                inventory=copy.deepcopy(self.m.OLD_DEPENDENCY_INVENTORY),directVersions=copy.deepcopy(self.m.OLD_ROOT_DEPENDENCIES),codecSha256=copy.deepcopy(self.m.OLD_CODEC_FILES),scriptsExecuted=False,installed=False))
+        self.m.OLD_STAGING_SHA=self.pin_json(self.m.PRIVATE/'jm1141-staging.json',self.prior_stage)
+        self.tools=self.m.PRIVATE/('install-1150-'+self.m.SOURCE[:8]);self.tools.mkdir(mode=0o700)
+        log_values={'npm-stdout.log':('NPM_STDOUT_SHA',b'synthetic npm ci success\n'),'npm-stderr.log':('NPM_STDERR_SHA',b''),
+            'codec-smoke-stdout.log':('SMOKE_STDOUT_SHA',b'synthetic six-family smoke\n'),'codec-smoke-stderr.log':('SMOKE_STDERR_SHA',b'')}
+        for name,(constant,data) in log_values.items():self.write(self.tools/name,data);setattr(self.m,constant,self.m.digest(data))
+        self.smoke=b'// synthetic pinned smoke, never executed\n';self.m.SMOKE_SHA=self.m.digest(self.smoke);self.write(self.current['checkout']/self.m.SMOKE_PATH,self.smoke,0o644)
+        self.stage=self.staged('1.15.0');self.m.START_SHA,self.m.CHECK_SHA=self.stage['launcherSha256'],self.stage['checkLauncherSha256']
+        self.stage.update(priorActiveStagingSha256=self.m.OLD_STAGING_SHA,baselineMetadataRelease='1.14.1',expectedActiveServiceVersion='1.14.1',checkoutMode='0700',dependenciesReused=False,dependencyDirectory=str(self.modules),
+            dependencies=dict(strategy='private-npm-ci-ignore-scripts',directory=str(self.modules),lockSha256=self.m.LOCK_SHA,inventory=copy.deepcopy(self.m.DEPENDENCY_INVENTORY),directVersions=copy.deepcopy(self.m.ROOT_DEPENDENCIES),codecSha256=copy.deepcopy(self.m.CODEC_FILES),scriptsExecuted=False,
+                codecSyntheticSmoke=True,codecSmokePath=self.m.SMOKE_PATH,codecSmokeSha256=self.m.SMOKE_SHA,codecSmokeStdoutSha256=self.m.SMOKE_STDOUT_SHA,codecSmokeStderrSha256=self.m.SMOKE_STDERR_SHA,stdoutSha256=self.m.NPM_STDOUT_SHA,stderrSha256=self.m.NPM_STDERR_SHA),
+            installer=dict(npmVersion=self.m.NPM_VERSION,npmCli=str(self.tools/'npm/bin/npm-cli.js'),archiveSha256=self.m.ARCHIVE_SHA,archiveBytes=self.m.ARCHIVE_BYTES),
+            priorDependencyInventory=copy.deepcopy(self.m.OLD_DEPENDENCY_INVENTORY),priorDependencies=dict(directory=str(self.old_modules),inventory=copy.deepcopy(self.m.OLD_DEPENDENCY_INVENTORY),directVersions=copy.deepcopy(self.m.OLD_ROOT_DEPENDENCIES),applicationLockSha256=self.m.OLD_LOCK_SHA,installationLockSha256=self.m.LEGACY_LOCK_SHA,codecSha256=copy.deepcopy(self.m.OLD_CODEC_FILES),installed=False,scriptsExecuted=False),
+            bundleFingerprintSha256=self.m.BUNDLE_SHA)
+        self.repin_stage()
+        (self.current['checkout']/'public').mkdir();self.home=b'<!doctype html>synthetic access';self.write(self.current['checkout']/'public/access.html',self.home,0o644)
+        self.write(self.current['precheckLog'],self.m.canonical(self.m.PRECHECK)+b'\n')
+        self.startup=dict(version=1,type='application_started',release=dict(version='1.15.0',commit=self.m.SOURCE,nodeVersion='v24.22.1',startedAt=self.m.REPORTED_STARTUP_SECOND*1000+772))
+        self.write(self.current['log'],self.m.canonical(self.startup)+b'\n')
+        self.published=dict(repository='fredbuhr/jessiemessage',releaseId=self.m.RELEASE_ID,tag='v1.15.0',source=self.m.SOURCE,tagObjectType='commit',latest='v1.15.0',latestSource=self.m.SOURCE,draft=False,prerelease=False,transport='anonymous_https_get_only')
+        self.http={name:dict(url='https://jessiemessage.com'+suffix,status=200) for name,suffix in [('health','/api/health'),('ready','/api/ready'),('home','/'),('entry','/api/entry')]}
+        self.http['health']['body']={'status':'ok'};self.http['ready']['body']={'status':'ready'};self.http['home']['sha256']=self.m.digest(self.home);self.http['entry']['administrator']=None
+        self.real_source=self.m.source
+        self.source_patch=mock.patch.object(self.m,'source',side_effect=lambda _root,_sha,_tree,version:self.legacy_inventory if version=='1.14.0' else self.base_inventory if version=='1.14.1' else ({'locked':'rollback-older-nodemailer'},*self.legacy_inventory[1:]) if version=='1.8.5' else self.candidate_inventory)
+        self.http_patch=mock.patch.object(self.m,'collect_http',side_effect=lambda:copy.deepcopy(self.http));self.publication_patch=mock.patch.object(self.m,'collect_published_release',side_effect=lambda:copy.deepcopy(self.published))
+        self.process_patch=mock.patch.object(self.m.subprocess,'run',side_effect=AssertionError('recording never executes Node,npm,CHECK or service'))
+        for patcher in (self.source_patch,self.http_patch,self.publication_patch,self.process_patch):patcher.start();self.addCleanup(patcher.stop)
+
+    def repin_stage(self):
+        self.m.STAGING_SHA = self.pin_json(self.m.PRIVATE / 'jm1150-staging.json', self.stage)
+
+    @staticmethod
+    def write(path, data, mode=0o600):
+        path.parent.mkdir(parents=True, exist_ok=True); path.write_bytes(data); path.chmod(mode)
+
+    def pin_json(self, path, value):
+        self.write(path, self.m.render(value)); return self.m.digest(path.read_bytes())
+
+    def staged(self, version):
+        pin = self.m.release(version)
+        value = {key:str(pin[key]) for key in ('source','tree','checkout','launcher','checkLauncher','log','precheckLog')}
+        value.update(format='jessiemessage-release'+version.replace('.','')+'-staging',version=1,release=version,
+            status='release'+version.replace('.','')+'_sources_staged_not_qualified',schemaMigrationsExpected=38,
+            applicationTablesExpected=37,experienceEnabled=True,profile=self.m.PROFILE,nodeVersion='v24.22.1',
+            nodeBinarySha256=self.m.NODE_SHA,preservedActiveCheckpointSha256=self.m.CHECKPOINT_SHA)
+        for key in ('launcher','checkLauncher'):
+            content=('#!/bin/bash\n# synthetic '+version+' '+key+'\n').encode(); self.write(pin[key],content,0o700)
+            value[key+'Sha256']=self.m.digest(content)
+        return value
+
+    def add_rollback(self):
+        self.m.ROLLBACK185_SOURCE,self.m.ROLLBACK185_TREE='d'*40,'e'*40
+        self.rollback=self.m.release('1.8.5'); staged=self.staged('1.8.5')
+        staged.update(preferencesEnabled=False,replyTrackingEnabled=False)
+        self.m.ROLLBACK185_STAGING_SHA=self.pin_json(self.m.PRIVATE/'jm185-staging.json',staged)
+        self.write(self.rollback['log'],b''); self.write(self.rollback['precheckLog'],self.m.canonical(self.m.PRECHECK)+b'\n')
+
+    def test_records_only_current_metadata_preserves_every_historical_block_and_is_idempotent(self):
+        result=self.m.record(); updated=self.m.parse(self.path.read_bytes())
+        self.assertEqual(result['status'],'release1150_metadata_recorded'); self.assertEqual(result['schemaMigrations'],38)
+        self.assertFalse(result['rollbackAfterMigrationQualified']); self.assertIsNone(result['rollbackRelease'])
+        section=updated['developmentSimplification'].pop('release1150')
+        self.assertEqual(section['priorActiveService'],self.old); self.assertIsNone(section['rollback'])
+        self.assertTrue(section['historicalRelease1112Preserved']); self.assertTrue(section['historicalRelease1111Preserved']); self.assertTrue(section['historicalRelease1101Preserved'])
+        self.assertTrue(result['historicalRelease1112Preserved']); self.assertTrue(result['historicalRelease1111Preserved']); self.assertTrue(result['historicalRelease1101Preserved'])
+        self.assertTrue(section['priorRelease1141SqlCompatible']); self.assertFalse(section['publicProfileDowngradeQualified']); self.assertFalse(result['publicProfileDowngradeQualified']); self.assertEqual(section['rollbackQualificationScope'], 'sql38_precheck_only'); self.assertTrue(section['historicalRelease1110Preserved']); self.assertTrue(result['historicalRelease1110Preserved']); self.assertTrue(section['schemaUnchanged']); self.assertFalse(section['restart184Allowed']); self.assertFalse(section['restart172Allowed'])
+        updated['activeService']=self.old; self.assertEqual(updated,self.document)
+        before=self.path.read_bytes(); inode=self.path.stat().st_ino
+        self.assertEqual(self.m.record()['status'],'release1150_metadata_already_recorded')
+        self.assertEqual(self.path.read_bytes(),before); self.assertEqual(self.path.stat().st_ino,inode)
+
+    def test_185_is_never_inferred_from_historical172_and_requires_its_own_current_evidence(self):
+        self.add_rollback(); result=self.m.record(); updated=self.m.parse(self.path.read_bytes())
+        self.assertEqual(result['rollbackRelease'],'1.8.5'); self.assertTrue(result['rollbackAfterMigrationQualified'])
+        rollback=updated['developmentSimplification']['release1150']['rollback']
+        self.assertEqual(rollback['schemaMigrations'],38); self.assertFalse(rollback['identityVerified'])
+        self.assertEqual(rollback['status'],'hosted_precheck_passed_not_started')
+        self.assertEqual(updated['developmentSimplification']['release184']['rollback'],self.document['developmentSimplification']['release184']['rollback'])
+
+    def test_precheck_accepts_all_passed_receipts_within_byte_limit(self):
+        line = self.m.canonical(self.m.PRECHECK) + b'\n'
+        self.assertEqual(len(line), 182)
+        for count in (1, 16, 17, 21, 360):
+            with self.subTest(count=count):
+                data = line * count
+                self.write(self.current['precheckLog'], data)
+                result = self.m.precheck(self.current['precheckLog'])
+                self.assertEqual(result['passedReceipts'], count)
+                self.assertEqual(result['sha256'], self.m.digest(data))
+                self.assertEqual(self.current['precheckLog'].read_bytes(), data)
+        data = line[:-1] + b' ' * (65536 - len(line)) + b'\n'
+        self.assertEqual(len(data), 65536)
+        self.write(self.current['precheckLog'], data)
+        self.assertEqual(self.m.precheck(self.current['precheckLog'])['passedReceipts'], 1)
+
+    def test_repeated_current_prechecks_record_and_retry_preserve_all_evidence(self):
+        self.add_rollback()
+        data = (self.m.canonical(self.m.PRECHECK) + b'\n') * 21
+        self.write(self.current['precheckLog'], data)
+        result = self.m.record()
+        self.assertEqual(result['status'], 'release1150_metadata_recorded')
+        updated = self.m.parse(self.path.read_bytes())
+        section = updated['developmentSimplification'].pop('release1150')
+        self.assertEqual(section['evidence']['precheck']['passedReceipts'], 21)
+        self.assertEqual(section['evidence']['precheck']['sha256'], self.m.digest(data))
+        self.assertEqual(section['rollback']['precheck']['passedReceipts'], 1)
+        self.assertEqual(section['priorActiveService'], self.old)
+        updated['activeService'] = self.old
+        self.assertEqual(updated, self.document)
+        before, inode = self.path.read_bytes(), self.path.stat().st_ino
+        self.assertEqual(self.m.record()['status'], 'release1150_metadata_already_recorded')
+        self.assertEqual(self.path.read_bytes(), before)
+        self.assertEqual(self.path.stat().st_ino, inode)
+        self.assertEqual(self.current['precheckLog'].read_bytes(), data)
+
+    def test_empty_and_oversized_prechecks_refuse_before_http_without_writes(self):
+        self.add_rollback()
+        line = self.m.canonical(self.m.PRECHECK) + b'\n'
+        for log in (self.current['precheckLog'], self.rollback['precheckLog']):
+            original = log.read_bytes()
+            for data in (b'', line * 361):
+                with self.subTest(log=log.name, size=len(data)):
+                    self.write(log, data)
+                    before = self.path.read_bytes()
+                    with mock.patch.object(self.m, 'collect_http', side_effect=AssertionError('invalid precheck must precede HTTP')):
+                        with self.assertRaises(self.m.RecordError):
+                            self.m.record()
+                    self.assertEqual(self.path.read_bytes(), before)
+                    self.assertEqual(log.read_bytes(), data)
+            self.write(log, original)
+
+    def test_every_precheck_line_is_required_even_among_many_passed_receipts(self):
+        self.add_rollback()
+        line = self.m.canonical(self.m.PRECHECK) + b'\n'
+        wrong = [self.m.canonical(dict(self.m.PRECHECK, **change)) + b'\n' for change in (
+            {'status': 'failed'}, {'pendingClosures': True}, {'version': 1},
+            {'scope': 'other'}, {'started': True}, {'unexpected': False})]
+        wrong += [b'\n', b'not a receipt\n', b'{"version":2,"version":2}\n', b'{"version":NaN}\n']
+        for log in (self.current['precheckLog'], self.rollback['precheckLog']):
+            original = log.read_bytes()
+            for bad in wrong:
+                for offset in (0, 10, 21):
+                    with self.subTest(log=log.name, bad=bad[:45], offset=offset):
+                        data = line * offset + bad + line * (21 - offset)
+                        self.write(log, data)
+                        before = self.path.read_bytes()
+                        with mock.patch.object(self.m, 'collect_http', side_effect=AssertionError('invalid precheck must precede HTTP')):
+                            with self.assertRaises((self.m.RecordError, ValueError)):
+                                self.m.record()
+                        self.assertEqual(self.path.read_bytes(), before)
+                        self.assertEqual(log.read_bytes(), data)
+            self.write(log, original)
+
+    def test_partial_rollback_pins_fail_without_checkpoint_write(self):
+        before=self.path.read_bytes(); self.m.ROLLBACK185_SOURCE='d'*40
+        with self.assertRaisesRegex(self.m.RecordError,'ROLLBACK_PINS_REQUIRED'):self.m.record()
+        self.assertEqual(self.path.read_bytes(),before)
+
+    def test_started_or_unchecked_185_refuses_checkpoint_write(self):
+        self.add_rollback(); before=self.path.read_bytes(); self.write(self.rollback['log'],b'was started\n')
+        with self.assertRaisesRegex(self.m.RecordError,'ROLLBACK_ALREADY_STARTED'):self.m.record()
+        self.assertEqual(self.path.read_bytes(),before)
+
+    def test_wrong_runtime_log_public_identity_or_publication_refuses_write(self):
+        before=self.path.read_bytes()
+        for selected in ['startup','ready','publication']:
+            with self.subTest(selected=selected):
+                self.write(self.current['log'],self.m.canonical(self.startup)+b'\n'); self.http['ready']['body']={'status':'ready'}; self.published['latest']='v1.15.0'
+                if selected=='startup':self.write(self.current['log'],self.m.canonical(dict(self.startup,release=dict(self.startup['release'],commit='f'*40)))+b'\n')
+                if selected=='ready':self.http['ready']['body']={'status':'starting'}
+                if selected=='publication':self.published['latest']='v1.8.4'
+                with self.assertRaises(self.m.RecordError):self.m.record()
+                self.assertEqual(self.path.read_bytes(),before)
+
+    def test_startup_must_match_reported_second_before_http_or_write(self):
+        before = self.path.read_bytes()
+        expected = self.m.REPORTED_STARTUP_SECOND * 1000
+        for offset in (-1, 1000):
+            with self.subTest(offset=offset):
+                changed = dict(self.startup, release=dict(self.startup['release'], startedAt=expected + offset))
+                self.write(self.current['log'], self.m.canonical(changed) + b'\n')
+                with mock.patch.object(self.m, 'collect_http', side_effect=AssertionError('wrong startup must precede HTTP')):
+                    with self.assertRaisesRegex(self.m.RecordError, 'STARTUP_IDENTITY'):
+                        self.m.record()
+                self.assertEqual(self.path.read_bytes(), before)
+        for offset in (0, 999):
+            changed = dict(self.startup, release=dict(self.startup['release'], startedAt=expected + offset))
+            self.write(self.current['log'], self.m.canonical(changed) + b'\n')
+            self.assertEqual(self.m.startup(self.current['log'])['release']['startedAt'], expected + offset)
+        self.assertEqual(self.path.read_bytes(), before)
+
+    def test_metadata_refuses_symlink_hardlink_and_wrong_mode(self):
+        for fault in ['mode','link','symlink']:
+            with self.subTest(fault=fault):
+                original=self.m.render(self.document); self.path.unlink(missing_ok=True); self.write(self.path,original)
+                if fault=='mode':self.path.chmod(0o644)
+                if fault=='link':os.link(self.path,self.path.with_name('extra-hardlink'))
+                if fault=='symlink':self.path.rename(self.path.with_name('original')); self.path.symlink_to(self.path.with_name('original'))
+                with self.assertRaises(self.m.RecordError):self.m.record()
+                self.assertEqual(self.path.read_bytes(),original)
+
+    def test_duplicate_json_keys_are_rejected(self):
+        with self.assertRaisesRegex(self.m.RecordError,'DUPLICATE_KEY'):self.m.parse(b'{"x":1,"x":2}')
+
+    def test_checkpoint_other_block_drift_refuses_and_is_not_overwritten(self):
+        changed=copy.deepcopy(self.document); changed['separateBlock']['authority']='new existing state'
+        self.write(self.path,self.m.render(changed)); before=self.path.read_bytes()
+        with self.assertRaisesRegex(self.m.RecordError,'CHECKPOINT_PIN'):self.m.record()
+        self.assertEqual(self.path.read_bytes(),before)
+
+    def test_second_runtime_startup_is_not_silently_accepted(self):
+        before = self.path.read_bytes()
+        changed = dict(self.startup, release=dict(self.startup['release'], startedAt=self.startup['release']['startedAt'] + 1))
+        for second in (self.startup, changed):
+            with self.subTest(identical=second is self.startup):
+                self.write(self.current['log'], self.m.canonical(self.startup) + b'\n' + self.m.canonical(second) + b'\n')
+                with self.assertRaisesRegex(self.m.RecordError, 'STARTUP_RECORD_COUNT'): self.m.record()
+                self.assertEqual(self.path.read_bytes(), before)
+
+    def test_retry_after_a_nonstartup_log_append_keeps_exact_metadata_without_replacement(self):
+        self.m.record(); before, inode = self.path.read_bytes(), self.path.stat().st_ino
+        line = self.m.canonical(dict(version=1,type='synthetic_technical_notice',status='preserved')) + b'\n'
+        self.write(self.current['log'], self.current['log'].read_bytes() + line)
+        with mock.patch.object(self.m.os,'replace',side_effect=AssertionError('an identical retry must not write')):
+            self.assertEqual(self.m.record()['status'],'release1150_metadata_already_recorded')
+        self.assertEqual(self.path.read_bytes(), before); self.assertEqual(self.path.stat().st_ino,inode)
+        self.assertTrue(self.current['log'].read_bytes().endswith(line))
+
+    def test_atomic_replace_failure_preserves_original_checkpoint_and_cleans_only_its_new_temporary(self):
+        before, inode = self.path.read_bytes(), self.path.stat().st_ino
+        with mock.patch.object(self.m.os,'replace',side_effect=OSError('synthetic interruption before replacement')):
+            with self.assertRaises(OSError): self.m.record()
+        self.assertEqual(self.path.read_bytes(),before);self.assertEqual(self.path.stat().st_ino,inode)
+        self.assertEqual(list(self.m.PRIVATE.glob('.release1150-*')),[])
+
+    def test_complete_final1141_section_and_active_service_survive_without_inventing_old_finalizations(self):
+        receipts = {p.name:p.read_bytes() for p in self.m.PRIVATE.glob('*staging.json')}
+        result = self.m.record(); updated = self.m.parse(self.path.read_bytes())
+        self.assertEqual(updated['developmentSimplification']['release1141'], self.document['developmentSimplification']['release1141'])
+        section = updated['developmentSimplification']['release1150']
+        self.assertEqual(section['priorActiveService'], self.old)
+        self.assertEqual(section['priorActiveService']['extension'], self.old['extension'])
+        self.assertEqual(section['priorCheckpointSha256'], self.m.CHECKPOINT_SHA)
+        self.assertEqual(section['priorMetadataRelease'], '1.14.1')
+        self.assertTrue(result['historicalRelease1141Preserved']); self.assertTrue(result['priorHostedStaging1141Preserved'])
+        self.assertNotIn('release1120', updated['developmentSimplification']); self.assertNotIn('release1113', updated['developmentSimplification'])
+        self.assertEqual({p.name:p.read_bytes() for p in self.m.PRIVATE.glob('*staging.json')}, receipts)
+        # The immutable1141 staging still describes its baseline13 and fresh install.
+        prior = self.m.parse((self.m.PRIVATE / 'jm1141-staging.json').read_bytes())
+        self.assertEqual(prior['baselineMetadataRelease'], '1.14.0')
+        self.assertEqual(prior['expectedActiveServiceVersion'], '1.14.0')
+        self.assertEqual(prior['preservedActiveCheckpointSha256'], '19ceaa7e91d32daba7da5b71d7dfe02ad964e8d9d2850ae016cfa732b8a9c6e0')
+        self.assertFalse((self.m.PRIVATE / 'jm1112-staging.json').exists())
+        self.assertFalse((self.m.PRIVATE / 'jm1120-staging.json').exists())
+        updated['activeService'] = self.old; del updated['developmentSimplification']['release1150']
+        self.assertEqual(updated, self.document)
+
+    def test_complete_normalized_lock_graph_is_immutable(self):
+        original = copy.deepcopy(self.candidate_inventory)
+        for kind in ('other_leaf', 'heif_integrity', 'extra_transitive', 'root_version'):
+            with self.subTest(kind=kind):
+                value = list(copy.deepcopy(original)); lock = value[0]
+                if kind == 'other_leaf': lock['packages']['node_modules/mariadb']['version'] = '99.0.0'
+                if kind == 'heif_integrity': lock['packages']['node_modules/libheif-js']['integrity'] = 'sha512-forbidden'
+                if kind == 'extra_transitive': lock['packages']['node_modules/unqualified'] = {'version':'1.0.0'}
+                if kind == 'root_version': lock['packages']['']['dependencies']['libheif-js'] = '^1.23.5'
+                self.candidate_inventory = tuple(value)
+                with mock.patch.object(self.m, 'collect_http', side_effect=AssertionError('must refuse before public HTTP')):
+                    with self.assertRaises(self.m.RecordError): self.m.record()
+                self.assertEqual(self.path.read_bytes(), self.m.render(self.document))
+        self.candidate_inventory = original
+
+    def test_package_fields_other_than_version_cannot_change_before_public_http(self):
+        before=self.path.read_bytes()
+        original=copy.deepcopy(self.candidate_inventory)
+        for field,value in [('scripts',{'start':'unqualified command'}),('engines',{'node':'>=99'}),('newField','unreviewed')]:
+            with self.subTest(field=field):
+                changed=list(copy.deepcopy(original));changed[4][field]=value;self.candidate_inventory=tuple(changed)
+                with mock.patch.object(self.m,'collect_http',side_effect=AssertionError('package drift precedes HTTP')):
+                    with self.assertRaisesRegex(self.m.RecordError,'PACKAGE_OTHER_CHANGED'):self.m.record()
+                self.assertEqual(self.path.read_bytes(),before)
+
+    def test_source_snapshot_normalizes_only_app_versions_and_preserves_other_package_fields(self):
+        root=self.current['checkout'];package=copy.deepcopy(self.candidate_inventory[4]);package['version']='1.15.0'
+        package['scripts']={'start':'synthetic exact start'}
+        self.write(root/'package.json',self.m.render(package),0o644)
+        groups=[('db/migrations',[f'{number:04d}_fixture.sql' for number in range(1,34)]),
+            ('server/video/migrations',self.m.VIDEO_DDL),('server/experience/migrations',self.m.EXPERIENCE_DDL)]
+        for directory,names in groups:
+            for name in names:self.write(root/directory/name,('synthetic SQL '+name).encode(),0o644)
+        answers={('rev-parse','--show-toplevel'):str(root),('rev-parse','HEAD'):self.m.SOURCE,
+            ('rev-parse','HEAD^{tree}'):self.m.TREE,('rev-parse','refs/tags/v1.15.0^{commit}'):self.m.SOURCE,
+            ('status','--porcelain','--untracked-files=normal'):''}
+        with mock.patch.object(self.m,'git',side_effect=lambda _root,*args:answers[args]):
+            snapshot=self.real_source(root,self.m.SOURCE,self.m.TREE,'1.15.0')
+        self.assertEqual(snapshot[0]['version'],'VERSION');self.assertEqual(snapshot[0]['packages']['']['version'],'VERSION')
+        self.assertEqual(snapshot[4]['version'],'VERSION');self.assertEqual(snapshot[4]['scripts'],package['scripts'])
+        self.assertEqual([len(snapshot[index]) for index in (1,2,3)],[33,3,2])
+
+    def test_all_migration_groups_must_match_finalized1141_before_public_http(self):
+        original = copy.deepcopy(self.candidate_inventory)
+        for index in (1,2,3):
+            with self.subTest(index=index):
+                value = list(copy.deepcopy(original)); value[index] = [('changed', 'f'*64)]
+                self.candidate_inventory = tuple(value)
+                with mock.patch.object(self.m, 'collect_http', side_effect=AssertionError('must refuse before public HTTP')):
+                    with self.assertRaisesRegex(self.m.RecordError, 'MIGRATIONS_CHANGED'): self.m.record()
+                self.assertEqual(self.path.read_bytes(), self.m.render(self.document))
+        self.candidate_inventory = original
+
+    def test_new_stage_must_reference_exact_final14_checkpoint_and_stage(self):
+        original = copy.deepcopy(self.stage)
+        for key, value in [('preservedActiveCheckpointSha256','f'*64), ('priorActiveStagingSha256','e'*64),
+                ('baselineMetadataRelease','1.11.2'), ('expectedActiveServiceVersion','1.12.0')]:
+            with self.subTest(key=key):
+                self.stage = copy.deepcopy(original); self.stage[key] = value; self.repin_stage()
+                with self.assertRaises(self.m.RecordError): self.m.record()
+                self.assertEqual(self.path.read_bytes(), self.m.render(self.document))
+
+    def test_old_dependency_directory_and_new_bytes_are_verified_before_public_http(self):
+        for path in (self.old_modules / 'old-sentinel', self.modules / 'libheif-js/libheif-wasm/libheif-bundle.mjs'):
+            with self.subTest(path=path.name):
+                before = path.read_bytes(); self.write(path, before+b'drift')
+                with mock.patch.object(self.m, 'collect_http', side_effect=AssertionError('must refuse first')):
+                    with self.assertRaises(self.m.RecordError): self.m.record()
+                self.assertEqual(self.path.read_bytes(), self.m.render(self.document)); self.write(path, before)
+
+    def test_shared1140_root_must_be_real_and_preserved1141_link_absolute_and_exact(self):
+        before=self.path.read_bytes()
+        for kind in ('relative_link','wrong_target','real_directory'):
+            with self.subTest(kind=kind):
+                self.module_link.unlink()
+                if kind=='relative_link': self.module_link.symlink_to(os.path.relpath(self.old_modules,self.previous['checkout']),target_is_directory=True)
+                elif kind=='wrong_target': self.module_link.symlink_to(self.m.PRIVATE,target_is_directory=True)
+                else:self.module_link.mkdir(mode=0o700)
+                try:
+                    with self.assertRaisesRegex(self.m.RecordError,'REUSED_DEPENDENCY_LINK'):self.m.record()
+                    self.assertEqual(self.path.read_bytes(),before)
+                finally:
+                    if self.module_link.is_symlink():self.module_link.unlink()
+                    else:self.module_link.rmdir()
+                    self.module_link.symlink_to(self.old_modules,target_is_directory=True)
+        saved=self.old_modules.with_name('saved-synthetic-modules');self.old_modules.rename(saved);self.old_modules.symlink_to(saved,target_is_directory=True)
+        try:
+            with self.assertRaisesRegex(self.m.RecordError,'PRIVATE_DIRECTORY'):self.m.record()
+        finally:self.old_modules.unlink();saved.rename(self.old_modules)
+        self.assertEqual(self.path.read_bytes(),before)
+
+    def test_installed_version_and_codec_are_checked_independently_of_inventory(self):
+        names=('libheif-js/package.json','@phenomen/libavif-wasm/dist/decode.wasm')
+        for name in names:
+            with self.subTest(name=name):
+                path=self.modules/name;before=path.read_bytes()
+                self.write(path,b'{"name":"libheif-js","version":"wrong"}' if name.endswith('package.json') else b'wrong codec')
+                self.m.DEPENDENCY_INVENTORY=self.m.dependency_inventory(self.modules)
+                self.stage['dependencies']['inventory']=copy.deepcopy(self.m.DEPENDENCY_INVENTORY);self.repin_stage()
+                with self.assertRaisesRegex(self.m.RecordError,'INSTALLED_VERSION|INSTALLED_CODEC'):self.m.record()
+                self.assertEqual(self.path.read_bytes(),self.m.render(self.document));self.write(path,before)
+
+    def test_exact_candidate_lock_bytes_are_pinned(self):
+        self.write(self.current['checkout'] / 'package-lock.json', b'wrong actual lock')
+        with self.assertRaisesRegex(self.m.RecordError, 'DEPENDENCY_LOCK_PIN'): self.m.record()
+        self.assertEqual(self.path.read_bytes(), self.m.render(self.document))
+
+    def test_preserved_reuse_receipt_bindings_cannot_be_relaxed_by_repinning_json(self):
+        original=copy.deepcopy(self.stage);prior=copy.deepcopy(self.prior_stage);legacy=copy.deepcopy(self.legacy_stage)
+        changes=[('root','dependenciesReused',False),('root','dependencyDirectory','/unqualified/modules'),
+            ('dependencies','scriptsExecuted',True),('dependencies','installed',True),('dependencies','strategy','private-npm-ci-ignore-scripts'),
+            ('dependencies','lockSha256',self.m.OLD_LOCK_SHA),('dependencies','inventory',{'sha256':'f'*64}),
+            ('dependencies','directVersions',{}),('dependencies','codecSha256',{}),
+            ('legacy','sharpSyntheticSmoke',False),('legacy','lockSha256',self.m.OLD_LOCK_SHA),('legacy','strategy','reuse-exact-private-1140')]
+        for group,key,value in changes:
+            with self.subTest(group=group,key=key):
+                self.stage=copy.deepcopy(original);self.prior_stage=copy.deepcopy(prior);self.legacy_stage=copy.deepcopy(legacy)
+                selected=self.legacy_stage['dependencies'] if group=='legacy' else self.prior_stage if group=='root' else self.prior_stage['dependencies']
+                selected[key]=value
+                self.m.LEGACY_STAGING_SHA=self.pin_json(self.m.PRIVATE/'jm1140-staging.json',self.legacy_stage)
+                self.prior_stage['priorActiveStagingSha256']=self.m.LEGACY_STAGING_SHA
+                self.m.OLD_STAGING_SHA=self.pin_json(self.m.PRIVATE/'jm1141-staging.json',self.prior_stage)
+                self.stage['priorActiveStagingSha256']=self.m.OLD_STAGING_SHA;self.repin_stage()
+                with self.assertRaises(self.m.RecordError):self.m.record()
+                self.assertEqual(self.path.read_bytes(),self.m.render(self.document))
+
+    def test_exact_prior1141_and_legacy1140_locks_remain_pinned(self):
+        before=self.path.read_bytes()
+        for pin in (self.previous,self.legacy):
+            path=pin['checkout']/'package-lock.json';original=path.read_bytes()
+            with self.subTest(version=pin['version']):
+                self.write(path,b'changed historical lock bytes')
+                with self.assertRaisesRegex(self.m.RecordError,'DEPENDENCY_LOCK_PIN'):self.m.record()
+                self.assertEqual(self.path.read_bytes(),before);self.write(path,original)
+
+    def test_dependency_tree_rejects_external_symlink_and_hardlink_without_reading_target(self):
+        path = self.modules / 'unexpected'
+        for kind in ('symlink', 'hardlink'):
+            with self.subTest(kind=kind):
+                if kind=='symlink': path.symlink_to(self.old_modules / 'old-sentinel')
+                else: os.link(self.old_modules / 'old-sentinel', path)
+                try:
+                    with self.assertRaises(self.m.RecordError): self.m.record()
+                finally: path.unlink()
+                self.assertEqual(self.path.read_bytes(), self.m.render(self.document))
+
+    def test_exact_fresh_launcher_pins_remain_required_even_if_stage_is_resealed(self):
+        self.write(self.current['launcher'], b'#!/bin/bash\n# changed\n', 0o700)
+        self.stage['launcherSha256'] = self.m.digest(self.current['launcher'].read_bytes()); self.repin_stage()
+        with self.assertRaisesRegex(self.m.RecordError, 'CURRENT_LAUNCHER_PINS'): self.m.record()
+        self.assertEqual(self.path.read_bytes(), self.m.render(self.document))
+
+
+    def test_fresh1150_root_rejects_symlinks_and_public_modes(self):
+        before=self.path.read_bytes();saved=self.modules.with_name('saved-fresh-modules')
+        self.modules.rename(saved)
+        try:
+            for target in (self.old_modules,saved):
+                with self.subTest(target=target.name):
+                    self.modules.symlink_to(target,target_is_directory=True)
+                    try:
+                        with mock.patch.object(self.m,'collect_http',side_effect=AssertionError('filesystem guard first')):
+                            with self.assertRaisesRegex(self.m.RecordError,'PRIVATE_DIRECTORY'):self.m.record()
+                        self.assertEqual(self.path.read_bytes(),before)
+                    finally:self.modules.unlink()
+        finally:saved.rename(self.modules)
+        self.modules.chmod(0o755)
+        try:
+            with self.assertRaisesRegex(self.m.RecordError,'PRIVATE_DIRECTORY'):self.m.record()
+        finally:self.modules.chmod(0o700)
+        self.assertEqual(self.path.read_bytes(),before)
+
+    def test_only_the_three_exact_new_lock_records_can_be_added(self):
+        original=copy.deepcopy(self.candidate_inventory)
+        for name in self.m.ADDED_LOCK_RECORDS:
+            for fault in ('missing','integrity','version','extra-field'):
+                with self.subTest(name=name,fault=fault):
+                    changed=list(copy.deepcopy(original));packages=changed[0]['packages']
+                    if fault=='missing':del packages[name]
+                    elif fault=='extra-field':packages[name]['unqualified']=True
+                    else:packages[name][fault]='unqualified'
+                    self.candidate_inventory=tuple(changed)
+                    with mock.patch.object(self.m,'collect_http',side_effect=AssertionError('lock guard before HTTP')):
+                        with self.assertRaises(self.m.RecordError):self.m.record()
+                    self.assertEqual(self.path.read_bytes(),self.m.render(self.document))
+        self.candidate_inventory=original
+
+    def test_fresh_receipt_and_installer_bindings_stay_exact_even_when_resealed(self):
+        original=copy.deepcopy(self.stage)
+        changes=[('root','dependenciesReused',True),('root','dependencyDirectory',str(self.old_modules)),
+            ('root','checkoutMode','0755'),('root','bundleFingerprintSha256','f'*64),('root','priorDependencyInventory',{}),
+            ('dependencies','strategy','reuse-exact-private-1140'),('dependencies','scriptsExecuted',True),('dependencies','installed',True),
+            ('dependencies','codecSyntheticSmoke',False),('dependencies','codecSmokePath','unqualified.mjs'),
+            ('dependencies','codecSmokeSha256','f'*64),('dependencies','codecSmokeStdoutSha256','f'*64),
+            ('dependencies','codecSmokeStderrSha256','f'*64),('dependencies','stdoutSha256','f'*64),('dependencies','stderrSha256','f'*64),
+            ('dependencies','directVersions',{}),('dependencies','codecSha256',{}),
+            ('installer','npmVersion','99.0.0'),('installer','archiveSha256','f'*64),('installer','npmCli','/unqualified/npm.js'),
+            ('priorDependencies','applicationLockSha256',self.m.LEGACY_LOCK_SHA),
+            ('priorDependencies','installationLockSha256',self.m.OLD_LOCK_SHA),('priorDependencies','scriptsExecuted',True)]
+        for group,key,value in changes:
+            with self.subTest(group=group,key=key):
+                self.stage=copy.deepcopy(original);selected=self.stage if group=='root' else self.stage[group];selected[key]=value;self.repin_stage()
+                with mock.patch.object(self.m,'collect_http',side_effect=AssertionError('receipt guard before HTTP')):
+                    with self.assertRaises(self.m.RecordError):self.m.record()
+                self.assertEqual(self.path.read_bytes(),self.m.render(self.document))
+
+    def test_the_four_pinned_install_logs_and_source_smoke_are_read_only_required_evidence(self):
+        paths=[self.tools/name for name in ('npm-stdout.log','npm-stderr.log','codec-smoke-stdout.log','codec-smoke-stderr.log')]
+        paths.append(self.current['checkout']/self.m.SMOKE_PATH)
+        for path in paths:
+            with self.subTest(path=path.name):
+                original=path.read_bytes();self.write(path,original+b'unqualified append',0o644 if path.name.endswith('.mjs') else 0o600)
+                try:
+                    with mock.patch.object(self.m,'collect_http',side_effect=AssertionError('local evidence must precede HTTP')):
+                        with self.assertRaisesRegex(self.m.RecordError,'INSTALL_LOG_PIN|CODEC_SMOKE_SOURCE'):self.m.record()
+                    self.assertEqual(self.path.read_bytes(),self.m.render(self.document));self.assertTrue(path.read_bytes().endswith(b'unqualified append'))
+                finally:self.write(path,original,0o644 if path.name.endswith('.mjs') else 0o600)
+
+    def test_pinned_codec_over_two_MiB_is_stream_hashed_without_loosening_the_generic_file_bound(self):
+        name='heic-to/src/lib/libheif-without-unsafe-eval.js';path=self.modules/name
+        data=b'synthetic pinned codec resource\n'*(100000)
+        self.assertGreater(len(data),self.m.LIMIT);self.assertLess(len(data),128*1024*1024)
+        self.write(path,data,0o644);self.m.CODEC_FILES[name]=self.m.digest(data)
+        self.m.DEPENDENCY_INVENTORY=self.m.dependency_inventory(self.modules)
+        self.stage['dependencies']['codecSha256']=copy.deepcopy(self.m.CODEC_FILES);self.stage['dependencies']['inventory']=copy.deepcopy(self.m.DEPENDENCY_INVENTORY);self.repin_stage()
+        result=self.m.record();self.assertTrue(result['metadataOnly']);self.assertEqual(path.read_bytes(),data)
+        with self.assertRaisesRegex(self.m.RecordError,'FILE_LIMIT'):self.m.file(path,mode=None,hash_only=True)
+        self.assertEqual(self.m.file(path,mode=None,limit=128*1024*1024,hash_only=True),self.m.digest(data))
+
+    def test_checkpoint_over_two_MiB_remains_rejected_without_replacement(self):
+        oversized=self.m.render(self.document)+b' '*(self.m.LIMIT+1)
+        self.write(self.path,oversized);inode=self.path.stat().st_ino
+        with mock.patch.object(self.m.os,'replace',side_effect=AssertionError('oversized checkpoint must never replace')):
+            with self.assertRaisesRegex(self.m.RecordError,'CHECKPOINT_LIMIT'):self.m.record()
+        self.assertEqual(self.path.read_bytes(),oversized);self.assertEqual(self.path.stat().st_ino,inode)
+
+    def test_uncertain_post_replace_outcomes_never_trigger_a_second_mutation(self):
+        actual_replace=self.m.os.replace;actual_file=self.m.file;original=self.path.read_bytes()
+        for fault in ('lost_replace_ack','readback_mismatch'):
+            with self.subTest(fault=fault):
+                self.write(self.path,original);calls=[];replaced=[False]
+                def replace_once(source,target):
+                    calls.append((source,target));actual_replace(source,target);replaced[0]=True
+                    if fault=='lost_replace_ack':raise OSError('synthetic acknowledgement lost after replacement')
+                def observe(path,*args,**kwargs):
+                    if fault=='readback_mismatch' and replaced[0] and Path(path)==self.path:return b'unconfirmed readback'
+                    return actual_file(path,*args,**kwargs)
+                with mock.patch.object(self.m.os,'replace',side_effect=replace_once),mock.patch.object(self.m,'file',side_effect=observe):
+                    with self.assertRaises((OSError,self.m.RecordError)):self.m.record()
+                self.assertEqual(len(calls),1,'An uncertain mutation must not be repeated to discover its result')
+                durable=json.loads(self.path.read_bytes());self.assertEqual(durable['activeService']['release'],'1.15.0')
+                self.assertEqual(durable['developmentSimplification']['release1150']['priorActiveService'],self.old)
+                self.assertEqual(durable['developmentSimplification']['release1141'],self.document['developmentSimplification']['release1141'])
+                self.assertEqual(list(self.m.PRIVATE.glob('.release1150-*')),[])
+
+
+
+class Pins(unittest.TestCase):
+    def test_real_release_staging_dependency_and_startup_pins(self):
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        m=helper()
+        expected={'SOURCE':'6712028e08b1e04ac7628bdbb9c39fd9f90d9909','TREE':'c80ee33ebfe01838c86cc2b4166b344acf5ea745',
+            'OLD_SOURCE':'c803c2c9be16c0c4ee218d8cac4a1272620d2772','OLD_TREE':'f391b5cebe0a8a8ffd63c818cd481b50970336f1',
+            'LEGACY_SOURCE':'4f3ce5de5ba059bc5fb4f3dc20aaf3c6202ea9bd','LEGACY_TREE':'e5a239eaf7b8c3395a843c9e0d600efeb7aa569b',
+            'CHECKPOINT_SHA':'93d6ddf70db3b1b30d006bf2fb30ab7594ebc2d2b8f88cc59a230f247cbaca82',
+            'STAGING_SHA':'6384c78bf94ce688ec33060d672019d8ae534466d7de57c701046e75c6c46a4b',
+            'OLD_STAGING_SHA':'df4b58f79ed08af15365557fd88670cd887c4cce9382200fadbd03a9c9593d72',
+            'LEGACY_STAGING_SHA':'2fe494a43a446c882ce509f4ecf51925bd5789a94bdbdf2ce6923d83e5ff7d72',
+            'START_SHA':'da4c86b73649a0939d8ff37f1bd35175b5d2d2b31aa0f15bcd8e1f9fcb191b56',
+            'CHECK_SHA':'c165522014d83d09d5fcb0032b41d91fa13e2f5e146f5aaffde61062620459ba',
+            'LOCK_SHA':'1c0f01051219030260877c438566a5be69bedf28b433907ebe0f9a26cd36fdd1',
+            'OLD_LOCK_SHA':'d4b723dc88b8e0e7b0d85755d6751b31399248a1444c55e47c61c56809e76f7c',
+            'LEGACY_LOCK_SHA':'623e3be5057fd8d348d9363d30afef93c6e26dc8cd6df3b8150116c5f17c8e5b'}
+        for name,value in expected.items():self.assertEqual(getattr(m,name),value,name)
+        self.assertEqual(m.REPORTED_STARTUP_SECOND,int(datetime(2026,11,1,20,27,30,tzinfo=ZoneInfo('Europe/Paris')).timestamp()))
+        self.assertEqual(m.REPORTED_STARTUP_SECOND,1793561250);self.assertEqual(m.RELEASE_ID,430794626);self.assertEqual(m.RELEASE_TAG,'v1.15.0')
+        self.assertEqual(m.DEPENDENCY_INVENTORY,dict(sha256='4df6d0b94070f09f2180c9478446b38e07ba58f3bb3e25de083ae79cf14a6152',entries=1180,files=988))
+        self.assertEqual(m.OLD_DEPENDENCY_INVENTORY,dict(sha256='547c6ec03aa29027264dbb848e7830df0cb615a1eb92710498bc94d988897c37',entries=1082,files=914))
+        self.assertEqual(len(m.ROOT_DEPENDENCIES),9);self.assertEqual(len(m.OLD_ROOT_DEPENDENCIES),6);self.assertEqual(len(m.CODEC_FILES),11)
+        graph=json.loads((HERE.parent/'package-lock.json').read_bytes())['packages']
+        self.assertEqual(m.ADDED_LOCK_RECORDS,{name:graph[name] for name in m.ADDED_LOCK_RECORDS})
+        self.assertEqual(set(m.ADDED_LOCK_RECORDS),{'node_modules/@imagemagick/magick-wasm','node_modules/@phenomen/libavif-wasm','node_modules/heic-to'})
+
+    def test_pending_pins_refuse_before_private_process_or_network_access(self):
+        module=helper()
+        with mock.patch.multiple(module,SOURCE='QUALIFICATION_PENDING',TREE='QUALIFICATION_PENDING'), \
+             mock.patch.object(module,'private_directory',side_effect=AssertionError('no private access')), \
+             mock.patch.object(module,'collect_http',side_effect=AssertionError('no HTTP')), \
+             mock.patch.object(module.subprocess,'run',side_effect=AssertionError('no process')):
+            with self.assertRaisesRegex(module.RecordError,'QUALIFICATION_REQUIRED'): module.record()
+
+
+if __name__=='__main__':
+    unittest.main(verbosity=2)

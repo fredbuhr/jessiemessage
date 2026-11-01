@@ -1,0 +1,34 @@
+{
+  "status": "writer1150_local_qualified_native_requested",
+  "source": "6712028e08b1e04ac7628bdbb9c39fd9f90d9909",
+  "tree": "c80ee33ebfe01838c86cc2b4166b344acf5ea745",
+  "observedStartedAtSecond": 1793561250,
+  "UIExactMillisecondsProvided": false,
+  "stagingSha256": "6384c78bf94ce688ec33060d672019d8ae534466d7de57c701046e75c6c46a4b",
+  "baselineCheckpointSha256": "93d6ddf70db3b1b30d006bf2fb30ab7594ebc2d2b8f88cc59a230f247cbaca82",
+  "tests": 39,
+  "pass": 39,
+  "fail": 0,
+  "skipped": 0,
+  "groupsOverlapNotSummed": true,
+  "bytes": [
+    {
+      "path": "ops/record-release1150.py",
+      "bytes": 44256,
+      "sha256": "dc8e7e45aa0d4ec68bc0bd050c65869d1a3bcc8840e577f79996b32995c74c6b"
+    },
+    {
+      "path": "ops/test-record-release1150.py",
+      "bytes": 55053,
+      "sha256": "a2dc62bbf56ba665e6747a5d5991fd7c578abe31868d271f32738a202f585377"
+    },
+    {
+      "path": ".github/workflows/record-release1150.yml",
+      "bytes": 1254,
+      "sha256": "cd3de4e666cc3e5db0d8d8933a0dd175118f79201392b2e95ef0bbde0cfe23b4"
+    }
+  ],
+  "productionWriterExecuted": false,
+  "appSuitesRepeated": false,
+  "scope": "New metadata-only writer; no CHECK/start/config/SQL mutation. Native qualification and remote byte readback required before providing command."
+}
