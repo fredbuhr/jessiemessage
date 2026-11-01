@@ -132,3 +132,19 @@ test("real stdin HEIC preparation uses the pinned safe decoder and retains rotat
     assert.ok((await sharp(prepared.full).stats()).channels.some(channel => channel.max > channel.min));
   }
 });
+
+test("real stdin BMP, JXL and hinted RAW preparation enter the common bounded JPEG pipeline", async () => {
+  const fixtures = JSON.parse(await readFile(new URL("./fixtures/photo-extra-codecs.json", import.meta.url), "utf8"));
+  for (const [name, hint, expected] of [["bmp", null, [32, 24]], ["jxl", null, [24, 32]], ["dng", "dng", [128, 96]]]) {
+    const source = Buffer.from(fixtures[name].base64, "base64");
+    const prepared = await prepareImageStream(Readable.from([source]), { declaredBytes: source.length, hint });
+    assert.deepEqual([prepared.width, prepared.height], expected); assert.ok(prepared.full.length <= 2097152);
+    const metadata = await sharp(prepared.full).metadata(); assert.equal(metadata.format, "jpeg");
+    for (const field of ["exif", "icc", "iptc", "xmp", "orientation"]) assert.equal(metadata[field], undefined);
+    assert.equal((await sharp(prepared.full).raw().toBuffer()).length, prepared.width * prepared.height * 3);
+  }
+  const tiff = await sharp({ create: { width: 30, height: 20, channels: 3, background: "red" } }).tiff().toBuffer();
+  const fallback = await prepareImageStream(Readable.from([tiff]), { declaredBytes: tiff.length, hint: "dng" });
+  assert.deepEqual([fallback.width, fallback.height], [30, 20]);
+  const pixels = await sharp(fallback.full).raw().toBuffer(); assert.ok(pixels[0] > 240 && pixels[1] < 15);
+});

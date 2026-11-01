@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import sharp from "sharp";
 import { imageFormat, MAX_IMAGE_INPUT_BYTES, MAX_PREPARATION_INPUT_BYTES, MAX_PREPARATION_OUTPUT_BYTES, MAX_PREPARATION_PIXELS } from "./image.mjs";
 import { decodeHeicOriginal } from "./heic-original.mjs";
+import { detectExtraImageFormat, decodeExtraImage } from "./extra-image-codecs.mjs";
 
 sharp.cache(false);
 sharp.concurrency(1);
@@ -62,11 +63,23 @@ process.once("message", async (request) => {
   try {
     const preparation = request.preparation === true;
     if (preparation && request.stream === true) bytes = await originalInput(request.declaredBytes);
-    const format = imageFormat(bytes, { preparation });
+    let format;
+    const hint = request.hint ?? null;
+    const extra = preparation ? detectExtraImageFormat(bytes, { hint }) : null;
+    try { format = imageFormat(bytes, { preparation }); }
+    catch (error) { if (extra === "raw") format = "raw"; else throw error; }
     if (!preparation && ((format === "png" && pngAnimated(bytes)) || (format === "webp" && webpAnimated(bytes)))) throw new Error();
     const maximumPixels = preparation ? MAX_PREPARATION_PIXELS : 16_000_000;
     const settings = { failOn: "warning", limitInputPixels: maximumPixels, sequentialRead: true, animated: false, pages: 1 };
     if (preparation && format === "heic") raster = await decodeHeicOriginal(bytes);
+    else if (extra) {
+      try { raster = await decodeExtraImage(bytes, extra, { hint }); }
+      catch (error) {
+        // An extension hint cannot prevent an ordinary TIFF from decoding.
+        // Keep real resource/dimension failures distinct and fail closed.
+        if (format !== "tiff" || extra !== "raw" || error?.code !== "MEDIA_FORMAT") throw error;
+      }
+    }
     if (raster && (!Buffer.isBuffer(raster.data) || ![3, 4].includes(raster.channels)
       || ![raster.width, raster.height].every(value => Number.isInteger(value) && value >= 1 && value <= 2048)
       || raster.data.length !== raster.width * raster.height * raster.channels)) { failure = "MEDIA_UNAVAILABLE"; throw new Error(); }

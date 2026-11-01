@@ -1,41 +1,41 @@
-# Acceptation des photos — développement1.15.0
+# Acceptation des photos — 1.15.0 en qualification
 
-Nouvelle demande du1novembre après livraison1141 close : un client rapporte toujours un échec photo. Aucun fichier original, message exact ou appareil n’a encore été fourni ; aucune cause individuelle certaine. Production1141c803c2c9/checkpoint93d6ddf7 préservés. Le présent lot élargit le parcours de conversion, donc version mineure compatible1.15.0, pas une nouvelle activation immédiate.
+La production reste la **1.14.1**, commit `c803c2c9be16c0c4ee218d8cac4a1272620d2772`, checkpoint `93d6ddf70db3b1b30d006bf2fb30ab7594ebc2d2b8f88cc59a230f247cbaca82`. Aucun outil de cette livraison close ne doit être rejoué. La branche `fix/photo-acceptance` développe un lot compatible **1.15.0** : le secours de conversion et les formats supplémentaires justifient une version mineure.
 
-## Refus établis sur sondes synthétiques nouvelles
+Un client signale toujours un échec après la 1.14.1. Son fichier original, son erreur précise et son appareil n’ont pas été fournis. Les causes ci-dessous sont reproduites sur données synthétiques ; elles ne prouvent pas la cause individuelle de ce signalement. Aucun compte, message ou média réel n’a été modifié.
 
-- Le préparateur refuse avant tout décodeur les GIF, BMP, TIFF, APNG et certains AVIF. Sharp/FFmpeg savent réellement décoder ces fixtures.
-- Un JPEG32×24 avec deux APP1Exif identiques et un panorama JPEG32769×1 sont rejetés, bien que décodables ; ce ne sont pas des images trop lourdes.
-- Le backend ne reçoit que trois formats, avec16MP/côté8192 : JPEG24/48MP valides et9000×1 refusés, bien que Sharp sache les réduire.
-- Sharp installé lit les métadonnées HEIC mais ne décode pas HEVC. Il embarque libheif1.23.5 ; les nouveaux décodeurs serveur ne doivent pas exposer de codec vulnérable faute de qualification.
-- Le cap sauvegarde1GiB et100000enregistrements historiques, appliqué à l’admission médias vivante, bloque tous formats malgré capacité globale configurée10GiB. Aucun épuisement réel de l’hôte n’est établi.
-- Une erreur d’aperçu peut rester masquée par le texte de préparation ; une reprise après ACK upload perdu peut réencoder un Blob déjà préparé et se bloquer avant le réseau.
+## Causes établies et corrections regroupées
 
-Les sondes et logs se trouvent temporairement dans implementation-notes/photo-acceptance hors dépôt, puis seront qualifiés et conservés avec le candidat. Aucun fichier client ni compte réel consulté.
+| Cause reproduite | Comportement corrigé |
+| --- | --- |
+| Filtre de format ou de métadonnées avant le décodeur : GIF, BMP, TIFF, APNG, certains AVIF ; JPEG avec APP1 Exif identiques ; panorama 32769 × 1 | Décodage natif du téléphone tenté en premier. Les métadonnées orientent la préparation sans interdire un fichier décodable. |
+| Backend limité aux fichiers déjà préparés, à 16 MP et au côté 8192 | Route de conversion distincte pour l’original, sans création d’asset ni stockage. JPEG 24/48 MP et panoramas synthétiques acceptés et réduits. Le contrat des assets préparés reste distinct. |
+| HEIC lu en métadonnées mais HEVC non décodable par Sharp installé | Noyau HEIC 1.23.7 commun au worker local et à l’enfant serveur ; version et octets épinglés, rotation réelle qualifiée. |
+| Plafond d’archive 1 Gio et nombre historique d’enregistrements appliqués aux nouveaux envois malgré capacité configurée supérieure | Admission vivante fondée sur la capacité globale configurée, le disque, les charges et les transactions. Retrait du quota photo par client ; historique et compteurs conservés. |
+| Échec d’aperçu masqué par « Préparation… » ; nouvel encodage lors d’une reprise après accusé perdu | Erreur persistante et utile ; réutilisation du Blob préparé exact lors d’une reprise explicite. Aucun POST stockant incertain n’est répété automatiquement. |
+| Déconnexion après fin du corps ne tuant plus le décodeur | Correctif ciblé en cours : annulation liée à la réponse HTTP jusqu’à la sortie réelle de l’enfant. |
+| Extensions absentes des sélecteurs du système | Les quatre sélecteurs photo annoncent aussi les extensions des familles prises en charge, dont les dix indices RAW autorisés. |
 
-## Lot en cours
+La conversion est raccordée au chat client/admin, au profil, aux diffusions et à la bibliothèque. Elle reçoit l’original uniquement après authentification, origine/CSRF et admission ; elle revérifie le propriétaire après décodage. Le nom complet du fichier n’est pas transmis : seul un indice RAW dans une énumération fermée peut aider le décodeur.
 
-1. Tentative native en premier : métadonnées indicatives, pas de liste arbitraire de formats/pixels bloquant le décodeur. Réduction avant transfert, première image des formats animés, sortie bornée et ressources libérées.
-2. Secours authentifié/CSRF POST media/prepare sans asset ni original conservé : JPEG normalisé pour aperçu puis POST assets ordinaire. Conversion isolée et bornée, aucune répétition automatique d’un envoi stockant au résultat incertain. Budget final128MiB en lecture directe vers le sous-processus, sans copie de l’original dans le parent, et64MP, distinct des capacités natives du téléphone et de la limite10MiB du fichier préparé ; sécurité mémoire réelle à qualifier.
-3. Décodeurs serveur couvrant familles non natives au téléphone : choix des distributions en cours. HEIC/AVIF/BMP/RAW/JXL ne sont pas promis tant que leur build, variantes et gardes ne sont pas qualifiés. Aucune conversion tierce externe.
-4. Réutiliser exactement le Blob préparé en reprise ; afficher les erreurs locales et HTTP de manière distincte. Pas de télémétrie ou diagnostic de comptes.
-5. Découpler l’admission photos des caps d’archive et du quota par client historique, en conservant capacité globale/disque, charges, propriétaires et transactions. Garder un refus explicite de sauvegarde trop grande avant arrêt, sans élargissement du chantier sauvegarde.
-6. Intégration chat, profil, diffusion et bibliothèque, tests utiles et qualification native PR/main, puis une seule livraison sur le SHA qualifié avec ses propres preuves/opérateurs.
+## Formats et dépendances
 
-Il n’est pas possible de garantir un fichier endommagé, chiffré ou un format propriétaire sans décodeur, ni des ressources infinies. Le critère de fin est la couverture explicite des familles et variantes qualifiées, suppression des refus injustifiés et diagnostic utile des limites physiques restantes. Ne pas prétendre avoir réparé le fichier client inconnu.
+Le navigateur essaie ses propres décodeurs avant tout secours serveur. Une animation ou un document photo multipage devient une photo fixe. La sortie commune est un JPEG normalisé, sans métadonnées de l’original, pour les aperçus et le stockage existants.
 
-## Premier checkpoint
+Le secours serveur couvre JPEG, PNG/APNG, WebP, GIF et TIFF via Sharp ; HEIC/HEIF via le noyau 1.23.7 ; BMP, JPEG XL et RAW via des lecteurs explicitement forcés et une politique Magick restrictive. AVIF utilise une voie séparée moderne libavif/dav1d, en cours de qualification finale. La couverture RAW dépend du décodeur ou de la miniature JPEG embarquée : les dix extensions ne signifient pas que chaque modèle d’appareil est attesté.
 
-Les corrections indépendantes chat sont en cours d’intégration du secours. Leur premier groupe ciblé :179tests/178réussites, puis une attente devenue obsolète après transfert corrigée et seul cas1/1 réussi ; nouveaux scénarios3/3 et5/5, sans omission. Groupes recoupants, ne pas additionner. Ce checkpoint ne vaut ni candidat complet, ni CI native, ni livraison. Backend, préparateur commun, capacité et codecs restent en développement et sont exclus du premier snapshot tant que non gelés.
+Trois dépendances supplémentaires exactes sont retenues : `heic-to 1.6.7`, `@imagemagick/magick-wasm 0.0.45`, `@phenomen/libavif-wasm 1.4.203`. Les six versions antérieures et chaque entrée transitive de leur lock sont préservées. La piste provisoire jsquash ancienne a été retirée. Magick ne peut jamais ouvrir son ancien décodeur HEIC/AVIF ; les avis upstream [AV1](https://github.com/strukturag/libheif/security/advisories/GHSA-jx54-6rm6-2cgj) et [images codées multiples](https://github.com/strukturag/libheif/security/advisories/GHSA-2g6j-vhr6-6wrj) motivent ce choix.
 
-## Reprise après interruption — deuxième checkpoint de développement
+## Ressources et limites utiles
 
-Les fichiers locaux et les références distantes ont été relus : premier checkpointc3915866 bien présent, main127a4d57 et production1141c803 inchangés, aucune PR ouverte. Les sous-tâches étaient interrompues ; reprise explicite depuis leurs preuves, sans répétition des suites vertes.
+Aucune limite source de taille ou de pixels ne précède la tentative native du téléphone. Le secours serveur lit au plus **128 Mio** directement vers un enfant isolé, sans copie complète de l’original dans le parent ; une seule préparation lourde est admise à la fois. Corps : 120 s ; conversion : 30 s ; client : 180 s. Budget de décodage : 64 MP ; sortie : côté 2048 et 2 Mio. Les bornes mémoire WASM sont vérifiées séparément et ne constituent pas un plafond de RSS total du processus.
 
-Serveur : endpoint protégé /prepare désormais128MiB via stdin direct,120s de corps puis30s de conversion, réponseJPEG2MiB/2048 ; auth/CSRF avant lecture et propriétaire revérifié après. Tests stream100/100, original synthétique75MiB validé, parent42–44MiBRSS selon sonde resourceUsage ; ce ne sont pas un maximum garanti HEIC/RAW ni des mesures hébergées. HEIC1.23.7 partagé et worker Node réel branchés, rotation48×64 qualifiée.
+Les sondes JPEG/PNG de 75 Mio ont observé environ 42–44 Mio RSS parent et jusqu’à 374 Mio enfant ; un RAW intégral 48 MP a révélé une consommation excessive malgré les limites annoncées du cache Magick, d’où la qualification d’une borne mémoire native et des miniatures embarquées. Ce sont des observations synthétiques, pas des mesures hébergées ni des maxima garantis.
 
-Préparateur natif-first et noyauHEIC1.23.7 gelés, interface chat/profil/diffusion/bibliothèque raccordée, hint RAW limité à une extension enum sans nom complet, commandes stockantes incertaines non répétées automatiquement. Les quotas photos par propriétaire et les caps d’archive ne bloquent plus l’admission live ; capacité globale/disque/charges/transactions conservés. La sauvegarde hors de son format garde ses limites et reçoit un refus précoce avant interruption, sans extension du chantier sauvegarde.
+La sauvegarde manuelle conserve son format et ses plafonds : un refus précoce évite d’arrêter le runtime lorsqu’un dépassement est déjà établi. Les contrôles de capture restent actifs pour les envois terminant après ce relevé. Cela ne rouvre pas le test hébergé de sauvegarde, reporté par l’utilisateur.
 
-Les ressources publiques codec/core/licences sont désormais raccordées ; le worker courant n’a plus de permission d’évaluation dynamique, les assets1.23.5 historiques restent immuables pour les onglets déjà ouverts. Huit contrôles serveur ciblés réussis ; NodeHEICréel2/2 acquis.
+## État et critère de fin
 
-RESTE : achever le module supplémentaire BMP/JXL/RAW forcé et une voie AVIF actuelle réellement sûre ; les probes ont révélé que jsquash2.1.1 livre un ancien décodeur AOM et non dav1d. Magick0.0.45 ne doit jamais invoquer HEIC/AVIF (libheif1.23.6 vulnérable) ; HEIC reste sur1.23.7. Choix final AVIF encore en cours, dépendances provisoires non livrées. Terminer intégration/contre-revues et qualifier le candidat complet PR/main, puis publication/préparation uniquement après résultats natifs. Ce deuxième checkpoint ne vaut ni candidat complet ni livraison.
+Checkpoints de développement publiés : `c39158662cedcaf1f44e1b0faef2c419547c8993`, puis `592b826353b46f01f474ba8bf1aa01c66fee997c` (arbre `d3c6272284335f3f70d4447858a1461c35f5ddea`). Ce sont des états partiels, pas des livraisons. Les groupes locaux déjà acquis sont conservés dans [le checkpoint](verification-proofs/jm1150/development-checkpoint.json) et [la checklist](verification-proofs/jm1150/coverage.json) ; leurs recouvrements interdisent de les additionner.
+
+Reste à achever le bornage des codecs et l’annulation après EOF, relire le diff final, qualifier PR puis main sur les cinq jobs natifs, publier le commit exact et qualifier un préparateur avec installation neuve isolée. Aucun déploiement 1.15.0 n’est encore attesté. La fin exige des preuves explicites par famille et parcours ; elle ne promet ni fichier endommagé/chiffré/propriétaire sans décodeur, ni ressources infinies. Téléphones physiques, Safari et photo cliente d’origine restent non attestés.

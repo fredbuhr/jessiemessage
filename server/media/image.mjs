@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { fork } from "node:child_process";
+import { detectExtraImageFormat } from "./extra-image-codecs.mjs";
 
 export const MAX_IMAGE_INPUT_BYTES = 10 * 1024 * 1024;
 export const MAX_PREPARATION_INPUT_BYTES = 128 * 1024 * 1024;
@@ -42,6 +43,10 @@ export function imageFormat(bytes, { preparation = false } = {}) {
       }
       if (heic && !avif) return "heic";
     }
+  }
+  if (preparation) {
+    const extra = detectExtraImageFormat(bytes);
+    if (extra) return extra;
   }
   throw new MediaImageError("MEDIA_FORMAT");
 }

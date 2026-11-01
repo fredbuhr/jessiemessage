@@ -118,7 +118,7 @@ export function createProfileUI(adapter) {
   const preview = node("div", null, "profile-avatar-preview"); preview.setAttribute("aria-hidden", "true");
   const image = node("img"); image.alt = ""; image.hidden = true;
   const fallback = node("span", "○", "profile-avatar-fallback"); preview.append(image, fallback);
-  const file = node("input", null, "profile-file"); file.type = "file"; file.accept = "image/*,.heic,.heif,.avif";
+  const file = node("input", null, "profile-file"); file.type = "file"; file.accept = "image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif,.jxl,.bmp,.tif,.tiff,.dng,.nef,.arw,.cr2,.cr3,.raf,.rw2,.orf,.pef,.srw";
   // Native file-control captions use the browser's language. Keep that
   // control hidden and bind the visible command to our explicit UI source.
   file.hidden = true; ui.attr(file, "aria-label", "Choisir ou remplacer l’avatar");

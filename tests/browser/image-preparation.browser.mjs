@@ -19,7 +19,7 @@ test("phone preparation really shrinks large JPEG, AVIF and HEIC locally under t
     readFile(new URL("../fixtures/photo-1140.heic.b64", import.meta.url), "utf8"),
   ]);
   const heic = Buffer.from(heicText, "base64"), decoderRequests = [];
-  const workerPolicy = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'none'; worker-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'";
+  const workerPolicy = "default-src 'none'; script-src 'self'; connect-src 'none'; worker-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'";
   const privateMarker = "private-original-camera-owner-527";
   const exif = { IFD0: { Artist: privateMarker, Copyright: privateMarker } };
   const xmp = `<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:description="${privateMarker}"/></rdf:RDF></x:xmpmeta>`;
@@ -179,7 +179,7 @@ test("real HEIC uses document encoding without worker canvas while legacy caller
     else if (request.url === "/heic-decoder-worker.js") {
       decoderRequests.push([request.url, mode]);
       response.writeHead(200, { "Content-Type": "text/javascript", "Cache-Control": "no-store",
-        "Content-Security-Policy": "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'none'; worker-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'" });
+        "Content-Security-Policy": "default-src 'none'; script-src 'self'; connect-src 'none'; worker-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'" });
       response.end(Buffer.concat([Buffer.from(modes[mode]), worker]));
     } else if (request.url === "/heic-decoder-core.js") {
       response.writeHead(200, { "Content-Type": "text/javascript" }); response.end(core);

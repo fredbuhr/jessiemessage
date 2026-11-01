@@ -1,0 +1,89 @@
+{
+  "format": "jessiemessage-1150-coverage",
+  "asOf": "2026-11-01",
+  "candidateVersion": "1.15.0",
+  "branch": "fix/photo-acceptance",
+  "status": "development_checkpoint_with_native_qualification_pending",
+  "reviewedCheckpoint": "592b826353b46f01f474ba8bf1aa01c66fee997c",
+  "reviewedTree": "d3c6272284335f3f70d4447858a1461c35f5ddea",
+  "finalCandidateSource": null,
+  "baseline": {
+    "documentaryMain": "127a4d57ff75457a9ccbb35fb04537be17c904ae",
+    "productionVersion": "1.14.1",
+    "productionSource": "c803c2c9be16c0c4ee218d8cac4a1272620d2772"
+  },
+  "groupsOverlapNotSummed": true,
+  "acquiredGroups": "development-checkpoint.json",
+  "points": [
+    {
+      "id": "P01",
+      "scope": "Native-first preparation and codec boundaries",
+      "disposition": "shared_preparation_and_HEIC_locally_checked_extra_codecs_pending_final_review",
+      "evidence": ["tests/image-preparation.test.mjs", "tests/heic-decoder-worker.test.mjs", "tests/browser/image-preparation.browser.mjs", "development-checkpoint.json"],
+      "proofScope": "Synthetic local/native-first and pinned HEIC1.23.7 results acquired; extra codec work after reviewedCheckpoint is not qualified by this review.64MP and2048 output bounds retained. No physical Safari/device attestation."
+    },
+    {
+      "id": "P02",
+      "scope": "Authenticated pure server conversion",
+      "disposition": "reviewed_and_locally_checked",
+      "evidence": ["server/media/http.mjs", "server/media/service.mjs", "server/media/image.mjs", "tests/media-http.test.mjs", "tests/media-service.test.mjs", "tests/media-preparation-stream.test.mjs", "development-checkpoint.json"],
+      "proofScope": "Origin, role cookie, current actor and CSRF precede body admission.128MiB measured/declared original, stdin backpressure,120s body and30s decode, no original persistence or media allocation. Current owner checked again after conversion; bounded2MiB/2048 JPEG response."
+    },
+    {
+      "id": "P03",
+      "scope": "Cancellation after original EOF",
+      "disposition": "P2_reproduced_fix_authorized_not_yet_verified",
+      "evidence": ["server/media/image.mjs", "server/media/http.mjs", "tests/media-preparation-stream.test.mjs"],
+      "proofScope": "New independent synthetic probe on the exact reviewedCheckpoint confirms that abort/close after EOF does not kill the child, retaining the one global preparation place until result or30s deadline. No data leak or media loss established. Response-close AbortSignal correction authorized; completion requires new targeted results and code review."
+    },
+    {
+      "id": "P04",
+      "scope": "Chat, retry identity and visible errors",
+      "disposition": "implemented_with_acquired_synthetic_checks_native_pending",
+      "evidence": ["tests/chat-lifecycle.test.mjs", "tests/chat-i18n.test.mjs", "tests/photo-upload.test.mjs", "tests/photo-batch.test.mjs", "development-checkpoint.json"],
+      "proofScope": "Owner/CSRF and cancellation guards, exact normalized Blob on explicit retry, no automatic uncertain storing POST, pure server fallback and profile account scope. Reported groups overlap and are not summed. No real message sent by this qualification."
+    },
+    {
+      "id": "P05",
+      "scope": "Profile, library and broadcast callers",
+      "disposition": "implemented_local_checks_passed_browser_pending",
+      "evidence": ["tests/profile-ui.test.mjs", "tests/media-library-ui.test.mjs", "tests/broadcast-lifecycle.test.mjs", "tests/browser/profile-avatar.browser.mjs", "development-checkpoint.json"],
+      "proofScope": "127-case library/broadcast group,10-case binary cancellation group with8 overlaps and2 new cases,4 new profile cases.128MiB/180s callback, source-original identity, bounded binary/JSON errors, owner and CSRF changes, late/aborted replies, legacy404 without asset POST, RAW enum only without filename. Profile browser case written but local attempt blocked before application by absent ChromeDriver."
+    },
+    {
+      "id": "P06",
+      "scope": "Live capacity and preserved storage accounting",
+      "disposition": "implemented_local_checks_passed_native_SQL_pending",
+      "evidence": ["tests/media-admission-budget.test.mjs", "tests/backup-media-admission.test.mjs", "tests/backup-media-admission.integration.test.mjs", "tests/media-store.integration.test.mjs", "tests/media-flow.integration.test.mjs", "development-checkpoint.json"],
+      "proofScope": "Archive1GiB/lifetime records no longer gate live media. Historical photo owner binding retained without photo per-owner admission cap. Configured aggregate photo/video total, disk/inflight/locks/counters and admin-only video owner quota retained. No reset, purge or real allocation changed.99 distinct executable cases green across capacity/preflight work;3 native omissions remain unqualified."
+    },
+    {
+      "id": "P07",
+      "scope": "Manual backup boundary and photo closure/recovery compatibility",
+      "disposition": "early_refusal_and_synthetic_checks_passed_native_pending",
+      "evidence": ["tests/manual-backup-capacity.test.mjs", "tests/manual-backup-http.test.mjs", "tests/manual-backups-ui.test.mjs", "tests/recurring-supervisor.test.mjs", "tests/backup-snapshot.test.mjs", "tests/backup-recovery-store.test.mjs", "tests/local-closures.integration.test.mjs", "tests/manual-restore-operator.integration.test.mjs"],
+      "proofScope": "Existing archive format/readers unchanged. Aggregate read before a new request and last in parent preflight rejects known oversize before stopping runtime; accepted request identity and old downloads preserved. Capture retains exact checks for uploads finishing after the sample/during drain. Photo snapshot/recovery above preserved owner binding checked synthetically; updated disposable SQL closure fixtures await native CI. No hosted backup or restore executed."
+    },
+    {
+      "id": "P08",
+      "scope": "Final candidate, hosted state and original client case",
+      "disposition": "pending_not_claimed",
+      "evidence": ["development-checkpoint.json"],
+      "proofScope": "No final candidate CI, merged-main qualification, deployment, hosted check or original client-photo reproduction is established here. Original file, error and device were not supplied; synthetic causes do not diagnose that account."
+    }
+  ],
+  "openFindings": [
+    {
+      "id": "PREPARE_ABORT_AFTER_EOF",
+      "severity": "P2",
+      "status": "reproduced_fix_authorized_pending_targeted_result_and_review",
+      "atReviewedCheckpoint": true
+    }
+  ],
+  "nativeCandidateQualification": false,
+  "nativeMainQualification": false,
+  "hostOperations": false,
+  "realAccountMediaMessagesTouched": false,
+  "realBackupOrRestoreExecuted": false,
+  "originalClientCase": "not_reproduced_without_original_error_and_device"
+}
