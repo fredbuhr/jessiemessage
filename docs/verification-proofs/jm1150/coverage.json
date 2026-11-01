@@ -3,7 +3,7 @@
   "asOf": "2026-11-01",
   "candidateVersion": "1.15.0",
   "branch": "fix/photo-acceptance",
-  "status": "published_native_qualified_hosted_preparation_pending",
+  "status": "hosted_preparation_and_check_acquired_activation_pending",
   "reviewedCheckpoint": "592b826353b46f01f474ba8bf1aa01c66fee997c",
   "reviewedTree": "d3c6272284335f3f70d4447858a1461c35f5ddea",
   "finalCandidateSource": "6712028e08b1e04ac7628bdbb9c39fd9f90d9909",
@@ -142,15 +142,16 @@
     {
       "id": "P08",
       "scope": "Final candidate, hosted state and original client case",
-      "disposition": "published_qualified_awaiting_hosted_preparation",
+      "disposition": "hosted_preparation_and_check_acquired_activation_pending",
       "evidence": [
         "development-checkpoint.json",
         "pr-native.json",
         "main-native.json",
         "publication-native.json",
-        "preparation-native.json"
+        "preparation-native.json",
+        "hosted-preparation.json"
       ],
-      "proofScope": "PR/main exact tree qualified and immutable v1.15.0 published, release/latest430794626. New staging operator qualified23/23 plus isolated fresh install/six-family smoke. No hosted preparation,CHECK,start or metadata receipt yet. Production remains1.14.1. Original client file/error/device absent; its individual failure is not directly reproduced."
+      "proofScope": "PR/main exact tree qualified and immutable v1.15.0 published, release/latest430794626. Staging operator qualified23/23 plus isolated fresh install/six-family smoke. User now reports staged sources and separate CHECK_EXIT0; canonical receipt6384c78b/6008bytes verified, all native codec/inventory/smoke values match. Actual1150 start and metadata remain unattested; last active production1.14.1. Original client photo/device not directly reproduced."
     },
     {
       "id": "P09",
@@ -165,12 +166,12 @@
     {
       "id": "P10",
       "scope": "Root local build and six-family smoke",
-      "disposition": "local_build_and_synthetic_smoke_passed_global_CI_pending",
+      "disposition": "local_build_smoke_then_PR_main_native_qualified",
       "evidence": [
         "local/final-build.log.gz",
         "local/smoke-six-families-initial.log.gz"
       ],
-      "proofScope": "Root build completed syntax checks for810 JavaScript/shell sources and generated the workbench artifact. Root smoke reports6 successful synthetic codec families BMP/JXL/DNG/AVIF/HEIC/JPEG on Node24.22.1, with no runtime, SQL or stored media. This is not a final candidate/main CI or a hosted photo test."
+      "proofScope": "Root build completed syntax checks for810 JavaScript/shell sources and generated the workbench artifact. Root smoke reports6 successful synthetic codec families BMP/JXL/DNG/AVIF/HEIC/JPEG on Node24.22.1, with no runtime, SQL or stored media. This is not a final candidate/main CI or a hosted photo test. Subsequent PR/main five-job native success is recorded separately in pr-native.json/main-native.json; user hosted staging and CHECK now reported separately."
     }
   ],
   "openFindings": [],
@@ -178,7 +179,7 @@
     {
       "id": "PREPARE_ABORT_AFTER_EOF",
       "severity": "P2",
-      "status": "corrected_locally_two_new_tests_passed_independent_review_passed_native_pending",
+      "status": "corrected_targeted_independent_review_and_PR_main_native_passed",
       "atReviewedCheckpoint": true,
       "correctionBase": "871a54b549c3ddb847abc80ce0af07f05b366d5b",
       "correctionHttpSha256": "a274d33d093462292b02ccc249a069905050cb30a44cfa0f989f145e813734d7",
@@ -233,7 +234,18 @@
     "Original client photo and device/Safari",
     "Arbitrary proprietary,corrupt,encrypted or all RAWcamera variants",
     "Hosted proxy passage of128MiB original or180s deadline",
-    "Hosted1150 preparation,CHECK,activation,metadata",
+    "Hosted1150 activation and metadata",
     "Deferred real manual backup/restore"
-  ]
+  ],
+  "hostOperationsMeaning": "Direct host operations performed by agent; reported user actions recorded separately.",
+  "hostedObservation": {
+    "proof": "hosted-preparation.json",
+    "receiptSha256": "6384c78bf94ce688ec33060d672019d8ae534466d7de57c701046e75c6c46a4b",
+    "canonicalBytes": 6008,
+    "preparationReported": true,
+    "checkExit": 0,
+    "nativeDependencyComparison": true,
+    "activationReported": false,
+    "metadata1150Reported": false
+  }
 }

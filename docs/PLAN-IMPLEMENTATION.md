@@ -8,9 +8,11 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 Code, contre-revues, qualifications PR/main5/5, publicationv1.15.0/source6712028e et opérateurs natifs sont acquis. [Preuves et prochaine action exacte](REPRISE.md).
 
-1. Recueillir le reçu utilisateur de l’unique préparation/CHECK1150 épinglé dans le guide ; comparer source/arbre/inventaire et préservation1141. Aucune relance si reçu incertain.
-2. Après ce résultat seulement, fournir les champs Manager exacts puis recueillir l’identité réellement démarrée. Production1141 reste le dernier état attesté.
-3. Après démarrage attesté, qualifier un nouveau writer1150 lié à la seconde et au staging observés ; enregistrer les seules métadonnées puis clore. Aucun ancien outil à rejouer, aucune nouvelle suite applicative verte à relancer sans cause.
+Préparation/CHECK1150 désormais acquis selon le reçu utilisateur : empreinte6384c78b/6008octets vérifiée, inventaire et codecs identiques au natif, CHECK0. Ne pas les rejouer.
+
+1. Activer une seule fois les lanceurs1150 dans Manager selon le guide ; conserver port3000 et répertoire existant. Si Enregistrer relance déjà, ne pas ajouter de redémarrage.
+2. Recueillir version, commit complet, Node et date réellement affichés. Production1141 reste le dernier état attesté jusqu’à ce relevé.
+3. Après démarrage attesté, qualifier un nouveau writer1150 lié à sa seconde et au staging6384c78b ; enregistrer les seules métadonnées puis clore. Aucun ancien outil ou test applicatif vert à rejouer sans cause.
 
 ## Correctif 1.14.1 — livraison terminée
 

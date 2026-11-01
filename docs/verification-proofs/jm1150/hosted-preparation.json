@@ -1,0 +1,166 @@
+{
+  "format": "jessiemessage-1150-hosted-preparation-observation",
+  "authority": "user terminal output; no direct hosting access by agent",
+  "stageResult": {
+    "format": "jessiemessage-release1150-staging",
+    "version": 1,
+    "status": "release1150_sources_staged_not_qualified",
+    "release": "1.15.0",
+    "source": "6712028e08b1e04ac7628bdbb9c39fd9f90d9909",
+    "tree": "c80ee33ebfe01838c86cc2b4166b344acf5ea745",
+    "checkout": "/srv/customer/jessiemessage-operator/production-1150-6712028e",
+    "checkoutMode": "0700",
+    "launcher": "/srv/customer/jessiemessage-private/start-primary-release1150-6712028e.sh",
+    "launcherSha256": "da4c86b73649a0939d8ff37f1bd35175b5d2d2b31aa0f15bcd8e1f9fcb191b56",
+    "launcherMode": "0700",
+    "checkLauncher": "/srv/customer/jessiemessage-private/check-primary-release1150-6712028e.sh",
+    "checkLauncherSha256": "c165522014d83d09d5fcb0032b41d91fa13e2f5e146f5aaffde61062620459ba",
+    "checkLauncherMode": "0700",
+    "log": "/srv/customer/jessiemessage-private/jm1150-node24221.log",
+    "logMode": "0600",
+    "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "precheckLog": "/srv/customer/jessiemessage-private/jm1150-preflight-node24221-6712028e.log",
+    "precheckLogMode": "0600",
+    "precheckLogSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "nodeVersion": "v24.22.1",
+    "nodeBinarySha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb",
+    "profile": "photos-notify-recovery-crm-broadcast-video",
+    "expectedActiveServiceVersion": "1.14.1",
+    "baselineMetadataRelease": "1.14.1",
+    "preservedActiveCheckpointSha256": "93d6ddf70db3b1b30d006bf2fb30ab7594ebc2d2b8f88cc59a230f247cbaca82",
+    "priorActiveStagingSha256": "df4b58f79ed08af15365557fd88670cd887c4cce9382200fadbd03a9c9593d72",
+    "priorActivePreserved": true,
+    "existingConfigurationUntouched": true,
+    "baselineMigrationFiles": 33,
+    "schemaMigrationsExpected": 38,
+    "applicationTablesExpected": 37,
+    "experienceEnabled": true,
+    "experienceMigrationFiles": 2,
+    "experienceMigrationsIdentical": true,
+    "normalMigrationsPreserved": true,
+    "videoMigrationsIdentical": true,
+    "sqlStatusChecked": false,
+    "configurationPrepared": false,
+    "hostedQualified": false,
+    "precheckPassed": false,
+    "started": false,
+    "migrated": false,
+    "runtimeStarted": false,
+    "noRestart": true,
+    "managerChanged": false,
+    "checkpointChanged": false,
+    "dependenciesReused": false,
+    "dependencyDirectory": "/srv/customer/jessiemessage-operator/production-1150-6712028e/node_modules",
+    "dependencies": {
+      "strategy": "private-npm-ci-ignore-scripts",
+      "directory": "/srv/customer/jessiemessage-operator/production-1150-6712028e/node_modules",
+      "lockSha256": "1c0f01051219030260877c438566a5be69bedf28b433907ebe0f9a26cd36fdd1",
+      "inventory": {
+        "sha256": "4df6d0b94070f09f2180c9478446b38e07ba58f3bb3e25de083ae79cf14a6152",
+        "entries": 1180,
+        "files": 988
+      },
+      "directVersions": {
+        "libheif-js": "1.23.5",
+        "mariadb": "3.5.4",
+        "nodemailer": "10.1.4",
+        "otpauth": "9.5.2",
+        "sharp": "0.35.5",
+        "web-push": "3.6.7",
+        "@imagemagick/magick-wasm": "0.0.45",
+        "@phenomen/libavif-wasm": "1.4.203",
+        "heic-to": "1.6.7"
+      },
+      "codecSha256": {
+        "@imagemagick/magick-wasm/LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "@imagemagick/magick-wasm/NOTICE": "7cb6cf162ba965ed068dbc9e638c9b792b8a1a9f4dae51031e7a21ff1ebefc8d",
+        "@imagemagick/magick-wasm/dist/index.js": "696370daea26ec9ccb1d53316e49eca464cd841678be0fdd550652cbcc73208e",
+        "@imagemagick/magick-wasm/dist/x86/magick.wasm": "54629cbcf06dd10db38b4d87fa6ab241b248c09c94f2d9689506e5f994ac5f0c",
+        "@phenomen/libavif-wasm/LICENSE": "9c49270079649e9ca5017850706c7c7b6d3e55c87351f50db343c9cf8a3947ac",
+        "@phenomen/libavif-wasm/THIRD_PARTY_NOTICES.md": "6f002f45208da417ea75f12759a151419e6472dc3c5a7718b422c652f65209f6",
+        "@phenomen/libavif-wasm/dist/codec/decode.mjs": "9a005bb8209388479101680344c7ef2123625d08af699ff32bbcd85c198f0d07",
+        "@phenomen/libavif-wasm/dist/decode.wasm": "10cd87f2c5cd865a3c4fcfde30cc9611387bebe91e4eae7d62b62ef17c27279e",
+        "@phenomen/libavif-wasm/dist/versions.json": "48e014a6fe8aa1f6638c3a146f106b78a7c6c7bc98ec7df47af5b7bcdbbac477",
+        "heic-to/LICENSE": "dbd7222d8026e5d6ca6991d1e6a205de927f300840433c2e90a60644a9980c75",
+        "heic-to/src/lib/libheif-without-unsafe-eval.js": "75aaf03816c22f8cf40dbcaeb22bee83f2e1c5da4b7417577a7883b296348734"
+      },
+      "codecSyntheticSmoke": true,
+      "codecSmokePath": "ops/smoke-photo-codecs1150.mjs",
+      "codecSmokeSha256": "57d6d1e552fb8dd9a9373d3fa0a103705e109edbffe8c9c35e1dfb6fe53d9ddb",
+      "codecSmokeStdoutSha256": "e543359fa86dde7b69979c467dff601a69e481fdb47907762949ccfb9687ec8e",
+      "codecSmokeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutSha256": "a93cec561d30b0e48414b8a526dfc163a51e9ca00ac0b52c2fd769a7c13b251f",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "scriptsExecuted": false
+    },
+    "installer": {
+      "npmVersion": "11.19.1",
+      "npmCli": "/srv/customer/jessiemessage-private/install-1150-6712028e/npm/bin/npm-cli.js",
+      "archiveSha256": "6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6",
+      "archiveBytes": 32026916
+    },
+    "priorDependencyInventory": {
+      "sha256": "547c6ec03aa29027264dbb848e7830df0cb615a1eb92710498bc94d988897c37",
+      "entries": 1082,
+      "files": 914
+    },
+    "priorDependencies": {
+      "directory": "/srv/customer/jessiemessage-operator/production-1140-4f3ce5de/node_modules",
+      "inventory": {
+        "sha256": "547c6ec03aa29027264dbb848e7830df0cb615a1eb92710498bc94d988897c37",
+        "entries": 1082,
+        "files": 914
+      },
+      "directVersions": {
+        "libheif-js": "1.23.5",
+        "mariadb": "3.5.4",
+        "nodemailer": "10.1.4",
+        "otpauth": "9.5.2",
+        "sharp": "0.35.5",
+        "web-push": "3.6.7"
+      },
+      "applicationLockSha256": "d4b723dc88b8e0e7b0d85755d6751b31399248a1444c55e47c61c56809e76f7c",
+      "installationLockSha256": "623e3be5057fd8d348d9363d30afef93c6e26dc8cd6df3b8150116c5f17c8e5b",
+      "codecSha256": {
+        "libheif-wasm/libheif-bundle.mjs": "095194187be00d3e36335b8ad7f5552d70655e5e2159486d7d36cd4daa47bba9",
+        "libheif-wasm/LICENSE": "fa81ce652315b013359d6e8e4744335f31a50c7c192907176d3632f78a3b4596"
+      },
+      "installed": false,
+      "scriptsExecuted": false
+    },
+    "bundleFingerprintSha256": "bcca2f3fd91ffc0dec51a7077eb9e192a53b6e653b60c7db7159e473b83aac85",
+    "videoConfigurationDirectory": "/srv/customer/jessiemessage-private/runtime-video-180",
+    "operationsDirectory": "/srv/customer/jessiemessage-private/recurring-backup-052",
+    "nextCheckCommand": "bash /srv/customer/jessiemessage-private/check-primary-release1150-6712028e.sh",
+    "receipt": "/srv/customer/jessiemessage-private/jm1150-staging.json",
+    "receiptSha256": "6384c78bf94ce688ec33060d672019d8ae534466d7de57c701046e75c6c46a4b"
+  },
+  "receiptVerification": {
+    "algorithm": "sha256",
+    "canonicalization": "sorted JSON keys, compact separators, newline; excludes returned receipt/receiptSha256",
+    "bytes": 6008,
+    "sha256": "6384c78bf94ce688ec33060d672019d8ae534466d7de57c701046e75c6c46a4b",
+    "matchesUserReceipt": true
+  },
+  "nativeComparison": {
+    "sourceTreeNodeAndDependenciesEqual": true,
+    "all11CodecResourcesEqual": true,
+    "inventoryEqual": true,
+    "smokeOutputsEqual": true,
+    "previous1141PreservedAccordingToReceipt": true
+  },
+  "check": {
+    "exitCode": 0,
+    "finalStatus": "PREPARATION_1150_CHECK_OK",
+    "authority": "user terminal output after staging result",
+    "notReexecutedByAgent": true
+  },
+  "scope": {
+    "preparationAndSeparateCheckAcquired": true,
+    "activationAcquired": false,
+    "metadata1150Acquired": false,
+    "freshPhysicalSqlInventoryByAgent": false,
+    "realClientPhotoValidated": false
+  },
+  "next": "Set the two Manager Run and Build commands from the exact new launchers, keep port3000, then observe actual application identity. Never replay preparation or SSH CHECK."
+}
