@@ -1,6 +1,6 @@
 # Livraison1.15.1 — parcours d’accès
 
-Source applicative `a4a07f9f31c47a7185b57d11b8277be1d87fd2c1`, arbre `568530e702fa4d0a8a6b1743988c5e20b8656c40`. Node24.22.1, neuf dépendances et schéma attendu38/37tables inchangés. [Diagnostic et couverture](access-reliability-1151.md). Le relevé utilisateur confirme1.15.1 démarrée le03/11/2026 à12:44:52Paris ; la finalisation des métadonnées reste en attente.
+Source applicative `a4a07f9f31c47a7185b57d11b8277be1d87fd2c1`, arbre `568530e702fa4d0a8a6b1743988c5e20b8656c40`. Node24.22.1, neuf dépendances et schéma attendu38/37tables inchangés. [Diagnostic et couverture](access-reliability-1151.md). La1.15.1 est démarrée et ses métadonnées alignées selon le [reçu final utilisateur](verification-proofs/jm1151/hosted-metadata.json) :03/11/2026 12:44:52.415Paris,1793706292415ms, `release1151_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, `publicReady:true`, checkpoint0a2f64c3. **Livraison close, aucun opérateur ou redémarrage à rejouer.**
 
 Préparateur `1c37c5b8055a205df71c8fa86555ae34426f2d61`, arbre `8656cddb0886545a50de3785d32a4072bf75315e`, [qualification41612307744](verification-proofs/jm1151/preparation-native.json) :40/40tests natifs sans omission,1/1job, tentative1. Helper24855octets/SHA256 `481ae7f8ad6c9293316993431fe582a4a743554d6645c7f6e0546548c6d1b102`. Les trois fichiers du helper/test/workflow ont été relus identiques au commit qualifié. Les40locaux/40natifs sont le même lot ; cinq tests de liaison ont ensuite contrôlé les pins finaux sans répéter tout le lot local.
 
@@ -61,13 +61,13 @@ Le [relevé utilisateur](verification-proofs/jm1151/hosted-identity.json) confir
 
 Les deux commandes communiquées étaient `bash /srv/customer/jessiemessage-private/start-primary-release1151-a4a07f9f.sh` en Exécution et `bash /srv/customer/jessiemessage-private/check-primary-release1151-a4a07f9f.sh` en Build, port3000 et dossier de travail conservés. Elles restent une trace de l’étape achevée, pas une instruction de les appliquer à nouveau.
 
-## Métadonnées — prochaine action, outil qualifié
+## Métadonnées — acquises, ne pas rejouer
 
-Démarrage1151 confirmé, reçu d’enregistrement des métadonnées1151 encore absent. Le writer final est [qualifié36/36tests natifs sans omission](verification-proofs/jm1151/writer-final-native.json),1/1job, tentative1, [run41631279412](https://github.com/fredbuhr/jessiemessage/actions/runs/41631279412). Opérateur **`73e0fd4fadd23dcbd854daa24cb8b6475de17987`**, arbre **`1bb97c8fd795821c8ab0334e0f122340bb73a89e`**. Helper36208octets/SHA256 **`5fe08d685e1e0c973bd3bb23da2cfc0083f754fb67834f4c3211be376265ab41`**. Les trois fichiers qualifiés ont été relus identiques, contre-revue sans blocage ;36locaux/36natifs non additionnés.
+Démarrage1151 et enregistrement final confirmés par le reçu utilisateur ci-dessous. Le writer final est [qualifié36/36tests natifs sans omission](verification-proofs/jm1151/writer-final-native.json),1/1job, tentative1, [run41631279412](https://github.com/fredbuhr/jessiemessage/actions/runs/41631279412). Opérateur **`73e0fd4fadd23dcbd854daa24cb8b6475de17987`**, arbre **`1bb97c8fd795821c8ab0334e0f122340bb73a89e`**. Helper36208octets/SHA256 **`5fe08d685e1e0c973bd3bb23da2cfc0083f754fb67834f4c3211be376265ab41`**. Les trois fichiers qualifiés ont été relus identiques, contre-revue sans blocage ;36locaux/36natifs non additionnés.
 
 Il vérifie la seconde1793706292, le staging0323/4257octets, l’ancien checkpoint1150/989, sources/tags/versions, Node/configuration/migrations, CHECK existants et identité HTTP avant écriture/relecture du seul checkpoint. Dépendances1151→vrai1150/inventaire4df6, neuf versions/onze ressources et graphe normalisé exact ; les locks d’installation1c0f et applicatifeb620 sont distingués. Gros codecs hachés en flux, JSON/checkpoint2Mio. Active1150 entier, section1150, historiques et autres blocs, repli185 SQL38seulement/downgradefalse/184172interdits préservés. Aucun démarrage/CHECK/install/SQL en écriture.
 
-Dans le [terminal SSH utilisateur](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), première exécution du bloc suivant :
+Bloc historique exécuté une fois avec succès par l’utilisateur dans son terminal SSH. **Ne pas le rejouer** :
 
 ```bash
 env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD1151'
@@ -84,6 +84,8 @@ exec(compile(code, '<enregistrement1151>', 'exec'), {'__name__': '__main__'})
 PY_RECORD1151
 ```
 
-Résultat attendu : `release1151_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, sourcea4a07f9f/arbre568530e7, `publicReady:true`, millisecondes réelles conformes à la seconde1793706292 et empreinte du nouveau checkpoint. Le résultat doit être fourni pour clôturer la livraison. En cas de réponse perdue/interrompue ou statut non confirmé, conserver les traces et inspecter l’état durable en lecture seule ; ne pas relancer pour découvrir un succès éventuel.
+Le [reçu final utilisateur](verification-proofs/jm1151/hosted-metadata.json) confirme `release1151_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, sourcea4a07f9f/arbre568530e7, `publicReady:true`. Millisecondes réelles **1793706292415**, soit **03/11/2026 12:44:52.415Europe/Paris**, conformes à l’UI à la seconde1793706292. Empreinte du checkpoint1151 **`0a2f64c3f77082f374289883b3607a27e3447bdcb37e4ca43faea2971e6267c3`**, rapportée après écriture/relecture du writer qualifié. Le fichier privé complet n’a pas été fourni, aucune reconstruction indépendante de son hash par l’agent.
 
-Ne pas réutiliser le writer1150 ni inventer le nouveau checkpoint ou les millisecondes. Le repli185 reste qualifié au seul précontrôleSQL38, jamais démarré ; downgrade du snapshot public non qualifié,184/172 interdits. Sauvegarde manuelle reportée, PC et juridique non rouverts.
+Active1150 entier, section1150, historiques1141/1140/1130/1112/1111/1110/1101/1100/190/184, staging1150 et autres blocs préservés selon le reçu. La qualification36/36 native et l’exécution hébergée rapportée restent des preuves distinctes. Repli185 limité au précontrôleSQL38, jamais démarré ; downgrade public non qualifié,184/172 interdits. Aucun nouvel inventaire SQL physique ou appareil réel déduit.
+
+**Aucune étape restante.** Ne rejouer ni préparation, CHECK, activation, writer ou suite verte sans raison nouvelle ; aucun nouveau redémarrage. Si une réponse future est perdue ou incertaine, préserver les traces et inspecter l’état durable en lecture seule avant toute suite ; ne pas relancer pour découvrir un succès éventuel. Sauvegarde manuelle reportée, PC et juridique non rouverts. Attendre la prochaine demande utilisateur.

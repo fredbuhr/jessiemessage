@@ -153,7 +153,7 @@
     "no_new_hosted_SQL_inventory",
     "invitation_clock_fix_does_not_claim_arbitrary_device_clock_support_for_every_feature"
   ],
-  "applicationStatus": "merged_published_hosted_started_metadata_pending",
+  "applicationStatus": "deployed_metadata_recorded_delivery_closed",
   "tag": "v1.15.1",
   "releaseId": 432505702,
   "preparationOperator": "1c37c5b8055a205df71c8fa86555ae34426f2d61",
@@ -165,8 +165,8 @@
   "hostedPreparation": true,
   "hostedCheck": true,
   "hostedActivation": true,
-  "hostedMetadata": false,
-  "nextAction": "first execution of qualified1151 metadata-only writer and read final receipt; no restart",
+  "hostedMetadata": true,
+  "nextAction": "none; wait for next user improvement/audit; no replay or restart",
   "hostedPreparationReceipt": "0323f8631bc6c0f4c6f1fee22e68a2bc1c5b8d730a6d2c93545f929518cb7216",
   "hostedIdentityProof": "hosted-identity.json",
   "observedStartupSecond": 1793706292,
@@ -174,5 +174,11 @@
   "writerRun": 41631279412,
   "writerNativeTests": 36,
   "writerNativePassed": 36,
-  "writerHostExecution": false
+  "writerHostExecution": true,
+  "hostedPublicReady": true,
+  "hostedMetadataProof": "hosted-metadata.json",
+  "checkpointSha256": "0a2f64c3f77082f374289883b3607a27e3447bdcb37e4ca43faea2971e6267c3",
+  "actualStartedAtMilliseconds": 1793706292415,
+  "actualStartedAtParis": "2026-11-03T12:44:52.415+01:00",
+  "deliveryClosed": true
 }

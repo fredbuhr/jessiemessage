@@ -2,20 +2,13 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Correctif1.15.1 — métadonnées finales restantes
+## Correctif1.15.1 — livraison terminée
 
-Audit et corrections terminés, PR148/main5/5, six captures inspectées, publicationv1.15.1/sourcea4a07f9f/release432505702, préparateur40/40 natifs qualifié et relu. [Bilan8domaines](access-reliability-1151.md), [état et preuves](REPRISE.md). Application1.15.1 confirmée par le relevé utilisateur03novembre12:44:52Paris, dernière métadonnée connue1150/989. Aucune migration/dépendance nouvelle ni compte/e-mail réel touché.
+[Audit et bilan8domaines](access-reliability-1151.md) terminés : PR148/main5/5, six captures inspectées, publicationv1.15.1/sourcea4a07f9f/arbre568530e7/release432505702, préparateur40/40 et writer36/36 natifs qualifiés, sources relues et contre-revues acquises.52omissions générales explicites conservées, aucun nouveau schéma ou dépendance.
 
-Préparation/CHECK1151 acquis selon le reçu utilisateur, staging0323f863/4257octets reconstruits identiques et CHECK0. Ne les rejouer sous aucun prétexte de vérification d’un résultat déjà reçu.
+Préparation/CHECK0 puis activation acquis selon les reçus. [Reçu final](verification-proofs/jm1151/hosted-metadata.json) `release1151_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, `publicReady:true`, checkpoint1151 **`0a2f64c3f77082f374289883b3607a27e3447bdcb37e4ca43faea2971e6267c3`**. Démarrage réel03/11/2026 **12:44:52.415Paris**, conforme à l’UI. Active1150 entier, section1150, historiques et autres blocs préservés selon le reçu.
 
-Activation1151 acquise, sourcea4a07f9f/Node24.22.1/secondeUTC1793706292. Aucun nouveau redémarrage, réglage Manager, préparation ou CHECK à demander.
-
-Writer1151 qualifié36/36tests natifs sans omission, run41631279412/1job, opérateur73e0fd4f et helper5fe08d relus identiques, contre-revue sans blocage. [Preuves](verification-proofs/jm1151/writer-final-native.json). Les suites applicatives déjà vertes ne sont pas rejouées.
-
-1. Exécuter une première fois le bloc writer1151 exact du [guide](operations-release1151.md), qui vérifie les preuves puis enregistre seulement les métadonnées ; aucun redémarrage. Lire le reçu final `release1151_metadata_recorded`, identité réelle/millisecondes et nouvelle empreinte checkpoint, puis clore la livraison.
-2. Si résultat incertain, inspecter l’état durable en lecture seule avant toute suite ; ne jamais relancer une écriture pour découvrir le résultat. Aucun writer1150 ou ancien outil à rejouer.
-
-Ne répéter aucune suite verte sans raison nouvelle. Le cas individuel du client, Safari/téléphones physiques et la livraison SMTP réelle restent non attestés ; sauvegarde manuelle reportée, PC et juridique non rouverts.
+**Aucune action restante pour ce lot.** Ne rejouer ni préparation, CHECK, réglages Manager, activation, writer ou suite verte sans raison nouvelle ; aucun redémarrage supplémentaire. Une opération future dépendante impose d’abord une lecture durable de l’état, jamais une mutation pour découvrir un résultat. Attendre la prochaine demande utilisateur d’amélioration ou d’audit. Cas individuel du client, Safari/téléphones physiques et livraison SMTP réelle non attestés ; sauvegarde reportée, PC et juridique non rouverts.
 
 ## Évolution1.15.0 — suppression des refus photo injustifiés
 
