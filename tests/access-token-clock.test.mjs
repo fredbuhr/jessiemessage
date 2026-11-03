@@ -171,13 +171,11 @@ test("verification resend leaves old links and mail intact when its new challeng
   assert.deepEqual(f.state.writes, []);
 });
 
-test("verification resend revokes old links and queues its unchanged challenge using fresh timestamps", async () => {
+test("verification resend preserves old links and queues its unchanged challenge using fresh timestamps", async () => {
   const f = fixture(), at = NOW + 999, command = f.reissue();
   f.state.afterRead = sql => { if (lastCredentialLock(sql)) f.state.at = at; };
   assert.equal(await f.store.reissueVerification(command), true);
-  const revoked = f.state.writes.find(write => write.sql.startsWith("UPDATE email_verifications SET revoked_at"));
-  assert.deepEqual(revoked.parameters, [sqlDate(at), f.user.id, sqlDate(at)]);
-  assert.equal(f.state.writes.filter(write => write.sql.startsWith("UPDATE mail_outbox SET status = 'cancelled'")).length, 1);
+  assert.equal(f.state.writes.some(write => /^UPDATE (?:email_verifications|mail_outbox|users|sessions|client_session_state)\b/.test(write.sql)), false);
   const challenge = f.state.writes.find(write => write.sql.startsWith("INSERT INTO email_verifications"));
   assert.deepEqual(challenge.parameters.slice(-2), [sqlDate(at), sqlDate(command.verification.expiresAt)]);
   const mail = f.state.writes.find(write => write.sql.startsWith("INSERT INTO mail_outbox"));

@@ -223,20 +223,24 @@ export async function createAccessService({ store, authStore, authService, totpK
     if (!await database(() => store.verifyEmail(hash, { now: clock() }))) throw invalid();
     return { status: "email_verified" };
   }
-  async function resendVerification({ email, password, peerAddress } = {}) {
+  async function resendVerification({ email, peerAddress } = {}) {
     let address;
     try { address = canonicalEmail(email); } catch { address = null; }
     await limit("resend", address ?? "invalid-email", peerAddress, 3);
     const record = address ? await database(() => store.getClientLoginRecord(address)) : null;
+    // Retain the same bounded password-work path for missing, ineligible and
+    // eligible accounts, without depending on a password supplied by the client.
+    await passwordMatches("jessiemessage:verification-resend", dummyHash);
+    const now = clock();
+    const job = address ? verificationJob(address, now) : null;
     const eligible = record?.role === "client" && record.status === "pending" && !record.emailVerified && typeof record.passwordHash === "string";
-    const matched = await passwordMatches(password, eligible ? record.passwordHash : dummyHash);
-    if (matched && eligible) {
-      const now = clock();
+    if (eligible) {
       const accepted = await database(() => store.reissueVerification({ userId: record.id, expectedPasswordHash: record.passwordHash,
-        expectedVersion: record.credentialVersion, ...verificationJob(address, now), now }));
+        expectedVersion: record.credentialVersion, ...job, now }));
       if (accepted) verificationQueued();
     }
-    // Mailbox/account existence and password validity are never disclosed.
+    // Mailbox/account existence is never disclosed. Mailbox ownership remains
+    // necessary to confirm; a forgotten first password must not block this step.
     return { status: "accepted" };
   }
   async function login({ email, password, peerAddress } = {}) {

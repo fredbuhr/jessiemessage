@@ -1,15 +1,11 @@
 import { createHash, randomBytes } from "node:crypto";
 import { tokenDigest } from "../auth/crypto.mjs";
+import { normalizeInvitationCode } from "../../public/invitation-code.js";
+
+export { normalizeInvitationCode };
 
 const alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-const codePattern = /^[0-9A-HJKMNP-TV-Z]{20}$/;
 const codeDomain = "jessiemessage:invitation-code:v1\0";
-
-export function normalizeInvitationCode(value) {
-  if (typeof value !== "string" || value.length < 20 || value.length > 64 || !/^[0-9A-Za-z -]+$/.test(value)) return null;
-  const normalized = value.replace(/[ -]/g, "").toUpperCase();
-  return codePattern.test(normalized) ? normalized : null;
-}
 
 export function formatInvitationCode(value) {
   const normalized = normalizeInvitationCode(value);

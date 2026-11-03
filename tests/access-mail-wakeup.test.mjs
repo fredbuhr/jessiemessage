@@ -45,11 +45,11 @@ test("registration wakes verification delivery only after a successful committed
 test("verification resend wakes only an eligible account with a successful new outbox entry", async () => {
   for (const [changes, expected] of [[{}, 1], [{ accepted: false }, 0], [{ verified: true }, 0]]) {
     const f = await fixture(() => {}, changes);
-    assert.deepEqual(await f.service.resendVerification({ email, password }), { status: "accepted" });
+    assert.deepEqual(await f.service.resendVerification({ email }), { status: "accepted" });
     assert.equal(f.state.queued, expected);
   }
   const failed = await fixture(() => {}, { fail: true });
-  await assert.rejects(failed.service.resendVerification({ email, password }));
+  await assert.rejects(failed.service.resendVerification({ email }));
   assert.equal(failed.state.queued, 0);
 });
 

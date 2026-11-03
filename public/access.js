@@ -1,5 +1,7 @@
 "use strict";
 
+import { normalizeInvitationCode } from "/invitation-code.js";
+
 // UI sources are French; private values never enter the translation catalog.
 const accessI18n = globalThis.JessieI18n ?? {
   t(source, params = {}) { return source.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (whole, key) => Object.hasOwn(params, key) ? String(params[key]) : whole); },
@@ -39,6 +41,8 @@ let recoveryCapabilityFailed = false;
 let recoveryCapabilityEpoch = 0;
 let submitEpoch = 0;
 let sessionRefreshEpoch = 0;
+let registrationPending = null;
+let registrationInterrupted = false;
 const controllers = new Set();
 const visible = () => document.visibilityState === "visible";
 const recoveryRetry = document.createElement("button"); recoveryRetry.id = "client-recovery-retry";
@@ -248,7 +252,17 @@ async function submit(action) {
 loginForm.addEventListener("submit", (event) => {
   event.preventDefault(); void submit(async () => {
     notice("Connexion en cours…");
-    const login = await request("/api/access/login", { mutation: true, body: { email: element("login-email").value, password: element("login-password").value } });
+    const email = element("login-email").value;
+    let login;
+    try { login = await request("/api/access/login", { mutation: true, body: { email, password: element("login-password").value } }); }
+    catch (error) {
+      if (!error.stale && error.status === 401) {
+        element("resend-email").value = email;
+        notice("Connexion impossible avec cet e-mail et ce mot de passe. Si tu viens de t’inscrire, vérifie ton e-mail ou demande un nouveau lien ci-dessous.", true);
+        return;
+      }
+      throw error;
+    }
     try {
       if (!validClientSession(login)) throw new Error("invalid_client_session");
       // Another window may replace the cookie after the login response. Only
@@ -258,7 +272,9 @@ loginForm.addEventListener("submit", (event) => {
       const unchanged = sameClientOwner(login, current);
       verificationFlow = false;
       openConversation = true;
-      signedIn(current); notice(unchanged ? "" : "La connexion a changé. Cet espace correspond à ta session actuelle.");
+      signedIn(current);
+      if (unchanged && !current.access.emailVerified) element("resend-email").value = email;
+      notice(unchanged ? "" : "La connexion a changé. Cet espace correspond à ta session actuelle.");
     } catch (error) { if (!error.stale) error.loginUnconfirmed = true; throw error; }
   });
 });
@@ -266,11 +282,30 @@ registrationForm.addEventListener("submit", (event) => {
   event.preventDefault(); void submit(async () => {
     if (!invitationToken || !element("age-declared").checked) { notice("L’invitation et la déclaration de majorité sont nécessaires.", true); return; }
     notice("Création du compte…");
-    await request("/api/access/register", { mutation: true, body: { invitationToken, email: element("registration-email").value, pseudonym: element("registration-name").value, password: element("registration-password").value, ageDeclared: true } });
+    const email = element("registration-email").value;
+    const operation = {}; registrationPending = operation;
+    try { await request("/api/access/register", { mutation: true, body: { invitationToken, email, pseudonym: element("registration-name").value, password: element("registration-password").value, ageDeclared: true } }); }
+    catch (error) {
+      if (error.stale) throw error;
+      if (!error.status || error.status >= 500) { uncertainRegistration(email); return; }
+      if ([400, 401].includes(error.status)) {
+        element("resend-email").value = email;
+        notice("L’inscription n’a pas pu être finalisée. Si tu as déjà créé ton compte, connecte-toi ou demande un nouvel e-mail de confirmation ci-dessous.", true);
+        return;
+      }
+      throw error;
+    } finally { if (registrationPending === operation) registrationPending = null; }
     invitationToken = null; registrationForm.reset(); signedOut("Ton compte est créé. L’e-mail de confirmation est en cours d’envoi. Vérifie aussi tes indésirables ; tu peux demander un nouvel e-mail ci-dessous. Après confirmation, connecte-toi pour accéder à la messagerie.");
+    element("login-email").value = email; element("resend-email").value = email;
   });
 });
 function returnToLogin() { codeEntry = false; invitationToken = null; verificationToken = null; invitationCodeForm.reset(); registrationForm.reset(); signedOut(); element("login-email").focus(); }
+function uncertainRegistration(email = "") {
+  returnToLogin();
+  element("login-email").value = email; element("resend-email").value = email;
+  element("resend-section").open = true;
+  notice("L’inscription a peut-être abouti. Vérifie tes e-mails, puis connecte-toi. Tu peux demander un nouvel e-mail de confirmation ci-dessous ; inutile de créer un autre compte.", true);
+}
 element("show-login").addEventListener("click", returnToLogin);
 element("cancel-invitation-code").addEventListener("click", returnToLogin);
 element("verification-login-button").addEventListener("click", returnToLogin);
@@ -278,7 +313,7 @@ element("show-invitation-code").addEventListener("click", () => {
   if (busy || !visible()) return; invitationToken = null; codeEntry = true; signedOut(); element("invitation-code").focus();
 });
 function invitationSummary(invitation) {
-  if (!invitation || !Number.isSafeInteger(invitation.expiresAt) || invitation.expiresAt <= Date.now() || invitation.expiresAt > 253402300799999
+  if (!invitation || !Number.isSafeInteger(invitation.expiresAt) || invitation.expiresAt < 0 || invitation.expiresAt > 253402300799999
     || !(invitation.accessDays === null || Number.isSafeInteger(invitation.accessDays) && invitation.accessDays >= 1 && invitation.accessDays <= 3650)) throw new Error("invalid_invitation");
   accessI18n.text(element("invitation-summary"), invitation.accessDays === null
     ? "Invitation valable jusqu’au {date}. Accès sans limite de durée après confirmation de ton e-mail."
@@ -287,13 +322,12 @@ function invitationSummary(invitation) {
 }
 invitationCodeForm.addEventListener("submit", (event) => {
   event.preventDefault(); void submit(async () => {
-    const raw = element("invitation-code").value;
-    const code = raw.toUpperCase().replace(/[ -]/g, "");
-    if (raw.length < 20 || raw.length > 64 || !/^[0-9A-Za-z -]+$/.test(raw) || !/^[0-9A-HJKMNP-TV-Z]{20}$/.test(code)) { notice("Ce code est invalide, expiré ou déjà utilisé.", true); return; }
+    const code = normalizeInvitationCode(element("invitation-code").value);
+    if (code === null) { notice("Ce code doit contenir 20 lettres ou chiffres. Colle le code complet reçu de Jessie.", true); return; }
     notice("Vérification du code…");
     let invitation;
     try { invitation = await request("/api/access/invitation", { mutation: true, body: { token: code } }); }
-    catch (error) { if (!error.stale && [400, 401, 404].includes(error.status)) { notice("Ce code est invalide, expiré ou déjà utilisé.", true); return; } throw error; }
+    catch (error) { if (!error.stale && [400, 401, 404].includes(error.status)) { notice("Ce code n’est pas disponible. Si tu as déjà créé ton compte, choisis « J’ai déjà un compte » pour te connecter ou demander un nouvel e-mail. Sinon, demande une nouvelle invitation à Jessie.", true); return; } throw error; }
     invitationSummary(invitation);
     invitationToken = code; codeEntry = false; invitationCodeForm.reset(); signedOut(); element("registration-email").focus();
   });
@@ -318,7 +352,7 @@ async function confirmEmailFromLink() {
 element("verify-email-button").addEventListener("click", () => { void confirmEmailFromLink(); });
 element("resend-form").addEventListener("submit", (event) => {
   event.preventDefault(); void submit(async () => {
-    await request("/api/access/resend-verification", { mutation: true, body: { email: element("resend-email").value, password: element("resend-password").value } });
+    await request("/api/access/resend-verification", { mutation: true, body: { email: element("resend-email").value } });
     element("resend-form").reset(); notice("Si les informations correspondent à un compte en attente, un nouvel e-mail de vérification sera envoyé.");
   });
 });
@@ -346,18 +380,20 @@ function sessionUnavailable() {
 }
 async function refreshSession() {
   if (busy || checkingSession || !visible()) return;
+  if (registrationInterrupted) { registrationInterrupted = false; uncertainRegistration(); return; }
   // A mailbox link can belong to a different client than the existing cookie.
   // Keep its explicit sign-in intent until credentials and current owner pass.
   if (verificationFlow) { signedOut(); if (verificationToken) await confirmEmailFromLink(); return; }
   checkingSession = true;
   const epoch = ++sessionRefreshEpoch;
+  const submission = submitEpoch;
   try {
     const session = await request(publicEntry ? "/api/entry" : "/api/access/session");
-    if (epoch === sessionRefreshEpoch && visible()) {
+    if (epoch === sessionRefreshEpoch && submission === submitEpoch && visible()) {
       if (publicEntry) showEntry(session); else signedIn(session);
     }
   } catch (error) {
-    if (error.stale || epoch !== sessionRefreshEpoch || !visible()) return;
+    if (error.stale || epoch !== sessionRefreshEpoch || submission !== submitEpoch || !visible()) return;
     if (error.status === 401) signedOut();
     else sessionUnavailable();
   } finally { if (epoch === sessionRefreshEpoch) checkingSession = false; }
@@ -384,6 +420,7 @@ function clearPrivateAccessSummary() {
   for (const id of ["client-validity", "renewal-contact", "check-client-access"]) element(id).hidden = true;
 }
 function hideAccess() {
+  if (registrationPending) { registrationInterrupted = true; registrationPending = null; }
   submitEpoch += 1; sessionRefreshEpoch += 1; checkingSession = false; invalidate(); csrf = null; displayedSession = null; setBusy(false);
   cancelSessionCheck?.(); cancelSessionCheck = null;
   element("access-retry").hidden = true;

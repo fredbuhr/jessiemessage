@@ -54,6 +54,16 @@ function credentials(body) {
     || typeof body.password !== "string" || !body.password.length || body.password.length > 128 || Buffer.byteLength(body.password) > 512) throw httpError(400, "invalid_request");
   return { email: body.email, password: body.password };
 }
+function verificationAddress(body) {
+  if (Object.keys(body).some((key) => !["email", "password"].includes(key))
+    || typeof body.email !== "string" || !body.email.length || body.email.length > 254
+    || Object.hasOwn(body, "password") && (typeof body.password !== "string" || body.password.length > 128 || Buffer.byteLength(body.password) > 512)) {
+    throw httpError(400, "invalid_request");
+  }
+  // Older open tabs still submit a password. It is bounded but not required or
+  // forwarded: only the mailbox can complete this public, rate-limited action.
+  return { email: body.email };
+}
 export function safeClientSession(session) {
   const { user, access } = session ?? {};
   if (!user || typeof user.id !== "string" || !idPattern.test(user.id) || user.role !== "client" || typeof user.pseudonym !== "string" || user.pseudonym.length > 64
@@ -219,7 +229,7 @@ export function createAccessHandler(service, { origin, clock = Date.now }) {
         if (result?.status !== "email_verified") throw httpError(503, "authentication_unavailable");
         reply(response, method, 200, { status: "email_verified" });
       } else if (pathname === "/api/access/resend-verification") {
-        const body = credentials(shape(await readJson(request), ["email", "password"]));
+        const body = verificationAddress(await readJson(request));
         const result = await service.resendVerification({ ...body, peerAddress });
         if (result?.status !== "accepted") throw httpError(503, "authentication_unavailable");
         reply(response, method, 202, { status: "accepted" });

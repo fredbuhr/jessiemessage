@@ -383,8 +383,8 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
           await connection.commit();
           assert.equal(await pending, elapsed < 1000);
           const old = (await connection.query("SELECT consumed_at, revoked_at FROM email_verifications WHERE id = ?", [fixture.verification.id]))[0];
-          assert.equal(old.consumed_at, null); assert.equal(old.revoked_at, elapsed < 1000 ? sqlDate(at) : null);
-          assert.equal((await connection.query("SELECT status FROM mail_outbox WHERE id = ?", [fixture.mail.id]))[0].status, elapsed < 1000 ? "cancelled" : "pending");
+          assert.equal(old.consumed_at, null); assert.equal(old.revoked_at, null);
+          assert.equal((await connection.query("SELECT status FROM mail_outbox WHERE id = ?", [fixture.mail.id]))[0].status, "pending");
           const fresh = await connection.query("SELECT created_at, expires_at FROM email_verifications WHERE id = ?", [verification.id]);
           const queued = await connection.query("SELECT created_at, available_at, expires_at FROM mail_outbox WHERE id = ?", [mail.id]);
           if (elapsed === 1000) { assert.deepEqual(fresh, []); assert.deepEqual(queued, []); }
@@ -510,22 +510,72 @@ test("real MariaDB invitation and restricted client access persistence (syntheti
       assert.equal(await lookup(b), null); assert.ok(await lookup(c));
     });
 
-    await t.test("verification resend atomically invalidates the old link, cancels old jobs and refuses stale credentials", async () => {
-      const fixture = await registered();
-      const verification = { id: id(), tokenHash: digest(), expiresAt: now + 3600000 };
-      const mail = { id: id(), payloadEncrypted: "synthetic-reissued-encrypted-mail" };
-      const payload = { userId: fixture.user.id, expectedPasswordHash: passwordHash, expectedVersion: 1, verification, mail, now };
-      assert.equal(await store.reissueVerification({ ...payload, expectedPasswordHash: "stale" }), false);
-      assert.equal(await store.reissueVerification({ ...payload, expectedVersion: 2 }), false);
-      assert.equal(await store.reissueVerification(payload), true);
-      assert.equal(await store.verifyEmail(fixture.verification.tokenHash, { now }), false);
-      assert.equal((await connection.query("SELECT status FROM mail_outbox WHERE id = ?", [fixture.mail.id]))[0].status, "cancelled");
-      assert.equal((await connection.query("SELECT status FROM mail_outbox WHERE id = ?", [mail.id]))[0].status, "pending");
-      assert.equal(await store.verifyEmail(verification.tokenHash, { now }), true);
-      assert.equal(await store.reissueVerification({ ...payload, verification: { ...verification, id: id(), tokenHash: digest() }, mail: { ...mail, id: id() } }), false);
-      assert.equal((await connection.query("SELECT status FROM mail_outbox WHERE id = ?", [mail.id]))[0].status, "cancelled");
+    await t.test("resent verification links work in either delivery order and only first confirmation activates", async () => {
+      for (const originalFirst of [true, false]) {
+        const fixture = await registered();
+        const verification = { id: id(), tokenHash: digest(), expiresAt: now + 3600000 };
+        const mail = { id: id(), payloadEncrypted: "synthetic-reissued-encrypted-mail" };
+        const payload = { userId: fixture.user.id, expectedPasswordHash: passwordHash, expectedVersion: 1, verification, mail, now };
+        assert.equal(await store.reissueVerification({ ...payload, expectedPasswordHash: "stale" }), false);
+        assert.equal(await store.reissueVerification({ ...payload, expectedVersion: 2 }), false);
+        assert.equal(await store.reissueVerification(payload), true);
+        const untouched = (await connection.query("SELECT status, email_verified_at, access_approved_at, access_expires_at FROM users WHERE id = ?", [fixture.user.id]))[0];
+        assert.deepEqual({ ...untouched }, { status: "pending", email_verified_at: null, access_approved_at: null, access_expires_at: null });
+        assert.equal(Number((await connection.query("SELECT COUNT(*) AS total FROM sessions WHERE user_id = ?", [fixture.user.id]))[0].total), 0);
+        for (const job of [fixture.mail, mail]) assert.equal((await connection.query("SELECT status FROM mail_outbox WHERE id = ?", [job.id]))[0].status, "pending");
+        const [first, other] = originalFirst ? [fixture.verification, verification] : [verification, fixture.verification];
+        assert.equal(await store.verifyEmail(first.tokenHash, { now: now + 500 }), true);
+        const granted = (await connection.query("SELECT email_verified_at, access_approved_at, access_expires_at FROM users WHERE id = ?", [fixture.user.id]))[0];
+        assert.equal(granted.access_expires_at, sqlDate(now + 500 + 2 * 86400000));
+        assert.equal(await store.verifyEmail(other.tokenHash, { now: now + 600 }), false);
+        assert.equal(await store.verifyEmail(first.tokenHash, { now: now + 600 }), true);
+        assert.deepEqual((await connection.query("SELECT email_verified_at, access_approved_at, access_expires_at FROM users WHERE id = ?", [fixture.user.id]))[0], granted);
+        assert.equal(Number((await connection.query("SELECT COUNT(*) AS total FROM conversations WHERE client_id = ?", [fixture.user.id]))[0].total), 1);
+        assert.equal(Number((await connection.query("SELECT COUNT(*) AS total FROM sessions WHERE user_id = ?", [fixture.user.id]))[0].total), 0);
+        assert.equal(await store.reissueVerification({ ...payload, verification: { ...verification, id: id(), tokenHash: digest() }, mail: { ...mail, id: id() } }), false);
+        for (const job of [fixture.mail, mail]) assert.equal((await connection.query("SELECT status FROM mail_outbox WHERE id = ?", [job.id]))[0].status, "cancelled");
+      }
       const expired = await registered({ verification: { id: id(), tokenHash: digest(), expiresAt: now + 1000 } });
       assert.equal(await store.verifyEmail(expired.verification.tokenHash, { now: now + 1000 }), false);
+    });
+
+    await t.test("concurrent confirmation of resent siblings grants one access and no session", async () => {
+      const fixture = await registered(), verification = { id: id(), tokenHash: digest(), expiresAt: now + 3600000 };
+      assert.equal(await store.reissueVerification({ userId: fixture.user.id, expectedPasswordHash: passwordHash, expectedVersion: 1,
+        verification, mail: { id: id(), payloadEncrypted: "synthetic-concurrent-resend" }, now }), true);
+      const results = await Promise.all([fixture.verification, verification].map(challenge => store.verifyEmail(challenge.tokenHash, { now: now + 500 })));
+      assert.deepEqual(results.toSorted(), [false, true]);
+      const user = (await connection.query("SELECT status, email_verified_at, access_approved_at, access_expires_at FROM users WHERE id = ?", [fixture.user.id]))[0];
+      assert.deepEqual({ ...user }, { status: "active", email_verified_at: sqlDate(now + 500), access_approved_at: sqlDate(now + 500), access_expires_at: sqlDate(now + 500 + 2 * 86400000) });
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS total FROM conversations WHERE client_id = ?", [fixture.user.id]))[0].total), 1);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS total FROM sessions WHERE user_id = ?", [fixture.user.id]))[0].total), 0);
+    });
+
+    await t.test("a resend racing confirmation leaves no outstanding link on the activated account", async () => {
+      const fixture = await registered(), verification = { id: id(), tokenHash: digest(), expiresAt: now + 3600000 };
+      const [confirmed, resent] = await Promise.all([
+        store.verifyEmail(fixture.verification.tokenHash, { now: now + 500 }),
+        store.reissueVerification({ userId: fixture.user.id, expectedPasswordHash: passwordHash, expectedVersion: 1,
+          verification, mail: { id: id(), payloadEncrypted: "synthetic-resend-confirmation-race" }, now: now + 500 }),
+      ]);
+      assert.equal(confirmed, true); assert.equal(typeof resent, "boolean");
+      const outstanding = (await connection.query("SELECT COUNT(*) AS total FROM email_verifications WHERE user_id = ? AND consumed_at IS NULL AND revoked_at IS NULL", [fixture.user.id]))[0];
+      assert.equal(Number(outstanding.total), 0);
+      assert.equal(await store.verifyEmail(verification.tokenHash, { now: now + 600 }), false);
+      assert.equal((await connection.query("SELECT access_expires_at FROM users WHERE id = ?", [fixture.user.id]))[0].access_expires_at, sqlDate(now + 500 + 2 * 86400000));
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS total FROM conversations WHERE client_id = ?", [fixture.user.id]))[0].total), 1);
+      assert.equal(Number((await connection.query("SELECT COUNT(*) AS total FROM sessions WHERE user_id = ?", [fixture.user.id]))[0].total), 0);
+    });
+
+    await t.test("resend refuses a suspended or revoked pending account without adding a challenge", async () => {
+      for (const status of ["suspended", "revoked"]) {
+        const fixture = await registered(), verification = { id: id(), tokenHash: digest(), expiresAt: now + 3600000 };
+        await connection.query("UPDATE users SET status = ? WHERE id = ?", [status, fixture.user.id]);
+        assert.equal(await store.reissueVerification({ userId: fixture.user.id, expectedPasswordHash: passwordHash, expectedVersion: 1,
+          verification, mail: { id: id(), payloadEncrypted: "synthetic-forbidden-resend" }, now }), false);
+        assert.deepEqual(await connection.query("SELECT id FROM email_verifications WHERE id = ?", [verification.id]), []);
+        assert.equal(await store.verifyEmail(fixture.verification.tokenHash, { now }), false);
+      }
     });
 
     await t.test("revoking clients cancels challenges and all sessions immediately while other clients remain isolated", async () => {

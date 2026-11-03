@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createContext, Script } from "node:vm";
 import * as recoveryModel from "../public/recover-model.js";
+import * as invitationCode from "../public/invitation-code.js";
 
 const read = (name) => readFileSync(new URL(`../public/${name}`, import.meta.url), "utf8");
 const decode = (value) => value.replace(/&(?:quot|apos|amp|lt|gt|#(\d+)|#x([a-f\d]+));/gi, (whole, decimal, hex) => decimal ? String.fromCodePoint(Number(decimal)) : hex ? String.fromCodePoint(parseInt(hex, 16)) : ({ "&quot;": '"', "&apos;": "'", "&amp;": "&", "&lt;": "<", "&gt;": ">" })[whole] ?? whole);
@@ -88,12 +89,13 @@ function controller(name, fetchHandler, { language = "fr", hash = "", pathname =
   const location = { hash, pathname, replace(value) { navigations.push(value); const target = new URL(value, "https://example.invalid"); this.pathname = target.pathname; this.hash = target.hash; } };
   const history = { replaceState(_state, _title, path) { const target = new URL(path, "https://example.invalid"); location.hash = target.hash; location.pathname = target.pathname; } };
   const context = createContext({ document, window, location, history, navigator: { language: "fr-FR", languages: ["fr-FR"] }, URLSearchParams, AbortController, Event, Intl,
-    __recoveryModel: recoveryModel,
+    __recoveryModel: recoveryModel, __invitationCode: invitationCode,
     sessionStorage: { getItem(key) { return storage.get(key) ?? null; }, setItem(key, value) { writes.push([key, value]); storage.set(key, String(value)); } },
     setTimeout(callback, milliseconds) { const id = ++timer; timers.set(id, { callback, milliseconds }); return id; }, clearTimeout(id) { timers.delete(id); },
     fetch(path, options = {}) { calls.push({ path, options }); return Promise.resolve().then(() => fetchHandler(path, options, calls)); } });
   for (const script of ["notification-link.js", "i18n.js", "help-link.js", "i18n-access.js", "session-clock.js"]) new Script(read(script), { filename: `public/${script}` }).runInContext(context);
   let source = read(`${name}.js`);
+  if (name === "access") source = source.replace(/^import\s*\{([\s\S]*?)\}\s*from\s*"\/invitation-code\.js";/m, "const {$1} = __invitationCode;");
   if (name === "recover") source = source.replace(/^import\s*\{([\s\S]*?)\}\s*from\s*"\/recover-model\.js";/, "const {$1} = __recoveryModel;");
   new Script(source, { filename: `public/${name}.js`, importModuleDynamically: async () => { throw new Error("optional feature unavailable in fixture"); } }).runInContext(context);
   return { document, context, calls, writes, location, navigations, timers, async tick(milliseconds) { const timer = [...timers].find(([, value]) => value.milliseconds === milliseconds); assert.ok(timer, `timer ${milliseconds}`); timers.delete(timer[0]); timer[1].callback(); await flush(); }, async online() { window.dispatchEvent(new Event("online")); await flush(); }, get: (id) => document.getElementById(id), language: (value) => context.JessieI18n.setLanguage(value),
@@ -343,18 +345,98 @@ test("invitation code validates explicitly in either language and reuses registr
   } finally { f.dispose(); }
 });
 
-test("invalid invitation code has one generic retryable message and accepts only ASCII spaces and hyphens", async () => {
-  const f = controller("access", path => path === "/api/access/session" ? response({}, 401) : path === "/api/access/invitation" ? response({ error: "invalid_invitation" }, 401) : capability());
+test("malformed and refused invitation codes give distinct retryable instructions in both languages", async () => {
+  for (const language of ["fr", "en"]) {
+    const f = controller("access", path => path === "/api/access/session" ? response({}, 401) : path === "/api/access/invitation" ? response({ error: "invalid_credentials" }, 401) : capability(), { language });
+    try {
+      await flush(); f.get("show-invitation-code").dispatchEvent(new Event("click"));
+      for (const input of ["bad", "A".repeat(18) + "ß", "A".repeat(17) + "ﬃ", "AAAA_ AAAA AAAA AAAA AAAA"]) {
+        f.input("invitation-code", input); f.submit("invitation-code-form"); await flush();
+        assert.match(f.get("access-status").textContent, language === "fr" ? /20 lettres ou chiffres/ : /20 letters or digits/);
+        assert.equal(f.get("invitation-code-form").hidden, false); assert.equal(f.get("validate-invitation-code").disabled, false);
+      }
+      assert.equal(f.calls.filter(call => call.path === "/api/access/invitation").length, 0);
+      f.input("invitation-code", "ABCD EFGH-JKMN-PQRS-TVWX"); f.submit("invitation-code-form"); await flush();
+      assert.equal(f.calls.filter(call => call.path === "/api/access/invitation").length, 1);
+      assert.match(f.get("access-status").textContent, language === "fr" ? /déjà créé ton compte/ : /already created your account/);
+      assert.doesNotMatch(f.get("access-status").textContent, /expir/);
+      f.get("cancel-invitation-code").dispatchEvent(new Event("click")); assert.equal(f.get("invitation-code").value, ""); assert.equal(f.get("client-login-form").hidden, false);
+    } finally { f.dispose(); }
+  }
+});
+
+for (const language of ["fr", "en"]) test(`mobile separators, Crockford aliases and a wrong device clock do not reject a server-validated invitation in ${language}`, async () => {
+  const expiresAt = Date.now() + 3600000;
+  const f = controller("access", path => path === "/api/access/session" ? response({}, 401) : path === "/api/access/invitation" ? response({ expiresAt, accessDays: null }) : capability(), { language });
   try {
-    await flush(); f.get("show-invitation-code").dispatchEvent(new Event("click"));
-    for (const input of ["bad", "ABCD\u00a0EFGH-JKMN-PQRS-TVWX", "A".repeat(18) + "ß", "A".repeat(17) + "ﬃ", "ABCD EFGH-JKMN-PQRS-TVWX"]) {
-      f.input("invitation-code", input); f.submit("invitation-code-form"); await flush();
-      assert.equal(f.get("access-status").textContent, "Ce code est invalide, expiré ou déjà utilisé."); assert.equal(f.get("invitation-code-form").hidden, false);
-      assert.equal(f.get("validate-invitation-code").disabled, false);
-    }
-    assert.equal(f.calls.filter(call => call.path === "/api/access/invitation").length, 1);
-    f.language("en"); assert.equal(f.get("access-status").textContent, "This code is invalid, expired or already used.");
-    f.get("cancel-invitation-code").dispatchEvent(new Event("click")); assert.equal(f.get("invitation-code").value, ""); assert.equal(f.get("client-login-form").hidden, false);
+    await flush(); new Script(`Date.now = () => ${expiresAt + 86400000}`).runInContext(f.context);
+    f.get("show-invitation-code").dispatchEvent(new Event("click"));
+    f.input("invitation-code", "\u00a0oil3\u20114567\u202f89ab\u2013cdef\nGhJK\u00a0"); f.submit("invitation-code-form"); await flush();
+    assert.equal(f.get("registration-form").hidden, false);
+    const inspections = f.calls.filter(call => call.path === "/api/access/invitation"); assert.equal(inspections.length, 1);
+    assert.deepEqual(JSON.parse(inspections[0].options.body), { token: "0113456789ABCDEFGHJK" });
+    assert.match(f.get("invitation-summary").textContent, language === "fr" ? /sans limite/ : /no time limit/);
+  } finally { f.dispose(); }
+});
+
+for (const language of ["fr", "en"]) test(`a refused login explains credentials and resends confirmation using email alone in ${language}`, async () => {
+  const f = controller("access", path => path === "/api/access/session" || path === "/api/access/login" ? response({ error: "invalid_credentials" }, 401) : path === "/api/access/resend-verification" ? response({ status: "accepted" }) : capability(), { language });
+  try {
+    await flush(); f.input("login-email", "pending@example.invalid"); f.input("login-password", "synthetic password"); f.submit("client-login-form"); await flush();
+    assert.match(f.get("access-status").textContent, language === "fr" ? /Connexion impossible/ : /Unable to sign in/);
+    assert.doesNotMatch(f.get("access-status").textContent, /expir/); assert.equal(f.get("resend-email").value, "pending@example.invalid");
+    assert.equal(f.get("resend-password"), null); assert.equal(f.get("login-password").value, "");
+    f.submit("resend-form"); await flush(); const resent = f.calls.filter(call => call.path === "/api/access/resend-verification");
+    assert.equal(resent.length, 1); assert.deepEqual(JSON.parse(resent[0].options.body), { email: "pending@example.invalid" });
+    assert.match(f.get("access-status").textContent, language === "fr" ? /^Si les informations/ : /^If these details/);
+  } finally { f.dispose(); }
+});
+
+async function beginRegistration(f) {
+  await flush(); f.get("show-invitation-code").dispatchEvent(new Event("click")); f.input("invitation-code", "ABCD-EFGH-JKMN-PQRS-TVWX"); f.submit("invitation-code-form"); await flush();
+  f.input("registration-email", "pending@example.invalid"); f.input("registration-name", "Synthetic client"); f.input("registration-password", "synthetic password"); f.get("age-declared").checked = true;
+}
+for (const language of ["fr", "en"]) for (const failure of ["network", "http503"]) test(`uncertain registration returns to sign-in and confirmation without replay (${language}, ${failure})`, async () => {
+  const f = controller("access", path => path === "/api/access/session" ? response({}, 401) : path === "/api/access/invitation" ? response({ expiresAt: Date.now() + 3600000, accessDays: null }) : path === "/api/access/register" ? failure === "network" ? Promise.reject(new TypeError("lost acknowledgement")) : response({ error: "authentication_unavailable" }, 503) : capability(), { language });
+  try {
+    await beginRegistration(f); f.submit("registration-form"); await flush();
+    assert.equal(f.get("client-login-form").hidden, false); assert.equal(f.get("registration-form").hidden, true);
+    assert.match(f.get("access-status").textContent, language === "fr" ? /peut-être abouti/ : /may have succeeded/);
+    assert.equal(f.get("resend-section").open, true); assert.equal(f.get("login-email").value, "pending@example.invalid"); assert.equal(f.get("resend-email").value, "pending@example.invalid");
+    assert.equal(f.get("registration-password").value, ""); assert.equal(f.calls.filter(call => call.path === "/api/access/register").length, 1);
+    f.hide(); await f.show(); assert.equal(f.get("login-email").value, ""); assert.equal(f.get("resend-email").value, "");
+    assert.equal(f.calls.filter(call => call.path === "/api/access/register").length, 1);
+  } finally { f.dispose(); }
+});
+for (const language of ["fr", "en"]) test(`switching apps during an accepted registration preserves a useful uncertain outcome without private fields (${language})`, async () => {
+  const pending = deferred(); const f = controller("access", path => path === "/api/access/session" ? response({}, 401) : path === "/api/access/invitation" ? response({ expiresAt: Date.now() + 3600000, accessDays: null }) : path === "/api/access/register" ? pending.promise : capability(), { language });
+  try {
+    await beginRegistration(f); f.submit("registration-form"); await flush(); f.hide(); pending.resolve(response({ status: "verification_pending" })); await flush(); await f.show();
+    assert.equal(f.get("client-login-form").hidden, false); assert.equal(f.get("registration-form").hidden, true);
+    assert.match(f.get("access-status").textContent, language === "fr" ? /peut-être abouti/ : /may have succeeded/);
+    assert.equal(f.get("resend-section").open, true); assert.equal(f.get("login-email").value, ""); assert.equal(f.get("resend-email").value, "");
+    assert.equal(f.get("registration-name").value, ""); assert.equal(f.get("registration-password").value, "");
+    assert.equal(f.calls.filter(call => call.path === "/api/access/register").length, 1); assert.equal(f.calls.some(call => call.path === "/api/access/resend-verification"), false);
+  } finally { f.dispose(); }
+});
+
+for (const proofStatus of [200, 401]) test(`a background session response cannot erase or interrupt a later registration (HTTP ${proofStatus})`, async () => {
+  const proof = deferred(), registration = deferred(); let sessionChecks = 0;
+  const f = controller("access", path => path === "/api/access/session" ? ++sessionChecks === 1 ? response({}, 401) : proof.promise
+    : path === "/api/access/invitation" ? response({ expiresAt: Date.now() + 3600000, accessDays: null })
+      : path === "/api/access/register" ? registration.promise : capability());
+  try {
+    await beginRegistration(f); await f.online(); f.submit("registration-form"); await flush();
+    const request = f.calls.find(call => call.path === "/api/access/register"); assert.ok(request);
+    proof.resolve(response(proofStatus === 200 ? user("pending") : {}, proofStatus)); await flush();
+    assert.equal(request.options.signal.aborted, false, "an earlier session proof cannot abort the current submission");
+    assert.equal(f.get("registration-form").hidden, false); assert.equal(f.get("registration-email").value, "pending@example.invalid");
+    assert.equal(f.get("client-connected").hidden, true);
+    registration.resolve(response({ status: "verification_pending" })); await flush();
+    assert.equal(f.get("client-login-form").hidden, false); assert.equal(f.get("registration-form").hidden, true);
+    assert.match(f.get("access-status").textContent, /^Ton compte est créé/);
+    assert.equal(f.get("resend-email").value, "pending@example.invalid"); assert.equal(f.calls.filter(call => call.path === "/api/access/register").length, 1);
+    await f.online(); assert.equal(sessionChecks, 3, "the older proof releases its checking flag");
   } finally { f.dispose(); }
 });
 

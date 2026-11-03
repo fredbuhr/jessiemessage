@@ -15,7 +15,7 @@ before(async () => {
   const store = {
     inspectInvitation: async (hash) => { state.inspectedInvitationHash = hash; return state.invitation ? { expiresAt: now + 100000, accessDays: 30 } : null; },
     register: async (options) => { captured.push(options); return state.registered; },
-    getClientLoginRecord: async () => state.record ? { id: userId, role: "client", status: "pending", emailVerified: state.verified,
+    getClientLoginRecord: async () => state.record ? { id: userId, role: state.recordRole ?? "client", status: state.recordStatus ?? "pending", emailVerified: state.verified,
       credentialVersion: 1, passwordHash } : null,
     reissueVerification: async (options) => { captured.push(options); return true; },
     completeClientLogin: async (options) => { captured.push(options); state.tokenHash = options.session.tokenHash; return state.loginAllowed; },
@@ -85,14 +85,31 @@ test("invalid invitations, missing declarations and failed atomic registration n
   state.registered = false;
   await assert.rejects(service.register(request), { code: "ACCESS_REGISTRATION_FAILED" });
 });
-test("resending conceals unknown accounts and wrong passwords and creates a new job only for the eligible account", async () => {
+test("resending uses email alone, keeps legacy password submissions compatible and conceals missing accounts", async () => {
   state.record = false;
-  assert.deepEqual(await service.resendVerification({ email: "unknown@example.invalid", password }), { status: "accepted" });
+  assert.deepEqual(await service.resendVerification({ email: "unknown@example.invalid" }), { status: "accepted" });
+  assert.equal(captured.some((item) => item.verification), false);
   state.record = true;
   assert.deepEqual(await service.resendVerification({ email: "client@example.invalid", password: "Incorrect client password" }), { status: "accepted" });
-  assert.equal(captured.some((item) => item.verification), false);
-  assert.deepEqual(await service.resendVerification({ email: "client@example.invalid", password }), { status: "accepted" });
-  assert.equal(captured.filter((item) => item.verification).length, 1);
+  assert.deepEqual(await service.resendVerification({ email: "client@example.invalid" }), { status: "accepted" });
+  const commands = captured.filter((item) => item.verification);
+  assert.equal(commands.length, 2);
+  for (const command of commands) {
+    assert.equal(command.expectedPasswordHash, passwordHash);
+    assert.equal(command.expectedVersion, 1);
+    assert.equal(command.verification.expiresAt, now + 24 * 3600000);
+    assert.equal(Object.hasOwn(command, "password"), false);
+  }
+  assert.equal(captured.filter((item) => item.options?.limit === 3).length, 3);
+});
+test("resending does not issue mail or sessions for confirmed, suspended, revoked, deleted or administrator accounts", async () => {
+  for (const changes of [{ verified: true }, { recordStatus: "active" }, { recordStatus: "suspended" },
+    { recordStatus: "revoked" }, { recordStatus: "deleted" }, { recordRole: "admin" }]) {
+    Object.assign(state, { verified: false, recordStatus: "pending", recordRole: "client" }, changes);
+    assert.deepEqual(await service.resendVerification({ email: "client@example.invalid" }), { status: "accepted" });
+  }
+  assert.equal(captured.some((item) => item.verification || item.session), false);
+  assert.equal(state.tokenHash, null);
 });
 test("email verification is required for login; limited and expired sessions cannot authorize private access", async () => {
   await assert.rejects(service.login({ email: "client@example.invalid", password }), { code: "AUTH_INVALID" });

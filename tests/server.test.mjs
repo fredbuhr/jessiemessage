@@ -56,3 +56,11 @@ test("shared public password validation is available without a recovery service"
   assert.match(response.headers.get("content-type"), /javascript/);
   assert.match(await response.text(), /export function passwordProblem/);
 });
+
+test("shared invitation code module is served as uncached JavaScript", async () => {
+  const response = await fetch(`${base}/invitation-code.js`);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type"), /javascript/);
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  assert.match(await response.text(), /export function normalizeInvitationCode/);
+});

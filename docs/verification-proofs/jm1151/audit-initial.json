@@ -1,0 +1,43 @@
+{
+  "format": "jessiemessage-access1151-initial-audit",
+  "source": "04b98b24c693b36fde4f0f4eba67057690cc1e6b",
+  "applicationVersion": "1.15.0",
+  "nodeVersion": "v24.22.1",
+  "hostedMutation": false,
+  "realMail": false,
+  "customerAccountsTouched": false,
+  "logs": [
+    {
+      "file": "initial-invitations.tap.gz",
+      "sha256": "da11c97d1a30a9acdfe10baf9ee2dbacc95cedf125701e042a11aabbbfa07609",
+      "uncompressedSha256": "a40acac33260b781c6d2fd562433c2585f8e1282474e6e35196869c9e732283e",
+      "tests": 40,
+      "passed": 40,
+      "skipped": 0,
+      "scope": "initial_synthetic_existing_tests"
+    },
+    {
+      "file": "initial-sessions.tap.gz",
+      "sha256": "22f408b67a9794fc77f7e8d35c0cdaa7da29042e1a3a98d3cbd1bebcb0fdc205",
+      "uncompressedSha256": "7dc3fc78cc75c951e9e6f70bd2db3230991a8b9a0b120fa0afb1e1568c042f2d",
+      "tests": 58,
+      "passed": 58,
+      "skipped": 0,
+      "scope": "initial_synthetic_existing_tests"
+    }
+  ],
+  "incidentCauseConfirmed": false,
+  "findings": [
+    "unicode_paste_rejected_before_http",
+    "device_clock_overrules_server_invitation",
+    "registration_commit_after_pagehide_silent",
+    "resend_revokes_live_earlier_links",
+    "forgotten_password_before_email_confirmation_dead_end"
+  ],
+  "limits": [
+    "exact_customer_incident_unknown",
+    "physical_phones_not_tested",
+    "safari_not_tested",
+    "real_smtp_not_tested"
+  ]
+}
