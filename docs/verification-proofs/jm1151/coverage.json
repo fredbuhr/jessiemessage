@@ -153,7 +153,7 @@
     "no_new_hosted_SQL_inventory",
     "invitation_clock_fix_does_not_claim_arbitrary_device_clock_support_for_every_feature"
   ],
-  "applicationStatus": "merged_published_not_hosted",
+  "applicationStatus": "merged_published_hosted_prepared_and_checked_not_started",
   "tag": "v1.15.1",
   "releaseId": 432505702,
   "preparationOperator": "1c37c5b8055a205df71c8fa86555ae34426f2d61",
@@ -162,9 +162,10 @@
   "publicationOperator": "5a7c38d13d1f60beafcd0f38f666efa72591da5e",
   "publicationRun": 41613109924,
   "publicationNativeTests": 24,
-  "hostedPreparation": false,
-  "hostedCheck": false,
+  "hostedPreparation": true,
+  "hostedCheck": true,
   "hostedActivation": false,
   "hostedMetadata": false,
-  "nextAction": "first hosted1151 preparation and separate CHECK using exact operations guide"
+  "nextAction": "apply exact Manager Run/Build commands, activate1151 once, then observe actual identity and startup time",
+  "hostedPreparationReceipt": "0323f8631bc6c0f4c6f1fee22e68a2bc1c5b8d730a6d2c93545f929518cb7216"
 }

@@ -6,11 +6,11 @@ Préparateur `1c37c5b8055a205df71c8fa86555ae34426f2d61`, arbre `8656cddb0886545a
 
 La préparation réemploie exactement le vrai `node_modules`1150, via un nouveau lien1151. Neuf versions, onze ressources, graphe complet, lock1150 `1c0f0105…` et inventaire `4df6d0b9…`/1180entrées/988fichiers sont contrôlés avant et après. Aucun npm, nouvelle installation ou smoke de codecs inchangés rejoué. Checkpoint1150 `989de548…`, staging1150 `6384c78b…`, anciens lanceurs, dépendances et configuration préservés. Sorties exclusives, aucun effacement de sortie partielle ni reprise automatique. La préparation ne lance ni CHECK, migration, runtime, changement Manager ou écriture des métadonnées ; le bloc ci-dessous lance séparément le CHECK en lecture seule après le reçu de préparation.
 
-Publication acquise : tag/release/latestv1.15.1/432505702, sourcea4a07f9f, [41613109924](verification-proofs/jm1151/publication-native.json)2/2jobs et24/24tests natifs. Qualification [PR41610784906](verification-proofs/jm1151/pr-native.json) puis [main41612033199](verification-proofs/jm1151/main-native.json)5/5 chacune, même arbre exact ;52omissions générales conservées. Aucune opération hébergée1151 n’est déjà effectuée.
+Publication acquise : tag/release/latestv1.15.1/432505702, sourcea4a07f9f, [41613109924](verification-proofs/jm1151/publication-native.json)2/2jobs et24/24tests natifs. Qualification [PR41610784906](verification-proofs/jm1151/pr-native.json) puis [main41612033199](verification-proofs/jm1151/main-native.json)5/5 chacune, même arbre exact ;52omissions générales conservées. La préparation et le CHECK sont acquis selon le reçu ci-dessous ; l’activation1151 reste à observer.
 
-## Étape opérateur suivante
+## Préparation et CHECK — acquis, ne pas rejouer
 
-Exécuter le bloc seulement après publicationv1.15.1 et qualification main5/5 enregistrées dans REPRISE. Il est fourni pour une première exécution, jamais pour découvrir le résultat d’une tentative antérieure. À réception d’un résultat partiel/incertain, préserver les traces et examiner l’état durable en lecture seule avant toute suite.
+Le [reçu utilisateur](verification-proofs/jm1151/hosted-preparation.json) confirme une préparation1151 réussie suivie de `CHECK1151_EXIT=0` et `PREPARATION_1151_CHECK_OK`. Empreinte du reçu canonique **`0323f8631bc6c0f4c6f1fee22e68a2bc1c5b8d730a6d2c93545f929518cb7216`**,4257octets reconstruits identiques par deux lectures indépendantes. Source/arbre/Node, neuf versions/onze ressources, inventaire4df6 et lock1c0f concordent. Checkpoint1150/989, staging1150/6384 et autres états préservés selon le reçu. Aucune activation1151 n’est déduite du CHECK. **Ne pas exécuter de nouveau le bloc historique ci-dessous.** Un résultat futur incertain impose une lecture durable, jamais une mutation pour découvrir son résultat.
 
 [Terminal SSH Infomaniak](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal) :
 
@@ -44,10 +44,35 @@ print('PREPARATION_1151_CHECK_OK')
 PY_PREPARE1151
 ```
 
-Le JSON de préparation précède le CHECK : ses flags `precheckPassed:false`, `started:false` et ses journaux vides décrivent cet instant, sans invalider un `CHECK1151_EXIT=0` ultérieur. Résultat attendu : reçu source/arbre exacts, `dependenciesReused:true`, `checkpointChanged:false`, puis `CHECK1151_EXIT=0` et `PREPARATION_1151_CHECK_OK`. Aucun démarrage n’est déduit du CHECK.
+Le JSON de préparation précède le CHECK : ses flags `precheckPassed:false`, `started:false` et ses journaux vides décrivent cet instant, sans invalider un `CHECK1151_EXIT=0` ultérieur. Résultat observé selon le reçu utilisateur : source/arbre exacts, `dependenciesReused:true`, `checkpointChanged:false`, puis `CHECK1151_EXIT=0` et `PREPARATION_1151_CHECK_OK`. Aucun démarrage n’est déduit du CHECK.
 
-## Activation et métadonnées
+## Activation — prochaine action
 
-Étapes encore non exécutées. Examiner d’abord le reçu de préparation/CHECK avant toute instruction d’activation. Nouveau checkout prévu `/srv/customer/jessiemessage-operator/production-1151-a4a07f9f` ; lanceurs `start-primary-release1151-a4a07f9f.sh` et `check-primary-release1151-a4a07f9f.sh` dans le dossier privé. Leurs empreintes réelles viendront du reçu ; aucune n’est inventée ici. Les réglages sont à effectuer dans le navigateur ou terminal de l’utilisateur, jamais dans le navigateur cloud.
+Les chemins et empreintes réels sont ceux du reçu :
 
-Après démarrage, vérifier l’identité1.15.1/sourcea4a07f9f/Node24.22.1 et la date réelle avant de préparer un writer1151 qualifié. Ne pas réutiliser le writer1150 ou inventer un démarrage1151. Le repli185 reste qualifié au seul précontrôleSQL38, jamais démarré ; le downgrade du snapshot public n’est pas qualifié,184/172 restent interdits. Sauvegarde manuelle reportée, PC et juridique ne sont pas rouverts.
+| Élément | Chemin | SHA256 rapporté |
+| --- | --- | --- |
+| Exécution | `/srv/customer/jessiemessage-private/start-primary-release1151-a4a07f9f.sh` | `6ec4d5e5e38752ceecf01dbd68c007e3052fa4e8c395cfc8a32f67e3459359df` |
+| Build | `/srv/customer/jessiemessage-private/check-primary-release1151-a4a07f9f.sh` | `89db31ab008fbe3af3d8dacd053e740c28f47ef906b496cfc981d01e6aaff8b9` |
+
+Lanceurs0700, checkout `/srv/customer/jessiemessage-operator/production-1151-a4a07f9f`0700, journaux0600 selon le reçu. Aucun accès direct aux octets privés des lanceurs par l’agent ; leur identité est contrôlée par les gardes du préparateur qualifié et leur liaison au reçu.
+
+1. Ouvrir les [paramètres Exécution/Build du service Node239143](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/advanced-settings/application) dans le navigateur de l’utilisateur. Le service nommé recette dessert aussi le domaine principal ; ce n’est pas une activation isolée de recette.
+2. Champ **Exécution, en haut** :
+
+   ```bash
+   bash /srv/customer/jessiemessage-private/start-primary-release1151-a4a07f9f.sh
+   ```
+
+3. Champ **Build, en bas** :
+
+   ```bash
+   bash /srv/customer/jessiemessage-private/check-primary-release1151-a4a07f9f.sh
+   ```
+
+4. Conserver le port3000 et le dossier de travail existant. Enregistrer et appliquer un seul démarrage de la nouvelle version depuis le [tableau de bord](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/h3/118579/nodejs/239143/data/dashboard). Si l’enregistrement déclenche déjà le redémarrage, ne pas en lancer un second. Aucun nouveau CHECK SSH manuel.
+5. Ouvrir le [diagnostic de l’application](https://jessiemessage.com/admin/readiness) et fournir le relevé réel : **version1.15.1**, **commit `a4a07f9f31c47a7185b57d11b8277be1d87fd2c1`**, **Nodev24.22.1**, signal du service et **heure de démarrage**. Ne pas déduire le commit exécuté d’un simple GET public ou du numéro de configuration.
+
+## Métadonnées — après identité réelle
+
+Aucun démarrage1151 ni enregistrement de ses métadonnées encore observé. Après le relevé réel, qualifier un writer1151 lié à cette heure, au staging0323, au checkpoint1150/989 et aux nouvelles empreintes de lanceurs. Ne pas réutiliser le writer1150 ni inventer un démarrage1151. Le repli185 reste qualifié au seul précontrôleSQL38, jamais démarré ; le downgrade du snapshot public n’est pas qualifié,184/172 restent interdits. Sauvegarde manuelle reportée, PC et juridique non rouverts.
