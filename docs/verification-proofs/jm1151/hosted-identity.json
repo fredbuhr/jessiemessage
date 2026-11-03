@@ -1,0 +1,37 @@
+{
+  "format": "jessiemessage-1151-hosted-identity-observation",
+  "authority": "user application UI report; no direct host/Manager access by agent",
+  "observed": {
+    "version": "1.15.1",
+    "commit": "a4a07f9f31c47a7185b57d11b8277be1d87fd2c1",
+    "nodeVersion": "v24.22.1",
+    "startedAtDisplay": "03/11/2026 12:44:52",
+    "timeZone": "Europe/Paris",
+    "utcOffset": "+01:00",
+    "startedAtUTC": "2026-11-03T11:44:52Z",
+    "startedAtSecond": 1793706292,
+    "startedAtMilliseconds": null,
+    "serviceSignal": null
+  },
+  "publishedIdentity": {
+    "tag": "v1.15.1",
+    "tree": "568530e702fa4d0a8a6b1743988c5e20b8656c40",
+    "sourceMatches": true,
+    "treeNotShownInUI": true
+  },
+  "preparationProof": "hosted-preparation.json",
+  "stagingSha256": "0323f8631bc6c0f4c6f1fee22e68a2bc1c5b8d730a6d2c93545f929518cb7216",
+  "lastRecordedMetadata": {
+    "version": "1.15.0",
+    "checkpointSha256": "989de548cb42ac6784cbc4c341e43b240b63386a089fb2d107d4f6a067798814",
+    "preservedAtPreparation": true,
+    "notReadDirectlyByAgent": true
+  },
+  "limits": [
+    "UI provides a second, not exact milliseconds; final writer must bind unique real startup log.",
+    "Service signal absent from supplied UI excerpt; HTTP availability, PID/socket/executed binary and physical SQL inventory not independently inspected.",
+    "No real customer incident, real SMTP, Safari or physical phone qualification inferred."
+  ],
+  "noRestartRequested": true,
+  "next": "Qualify1151 metadata-only writer bound to observed second1793706292, staging0323 and baseline989; do not replay preparation,CHECK,activation or prior writers."
+}

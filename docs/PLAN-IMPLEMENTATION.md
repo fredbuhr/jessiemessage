@@ -2,14 +2,16 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Correctif1.15.1 — activation et métadonnées restantes
+## Correctif1.15.1 — métadonnées finales restantes
 
-Audit et corrections terminés, PR148/main5/5, six captures inspectées, publicationv1.15.1/sourcea4a07f9f/release432505702, préparateur40/40 natifs qualifié et relu. [Bilan8domaines](access-reliability-1151.md), [état et preuves](REPRISE.md). Production confirmée encore1.15.0 ; aucune migration/dépendance nouvelle ni compte/e-mail réel touché.
+Audit et corrections terminés, PR148/main5/5, six captures inspectées, publicationv1.15.1/sourcea4a07f9f/release432505702, préparateur40/40 natifs qualifié et relu. [Bilan8domaines](access-reliability-1151.md), [état et preuves](REPRISE.md). Application1.15.1 confirmée par le relevé utilisateur03novembre12:44:52Paris, dernière métadonnée connue1150/989. Aucune migration/dépendance nouvelle ni compte/e-mail réel touché.
 
 Préparation/CHECK1151 acquis selon le reçu utilisateur, staging0323f863/4257octets reconstruits identiques et CHECK0. Ne les rejouer sous aucun prétexte de vérification d’un résultat déjà reçu.
 
-1. Appliquer les réglages Manager exacts des deux nouveaux lanceurs selon le [guide](operations-release1151.md), effectuer un seul démarrage1151, puis obtenir l’identité1.15.1/sourcea4a07f9f/Node24.22.1 et l’heure réelle. L’enregistrement peut lui-même déclencher ce démarrage ; ne pas en créer un second. Ne pas confondre tag publié, CHECK et application active.
-2. Qualifier ensuite un writer1151 lié au staging0323, aux empreintes réelles des lanceurs et à cette heure de démarrage, enregistrer seulement les métadonnées, lire le reçu final et clore la livraison. Aucun writer1150 ou ancien outil à rejouer.
+Activation1151 acquise, sourcea4a07f9f/Node24.22.1/secondeUTC1793706292. Aucun nouveau redémarrage, réglage Manager, préparation ou CHECK à demander.
+
+1. Terminer et qualifier nativement le writer1151 lié au staging0323, aux empreintes des lanceurs6ec4/89db, à cette seconde réelle et au checkpoint1150/989. Préserver l’état1150 complet, historiques/autres blocs, dépendances exactes et restrictions de repli ; aucun SQL/CHECK/start/install.
+2. Fournir le bloc exact qualifié de métadonnées seules dans le terminal utilisateur, lire son reçu final et clore la livraison. Ne jamais relancer une écriture pour découvrir un résultat incertain ; lire l’état durable d’abord. Aucun writer1150 ou ancien outil à rejouer.
 
 Ne répéter aucune suite verte sans raison nouvelle. Le cas individuel du client, Safari/téléphones physiques et la livraison SMTP réelle restent non attestés ; sauvegarde manuelle reportée, PC et juridique non rouverts.
 
