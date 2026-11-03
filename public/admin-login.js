@@ -641,7 +641,7 @@ function clearInvitation() {
 function invitationResult(value, format) {
   const fields = ["id", "expiresAt", "accessDays", ...(format === "code" ? ["format", "code"] : ["url"])];
   if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length !== fields.length || fields.some(key => !Object.hasOwn(value, key))
-    || !/^[a-f0-9]{32}$/.test(value.id) || !Number.isSafeInteger(value.expiresAt) || value.expiresAt <= Date.now() || value.expiresAt > 253402300799999
+    || !/^[a-f0-9]{32}$/.test(value.id) || !Number.isSafeInteger(value.expiresAt) || value.expiresAt < 0 || value.expiresAt > 253402300799999
     || !(value.accessDays === null || Number.isSafeInteger(value.accessDays) && value.accessDays >= 1 && value.accessDays <= 3650)) throw new Error("invalid_invitation");
   if (format === "code") {
     if (value.format !== "code" || typeof value.code !== "string" || !/^[0-9A-HJKMNP-TV-Z]{4}(?:-[0-9A-HJKMNP-TV-Z]{4}){4}$/.test(value.code)) throw new Error("invalid_invitation");

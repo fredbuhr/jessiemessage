@@ -106,12 +106,15 @@ test("invitation codes use the existing inspection and registration body fields 
   const registered = await post(base, "/api/access/register", { ...registration, invitationToken: code });
   assert.equal(registered.status, 202);
   assert.deepEqual(await registered.json(), { status: "verification_pending" });
+  for (const token of [code.replaceAll("-", "\u2011"), "AAAA\nAAAA-AAAA-AAAA-AAAA"]) {
+    assert.equal((await post(base, "/api/access/invitation", { token })).status, 200);
+  }
   const count = calls.length;
   for (const [path, body] of [["invitation", { token: code }], ["register", { ...registration, invitationToken: code }]]) {
     const response = await post(base, `/api/access/${path}?code=${code}`, body);
     assert.equal(response.status, 400); assert.equal((await response.text()).includes(code), false);
   }
-  for (const token of ["A".repeat(19), "A".repeat(65), "AAAA-AAAA-AAAA-AAAA-AAAU", "AAAA\nAAAA-AAAA-AAAA-AAAA"]) {
+  for (const token of ["A".repeat(19), "A".repeat(65), "AAAA-AAAA-AAAA-AAAA-AAAU", "AAAA\nAAAA-AAAA-AAAA-AAA"]) {
     assert.equal((await post(base, "/api/access/invitation", { token })).status, 400);
   }
   assert.equal((await post(base, "/api/access/verify-email", { token: code })).status, 400);
@@ -213,8 +216,24 @@ test("verification and resend responses strip service internals and prevent enum
   assert.equal(verified.status, 200); assert.deepEqual(await verified.json(), { status: "email_verified" });
   const resent = await post(base, "/api/access/resend-verification", credentials);
   assert.equal(resent.status, 202); assert.deepEqual(await resent.json(), { status: "accepted" });
-  assert.deepEqual(calls, [["verifyEmail", { token: invitationToken, peerAddress: "127.0.0.1" }], ["resendVerification", { ...credentials, peerAddress: "127.0.0.1" }]]);
+  const emailOnly = await post(base, "/api/access/resend-verification", { email: credentials.email });
+  assert.equal(emailOnly.status, 202); assert.deepEqual(await emailOnly.json(), { status: "accepted" });
+  assert.deepEqual(calls, [["verifyEmail", { token: invitationToken, peerAddress: "127.0.0.1" }],
+    ["resendVerification", { email: credentials.email, peerAddress: "127.0.0.1" }],
+    ["resendVerification", { email: credentials.email, peerAddress: "127.0.0.1" }]]);
   const forged = await post(base, "/api/access/verify-email", { token: invitationToken, userId: clientId }); assert.equal(forged.status, 400);
+});
+
+test("email-only resend rejects malformed or unbounded compatibility fields before service work", async (t) => {
+  const { base, calls } = await fixture(t);
+  for (const body of [{}, { email: "" }, { email: 7 }, { email: "a".repeat(255) },
+    { email: credentials.email, userId: clientId }, { email: credentials.email, password: null },
+    { email: credentials.email, password: "x".repeat(129) }]) {
+    const response = await post(base, "/api/access/resend-verification", body);
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), { error: "invalid_request" });
+  }
+  assert.equal(calls.length, 0);
 });
 
 test("client login uses a separate secure cookie and returns a minimal restricted access state", async (t) => {

@@ -2,6 +2,12 @@
 
 // Only fixed interface sources belong in this catalog. Account fields stay raw.
 globalThis.JessieI18n?.register({
+  "Ce code doit contenir 20 lettres ou chiffres. Colle le code complet reçu de Jessie.": "This code must contain 20 letters or digits. Paste the complete code Jessie sent you.",
+  "Ce code n’est pas disponible. Si tu as déjà créé ton compte, choisis « J’ai déjà un compte » pour te connecter ou demander un nouvel e-mail. Sinon, demande une nouvelle invitation à Jessie.": "This code is not available. If you already created your account, choose ‘I already have an account’ to sign in or request another email. Otherwise, ask Jessie for a new invitation.",
+  "Connexion impossible avec cet e-mail et ce mot de passe. Si tu viens de t’inscrire, vérifie ton e-mail ou demande un nouveau lien ci-dessous.": "Unable to sign in with this email and password. If you just signed up, check your email or request a new link below.",
+  "L’inscription n’a pas pu être finalisée. Si tu as déjà créé ton compte, connecte-toi ou demande un nouvel e-mail de confirmation ci-dessous.": "Registration could not be completed. If you already created your account, sign in or request another confirmation email below.",
+  "L’inscription a peut-être abouti. Vérifie tes e-mails, puis connecte-toi. Tu peux demander un nouvel e-mail de confirmation ci-dessous ; inutile de créer un autre compte.": "Registration may have succeeded. Check your email, then sign in. You can request another confirmation email below; you do not need to create another account.",
+  "Saisis l’adresse e-mail choisie à l’inscription pour demander un nouveau lien de confirmation.": "Enter the email address you used to sign up to request a new confirmation link.",
   "La confirmation se fait automatiquement à l’ouverture du lien.": "Your email is confirmed automatically when this link opens.",
   "Confirmation de ton e-mail en cours…": "Confirming your email…",
   "Réessayer la confirmation": "Retry confirmation",
@@ -16,7 +22,6 @@ globalThis.JessieI18n?.register({
   "Colle le code reçu de Jessie en message privé. Les espaces et les tirets sont acceptés.": "Paste the code Jessie sent you privately. Spaces and hyphens are accepted.",
   "Valider mon code": "Validate my code",
   "Vérification du code…": "Checking your code…",
-  "Ce code est invalide, expiré ou déjà utilisé.": "This code is invalid, expired or already used.",
   "Ta connexion reste ouverte sur cet appareil. Tu peux la fermer dans « Mon accès ».": "You stay signed in on this device. You can sign out in ‘My access’.",
     "Notifications": "Notifications",
 
@@ -68,7 +73,6 @@ globalThis.JessieI18n?.register({
   "Se déconnecter": "Sign out",
   "Déconnecter toutes mes sessions": "Sign out all my sessions",
   "Je n’ai pas reçu l’e-mail de vérification": "I did not receive the verification email",
-  "Saisis les identifiants choisis à l’inscription pour demander un nouvel e-mail.": "Enter the credentials you chose when signing up to request another email.",
   "Renvoyer la vérification": "Resend verification",
   "Active JavaScript pour utiliser cet accès sécurisé.": "Enable JavaScript to use this secure access.",
   "JessieMessage · Accès privé sur invitation · ": "JessieMessage · Private access by invitation · ",

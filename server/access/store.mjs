@@ -529,8 +529,8 @@ export function createAccessStore(pool, { clock } = {}) {
         if (!state || storedVersion(state.credential_version) !== expectedVersion) return false;
         now = sessionNow(now);
         if (verification.expiresAt <= now) return false;
-        await connection.query("UPDATE email_verifications SET revoked_at = ? WHERE user_id = ? AND consumed_at IS NULL AND revoked_at IS NULL AND created_at <= ?", [sqlDate(now), userId, sqlDate(now)]);
-        await cancelMail(connection, userId);
+        // Delivered messages can arrive out of order. Keep each live link valid
+        // until the first confirmation atomically activates and revokes siblings.
         await enqueue(connection, userId, verification, mail, now);
         return true;
       }, true);

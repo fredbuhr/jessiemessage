@@ -1,0 +1,71 @@
+{
+  "format": "jessiemessage-access1151-local-qualification",
+  "nodeVersion": "v24.22.1",
+  "backendUniquePassed": 85,
+  "backendAccounting": "43 unchanged passing non-HTTP cases in first run plus42 final HTTP cases; do not add85+42",
+  "frontendFinalPassed": 45,
+  "normalizerPassed": 4,
+  "normalizerCommand": "node --test tests/invitation-code.test.mjs",
+  "staticModulePassed": 7,
+  "buildPassed": true,
+  "firstFailuresPreserved": true,
+  "initialFailureCauses": [
+    "old HTTP fixture expected newline code refusal, new normalizer accepts bounded separators",
+    "English confirmation copy fixture details/these details mismatch"
+  ],
+  "raceDetectedAndCorrected": "older session GET200/401 invalidating pending registration; submitEpoch snapshot protects both paths",
+  "logs": [
+    {
+      "file": "backend-initial-correction.tap.gz",
+      "sha256": "78969dd86989b40f71230500a920684540a8044d8c0c37e32278eb4ac04a1eb6",
+      "rawSha256": "6ec013f28b2caedcd2ad6780f86d63dc6c093014af89ff28d32426a12a04b63c",
+      "tests": 85,
+      "passed": 84,
+      "failed": 1
+    },
+    {
+      "file": "backend-http-final.tap.gz",
+      "sha256": "eb51c71685bb896d0b80bff65553c11722d5b910bee344ac32fdc534289e4cc9",
+      "rawSha256": "2fa08d63597a5ac6c320ded6836937a50ed2f32c5cf574d871d6f35e6fcc6372",
+      "tests": 42,
+      "passed": 42,
+      "failed": 0
+    },
+    {
+      "file": "frontend-initial-correction.tap.gz",
+      "sha256": "67e5368d57ffdbbe9bc9281c6eac4889f6d4749325eb0de656eaf84a12ec7665",
+      "rawSha256": "132a6242ca9b4c7cda518d8198ff288383cbaca6de2deeed1bce06aa3ec1230c",
+      "tests": 43,
+      "passed": 42,
+      "failed": 1
+    },
+    {
+      "file": "frontend-final.tap.gz",
+      "sha256": "bc05e31713f16995bb308e8f79b3323d888ae444a8444dfb110bd69ceb6864a5",
+      "rawSha256": "72b5bb8a5e03e6c8533d3dcd267766c02b8354554fe5ee9d5e1d604088313cf4",
+      "tests": 45,
+      "passed": 45,
+      "failed": 0
+    },
+    {
+      "file": "static-module-final.tap.gz",
+      "sha256": "527a875398895771722bced174493a0ff76ee5e5334c7531bdf1469739393d07",
+      "rawSha256": "c2f7536f42871b59958c400ec29333cf6d552c5301f2b90da936b8b492086d04",
+      "tests": 7,
+      "passed": 7,
+      "failed": 0
+    },
+    {
+      "file": "build.log.gz",
+      "sha256": "dde90a5b7ed040c517bfa3c29b95f789db628010634de5621c6918f717d1dfa3",
+      "rawSha256": "ca4a82006c4fcae267c85cbff2851f5ef9db0a43ff15944c93db2c270295ed31",
+      "tests": null,
+      "passed": null,
+      "failed": null
+    }
+  ],
+  "nativeChrome": "pending",
+  "nativeMariaDB": "pending",
+  "hostedMutation": false,
+  "exactCustomerIncidentConfirmed": false
+}

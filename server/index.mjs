@@ -46,6 +46,7 @@ const publicFiles = new Map([
   ["/notifications.js", ["notifications.js", "text/javascript; charset=utf-8"]],
   ["/notifications.css", ["notifications.css", "text/css; charset=utf-8"]],
   ["/session-clock.js", ["session-clock.js", "text/javascript; charset=utf-8"]],
+  ["/invitation-code.js", ["invitation-code.js", "text/javascript; charset=utf-8"]],
   ["/notification-link.js", ["notification-link.js", "text/javascript; charset=utf-8"]],
   ["/image-preparation.js", ["image-preparation.js", "text/javascript; charset=utf-8"]],
   ["/emoji-catalog.js", ["emoji-catalog.js", "text/javascript; charset=utf-8"]],

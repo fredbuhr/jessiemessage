@@ -23,8 +23,8 @@ const verificationToken = Buffer.alloc(32, 24).toString("base64url");
 const password = "Synthetic invitation password", email = "invited@example.invalid";
 const screenshots = new URL("../../artifacts/homepage/", import.meta.url);
 const copy = {
-  fr: { invalid: "Ce code est invalide, expiré ou déjà utilisé.", created: "Ton compte est créé.", verificationRejected: "Ce lien de confirmation est invalide, expiré ou déjà utilisé. Connecte-toi si ton e-mail est confirmé, ou demande un nouvel e-mail ci-dessous.", verified: "Ton adresse e-mail est vérifiée. Connecte-toi pour ouvrir ta conversation.", signIn: "Aller à la connexion" },
-  en: { invalid: "This code is invalid, expired or already used.", created: "Your account is ready.", verificationRejected: "This confirmation link is invalid, expired or already used. Sign in if your email is confirmed, or request another email below.", verified: "Your email address is verified. Sign in to open your conversation.", signIn: "Go to sign in" },
+  fr: { invalid: "Ce code doit contenir 20 lettres ou chiffres. Colle le code complet reçu de Jessie.", unavailable: "Ce code n’est pas disponible. Si tu as déjà créé ton compte, choisis « J’ai déjà un compte » pour te connecter ou demander un nouvel e-mail. Sinon, demande une nouvelle invitation à Jessie.", created: "Ton compte est créé.", verificationRejected: "Ce lien de confirmation est invalide, expiré ou déjà utilisé. Connecte-toi si ton e-mail est confirmé, ou demande un nouvel e-mail ci-dessous.", verified: "Ton adresse e-mail est vérifiée. Connecte-toi pour ouvrir ta conversation.", signIn: "Aller à la connexion" },
+  en: { invalid: "This code must contain 20 letters or digits. Paste the complete code Jessie sent you.", unavailable: "This code is not available. If you already created your account, choose ‘I already have an account’ to sign in or request another email. Otherwise, ask Jessie for a new invitation.", created: "Your account is ready.", verificationRejected: "This confirmation link is invalid, expired or already used. Sign in if your email is confirmed, or request another email below.", verified: "Your email address is verified. Sign in to open your conversation.", signIn: "Go to sign in" },
 };
 
 async function fixture({ invitations = [] } = {}) {
@@ -37,8 +37,8 @@ async function fixture({ invitations = [] } = {}) {
     await chmod(key, 0o600); await chmod(cert, 0o600);
     const adminToken = Buffer.alloc(32, 22).toString("base64url");
     const admin = { user: { id: "2".repeat(32), role: "admin", pseudonym: "Jessie de test" }, csrf: Buffer.alloc(32, 23).toString("base64url"), expiresAt: Date.now() + 3600000 };
-    const requests = [], inspections = [], registrations = [], creations = [], verifications = [], failures = [], listQueries = [];
-    let app, registrationRefused = false, verificationRefused = false;
+    const requests = [], inspections = [], registrations = [], creations = [], verifications = [], failures = [], listQueries = [], resends = [];
+    let app, registrationRefused = false, registrationUncertain = false, verificationRefused = false;
     server = createServer({ key: await readFile(key), cert: await readFile(cert), minVersion: "TLSv1.2" }, (request, response) => {
       const url = new URL(request.url, "https://localhost");
       requests.push({ path: url.pathname, method: request.method, noQuery: !url.search,
@@ -79,8 +79,10 @@ async function fixture({ invitations = [] } = {}) {
           && input.pseudonym === "Compte invité" && input.password === password && input.ageDeclared === true,
         kind: input.invitationToken === legacyToken ? "link" : "code" });
         if (registrationRefused) { registrationRefused = false; throw Object.assign(new Error("Synthetic registration refusal"), { code: "ACCESS_REGISTRATION_FAILED" }); }
+        if (registrationUncertain) { registrationUncertain = false; throw new Error("Synthetic registration acknowledgement unavailable"); }
         return { status: "verification_pending" };
       },
+      async resendVerification(input) { resends.push(input); return { status: "accepted" }; },
       async createInvitation(token, input) {
         assert.equal(token, adminToken); creations.push({ ...input });
         const metadata = { id: "3".repeat(32), expiresAt: Date.now() + 3600000, accessDays: input.accessDays };
@@ -93,9 +95,10 @@ async function fixture({ invitations = [] } = {}) {
     }, async logout() {}, async logoutAll() {} }, { origin });
     app = createAppServer({ authHandler, accessHandler: createAccessHandler(access, { origin }),
       entryHandler: createEntryHandler({ clientSession, adminSession, chatEnabled: true, deviceTransition: true }) });
-    return { origin, requests, inspections, registrations, creations, verifications, failures, listQueries,
+    return { origin, requests, inspections, registrations, creations, verifications, failures, listQueries, resends,
       setVerificationRefused(value) { verificationRefused = value; },
       refuseNextRegistration() { registrationRefused = true; },
+      loseNextRegistrationAcknowledgement() { registrationUncertain = true; },
       async close() { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); await rm(directory, { recursive: true, force: true }); } };
   } catch (error) {
     server?.closeAllConnections(); if (server?.listening) await new Promise(resolve => server.close(resolve));
@@ -186,10 +189,10 @@ test("real Chrome: invitation code entry is generic, retryable and opens explici
         await waitUntil(() => page.execute("return document.getElementById('access-status').textContent===arguments[0] && !document.getElementById('validate-invitation-code').disabled", copy[language].invalid), "generic malformed-code refusal");
         assert.equal(source.inspections.length, before, "malformed code never sends an inspection");
         await page.type("#invitation-code", "ZZZZ-ZZZZ-ZZZZ-ZZZZ-ZZZZ"); await page.click("#validate-invitation-code");
-        await waitUntil(() => page.execute("return document.getElementById('access-status').textContent===arguments[0] && !document.getElementById('validate-invitation-code').disabled", copy[language].invalid), "same generic unknown-code refusal");
+        await waitUntil(() => page.execute("return document.getElementById('access-status').textContent===arguments[0] && !document.getElementById('validate-invitation-code').disabled", copy[language].unavailable), "unknown-code refusal offers sign-in and new confirmation");
         assert.equal(source.inspections.length, before + 1);
         assert.equal(await page.execute("return !document.getElementById('invitation-code-form').hidden && document.getElementById('registration-form').hidden"), true);
-        await page.type("#invitation-code", `  ${code.toLowerCase().replaceAll("-", " - ")}  `);
+        await page.type("#invitation-code", `\u00a0${code.toLowerCase().replaceAll("-", "\u2011")}\u202f`);
         const registeredBefore = source.registrations.length;
         await page.execute("const form=document.getElementById('invitation-code-form');form.requestSubmit();form.requestSubmit()");
         await waitUntil(() => page.execute("return !document.getElementById('registration-form').hidden && !document.querySelector('#registration-form button[type=submit]').disabled"), "valid code opens registration");
@@ -212,6 +215,35 @@ test("real Chrome: invitation code entry is generic, retryable and opens explici
     });
     cleanFixture(source);
   } finally { try { await source.close(); } finally { await driver?.close(); } }
+});
+
+test("real Chrome: uncertain signup guides the client to email-only confirmation instead of another account at mobile widths", { timeout: 120000 }, async t => {
+  const source = await fixture(); let driver;
+  try {
+    driver = await startWebDriver();
+    for (const [language, width] of [["fr", 320], ["en", 390]]) await t.test(`${language}, ${width}px`, async () => {
+      const page = await driver.browser({ origin: source.origin, acceptInsecureCerts: true, width });
+      try {
+        await open(page, language); await loginReady(page); await page.click("#show-invitation-code");
+        await page.type("#invitation-code", `\u00a0${code.toLowerCase().replaceAll("-", "\u2011")}\u202f`);
+        await page.click("#validate-invitation-code");
+        await waitUntil(() => page.execute("return !document.getElementById('registration-form').hidden"), "mobile copied code opens signup");
+        await fillRegistration(page); source.loseNextRegistrationAcknowledgement();
+        const before = source.registrations.length; await page.click('#registration-form button[type="submit"]'); await loginReady(page);
+        assert.equal(source.registrations.length, before + 1);
+        assert.equal(await page.execute("return document.getElementById('access-status').textContent.includes(arguments[0])", language === "fr" ? "peut-être abouti" : "may have succeeded"), true);
+        assert.equal(await page.execute("return document.getElementById('registration-form').hidden && document.getElementById('resend-section').open && document.getElementById('login-email').value===arguments[0] && document.getElementById('resend-email').value===arguments[0] && !document.getElementById('resend-password')", email), true);
+        await geometry(page); await capture(page, `onboarding-uncertain-${language}-${width}`);
+        const previous = source.resends.length; await page.click('#resend-form button[type="submit"]');
+        await waitUntil(() => page.execute("return !document.querySelector('#resend-form button[type=submit]').disabled"), "confirmation resend acknowledgement");
+        assert.equal(source.resends.length, previous + 1);
+        assert.equal(source.resends.at(-1).email, email); assert.equal(Object.hasOwn(source.resends.at(-1), "password"), false);
+        assert.equal(source.registrations.length, before + 1, "no automatic replay of uncertain registration");
+        await cleanClientSurfaces(page);
+      } finally { await page.close(); }
+    });
+    cleanFixture(source);
+  } finally { await driver?.close(); await source.close(); }
 });
 
 test("real Chrome: existing invitation links still inspect and register after their fragment is removed", { timeout: 60000 }, async () => {

@@ -2,6 +2,15 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
+## Correctif1.15.1 — invitations, inscription et connexion
+
+Demande du3novembre : enquêter sur les nouveaux codes signalés expirés et auditer tout le parcours. [Checklist et diagnostic](access-reliability-1151.md). Aucun changement des comptes clients ni nouvel essai réel d’envoi.
+
+1. Corriger ensemble la normalisation des codes, l’arbitrage serveur de la validité, les erreurs propres à chaque étape et la reprise d’une inscription incertaine.
+2. Retirer le mot de passe du renvoi de confirmation et préserver les liens non expirés jusqu’à la première confirmation atomique ; conserver quotas, réponse publique uniforme, révocations, propriété des sessions et activation unique.
+3. Qualifier les régressions synthétiques et les parcours SQL/HTTPS/Chrome concernés, contre-relire les gardes d’accès, conserver preuves et bilan de couverture. Puis qualifier la PR et le commit main exact selon le circuit existant.
+4. Préparer seulement après ces preuves la livraison compatible1.15.1 et son opérateur ; la production confirmée reste1.15.0 jusqu’au relevé réel de démarrage. Aucun replay des opérateurs1150.
+
 ## Évolution1.15.0 — suppression des refus photo injustifiés
 
 [Diagnostic et périmètre](photo-acceptance-1150.md). Refus synthétiques établis sur formats courants, JPEG valides, capacité couplée aux archives et reprise/erreurs masquées. Original client non attesté.
