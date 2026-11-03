@@ -2,14 +2,15 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
-## Correctif1.15.1 — invitations, inscription et connexion
+## Correctif1.15.1 — préparation hébergée restante
 
-Demande du3novembre : enquêter sur les nouveaux codes signalés expirés et auditer tout le parcours. [Checklist et diagnostic](access-reliability-1151.md). Aucun changement des comptes clients ni nouvel essai réel d’envoi.
+Audit et corrections terminés, PR148/main5/5, six captures inspectées, publicationv1.15.1/sourcea4a07f9f/release432505702, préparateur40/40 natifs qualifié et relu. [Bilan8domaines](access-reliability-1151.md), [état et preuves](REPRISE.md). Production confirmée encore1.15.0 ; aucune migration/dépendance nouvelle ni compte/e-mail réel touché.
 
-1. Corriger ensemble la normalisation des codes, l’arbitrage serveur de la validité, les erreurs propres à chaque étape et la reprise d’une inscription incertaine.
-2. Retirer le mot de passe du renvoi de confirmation et préserver les liens non expirés jusqu’à la première confirmation atomique ; conserver quotas, réponse publique uniforme, révocations, propriété des sessions et activation unique.
-3. Qualifier les régressions synthétiques et les parcours SQL/HTTPS/Chrome concernés, contre-relire les gardes d’accès, conserver preuves et bilan de couverture. Puis qualifier la PR et le commit main exact selon le circuit existant.
-4. Préparer seulement après ces preuves la livraison compatible1.15.1 et son opérateur ; la production confirmée reste1.15.0 jusqu’au relevé réel de démarrage. Aucun replay des opérateurs1150.
+1. Exécuter une première fois le bloc1151 de préparation puis CHECK séparé du [guide](operations-release1151.md). Examiner le reçu source/arbre/dépendances/préservation et `CHECK1151_EXIT=0` ; aucune répétition en cas de résultat incertain.
+2. Après ce reçu, fournir les réglages Manager exacts du nouveau lanceur, puis obtenir l’identité1.15.1/sourcea4a07f9f/Node24.22.1 et l’heure réelle de démarrage. Ne pas confondre tag publié, CHECK et application active.
+3. Qualifier ensuite un writer1151 lié aux reçus/empreintes et à cette heure réelle, enregistrer seulement les métadonnées, lire le reçu final et clore la livraison. Aucun writer1150 ou ancien outil à rejouer.
+
+Ne répéter aucune suite verte sans raison nouvelle. Le cas individuel du client, Safari/téléphones physiques et la livraison SMTP réelle restent non attestés ; sauvegarde manuelle reportée, PC et juridique non rouverts.
 
 ## Évolution1.15.0 — suppression des refus photo injustifiés
 

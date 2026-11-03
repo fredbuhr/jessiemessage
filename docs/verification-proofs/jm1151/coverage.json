@@ -1,0 +1,170 @@
+{
+  "format": "jessiemessage-access1151-coverage",
+  "source": "a4a07f9f31c47a7185b57d11b8277be1d87fd2c1",
+  "tree": "568530e702fa4d0a8a6b1743988c5e20b8656c40",
+  "productionVersion": "1.15.0",
+  "checks": [
+    {
+      "id": "A01",
+      "domain": "Génération, collage des codes et liens historiques",
+      "tests": [
+        "tests/invitation-code.test.mjs",
+        "tests/access-http.test.mjs",
+        "tests/browser/invitation-code.browser.mjs"
+      ],
+      "inspection": "completed",
+      "correction": "implemented_where_needed",
+      "prQualification": "passed",
+      "mainQualification": "passed"
+    },
+    {
+      "id": "A02",
+      "domain": "Dates UTC, expiration serveur et veto appareil supprimé pour les invitations",
+      "tests": [
+        "tests/access-token-clock.test.mjs",
+        "tests/access-i18n.test.mjs"
+      ],
+      "inspection": "completed",
+      "correction": "implemented_where_needed",
+      "prQualification": "passed",
+      "mainQualification": "passed"
+    },
+    {
+      "id": "A03",
+      "domain": "Erreurs adaptées et chemin du compte existant",
+      "tests": [
+        "tests/access-i18n.test.mjs",
+        "tests/recovery-lifecycle.test.mjs"
+      ],
+      "inspection": "completed",
+      "correction": "implemented_where_needed",
+      "prQualification": "passed",
+      "mainQualification": "passed"
+    },
+    {
+      "id": "A04",
+      "domain": "Inscription incertaine, masquage et anciennes lectures de session",
+      "tests": [
+        "tests/access-i18n.test.mjs",
+        "tests/recovery-lifecycle.test.mjs",
+        "tests/browser/invitation-code.browser.mjs"
+      ],
+      "inspection": "completed",
+      "correction": "implemented_where_needed",
+      "prQualification": "passed",
+      "mainQualification": "passed"
+    },
+    {
+      "id": "A05",
+      "domain": "Renvoi public et livraison désordonnée des liens",
+      "tests": [
+        "tests/access-service.test.mjs",
+        "tests/access-http.test.mjs",
+        "tests/access-flow.integration.test.mjs",
+        "tests/access-store.integration.test.mjs"
+      ],
+      "inspection": "completed",
+      "correction": "implemented_where_needed",
+      "prQualification": "passed",
+      "mainQualification": "passed"
+    },
+    {
+      "id": "A06",
+      "domain": "Confirmation unique, concurrence et absence de session/prolongation",
+      "tests": [
+        "tests/access-auto-activation.test.mjs",
+        "tests/access-store.integration.test.mjs",
+        "tests/access-flow.integration.test.mjs"
+      ],
+      "inspection": "completed",
+      "correction": "implemented_where_needed",
+      "prQualification": "passed",
+      "mainQualification": "passed"
+    },
+    {
+      "id": "A07",
+      "domain": "Connexion, récupération et propriété des sessions",
+      "tests": [
+        "tests/auth-service.test.mjs",
+        "tests/reset-service.test.mjs",
+        "tests/recovery-lifecycle.test.mjs",
+        "tests/rehearsal/authentication.rehearsal.mjs"
+      ],
+      "inspection": "completed",
+      "correction": "implemented_where_needed",
+      "prQualification": "passed",
+      "mainQualification": "passed"
+    },
+    {
+      "id": "A08",
+      "domain": "HTTP, schéma des tables concernées et affichage mobile",
+      "tests": [
+        "tests/server.test.mjs",
+        "tests/access-http.test.mjs",
+        "tests/migrations.integration.test.mjs",
+        "tests/browser/invitation-code.browser.mjs"
+      ],
+      "inspection": "completed",
+      "correction": "implemented_where_needed",
+      "prQualification": "passed",
+      "mainQualification": "passed"
+    }
+  ],
+  "prRun": 41610784906,
+  "mainRun": 41612033199,
+  "nativeCounts": {
+    "general": {
+      "tests": 4541,
+      "passed": 4489,
+      "skipped": 52
+    },
+    "chrome": {
+      "tests": 327,
+      "passed": 327,
+      "skipped": 0
+    },
+    "https": {
+      "tests": 14,
+      "passed": 14,
+      "skipped": 0
+    },
+    "mariaDB1011": {
+      "tests": 620,
+      "passed": 620,
+      "skipped": 0
+    },
+    "mariaDB114": {
+      "tests": 620,
+      "passed": 620,
+      "skipped": 0
+    }
+  },
+  "omissionsAreSuccesses": false,
+  "groupsSummed": false,
+  "accountChanges": false,
+  "realMail": false,
+  "newDDL": false,
+  "newDependencies": false,
+  "limits": [
+    "exact_customer_incident_not_confirmed",
+    "physical_devices_not_attested",
+    "Safari_not_attested",
+    "real_SMTP_not_attested",
+    "no_new_hosted_SQL_inventory",
+    "invitation_clock_fix_does_not_claim_arbitrary_device_clock_support_for_every_feature"
+  ],
+  "applicationStatus": "merged_published_not_hosted",
+  "tag": "v1.15.1",
+  "releaseId": 432505702,
+  "preparationOperator": "1c37c5b8055a205df71c8fa86555ae34426f2d61",
+  "preparationRun": 41612307744,
+  "preparationNativeTests": 40,
+  "publicationOperator": "5a7c38d13d1f60beafcd0f38f666efa72591da5e",
+  "publicationRun": 41613109924,
+  "publicationNativeTests": 24,
+  "hostedPreparation": false,
+  "hostedCheck": false,
+  "hostedActivation": false,
+  "hostedMetadata": false,
+  "nextAction": "first hosted1151 preparation and separate CHECK using exact operations guide"
+}

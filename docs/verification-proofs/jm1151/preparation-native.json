@@ -1,0 +1,54 @@
+{
+  "format": "jessiemessage-release1151-preparation-native",
+  "operator": "1c37c5b8055a205df71c8fa86555ae34426f2d61",
+  "operatorTree": "8656cddb0886545a50de3785d32a4072bf75315e",
+  "run": 41612307744,
+  "attempt": 1,
+  "job": 125836978022,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41612307744",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": 1,
+  "successfulJobs": 1,
+  "tests": 40,
+  "passed": 40,
+  "skipped": 0,
+  "nodeVersion": "v24.22.1",
+  "source": "a4a07f9f31c47a7185b57d11b8277be1d87fd2c1",
+  "tree": "568530e702fa4d0a8a6b1743988c5e20b8656c40",
+  "baseline": {
+    "version": "1.15.0",
+    "source": "6712028e08b1e04ac7628bdbb9c39fd9f90d9909",
+    "checkpointSha256": "989de548cb42ac6784cbc4c341e43b240b63386a089fb2d107d4f6a067798814",
+    "dependencyInventory": "4df6d0b94070f09f2180c9478446b38e07ba58f3bb3e25de083ae79cf14a6152"
+  },
+  "files": [
+    {
+      "path": "ops/prepare-release1151.py",
+      "bytes": 24855,
+      "sha256": "481ae7f8ad6c9293316993431fe582a4a743554d6645c7f6e0546548c6d1b102"
+    },
+    {
+      "path": "ops/test-prepare-release1151.py",
+      "bytes": 51689,
+      "sha256": "b46e42580f7dfcf0ed9e61d258fddeef9a272e7ababb3177128e23cc8cb1dc80"
+    },
+    {
+      "path": ".github/workflows/prepare-qualified1151.yml",
+      "bytes": 1185,
+      "sha256": "8bcb9c44839b697ca4d688e21f9ebce136df5566f65afbac397c1048ec2ad623"
+    }
+  ],
+  "readbackAllFilesIdentical": true,
+  "scope": "synthetic exclusive staging, exact dependency reuse and preserved baseline; no install or repeated codec smoke",
+  "hostedStaging": false,
+  "hostedCheck": false,
+  "hostedStarted": false,
+  "metadataChanged": false,
+  "sourceMainQualification": "separately required before hosted execution",
+  "log": {
+    "path": "logs/preparation-125836978022.log.gz",
+    "rawSha256": "d54d486b3d4c36bf53a7493d5964e73bf2f09457ad40a2b295133e0d11ccf3dc",
+    "sha256": "db0fab9c2b885a8eafef1b80eaf6735b602dd0a4b1b148889c2f13d6425ebd67"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "format": "jessiemessage-release1151-publication-native",
+  "operator": "5a7c38d13d1f60beafcd0f38f666efa72591da5e",
+  "operatorTree": "f13eed643846a962a600494ed958965db5085483",
+  "run": 41613109924,
+  "attempt": 1,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41613109924",
+  "status": "completed",
+  "conclusion": "success",
+  "successfulJobs": 2,
+  "tests": 24,
+  "passed": 24,
+  "skipped": 0,
+  "nodeVersion": "v24.22.1",
+  "source": "a4a07f9f31c47a7185b57d11b8277be1d87fd2c1",
+  "tree": "568530e702fa4d0a8a6b1743988c5e20b8656c40",
+  "mainCI": 41612033199,
+  "releaseId": 432505702,
+  "tag": "v1.15.1",
+  "tagCommitVerified": true,
+  "releaseTargetVerified": true,
+  "latestVerified": true,
+  "priorRelease": {
+    "id": 430794626,
+    "tag": "v1.15.0",
+    "source": "6712028e08b1e04ac7628bdbb9c39fd9f90d9909",
+    "preserved": true
+  },
+  "files": [
+    {
+      "path": "ops/publish-qualified1151.py",
+      "bytes": 18538,
+      "sha256": "a8a1321c4a5c2f7efc4729b823f2ce7b937b3700d5cd922563c3a60ffc6a9a95"
+    },
+    {
+      "path": "ops/test-publish-qualified1151.py",
+      "bytes": 30039,
+      "sha256": "4d612e8fe761826fd8d42e4e513ddaa1fe51689e14ceda89ce07c6abf4f784b3"
+    },
+    {
+      "path": ".github/workflows/publish-qualified1151.yml",
+      "bytes": 1907,
+      "sha256": "180e2efe57054dd72985e2856b771cd499cd8c4b4bc2a47355e500ed69803df8"
+    }
+  ],
+  "readbackAllFilesIdentical": true,
+  "jobs": [
+    {
+      "id": 125839730277,
+      "name": "operator-tests",
+      "conclusion": "success"
+    },
+    {
+      "id": 125839813875,
+      "name": "publish",
+      "conclusion": "success"
+    }
+  ],
+  "deploymentPerformed": false,
+  "logs": [
+    {
+      "job": 125839730277,
+      "path": "logs/publication-125839730277.log.gz",
+      "sha256": "b8d2fadac00415ccf18ab365221b8ace2857301188afe58220f2675624354a74",
+      "rawSha256": "5e330ae04878e37f2152ca2828ce1979d7c816e2a793c8a0f15c0118d954c352"
+    },
+    {
+      "job": 125839813875,
+      "path": "logs/publication-125839813875.log.gz",
+      "sha256": "a60ab1008aa40b2432b93f2e40c899f6daf1a5e3f8d3b645ce763a3bde7b4199",
+      "rawSha256": "a78f7ae551d797c9d148d9704d14bd13fcd530276d2d1007a2a5a594914c2efb"
+    }
+  ]
+}

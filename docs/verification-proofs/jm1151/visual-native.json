@@ -1,0 +1,107 @@
+{
+  "format": "jessiemessage1151-visual-review",
+  "source": "ac6e5ff25e54f6063bfa3f810175d0a696678b9f",
+  "checkout": "9dd7cdf9a0496afbd7097c057908f29bb01313a2",
+  "tree": "568530e702fa4d0a8a6b1743988c5e20b8656c40",
+  "checkoutTreeVerifiedByGitHubApi": true,
+  "checkoutParents": [
+    "04b98b24c693b36fde4f0f4eba67057690cc1e6b",
+    "ac6e5ff25e54f6063bfa3f810175d0a696678b9f"
+  ],
+  "run": 41610784906,
+  "runUrl": "https://github.com/fredbuhr/jessiemessage/actions/runs/41610784906",
+  "attempt": 1,
+  "job": {
+    "id": 125831826248,
+    "name": "Chrome keyboard and chat lifecycle",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "artifact": 13218847905,
+  "artifactName": "homepage-render",
+  "artifactApiUrl": "https://api.github.com/repos/fredbuhr/jessiemessage/actions/artifacts/13218847905",
+  "artifactSha256": "334e0001c656b9c96872d8acfafa4139e6f317a8e5f7ad876a77e2897876375b",
+  "artifactBytes": 8343403,
+  "artifactDigestMatched": true,
+  "archiveGuards": {
+    "passed": true,
+    "entries": 73,
+    "totalUncompressedBytes": 8493367,
+    "checks": [
+      "Exact GitHub compressed size and SHA256 before extraction",
+      "Bounded compressed archive, total entries, expanded bytes, individual files and compression ratios",
+      "No duplicate names, absolute paths, traversal, Windows separators, colon paths or symbolic links",
+      "Selected original PNG bytes only, checked signature, bounded dimensions and Pillow verification; no redraw or resizing"
+    ]
+  },
+  "reviewedAt": "2026-11-03T09:34:45.267588+00:00",
+  "reviewedImages": [
+    {
+      "archivePath": "invitation-code-en-1280.png",
+      "path": "screenshots/invitation-code-en-1280.png",
+      "sha256": "bd7ebf68ed1ae7ef302834ac56ab8a4f3b14ca78fec9dcfb0074c6e4f00d5d57",
+      "bytes": 165350,
+      "width": 1280,
+      "height": 757
+    },
+    {
+      "archivePath": "invitation-code-fr-320.png",
+      "path": "screenshots/invitation-code-fr-320.png",
+      "sha256": "c78b9c02fd8938d8f40e4896b697f133693000ec281cb900ce314eabc2828245",
+      "bytes": 69114,
+      "width": 320,
+      "height": 844
+    },
+    {
+      "archivePath": "invitation-code-registration-en-1280.png",
+      "path": "screenshots/invitation-code-registration-en-1280.png",
+      "sha256": "fae999d15fca4fff8f01a7e441918ace9e5bfee85903255020425a3e1286ca80",
+      "bytes": 246277,
+      "width": 1280,
+      "height": 757
+    },
+    {
+      "archivePath": "invitation-code-registration-fr-320.png",
+      "path": "screenshots/invitation-code-registration-fr-320.png",
+      "sha256": "1308a516cd598f1dab94682a51383364f559c44b37a661249d142ba6abf4053f",
+      "bytes": 73493,
+      "width": 320,
+      "height": 844
+    },
+    {
+      "archivePath": "onboarding-uncertain-en-390.png",
+      "path": "screenshots/onboarding-uncertain-en-390.png",
+      "sha256": "463f13b75755783ca63c7be5f7e80909c6c6bd9ab79fd6c3b50c1193efb2a107",
+      "bytes": 72788,
+      "width": 390,
+      "height": 844
+    },
+    {
+      "archivePath": "onboarding-uncertain-fr-320.png",
+      "path": "screenshots/onboarding-uncertain-fr-320.png",
+      "sha256": "d602372df92edbdf1f443da914d4fa047df0c48492b30d9b8fdc6ce57a9e4a8f",
+      "bytes": 67566,
+      "width": 320,
+      "height": 844
+    }
+  ],
+  "review": {
+    "uncertainRegistrationFr320": "Message prudent lisible et entièrement dans la largeur. E-mail synthétique prérempli, mot de passe vide, connexion et entrée code distinctes. La rubrique de renvoi est ouverte, sa suite se rejoint par défilement vertical.",
+    "uncertainRegistrationEn390": "Même parcours traduit : résultat incertain, accès à la connexion et confirmation sans deuxième mot de passe. Le bas du formulaire de renvoi est sous le pli de la capture.",
+    "invitationCodeFr320": "Libellé, aide et deux actions lisibles sans débordement de la page. Le champ monoligne défile horizontalement pour son propre code long, sans élargir la page.",
+    "invitationCodeEn1280": "Carte centrée, code et aides lisibles, validation et connexion séparées.",
+    "registrationFr320En1280": "Invitation acceptée, durée et formulaire traduits. Le formulaire long reste accessible par défilement vertical ; la capture ne prétend pas afficher tous ses contrôles simultanément.",
+    "nativeGeometryAssertions": "Le test Chrome geometry() du même job vérifie largeur de page et contrôles rendus : champs/actions de 44px minimum, case à cocher de 20px minimum. Ces tailles sont qualifiées par les assertions DOM, pas déduites des pixels des captures.",
+    "blockingVisualDefectObserved": false
+  },
+  "scope": "Captures Chrome synthétiques de ce run et de cet arbre exact. Six PNG originaux extraits sans modification ; les noms invitation-code sont réutilisés mais les octets sont nouvellement produits par ce run. La fixture emploie invited@example.invalid et ne livre aucun e-mail.",
+  "limits": [
+    "Téléphone physique, clavier et collage réels iOS/Android et Safari non attestés",
+    "La confirmation email réelle et le cas exact du client signalé ne sont pas démontrés par ces captures",
+    "Les captures de résultat incertain sont des vues de la fenêtre : une partie du formulaire de renvoi est sous le pli ; les contrôles sont qualifiés par le DOM et le parcours du test",
+    "Aucune interaction en production, aucun compte réel et aucun envoi réel"
+  ],
+  "physicalPhoneSafariOrOriginalCustomerIncidentAttested": false,
+  "parentVisuallyReviewedAllOriginals": true,
+  "parentReview": "Six original captures opened and visually inspected by root: readable FR/EN text, no horizontal overflow; vertical scrolling normal at mobile sizes. DOM assertions, not image estimates, establish control heights."
+}
