@@ -10,8 +10,10 @@ Préparation/CHECK1151 acquis selon le reçu utilisateur, staging0323f863/4257oc
 
 Activation1151 acquise, sourcea4a07f9f/Node24.22.1/secondeUTC1793706292. Aucun nouveau redémarrage, réglage Manager, préparation ou CHECK à demander.
 
-1. Terminer et qualifier nativement le writer1151 lié au staging0323, aux empreintes des lanceurs6ec4/89db, à cette seconde réelle et au checkpoint1150/989. Préserver l’état1150 complet, historiques/autres blocs, dépendances exactes et restrictions de repli ; aucun SQL/CHECK/start/install.
-2. Fournir le bloc exact qualifié de métadonnées seules dans le terminal utilisateur, lire son reçu final et clore la livraison. Ne jamais relancer une écriture pour découvrir un résultat incertain ; lire l’état durable d’abord. Aucun writer1150 ou ancien outil à rejouer.
+Writer1151 qualifié36/36tests natifs sans omission, run41631279412/1job, opérateur73e0fd4f et helper5fe08d relus identiques, contre-revue sans blocage. [Preuves](verification-proofs/jm1151/writer-final-native.json). Les suites applicatives déjà vertes ne sont pas rejouées.
+
+1. Exécuter une première fois le bloc writer1151 exact du [guide](operations-release1151.md), qui vérifie les preuves puis enregistre seulement les métadonnées ; aucun redémarrage. Lire le reçu final `release1151_metadata_recorded`, identité réelle/millisecondes et nouvelle empreinte checkpoint, puis clore la livraison.
+2. Si résultat incertain, inspecter l’état durable en lecture seule avant toute suite ; ne jamais relancer une écriture pour découvrir le résultat. Aucun writer1150 ou ancien outil à rejouer.
 
 Ne répéter aucune suite verte sans raison nouvelle. Le cas individuel du client, Safari/téléphones physiques et la livraison SMTP réelle restent non attestés ; sauvegarde manuelle reportée, PC et juridique non rouverts.
 

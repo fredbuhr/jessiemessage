@@ -1,0 +1,75 @@
+{
+  "format": "jessiemessage-release1151-writer-native",
+  "operator": "73e0fd4fadd23dcbd854daa24cb8b6475de17987",
+  "operatorTree": "1bb97c8fd795821c8ab0334e0f122340bb73a89e",
+  "run": 41631279412,
+  "attempt": 1,
+  "job": 125901179858,
+  "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/41631279412",
+  "status": "completed",
+  "conclusion": "success",
+  "successfulJobs": 1,
+  "totalJobs": 1,
+  "tests": 36,
+  "passed": 36,
+  "skipped": 0,
+  "nodeVersion": "v24.22.1",
+  "source": "a4a07f9f31c47a7185b57d11b8277be1d87fd2c1",
+  "tree": "568530e702fa4d0a8a6b1743988c5e20b8656c40",
+  "observedStartupSecond": 1793706292,
+  "observedStartupDisplay": "03/11/2026 12:44:52 Europe/Paris",
+  "stagingSha256": "0323f8631bc6c0f4c6f1fee22e68a2bc1c5b8d730a6d2c93545f929518cb7216",
+  "stagingBytes": 4257,
+  "priorCheckpointSha256": "989de548cb42ac6784cbc4c341e43b240b63386a089fb2d107d4f6a067798814",
+  "files": [
+    {
+      "path": "ops/record-release1151.py",
+      "bytes": 36208,
+      "sha256": "5fe08d685e1e0c973bd3bb23da2cfc0083f754fb67834f4c3211be376265ab41"
+    },
+    {
+      "path": "ops/test-record-release1151.py",
+      "bytes": 46878,
+      "sha256": "09b9284456be649f684d655bfcb4c837908e2c754426c424b8bc36e7d381c2b6"
+    },
+    {
+      "path": ".github/workflows/record-release1151.yml",
+      "bytes": 1254,
+      "sha256": "e6cf4c4393b5eb28d559f004743485bb3835de0f5a18eef2d6d1bbc8317c4bd4"
+    }
+  ],
+  "readbackAllFilesIdentical": true,
+  "localFinalTests": 36,
+  "localInitialTests": 34,
+  "localAndNativeSameLotNotSummed": true,
+  "logs": [
+    {
+      "path": "logs/writer-125901179858.log.gz",
+      "sha256": "7d5d0d34e1ec35f3b3bd78d79ffa367344761d7cebe7cf6cf90dddc238eb94f8",
+      "rawSha256": "a53e55d8fe1d9d6661209f706eb220f463e3536be4ad70ae77b655eca789362e",
+      "scope": "native"
+    },
+    {
+      "path": "logs/writer-local-initial.log.gz",
+      "sha256": "2fc13d5914bb5364af7dd110fda0839fd3f62a311149e1a53a094d9b940cd376",
+      "rawSha256": "ea65d102df2002fdd7f1b29d5286ad52c408df5038e68182986db1770da47df9",
+      "scope": "local"
+    },
+    {
+      "path": "logs/writer-local-final.log.gz",
+      "sha256": "2703cd6e2fe3555f8d886df1385037511c298767a93f6073596d86f0d7a1f0af",
+      "rawSha256": "eaa38ab5e1dcdd82af34fe79aceb34b64289d36a3e2551c939d527af7c7e0f2c",
+      "scope": "local"
+    }
+  ],
+  "scope": "metadata-only writer qualification with isolated synthetic files; read-only Git source pins; full1150 preservation and exact1151-to-real1150 reuse",
+  "independentCounterReview": "no blocker on exact final helper5fe08d; root also reviewed file/verify_evidence/prepare/record/workflow",
+  "hostedExecution": false,
+  "hostedMetadataChanged": false,
+  "noRestart": true,
+  "limits": [
+    "actual startup milliseconds will come from unique hosted log, not invented from UI second",
+    "hosted availability and final checkpoint remain unconfirmed until user writer receipt",
+    "SQL38 is source/precheck qualification, no new independent physical SQL inventory"
+  ]
+}

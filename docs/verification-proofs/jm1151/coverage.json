@@ -166,8 +166,13 @@
   "hostedCheck": true,
   "hostedActivation": true,
   "hostedMetadata": false,
-  "nextAction": "qualify1151 metadata-only writer against observed startup second and immutable preparation/baseline evidence; no restart",
+  "nextAction": "first execution of qualified1151 metadata-only writer and read final receipt; no restart",
   "hostedPreparationReceipt": "0323f8631bc6c0f4c6f1fee22e68a2bc1c5b8d730a6d2c93545f929518cb7216",
   "hostedIdentityProof": "hosted-identity.json",
-  "observedStartupSecond": 1793706292
+  "observedStartupSecond": 1793706292,
+  "writerOperator": "73e0fd4fadd23dcbd854daa24cb8b6475de17987",
+  "writerRun": 41631279412,
+  "writerNativeTests": 36,
+  "writerNativePassed": 36,
+  "writerHostExecution": false
 }

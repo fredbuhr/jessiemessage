@@ -61,6 +61,29 @@ Le [relevé utilisateur](verification-proofs/jm1151/hosted-identity.json) confir
 
 Les deux commandes communiquées étaient `bash /srv/customer/jessiemessage-private/start-primary-release1151-a4a07f9f.sh` en Exécution et `bash /srv/customer/jessiemessage-private/check-primary-release1151-a4a07f9f.sh` en Build, port3000 et dossier de travail conservés. Elles restent une trace de l’étape achevée, pas une instruction de les appliquer à nouveau.
 
-## Métadonnées — qualification en cours
+## Métadonnées — prochaine action, outil qualifié
 
-Démarrage1151 confirmé, enregistrement des métadonnées1151 encore non exécuté. Qualifier le writer lié à la seconde1793706292, au staging0323, au checkpoint1150/989 et aux nouvelles empreintes de lanceurs. Le journal réel fournira les millisecondes ; ne pas les inventer depuis l’affichage UI. Ne pas réutiliser le writer1150 ni inventer un démarrage1151. Le repli185 reste qualifié au seul précontrôleSQL38, jamais démarré ; le downgrade du snapshot public n’est pas qualifié,184/172 restent interdits. Sauvegarde manuelle reportée, PC et juridique non rouverts.
+Démarrage1151 confirmé, reçu d’enregistrement des métadonnées1151 encore absent. Le writer final est [qualifié36/36tests natifs sans omission](verification-proofs/jm1151/writer-final-native.json),1/1job, tentative1, [run41631279412](https://github.com/fredbuhr/jessiemessage/actions/runs/41631279412). Opérateur **`73e0fd4fadd23dcbd854daa24cb8b6475de17987`**, arbre **`1bb97c8fd795821c8ab0334e0f122340bb73a89e`**. Helper36208octets/SHA256 **`5fe08d685e1e0c973bd3bb23da2cfc0083f754fb67834f4c3211be376265ab41`**. Les trois fichiers qualifiés ont été relus identiques, contre-revue sans blocage ;36locaux/36natifs non additionnés.
+
+Il vérifie la seconde1793706292, le staging0323/4257octets, l’ancien checkpoint1150/989, sources/tags/versions, Node/configuration/migrations, CHECK existants et identité HTTP avant écriture/relecture du seul checkpoint. Dépendances1151→vrai1150/inventaire4df6, neuf versions/onze ressources et graphe normalisé exact ; les locks d’installation1c0f et applicatifeb620 sont distingués. Gros codecs hachés en flux, JSON/checkpoint2Mio. Active1150 entier, section1150, historiques et autres blocs, repli185 SQL38seulement/downgradefalse/184172interdits préservés. Aucun démarrage/CHECK/install/SQL en écriture.
+
+Dans le [terminal SSH utilisateur](https://manager.infomaniak.com/v3/hosting/1446368/hosting/812119/ssh-terminal/Node.js/terminal), première exécution du bloc suivant :
+
+```bash
+env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY_RECORD1151'
+import hashlib, urllib.request
+
+url = 'https://raw.githubusercontent.com/fredbuhr/jessiemessage/73e0fd4fadd23dcbd854daa24cb8b6475de17987/ops/record-release1151.py'
+with urllib.request.urlopen(url, timeout=30) as response:
+    if response.status != 200 or response.url != url:
+        raise SystemExit('URL_OUTIL_A_VERIFIER : arret.')
+    code = response.read(65537)
+if len(code) > 65536 or hashlib.sha256(code).hexdigest() != '5fe08d685e1e0c973bd3bb23da2cfc0083f754fb67834f4c3211be376265ab41':
+    raise SystemExit('EMPREINTE_OUTIL_INCORRECTE : aucun outil execute.')
+exec(compile(code, '<enregistrement1151>', 'exec'), {'__name__': '__main__'})
+PY_RECORD1151
+```
+
+Résultat attendu : `release1151_metadata_recorded`, `metadataOnly:true`, `noRestart:true`, sourcea4a07f9f/arbre568530e7, `publicReady:true`, millisecondes réelles conformes à la seconde1793706292 et empreinte du nouveau checkpoint. Le résultat doit être fourni pour clôturer la livraison. En cas de réponse perdue/interrompue ou statut non confirmé, conserver les traces et inspecter l’état durable en lecture seule ; ne pas relancer pour découvrir un succès éventuel.
+
+Ne pas réutiliser le writer1150 ni inventer le nouveau checkpoint ou les millisecondes. Le repli185 reste qualifié au seul précontrôleSQL38, jamais démarré ; downgrade du snapshot public non qualifié,184/172 interdits. Sauvegarde manuelle reportée, PC et juridique non rouverts.
