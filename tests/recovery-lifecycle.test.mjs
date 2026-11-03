@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createContext, Script } from "node:vm";
 import * as recoveryModel from "../public/recover-model.js";
+import * as invitationCode from "../public/invitation-code.js";
 
 const capabilityPath = "/api/access/recovery/capabilities";
 const capability = () => ({ enabled: true, password: { minLength: 8, maxLength: 128 } });
@@ -66,11 +67,12 @@ function controller(name, fetchHandler, { hash = "", visibility = "visible" } = 
   const document = new Document(html, visibility); const window = new EventTarget(); const calls = []; const timers = new Map(); let timerId = 0;
   const location = { hash, pathname: `/${name}` }; const history = { replaceState(_state, _unused, path) { location.hash = ""; location.pathname = path; } };
   const context = createContext({ document, window, location, history, URLSearchParams, TextEncoder, AbortController, Event,
-    __recoveryModel: recoveryModel,
+    __recoveryModel: recoveryModel, __invitationCode: invitationCode,
     setTimeout(callback, milliseconds) { const id = ++timerId; timers.set(id, { callback, milliseconds }); return id; }, clearTimeout(id) { timers.delete(id); },
     fetch(path, options = {}) { calls.push({ path, options }); return Promise.resolve().then(() => fetchHandler(path, options, calls)); } });
   new Script(readFileSync(new URL("../public/session-clock.js", import.meta.url), "utf8"), { filename: "public/session-clock.js" }).runInContext(context);
   let source = readFileSync(new URL(`../public/${name}.js`, import.meta.url), "utf8");
+  if (name === "access") source = source.replace(/^import\s*\{([\s\S]*?)\}\s*from\s*"\/invitation-code\.js";/m, "const {$1} = __invitationCode;");
   if (name === "recover") source = source.replace(/^import\s*\{([\s\S]*?)\}\s*from\s*"\/recover-model\.js";/, "const {$1} = __recoveryModel;");
   new Script(source, { filename: `public/${name}.js`, importModuleDynamically: async () => { throw new Error("optional feature unavailable in fixture"); } }).runInContext(context);
   return { document, window, calls, timers, context, get: (id) => document.getElementById(id),

@@ -1,0 +1,68 @@
+{
+  "format": "jessiemessage-access1151-first-native-failure",
+  "run": 41609766319,
+  "attempt": 1,
+  "head": "23a5375849614d1bc38a48b30885d8a75234b91a",
+  "tree": "5e7dd6a6b4ef57c925577da1cbc11fab849e5407",
+  "job": 125828422176,
+  "conclusion": "failure",
+  "general": {
+    "tests": 4541,
+    "passed": 4475,
+    "failed": 14,
+    "skipped": 52
+  },
+  "rawLogSha256": "1e4f5fa0f5ea5dc163de591502b0b06a772a4e3fe725a2ba6cd9503e3b6ecd2f",
+  "gzipLogSha256": "f8ff0f1ff39ce94f2522d07c27d13a5a4299995300f55e86548745c1e4be2eea",
+  "rawLog": "pr-initial-verify.log.gz",
+  "cause": "All14failures are tests/recovery-lifecycle.test.mjs VM loader SyntaxError on new real ESM import; product module works in native HTTPS job.",
+  "correction": "Inject the real shared module into this existing VM harness, as in access-i18n. No product code changed.",
+  "correctedTargetedTests": 25,
+  "correctedTargetedPassed": 25,
+  "correctedTargetedSkipped": 0,
+  "correctedTargetedLog": "recovery-fixture-final.tap.gz",
+  "correctedTargetedLogSha256": "f36d9cb500de0ecc8be8ec8a2a17d902fd7f33911a1aaf41d6c54f1d1d9e676a",
+  "otherJobsAtRecord": "all four other jobs completed successfully; full corrected candidate still requires fresh5/5 qualification",
+  "jobs": [
+    {
+      "id": 125828421909,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 41609766319,
+      "run_attempt": 1
+    },
+    {
+      "id": 125828421960,
+      "name": "MariaDB 10.11",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 41609766319,
+      "run_attempt": 1
+    },
+    {
+      "id": 125828422069,
+      "name": "Chrome keyboard and chat lifecycle",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 41609766319,
+      "run_attempt": 1
+    },
+    {
+      "id": 125828422176,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "failure",
+      "run_id": 41609766319,
+      "run_attempt": 1
+    },
+    {
+      "id": 125828422260,
+      "name": "MariaDB 11.4",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 41609766319,
+      "run_attempt": 1
+    }
+  ]
+}

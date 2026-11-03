@@ -38,7 +38,7 @@ Correctifs codés sur `fix/access-onboarding-1151`, sans migration ni dépendanc
 
 La contre-revue a reproduit une course supplémentaire : un GET de session commencé avant une inscription pouvait finir pendant le POST, invalider la réponse puis effacer tout avertissement. Un instantané de l’époque de soumission rend ce GET ancien inopérant, pour succès200 et refus401 ; le verrou de vérification est libéré normalement. Reproduction indépendante ensuite corrigée, un seul POST. Le contrôle login compteA suivi de preuve session compteB laisse l’identitéB et aucun e-mailA prérempli dans le renvoi. Aucun autre blocage trouvé à la contre-revue.
 
-Chrome, HTTPS et MariaDB natifs : en attente de la CI du candidat ; aucune qualification physique ou hébergée déduite de ces résultats locaux.
+Premier candidat23a53758/run41609766319 : Chrome, HTTPS et les deux MariaDB natifs réussis ; général4541tests/4475pass/14échecs/52omissions. Tous les14échecs sont le même chargeur VM de `recovery-lifecycle` resté sans adaptation à l’import ESM réel. Fixture seule corrigée,25/25ciblés réussis. [Échec complet conservé](verification-proofs/jm1151/pr-initial-failure.json). Nouvelle qualification complète du candidat corrigé requise ; aucune qualification physique ou hébergée déduite.
 
 ## Limites
 
