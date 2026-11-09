@@ -491,7 +491,7 @@ test("Chrome: only Jessie sees a read receipt after a metadata-only poll, with s
 });
 
 test("Chrome mobile: message emojis are enlarged without splitting Unicode sequences or styling the surrounding text", { timeout: 60000 }, async () => {
-  const samples = ["Salut <b>Jessie</b> 😘\nÀ demain", "👩🏽‍💻", "❤️", "🇫🇷1️⃣"];
+  const samples = ["Salut <b>Jessie</b> 😘\nÀ demain", "👩🏽‍💻", "❤️", "🇫🇷1️⃣", "a🏽"];
   for (const role of ["client", "admin"]) {
     resetFixture(); fixture.windowedHistory = true; fixture.latest = samples.length;
     fixture.sent = samples.map((body, index) => ({ ...message(index + 1, role), body }));
@@ -507,9 +507,10 @@ test("Chrome mobile: message emojis are enlarged without splitting Unicode seque
           htmlInterpreted: !!text.querySelector('b') };
       })`);
       assert.deepEqual(rendered.map(item => item.text), samples);
-      assert.deepEqual(rendered.map(item => item.emoji), ["😘", "👩🏽‍💻", "❤️", "🇫🇷1️⃣"]);
-      assert.deepEqual(rendered.map(item => item.single), [false, true, false, false]);
-      assert.ok(rendered.every(item => !item.htmlInterpreted && item.emojiFont > item.font));
+      assert.deepEqual(rendered.map(item => item.emoji), ["😘", "👩🏽‍💻", "❤️", "🇫🇷1️⃣", undefined]);
+      assert.deepEqual(rendered.map(item => item.single), [false, true, false, false, false]);
+      assert.ok(rendered.every(item => !item.htmlInterpreted));
+      assert.ok(rendered.slice(0, 4).every(item => item.emojiFont > item.font));
       assert.ok(rendered[1].emojiFont > rendered[0].emojiFont);
       await noJavascriptErrors(page);
     } finally { await page.close(); }

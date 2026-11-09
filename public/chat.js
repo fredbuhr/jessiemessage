@@ -1847,7 +1847,7 @@ function renderMessageText(node, text, enlargeSingleEmoji = false) {
   const trimmed = text.trim();
   const runs = [];
   for (const { segment } of messageGraphemes.segment(text)) {
-    const emoji = emojiGlyph.test(segment) && !segment.includes("\uFE0E");
+    const emoji = emojiGlyph.exec(segment)?.index === 0 && !segment.includes("\uFE0E");
     if (emoji && enlargeSingleEmoji && segment === trimmed) node.classList.add("single-emoji-message");
     const previous = runs.at(-1);
     if (previous?.emoji === emoji) previous.text += segment;
