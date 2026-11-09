@@ -1,0 +1,55 @@
+{
+  "format": "jessiemessage-1160-hosted-startup-observation",
+  "authority": "User SSH output and Manager screenshot on 9 November 2026. Public HTTPS separately checked.",
+  "managerStatus": "Actif",
+  "startedAtParis": "2026-11-09T16:33:01.632+01:00",
+  "readback": {
+    "status": "release1160_record_pins_read_only",
+    "readOnly": true,
+    "source": "d2b57fb88d58aacf64dd51c5d1952c65f5c327ae",
+    "tree": "632ec530d812fa75cf2aa4b603c91c81dcaf7e8e",
+    "nodeVersion": "v24.22.1",
+    "precheckSha256": "6aac70a7b9626362009117094981574277cdbb8f3bde674096b067f5518b8712",
+    "precheckReceipts": 1,
+    "storageMarkerSha256": {
+      "media": "77a469a9238ac286d6a2b5e5648a8ba866d524eaeb3788f9b506a2460910a7d4",
+      "video": "707ac04b285d9df2e45ec9a4847167efdc334b46c09072f3dbc21ec75dd4e2ac"
+    },
+    "markerCurrentMountAndSignatureVerified": true,
+    "startedAtMs": 1794238381632,
+    "startedAtSecond": 1794238381,
+    "startedAtUtc": "2026-11-09T15:33:01.632+00:00",
+    "startupRecordSha256": "4e91260ced4d870a1aee6e899f0fb5e6f488c59c1a05ce92d5ea57d9c1ae0104"
+  },
+  "startupHashReconstructed": true,
+  "publicObservation": {
+    "checkedAtParis": "2026-11-09T16:35:04+01:00",
+    "origins": {
+      "jessiemessage.com": {
+        "healthHttp": 200,
+        "healthJson": {
+          "status": "ok"
+        },
+        "readyHttp": 200,
+        "readyJson": {
+          "status": "ready"
+        },
+        "homeHttp": 200,
+        "homeJessie": true
+      },
+      "recette.jessiemessage.com": {
+        "healthHttp": 200,
+        "healthJson": {
+          "status": "ok"
+        },
+        "readyHttp": 200,
+        "readyJson": {
+          "status": "ready"
+        },
+        "homeHttp": 200,
+        "homeJessie": true
+      }
+    }
+  },
+  "next": "Record the verified startup in the private deployment checkpoint."
+}

@@ -4,8 +4,7 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 ## Incident d’accès du 9 novembre et évolution 1.16.0
 
-1. Activer la 1.16.0. La préparation, les deux attestations et le CHECK sont acquis. Vérifier l’identité du démarrage, l’accueil et les réponses JSON publiques. [État et preuves](REPRISE.md#incident-daccès-du-9-novembre-2026)
-2. Finaliser le checkpoint privé après les preuves de rétablissement.
+La 1.16.0 est active et les deux domaines sont disponibles. Finaliser le checkpoint privé avec les preuves du démarrage. [État et preuves](REPRISE.md#incident-daccès-du-9-novembre-2026)
 
 ## Correctif1.15.1 — livraison terminée
 
