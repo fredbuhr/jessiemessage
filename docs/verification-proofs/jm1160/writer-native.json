@@ -1,0 +1,19 @@
+{
+  "format": "jessiemessage-1160-native-checkpoint-writer-qualification",
+  "run": 42646613779,
+  "job": 129261447182,
+  "attempt": 1,
+  "conclusion": "success",
+  "jobsPassed": 1,
+  "tests": 10,
+  "passed": 10,
+  "omitted": 0,
+  "nodeVersion": "v24.22.1",
+  "operator": "e20f151258d0fc8f6e821505931c70caa0a4dddd",
+  "operatorTree": "3171fd8dbb354074cf6311f6c573676a21c87b30",
+  "writerSha256": "b9bb965762205f363a91a89b9d72fd4969fac3ca558410d551247ed735d76345",
+  "writerBytes": 36351,
+  "exactWriterReadback": true,
+  "hostedExecutionPerformedByWorkflow": false,
+  "evidence": "GitHub Actions job logs record the exact checkout and native test footer."
+}

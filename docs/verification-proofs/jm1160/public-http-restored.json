@@ -1,0 +1,116 @@
+{
+  "method": "anonymous HTTPS GET without redirect following",
+  "runtimeIdentitySource": "operator startup receipt, separate from these HTTP checks",
+  "publishedSource": "d2b57fb88d58aacf64dd51c5d1952c65f5c327ae",
+  "publishedTree": "632ec530d812fa75cf2aa4b603c91c81dcaf7e8e",
+  "checks": [
+    {
+      "host": "jessiemessage.com",
+      "route": "health",
+      "url": "https://jessiemessage.com/api/health",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "sha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288",
+      "bytes": 15,
+      "httpDate": [
+        "Mon, 09 Nov 2026 15:36:43 GMT",
+        "Mon, 09 Nov 2026 15:36:43 GMT"
+      ],
+      "redirect": false,
+      "hsts": true,
+      "body": {
+        "status": "ok"
+      }
+    },
+    {
+      "host": "jessiemessage.com",
+      "route": "home",
+      "url": "https://jessiemessage.com/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sha256": "71b70b89c4266bcf837f6bfc8b97e97762e773d0fa8be15b3483868fba88fe46",
+      "bytes": 10929,
+      "httpDate": [
+        "Mon, 09 Nov 2026 15:36:43 GMT",
+        "Mon, 09 Nov 2026 15:36:43 GMT"
+      ],
+      "redirect": false,
+      "hsts": true,
+      "title": "JessieMessage — Ton accès privé",
+      "sourceFile": "public/access.html",
+      "exactSourceBody": true
+    },
+    {
+      "host": "jessiemessage.com",
+      "route": "ready",
+      "url": "https://jessiemessage.com/api/ready",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "sha256": "31bf75f4c0a97cc1f7b60df824fa390b3be9ba014f29b63c87c698ba63d9a9fd",
+      "bytes": 18,
+      "httpDate": [
+        "Mon, 09 Nov 2026 15:36:43 GMT",
+        "Mon, 09 Nov 2026 15:36:43 GMT"
+      ],
+      "redirect": false,
+      "hsts": true,
+      "body": {
+        "status": "ready"
+      }
+    },
+    {
+      "host": "recette.jessiemessage.com",
+      "route": "health",
+      "url": "https://recette.jessiemessage.com/api/health",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "sha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288",
+      "bytes": 15,
+      "httpDate": [
+        "Mon, 09 Nov 2026 15:36:44 GMT",
+        "Mon, 09 Nov 2026 15:36:44 GMT"
+      ],
+      "redirect": false,
+      "hsts": true,
+      "body": {
+        "status": "ok"
+      }
+    },
+    {
+      "host": "recette.jessiemessage.com",
+      "route": "home",
+      "url": "https://recette.jessiemessage.com/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "sha256": "f66af81b9c69d01386a86e3195aff5cf791d120bae63112c1b3dc24d51d55e9f",
+      "bytes": 3416,
+      "httpDate": [
+        "Mon, 09 Nov 2026 15:36:44 GMT",
+        "Mon, 09 Nov 2026 15:36:45 GMT"
+      ],
+      "redirect": false,
+      "hsts": true,
+      "title": "Jessie — Mon espace privé",
+      "sourceFile": "public/index.html",
+      "exactSourceBody": true
+    },
+    {
+      "host": "recette.jessiemessage.com",
+      "route": "ready",
+      "url": "https://recette.jessiemessage.com/api/ready",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "sha256": "31bf75f4c0a97cc1f7b60df824fa390b3be9ba014f29b63c87c698ba63d9a9fd",
+      "bytes": 18,
+      "httpDate": [
+        "Mon, 09 Nov 2026 15:36:44 GMT",
+        "Mon, 09 Nov 2026 15:36:44 GMT"
+      ],
+      "redirect": false,
+      "hsts": true,
+      "body": {
+        "status": "ready"
+      }
+    }
+  ]
+}
