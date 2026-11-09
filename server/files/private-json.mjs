@@ -1,5 +1,5 @@
 import { constants } from "node:fs";
-import { lstat, open, rename, unlink } from "node:fs/promises";
+import { link, lstat, open, rename, unlink } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import { withPrivateDirectory } from "./private-directory.mjs";
 
@@ -85,7 +85,7 @@ async function saveCopyState(directory, value, expectedRevision, internal = {}) 
         lockStats = await lock.stat({ bigint: true }); regular(lockStats);
         if (lockStats.size !== 0n) failCopy("changed");
         const previous = await read(scope);
-        if (previous.state.revision !== expectedRevision) failCopy("changed");
+        if (previous.state.revision !== expectedRevision || internal.exclusiveCreate && previous.stats) failCopy("changed");
         file = await open(scope.file(temporary), constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW | constants.O_NONBLOCK, 0o600);
         fileStats = await file.stat({ bigint: true }); regular(fileStats);
         if (fileStats.size !== 0n) failCopy("changed");
@@ -110,7 +110,11 @@ async function saveCopyState(directory, value, expectedRevision, internal = {}) 
         } else await absent(scope, NAME);
         if (!same(await lstat(scope.file(LOCK), { bigint: true }), lockStats)) failCopy("changed");
         if (!same(await lstat(scope.file(temporary), { bigint: true }), visible)) failCopy("changed");
-        await rename(scope.file(temporary), scope.file(NAME)); await scope.sync();
+        if (internal.exclusiveCreate) {
+          await link(scope.file(temporary), scope.file(NAME));
+          await unlink(scope.file(temporary));
+        } else await rename(scope.file(temporary), scope.file(NAME));
+        await scope.sync();
         const final = await lstat(scope.file(NAME), { bigint: true }); regular(final);
         if (!identity(final, fileStats) || final.size !== BigInt(bytes.length)) failCopy("changed");
         if (JSON.stringify((await read(scope)).state) !== JSON.stringify(next)) failCopy("changed");

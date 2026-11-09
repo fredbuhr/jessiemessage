@@ -1,6 +1,7 @@
 import { constants } from "node:fs";
 import { lstat, realpath, open as openFile, link, unlink, statfs, readdir, opendir } from "node:fs/promises";
 import { createCipheriv, createDecipheriv, createHmac, createHash, randomBytes } from "node:crypto";
+import { storageRootFingerprint } from "../files/storage-root-binding.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { openPrivateDirectory, privatePathMode } from "../files/private-directory.mjs";
@@ -296,8 +297,7 @@ export async function createVideoStorage({ root, key, pathMode = privatePathMode
     let scope, result, failure;
     try {
       scope = await directory(); const stats = await scope.assertReady();
-      result = createHmac("sha256", secret).update("jessiemessage:video-root:v1:\0", "ascii")
-        .update(root, "utf8").update("\0").update(stats.dev.toString()).update("\0").update(stats.ino.toString()).digest();
+      result = await storageRootFingerprint({ kind: "video", root, key: secret, identity: stats });
       await scope.assertReady();
     } catch (error) { failure = wrapped(error); }
     finally { try { await scope?.close(); } catch (error) { failure ??= wrapped(error); } }

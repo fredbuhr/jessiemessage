@@ -147,10 +147,9 @@ export async function inspectDirectoryIdentities(root, internal = {}) {
   return result;
 }
 
-// The optional third argument is an internal test seam, never configuration.
-export async function withPrivateDirectory(root, callback, internal = {}) {
+async function withDirectoryScope(root, callback, internal, requirePrivateRoot) {
   if (typeof callback !== "function") throw unavailable();
-  const scope = await openPrivateDirectory(root, internal);
+  const { scope } = await anchorDirectory(root, internal, requirePrivateRoot);
   let failed = false, failure, result;
   try {
     // Callback failures belong to the consumer, which owns their public boundary.
@@ -160,4 +159,15 @@ export async function withPrivateDirectory(root, callback, internal = {}) {
   finally { try { await scope.close(); } catch (error) { if (!failed) { failed = true; failure = error; } } }
   if (failed) throw failure;
   return result;
+}
+
+// The optional third argument is an internal test seam, never configuration.
+export function withPrivateDirectory(root, callback, internal = {}) {
+  return withDirectoryScope(root, callback, internal, true);
+}
+
+// A storage binding is a private file beside the media root. The parent may
+// be a provider-owned ancestor, but traversal still uses the same fd guards.
+export function withStorageBindingParent(root, callback) {
+  return withDirectoryScope(root, callback, {}, false);
 }
