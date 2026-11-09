@@ -47,8 +47,8 @@ QUALIFIED_JOB_IDS = {
         'MariaDB 10.11': 129239105614,
     },
 }
-RETAINED_JOB_FIELDS = ('started_at', 'completed_at', 'steps', 'runner_id', 'runner_name',
-                       'runner_group_id', 'runner_group_name')
+# Retained rows may normalize runner_group_id from 0 to null during a rerun.
+RETAINED_JOB_FIELDS = ('started_at', 'completed_at', 'steps', 'runner_id', 'runner_name', 'runner_group_name')
 VIDEO_NAMES = {'server/video/migrations/0034_video_storage_state.sql', 'server/video/migrations/0035_video_assets.sql', 'server/video/migrations/0036_message_video.sql'}
 EXPERIENCE_NAMES = {'server/experience/migrations/0037_profile_preferences.sql', 'server/experience/migrations/0038_reply_tracking.sql'}
 ACTION_COUNTS = {'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1':4,

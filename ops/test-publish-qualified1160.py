@@ -169,6 +169,8 @@ class Api:
             if self.fault == 'retained_missing_completion': retained.pop('completed_at')
             if self.fault == 'retained_step_changed': retained['steps'][0]['name'] = 'Other execution'
             if self.fault == 'retained_runner_changed': retained['runner_id'] = 2
+            if self.fault == 'retained_runner_group_omitted': retained.pop('runner_group_id')
+            if self.fault == 'retained_runner_group_null': retained['runner_group_id'] = None
             if self.fault == 'jobs': jobs[0]['conclusion'] = 'skipped'
             if self.fault == 'job_sha': jobs[0]['head_sha'] = 'f'*40
             if self.fault == 'job_run': jobs[0]['run_id'] = ci+1
@@ -330,6 +332,13 @@ class Publication(unittest.TestCase):
                     with self.assertRaisesRegex(self.m.PublicationRefused, code):
                         api.publish()
                     self.assertEqual(api.writes, [])
+
+    def test_runner_group_id_may_be_omitted_or_normalized_for_a_retained_job(self):
+        for fault in ('retained_runner_group_omitted', 'retained_runner_group_null'):
+            with self.subTest(fault=fault):
+                api = Api(self.m); api.fault = fault
+                self.assertEqual(api.publish()['status'], 'published_verified')
+                self.assertEqual([path for path, _ in api.writes], ['git/refs', 'releases'])
 
     def test_first_attempt_cannot_publish(self):
         with mock.patch.object(self.m, 'RELEASES', (dict(self.m.RELEASES[0], attempt=1),)):
