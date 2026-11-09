@@ -4,8 +4,9 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 ## Incident d’accès du 9 novembre et évolution 1.16.0
 
-1. Résoudre le refus `ERASURE_BINDING` du service Node 239143. Demander à Infomaniak de vérifier l’identité du montage. Confirmer les deux empreintes avant de relancer la 1.15.1. Si le montage ne peut être rétabli, inventorier et authentifier les fichiers et reçus avant toute réassociation. Vérifier l’accueil et les JSON de santé et de disponibilité après redémarrage. [Relevés et actions](REPRISE.md#incident-daccès-du-9-novembre-2026)
-2. Après le rétablissement, reprendre la publication et l’activation de la 1.16.0 avec son commit exact et ses preuves. Le sélecteur multiple et les tailles d’emojis sont intégrés et qualifiés. [PR149](https://github.com/fredbuhr/jessiemessage/pull/149) · [CI main](https://github.com/fredbuhr/jessiemessage/actions/runs/42631403755)
+1. Terminer la qualification du commit exact de 1.16.0 sur main. La PR de reprise et les outils de staging et d’attestation sont qualifiés. [État et preuves](REPRISE.md#incident-daccès-du-9-novembre-2026)
+2. Publier le tag immuable. Préparer le checkout privé, installer les deux attestations après vérification des données et exécuter le CHECK, avec un reçu par étape.
+3. Démarrer la 1.16.0, puis vérifier l’identité de l’application, l’accueil et les réponses JSON publiques. La reprise livre les améliorations emojis déjà qualifiées et le correctif du stockage. Épingler la preuve du démarrage et finaliser le checkpoint privé.
 
 ## Correctif1.15.1 — livraison terminée
 
