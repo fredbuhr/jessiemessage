@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { privatePathMode, withPrivateDirectory } from "../files/private-directory.mjs";
+import { storageRootFingerprint } from "../files/storage-root-binding.mjs";
 
 const CHECKOUT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const NAMESPACE = Buffer.from("jessiemessage:media-file:v1:", "ascii");
@@ -168,8 +169,7 @@ export async function createMediaStorage({ root, key, pathMode = privatePathMode
   async function fingerprint() {
     try {
       await assertReady();
-      const result = createHmac("sha256", secret).update("jessiemessage:media-root:v1:\0", "ascii")
-        .update(root, "utf8").update("\0").update(identity.dev.toString()).update("\0").update(identity.ino.toString()).digest();
+      const result = await storageRootFingerprint({ kind: "media", root, key: secret, identity });
       await assertReady();
       return result;
     } catch { throw new MediaStorageError(); }
