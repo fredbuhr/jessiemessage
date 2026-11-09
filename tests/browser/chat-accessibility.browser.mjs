@@ -502,12 +502,12 @@ test("Chrome mobile: message emojis are enlarged without splitting Unicode seque
       await loadedPhoto(page);
       const rendered = await page.execute(`return [...document.querySelectorAll('#messages .bubble')].map(bubble => {
         const text = bubble.querySelector('.photo-caption') ?? bubble, emoji = text.querySelector('.message-emoji');
-        return { text: text.textContent, emoji: emoji?.textContent, single: bubble.classList.contains('single-emoji-message'),
+        return { text: text.textContent, emoji: emoji?.textContent ?? null, single: bubble.classList.contains('single-emoji-message'),
           font: parseFloat(getComputedStyle(text).fontSize), emojiFont: emoji && parseFloat(getComputedStyle(emoji).fontSize),
           htmlInterpreted: !!text.querySelector('b') };
       })`);
       assert.deepEqual(rendered.map(item => item.text), samples);
-      assert.deepEqual(rendered.map(item => item.emoji), ["😘", "👩🏽‍💻", "❤️", "🇫🇷1️⃣", undefined]);
+      assert.deepEqual(rendered.map(item => item.emoji), ["😘", "👩🏽‍💻", "❤️", "🇫🇷1️⃣", null]);
       assert.deepEqual(rendered.map(item => item.single), [false, true, false, false, false]);
       assert.ok(rendered.every(item => !item.htmlInterpreted));
       assert.ok(rendered.slice(0, 4).every(item => item.emojiFont > item.font));
