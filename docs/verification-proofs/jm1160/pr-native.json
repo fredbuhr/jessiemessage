@@ -1,0 +1,250 @@
+{
+  "repository": "fredbuhr/jessiemessage",
+  "pullRequest": 149,
+  "run": {
+    "id": 42630068262,
+    "attempt": 1,
+    "event": "pull_request",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/42630068262",
+    "createdAt": "2026-11-09T13:57:41Z",
+    "startedAt": "2026-11-09T13:57:41Z",
+    "updatedAt": "2026-11-09T14:05:25Z",
+    "head": "07004e8dc1eba5e4df8283a4551254842b66f92d"
+  },
+  "merge": {
+    "commit": "8d4bfeae8a6ff47be490f7d2e8f4979ab96034d0",
+    "parents": [
+      "7edbe92c743ad144ed8596447edcefbde88c1ac4",
+      "07004e8dc1eba5e4df8283a4551254842b66f92d"
+    ],
+    "tree": "dd2b56af0eb8668b70b2efc713c4d843de82fff9",
+    "headTree": "dd2b56af0eb8668b70b2efc713c4d843de82fff9"
+  },
+  "jobs": [
+    {
+      "id": 129203771335,
+      "name": "verify",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/42630068262/job/129203771335",
+      "status": "completed",
+      "conclusion": "success",
+      "checkout": "8d4bfeae8a6ff47be490f7d2e8f4979ab96034d0",
+      "node": "node: v24.22.1",
+      "footer": [
+        "ℹ tests 4541",
+        "ℹ suites 0",
+        "ℹ pass 4489",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 52",
+        "ℹ todo 0",
+        "ℹ duration_ms 105651.026511"
+      ],
+      "counts": {
+        "tests": 4541,
+        "suites": 0,
+        "pass": 4489,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 52,
+        "todo": 0,
+        "duration_ms": 105651.026511
+      },
+      "omissions": [
+        "﹣ real HTTP invitation, encrypted verification mail and gated client access (synthetic disposable database only) (0.812822ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ real MariaDB invitation and restricted client access persistence (synthetic disposable database only) (0.724754ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ durable account erasure removes the selected graph and actual encrypted files, with peers intact (disposable MariaDB only) (0.696469ms) # Set JESSIEMESSAGE_DB_TEST=1 with explicit loopback disposable credentials.",
+        "﹣ real database own-password rotation is atomic, preserves encrypted history and revokes old devices/reset links (0.785953ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ Linux descriptor bootstrap refuses unavailable proc descriptor paths before database initialization (0.123591ms) # Real proc descriptor paths are available",
+        "﹣ real MariaDB controlled administrator recovery (synthetic disposable database only) (0.826721ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ real MariaDB announcements are private, atomic, scheduled, expiring and retryable with ordinary delivery (0.813223ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+        "﹣ real MariaDB administrator authentication persistence (synthetic disposable database only) (0.748754ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ offline backup restores a separate real MariaDB schema and private encrypted root without changing its source (synthetic fixtures only) (1.047413ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases.",
+        "﹣ real MariaDB live media use configured shared capacity while backup format eligibility remains separate (0.653674ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+        "﹣ real MariaDB trusted broadcast/chat transactions (synthetic disposable database only) (0.521568ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ real HTTP targeted broadcasts require active access and retain durable ordinary chat delivery (synthetic disposable database only) (0.648059ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ real MariaDB: 2,500-client audience is bounded, atomic, retryable and resumes without duplicate messages (0.643547ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ real MariaDB active-access eligibility, immutable targeted campaigns and atomic private delivery (synthetic disposable schema only) (0.66654ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ real HTTP private chat, ciphertext, receipts, deletion and live authorization (synthetic disposable database only) (0.715299ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ real MariaDB private text chat persistence (synthetic disposable database only) (0.637159ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ native closure reconciliation replays a source receipt into a distinct MariaDB/media clone and retains quarantine (0.616263ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases.",
+        "﹣ real HTTP private CRM, encrypted notes, scoped labels and current authorization (synthetic disposable database only) (0.724795ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ real MariaDB private CRM ownership, optimistic saves and inbox filters (synthetic disposable schema only) (0.856732ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ offline deletion facts and operator plan inspect real reference graphs without SQL or filesystem mutation (synthetic disposable database only) (0.692147ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+        "﹣ offline client content reader isolates two real MariaDB clients in one read-only snapshot (synthetic disposable database only) (0.82494ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+        "﹣ the real dual-origin runtime shares schema thirty, source sessions, encrypted notifications and invitation policy (synthetic disposable database only) (0.636816ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+        "﹣ native SQL38 capture, crypto verification and closure preserve private preferences and reply tasks of other accounts (0.681879ms) # Requires two explicit disposable loopback databases, native SQL/tar tools and procfs.",
+        "﹣ local closures drain the real managed process and preserve durable SQL/photo absence without a PC (disposable MariaDB only) (0.572785ms) # Set JESSIEMESSAGE_DB_TEST=1 with explicit loopback disposable credentials.",
+        "﹣ real MariaDB encrypted verification mail persistence (synthetic disposable database only) (0.825304ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ an administrator request drains a real child, captures SQL33 and photos, encrypts with real GPG, resumes and downloads its pinned ciphertext (0.535907ms) # Set JESSIEMESSAGE_DB_TEST=1 with disposable loopback MariaDB, native clients, procfs and GPG.",
+        "﹣ manual operator imports a real native archive, publishes the actual IPC application and verifies drain and ordinary restart on an isolated target (0.094565ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases and native MariaDB clients.",
+        "﹣ the operator CLI resumes interrupted media using native SQL once, then copies only missing files and opens the owned IPC service (0.073595ms) # Set JESSIEMESSAGE_DB_TEST=1 with explicit loopback disposable databases and native MariaDB clients.",
+        "﹣ manual local restoration reconciles later closures on a distinct MariaDB/media clone without witness or exhaustive SQL inventory (0.552889ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit loopback disposable databases.",
+        "﹣ real HTTP private media uses normalized encrypted files and current delivery authorization (synthetic disposable fixtures only) (0.48183ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ real MariaDB private media ownership and delivery (synthetic disposable database only) (0.789666ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ real MariaDB migration and foundation constraints (synthetic disposable database only) (0.777621ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ real MariaDB private notification transactions (synthetic disposable database only) (0.82019ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ operational metadata samples real MariaDB queues with runtime DML rights and no queue mutation (synthetic disposable database only) (0.258833ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+        "﹣ real MariaDB preferences: owner-only encrypted selections, cross-device CAS, authorised peer view and safe clearing (1.140437ms) # Requires explicit loopback disposable MariaDB database.",
+        "﹣ operator SQL preflight observes real MariaDB with runtime DML rights without mutation (synthetic disposable database only) (0.788285ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+        "﹣ explicit Linux dirfd selection fails closed when real procfs is absent (0.156441ms) # SKIP",
+        "﹣ real MariaDB own profiles, bounded private avatars and simultaneous updates (synthetic disposable database only) (0.801471ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+        "﹣ administrator readiness with real SQL MFA, private HTTP and fake verification-only SMTP (synthetic disposable database only) (0.694583ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ real SQL reply task tracks incoming, concurrent replies, broadcasts, historical requests and two sessions (0.623468ms) # Set JESSIEMESSAGE_DB_TEST=1 with a disposable loopback database.",
+        "﹣ real HTTP client recovery, encrypted mail, single use and unchanged access gates (synthetic disposable database only) (0.786181ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ real MariaDB single-use client password recovery and private leased mail (synthetic disposable database only) (0.539287ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback test database.",
+        "﹣ real MariaDB private tasks persist, retry, page and serialize simultaneous administrators (0.977974ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+        "﹣ native SQL36 video backup captures two encrypted roots, resumes a separate clone and preserves old closure receipts (0.707085ms) # Set JESSIEMESSAGE_DB_TEST=1 with two explicit disposable loopback databases, native SQL/tar clients and procfs.",
+        "﹣ SQL36 video broadcasts protect queued originals, preserve private delivery and release unused terminal sources (0.579944ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+        "﹣ real HTTP conversation ZIP streams isolate video deliveries and authenticate GCM before a valid ZIP footer (0.85935ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+        "﹣ real read-only MariaDB client video exports stream authenticated files without changing SQL or source capacity (0.695018ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+        "﹣ candidate video deletion and account closure remain durable and preserve other clients (0.465499ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+        "﹣ real HTTP/SQL video messages are atomic, idempotent, private and visible only through live deliveries (0.60176ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+        "﹣ real MariaDB dormant video catalog reserves, commits and reconciles durable capacity (0.830216ms) # Set JESSIEMESSAGE_DB_TEST=1 with an explicit loopback disposable database.",
+        "﹣ witness maintenance drains and resumes the actual messaging runtime, SQL and media directly without enabling closures (disposable MariaDB only) (0.73103ms) # Set JESSIEMESSAGE_DB_TEST=1 with loopback disposable credentials.",
+        "﹣ witness maintenance drains and resumes the actual messaging runtime, SQL and media through the real parent gateway without enabling closures (disposable MariaDB only) (0.128796ms) # Set JESSIEMESSAGE_DB_TEST=1 with loopback disposable credentials."
+      ],
+      "decodedUtf8Log": {
+        "bytes": 638760,
+        "sha256": "e589e587f1519ed9ec77181923fc8975f33787e801fccad68f7a05ef123b695f"
+      }
+    },
+    {
+      "id": 129203771548,
+      "name": "Chrome keyboard and chat lifecycle",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/42630068262/job/129203771548",
+      "status": "completed",
+      "conclusion": "success",
+      "checkout": "8d4bfeae8a6ff47be490f7d2e8f4979ab96034d0",
+      "node": "node: v24.22.1",
+      "footer": [
+        "ℹ tests 328",
+        "ℹ suites 0",
+        "ℹ pass 328",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0",
+        "ℹ todo 0",
+        "ℹ duration_ms 396205.084523"
+      ],
+      "counts": {
+        "tests": 328,
+        "suites": 0,
+        "pass": 328,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 396205.084523
+      },
+      "omissions": [],
+      "decodedUtf8Log": {
+        "bytes": 63883,
+        "sha256": "fd488f8352e03c0568f77d96891c48593a5e731939c1496de859cc979f218f84"
+      }
+    },
+    {
+      "id": 129203771600,
+      "name": "MariaDB 11.4",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/42630068262/job/129203771600",
+      "status": "completed",
+      "conclusion": "success",
+      "checkout": "8d4bfeae8a6ff47be490f7d2e8f4979ab96034d0",
+      "node": "node: v24.22.1",
+      "footer": [
+        "# tests 620",
+        "# suites 0",
+        "# pass 620",
+        "# fail 0",
+        "# cancelled 0",
+        "# skipped 0",
+        "# todo 0",
+        "# duration_ms 419368.821783"
+      ],
+      "counts": {
+        "tests": 620,
+        "suites": 0,
+        "pass": 620,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 419368.821783
+      },
+      "omissions": [],
+      "decodedUtf8Log": {
+        "bytes": 367249,
+        "sha256": "fa81ae7e48e74a6ab0c6378f9e42ca6f1603b0c83e9354bedbec2100f8ff08ea"
+      }
+    },
+    {
+      "id": 129203771678,
+      "name": "Chrome HTTPS authentication and messaging with MariaDB",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/42630068262/job/129203771678",
+      "status": "completed",
+      "conclusion": "success",
+      "checkout": "8d4bfeae8a6ff47be490f7d2e8f4979ab96034d0",
+      "node": "node: v24.22.1",
+      "footer": [
+        "ℹ tests 14",
+        "ℹ suites 0",
+        "ℹ pass 14",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0",
+        "ℹ todo 0",
+        "ℹ duration_ms 118731.016022"
+      ],
+      "counts": {
+        "tests": 14,
+        "suites": 0,
+        "pass": 14,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 118731.016022
+      },
+      "omissions": [],
+      "decodedUtf8Log": {
+        "bytes": 42651,
+        "sha256": "e876bada03d5ff37c76d53741ba268c24288abeb242d64b3f10b1cfa780814fb"
+      }
+    },
+    {
+      "id": 129203771717,
+      "name": "MariaDB 10.11",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/42630068262/job/129203771717",
+      "status": "completed",
+      "conclusion": "success",
+      "checkout": "8d4bfeae8a6ff47be490f7d2e8f4979ab96034d0",
+      "node": "node: v24.22.1",
+      "footer": [
+        "# tests 620",
+        "# suites 0",
+        "# pass 620",
+        "# fail 0",
+        "# cancelled 0",
+        "# skipped 0",
+        "# todo 0",
+        "# duration_ms 409468.393025"
+      ],
+      "counts": {
+        "tests": 620,
+        "suites": 0,
+        "pass": 620,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 409468.393025
+      },
+      "omissions": [],
+      "decodedUtf8Log": {
+        "bytes": 366735,
+        "sha256": "aebcced5cda5f413dd974c34d17b2a75006b004ab3ffcb9bd654b99761cc8f52"
+      }
+    }
+  ]
+}

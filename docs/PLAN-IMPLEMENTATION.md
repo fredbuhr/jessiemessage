@@ -2,6 +2,11 @@
 
 Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’application](AUDIT-FINAL-20261022.md), en conservant la décision de simplifier son périmètre. Le précédent décompte de huit résultats concernait seulement la vidéo et sa qualification ; il ne mesurait pas toutes les fonctions encore absentes. Il est remplacé par le présent plan. Le [bilan initial](BILAN-GLOBAL-20261022.md) conserve l’état de sa livraison180 ; les correctifs182 et les contrôles restants sont décrits ci-dessous. [REPRISE](REPRISE.md) reste l’unique référence de production et des commandes opérateur.
 
+## Incident d’accès du 9 novembre et évolution 1.16.0
+
+1. Lire l’erreur d’exécution du service Node 239143, arrêté dans le Manager, et identifier la cause avant toute nouvelle tentative. Le retour de l’accueil de JessieMessage et des JSON de santé et de disponibilité sur les domaines partagés confirme le rétablissement. [Relevés et actions](REPRISE.md#incident-daccès-du-9-novembre-2026)
+2. Après le rétablissement, reprendre la publication et l’activation de la 1.16.0 avec son commit exact et ses preuves. Le sélecteur multiple et les tailles d’emojis sont intégrés et qualifiés. [PR149](https://github.com/fredbuhr/jessiemessage/pull/149) · [CI main](https://github.com/fredbuhr/jessiemessage/actions/runs/42631403755)
+
 ## Correctif1.15.1 — livraison terminée
 
 [Audit et bilan8domaines](access-reliability-1151.md) terminés : PR148/main5/5, six captures inspectées, publicationv1.15.1/sourcea4a07f9f/arbre568530e7/release432505702, préparateur40/40 et writer36/36 natifs qualifiés, sources relues et contre-revues acquises.52omissions générales explicites conservées, aucun nouveau schéma ou dépendance.
