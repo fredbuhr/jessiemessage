@@ -1,0 +1,19 @@
+{
+  "format": "jessiemessage-1160-hosted-check-observation",
+  "authority": "User terminal output on 9 November 2026. No direct access to hosted files.",
+  "stageReceiptSha256": "3f0839dc9153fc4b38dbcad7b8084690e6953c72e48127facab6eb47bb831827",
+  "launcherSha256": "703beb28850f15095cecf89cd453118c20f9b776444336b223158e9bfccd0feb",
+  "launcherHashVerified": true,
+  "exitCode": 0,
+  "result": {
+    "version": 2,
+    "type": "local_closure_precheck",
+    "status": "passed",
+    "scope": "local_application",
+    "pendingClosures": false,
+    "started": false,
+    "erased": false,
+    "externalContinuityVerified": false
+  },
+  "next": "Set the Manager Run and Build commands from the stage receipt, then confirm startup and public readiness."
+}
