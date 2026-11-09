@@ -490,6 +490,33 @@ test("Chrome: only Jessie sees a read receipt after a metadata-only poll, with s
   }
 });
 
+test("Chrome mobile: message emojis are enlarged without splitting Unicode sequences or styling the surrounding text", { timeout: 60000 }, async () => {
+  const samples = ["Salut <b>Jessie</b> 😘\nÀ demain", "👩🏽‍💻", "❤️", "🇫🇷1️⃣", "a🏽"];
+  for (const role of ["client", "admin"]) {
+    resetFixture(); fixture.windowedHistory = true; fixture.latest = samples.length;
+    fixture.sent = samples.map((body, index) => ({ ...message(index + 1, role), body }));
+    const page = await browser(320, 640);
+    try {
+      await loaded(page, role === "admin" ? "/admin/messages" : "/messages");
+      if (role === "admin") await page.click(".contact");
+      await loadedPhoto(page);
+      const rendered = await page.execute(`return [...document.querySelectorAll('#messages .bubble')].map(bubble => {
+        const text = bubble.querySelector('.photo-caption') ?? bubble, emoji = text.querySelector('.message-emoji');
+        return { text: text.textContent, emoji: emoji?.textContent ?? null, single: bubble.classList.contains('single-emoji-message'),
+          font: parseFloat(getComputedStyle(text).fontSize), emojiFont: emoji && parseFloat(getComputedStyle(emoji).fontSize),
+          htmlInterpreted: !!text.querySelector('b') };
+      })`);
+      assert.deepEqual(rendered.map(item => item.text), samples);
+      assert.deepEqual(rendered.map(item => item.emoji), ["😘", "👩🏽‍💻", "❤️", "🇫🇷1️⃣", null]);
+      assert.deepEqual(rendered.map(item => item.single), [false, true, false, false, false]);
+      assert.ok(rendered.every(item => !item.htmlInterpreted));
+      assert.ok(rendered.slice(0, 4).every(item => item.emojiFont > item.font));
+      assert.ok(rendered[1].emojiFont > rendered[0].emojiFont);
+      await noJavascriptErrors(page);
+    } finally { await page.close(); }
+  }
+});
+
 test("Chrome mobile: compact messages reveal one accessible details area at a time without intercepting photos or native links", { timeout: 180000 }, async () => {
   for (const width of [320, 360, 390]) for (const role of ["client", "admin"]) for (const language of ["fr", "en"]) {
     resetFixture(); fixture.peerReadSequence = "2";
@@ -598,7 +625,7 @@ test("Chrome: message details never hide an uncertain send, its error or the exp
   }
 });
 
-test("Chrome 320px: keyboard emoji panel inserts at the selection without photos or automatic sending, and Escape restores focus", { timeout: 60000 }, async () => {
+test("Chrome 320px: keyboard emoji panel stays open for successive insertions and dismisses with Escape or a tap outside", { timeout: 60000 }, async () => {
   for (const role of ["client", "admin"]) {
     resetFixture(); fixture.mediaDisabled = true; const page = await browser(320);
     try {
@@ -614,9 +641,12 @@ test("Chrome 320px: keyboard emoji panel inserts at the selection without photos
       await page.key("\uE012"); assert.equal(await page.execute("return document.activeElement.dataset.emojiId"), "kiss-face");
       await page.key("\uE007");
       assert.equal(await page.execute("return document.getElementById('message-body').value"), "Hello 😘");
-      assert.deepEqual(await page.execute("const t=document.getElementById('message-body');return [t.selectionStart,t.selectionEnd,document.activeElement.id]"), [8, 8, "open-emojis"]);
+      assert.deepEqual(await page.execute("const t=document.getElementById('message-body');return [t.selectionStart,t.selectionEnd,document.activeElement.dataset.emojiId,document.getElementById('emoji-dialog').open]"), [8, 8, "kiss-face", true]);
+      await page.key("\uE007");
+      assert.equal(await page.execute("return document.getElementById('message-body').value"), "Hello 😘😘");
+      assert.deepEqual(await page.execute("const t=document.getElementById('message-body');return [t.selectionStart,t.selectionEnd]"), [10, 10]);
       assert.equal(fixture.messageRequests.length, 0);
-      await page.click("#open-emojis"); await page.key("\uE00C");
+      await page.key("\uE00C");
       await waitUntil(() => page.execute("return !document.getElementById('emoji-dialog').open && document.activeElement.id === 'open-emojis'"), "Escape returns to the emoji opener");
       await page.click("#open-emojis");
       await page.execute("JessieI18n.setLanguage('en')");
@@ -625,7 +655,9 @@ test("Chrome 320px: keyboard emoji panel inserts at the selection without photos
         return {fits:rect.left>=0 && rect.right<=innerWidth && dialog.scrollWidth<=dialog.clientWidth,
           touch:[...document.querySelectorAll('#emoji-list button')].every(button=>{const b=button.getBoundingClientRect();return b.width>=44 && b.height>=44})};`);
       assert.deepEqual(layout, { fits: true, touch: true });
-      await page.key("\uE00C"); assert.equal(await page.execute("return document.getElementById('message-body').value"), "Hello 😘");
+      await page.swipe(1, 1, 1, 1);
+      await waitUntil(() => page.execute("return !document.getElementById('emoji-dialog').open && document.activeElement.id === 'open-emojis'"), "a tap on the backdrop returns to the emoji opener");
+      assert.equal(await page.execute("return document.getElementById('message-body').value"), "Hello 😘😘");
       assert.equal(fixture.messageRequests.length, 0); await noJavascriptErrors(page);
     } finally { await page.close(); }
   }
@@ -648,9 +680,10 @@ test("Chrome 320px: skin tone changes the preview and inserted text, survives re
       assert.equal(await page.execute("return document.querySelector('[data-emoji-id=\"thumbs-up\"]').textContent"), "👍🏿");
       await page.click('[data-emoji-id="thumbs-up"]');
       assert.equal(await page.execute("return document.getElementById('message-body').value"), "Hello 👍🏿");
-      assert.deepEqual(await page.execute("const t=document.getElementById('message-body');return [t.selectionStart,t.selectionEnd,document.activeElement.id]"), [10, 10, "open-emojis"]);
+      assert.deepEqual(await page.execute("const t=document.getElementById('message-body');return [t.selectionStart,t.selectionEnd,document.activeElement.dataset.emojiId,document.getElementById('emoji-dialog').open]"), [10, 10, "thumbs-up", true]);
       assert.equal(fixture.messageRequests.length, 0);
 
+      await page.click("#close-emojis");
       await page.click("#open-emojis");
       assert.equal(await page.execute("return document.getElementById('emoji-skin-tone').value"), "dark");
       await page.execute("JessieI18n.setLanguage('en')");
@@ -1534,7 +1567,9 @@ test("Chrome: synthetic coarse-pointer focus policy keeps keyboards closed after
     await page.click("#open-emojis");
     assert.equal(await page.execute("return document.getElementById('emoji-search')===null && document.activeElement.id==='close-emojis'"), true);
     await page.click('[data-emoji-id="kiss-face"]');
-    assert.equal(await page.execute("return document.getElementById('message-body').value==='😘' && document.activeElement.id==='open-emojis'"), true);
+    assert.equal(await page.execute("return document.getElementById('message-body').value==='😘' && document.getElementById('emoji-dialog').open && document.activeElement.dataset.emojiId==='kiss-face'"), true);
+    await page.click("#close-emojis");
+    assert.equal(await page.execute("return document.activeElement.id==='open-emojis'"), true);
     assert.equal(fixture.messageRequests.length, 1); await noJavascriptErrors(page);
   } finally { await page.close(); }
 });
