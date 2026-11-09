@@ -1,0 +1,41 @@
+name: Qualify JessieMessage storage recovery 1.16.0
+
+on:
+  push:
+    branches: ["ops/recover-v1.16.0"]
+
+permissions:
+  contents: read
+
+jobs:
+  operator-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout exact operator commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Use qualified Node.js 24.22.1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+          package-manager-cache: false
+      - name: Test exclusive staging against temporary checkouts
+        run: PYTHONDONTWRITEBYTECODE=1 python3 ops/test-prepare-release1160.py
+      - name: Verify exact installer syntax and fingerprints
+        run: |
+          node --version
+          node --check ops/install-storage-bindings1160.mjs
+          git rev-parse HEAD 'HEAD^{tree}'
+          sha256sum ops/prepare-release1160.py ops/test-prepare-release1160.py ops/install-storage-bindings1160.mjs ops/test-install-storage-bindings1160.mjs
+      - name: Test storage attestation installer on temporary repositories
+        run: |
+          active="$RUNNER_TEMP/jm1151"
+          candidate="$RUNNER_TEMP/jm1160"
+          git worktree add --detach "$active" a4a07f9f31c47a7185b57d11b8277be1d87fd2c1
+          git worktree add --detach "$candidate" d2b57fb88d58aacf64dd51c5d1952c65f5c327ae
+          chmod 700 "$active" "$candidate"
+          TMPDIR="$RUNNER_TEMP" node ops/test-install-storage-bindings1160.mjs ops/install-storage-bindings1160.mjs "$active" "$candidate"
