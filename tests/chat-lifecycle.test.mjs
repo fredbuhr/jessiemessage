@@ -650,7 +650,7 @@ test("quick replies reject clients, full drafts, suspended sending and stale cho
   for (const handler of button.events.get("click")) handler({}); await flush();
   assertOwner(f, 2, "B".repeat(43)); assert.equal(f.element("message-body").value, ""); assert.equal(f.element("quick-replies-list").children.length, 0); assert.equal(f.state.posts, 0);
 });
-for (const role of ["client", "admin"]) test(`${role}: emojis replace the selected draft text without media, network or automatic sending`, async () => {
+for (const role of ["client", "admin"]) test(`${role}: successive emojis replace the selection then advance the draft caret without sending`, async () => {
   const f = harness({ currentSession: session(1, "A".repeat(43), role) }); await flush();
   if (role === "admin") {
     for (const handler of f.element("conversations").children[0].events.get("click")) handler({}); await flush();
@@ -666,8 +666,15 @@ for (const role of ["client", "admin"]) test(`${role}: emojis replace the select
   for (const handler of kiss.events.get("click")) handler({}); await flush();
   assert.equal(f.element("message-body").value, "Bonjour 😘 !");
   assert.equal(f.element("message-body").selectionStart, 10); assert.equal(f.element("message-body").selectionEnd, 10);
-  assert.equal(f.inspect().states.get(f.inspect().selected).draft, "Bonjour 😘 !");
-  assert.equal(f.document.activeElement, f.element("message-body")); assert.equal(f.element("emoji-dialog").open, false);
+  assert.equal(f.document.activeElement, kiss); assert.equal(f.element("emoji-dialog").open, true);
+  const heart = f.element("emoji-list").children.find(button => button.dataset.emojiId === "red-heart");
+  for (const handler of heart.events.get("click")) handler({}); await flush();
+  assert.equal(f.element("message-body").value, "Bonjour 😘❤️ !");
+  assert.equal(f.element("message-body").selectionStart, 12); assert.equal(f.element("message-body").selectionEnd, 12);
+  assert.equal(f.inspect().states.get(f.inspect().selected).draft, "Bonjour 😘❤️ !");
+  assert.equal(f.document.activeElement, heart); assert.equal(f.element("emoji-dialog").open, true);
+  await f.click("close-emojis");
+  assert.equal(f.document.activeElement, f.element("open-emojis")); assert.equal(f.element("emoji-dialog").open, false);
   assert.equal(f.element("emoji-list").children.length, 0); assert.equal(f.element("send").disabled, false);
   assert.equal(f.calls.length, before); assert.equal(f.state.posts, 0);
 });
@@ -1632,7 +1639,9 @@ test("touch sends and emoji insertion never automatically refocus the text field
   assert.equal(f.element("emoji-search"), undefined); assert.equal(f.document.activeElement, f.element("close-emojis"));
   const choice = f.element("emoji-list").children.find(button => button.dataset.emojiId === "kiss-face");
   for (const handler of choice.events.get("click")) handler({}); await flush();
-  assert.equal(f.element("message-body").value, "Hello 😘"); assert.equal(f.document.activeElement.id, "open-emojis");
+  assert.equal(f.element("message-body").value, "Hello 😘"); assert.equal(f.document.activeElement, choice);
+  assert.equal(f.element("emoji-dialog").open, true);
+  await f.click("close-emojis"); assert.equal(f.document.activeElement.id, "open-emojis");
   assert.equal(f.calls.length, before); assert.equal(f.state.posts, 2);
 });
 

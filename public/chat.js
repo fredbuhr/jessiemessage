@@ -1835,6 +1835,33 @@ function messageContentKey(message) {
     media ? [media.id, media.width, media.height, media.thumbnailWidth, media.thumbnailHeight, media.fullUrl, media.thumbnailUrl, mediaEnabled] : null,
     video ? [video.id, video.bytes, video.mime, video.contentUrl, videoEnabled] : null]);
 }
+const messageGraphemes = typeof Intl.Segmenter === "function" ? new Intl.Segmenter() : null;
+const emojiGlyph = /\p{Emoji_Presentation}|\p{Emoji}(?:\uFE0F|\u20E3)/u;
+
+function renderMessageText(node, text, enlargeSingleEmoji = false) {
+  if (!messageGraphemes || !emojiGlyph.test(text)) {
+    ui.rawText(node, text);
+    return;
+  }
+
+  const trimmed = text.trim();
+  const runs = [];
+  for (const { segment } of messageGraphemes.segment(text)) {
+    const emoji = emojiGlyph.test(segment) && !segment.includes("\uFE0E");
+    if (emoji && enlargeSingleEmoji && segment === trimmed) node.classList.add("single-emoji-message");
+    const previous = runs.at(-1);
+    if (previous?.emoji === emoji) previous.text += segment;
+    else runs.push({ text: segment, emoji });
+  }
+  ui.rawText(node, "");
+  for (const run of runs) {
+    const span = document.createElement("span");
+    if (run.emoji) span.className = "message-emoji";
+    ui.rawText(span, run.text);
+    node.append(span);
+  }
+}
+
 function createMessageRow(state, message, contentKey) {
   const own = message.sender === "me"; const fromJessie = role === "admin" ? own : !own;
   const article = document.createElement("article"); article.className = `message ${own ? "own" : ""} ${fromJessie ? "from-jessie" : "from-client"}`; article.dataset.sequence = message.sequence; article.dataset.sender = message.sender; article.setAttribute("role", "listitem");
@@ -1846,7 +1873,7 @@ function createMessageRow(state, message, contentKey) {
       row.video = privateVideoElement(); body.append(row.video);
       const error = document.createElement("p"); error.className = "video-error"; error.hidden = true; body.append(error);
     } else { const unavailable = document.createElement("p"); ui.text(unavailable, "Vidéos indisponibles pour le moment"); body.append(unavailable); }
-    if (message.body) { const caption = document.createElement("p"); caption.className = "photo-caption"; ui.rawText(caption, message.body); body.append(caption); }
+    if (message.body) { const caption = document.createElement("p"); caption.className = "photo-caption"; renderMessageText(caption, message.body); body.append(caption); }
   } else if (message.media && message.deletedAt == null) {
     body.classList.add("photo-message"); const photo = document.createElement("button"); photo.type = "button"; photo.className = "photo-open"; photo.style.aspectRatio = `${message.media.thumbnailWidth}/${message.media.thumbnailHeight}`; ui.attr(photo, "aria-label", "Agrandir la photo de ce message");
     row.photoButton = photo;
@@ -1854,8 +1881,8 @@ function createMessageRow(state, message, contentKey) {
       photo.addEventListener("click", () => { void openLightbox({ media: message.media, messageId: message.id, sequence: message.sequence, createdAt: message.createdAt }, state, photo); });
       row.photo = photo;
     } else { ui.text(photo, "Photos indisponibles pour le moment"); photo.disabled = true; }
-    body.append(photo); if (message.body) { const caption = document.createElement("p"); caption.className = "photo-caption"; ui.rawText(caption, message.body); body.append(caption); }
-  } else if (message.deletedAt != null) ui.text(body, "Message supprimé"); else ui.rawText(body, message.body);
+    body.append(photo); if (message.body) { const caption = document.createElement("p"); caption.className = "photo-caption"; renderMessageText(caption, message.body); body.append(caption); }
+  } else if (message.deletedAt != null) ui.text(body, "Message supprimé"); else renderMessageText(body, message.body, true);
   article.append(body);
   const meta = document.createElement("div"); meta.className = "message-meta"; meta.id = `message-details-${message.sequence}`; meta.hidden = true; row.meta = meta;
   const detailsToggle = document.createElement("button"); detailsToggle.type = "button"; detailsToggle.className = "message-details-toggle";
@@ -2363,12 +2390,12 @@ function canUseEmojis() {
   return ready && visible() && !loggingOut && !logoutBusy && !selectionLoading && !sendBusy
     && Boolean(sessionOwner && state?.conversation?.canSend && !state.pending);
 }
-function closeEmojis(restoreFocus = false, compose = false) {
+function closeEmojis(restoreFocus = false) {
   emojiContext = null; emojiCategory = "all";
   if (el("emoji-dialog").open) el("emoji-dialog").close();
   for (const id of ["emoji-categories", "emoji-list"]) { ui.forget(el(id)); el(id).replaceChildren(); }
   notice("", false, "emoji-status");
-  if (restoreFocus) focusVisible(el(compose && !touchKeyboard() ? "message-body" : "open-emojis"));
+  if (restoreFocus) focusVisible(el("open-emojis"));
 }
 function renderEmojis(rebuildCategories = false) {
   if (!emojiContext) return;
@@ -2398,15 +2425,20 @@ function renderEmojis(rebuildCategories = false) {
     const button = document.createElement("button"); button.type = "button"; button.className = "emoji-choice";
     button.dataset.emojiId = choice.id; button.setAttribute("aria-label", choice.label); button.title = choice.label; ui.rawText(button, choice.text);
     button.addEventListener("click", () => {
-      const context = emojiContext, state = currentState();
+      const context = emojiContext, state = currentState(), textarea = el("message-body");
       if (context !== capturedContext || !button.isConnected) return;
       if (!context || !canUseEmojis() || !fresh(context.ticket) || context.owner !== sessionOwner.id || context.csrf !== csrf
-        || context.draft !== el("message-body").value) { closeEmojis(); return; }
+        || context.draft !== textarea.value) { closeEmojis(); return; }
       try {
         const result = insertEmoji(context.draft, choice.id, { start: context.start, end: context.end, image: Boolean(state.imageDraft || state.videoDraft), skinTone: selectedSkinTone });
-        el("message-body").value = result.value; state.draft = result.value; closeEmojis(true, true); renderMeta(state);
-        el("message-body").setSelectionRange?.(result.caret, result.caret);
-        notice("Emoji ajouté au brouillon. Relis le message avant de l’envoyer.");
+        textarea.value = result.value;
+        state.draft = result.value;
+        context.draft = result.value;
+        context.start = context.end = result.caret;
+        textarea.setSelectionRange?.(result.caret, result.caret);
+        renderMeta(state);
+        focusVisible(button);
+        notice("Emoji ajouté au brouillon. Relis le message avant de l’envoyer.", false, "emoji-status");
       } catch {
         notice("Cet emoji ne peut pas être ajouté. Raccourcis le brouillon puis réessaie.", true, "emoji-status");
       }
