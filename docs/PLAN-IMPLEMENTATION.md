@@ -4,7 +4,7 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 ## Incident d’accès du 9 novembre et évolution 1.16.0
 
-1. Préparer le checkout privé 1.16.0 déjà qualifié et publié, installer les deux attestations après vérification des données, puis exécuter le CHECK. Conserver un reçu par étape. [État et preuves](REPRISE.md#incident-daccès-du-9-novembre-2026)
+1. Obtenir le résultat du CHECK 1.16.0. La préparation et les deux attestations sont acquises. [État et preuves](REPRISE.md#incident-daccès-du-9-novembre-2026)
 2. Démarrer la 1.16.0, puis vérifier l’identité de l’application, l’accueil et les réponses JSON publiques. La reprise livre les améliorations emojis déjà qualifiées et le correctif du stockage. Épingler la preuve du démarrage et finaliser le checkpoint privé.
 
 ## Correctif1.15.1 — livraison terminée

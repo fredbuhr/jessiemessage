@@ -1,0 +1,42 @@
+{
+  "format": "jessiemessage-1160-hosted-binding-installation-observation",
+  "authority": "User terminal output on 9 November 2026. No direct access to hosted files.",
+  "operator": "f7edaef304452efbf93e056c0552eb77500da010",
+  "installerSha256": "0a5a59ef241d611302cce6ea95670ed66079f0ebe8c3d913680297340c9ecc30",
+  "stageReceiptSha256": "3f0839dc9153fc4b38dbcad7b8084690e6953c72e48127facab6eb47bb831827",
+  "result": {
+    "status": "storage_bindings_installed",
+    "inventoryVerified": true,
+    "sqlMutated": false,
+    "mediaMutated": false,
+    "runtimeStarted": false,
+    "markerWriteAttempts": 2,
+    "markersConfirmed": 2,
+    "photoParentPrivate": true,
+    "videoParentPrivate": true,
+    "photoHeldBytes": 14125805,
+    "videoHeldBytes": 20677703,
+    "priorBindingVerified": true,
+    "photo": {
+      "catalogued": 44,
+      "objects": 44,
+      "reserved": 0,
+      "cleanupPending": 0,
+      "authenticated": 44
+    },
+    "video": {
+      "catalogued": 1,
+      "reserved": 0,
+      "cleanupPending": 0,
+      "authenticated": 1
+    },
+    "closures": {
+      "version1": 0,
+      "version2": 2,
+      "pending": 0,
+      "completed": 2
+    },
+    "markersPresentBefore": 0
+  },
+  "next": "Run the verified 1.16.0 CHECK once. Observe its result before changing Manager settings."
+}
