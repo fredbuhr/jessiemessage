@@ -4,9 +4,8 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 ## Incident d’accès du 9 novembre et évolution 1.16.0
 
-1. Terminer la qualification du commit exact de 1.16.0 sur main. La PR de reprise et les outils de staging et d’attestation sont qualifiés. [État et preuves](REPRISE.md#incident-daccès-du-9-novembre-2026)
-2. Publier le tag immuable. Préparer le checkout privé, installer les deux attestations après vérification des données et exécuter le CHECK, avec un reçu par étape.
-3. Démarrer la 1.16.0, puis vérifier l’identité de l’application, l’accueil et les réponses JSON publiques. La reprise livre les améliorations emojis déjà qualifiées et le correctif du stockage. Épingler la preuve du démarrage et finaliser le checkpoint privé.
+1. Préparer le checkout privé 1.16.0 déjà qualifié et publié, installer les deux attestations après vérification des données, puis exécuter le CHECK. Conserver un reçu par étape. [État et preuves](REPRISE.md#incident-daccès-du-9-novembre-2026)
+2. Démarrer la 1.16.0, puis vérifier l’identité de l’application, l’accueil et les réponses JSON publiques. La reprise livre les améliorations emojis déjà qualifiées et le correctif du stockage. Épingler la preuve du démarrage et finaliser le checkpoint privé.
 
 ## Correctif1.15.1 — livraison terminée
 

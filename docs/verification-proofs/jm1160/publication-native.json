@@ -1,0 +1,131 @@
+{
+  "repository": "fredbuhr/jessiemessage",
+  "run": {
+    "id": 42642017009,
+    "run_attempt": 1,
+    "event": "push",
+    "head_sha": "a39a2b04c7fa4ee651d0e089444b89a84ddfc788",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/fredbuhr/jessiemessage/actions/runs/42642017009",
+    "name": "Publish qualified JessieMessage 1.16.0",
+    "created_at": "2026-11-09T15:10:49Z",
+    "updated_at": "2026-11-09T15:11:34Z",
+    "run_started_at": "2026-11-09T15:10:49Z",
+    "head_branch": "ops/publish-v1.16.0"
+  },
+  "operator": {
+    "sha": "a39a2b04c7fa4ee651d0e089444b89a84ddfc788",
+    "tree": "49542078137f38b1081269d98b208f4b03d6a6a8",
+    "parents": [
+      "562bd899b19d6c16fc4b04d2e1eaa416ceab8fb7"
+    ]
+  },
+  "jobs": [
+    {
+      "id": 129245277991,
+      "name": "operator-tests",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/42642017009/job/129245277991",
+      "status": "completed",
+      "conclusion": "success",
+      "checkout": "a39a2b04c7fa4ee651d0e089444b89a84ddfc788",
+      "node": "node: v24.22.1",
+      "decodedUtf8Log": {
+        "bytes": 53967,
+        "sha256": "ddd3c37e536e7b09b6bf9e332d908365ba2f6c8a966a26b1ff5c3a9b9ded8182"
+      },
+      "footer": [
+        "Ran 26 tests in 0.138s",
+        "OK"
+      ],
+      "tests": 26,
+      "passed": 26,
+      "omissions": 0
+    },
+    {
+      "id": 129245410386,
+      "name": "publish",
+      "url": "https://github.com/fredbuhr/jessiemessage/actions/runs/42642017009/job/129245410386",
+      "status": "completed",
+      "conclusion": "success",
+      "checkout": "a39a2b04c7fa4ee651d0e089444b89a84ddfc788",
+      "node": "node: v24.22.1",
+      "decodedUtf8Log": {
+        "bytes": 18361,
+        "sha256": "e41fdf906b0d850d178de3c8266a84ca884ab64fe6e717f1de1a545262361ce2"
+      },
+      "receipt": {
+        "status": "published_verified",
+        "previousReleasePreserved": true,
+        "previousReleaseId": 432505702,
+        "uniqueReleaseVerified": true,
+        "nodeVersion": "24.22.1",
+        "schemaMigrations": 38,
+        "applicationTables": 37,
+        "normalMigrations": 33,
+        "videoMigrations": 3,
+        "experienceMigrations": 2,
+        "releases": [
+          {
+            "tag": "v1.16.0",
+            "source": "d2b57fb88d58aacf64dd51c5d1952c65f5c327ae",
+            "tree": "632ec530d812fa75cf2aa4b603c91c81dcaf7e8e",
+            "ciRun": "42638900913",
+            "ciAttempt": 2,
+            "releaseId": 439283371
+          }
+        ],
+        "latest": {
+          "tag": "v1.16.0",
+          "source": "d2b57fb88d58aacf64dd51c5d1952c65f5c327ae",
+          "id": 439283371
+        },
+        "publicationMode": "created",
+        "created": [
+          "v1.16.0"
+        ],
+        "deploymentPerformed": false
+      }
+    }
+  ],
+  "independentReadback": {
+    "tags": {
+      "refs/tags/v1.15.1": "a4a07f9f31c47a7185b57d11b8277be1d87fd2c1",
+      "refs/tags/v1.16.0": "d2b57fb88d58aacf64dd51c5d1952c65f5c327ae"
+    },
+    "release": {
+      "id": 439283371,
+      "tag_name": "v1.16.0",
+      "target_commitish": "d2b57fb88d58aacf64dd51c5d1952c65f5c327ae",
+      "name": "JessieMessage 1.16.0 — Emojis et continuité du stockage",
+      "draft": false,
+      "prerelease": false,
+      "published_at": "2026-11-09T15:11:27Z",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.16.0",
+      "message": null
+    },
+    "latest": {
+      "id": 439283371,
+      "tag_name": "v1.16.0",
+      "target_commitish": "d2b57fb88d58aacf64dd51c5d1952c65f5c327ae",
+      "name": "JessieMessage 1.16.0 — Emojis et continuité du stockage",
+      "draft": false,
+      "prerelease": false,
+      "published_at": "2026-11-09T15:11:27Z",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.16.0",
+      "message": null
+    },
+    "previous": {
+      "id": 432505702,
+      "tag_name": "v1.15.1",
+      "target_commitish": "a4a07f9f31c47a7185b57d11b8277be1d87fd2c1",
+      "name": "JessieMessage 1.15.1 — Invitation et connexion",
+      "draft": false,
+      "prerelease": false,
+      "published_at": "2026-11-03T09:42:26Z",
+      "html_url": "https://github.com/fredbuhr/jessiemessage/releases/tag/v1.15.1",
+      "message": null
+    }
+  },
+  "initialRefusalProof": "remount-publication-42641548890-attempt1-proof.json"
+}
