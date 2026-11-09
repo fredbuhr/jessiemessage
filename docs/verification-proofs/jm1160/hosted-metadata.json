@@ -1,0 +1,64 @@
+{
+  "format": "jessiemessage-1160-hosted-metadata-observation",
+  "authority": "User terminal output on 9 November 2026. Checkpoint bytes not accessible to the agent.",
+  "operator": "e20f151258d0fc8f6e821505931c70caa0a4dddd",
+  "operatorSha256": "b9bb965762205f363a91a89b9d72fd4969fac3ca558410d551247ed735d76345",
+  "qualification": 42646613779,
+  "result": {
+    "status": "release1160_metadata_recorded",
+    "version": "1.16.0",
+    "source": "d2b57fb88d58aacf64dd51c5d1952c65f5c327ae",
+    "tree": "632ec530d812fa75cf2aa4b603c91c81dcaf7e8e",
+    "metadataOnly": true,
+    "noRestart": true,
+    "schemaMigrations": 38,
+    "applicationTables": 37,
+    "release": {
+      "version": "1.16.0",
+      "commit": "d2b57fb88d58aacf64dd51c5d1952c65f5c327ae",
+      "nodeVersion": "v24.22.1",
+      "startedAt": 1794238381632
+    },
+    "publicReady": true,
+    "rollbackRelease": null,
+    "rollbackAfterMigrationQualified": false,
+    "rollbackQualificationScope": "historical_sql38_precheck_only_not_remount_qualified",
+    "publicProfileDowngradeQualified": false,
+    "restart184Allowed": false,
+    "restart172Allowed": false,
+    "historicalRelease1151Preserved": true,
+    "historicalRelease1150Preserved": true,
+    "historicalRelease1141Preserved": true,
+    "historicalRelease1140Preserved": true,
+    "historicalRelease1130Preserved": true,
+    "historicalRelease1112Preserved": true,
+    "historicalRelease1111Preserved": true,
+    "historicalRelease1110Preserved": true,
+    "historicalRelease1101Preserved": true,
+    "historicalRelease1100Preserved": true,
+    "historicalRelease190Preserved": true,
+    "historicalRelease184Preserved": true,
+    "priorHostedStaging1151Preserved": true,
+    "priorMetadataRelease": "1.15.1",
+    "priorActivePreserved": true,
+    "otherBlocksPreserved": true,
+    "checkpointSha256": "3ca2fd917cac8be4ef980d982e5905c09f2a4ac8c1763b5ff5587f6bea0881cb"
+  },
+  "publicReadyAfterRecord": {
+    "checkedAtParis": "2026-11-09T16:43:12+01:00",
+    "origins": {
+      "jessiemessage.com": {
+        "http": 200,
+        "json": {
+          "status": "ready"
+        }
+      },
+      "recette.jessiemessage.com": {
+        "http": 200,
+        "json": {
+          "status": "ready"
+        }
+      }
+    }
+  }
+}

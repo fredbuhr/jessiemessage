@@ -4,7 +4,7 @@ Révisé le 23 octobre 2026 après l’[audit final de l’ensemble de l’appli
 
 ## Incident d’accès du 9 novembre et évolution 1.16.0
 
-La 1.16.0 est active et les deux domaines sont disponibles. Finaliser le checkpoint privé avec les preuves du démarrage. [État et preuves](REPRISE.md#incident-daccès-du-9-novembre-2026)
+Incident et livraison clos. La 1.16.0 est active sur les deux domaines et son démarrage est enregistré dans le checkpoint privé. [État et preuves](REPRISE.md#incident-daccès-du-9-novembre-2026)
 
 ## Correctif1.15.1 — livraison terminée
 
